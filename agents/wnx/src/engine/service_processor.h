@@ -86,6 +86,7 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
 
 class ServiceProcessor;
 
+//
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
@@ -108,7 +109,9 @@ public:
         const AnswerId Tp,            // expected id
         ServiceProcessor* processor   // hosting object
     ) {
+        engine_.registerOwner(processor);
         engine_.loadConfig();
+
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
@@ -237,6 +240,14 @@ public:
 
     static void resetOhm() noexcept;
     bool isOhmStarted() const noexcept { return ohm_started_; }
+
+    cma::cfg::modules::ModuleCommander& getModuleCommander() noexcept {
+        return mc_;
+    }
+    const cma::cfg::modules::ModuleCommander& getModuleCommander() const
+        noexcept {
+        return mc_;
+    }
 
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {

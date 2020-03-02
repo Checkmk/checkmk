@@ -91,6 +91,8 @@ public:
     int timeout() const { return timeout_; }
     virtual void registerCommandLine(const std::string& CmdLine);
 
+    void registerOwner(cma::srv::ServiceProcessor* sp);
+
     virtual void preStart() noexcept {}
     uint64_t errorCount() const { return error_count_; }
     uint64_t resetError() { return error_count_.exchange(0); }
@@ -135,17 +137,23 @@ protected:
     // optional API to store info about errors used, for example by OHM
     uint64_t registerError() { return error_count_.fetch_add(1); }
 
+    cma::srv::ServiceProcessor* getHostSp() const noexcept { return host_sp_; }
+
 private:
     bool headerless_;  // if true no makeHeader called during content generation
     std::string ip_;
     char separator_;
     std::atomic<uint64_t> error_count_ = 0;
+    cma::srv::ServiceProcessor* host_sp_ = nullptr;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
     FRIEND_TEST(WmiProviderTest, WmiAll);
     FRIEND_TEST(WmiProviderTest, BasicWmi);
     FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
+
+    friend class SectionProviders;
+    FRIEND_TEST(SectionProviders, Basic);
 #endif
 };
 

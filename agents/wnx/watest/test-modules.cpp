@@ -66,11 +66,12 @@ TEST(ModulesTest, Internal) {
     m.zip_ = "z";
     EXPECT_EQ(m.zip(), "z");
 
-    EXPECT_EQ(m.buildCommandLine("q.v"), m.exec());
+    std::filesystem::path x = GetUserDir();
+    EXPECT_EQ(m.buildCommandLine("q.v"), (x / m.exec()).wstring());
     EXPECT_TRUE(m.buildCommandLine("q.x").empty()) << "invalid extension";
 
     m.exec_ = L"a {}";
-    EXPECT_EQ(m.buildCommandLine("q.v"), L"a q.v");
+    EXPECT_EQ(m.buildCommandLine("q.v"), x.wstring() + L"\\a q.v");
 
     // reset test
     m.reset();
@@ -278,9 +279,12 @@ TEST_F(ModuleCommanderTest, PrepareToWork) {
     tst::ConstructFile(modules_dir / m.name() / "zz.exe", "exe");
     EXPECT_TRUE(m.prepareToWork(backup_dir, modules_dir));
     EXPECT_EQ(m.bin(), modules_dir / m.name() / "zz.exe");
-    EXPECT_EQ(m.buildCommandLine("x.t"), L"zz.exe x.t");
+    auto expected_location = std::filesystem::path{GetUserDir()} / m.dir();
+    EXPECT_EQ(m.buildCommandLine("x.t"),
+              expected_location.wstring() + L"\\zz.exe x.t");
     EXPECT_TRUE(m.buildCommandLine("x.tx").empty());
-    EXPECT_EQ(m.buildCommandLineForced("x.z"), L"zz.exe x.z");
+    EXPECT_EQ(m.buildCommandLineForced("x.z"),
+              expected_location.wstring() + L"\\zz.exe x.z");
 }
 
 TEST_F(ModuleCommanderTest, PrepareToWork2) {
@@ -344,7 +348,10 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     EXPECT_FALSE(mc.isModuleScript("cc"));
     EXPECT_FALSE(mc.isModuleScript("cc.c"));
 
-    EXPECT_EQ(mc.buildCommandLine("x.t"), L"zz.exe x.t");
+    auto expected_location =
+        std::filesystem::path{GetUserDir()} / mc.modules_[0].dir();
+    EXPECT_EQ(mc.buildCommandLine("x.t"),
+              expected_location.wstring() + L"\\zz.exe x.t");
 }
 
 TEST_F(ModuleCommanderTest, LowLevelFs) {

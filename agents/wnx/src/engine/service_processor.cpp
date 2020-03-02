@@ -257,6 +257,7 @@ void ServiceProcessor::preStartBinaries() {
     ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
+    plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
@@ -559,11 +560,6 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     cma::MailSlot mailbox(mailslot_name, 0);
     using namespace cma::carrier;
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
-    if (cma::IsService()) {
-        mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
-    } else
-        mc_.LoadDefault();
-
     try {
         // start and stop for mailbox thread
         mailbox.ConstructThread(SystemMailboxCallback, 20, this);
@@ -571,6 +567,13 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // preparation if any
         ReloadConfigInServiceMode();
+
+        // module commander loading(and install if service)
+        if (cma::IsService()) {
+            mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
+        } else
+            mc_.LoadDefault();
+
         preStartBinaries();
         // *******************
 

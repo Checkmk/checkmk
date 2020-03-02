@@ -24,6 +24,10 @@ wtools::InternalUser ObtainInternalUser(std::wstring_view group);
 void KillAllInternalUsers();
 }  // namespace cma
 
+namespace cma::srv {
+class ServiceProcessor;
+}
+
 namespace cma {
 namespace tools {
 
@@ -242,12 +246,11 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
-    bool startEx(std::wstring_view Id, std::filesystem::path ExeFile,
-                 StartMode start_mode, wtools::InternalUser internal_user);
-    bool start(std::wstring_view Id, std::filesystem::path ExeFile,
-
-               StartMode start_mode) {
-        return startEx(Id, ExeFile, start_mode, {});
+    bool startEx(std::wstring_view Id, std::wstring exec, StartMode start_mode,
+                 wtools::InternalUser internal_user);
+    bool startStd(std::wstring_view Id, std::wstring exec,
+                  StartMode start_mode) {
+        return startEx(Id, exec, start_mode, {});
     }
 
     // strange?
@@ -519,6 +522,9 @@ public:
     // which plugin
     std::filesystem::path path() const { return path_; }
 
+    // which plugin
+    void setCmdLine(std::wstring_view name);
+
     // stored data from plugin
     std::vector<char> data() const {
         std::lock_guard lk(data_lock_);
@@ -593,6 +599,8 @@ public:
 
     static int threadCount() noexcept { return thread_count_.load(); }
 
+    std::wstring cmdLine() const noexcept { return cmd_line_; }
+
 protected:
     void fillInternalUser();
     void resetData() {
@@ -649,6 +657,8 @@ private:
 
     static std::atomic<int> thread_count_;
 
+    std::wstring cmd_line_;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
@@ -657,6 +667,8 @@ private:
     FRIEND_TEST(PluginTest, Async0DataPickup);
     FRIEND_TEST(PluginTest, AsyncLocal);
     FRIEND_TEST(PluginTest, SyncLocal);
+
+    FRIEND_TEST(PluginTest, Entry);
 #endif
 };
 wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
@@ -697,6 +709,8 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
                      bool Local, const PathVector& FoundFiles,
                      const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
                      bool CheckExists = true);
+
+void UpdatePluginMapCmdLine(PluginMap& Out, cma::srv::ServiceProcessor* sp);
 
 // API call to exec all plugins and get back data and count
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);

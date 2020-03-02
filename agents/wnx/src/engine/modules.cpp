@@ -127,7 +127,9 @@ std::wstring Module::buildCommandLineForced(
     const std::filesystem::path &script) const noexcept {
     try {
         if (bin().empty()) return {};
-        auto result = fmt::format(exec(), script.wstring());
+        auto actual_dir = std::filesystem::path{GetUserDir()} / dir();
+        auto result =
+            fmt::format((actual_dir / exec()).wstring(), script.wstring());
         return result;
     } catch (const std::exception &e) {
         XLOG::d("can't build valid command line for '{}', exception is '{}'",
@@ -527,6 +529,7 @@ void ModuleCommander::InstallDefault(InstallMode mode) noexcept {
         findModuleFiles(root);
         XLOG::l.i("Installing modules");
         installModules(root, user, mode);
+        prepareToWork();
     } catch (const std::exception &e) {
         XLOG::l("Exception installing modules '{}'", e.what());
     }
@@ -536,6 +539,7 @@ void ModuleCommander::LoadDefault() noexcept {
         auto yaml = GetLoadedConfig();
         XLOG::l.i("Loading module config");
         readConfig(yaml);
+        prepareToWork();
     } catch (const std::exception &e) {
         XLOG::l("Exception loading modules config '{}'", e.what());
     }

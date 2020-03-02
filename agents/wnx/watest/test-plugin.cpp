@@ -137,6 +137,18 @@ static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
     }
 }
 
+TEST(PluginTest, Entry) {
+    PluginMap pm;
+    InsertEntry(pm, "a1", 5, true, 0);
+    auto entry = GetEntrySafe(pm, "a1");
+    ASSERT_TRUE(entry != nullptr);
+    EXPECT_TRUE(entry->cmd_line_.empty());
+    EXPECT_TRUE(entry->cmdLine().empty());
+    entry->setCmdLine(L"aaa");
+    EXPECT_EQ(entry->cmd_line_, L"aaa");
+    EXPECT_EQ(entry->cmdLine(), L"aaa");
+}
+
 TEST(PluginTest, TimeoutCalc) {
     using namespace cma::provider;
     {
@@ -2331,7 +2343,7 @@ TEST(CmaMain, MiniBoxStartMode) {
          {TheMiniBox::StartMode::job, TheMiniBox::StartMode::updater}) {
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, mode);
+        auto started = mb.startStd(L"x", path, mode);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2355,13 +2367,15 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     auto [source, target] = tst::CreateInOut();
-    auto path = target / "a.bat";
+    auto file = target / "a.bat";
 
-    CreateComplicatedPluginInTemp(path, "aaa");
+    CreateComplicatedPluginInTemp(file, "aaa");
     {
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto exec = ConstructCommandToExec(file);
+
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2382,11 +2396,12 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
 
     // this code is for testing vbs scripts, not usable
     if (1) {
-        auto path = target / "a.vbs";
-        CreateVbsPluginInTemp(path, "aaa");
+        auto file = target / "a.vbs";
+        CreateVbsPluginInTemp(file, "aaa");
+        auto exec = ConstructCommandToExec(file);
         TheMiniBox mb;
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2407,8 +2422,9 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
 
     {
         TheMiniBox mb;
+        auto exec = ConstructCommandToExec(file);
 
-        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2585,3 +2601,54 @@ TEST(PluginTest, Hacking) {
 }
 
 }  // namespace cma
+
+namespace cma::provider {
+
+// this test is primitive and check only reset of cmdline to empty string
+// can be tested only with intergration tests
+TEST(PluginTest, ModulesCmdLine) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+
+    cma::OnStartTest();
+    std::vector<Plugins::ExeUnit> exe_units = {
+        //
+        {"*.cmd",
+         "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+        {"*.py",
+         "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+        {"*", "run: no\n"},  //
+
+    };
+
+    fs::path temp_folder = cma::cfg::GetTempDir();
+
+    PathVector vp = {
+        (temp_folder / "a.cmd").u8string(),  //
+        (temp_folder / "b.py").u8string(),   //
+    };
+    CreatePluginInTemp(vp[0], 5, "a");
+    CreatePluginInTemp(vp[1], 0, "b");
+
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    PluginMap pm;  // load from the groups::plugin
+    UpdatePluginMap(pm, false, vp, exe_units, false);
+    ASSERT_EQ(pm.size(), 2);
+    for (auto& [name, entry] : pm) {
+        EXPECT_TRUE(entry.cmdLine().empty());
+        entry.setCmdLine(L"111");
+    }
+    cma::srv::ServiceProcessor sp;
+    auto& mc = sp.getModuleCommander();
+    mc.LoadDefault();
+    ASSERT_TRUE(mc.isModuleScript("this.py"))
+        << "we should have configured python module";
+    PluginsProvider::UpdatePluginMapCmdLine(pm, &sp);
+
+    for (auto& [name, entry] : pm) {
+        EXPECT_TRUE(entry.cmdLine().empty());
+    }
+}
+}  // namespace cma::provider

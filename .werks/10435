@@ -1,0 +1,16 @@
+Title: Agent Deployment: Log info about calling host on error
+Knowledge: undoc
+Level: 1
+Component: agents
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p10
+Date: 1583160206
+
+When calling the agent bakery for the purpose of agent deployment
+(normally done automatically via agent updater), occuring errors will be logged
+to ~/var/log/web.log. This error log entry is now augmented by the calling
+hostname (if it is provided by the calling client). With this information, it
+becomes easier to debug host-related errors.

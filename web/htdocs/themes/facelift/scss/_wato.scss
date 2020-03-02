@@ -41,6 +41,7 @@
     border-radius: 0;
 
     &.header_state {
+      color: $color-text !important;
       background: $wato-data-th-bg-color !important;
     }
   }

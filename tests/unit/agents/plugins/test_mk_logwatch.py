@@ -382,16 +382,16 @@ def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, posit
 
 def test_log_lines_iter(mk_logwatch):
     with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
-        log_iter.set_position(710)
-        assert log_iter.get_position() == 710
+        log_iter.set_position(121)
+        assert log_iter.get_position() == 121
 
         line = log_iter.next_line()
         assert isinstance(line, unicode)
-        assert line == u"# This file is part of Check_MK.\n"
-        assert log_iter.get_position() == 743
+        assert line == u"# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
+        assert log_iter.get_position() == 206
 
         log_iter.push_back_line(u'Täke this!')
-        assert log_iter.get_position() == 732
+        assert log_iter.get_position() == 195
         assert log_iter.next_line() == u'Täke this!'
 
         log_iter.skip_remaining()

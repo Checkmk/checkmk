@@ -22,16 +22,8 @@ headrify ()
       return
   fi
 
-  suffix="${file##*.}"
-  if ! [[ $suffix == "py" || $suffix == "h" || $suffix == "c" || $suffix == "cc" || \
-      $suffix == "js" || $suffix == "scss" || $suffix == "css" || $file == *"Makefile" ]] ;
-  then
-      echo "Skipping $file. It's not a source code file in Python, C/C++, JS or (S)CSS nor a Makefile."
-      return
-  fi
-
-  TMP=$(mktemp .headrify.new.XXXXXX)
   headline="$(head -n1 $file)"
+  checkSuffix=false
   if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
       comment="# "
       bangpath="#!/bin/sh"
@@ -50,32 +42,52 @@ headrify ()
   elif [ "${headline:0:14}" = "#!/usr/bin/php" ] ; then
       comment="# "
       bangpath="#!/usr/bin/php"
-  elif [ "${headline:0:22}" = "#!/usr/bin/env python3" ] ; then
+  elif [[ "${headline:0:22}" = "#!/usr/bin/env python3" || "${headline:0:18}" = "#!/usr/bin/python3" ]] ; then
       comment="# "
       bangpath="#!/usr/bin/env python3
 # -*- coding: utf-8 -*-"
-  elif [ "${headline:0:21}" = "#!/usr/bin/env python" ] ; then
+  elif [[ "${headline:0:21}" = "#!/usr/bin/env python" || "${headline:0:17}" = "#!/usr/bin/python" ]] ; then
       comment="# "
-      bangpath="#!/usr/bin/env python2
+      bangpath="#!/usr/bin/env python
 # -*- coding: utf-8 -*-"
   else
+      if [ "$force" = false ]; then
+          checkSuffix=true
+      fi
       bangpath=""
       case "${file##*/}" in
-          *.openvms) comment='$!# ' ;;
+          *.openvms) comment="$!# " ;;
           *.php)    comment="# " ; bangpath="<?php" ;;
           *.scss|*.css)    comment="// " ;  bangpath="@charset \"UTF-8\";" ;;
           *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
-          *.py|*)     comment="# "  ; bangpath="#!/usr/bin/env python2
+          *.sh) comment="# " ;;
+          *.py)     comment="# "  ; bangpath="#!/usr/bin/env python
 # -*- coding: utf-8 -*-"; ;;
+          *) echo "Skipping $file. No shebang or suffix match for Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile." ;
+          return ;;
       esac
+  fi
+
+  if [ "$checkSuffix" = true ];
+  then
+      suffix="${file##*.}"
+      if ! [[ $suffix == "py" || $suffix == "h" || $suffix == "c" || $suffix == "cc" || \
+          $suffix == "js" || $suffix == "scss" || $suffix == "css" || $file == *"Makefile" || \
+          $suffix == "sh" || $suffix == "cfg" ]];
+      then
+          echo "Skipping $file. It's not a source code file in Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile."
+          return
+      fi
   fi
 
   figletline="---------------------------------------------------"
   up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
   endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|which is part of this source code package.)'
 
+  TMP=$(mktemp .headrify.new.XXXXXX)
+  chmod --reference=$file $TMP
   : > $TMP
   if [ -n "$bangpath" ]; then echo "$bangpath" > $TMP ; fi
   if [[ $file == "enterprise/"* || $file == "managed/"* ]]; then
@@ -84,6 +96,7 @@ headrify ()
       header $CRE_LICENSE_NAME | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
   fi
   echo >> $TMP
+  bangpathlines=0
   count=0
   tmpwritten=false
   while read line; do
@@ -98,6 +111,8 @@ headrify ()
       echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
       rm -f $TMP
       return
+    elif [[ ( $count == $bangpathlines ) && ( "$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* ) ]]; then
+        let bangpathlines=bangpathlines+1
     fi
 
     if [ $count -gt 4 ]; then
@@ -107,17 +122,29 @@ headrify ()
   done <$file
 
   if [ "$tmpwritten" = false ]; then
-    cat $file >> $TMP
+    if [ $bangpathlines -gt 0 ]; then
+        let tailindex=bangpathlines+1
+        tail -n +$tailindex "$file" >> $TMP
+    else
+        cat $file >> $TMP
+    fi
   fi
   echo "$file..."
   mv $TMP $file || rm -f $TMP
+  if [[ "$bangpath" == *"python"* ]]; then
+      yapf -i $file
+  fi
 }
 
 if [ "$#" -gt 0 ] ; then
   #echo "Headrifying to version $VERSION"
+  force=false
+  if [[ "$*" == *"-f"* ]]; then
+      force=true
+  fi
   for file in "$@"
   do
-    headrify "$file"
+    headrify "$file" $force
   done
 else
   echo "Provide at least one file as an argument."

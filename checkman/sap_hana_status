@@ -9,12 +9,12 @@ description:
  {{mk_sap_hana}}.
 
  If the status is OK the check is OK. If it is UNKNOWN the check
- is also UNKNOWN. Otherwise the check is CRIT. 
+ is also UNKNOWN. Otherwise the check is CRIT.
 
  This check is also cluster-aware.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
  One service is created per instance.

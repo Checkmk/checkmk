@@ -8,6 +8,8 @@ description:
  It is possible to define levels for warning and critical temperature. The plugin return
  {CRIT} or {WARN} if the current temperatue is higher then one of the levels.
 
+item:
+ ID of the sensor
 
 inventory:
  The inventory will create one service per device.

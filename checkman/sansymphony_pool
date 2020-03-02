@@ -15,5 +15,8 @@ description:
 Performance data:
  The check outputs the disk pool allocation in percent.
 
+item:
+ Name of the pool
+
 Inventory:
  One service will be created

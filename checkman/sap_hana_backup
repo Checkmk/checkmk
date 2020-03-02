@@ -19,7 +19,7 @@ description:
  This check is also cluster-aware.
 
 item:
- The instance name and backup type
+ The sid instance name and backup type seperated by a {{-}}
 
 inventory:
  One service is created per instance and backup type.

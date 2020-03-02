@@ -14,7 +14,7 @@ description:
  in case of Critical values also these.
 
 item:
-  The Name of the Group
+  The name of the group
 
 inventory:
  The check does not inventory all available values by default.

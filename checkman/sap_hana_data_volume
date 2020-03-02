@@ -15,7 +15,7 @@ description:
  This check is also cluster-aware.
 
 item:
- The instance name, file type and volume ID
+ The sid instance name followed by a {{-}} followed by the file type and the volume ID
 
 inventory:
  One service is created per instance, file type and volume.

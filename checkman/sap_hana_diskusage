@@ -16,7 +16,7 @@ description:
  the check state is also UNKNOWN, otherwise CRIT.
 
 item:
- The instance name and disk type.
+ The sid instance name and the disk type seperated by a {{-}}
 
 inventory:
  One service is created per instance and disk type.

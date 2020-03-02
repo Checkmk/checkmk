@@ -22,7 +22,7 @@ description:
  This check is also cluster-aware.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
  One service is created per instance.

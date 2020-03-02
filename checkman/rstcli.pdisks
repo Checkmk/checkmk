@@ -18,7 +18,7 @@ description:
  {https://downloadcenter.intel.com/download/24310/Intel-Rapid-Storage-Technology-Command-Line-Interface-RST-CLI}
 
 item:
- A combination of the raid volume and the drive ID within that volume.
+ The name of the raid volume and the drive ID seperated by a {{/}}
 
 inventory:
  One service is created for each disk.

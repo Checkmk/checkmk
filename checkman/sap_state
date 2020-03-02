@@ -11,7 +11,7 @@ description:
  the other sap checks appear on a host named after the sap instance.
 
 item:
- The item name is the hostname of the monitored system.
+ The name of the hostname of the monitored system.
 
 inventory:
  The check creates one item for each host configured in sap.cfg

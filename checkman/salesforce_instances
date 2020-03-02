@@ -9,7 +9,7 @@ description:
  The check is OK if the instance is OK; otherwise CRIT.
 
 item:
- Instance name.
+ The name of the instance
 
 inventory:
  One check per instance is created.

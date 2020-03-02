@@ -448,6 +448,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
                 cmc_path() + "/bin",
+                cmc_path() + "/agents/bakery",
                 cmc_path() + "/modules",
                 cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",

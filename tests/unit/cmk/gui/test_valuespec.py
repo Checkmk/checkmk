@@ -69,25 +69,27 @@ def test_timehelper_add(args, result):
 
 
 @pytest.mark.parametrize("value, result", [
-    (-1580000000, "1919-12-08"),
+    (-1580000000, "1919-12-07"),
     (1, "1970-01-01"),
     (1580000000, "2020-01-26"),
     (1850000000, "2028-08-16"),
 ])
 def test_absolutedate_value_to_json_conversion(value, result):
-    assert vs.AbsoluteDate().value_to_text(value) == result
-    json_value = vs.AbsoluteDate().value_to_json(value)
-    assert vs.AbsoluteDate().value_from_json(json_value) == value
+    with on_time("2020-03-02", "UTC"):
+        assert vs.AbsoluteDate().value_to_text(value) == result
+        json_value = vs.AbsoluteDate().value_to_json(value)
+        assert vs.AbsoluteDate().value_from_json(json_value) == value
 
 
 @pytest.mark.parametrize("value, result", [
-    ((1582671600, 1582844400), "2020-02-26, 2020-02-28"),
-    ((1577833200, 1580425200), "2020-01-01, 2020-01-31"),
+    ((1582671600, 1582844400), "2020-02-25, 2020-02-27"),
+    ((1577833200, 1580425200), "2019-12-31, 2020-01-30"),
 ])
 def test_tuple_value_to_json_conversion(value, result):
-    assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_text(value) == result
-    json_value = vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
-    assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value) == value
+    with on_time("2020-03-02", "UTC"):
+        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_text(value) == result
+        json_value = vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
+        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value) == value
 
 
 @pytest.mark.parametrize("value, result", [
@@ -113,21 +115,23 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 
 
 def test_timerange_value_to_json_conversion():
-    for choice in vs.Timerange().choices():
-        if choice[0] == "age":
-            choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds")
-        elif choice[0] == "date":
-            choice = (("date", (1582671600.0, 1582844400.0)), "Date range, 2020-02-26, 2020-02-28")
-        assert vs.Timerange().value_to_text(choice[0]) == choice[1]
-        json_value = vs.Timerange().value_to_json(choice[0])
-        assert vs.Timerange().value_from_json(json_value) == choice[0]
+    with on_time("2020-03-02", "UTC"):
+        for choice in vs.Timerange().choices():
+            if choice[0] == "age":
+                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds")
+            elif choice[0] == "date":
+                choice = (("date", (1582671600.0, 1582844400.0)),
+                          "Date range, 2020-02-25, 2020-02-27")
+            assert vs.Timerange().value_to_text(choice[0]) == choice[1]
+            json_value = vs.Timerange().value_to_json(choice[0])
+            assert vs.Timerange().value_from_json(json_value) == choice[0]
 
 
 @pytest.mark.parametrize("value, result", [
     ({
         "time_range": ("date", (1577833200, 1580425200)),
         "time_resolution": "h"
-    }, "Time range: Date range, 2020-01-01, 2020-01-31, Time resolution: Show alerts per hour"),
+    }, "Time range: Date range, 2019-12-31, 2020-01-30, Time resolution: Show alerts per hour"),
     ({
         "time_range": ("age", 158000),
         "time_resolution": "d"
@@ -136,16 +140,18 @@ def test_timerange_value_to_json_conversion():
     ),
 ])
 def test_dictionary_value_to_json_conversion(value, result):
-    # TODO: Obtain this valuespec directly by importing AlertBarChartDashlet
-    #       once it's available and simplify to:
-    #       abcd_vs = AlertBarChartDashlet.vs_parameters()
-    abcd_vs = vs.Dictionary([
-        ("time_range", vs.Timerange(title="Time range")),
-        ("time_resolution",
-         vs.DropdownChoice(title="Time resolution",
-                           choices=[("h", "Show alerts per hour"), ("d", "Show alerts per day")])),
-    ])
-    abcd_vs._render = "oneline"
-    assert abcd_vs.value_to_text(value) == result
-    json_value = abcd_vs.value_to_json(value)
-    assert abcd_vs.value_from_json(json_value) == value
+    with on_time("2020-03-02", "UTC"):
+        # TODO: Obtain this valuespec directly by importing AlertBarChartDashlet
+        #       once it's available and simplify to:
+        #       abcd_vs = AlertBarChartDashlet.vs_parameters()
+        abcd_vs = vs.Dictionary([
+            ("time_range", vs.Timerange(title="Time range")),
+            ("time_resolution",
+             vs.DropdownChoice(title="Time resolution",
+                               choices=[("h", "Show alerts per hour"),
+                                        ("d", "Show alerts per day")])),
+        ])
+        abcd_vs._render = "oneline"
+        assert abcd_vs.value_to_text(value) == result
+        json_value = abcd_vs.value_to_json(value)
+        assert abcd_vs.value_from_json(json_value) == value

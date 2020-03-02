@@ -41,10 +41,8 @@ def check_qnap_disks(item, _no_params, info):
     for desc, temp, status, model, size, cond in info:
         if desc == item:
             state, state_readable = map_states.get(status, (3, "unknown"))
-            if state == 0 and "GOOD" not in cond and "--" not in cond:
-                state = 1
-
             yield state, "Status: %s (%s)" % (state_readable, cond)
+
             if "--" in cond:
                 yield 1, "SMART Information missing"
 

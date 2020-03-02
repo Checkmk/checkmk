@@ -7,10 +7,8 @@ description:
  This check monitors the health and current Status of
  Hardisks attached to a QNAP NAS device.
  The check returns an {CRIT} in case of an error state reported
- by the device. The checks also considers the reported SMART Status (condition) from each Disk
- and reports the model number, size and the
- temperature for each disk. 
- If the S.M.A.R.T. Status is not "GOOD" then the overall state of the disk switches to a {WARN} state.
+ by the device. The check also reports the model number, size and the
+ temperature for each disk.
 
 item:
  The name of the disk like reported in the MIB

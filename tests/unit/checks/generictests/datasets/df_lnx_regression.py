@@ -17,7 +17,7 @@ info = [
     [u'[df_inodes_end]']
 ]
 
-discovery = {'': [(u'/', {}), (u'/boot', {})]}
+discovery = {'': [(u'/', {"include_volume_name": False}), (u'/boot', {"include_volume_name": False})]}
 
 checks = {
     '': [

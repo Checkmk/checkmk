@@ -17,7 +17,7 @@ info = [
     ]
 ]
 
-discovery = {'': [(u'C:/', {}), (u'E:/', {}), (u'F:/', {})]}
+discovery = {'': [(u'C:/', {"include_volume_name": False}), (u'E:/', {"include_volume_name": False}), (u'F:/', {"include_volume_name": False})]}
 
 checks = {
     '': [

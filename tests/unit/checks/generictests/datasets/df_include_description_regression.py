@@ -25,10 +25,10 @@ mock_host_conf_merged = {
 }
 
 
-discovery = {'': [(r'C:\\ C://', {}),  # TODO: make this even more beautiful
-                  ('SQL_Database_[GROUPME] D://', {}),
-                  ('Scratch_Volume_[GROUPME] E://', {}),
-                  ('myGroup', {'patterns': ['GROUPME']})]}
+discovery = {'': [(r'C:\\ C://', {'include_volume_name': True}),  # TODO: make this even more beautiful
+                  ('SQL_Database_[GROUPME] D://', {'include_volume_name': True}),
+                  ('Scratch_Volume_[GROUPME] E://', {'include_volume_name': True}),
+                  ('myGroup', {'grouping_behaviour': 'mountpoint', 'include_volume_name': True, 'patterns': ['GROUPME']})]}
 
 
 checks = {'': [(r'C:\\ C://',

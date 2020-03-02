@@ -136,11 +136,15 @@ info_empty_inodes = [
     [
         ([], [], {}),
         # Linux:
-        (info_df_lnx, [(u'/', {})], {}),
+        (info_df_lnx, [(u'/', {
+            "include_volume_name": False
+        })], {}),
         # Linux w/ volume name unset:
         (
             info_df_lnx,
-            [(u'/', {})],
+            [(u'/', {
+                "include_volume_name": False
+            })],
             {
                 "include_volume_name": False
             },
@@ -148,17 +152,31 @@ info_empty_inodes = [
         # Linux w/ volume name option:
         (
             info_df_lnx,
-            [(u'/dev/sda4 /', {})],
+            [(u'/dev/sda4 /', {
+                "include_volume_name": True
+            })],
             {
                 "include_volume_name": True
             },
         ),
         # Windows:
-        (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], {}),
+        (info_df_win, [(u'E:/', {
+            "include_volume_name": False
+        }), (u'F:/', {
+            "include_volume_name": False
+        }), (u'C:/', {
+            "include_volume_name": False
+        })], {}),
         # Windows w/ volume name option:
         (
             info_df_win,
-            [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})],
+            [(u'New_Volume E:/', {
+                "include_volume_name": True
+            }), (u'New_Volume F:/', {
+                "include_volume_name": True
+            }), (u'C:\\ C:/', {
+                "include_volume_name": True
+            })],
             {
                 "include_volume_name": True
             },
@@ -176,7 +194,9 @@ info_empty_inodes = [
         # Ignoring tmpfs explicitly, but including one mountpoint explicitly:
         (
             info_df_lnx_tmpfs,
-            [(u'/opt/omd/sites/heute/tmp', {})],
+            [(u'/opt/omd/sites/heute/tmp', {
+                "include_volume_name": False
+            })],
             {
                 "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
                 "never_ignore_mountpoints": [u'/opt/omd/sites/heute/tmp']
@@ -185,7 +205,11 @@ info_empty_inodes = [
         # Including tmpfs:
         (
             info_df_lnx_tmpfs,
-            [(u'/opt/omd/sites/heute/tmp', {}), (u'/dev/shm', {})],
+            [(u'/opt/omd/sites/heute/tmp', {
+                "include_volume_name": False
+            }), (u'/dev/shm', {
+                "include_volume_name": False
+            })],
             {
                 "ignore_fs_types": ['nfs', 'smbfs', 'cifs', 'iso9660']
             },
@@ -193,18 +217,26 @@ info_empty_inodes = [
         # Including tmpfs and volume name:
         (
             info_df_lnx_tmpfs,
-            [(u'tmpfs /opt/omd/sites/heute/tmp', {}), (u'tmpfs /dev/shm', {})],
+            [(u'tmpfs /opt/omd/sites/heute/tmp', {
+                "include_volume_name": True
+            }), (u'tmpfs /dev/shm', {
+                "include_volume_name": True
+            })],
             {
                 "ignore_fs_types": ['nfs', 'smbfs', 'cifs', 'iso9660'],
                 "include_volume_name": True
             },
         ),
         # btrfs:
-        (info_df_btrfs, [(u'btrfs /dev/sda1', {})], {}),
+        (info_df_btrfs, [(u'btrfs /dev/sda1', {
+            "include_volume_name": False
+        })], {}),
         # btrfs w/ volume name option:
         (
             info_df_btrfs,
-            [(u'/dev/sda1 btrfs /dev/sda1', {})],
+            [(u'/dev/sda1 btrfs /dev/sda1', {
+                "include_volume_name": True
+            })],
             {
                 "include_volume_name": True
             },
@@ -215,8 +247,12 @@ info_empty_inodes = [
         (
             info_df_lnx_docker,
             [
-                (u'/var/lib/docker', {}),
-                (u'/var/lib/docker-latest', {}),
+                (u'/var/lib/docker', {
+                    "include_volume_name": False
+                }),
+                (u'/var/lib/docker-latest', {
+                    "include_volume_name": False
+                }),
             ],
             {},
         ),
@@ -231,8 +267,8 @@ def test_df_discovery_with_parse(check_manager, info, expected_result, inventory
 
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
         raw_discovery_result = check.run_discovery(check.run_parse(info))
+        discovery_result = DiscoveryResult(raw_discovery_result)
 
-    discovery_result = DiscoveryResult(raw_discovery_result)
     expected_result = DiscoveryResult(expected_result)
     assertDiscoveryResultsEqual(check, discovery_result, expected_result)
 

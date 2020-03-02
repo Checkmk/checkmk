@@ -445,7 +445,7 @@ class Crawler:
 
 
 def test_crawl():
-    sf = get_site_factory(prefix="crawl_", install_test_python_modules=False)
+    sf = get_site_factory(prefix="crawl_", update_from_git=True, install_test_python_modules=False)
     site = sf.get_site("central")
     logger.info("Site %s is ready!", site.id)
 

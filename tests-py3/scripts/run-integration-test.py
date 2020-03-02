@@ -44,7 +44,7 @@ def main(args):
     logger.info("Setting up site")
     logger.info("===============================================")
 
-    sf = get_site_factory(prefix="int_", install_test_python_modules=True)
+    sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
     site = sf.get_site(current_base_branch_name())
     logger.info("Site %s is ready!", site.id)
 

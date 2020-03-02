@@ -32,13 +32,14 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                  version=CMKVersion.DEFAULT,
                  edition=CMKVersion.CEE,
                  branch="master",
+                 update_from_git=False,
                  install_test_python_modules=True):
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
         self.version = CMKVersion(version, edition, branch)
 
-        self.update_with_git = version == CMKVersion.GIT
+        self.update_from_git = update_from_git
         self.install_test_python_modules = install_test_python_modules
 
         self.reuse = reuse
@@ -369,7 +370,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if self.install_test_python_modules:
             self._install_test_python_modules()
 
-        if self.update_with_git:
+        if self.update_from_git:
             self._update_with_f12_files()
 
     def _update_with_f12_files(self):
@@ -714,13 +715,14 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
 
 class SiteFactory(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, version, edition, branch, install_test_python_modules=True, prefix=None):
+    def __init__(self, version, edition, branch, update_from_git=False, install_test_python_modules=True, prefix=None):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
         self._branch = branch
         self._sites = {}
         self._index = 1
+        self._update_from_git = update_from_git
         self._install_test_python_modules = install_test_python_modules
 
     @property
@@ -767,6 +769,7 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
                     version=self._version,
                     edition=self._edition,
                     branch=self._branch,
+                    update_from_git=self._update_from_git,
                     install_test_python_modules=self._install_test_python_modules)
 
     def _new_site(self, name):
@@ -787,7 +790,7 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
             self.remove_site(site_id)
 
 
-def get_site_factory(prefix, install_test_python_modules):
+def get_site_factory(prefix, update_from_git, install_test_python_modules):
     version = os.environ.get("VERSION", CMKVersion.DAILY)
     edition = os.environ.get("EDITION", CMKVersion.CEE)
     branch = os.environ.get("BRANCH", current_base_branch_name())
@@ -798,5 +801,6 @@ def get_site_factory(prefix, install_test_python_modules):
         edition=edition,
         branch=branch,
         prefix=prefix,
+        update_from_git=update_from_git,
         install_test_python_modules=install_test_python_modules,
     )

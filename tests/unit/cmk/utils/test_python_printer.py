@@ -67,6 +67,6 @@ def test_byte_strings_are_prefixed(obj, result):
      "{u'Kontiom\\xe4ki': set([u'Wassersee']), u'Vesij\\xe4rvi': [(u'B\\xe4renh\\xfcgel', True), 42]}"
     ),
 ])
-@pytest.mark.skipif(sys.version_info[0] >= 3, reason="Not yet done...")
+@pytest.mark.skipif(reason="Not yet done...")
 def test_unicode_strings_are_prefixed(obj, result):
     assert pformat(obj) == result

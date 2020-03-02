@@ -9,6 +9,9 @@ description:
 
  This check relies on data reported by the agent-side plugin {mk_postgres}
 
+item:
+ Name of the category
+
 inventory:
   One service will be created.
 

@@ -9,7 +9,7 @@ description:
  The status is OK if the mail instance is running, otherwise CRIT.
 
 item:
- The instance name if multi instance is configured.
+ The name of the queue if multi instance is configured.
 
 inventory:
  One service per instance is created.

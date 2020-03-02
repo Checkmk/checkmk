@@ -8,6 +8,9 @@ description:
 
  If instance is running, service status is OK, otherwise CRIT.
 
+item:
+ Name of the database in upper case letters
+
 inventory:
   One service per instance is created.
 

@@ -9,5 +9,8 @@ description:
  This check needs the Check_MK mk_postgres plugin installed in
  the agent.
 
+item:
+ The name of the category
+
 inventory:
  One check

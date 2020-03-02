@@ -13,7 +13,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
     def _config(self):
         cfg = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec (content, {}, cfg)
+        exec(content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):

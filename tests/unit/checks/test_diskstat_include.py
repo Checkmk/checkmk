@@ -18,7 +18,7 @@ def get_average(_counter, _time, value, _time_span):
     return round(value / 10.) * 10.
 
 
-exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/diskstat.include')).read())
+exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/diskstat.include')).read())
 
 
 @pytest.mark.parametrize('args,expected_result', [

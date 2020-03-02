@@ -237,7 +237,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
     def load(self, site_specific=False):
         cleanup_settings = {}
-        exec (open(self.diskspace_config).read(), {}, cleanup_settings)
+        exec(open(self.diskspace_config).read(), {}, cleanup_settings)
 
         if not cleanup_settings:
             return {}
@@ -286,7 +286,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
         with (open(str(filename))) as f:
             code = compile(f.read(), str(filename), 'exec')
-            exec (code, {}, diskspace_context)
+            exec(code, {}, diskspace_context)
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }

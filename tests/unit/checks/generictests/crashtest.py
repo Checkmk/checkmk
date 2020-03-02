@@ -97,7 +97,7 @@ class CrashDataset(WritableDataset):
         exec_scope = {}
         exec_command = 'local_vars = ' + base64.b64decode(local_vars_encoded)
         try:
-            exec (exec_command, exec_scope)  # pylint: disable=exec-used
+            exec(exec_command, exec_scope)  # pylint: disable=exec-used
         except Exception as exc:
             raise SkipReport("failed to load local_vars: %r" % exc)
 

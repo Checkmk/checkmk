@@ -117,9 +117,9 @@ class BIManagement(object):
             }
             vars_.update(self._bi_constants)
             if os.path.exists(filename):
-                exec (open(filename).read(), vars_, vars_)
+                exec(open(filename).read(), vars_, vars_)
             else:
-                exec (bi_example, vars_, vars_)
+                exec(bi_example, vars_, vars_)
 
             # put legacy non-pack stuff into packs
             if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \

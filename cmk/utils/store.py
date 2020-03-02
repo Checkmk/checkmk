@@ -136,7 +136,7 @@ def load_mk_file(path, default=None, lock=False):
     try:
         try:
             with path.open(mode="rb") as f:
-                exec (f.read(), globals(), default)
+                exec(f.read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise

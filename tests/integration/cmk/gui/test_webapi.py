@@ -368,7 +368,7 @@ def test_write_host_tags(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert "dmz" in cfg["host_tags"]["test-host-dmz"]["networking"]
         assert "lan" not in cfg["host_tags"]["test-host-dmz"]["networking"]
@@ -406,7 +406,7 @@ def test_write_host_labels(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert cfg["host_labels"]["test-host-lan"] == {
             u"blä": u"blüb",

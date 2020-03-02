@@ -533,9 +533,9 @@ def import_settings(base_dir):
     }
 
     if os.path.isfile(defaults_cfg):
-        exec (open(defaults_cfg).read(), settings, settings)
+        exec(open(defaults_cfg).read(), settings, settings)
     if os.path.isfile(ticket_cfg):
-        exec (open(ticket_cfg).read(), settings, settings)
+        exec(open(ticket_cfg).read(), settings, settings)
 
     # execfile put all tho globals into settings, including modules.
     # This doesn't acually hurt but let's clean up a bit anyway

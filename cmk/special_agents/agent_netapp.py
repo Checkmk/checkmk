@@ -930,28 +930,29 @@ def process_clustermode(args, server, netapp_mode, licenses):
     disks = query(args, server, "storage-disk-get-iter")
     if disks:
         print("<<<netapp_api_disk:sep(9)>>>")
-        print(format_config(disks,
-                            "disk",
-                            "disk-uid",
-                            config_report=[
-                                "disk-inventory-info.shelf-bay",
-                                "disk-inventory-info.serial-number", "disk-inventory-info.vendor",
-                                "disk-raid-info.container-type", "disk-raid-info.position",
-                                "disk-raid-info.used-blocks", "disk-raid-info.physical-blocks"
-                            ],
-                            config_scale={
-                                "disk-raid-info.physical-blocks": 4096,
-                                "disk-raid-info.used-blocks": 4096
-                            },
-                            config_rename={
-                                "disk-inventory-info.shelf-bay": "bay",
-                                "disk-inventory-info.serial-number": "serial-number",
-                                "disk-inventory-info.vendor": "vendor-id",
-                                "disk-raid-info.container-type": "raid-state",
-                                "disk-raid-info.position": "raid-type",
-                                "disk-raid-info.used-blocks": "used-space",
-                                "disk-raid-info.physical-blocks": "physical-space"
-                            }))
+        print(
+            format_config(disks,
+                          "disk",
+                          "disk-uid",
+                          config_report=[
+                              "disk-inventory-info.shelf-bay", "disk-inventory-info.serial-number",
+                              "disk-inventory-info.vendor", "disk-raid-info.container-type",
+                              "disk-raid-info.position", "disk-raid-info.used-blocks",
+                              "disk-raid-info.physical-blocks"
+                          ],
+                          config_scale={
+                              "disk-raid-info.physical-blocks": 4096,
+                              "disk-raid-info.used-blocks": 4096
+                          },
+                          config_rename={
+                              "disk-inventory-info.shelf-bay": "bay",
+                              "disk-inventory-info.serial-number": "serial-number",
+                              "disk-inventory-info.vendor": "vendor-id",
+                              "disk-raid-info.container-type": "raid-state",
+                              "disk-raid-info.position": "raid-type",
+                              "disk-raid-info.used-blocks": "used-space",
+                              "disk-raid-info.physical-blocks": "physical-space"
+                          }))
 
     # Volumes
     volumes = query(args, server, "volume-get-iter")
@@ -961,63 +962,67 @@ def process_clustermode(args, server, netapp_mode, licenses):
         volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
-        print(format_config(
-            volumes,
-            "volume",
-            "volume-id-attributes.instance-uuid",
-            config_report=[
-                "volume-space-attributes.size-available", "volume-space-attributes.size-total",
-                "volume-state-attributes.state", "volume-id-attributes.owning-vserver-name",
-                "volume-id-attributes.name", "volume-id-attributes.node",
-                "volume-id-attributes.msid", "volume-inode-attributes.files-total",
-                "volume-inode-attributes.files-used"
-            ],
-            config_rename={
-                "volume-space-attributes.size-available": "size-available",
-                "volume-space-attributes.size-total": "size-total",
-                "volume-state-attributes.state": "state",
-                "volume-id-attributes.owning-vserver-name": "vserver_name",
-                "volume-id-attributes.name": "name",
-                "volume-id-attributes.msid": "msid",
-                "volume-id-attributes.node": "node",
-                "volume-inode-attributes.files-total": "files-total",
-                "volume-inode-attributes.files-used": "files-used"
-            },
-            extra_info=create_dict(volume_counters, custom_key=["instance_uuid"]),
-            extra_info_report=[
-                z + y + x  #
-                for x in ["data", "latency", "ops"]  #
-                for y in ["read_", "write_"]
-                for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
-            ] + ["instance_name"],
-            skip_missing_config_key=True))
+        print(
+            format_config(
+                volumes,
+                "volume",
+                "volume-id-attributes.instance-uuid",
+                config_report=[
+                    "volume-space-attributes.size-available", "volume-space-attributes.size-total",
+                    "volume-state-attributes.state", "volume-id-attributes.owning-vserver-name",
+                    "volume-id-attributes.name", "volume-id-attributes.node",
+                    "volume-id-attributes.msid", "volume-inode-attributes.files-total",
+                    "volume-inode-attributes.files-used"
+                ],
+                config_rename={
+                    "volume-space-attributes.size-available": "size-available",
+                    "volume-space-attributes.size-total": "size-total",
+                    "volume-state-attributes.state": "state",
+                    "volume-id-attributes.owning-vserver-name": "vserver_name",
+                    "volume-id-attributes.name": "name",
+                    "volume-id-attributes.msid": "msid",
+                    "volume-id-attributes.node": "node",
+                    "volume-inode-attributes.files-total": "files-total",
+                    "volume-inode-attributes.files-used": "files-used"
+                },
+                extra_info=create_dict(volume_counters, custom_key=["instance_uuid"]),
+                extra_info_report=[
+                    z + y + x  #
+                    for x in ["data", "latency", "ops"]  #
+                    for y in ["read_", "write_"]
+                    for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
+                ] + ["instance_name"],
+                skip_missing_config_key=True))
 
     # Aggregations
     aggregations = query(args, server, "aggr-get-iter")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
-        print(format_config(aggregations,
-                            "aggregation",
-                            "aggregate-name",
-                            config_report=[
-                                "aggr-space-attributes.size-available",
-                                "aggr-space-attributes.size-total"
-                            ],
-                            config_rename={
-                                "aggr-space-attributes.size-available": "size-available",
-                                "aggr-space-attributes.size-total": "size-total"
-                            }))
+        print(
+            format_config(aggregations,
+                          "aggregation",
+                          "aggregate-name",
+                          config_report=[
+                              "aggr-space-attributes.size-available",
+                              "aggr-space-attributes.size-total"
+                          ],
+                          config_rename={
+                              "aggr-space-attributes.size-available": "size-available",
+                              "aggr-space-attributes.size-total": "size-total"
+                          }))
 
     # LUNs
     luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
-        print(format_config(
-            luns,
-            "lun",
-            "path",
-            config_report=["size", "size-used", "path", "online", "read-only", "vserver",
-                           "volume"]))
+        print(
+            format_config(luns,
+                          "lun",
+                          "path",
+                          config_report=[
+                              "size", "size-used", "path", "online", "read-only", "vserver",
+                              "volume"
+                          ]))
 
     # Diagnosis status
     diag_status = query(args, server, "diagnosis-status-get")
@@ -1040,19 +1045,20 @@ def process_clustermode(args, server, netapp_mode, licenses):
     snapmirror_info = query(args, server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
-        print(format_config(snapmirror_info,
-                            "snapvault",
-                            "destination-volume",
-                            config_report=[
-                                "destination-volume-node", "policy", "mirror-state",
-                                "source-vserver", "lag-time", "relationship-status"
-                            ],
-                            config_rename={
-                                "destination-volume-node": "destination-system",
-                                "mirror-state": "state",
-                                "source-vserver": "source-system",
-                                "relationship-status": "status"
-                            }))
+        print(
+            format_config(snapmirror_info,
+                          "snapvault",
+                          "destination-volume",
+                          config_report=[
+                              "destination-volume-node", "policy", "mirror-state", "source-vserver",
+                              "lag-time", "relationship-status"
+                          ],
+                          config_rename={
+                              "destination-volume-node": "destination-system",
+                              "mirror-state": "state",
+                              "source-vserver": "source-system",
+                              "relationship-status": "status"
+                          }))
 
     # Environmental sensors
     environment_info = query_nodes(args, server, nodes, "storage-shelf-environment-list-info")
@@ -1094,26 +1100,28 @@ def process_clustermode(args, server, netapp_mode, licenses):
     quota_info = query(args, server, "quota-report-iter")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
-        print(format_config(quota_info,
-                            "quota",
-                            "tree",
-                            config_report=[
-                                "volume", "tree", "disk-limit", "disk-used", "quota-type",
-                                "quota-users.quota-user.quota-user-name"
-                            ],
-                            config_rename={"quota-users.quota-user.quota-user-name": "quota-users"
-                                          }))
+        print(
+            format_config(quota_info,
+                          "quota",
+                          "tree",
+                          config_report=[
+                              "volume", "tree", "disk-limit", "disk-used", "quota-type",
+                              "quota-users.quota-user.quota-user-name"
+                          ],
+                          config_rename={"quota-users.quota-user.quota-user-name": "quota-users"}))
 
     # LUNs
     luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
-        print(format_config(
-            luns,
-            "lun",
-            "path",
-            config_report=["size", "size-used", "path", "online", "read-only", "vserver",
-                           "volume"]))
+        print(
+            format_config(luns,
+                          "lun",
+                          "path",
+                          config_report=[
+                              "size", "size-used", "path", "online", "read-only", "vserver",
+                              "volume"
+                          ]))
 
 
 def process_vserver_status(args, server):
@@ -1189,23 +1197,24 @@ def process_interfaces(args, server, netapp_mode):
             extra_info.setdefault(key, {})
             extra_info[key].update(values)
 
-        print(format_config(interfaces,
-                            "interface",
-                            "interface-name",
-                            extra_info=extra_info,
-                            extra_info_report=[
-                                "recv_data",
-                                "send_data",
-                                "recv_mcasts",
-                                "send_mcasts",
-                                "recv_errors",
-                                "send_errors",
-                                "instance_name",
-                                "link-status",
-                                "operational-speed",
-                                "recv_packet",
-                                "send_packet",
-                            ]))
+        print(
+            format_config(interfaces,
+                          "interface",
+                          "interface-name",
+                          extra_info=extra_info,
+                          extra_info_report=[
+                              "recv_data",
+                              "send_data",
+                              "recv_mcasts",
+                              "send_mcasts",
+                              "recv_errors",
+                              "send_errors",
+                              "instance_name",
+                              "link-status",
+                              "operational-speed",
+                              "recv_packet",
+                              "send_packet",
+                          ]))
 
 
 def process_ports(args, server, netapp_mode):
@@ -1238,17 +1247,19 @@ def process_cpu(args, server):
     system_info = query(args, server, "system-node-get-iter")
     if node_info and system_info:
         print("<<<netapp_api_cpu:sep(9)>>>")
-        print(format_config(node_info,
-                            "cpu-info",
-                            "system-name",
-                            config_report=["number-of-processors"],
-                            config_rename={"number-of-processors": "num_processors"}))
-        print(format_config(system_info,
-                            "cpu-info",
-                            "node",
-                            config_scale={"cpu-busytime": 1000000},
-                            config_report=["cpu-busytime", "nvram-battery-status"],
-                            config_rename={"cpu-busytime": "cpu_busy"}))
+        print(
+            format_config(node_info,
+                          "cpu-info",
+                          "system-name",
+                          config_report=["number-of-processors"],
+                          config_rename={"number-of-processors": "num_processors"}))
+        print(
+            format_config(system_info,
+                          "cpu-info",
+                          "node",
+                          config_scale={"cpu-busytime": 1000000},
+                          config_report=["cpu-busytime", "nvram-battery-status"],
+                          config_rename={"cpu-busytime": "cpu_busy"}))
 
 
 def process_7mode(args, server, netapp_mode, licenses):
@@ -1257,15 +1268,16 @@ def process_7mode(args, server, netapp_mode, licenses):
     if_counters = query_counters(args, server, netapp_mode, "ifnet")
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
-        print(format_config(interfaces,
-                            "interface",
-                            "interface-name",
-                            extra_info=create_dict(if_counters),
-                            extra_info_report=[
-                                "recv_data", "send_data", "recv_mcasts", "send_mcasts",
-                                "recv_errors", "send_errors", "instance_name", "mediatype",
-                                "recv_packet", "send_packet"
-                            ]))
+        print(
+            format_config(interfaces,
+                          "interface",
+                          "interface-name",
+                          extra_info=create_dict(if_counters),
+                          extra_info_report=[
+                              "recv_data", "send_data", "recv_mcasts", "send_mcasts", "recv_errors",
+                              "send_errors", "instance_name", "mediatype", "recv_packet",
+                              "send_packet"
+                          ]))
 
     # TODO: Fibrechannel interfaces
 
@@ -1284,30 +1296,32 @@ def process_7mode(args, server, netapp_mode, licenses):
         volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
-        print(format_config(
-            volumes,
-            "volume",
-            "name",
-            config_report=[
-                "name", "volume-info", "size-total", "size-available", "volumes", "files-total",
-                "files-used", "state"
-            ],
-            extra_info=create_dict(volume_counters),
-            extra_info_report=[
-                z + y + x  #
-                for x in ["data", "latency", "ops"]  #
-                for y in ["read_", "write_"]
-                for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
-            ] + ["instance_name"]))
+        print(
+            format_config(
+                volumes,
+                "volume",
+                "name",
+                config_report=[
+                    "name", "volume-info", "size-total", "size-available", "volumes", "files-total",
+                    "files-used", "state"
+                ],
+                extra_info=create_dict(volume_counters),
+                extra_info_report=[
+                    z + y + x  #
+                    for x in ["data", "latency", "ops"]  #
+                    for y in ["read_", "write_"]
+                    for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
+                ] + ["instance_name"]))
 
     # Aggregation
     aggregations = query(args, server, "aggr-list-info")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
-        print(format_config(aggregations,
-                            "aggregation",
-                            "name",
-                            config_report=["name", "size-total", "size-available"]))
+        print(
+            format_config(aggregations,
+                          "aggregation",
+                          "name",
+                          config_report=["name", "size-total", "size-available"]))
 
     # Snapshot info
     print("<<<netapp_api_snapshots:sep(9)>>>")
@@ -1319,13 +1333,14 @@ def process_7mode(args, server, netapp_mode, licenses):
         else:
             container = NetAppNode("container")
             container.append(volume.get_node())
-        print(format_config(container,
-                            "volume_snapshot",
-                            "name",
-                            config_report=[
-                                "name", "size-total", "snapshot-percent-reserved", "state",
-                                "snapshot-blocks-reserved", "reserve-used-actual"
-                            ]))
+        print(
+            format_config(container,
+                          "volume_snapshot",
+                          "name",
+                          config_report=[
+                              "name", "size-total", "snapshot-percent-reserved", "state",
+                              "snapshot-blocks-reserved", "reserve-used-actual"
+                          ]))
 
     # Protocols
     print("<<<netapp_api_protocol:sep(9)>>>")
@@ -1339,12 +1354,13 @@ def process_7mode(args, server, netapp_mode, licenses):
         protocol_counters = query_counters(args, server, netapp_mode, what)
         if protocol_counters:
             protocol_dict = create_dict(protocol_counters)
-            print(format_dict(protocol_dict[key],
-                              report=["instance_name",
-                                      "%s_read_ops" % what,
-                                      "%s_write_ops" % what],
-                              prefix="protocol %s" % key,
-                              as_line=True))
+            print(
+                format_dict(protocol_dict[key],
+                            report=["instance_name",
+                                    "%s_read_ops" % what,
+                                    "%s_write_ops" % what],
+                            prefix="protocol %s" % key,
+                            as_line=True))
 
     # Diagnosis status
     diag_status = query(args, server, "diagnosis-status-get")
@@ -1356,13 +1372,14 @@ def process_7mode(args, server, netapp_mode, licenses):
     disk_info = query(args, server, "disk-list-info")
     if disk_info:
         print("<<<netapp_api_disk:sep(9)>>>")
-        print(format_config(disk_info,
-                            "disk",
-                            "disk-uid",
-                            config_report=[
-                                "raid-state", "raid-type", "physical-space", "bay", "raid-type",
-                                "used-space", "serial-number", "disk-uid", "disk-model", "vendor-id"
-                            ]))
+        print(
+            format_config(disk_info,
+                          "disk",
+                          "disk-uid",
+                          config_report=[
+                              "raid-state", "raid-type", "physical-space", "bay", "raid-type",
+                              "used-space", "serial-number", "disk-uid", "disk-model", "vendor-id"
+                          ]))
 
     # VFiler
     vfiler_info = query(args, server, "vfiler-list-info")
@@ -1387,13 +1404,14 @@ def process_7mode(args, server, netapp_mode, licenses):
             tag = response.child_get_string("tag")
             response = server.invoke("snapvault-secondary-relationship-status-list-iter-next",
                                      "maximum", records, "tag", tag)
-            print(format_config(response.child_get("status-list"),
-                                "snapvault",
-                                "source-path",
-                                config_report=[
-                                    "lag-time", "state", "status", "source-system",
-                                    "destination-system"
-                                ]))
+            print(
+                format_config(response.child_get("status-list"),
+                              "snapvault",
+                              "source-path",
+                              config_report=[
+                                  "lag-time", "state", "status", "source-system",
+                                  "destination-system"
+                              ]))
             server.invoke("snapvault-secondary-relationship-status-list-iter-end", "tag", tag)
         server.set_vfiler("")  # revert back to default (no) vfiler
 
@@ -1405,17 +1423,18 @@ def process_7mode(args, server, netapp_mode, licenses):
         if not data or len(data) <= 1:
             continue
         data = data[1]
-        print(format_config(data,
-                            "snapvault",
-                            "source-location",
-                            config_report=[
-                                "lag-time", "state", "status", "source-location",
-                                "destination-location"
-                            ],
-                            config_rename={
-                                "source-location": "source-system",
-                                "destination-location": "destination-system"
-                            }))
+        print(
+            format_config(data,
+                          "snapvault",
+                          "source-location",
+                          config_report=[
+                              "lag-time", "state", "status", "source-location",
+                              "destination-location"
+                          ],
+                          config_rename={
+                              "source-location": "source-system",
+                              "destination-location": "destination-system"
+                          }))
     server.set_vfiler("")
 
     # VFiler Counters
@@ -1478,15 +1497,15 @@ def process_7mode(args, server, netapp_mode, licenses):
     quota_info = query(args, server, "quota-report")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
-        print(format_config(quota_info,
-                            "quota",
-                            "tree",
-                            config_report=[
-                                "volume", "tree", "disk-limit", "disk-used", "quota-type",
-                                "quota-users.quota-user.quota-user-name"
-                            ],
-                            config_rename={"quota-users.quota-user.quota-user-name": "quota-users"
-                                          }))
+        print(
+            format_config(quota_info,
+                          "quota",
+                          "tree",
+                          config_report=[
+                              "volume", "tree", "disk-limit", "disk-used", "quota-type",
+                              "quota-users.quota-user.quota-user-name"
+                          ],
+                          config_rename={"quota-users.quota-user.quota-user-name": "quota-users"}))
 
 
 def connect(args):

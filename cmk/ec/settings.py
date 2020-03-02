@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Settings handling for the Check_MK event console."""
 
 # For some background about various design decisions below, see the concise
@@ -234,5 +233,6 @@ def settings(version, omd_root, default_config_dir, argv):
 if __name__ == "__main__":
     import cmk
     import cmk.utils.paths
-    print(settings(str(cmk.__version__), Path(cmk.utils.paths.omd_root),
-                   Path(cmk.utils.paths.default_config_dir), sys.argv))
+    print(
+        settings(str(cmk.__version__), Path(cmk.utils.paths.omd_root),
+                 Path(cmk.utils.paths.default_config_dir), sys.argv))

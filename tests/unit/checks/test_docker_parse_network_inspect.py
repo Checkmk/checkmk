@@ -4,7 +4,7 @@ import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
-exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
+exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 regex = re.compile
 

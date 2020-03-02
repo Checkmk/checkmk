@@ -284,7 +284,7 @@ class SiteManagement(object):
             return config.default_single_site_configuration()
 
         config_vars = {"sites": {}}
-        exec (open(cls._sites_mk()).read(), config_vars, config_vars)
+        exec(open(cls._sites_mk()).read(), config_vars, config_vars)
 
         if not config_vars["sites"]:
             return config.default_single_site_configuration()

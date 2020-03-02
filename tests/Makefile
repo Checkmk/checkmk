@@ -19,7 +19,6 @@ help:
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
-	@echo "test-format-python        - Test the python formatting"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"

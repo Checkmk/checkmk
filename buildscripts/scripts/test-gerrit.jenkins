@@ -87,7 +87,7 @@ node (NODE) {
 
         gerrit_stages.run(
             NAME: 'Python3 Format',
-            CONDITION: CHANGED_PYTHON_FILES != "",
+            CONDITION: CHANGED_PYTHON3_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON3_FILES}"],
             COMMAND: "make --quiet test-format-python &> ${RESULTS}/python3-yapf.txt",

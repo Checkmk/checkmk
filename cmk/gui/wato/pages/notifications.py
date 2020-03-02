@@ -313,20 +313,7 @@ class NotificationsMode(EventsMode):
                 html.write_text(rule["description"])
                 table.cell(_("Contacts"))
 
-                infos = []
-                if rule.get("contact_object"):
-                    infos.append(_("all contacts of the notified object"))
-                if rule.get("contact_all"):
-                    infos.append(_("all users"))
-                if rule.get("contact_all_with_email"):
-                    infos.append(_("all users with and email address"))
-                if rule.get("contact_users"):
-                    infos.append(_("users: ") + (", ".join(rule["contact_users"])))
-                if rule.get("contact_groups"):
-                    infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
-                if rule.get("contact_emails"):
-                    infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
-
+                infos = self._rule_infos(rule)
                 if not infos:
                     html.i(_("(no one)"))
                 else:
@@ -379,6 +366,22 @@ class NotificationsMode(EventsMode):
             code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
             return code + _("Notification rules of user %s") % userid
         return _("Global notification rules")
+
+    def _rule_infos(self, rule):
+        infos = []
+        if rule.get("contact_object"):
+            infos.append(_("all contacts of the notified object"))
+        if rule.get("contact_all"):
+            infos.append(_("all users"))
+        if rule.get("contact_all_with_email"):
+            infos.append(_("all users with and email address"))
+        if rule.get("contact_users"):
+            infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+        if rule.get("contact_groups"):
+            infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
+        if rule.get("contact_emails"):
+            infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+        return infos
 
 
 @mode_registry.register

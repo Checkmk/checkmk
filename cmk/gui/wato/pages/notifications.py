@@ -235,12 +235,7 @@ class NotificationsMode(EventsMode):
                 else:
                     listmode = "notifications"
 
-                # In case a notification plugin does not exist anymore the permission is completely missing.
-                permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
-                actions_allowed = permission_name not in permissions.permission_registry \
-                    or config.user.may(permission_name)
-
-                if show_buttons and actions_allowed:
+                if show_buttons and self._actions_allowed(rule):
                     anavar = html.request.var("analyse", "")
                     delete_url = make_action_link([
                         ("mode", listmode),
@@ -382,6 +377,12 @@ class NotificationsMode(EventsMode):
         if rule.get("contact_emails"):
             infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
         return infos
+
+    def _actions_allowed(self, rule):
+        # In case a notification plugin does not exist anymore the permission is completely missing.
+        permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
+        return (permission_name not in permissions.permission_registry or
+                config.user.may(permission_name))
 
 
 @mode_registry.register

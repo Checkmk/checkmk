@@ -13,7 +13,7 @@ description:
  the state {OK} when they are in the configured state, and {CRIT} otherwise.
 
 item:
- The ID Number of the plug as given by the device
+ The ID of the plug as given by the device
 
 inventory:
  One service per plug will be created

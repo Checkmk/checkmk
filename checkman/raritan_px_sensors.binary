@@ -9,7 +9,7 @@ description:
  No configuration is needed, the devices send their states by themselves.
 
 item:
- Sensor number, sensor name
+ The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
 inventory:
  One service per sensor is created.

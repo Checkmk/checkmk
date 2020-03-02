@@ -9,7 +9,7 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- One item named Summary.
+ The fixed statement {{Summary}}
 
 inventory:
  One check per phase is created.

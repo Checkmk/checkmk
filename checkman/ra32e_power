@@ -10,8 +10,5 @@ description:
  the unit runs on battery backup power the status
  {WARN} is returned.
 
-item:
- No item.
-
 inventory:
  One service per device.

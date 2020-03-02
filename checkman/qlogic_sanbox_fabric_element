@@ -10,7 +10,7 @@ description:
  status offline or faulty.
 
 item:
- The ID of Fabric Element, just an integer.
+ The ID of fabric element
 
 inventory:
  Creates one check for every Fabric Element found by SNMP.

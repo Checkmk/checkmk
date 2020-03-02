@@ -8,5 +8,8 @@ description:
  This check monitors the power consumption of PoE-capable ethernet ports for Power Sourcing Equipment (PSE), Powered Devices (PD) and both.
  PoE stands for Power over Ethernet.
 
+item:
+ Index of the device
+
 inventory:
  One service for every PSE will be created.

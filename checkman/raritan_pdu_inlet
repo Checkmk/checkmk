@@ -9,7 +9,7 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- The ID Number of the phase.
+ The fixed statement {{Phase}} plus the ID of the phase.
 
 inventory:
  One check per phase is created.

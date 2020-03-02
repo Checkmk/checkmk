@@ -9,7 +9,7 @@ description:
  No configuration is needed, the devices sends the state by himself
 
 item:
- Rack ID, Sensor Type, Sensor Name
+ The fixed statement {{Rack}} followed by the Rack ID, the sensor type and the name of the sensor
 
 inventory:
  One service per sensor will be created

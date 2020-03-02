@@ -14,7 +14,7 @@ description:
  is not a member of the cluster otherwise OK.
 
 item:
- The node name.
+ The name of the node
 
 inventory:
  One service per node is created.

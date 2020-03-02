@@ -9,6 +9,9 @@ description:
  on your windows agent. The service will go crit if all licenses are used up.
  You can configure levels for absolute and percentual used licenses.
 
+item:
+ The version of the license
+
 inventory:
  One service per license type will be created.
 

@@ -364,6 +364,21 @@ def test_check_tests_symlinks():
             py2_check_tests - py3_check_tests)
 
 
+def test_check_plugin_header():
+    for checkfile in Path(testlib.repo_path()).joinpath(Path('checks')).iterdir():
+        if checkfile.name.startswith("."):
+            # .f12
+            continue
+        with checkfile.open() as f:
+            shebang = f.readline().strip()
+            encoding_header = f.readline().strip()
+
+        assert shebang == "#!/usr/bin/env python3", "Check plugin '%s' has wrong shebang '%s'" % (
+            checkfile.name, shebang)
+        assert encoding_header == "# -*- encoding: utf-8; py-indent-offset: 4 -*-", "Check plugin '%s' has wrong encoding header '%s'" % (
+            checkfile.name, encoding_header)
+
+
 def test_inventory_tests_symlinks():
     # TODO After complete Python 3 migration we can remove this
     pattern = 'test_*.py'
@@ -380,3 +395,17 @@ def test_inventory_tests_symlinks():
         py3_inventory_plugin_tests
     ), "Forget to implement/symlink related Python 3 inventory plugin test: %s" % ", ".join(
         py2_inventory_plugin_tests - py3_inventory_plugin_tests)
+
+
+def test_inventory_plugin_header():
+    for inventory_pluginfile in Path(testlib.repo_path()).joinpath(Path('inventory')).iterdir():
+        if inventory_pluginfile.name.startswith("."):
+            # .f12
+            continue
+        with inventory_pluginfile.open() as f:
+            shebang = f.readline().strip()
+            encoding_header = f.readline().strip()
+        assert shebang == "#!/usr/bin/env python3", "Inventory plugin '%s' has wrong shebang '%s'" % (
+            inventory_pluginfile.name, shebang)
+        assert encoding_header == "# -*- encoding: utf-8; py-indent-offset: 4 -*-", "Inventory plugin '%s' has wrong encoding header '%s'" % (
+            checkfile.name, encoding_header)

@@ -49,6 +49,7 @@ public:
     Queue(Queue&&) = default;
     Queue& operator=(Queue&&) = default;
     ~Queue();
+    [[nodiscard]] size_type approx_size() const;
     [[nodiscard]] std::optional<size_type> limit() const;
     [[nodiscard]] bool try_push(const_reference);
     [[nodiscard]] bool try_push(value_type&&);
@@ -76,6 +77,12 @@ Queue<S>::Queue(size_type limit) : limit_{limit} {}
 template <typename S>
 Queue<S>::~Queue() {
     join();
+}
+
+template <typename S>
+typename Queue<S>::size_type Queue<S>::approx_size() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return q_.size();
 }
 
 template <typename S>

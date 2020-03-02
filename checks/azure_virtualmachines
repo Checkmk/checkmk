@@ -170,7 +170,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
     # long output
     templ = "%s: Provisioning %s, VM %s, Resource group: %s\n"
     names = (r.get("name") for r in fixed_resources_list)
-    vms = zip(names, provisionings, powers, groups)
+    vms = sorted(zip(names, provisionings, powers, groups))
     for vmach in vms:
         yield 0, templ % vmach
 

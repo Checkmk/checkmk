@@ -83,10 +83,10 @@ checks = {
         (2, "Provisioning: 1 failed (warn/crit at 1/1) / 2 succeeded", []),
         (0, "Power states: 1 deallocated / 1 running / 1 stopped", []),
         (0, "VMs per group: Glastonbury: 3\n", []),
-        (0, "provfailedserv: Provisioning failed, VM stopped, Resource group: Glastonbury\n", []),
         (0,
          "NotRunningUbuntu: Provisioning succeeded, VM deallocated, Resource group: Glastonbury\n",
          []),
+        (0, "provfailedserv: Provisioning failed, VM stopped, Resource group: Glastonbury\n", []),
         (0, "winserv2016: Provisioning succeeded, VM running, Resource group: Glastonbury\n", []),
     ]),],
     '': [

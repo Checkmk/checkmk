@@ -1,0 +1,16 @@
+Title: fileinfo_groups: fix display bug in service discovery
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1583149682
+
+This fix was previously handled by Werk #7052.
+The service discovery for fileinfo.groups showed
+an error starting with "Invalid check parameter:
+Undefined key 'group_patterns'. This commit resolves
+this issue.

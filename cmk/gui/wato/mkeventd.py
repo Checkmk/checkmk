@@ -2440,7 +2440,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
+        compiler.addSources(
+            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))

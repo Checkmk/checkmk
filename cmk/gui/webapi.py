@@ -11,7 +11,7 @@ import xml.dom.minidom  # type: ignore[import]
 
 import dicttoxml  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 
 import cmk.utils.store as store
 
@@ -38,7 +38,7 @@ from cmk.gui.permissions import (
 
 import cmk.gui.plugins.webapi
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins

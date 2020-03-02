@@ -7,7 +7,7 @@
 import re
 import logging
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.sites as sites
@@ -2168,7 +2168,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
     def _default_user_profile_elements(self):
         elements = []
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
             elements += managed.customer_choice_element()
 

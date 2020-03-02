@@ -6,7 +6,7 @@
 
 import socket
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -245,7 +245,8 @@ class NotificationParameterMail(NotificationParameter):
              )),
         ])
 
-        if not cmk.is_raw_edition():
+        if not cmk_version.is_raw_edition():
+            import cmk.gui.cee.plugins.wato.syncsmtp
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         return elements

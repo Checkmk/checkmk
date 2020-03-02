@@ -26,6 +26,7 @@ import six  # pylint: disable=unused-import
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
@@ -158,7 +159,7 @@ def release_package(pacname):
 
 def create_mkp_file(package, file_object=None):
     # type: (PackageInfo, BinaryIO) -> None
-    package["version.packaged"] = cmk.__version__
+    package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
     def create_tar_info(filename, size):
@@ -205,8 +206,8 @@ def get_initial_package_info(pacname):
         "name": pacname,
         "description": "Please add a description here",
         "version": "1.0",
-        "version.packaged": cmk.__version__,
-        "version.min_required": cmk.__version__,
+        "version.packaged": cmk_version.__version__,
+        "version.min_required": cmk_version.__version__,
         "version.usable_until": None,
         "author": "Add your name here",
         "download_url": "http://example.com/%s/" % pacname,
@@ -451,7 +452,7 @@ def _verify_check_mk_version(package):
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
     min_version = package["version.min_required"]
-    cmk_version = str(cmk.__version__)
+    version = str(cmk_version.__version__)
 
     if cmk.utils.misc.is_daily_build_version(min_version):
         min_branch = cmk.utils.misc.branch_of_daily_build(min_version)
@@ -460,17 +461,17 @@ def _verify_check_mk_version(package):
         # use the branch name (e.g. 1.2.8 as min version)
         min_version = min_branch
 
-    if cmk.utils.misc.is_daily_build_version(cmk_version):
-        branch = cmk.utils.misc.branch_of_daily_build(cmk_version)
+    if cmk.utils.misc.is_daily_build_version(version):
+        branch = cmk.utils.misc.branch_of_daily_build(version)
         if branch == "master":
             return  # can not check exact version
         # use the branch name (e.g. 1.2.8 as min version)
-        cmk_version = branch
+        version = branch
 
     compatible = True
     try:
         compatible = cmk.utils.werks.parse_check_mk_version(min_version) \
-                        <= cmk.utils.werks.parse_check_mk_version(cmk_version)
+                        <= cmk.utils.werks.parse_check_mk_version(version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.utils.debug.enabled():
@@ -479,7 +480,7 @@ def _verify_check_mk_version(package):
 
     if not compatible:
         raise PackageException("The package requires Check_MK version %s, "
-                               "but you have %s installed." % (min_version, cmk_version))
+                               "but you have %s installed." % (min_version, version))
 
 
 def get_all_package_infos():

@@ -22,7 +22,6 @@ import six
 
 from cmk.utils.defines import host_state_name
 from cmk.utils.regex import regex
-import cmk
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites

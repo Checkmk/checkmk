@@ -31,6 +31,7 @@ from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
 from pysmi.error import PySmiError  # type: ignore[import]
 import six
 
+import cmk.utils.version as cmk_version
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -39,7 +40,7 @@ import cmk.utils.render
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -289,7 +290,7 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
                          label=_("Currently disable execution of all rules in the pack"),
                      )),)
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
 
     return Dictionary(
@@ -312,7 +313,7 @@ def vs_mkeventd_rule(customer=None):
          )),
     ] + rule_option_elements()
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         if customer:
             # Enforced by rule pack
             elements += [
@@ -1104,7 +1105,7 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                             "snmpmib")
 
     def _get_rule_pack_to_mkp_map(self):
-        return {} if cmk.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
+        return {} if cmk_version.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
 
     def _vs_mkeventd_event(self):
         """Valuespec for simulating an event"""
@@ -1482,7 +1483,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text(managed.get_customer_name(rule_pack))
@@ -1705,7 +1706,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(_("ID"), html.render_a(rule["id"], edit_url))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text(
@@ -2020,7 +2021,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                             (num_repl, num_groups))
             num_repl -= 1
 
-        if cmk.is_managed_edition() and "customer" in self._rule_pack:
+        if cmk_version.is_managed_edition() and "customer" in self._rule_pack:
             try:
                 del self._rule["customer"]
             except KeyError:

@@ -7,6 +7,8 @@
 
 import six
 
+import cmk.utils.version as cmk_version
+
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -28,7 +30,7 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -122,7 +124,7 @@ class ModeLDAPConfig(LDAPMode):
 
                 table.cell(_("ID"), connection["id"])
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"), managed.get_customer_name(connection))
 
                 table.cell(_("Description"))

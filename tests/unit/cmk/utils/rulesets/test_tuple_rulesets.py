@@ -11,12 +11,12 @@ from testlib.base import Scenario
 import cmk.base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 
-import cmk
+import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
-    monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
 
 
 @pytest.fixture()

@@ -20,6 +20,7 @@ import six
 import livestatus
 from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
 
@@ -107,11 +108,11 @@ from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unuse
 import cmk.gui.plugins.views.inventory
 import cmk.gui.plugins.views.availability
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
     import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 if TYPE_CHECKING:
@@ -1470,7 +1471,7 @@ def show_view(view, view_renderer, only_count=False):
                     _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
                     ", ".join(sorted(corrupted_inventory_files)))
 
-        if not cmk.is_raw_edition():
+        if not cmk_version.is_raw_edition():
             import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module
             sla_params = []
             for cell in cells:

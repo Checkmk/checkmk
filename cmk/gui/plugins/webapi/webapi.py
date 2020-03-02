@@ -11,7 +11,7 @@ from functools import partial
 import os
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 
 import cmk.utils.tags
 import cmk.gui.escaping as escaping
@@ -498,7 +498,7 @@ class APICallGroups(APICallCollection):
     # We work around this wart by making "customer" an optional key formally
     # and doing some manual a posteriori validation here.  :-P
     def _check_customer(self, request):
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             if "customer" not in request.keys():
                 raise MKUserError(None, _("Missing required key(s): %s") % "customer")
         else:
@@ -512,7 +512,7 @@ class APICallGroups(APICallCollection):
         if group_type == "contact" and "nagvis_maps" in request:
             extra_info["nagvis_maps"] = request["nagvis_maps"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             extra_info["customer"] = request["customer"]
 
         return extra_info
@@ -897,7 +897,7 @@ class APICallHosttags(APICallCollection):
 @api_call_collection_registry.register
 class APICallSites(APICallCollection):
     def get_api_calls(self):
-        if cmk.is_demo():
+        if cmk_version.is_demo():
             return {}
 
         required_permissions = ["wato.sites"]

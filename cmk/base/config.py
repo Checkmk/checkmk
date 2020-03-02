@@ -32,7 +32,7 @@ else:
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex
@@ -2567,7 +2567,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         if spec == "ignore":
             return None
         if spec == "site":
-            return cmk.__version__
+            return cmk_version.__version__
         if isinstance(spec, str):
             # Compatibility to old value specification format (a single version string)
             return spec
@@ -3111,7 +3111,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         if host_config:
             return host_config
 
-        config_class = HostConfig if cmk.is_raw_edition() else CEEHostConfig
+        config_class = HostConfig if cmk_version.is_raw_edition() else CEEHostConfig
         host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
@@ -3191,7 +3191,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }  # type: Tags
 
@@ -3235,7 +3235,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }
 
@@ -3643,7 +3643,7 @@ def get_config_cache():
     # type: () -> ConfigCache
     config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
-        cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
+        cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()
     return config_cache["cache"]
 

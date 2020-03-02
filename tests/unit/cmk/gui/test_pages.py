@@ -7,7 +7,7 @@
 import sys
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.pages
 
 
@@ -128,7 +128,7 @@ def test_registered_pages():
         'ajax_render_graph_content',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_pages += [
             'ajax_metric_choice',
             'ajax_pagetype_add_element',

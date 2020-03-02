@@ -8,8 +8,9 @@ import re
 import copy
 from typing import Tuple, Dict, List, Text  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -40,7 +41,7 @@ from cmk.gui.watolib.notifications import (
 )
 from cmk.gui.valuespec import DualListChoice
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
@@ -138,7 +139,7 @@ def edit_group(name, group_type, extra_info):
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         old_customer = managed.get_customer_id(old_group_backup)
         new_customer = managed.get_customer_id(extra_info)
         if old_customer != new_customer:
@@ -185,7 +186,7 @@ def delete_group(name, group_type):
 # by the CME code for better encapsulation.
 def _add_group_change(group, action_name, text):
     group_sites = None
-    if cmk.is_managed_edition() and not managed.is_global(managed.get_customer_id(group)):
+    if cmk_version.is_managed_edition() and not managed.is_global(managed.get_customer_id(group)):
         group_sites = managed.get_sites_of_customer(managed.get_customer_id(group))
 
     add_change(action_name, text, sites=group_sites)

@@ -12,6 +12,7 @@ from typing import (  # pylint: disable=unused-import
 )
 import six
 
+import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 from cmk.utils.encoding import ensure_unicode
@@ -57,10 +58,10 @@ from cmk.gui.plugins.visuals.utils import (
 
 import cmk.gui.plugins.dashboard
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry

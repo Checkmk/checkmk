@@ -231,8 +231,8 @@ def settings(version, omd_root, default_config_dir, argv):
 
 
 if __name__ == "__main__":
-    import cmk
+    import cmk.utils.version as cmk_version
     import cmk.utils.paths
     print(
-        settings(str(cmk.__version__), Path(cmk.utils.paths.omd_root),
+        settings(str(cmk_version.__version__), Path(cmk.utils.paths.omd_root),
                  Path(cmk.utils.paths.default_config_dir), sys.argv))

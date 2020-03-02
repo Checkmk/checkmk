@@ -9,7 +9,7 @@ import threading
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Submount, Rule
 
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkApiApp, openapi_spec_dir
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
 from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middleware
@@ -31,7 +31,7 @@ def create_url_map():
     # NOTE: v0 means totally unstable until we hit v1.
     _api_app.add_api_blueprint(
         'checkmk.yaml',
-        base_path='/%s/check_mk/api/v0/' % cmk.omd_site(),
+        base_path='/%s/check_mk/api/v0/' % cmk_version.omd_site(),
     )
 
     wrapped_api_app = with_context_middleware(OverrideRequestMethod(_api_app).wsgi_app)

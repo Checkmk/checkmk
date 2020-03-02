@@ -18,7 +18,7 @@
 #      import cmk.gui.default_permissions
 #      import ...
 #
-#      if not cmk.is_raw_edition():
+#      if not cmk_version.is_raw_edition():
 #          import cmk.gui.cee.modules
 #          -> cee/modules.py
 #              import cmk.gui.cee.sla
@@ -31,7 +31,7 @@ import sys
 from types import ModuleType
 from typing import Optional, Iterator, Any, Dict, List  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.utils as utils
@@ -40,10 +40,10 @@ from cmk.gui.globals import g
 
 import cmk.gui.plugins.main_modules
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day

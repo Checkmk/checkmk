@@ -25,7 +25,6 @@ from typing import (  # pylint: disable=unused-import
 import six
 from livestatus import SiteId  # pylint: disable=unused-import
 
-import cmk
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
@@ -53,13 +52,19 @@ from cmk.gui.watolib.utils import (
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    host_attribute_registry,
+    collect_attributes,
+)
 from cmk.gui.plugins.watolib.utils import wato_fileheader
+
+import cmk.utils.version as cmk_version
+
 from cmk.utils import store as store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # Names:
@@ -2023,10 +2028,10 @@ class SearchFolder(BaseFolder):
     def criteria_from_html_vars():
         crit = {".name": html.request.var("host_search_host")}
         crit.update(
-            cmk.gui.watolib.host_attributes.collect_attributes("host_search",
-                                                               new=False,
-                                                               do_validate=False,
-                                                               varprefix="host_search_"))
+            collect_attributes("host_search",
+                               new=False,
+                               do_validate=False,
+                               varprefix="host_search_"))
         return crit
 
     # This method is allowed to return None when no search is currently performed.
@@ -2765,7 +2770,7 @@ class CMEHost(CREHost):
 
 
 # TODO: Change to factory?
-if not cmk.is_managed_edition():
+if not cmk_version.is_managed_edition():
     Folder = CREFolder  # type: Type[CREFolder]
     Host = CREHost  # type: Type[CREHost]
 else:

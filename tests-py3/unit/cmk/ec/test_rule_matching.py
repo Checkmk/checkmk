@@ -8,7 +8,7 @@ import logging
 from typing import Dict
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.ec.main import RuleMatcher, EventServer
 
 
@@ -178,7 +178,7 @@ def test_match_outcome(m, rule, match_groups, match_priority, result):
     }),
 ])
 def test_match_site(m, rule, result, monkeypatch):
-    monkeypatch.setattr(cmk, "omd_site", lambda: "ding")
+    monkeypatch.setattr(cmk_version, "omd_site", lambda: "ding")
     assert m.event_rule_matches_site(rule, {}) == result
 
 

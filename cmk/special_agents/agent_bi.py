@@ -12,7 +12,7 @@ from pathlib2 import Path
 import requests
 import urllib3  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.site
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKException
@@ -127,7 +127,7 @@ class AggregationRawdataGenerator(object):
 
         if site_config == "local":
             self._site_url = "http://localhost:%d/%s" % (cmk.utils.site.get_apache_port(),
-                                                         cmk.omd_site())
+                                                         cmk_version.omd_site())
         else:
             self._site_url = site_config[1]
 

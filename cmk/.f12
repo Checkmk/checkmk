@@ -58,7 +58,6 @@ PYTHON2_PATHS=(
 )
 
 PYTHON3_PATHS=(
-    __init__.py
     gui
     utils
     ec
@@ -103,8 +102,8 @@ for PY3_SA in special_agents/agent_aws.py special_agents/agent_elasticsearch.py 
 done
 
 # Restore site version after .f12
-sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py
-sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/__init__.py
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/utils/version.py
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then

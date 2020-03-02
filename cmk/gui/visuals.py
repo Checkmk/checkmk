@@ -14,7 +14,7 @@ from typing import (  # pylint: disable=unused-import
     Text, Tuple, Optional, cast, Dict, List, Callable, Union, Iterator,
 )
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
@@ -59,10 +59,10 @@ from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unus
 )
 from cmk.gui.permissions import permission_registry
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
 
 #   .--Plugins-------------------------------------------------------------.
@@ -1614,7 +1614,7 @@ def ajax_popup_add():
             html.close_li()
 
     # TODO: Find a good place for this special case. This needs to be modularized.
-    if add_type == "pnpgraph" and not cmk.is_enterprise_edition():
+    if add_type == "pnpgraph" and not cmk_version.is_enterprise_edition():
         html.open_li()
         html.open_span()
         html.write("%s:" % _("Export"))

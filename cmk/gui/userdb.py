@@ -21,6 +21,7 @@ else:
 
 from livestatus import SiteId  # pylint: disable=unused-import
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, ContactgroupName  # pylint: disable=unused-import
@@ -241,7 +242,7 @@ def create_non_existing_user(connection_id, username):
 
 def is_customer_user_allowed_to_login(user_id):
     # type: (UserId) -> bool
-    if not cmk.is_managed_edition():
+    if not cmk_version.is_managed_edition():
         return True
 
     user = config.LoggedInUser(user_id)

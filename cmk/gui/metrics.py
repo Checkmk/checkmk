@@ -22,6 +22,7 @@ import json
 import six
 
 import cmk.utils
+import cmk.utils.version as cmk_version
 import cmk.utils.render
 import cmk.utils.plugin_registry
 
@@ -650,7 +651,7 @@ def render_metrics_table(translated_metrics, host_name, service_description):
         output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
         output += "<td>%s:</td>" % metric["title"]
         output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
-        if not cmk.is_raw_edition():
+        if not cmk_version.is_raw_edition():
             output += "<td>"
             output += html.render_popup_trigger(
                 html.render_icon("custom_graph",

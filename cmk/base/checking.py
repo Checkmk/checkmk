@@ -18,7 +18,7 @@ from typing import (  # pylint: disable=unused-import
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -45,7 +45,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 )
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
     import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
@@ -82,7 +82,7 @@ UncleanPerfValue = Union[None, str, float]
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", six.ensure_str(cmk.__version__))
+    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)

@@ -19,6 +19,7 @@ else:
 import six
 from werkzeug.local import LocalProxy
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
@@ -529,7 +530,8 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.div("" if "hide_version" in config.login_screen else cmk.__version__, id_="version")
+        html.div("" if "hide_version" in config.login_screen else cmk_version.__version__,
+                 id_="version")
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')
@@ -563,14 +565,14 @@ class LoginPage(Page):
             footer.append(html.render_a(title, href=url, target=target))
 
         if "hide_version" not in config.login_screen:
-            footer.append("Version: %s" % cmk.__version__)
+            footer.append("Version: %s" % cmk_version.__version__)
 
         footer.append("&copy; %s" %
                       html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
 
         html.write(HTML(" - ").join(footer))
 
-        if cmk.is_raw_edition():
+        if cmk_version.is_raw_edition():
             html.br()
             html.br()
             html.write(

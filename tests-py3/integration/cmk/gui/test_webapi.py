@@ -20,7 +20,7 @@ import six
 import pytest  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 from testlib import web, APIError, wait_until  # pylint: disable=unused-import # noqa: F401
 from testlib.utils import get_standard_linux_agent_output
 
@@ -432,7 +432,7 @@ def test_add_group(web, group_type):
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -441,7 +441,7 @@ def test_add_group(web, group_type):
         assert group_id in all_groups
         assert group_alias == all_groups[group_id]["alias"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             assert all_groups[group_id]["provider"] == "provider"
     finally:
         all_groups = web.get_all_groups(group_type)
@@ -458,7 +458,7 @@ def test_edit_group(web, group_type):
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -470,7 +470,7 @@ def test_edit_group(web, group_type):
         assert group_id in all_groups
         assert group_alias2 == all_groups[group_id]["alias"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             assert all_groups[group_id]["customer"] == "provider"
     finally:
         web.delete_group(group_type, group_id)
@@ -485,7 +485,7 @@ def test_edit_group_missing(web, group_type):
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -513,7 +513,7 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group("contact", "nagvis_test", attributes)
@@ -538,7 +538,7 @@ def test_delete_group(web, group_type):
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)

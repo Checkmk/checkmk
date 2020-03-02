@@ -46,7 +46,7 @@ import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
@@ -82,7 +82,7 @@ from cmk.gui.plugins.userdb.utils import (
 
 import cmk.gui.sites as sites
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -1439,7 +1439,7 @@ class LDAPConnectionValuespec(Transform):
 
         general_elements += [id_element]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             general_elements += managed.customer_choice_element()
 
         from cmk.gui.plugins.wato.utils import rule_option_elements  # TODO: Clean this up!

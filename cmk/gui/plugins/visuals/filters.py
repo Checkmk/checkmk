@@ -13,7 +13,7 @@ import six
 
 import livestatus
 
-import cmk
+import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
     Labels,
 )
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
         filter_cme_choices, filter_cme_heading_info,
     )
@@ -1688,11 +1688,13 @@ class SiteFilter(Filter):
         self.enforce = enforce
 
     def display(self):
-        choices = filter_cme_choices() if cmk.is_managed_edition() else filter_cre_choices()
+        choices = filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
         html.dropdown("site", ([] if self.enforce else [("", "")]) + choices)
 
     def heading_info(self):
-        return filter_cme_heading_info() if cmk.is_managed_edition() else filter_cre_heading_info()
+        if cmk_version.is_managed_edition():
+            return filter_cme_heading_info()
+        return filter_cre_heading_info()
 
     def variable_settings(self, row):
         return [("site", row["site"])]

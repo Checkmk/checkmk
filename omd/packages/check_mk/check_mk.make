@@ -87,7 +87,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents
 	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz
 	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz \
-	    cmk/__init__.py \
 	    cmk/utils \
 	    cmk/ec \
 	    cmk/special_agents/__init__.py \

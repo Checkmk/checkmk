@@ -82,7 +82,7 @@ from hashlib import sha256
 from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as _Tuple, Optional as _Optional  # pylint: disable=unused-import
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
@@ -251,10 +251,10 @@ from cmk.gui.wato.pages.users import ModeUsers, ModeEditUser
 import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.bi
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
@@ -413,7 +413,7 @@ def page_handler():
               " in your <tt>multisite.mk</tt> if you want to use WATO."))
 
     # config.current_customer can not be checked with CRE repos
-    if cmk.is_managed_edition() and not managed.is_provider(
+    if cmk_version.is_managed_edition() and not managed.is_provider(
             config.current_customer):  # type: ignore[attr-defined]
         raise MKGeneralException(
             _("Check_MK can only be configured on "

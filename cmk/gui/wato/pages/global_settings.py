@@ -8,7 +8,7 @@ settings"""
 
 import abc
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.watolib as watolib
@@ -343,7 +343,8 @@ class ModeEditGlobals(GlobalSettingsMode):
                                 watolib.folder_preserving_link([("mode", "read_only")]),
                                 "read_only")
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.plugins.wato.managed
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
     def action(self):

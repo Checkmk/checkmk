@@ -14,7 +14,8 @@ from urllib import urlencode
 import pytest
 import webtest
 
-import cmk
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.gui.wsgi import make_app
 
@@ -112,7 +113,7 @@ def test_normal_auth(
     assert "Invalid credentials." not in resp.body
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), reason="No agent deployment in raw edition")
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app):
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
     assert response.body.startswith("ERROR: Missing or invalid")
@@ -128,7 +129,7 @@ def test_openapi_version(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
-    assert resp.json['site'] == cmk.omd_site()
+    assert resp.json['site'] == cmk_version.omd_site()
 
 
 def test_openapi_app_exception(
@@ -310,7 +311,7 @@ def test_cmk_automation(wsgi_app):
     assert response.body == "Missing secret for automation command."
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), reason="No AJAX graphs in raw edition")
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.body.startswith("You are not allowed")

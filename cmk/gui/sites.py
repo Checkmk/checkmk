@@ -13,7 +13,7 @@ from livestatus import (  # type: ignore[import]  # pylint: disable=unused-impor
     MultiSiteConnection, MKLivestatusQueryError, SiteId, SiteConfiguration, SiteConfigurations,
 )
 
-from cmk import is_managed_edition
+from cmk.utils.version import is_managed_edition
 
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports

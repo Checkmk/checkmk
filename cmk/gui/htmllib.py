@@ -77,6 +77,7 @@ _default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore[assignment]
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
@@ -1798,7 +1799,7 @@ class html(ABCHTMLGenerator):
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' %
                        config.custom_style_sheet)
 
-        if self._theme == "classic" and cmk.is_managed_edition():
+        if self._theme == "classic" and cmk_version.is_managed_edition():
             import cmk.gui.cme.gui_colors as gui_colors  # pylint: disable=no-name-in-module
             gui_colors.GUIColors().render_html()
 
@@ -1831,7 +1832,7 @@ class html(ABCHTMLGenerator):
         for min_part in min_parts:
             path_pattern = cmk.utils.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
             if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                filename_for_browser = 'js/%s%s-%s.js' % (jsname, min_part, cmk.__version__)
+                filename_for_browser = 'js/%s%s-%s.js' % (jsname, min_part, cmk_version.__version__)
                 break
 
         return filename_for_browser
@@ -1841,7 +1842,7 @@ class html(ABCHTMLGenerator):
         rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
         if os.path.exists(cmk.utils.paths.omd_root + rel_path) or \
             os.path.exists(cmk.utils.paths.omd_root + "/local" + rel_path):
-            return '%s-%s.css' % (css, cmk.__version__)
+            return '%s-%s.css' % (css, cmk_version.__version__)
         return None
 
     def html_head(self, title, javascripts=None, force=False):

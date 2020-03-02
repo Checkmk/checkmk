@@ -13,6 +13,7 @@ from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 
 import cmk.utils
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
@@ -96,7 +97,7 @@ def get_replication_paths():
     ]
 
     # TODO: Move this to CEE specific code again
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         paths += [
             ("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
              ["sitespecific.mk"]),
@@ -563,7 +564,7 @@ class ActivateChangesManager(ActivateChanges):
             log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
-            if cmk.is_managed_edition():
+            if cmk_version.is_managed_edition():
                 import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
                 managed_snapshots.CMESnapshotManager(
                     work_dir, self._get_site_configurations()).generate_snapshots()

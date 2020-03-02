@@ -17,9 +17,10 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.paths
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -92,7 +93,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk.is_raw_edition() and config.liveproxyd_enabled
+        return not cmk_version.is_raw_edition() and config.liveproxyd_enabled
 
     def config_dir(self):
         return liveproxyd_config_dir()

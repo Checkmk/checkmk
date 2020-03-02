@@ -7,7 +7,7 @@
 # yapf: disable
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
@@ -60,7 +60,7 @@ def _expected_visual_types():
     },
     }
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_visual_types.update({
         'reports': {
         'add_visual_handler': 'popup_add_element',

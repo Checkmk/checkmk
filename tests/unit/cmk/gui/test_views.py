@@ -11,6 +11,8 @@ import pytest  # type: ignore[import]
 import six
 import cmk.gui.config as config
 
+import cmk.utils.version as cmk_version
+
 # Make it load all plugins (CEE + CME)
 import cmk.gui.views  # pylint: disable=unused-import
 import cmk.gui.default_permissions
@@ -308,7 +310,7 @@ def test_registered_commands():
         },
     }
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected.update({'edit_downtimes': {
             'permission': 'action.downtimes',
             'tables': ['downtime'],

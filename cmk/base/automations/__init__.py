@@ -6,7 +6,6 @@
 
 import abc
 import signal
-import pprint
 from types import FrameType  # pylint: disable=unused-import
 from typing import NoReturn, Dict, Any, List, Optional  # pylint: disable=unused-import
 import six
@@ -74,10 +73,7 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
         finally:
             profiling.output_profile()
 
-        if cmk.utils.debug.enabled():
-            console.output(pprint.pformat(result))
-        else:
-            console.output(python_printer.pformat(result))
+        console.output(python_printer.pformat(result))
         console.output('\n')
 
         return 0

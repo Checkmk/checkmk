@@ -9,9 +9,10 @@ import six
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 
+import cmk.utils.paths
+
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.utils.paths
 
 
 @pytest.fixture(scope="module")
@@ -196,11 +197,13 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
-    _execute_automation(site, "try-inventory",
+    _execute_automation(
+        site,
+        "try-inventory",
         args=["xxx-not-existing-host"],
-        expect_stderr_pattern=r"Failed to lookup IPv4 address of xxx-not-existing-host " \
-                              r"via DNS: (\[Errno -2\] Name or service not known"
-                              r"|\[Errno -3\] Temporary failure in name resolution)\n",
+        expect_stderr_pattern=(r"Failed to lookup IPv4 address of xxx-not-existing-host "
+                               r"via DNS: (\[Errno -2\] Name or service not known"
+                               r"|\[Errno -3\] Temporary failure in name resolution)\n"),
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,
@@ -208,9 +211,10 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
 
 
 def test_automation_try_discovery_host(test_cfg, site):
+
     data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
     assert isinstance(data, dict)
-    assert isinstance(data["output"], str)
+    assert isinstance(data["output"], six.text_type)
     assert isinstance(data["check_table"], list)
 
 
@@ -308,7 +312,7 @@ def test_automation_get_real_time_checks(test_cfg, site):
     assert len(data) > 5
 
     for check_type, title in data:
-        assert isinstance(check_type, str)
+        assert isinstance(check_type, six.text_type)
         assert isinstance(title, six.text_type)
 
 

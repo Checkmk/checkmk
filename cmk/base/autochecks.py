@@ -326,7 +326,11 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
     for key, value in zip(ast_service_labels.keys, ast_service_labels.values):
         if key is not None:
             # mypy does not get the types of the ast objects here
-            labels.add_label(ServiceLabel(key.s, value.s))  # type: ignore[attr-defined]
+            labels.add_label(
+                ServiceLabel(
+                    six.ensure_text(key.s),  # type: ignore[attr-defined]
+                    six.ensure_text(value.s),  # type: ignore[attr-defined]
+                ))
     return labels
 
 

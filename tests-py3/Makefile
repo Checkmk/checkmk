@@ -32,11 +32,17 @@ test-pylint:
 test-unit:
 	$(PYTEST) -T unit unit
 
+MYPY3_FILES=$(shell \
+    ../scripts/find-python-files 3 | \
+    `: filter out plugins, they are not real modules` \
+    grep -v $$(realpath '../checks') | \
+    grep -v $$(realpath '../inventory'))
+
 test-mypy3:
-	$(MYPY) $$(../scripts/find-python-files 3)
+	$(MYPY) $(MYPY3_FILES)
 
 test-mypy3-raw:
-	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $$(../scripts/find-python-files 3)
+	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $(MYPY3_FILES)
 
 MYPY2_FILES=$(shell \
     ../scripts/find-python-files 2 | \

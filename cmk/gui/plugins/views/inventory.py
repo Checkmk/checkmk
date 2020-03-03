@@ -636,7 +636,7 @@ def declare_inventory_columns():
 #   '----------------------------------------------------------------------'
 
 
-def _create_inv_rows(hostrow, invpath, infoname):
+def _create_inv_rows(hostrow, infoname, invpath):
     try:
         merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
     except inventory.LoadStructuredDataError:
@@ -648,9 +648,11 @@ def _create_inv_rows(hostrow, invpath, infoname):
 
     if merged_tree is None:
         return []
+
     invdata = inventory.get_inventory_data(merged_tree, invpath)
     if invdata is None:
         return []
+
     entries = []
     for entry in invdata:
         newrow = {}
@@ -662,22 +664,18 @@ def _create_inv_rows(hostrow, invpath, infoname):
 
 def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
     # Create livestatus filter for filtering out hosts
-    filter_code = ""
-    for filt in filters:
-        header = filt.filter(infoname)
-        filter_code += header
-
     host_columns = ["host_name"] + list(
         {c for c in columns if c.startswith("host_") and c != "host_name"})
+
     if infoname != "invhist":
         host_columns.append("host_structured_status")
 
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
-    query += filter_code
+    query += "".join(filt.filter(infoname) for filt in filters)
 
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and display_options.enabled(display_options.W):
+    if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
+            display_options.W):
         html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
         html.open_tt()
         html.write(query.replace('\n', '<br>\n'))
@@ -690,18 +688,17 @@ def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, li
     sites.live().set_prepend_site(False)
     sites.live().set_only_sites(None)
 
-    headers = ["site"] + host_columns
+    if infoname == "invhist":
+        get_subrows = _create_hist_rows
+    else:
+        get_subrows = lambda hostrow: _create_inv_rows(hostrow, infoname, invpath)
+
     # Now create big table of all inventory entries of these hosts
+    headers = ["site"] + host_columns
     rows = []
     for row in data:
-        hostname = row[1]
         hostrow = dict(zip(headers, row))
-        if infoname == "invhist":
-            subrows = _create_hist_rows(hostname, columns)
-        else:
-            subrows = _create_inv_rows(hostrow, invpath, infoname)
-
-        for subrow in subrows:
+        for subrow in get_subrows(hostrow):
             subrow.update(hostrow)
             rows.append(subrow)
     return rows
@@ -1217,7 +1214,8 @@ class RowTableInventoryHistory(RowTable):
                                     all_active_filters)
 
 
-def _create_hist_rows(hostname, columns):
+def _create_hist_rows(hostrow):
+    hostname = hostrow.get("host_name")
     history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
     if corrupted_history_files:
         html.add_user_error(

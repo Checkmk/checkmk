@@ -28,10 +28,6 @@ import cmk.utils.aws_constants as agent_aws_types
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
 
-factory_settings['aws_cpu_credits'] = {
-    'balance_levels_lower': (10, 5),
-}
-
 
 def parse_aws(info):
     import json

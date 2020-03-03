@@ -104,6 +104,10 @@ check_info['aws_ec2'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+factory_settings['aws_cpu_credits'] = {
+    'balance_levels_lower': (10, 5),
+}
+
 
 def check_aws_ec2_cpu_credits(item, params, parsed):
     # item is None, therefore we cannot use @get_parsed_item_data

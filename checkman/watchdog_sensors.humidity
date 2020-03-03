@@ -8,7 +8,7 @@ description:
  located.
 
 item:
- One item per sensor will be created.
+ Name of the watchdog device
 
 inventory:
  All available humidity sensors are automatically inventorized.

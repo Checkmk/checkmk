@@ -9,7 +9,7 @@ description:
  which can be specified in numerous ways.
 
 item:
- The Quota name.
+ The name of the quota
 
 inventory:
  One service is created per quota.

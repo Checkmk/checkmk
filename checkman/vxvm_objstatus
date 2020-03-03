@@ -18,6 +18,9 @@ description:
 
   You need to install the agent plugin {vxvm}.
 
+item:
+ Name of the diskgroup
+
 inventory:
   One item is generated per volume in the volume manager.
   The naming is {diskgroup}-{volume}.

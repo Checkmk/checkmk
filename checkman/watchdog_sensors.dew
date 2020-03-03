@@ -7,7 +7,7 @@ description:
  This check monitors the dew point in the area of this sensor.
 
 item:
- One item per sensor will be created.
+ Name of the watchdog device
 
 inventory:
  All available dew point sensors are automatically inventorized.

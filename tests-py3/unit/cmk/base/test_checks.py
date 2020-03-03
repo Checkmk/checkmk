@@ -407,5 +407,5 @@ def test_inventory_plugin_header():
             encoding_header = f.readline().strip()
         assert shebang == "#!/usr/bin/env python3", "Inventory plugin '%s' has wrong shebang '%s'" % (
             inventory_pluginfile.name, shebang)
-        assert encoding_header == "# -*- encoding: utf-8; py-indent-offset: 4 -*-", "Inventory plugin '%s' has wrong encoding header '%s'" % (
+        assert encoding_header == "# -*- coding: utf-8 -*-", "Inventory plugin '%s' has wrong encoding header '%s'" % (
             inventory_pluginfile.name, encoding_header)

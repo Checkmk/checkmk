@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+factory_settings['winperf_cpu_default_levels'] = WINPERF_CPU_CHECK_DEFAULT_PARAMETERS
+
 
 def inventory_winperf_util(info):
     if len(info) <= 1:

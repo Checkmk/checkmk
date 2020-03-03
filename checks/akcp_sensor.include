@@ -106,7 +106,7 @@ def check_akcp_humidity(item, params, info):
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-factory_settings["akcp_temp_default_levels"] = {
+AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
     "levels": (32, 35),
 }
 

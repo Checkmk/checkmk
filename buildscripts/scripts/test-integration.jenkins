@@ -1,15 +1,14 @@
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
 // The following code adds libraries to the Pipeline script
 // Functions from libraries can be run by calling file-basename.functionaname()
 // If you need to adjust the loading of the library, please code your changes in
 // buildscripts/scripts/ on file jenkins-lib-loader/jenkins-template.groovy and run
 // jenkins-lib-loader/update-jenkins-lib-loading.sh
 // check the results and commit
-
-def NODE = ''
-withFolderProperties{
-    NODE = env.BUILD_NODE
-}
-
 node (NODE) {
    stage('Load Jenkins Libs') {
        def LIB = [

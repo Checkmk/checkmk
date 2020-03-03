@@ -1,3 +1,10 @@
+def DISTRO_LIST_DEFAULT = ''
+def NODE = ''
+withFolderProperties{
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    NODE = env.BUILD_NODE
+}
+
 // The following code adds libraries to the Pipeline script
 // Functions from libraries can be run by calling file-basename.functionaname()
 // If you need to adjust the loading of the library, please code your changes in
@@ -20,13 +27,6 @@ node (NODE) {
 }
 // jenkins-libs loaded
 import java.text.SimpleDateFormat
-
-def DISTRO_LIST_DEFAULT = ''
-def NODE = ''
-withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-    NODE = env.BUILD_NODE
-}
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),

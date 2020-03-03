@@ -9,9 +9,16 @@ CEE_LICENSE_NAME="Check_MK Enterprise License"
 
 header ()
 {
-  echo "Copyright (C) 2019 tribe29 GmbH - License: $@"
-  echo "This file is part of Checkmk (https://checkmk.com). It is subject to the terms and"
-  echo "conditions defined in the file COPYING, which is part of this source code package."
+  if [ $isCFile = true ]; then
+      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+      echo "This file is part of Checkmk (https://checkmk.com). It is subject to the"
+      echo "terms and conditions defined in the file COPYING, which is part of this"
+      echo "source code package."
+  else
+      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+      echo "This file is part of Checkmk (https://checkmk.com). It is subject to the terms and"
+      echo "conditions defined in the file COPYING, which is part of this source code package."
+  fi
 }
 
 headrify ()
@@ -32,6 +39,7 @@ headrify ()
 
   headline="$(head -n1 $file)"
   checkSuffix=false
+  isCFile=false
   if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
       comment="# "
       bangpath="#!/bin/sh"
@@ -65,15 +73,13 @@ headrify ()
       bangpath="#!/usr/bin/env python
 # -*- coding: utf-8 -*-"
   else
-      if [ "$force" = false ]; then
-          checkSuffix=true
-      fi
       bangpath=""
       case "${file##*/}" in
           *.openvms) comment="$!# " ;;
           *.php)    comment="# " ; bangpath="<?php" ;;
           *.scss|*.css)    comment="// " ;  bangpath="@charset \"UTF-8\";" ;;
-          *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
+          *.h|*.c|*.cc|*.h.in) comment="// " ; isCFile=true ;;
+          *.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
           *.sh) comment="# " ;;
@@ -86,21 +92,9 @@ headrify ()
       esac
   fi
 
-  if [ "$checkSuffix" = true ];
-  then
-      suffix="${file##*.}"
-      if ! [[ $suffix == "py" || $suffix == "h" || $suffix == "c" || $suffix == "cc" || \
-          $suffix == "js" || $suffix == "scss" || $suffix == "css" || $file == *"Makefile" || \
-          $suffix == "sh" || $suffix == "cfg" || $suffix == "php" ]];
-      then
-          echo "Skipping $file. It's not a source code file in Python, C/C++, JS, (S)CSS, PHP or Shell Script nor a Makefile."
-          return
-      fi
-  fi
-
   figletline="---------------------------------------------------"
   up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
-  endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|which is part of this source code package.)'
+  endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
 
   TMP=$(mktemp .headrify.new.XXXXXX)
   chmod --reference=$file $TMP
@@ -109,11 +103,12 @@ headrify ()
       printf "\xEF\xBB\xBF" > $TMP
   fi
   if [ -n "$bangpath" ]; then echo "$bangpath" >> $TMP ; fi
+
+  licenseName=$CRE_LICENSE_NAME
   if [[ "$(realpath $file)" == *"/enterprise/"* || "$(realpath $file)" == *"/managed/"* ]]; then
-      header $CEE_LICENSE_NAME | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
-  else
-      header $CRE_LICENSE_NAME | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
+      licenseName=$CEE_LICENSE_NAME
   fi
+  header $licenseName | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
   echo >> $TMP
   bangpathlines=0
   count=0
@@ -161,8 +156,9 @@ headrify ()
 if [ "$#" -gt 0 ] ; then
   #echo "Headrifying to version $VERSION"
   force=false
-  if [[ "$*" == *"-f"* ]]; then
+  if [[ "$*" == *" -f"* ]]; then
       force=true
+      echo "Entering 'force' mode. Headrifying will be forced ignoring shebang and suffix constraints."
   fi
   for file in "$@"
   do

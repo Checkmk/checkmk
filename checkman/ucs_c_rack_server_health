@@ -35,4 +35,4 @@ inventory:
  All server racks included in the special agent output are found automatically.
 
 item:
- One item per rack.
+ {{Rack unit}} followed by the index of the rack followed by {{Storage}} and the storage location

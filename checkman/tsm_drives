@@ -12,7 +12,7 @@ description:
  The check reports status information and serial number info for the drives.
 
 item:
- The name of the tape drive.
+ The name of the instance (optional), the library name and the drive name each seperated with {{/}}
 
 inventory:
  The check inventorizes all tape drives as reported by TSM.

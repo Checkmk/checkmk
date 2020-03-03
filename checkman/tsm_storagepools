@@ -11,7 +11,7 @@ description:
  Since this check is mostly informational it always returns an OK state.
 
 item:
- The name of the storage pool.
+ The name of the instance (optional) and the name of the staging pool seperated by a {{/}}
 
 inventory:
  The check inventorizes all storage pools on the server, independent of their type.

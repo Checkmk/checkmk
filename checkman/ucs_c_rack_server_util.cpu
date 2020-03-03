@@ -43,4 +43,4 @@ inventory:
   All server racks included in the agent plugin output are found automatically.
 
 item:
-  One item per server rack.
+ {{Rack unit}} followed by the index of the rack

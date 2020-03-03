@@ -60,14 +60,6 @@ printer_io_states = {
     64: (0, 'Transitioning to intended state'),
 }
 
-factory_settings['printer_input_default_levels'] = {
-    'capacity_levels': (0.0, 0.0),
-}
-
-factory_settings['printer_output_default_levels'] = {
-    'capacity_levels': (100.0, 100.0),
-}
-
 
 def inventory_printer_io(info):
     for line in info:

@@ -10,5 +10,8 @@ description:
  the Check goes {CRITICAL}.
  In order to run, its needed to copy the windows_tasks.ps1 script to the plugin folder of the agent.
 
+item:
+ Name of the task
+
 inventory:
  One service will be created for each enabled task

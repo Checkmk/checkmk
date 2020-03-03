@@ -10,5 +10,8 @@ description:
  or recovered, the check will be {WARN}.
  The VPG data is piggybacked to each VM.
 
+item:
+ The name of the VPG
+
 inventory:
  One service is created per VPG.

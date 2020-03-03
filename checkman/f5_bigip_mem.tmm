@@ -10,5 +10,8 @@ description:
  The logic used for monitoring is exactly the same as in the agent based
  check {mem.used}. Please refer to the man page of that check for details.
 
+item:
+ One of the two statements: {{total}} or {{TMM}}
+
 inventory:
  One service for the target host will be created.

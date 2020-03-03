@@ -7,6 +7,8 @@
 # The reason for this check is a problem on ASA devices
 # See: http://www.cisco.com/c/en/us/support/docs/security/asa-5500-x-series-next-generation-firewalls/116423-troubleshoot-asa-snmp.html
 
+factory_settings['cisco_mem_default_levels'] = CISCO_MEM_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_cisco_mem_asa(info):
     return [info[0][0], info[1][0]]

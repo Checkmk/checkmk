@@ -42,6 +42,8 @@
 # 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #40           {82AE1F27-BF28-4E30-AC3D-809DF5FF0D39}
 # 35             Broadcom BCM5709C NetXtreme II GigE (NDIS VBD Client) #38           {DC918766-F61C-4801-92F8-E5532907EA0D}
 
+factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+
 
 def get_real_adapter_name(bond, name):
     prefix = "TEAM : %s - " % bond

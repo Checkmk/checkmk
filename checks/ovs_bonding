@@ -37,6 +37,8 @@
 # slave eth1: enabled
 # active slave
 
+factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_ovs_bonding(info):
     bonds = {}

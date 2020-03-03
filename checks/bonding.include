@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings['bonding_default_levels'] = {
+BONDING_CHECK_DEFAULT_PARAMETERS = {
     'ieee_302_3ad_agg_id_missmatch_state': 1,
     'expect_active': 'ignore',
 }

@@ -55,6 +55,8 @@
 # Link Failure Count: 1
 # Permanent HW addr: 00:26:b9:7d:89:2e
 
+factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+
 
 def _split_into_bonds(info):
     bonds = {}

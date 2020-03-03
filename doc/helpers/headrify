@@ -16,8 +16,12 @@ header ()
 
 headrify ()
 {
-  if [[ ! -f "$file" || -L "$file" ]]; then
-      echo "Skipping $file. It's not a file / It is a symlink."
+  if [ ! -f "$file" ]; then
+      echo "Skipping $file. It's not a file."
+      return
+  fi
+  if [ -L "$file" ]; then
+      echo "Skipping $file. It's a symlink."
       return
   fi
 
@@ -31,6 +35,9 @@ headrify ()
   if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
       comment="# "
       bangpath="#!/bin/sh"
+      if [ "${headline:9}" != "" ] ; then
+          bangpath="$bangpath${headline:9}"
+      fi
   elif [ "${headline:0:16}" = "#!/usr/bin/ksh93" ] ; then
       comment="# "
       bangpath="#!/usr/bin/ksh93"
@@ -40,12 +47,15 @@ headrify ()
   elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then
       comment="# "
       bangpath="#!/bin/bash"
+      if [ "${headline:11}" != "" ] ; then
+          bangpath="$bangpath${headline:11}"
+      fi
   elif [ "${headline:0:15}" = "#!/usr/bin/bash" ] ; then
       comment="# "
       bangpath="#!/usr/bin/bash"
-  elif [ "${headline:0:14}" = "#!/usr/bin/php" ] ; then
+  elif [ "${headline:0:5}" = "<?php" ] ; then
       comment="# "
-      bangpath="#!/usr/bin/php"
+      bangpath="<?php"
   elif [[ "${headline:0:22}" = "#!/usr/bin/env python3" || "${headline:0:18}" = "#!/usr/bin/python3" ]] ; then
       comment="# "
       bangpath="#!/usr/bin/env python3
@@ -69,8 +79,10 @@ headrify ()
           *.sh) comment="# " ;;
           *.py)     comment="# "  ; bangpath="#!/usr/bin/env python
 # -*- coding: utf-8 -*-"; ;;
-          *) echo "Skipping $file. No shebang or suffix match for Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile." ;
-          return ;;
+          *) if [ "$force" = false ]; then
+                echo "Skipping $file. No shebang or suffix match for Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile."
+                return
+             fi ;;
       esac
   fi
 
@@ -79,9 +91,9 @@ headrify ()
       suffix="${file##*.}"
       if ! [[ $suffix == "py" || $suffix == "h" || $suffix == "c" || $suffix == "cc" || \
           $suffix == "js" || $suffix == "scss" || $suffix == "css" || $file == *"Makefile" || \
-          $suffix == "sh" || $suffix == "cfg" ]];
+          $suffix == "sh" || $suffix == "cfg" || $suffix == "php" ]];
       then
-          echo "Skipping $file. It's not a source code file in Python, C/C++, JS, (S)CSS or Shell Script nor a Makefile."
+          echo "Skipping $file. It's not a source code file in Python, C/C++, JS, (S)CSS, PHP or Shell Script nor a Makefile."
           return
       fi
   fi
@@ -93,8 +105,11 @@ headrify ()
   TMP=$(mktemp .headrify.new.XXXXXX)
   chmod --reference=$file $TMP
   : > $TMP
-  if [ -n "$bangpath" ]; then echo "$bangpath" > $TMP ; fi
-  if [[ $file == "enterprise/"* || $file == "managed/"* ]]; then
+  if [[ "$(head -n1 $file | sed -n "/^\xEF\xBB\xBF/ p")" ]]; then
+      printf "\xEF\xBB\xBF" > $TMP
+  fi
+  if [ -n "$bangpath" ]; then echo "$bangpath" >> $TMP ; fi
+  if [[ "$(realpath $file)" == *"/enterprise/"* || "$(realpath $file)" == *"/managed/"* ]]; then
       header $CEE_LICENSE_NAME | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
   else
       header $CRE_LICENSE_NAME | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
@@ -104,18 +119,19 @@ headrify ()
   count=0
   tmpwritten=false
   while read line; do
-    if [[ "$line" == *"$up2dateline"* || "$line" == *"$figletline"* ]]; then
+    if [[ ("$line" == *"$up2dateline"* || "$line" == *"$figletline"*) && "$(sed -rn "/$endline/I p" $file)" ]]; then
       # Delete all lines until and including $endline, then also remove all
       # leading # blank lines as well as a possible multiline comment ending
       # tag '*/' from the beginning of $file and append the result to $TMP
+      sed -i "1s/^\xEF\xBB\xBF//" $file
       sed -r '0,/^'"$endline"'$/Id' $file | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >> $TMP
       tmpwritten=true
       break
-    elif [[ "$(echo "$line" | sed -n '/tribe29/ !p' | sed -n '/copyright/I p')" ]]; then
+    elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/tribe29/ !p')" ]]; then
       echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
       rm -f $TMP
       return
-    elif [[ ( $count == $bangpathlines ) && ( "$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* ) ]]; then
+    elif [[ ( $count == $bangpathlines ) && ( "$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"* ) ]]; then
         let bangpathlines=bangpathlines+1
     fi
 
@@ -128,8 +144,10 @@ headrify ()
   if [ "$tmpwritten" = false ]; then
     if [ $bangpathlines -gt 0 ]; then
         let tailindex=bangpathlines+1
+        sed -i "1s/^\xEF\xBB\xBF//" $file
         tail -n +$tailindex "$file" >> $TMP
     else
+        sed -i "1s/^\xEF\xBB\xBF//" $file
         cat $file >> $TMP
     fi
   fi

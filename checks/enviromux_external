@@ -16,6 +16,8 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+factory_settings['enviromux_default_levels'] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
+
 check_info['enviromux_external'] = {
     'parse_function': parse_enviromux_external,
     'inventory_function': inventory_enviromux_temperature,

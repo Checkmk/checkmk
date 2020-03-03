@@ -9,7 +9,7 @@ description:
  informational and will not change his state.
 
 item:
- The product class will be the item
+ The product class
 
 inventory:
  Only one service is created

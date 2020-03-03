@@ -11,7 +11,7 @@ description:
  also be available.
 
 item:
- The item is the store name of a particular service set
+ The store name of a particular service set
 
 inventory:
  One service for each store is created

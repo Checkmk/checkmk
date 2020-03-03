@@ -11,8 +11,7 @@ description:
  Additional to that you can the the active UDP and TCP Sessions.
 
 item:
- The description of the service as provided by
- the device.
+ The description of the package
 
 inventory:
  The check creates a service for each interface, which is an ethernet

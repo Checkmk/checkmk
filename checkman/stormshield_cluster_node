@@ -10,8 +10,7 @@ description:
  The services will only be inventorized if you configured HA on your firewall.
 
 item:
- The description of the service as provided by
- the device.
+ The index of the cluster node
 
 inventory:
  One check is created which holds information about the other member

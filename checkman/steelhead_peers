@@ -9,5 +9,8 @@ description:
  As long the peer is connected the result will be {OK}. In all other cases
  it is {critical}.
 
+item:
+ The name of the host
+
 inventory:
  One check for each peer will be created.

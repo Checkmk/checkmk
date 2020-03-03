@@ -8,8 +8,5 @@ description:
  from the appliance are similar to Check_MK. The state "Information" will
  be treated as {OK}.
 
-item:
- No item will be created
-
 inventory:
  Only one service will be created

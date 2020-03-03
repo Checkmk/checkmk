@@ -8,8 +8,7 @@ description:
  information that could be useful.
 
 item:
- The description of the service as provided by
- the device.
+ The fixed statement {{Stormshield Info}}
 
 inventory:
  One check with the information will be created

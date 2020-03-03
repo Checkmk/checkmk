@@ -12,5 +12,4 @@ inventory:
  One service for each license will be created
 
 item:
- one item named "Splunk License License_name" will be created
-
+ The name of the license

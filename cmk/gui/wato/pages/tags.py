@@ -916,7 +916,13 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
         if not old_tag:
             continue
 
-        current_value = rule.conditions.host_tags[operation.tag_group_id]
+        try:
+            current_value = rule.conditions.host_tags[operation.tag_group_id]
+        except KeyError:
+            if TagCleanupMode.REMOVE:
+                continue
+            raise
+
         if old_tag != current_value and {"$ne": old_tag} != current_value:
             continue  # old_tag id is not configured
 
@@ -926,7 +932,10 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             continue  # Skip modification
 
         # First remove current setting
-        del rule.conditions.host_tags[operation.tag_group_id]
+        try:
+            del rule.conditions.host_tags[operation.tag_group_id]
+        except KeyError:
+            pass
 
         # In case it needs to be replaced with a new value, do it now
         if new_tag:

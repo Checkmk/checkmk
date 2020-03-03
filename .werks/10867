@@ -1,0 +1,13 @@
+Title: Tags: Fix cleanup actions after tag choice removal / editing
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1583270303
+Class: fix
+
+When removing a tag choice or changing the ID of a tag choice, this leads
+to a warning message when e.g. rulesets refer to the modified tag choice.
+After choosing one of these actions and confirming the dialog the action
+was not performed as expected. This is now possible again.

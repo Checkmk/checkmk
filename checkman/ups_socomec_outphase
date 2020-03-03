@@ -8,7 +8,7 @@ description:
  as of now and does not support setting parameters.
 
 item:
- The identifier of the phase (usually {"1"}, {"2"}, {"3"}).
+ ID of the phase
 
 inventory:
  One check per Socomec UPS output phase is created.

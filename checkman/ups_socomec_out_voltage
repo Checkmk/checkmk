@@ -8,6 +8,9 @@ description:
 
  Please refer to the manpage of ups_out_voltage for configuration examples.
 
+item:
+ ID of the phase
+
 inventory:
  Supported.
 

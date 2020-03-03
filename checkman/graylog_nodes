@@ -13,7 +13,7 @@ description:
  Needs the datasource "Check state of Graylog" to be configured.
 
 item:
- The item is the name of the node.
+ The name of the node.
 
 inventory:
  One service for each node {"Graylog Node my_node"} will be created.

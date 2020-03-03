@@ -21,10 +21,6 @@ description:
  The check also queries the air humidity level, but currently
  does not allow setting a level on this.
 
-
-item:
- This check generates no item.
-
 inventory:
  The check first looks for a cooling device vendor (this
  is where it needs to be extended to cover other Carel devices),

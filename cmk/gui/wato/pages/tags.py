@@ -134,15 +134,19 @@ class ModeTags(ABCTagMode):
     def _delete_tag_group(self):
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
-        message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
-        if message is True:  # no confirmation yet
-            c = wato_confirm(
-                _("Confirm deletion of the tag group '%s'") % del_id,
-                _("Do you really want to delete the tag group '%s'?") % del_id)
-            if c is False:
-                return ""
-            elif c is None:
-                return None
+        if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
+                del_id):
+            message = _("Transformed the user tag group \"%s\" to builtin.") % del_id
+        else:
+            message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
+            if message is True:  # no confirmation yet
+                c = wato_confirm(
+                    _("Confirm deletion of the tag group '%s'") % del_id,
+                    _("Do you really want to delete the tag group '%s'?") % del_id)
+                if c is False:
+                    return ""
+                elif c is None:
+                    return None
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -153,6 +157,31 @@ class ModeTags(ABCTagMode):
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
+
+    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
+        """The "Agent type" tag group was user defined in previous versions
+
+        Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
+        for further information
+
+        In case a user wants to remove such a "agent" tag group do not perform the
+        usual validations since this is not a real delete operation because it just
+        replaces a custom group with a builtin one.
+        """
+        if del_id != "agent":
+            return False
+
+        builtin_tg = self._builtin_config.get_tag_group("agent")
+        if builtin_tg is None:
+            return False
+
+        user_tg = self._tag_config.get_tag_group("agent")
+        if user_tg is None:
+            return False
+
+        # When the tag choices are matching the builtin tag group choices
+        # simply allow removal without confirm
+        return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self):
         del_id = html.get_item_input("_del_aux",

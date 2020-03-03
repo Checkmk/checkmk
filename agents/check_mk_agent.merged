@@ -386,6 +386,47 @@ if stat --version 2>&1 | head -n 1 | grepq "5.3.0"; then
     }
 fi
 
+# Expected format example: "Nov 10 2034 21:19:01"
+convert_time_to_epoch() {
+  month day timestamp year hours min sec
+
+  # Read our incoming date/time information into our variables
+  mkecho "${*:?No date provided}" | read -r month day year timestamp
+  mkecho "${timestamp}" | IFS=':' read -r hours min sec
+
+  # Convert the month to 0..11 range
+  case "${month}" in
+    ([jJ]an*) month=0 ;;
+    ([fF]eb*) month=1 ;;
+    ([mM]ar*) month=2 ;;
+    ([aA]pr*) month=3 ;;
+    ([mM]ay)  month=4 ;;
+    ([jJ]un*) month=5 ;;
+    ([jJ]ul*) month=6 ;;
+    ([aA]ug*) month=7 ;;
+    ([sS]ep*) month=8 ;;
+    ([oO]ct*) month=9 ;;
+    ([nN]ov*) month=10 ;;
+    ([dD]ec*) month=11 ;;
+  esac
+
+  # Pass our variables to the mighty 'perl'
+  perl -e 'use Time::Local; print timegm(@ARGV[0,1,2,3,4], $ARGV[5]-1900)."\n";' "${sec}" "${min}" "${hours}" "${day}" "${month}" "${year}"
+}
+
+# Calculate how many days until the cert expires
+# Short circuit versions of 'date' that don't support '-d' (e.g. Solaris)
+# In this instance, we want to call 'convert_time_to_epoch()'
+if date -d yesterday 2>&1 | grep illegal >/dev/null 2>&1; then
+    calculate_cert_epoch() {
+        convert_time_to_epoch "$(read_cert_expiry "${1:?No Cert Defined}")"
+    }
+else
+    calculate_cert_epoch() {
+        date -d "$(read_cert_expiry "${1:?No Cert Defined}")" +%s
+    }
+fi
+
 # Function to list CIFS mounts for use by section_nfs
 get_cifs_mounts() {
     if [ -r /proc/mounts ]; then
@@ -1958,69 +1999,111 @@ section_omd() {
         # mkecho '{"cmk/check_mk_server": "yes"}'
         mkecho -j "cmk/check_mk_server" "yes"
 
-        run_cached omd_status 60 "omd status --bare --auto || true"
+        run_cached omd_status 60 "omd status --bare || true"
         mkecho '<<<mknotifyd:sep(0)>>>'
         get_epoch
-        for statefile in /omd/sites/*/var/log/mknotifyd.state; do
-            if [ -e "$statefile" ]; then
-                site=${statefile%/var/log*}
-                site=${site#/omd/sites/}
-                mkecho "[$site]"
-                grep -v '^#' <"$statefile"
+        for _statefile in /omd/sites/*/var/log/mknotifyd.state; do
+            if [ -e "${_statefile}" ]; then
+                _site=${_statefile%/var/log*}
+                _site=${_site#/omd/sites/}
+                mkecho "[${_site}]"
+                grep -v '^#' <"${_statefile}"
             fi
+            unset -v _site
         done
 
         mkecho '<<<omd_apache:sep(124)>>>'
-        for statsfile in /omd/sites/*/var/log/apache/stats; do
-            if [ -e "$statsfile" ]; then
-                site=${statsfile%/var/log*}
-                site=${site#/omd/sites/}
-                mkecho "[$site]"
-                cat "$statsfile"
-                : >"$statsfile"
+        for _statsfile in /omd/sites/*/var/log/apache/stats; do
+            if [ -e "${_statsfile}" ]; then
+                _site=${_statsfile%/var/log*}
+                _site=${_site#/omd/sites/}
+                mkecho "[${_site}]"
+                cat "${_statsfile}"
+                : >"${_statsfile}"
                 # prevent next section to fail caused by a missing newline at the end of the statsfile
                 mkecho
             fi
+            unset -v _site
         done
     fi
+
+    mkecho '<<<omd_info:sep(59)>>>'
+    mkecho '[versions]'
+    mkecho 'version;number;edition;demo'
+    for _versiondir in /omd/versions/*; do
+        _omd_version=${_versiondir#/omd/versions/}
+
+        # filter out special directory 'default'
+        [ "${_omd_version}" = "default" ] && continue
+
+        _omd_number="${_omd_version}"
+        _omd_demo="0"
+        case "${_omd_version}" in
+            (*.demo)
+                _omd_number=${_omd_version%.demo}
+                _omd_demo="1"
+            ;;
+        esac
+        _omd_edition=${_omd_number##*.}
+        _omd_number=${_omd_number%.*}
+        mkecho "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
+    done
+    mkecho '[sites]'
+    mkecho 'site;used_version;autostart'
+    for _sitedir in /omd/sites/*; do
+        _site=${_sitedir#/omd/sites/}
+        _used_version=$(readlink "${_sitedir}"/version)
+        _used_version=${_used_version##*/}
+        _autostart="0"
+        if grepq "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${_sitedir}"/etc/omd/site.conf; then
+            _autostart="1"
+        fi
+        mkecho "${_site};${_used_version};${_autostart}"
+    done
 
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
     if cd /omd/sites; then
         mkecho '<<<livestatus_status:sep(59)>>>'
-        for site in *; do
-            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
-                mkecho "[$site]"
+        for _site in *; do
+            if [ -S "/omd/sites/${_site}/tmp/run/live" ]; then
+                mkecho "[${_site}]"
                 # shellcheck disable=SC2039
                 mkecho -e "GET status" |
-                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
+                    waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/live"
             fi
         done
 
         mkecho '<<<livestatus_ssl_certs:sep(124)>>>'
-        for site in *; do
-            mkecho "[$site]"
-            for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
-                if [ -f "$PEM_PATH" ]; then
-                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH")
+        for _site in *; do
+            mkecho "[${_site}]"
+            for _pem_path in "/omd/sites/${_site}/etc/ssl/ca.pem" "/omd/sites/${_site}/etc/ssl/sites/${_site}.pem"; do
+                if [ -f "${_pem_path}" ]; then
+                    _cert_date=$(
+                        openssl x509 -enddate -noout -in "${_pem_path}" | 
+                            sed -e "s/^notAfter=//" -e "s/GMT//" | 
+                            awk '{printf("%s %02d %d %s\n", $1,$2,$4,$3)}'
+                    )
                     # TO-DO: Confirm that this works
-                    CERT_DATE=$(mkecho "${CERT_DATE}" | sed 's/notAfter=//g')
-                    mkecho "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
+                    mkecho "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
                 fi
             done
         done
 
         mkecho '<<<mkeventd_status:sep(0)>>>'
-        for site in *; do
-            if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
-                mkecho "[\"$site\"]"
+        for _site in *; do
+            if [ -S "/omd/sites/${_site}/tmp/run/mkeventd/status" ]; then
+                mkecho "[\"${_site}\"]"
                 # shellcheck disable=SC2039
                 mkecho -e "GET status\\nOutputFormat: json" |
-                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+                    waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/mkeventd/status"
             fi
         done
     fi
+
+    unset -v _autostart _site _sitedir _statefile _statsfile _used_version _versiondir
+    unset -v _omd_demo _omd_edition _omd_number _omd_site _omd_version
 }
 
 section_openvpn() {
@@ -2217,7 +2300,7 @@ section_raid() {
         done
         mkecho
         lsicli -PDList -aALL -NoLog </dev/null |
-            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
         mkecho '<<<megaraid_ldisks>>>'
         lsicli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         mkecho '<<<megaraid_bbu>>>'

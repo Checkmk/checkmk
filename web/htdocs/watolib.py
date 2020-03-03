@@ -1824,12 +1824,16 @@ class CREFolder(BaseFolder):
         return choices
 
 
-    def recursive_subfolder_choices(self, current_depth=0):
+    def _prefixed_title(self, current_depth):
         if current_depth:
             title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
         else:
             title_prefix = ""
-        sel = [ (self.path(), HTML(title_prefix + html.attrencode(self.title()))) ]
+        return HTML(title_prefix + html.attrencode(self.title()))
+
+
+    def recursive_subfolder_choices(self, current_depth=0):
+        sel = [(self.path(), self._prefixed_title(current_depth))]
 
         for subfolder in self.visible_subfolders_sorted_by_title():
             sel += subfolder.recursive_subfolder_choices(current_depth + 1)

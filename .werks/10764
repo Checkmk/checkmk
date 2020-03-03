@@ -1,0 +1,13 @@
+Title: Background jobs: Run scheduled reports in background if configured
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p10
+Date: 1579699279
+
+Scheduled reports, configured as background job, were not executet in
+background. This has been fixed.

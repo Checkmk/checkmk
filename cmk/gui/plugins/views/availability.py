@@ -218,7 +218,7 @@ def render_availability_page(view, filterheaders):
 
     # Do CSV ouput
     if html.output_format == "csv_export" and config.user.may("general.csv_export"):
-        output_availability_csv(what, av_data, avoptions)
+        _output_csv(what, av_mode, av_data, avoptions)
         return
 
     title += " - " + range_title
@@ -256,7 +256,7 @@ def render_availability_page(view, filterheaders):
                 "report",
             )
 
-        if av_mode == "table" and config.user.may("general.csv_export"):
+        if config.user.may("general.csv_export"):
             html.context_button(
                 _("Export as CSV"),
                 html.makeuri([("output_format", "csv_export")]),
@@ -354,15 +354,16 @@ def render_availability_tables(availability_tables, what, avoptions):
 
 def render_availability_timelines(what, av_data, avoptions):
     for timeline_nr, av_entry in enumerate(av_data):
-        render_availability_timeline(what, av_entry, avoptions, timeline_nr)
+        _render_availability_timeline(what, av_entry, avoptions, timeline_nr)
 
 
-def render_availability_timeline(what, av_entry, avoptions, timeline_nr):
+def _render_availability_timeline(what, av_entry, avoptions, timeline_nr):
     html.open_h3()
     html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
     html.close_h3()
 
     timeline_rows = av_entry["timeline"]
+
     if not timeline_rows:
         html.div(_("No information available"), class_="info")
         return
@@ -374,12 +375,8 @@ def render_availability_timeline(what, av_entry, avoptions, timeline_nr):
         avoptions,
         "standalone",
     )
-    render_timeline_bar(timeline_layout, "standalone", timeline_nr)
 
-    # TODO: Hier fehlt bei BI der Timewarpcode (also der Baum im Zauberzustand)
-    # if what == "bi":
-    #    render_timewarp(
-    # soso..
+    render_timeline_bar(timeline_layout, "standalone", timeline_nr)
 
     # Table with detailed events
     with table_element("av_timeline", "", css="timelineevents", sortable=False,
@@ -389,6 +386,7 @@ def render_availability_timeline(what, av_entry, avoptions, timeline_nr):
                 id_="timetable_%d_entry_%d" % (timeline_nr, row_nr),
                 onmouseover="cmk.availability.timetable_hover(%d, %d, 1);" % (timeline_nr, row_nr),
                 onmouseout="cmk.availability.timetable_hover(%d, %d, 0);" % (timeline_nr, row_nr))
+
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -586,7 +584,7 @@ def render_bi_availability(title, aggr_rows):
         if config.reporting_available() and config.user.may("general.reporting"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"),
                                 "report")
-        if av_mode == "availability" and config.user.may("general.csv_export"):
+        if config.user.may("general.csv_export"):
             html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]),
                                 "download_csv")
 
@@ -730,7 +728,7 @@ def render_bi_availability(title, aggr_rows):
             html.show_warning(text)
 
         if html.output_format == "csv_export" and config.user.may("general.csv_export"):
-            output_availability_csv("bi", av_data, avoptions)
+            _output_csv("bi", av_mode, av_data, avoptions)
             return
 
         html.write(timewarpcode)
@@ -996,7 +994,58 @@ def handle_edit_annotations():
 #   '----------------------------------------------------------------------'
 
 
-def output_availability_csv(what, av_data, avoptions):
+def _output_csv(what, av_mode, av_data, avoptions):
+    if av_mode == "table":
+        _output_availability_csv(what, av_data, avoptions)
+    elif av_mode == "timeline":
+        _output_availability_timelines_csv(what, av_data, avoptions)
+    else:
+        raise NotImplementedError()
+
+
+def _output_availability_timelines_csv(what, av_data, avoptions):
+    _av_output_set_content_disposition("Checkmk-Availability-Timeline")
+    for timeline_nr, av_entry in enumerate(av_data):
+        _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr)
+
+
+def _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr):
+    timeline_layout = availability.layout_timeline(
+        what,
+        av_entry["timeline"],
+        av_entry["considered_duration"],
+        avoptions,
+        "standalone",
+    )
+
+    object_cells = availability.get_object_cells(what, av_entry, avoptions["labelling"])
+
+    with table_element("av_timeline", "", output_format="csv",
+                       omit_headers=timeline_nr != 0) as table:
+        for row in timeline_layout["table"]:
+            table.row()
+
+            table.text_cell("object_type", what)
+            for cell_index, objectcell in enumerate(object_cells):
+                table.text_cell("object_name_%d" % cell_index, objectcell[0])
+
+            table.text_cell("object_title", availability.object_title(what, av_entry))
+            table.text_cell("from", row["from"])
+            table.text_cell("from_text", row["from_text"])
+            table.text_cell("until", row["until"])
+            table.text_cell("until_text", row["until_text"])
+            table.text_cell("state", row["state"])
+            table.text_cell("state_name", row["state_name"])
+            table.text_cell("duration_text", row["duration_text"])
+
+            if "omit_timeline_plugin_output" not in avoptions["labelling"]:
+                table.text_cell("log_output", row.get("log_output", ""))
+
+            if "timeline_long_output" in avoptions["labelling"]:
+                table.text_cell("long_log_output", row.get("long_log_output", ""))
+
+
+def _output_availability_csv(what, av_data, avoptions):
     def cells_from_row(table, group_titles, group_cells, object_titles, cell_titles, row_object,
                        row_cells):
         for column_title, group_title in zip(group_titles, group_cells):
@@ -1008,7 +1057,7 @@ def output_availability_csv(what, av_data, avoptions):
         for (title, _help), (text, _css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
-    av_output_set_content_disposition(_("Check_MK-Availability"))
+    _av_output_set_content_disposition("Checkmk-Availability")
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
     with table_element("av_items", output_format="csv") as table:
         for group_title, availability_table in availability_tables:
@@ -1048,7 +1097,7 @@ def output_availability_csv(what, av_data, avoptions):
                 )
 
 
-def av_output_set_content_disposition(title):
+def _av_output_set_content_disposition(title):
     filename = '%s-%s.csv' % (
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),

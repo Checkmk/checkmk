@@ -27,6 +27,8 @@
 # Agent output:
 # <<<netapp_api_disk:sep(9)>>>
 
+factory_settings['filer_disks_default_levels'] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
+
 
 def inventory_netapp_api_disk_summary(info):
     return [(None, {})]

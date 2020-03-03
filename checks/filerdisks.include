@@ -30,7 +30,8 @@
 #       "type" : "parity",
 #       "capacity" : 1000000000000,
 #     }
-factory_settings["filer_disks_default_levels"] = {
+
+FILER_DISKS_CHECK_DEFAULT_PARAMETERS = {
     "failed_spare_ratio": (1.0, 50.0),
     "offline_spare_ratio": (1.0, 50.0),
 }

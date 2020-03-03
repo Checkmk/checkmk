@@ -51,6 +51,8 @@
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
+factory_settings['filer_disks_default_levels'] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_ibm_svc_disks(info):
     dflt_header = [

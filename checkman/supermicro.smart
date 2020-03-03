@@ -15,5 +15,8 @@ description:
   Status may also become {UNKNOWN} if the necessary driver is
   uninstalled.
 
+item:
+ Name of the device
+
 inventory:
   One item is reported per SMART-enabled harddisk.

@@ -8,5 +8,8 @@ description:
  This check monitors analog inputs with 0 to 60VDC range.
  Voltage minimum and maximum are interpreted as upper levels.
 
+item:
+ The first number of the object identifier
+
 inventory:
  One service for every sensor will be created.

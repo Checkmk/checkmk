@@ -15,5 +15,8 @@ description:
   itself reports a status which is applied if it's worse than the
   calculated one.
 
+item:
+ Name of the sensor
+
 inventory:
   One item is reported per sensor.

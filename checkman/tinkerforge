@@ -11,7 +11,7 @@ description:
  Apart from the cpu temperature, the values are purely informational.
 
 item:
- The item name is based on the bricks position inside the stack.
+ The bricks position inside the stack.
 
 inventory:
  All master bricks are automatically inventorized.

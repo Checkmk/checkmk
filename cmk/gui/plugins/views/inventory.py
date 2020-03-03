@@ -190,7 +190,7 @@ def _declare_inv_column(invpath, datatype, title, short=None):
 
         filter_info = _inv_filter_info().get(datatype, {})
 
-        # Declare filter. Sync this with _declare_invtable_columns()
+        # Declare filter. Sync this with _declare_invtable_column()
         if datatype in ["str", "bool"]:
             parent_class = FilterInvText if datatype == "str" else FilterInvBool
             filter_class = type(
@@ -730,57 +730,49 @@ def _inv_find_subtable_columns(invpath):
     return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
-def _declare_invtable_columns(infoname, invpath, topic):
-    for name in _inv_find_subtable_columns(invpath):
-        sub_invpath = invpath + "*." + name
-        hint = inventory_displayhints.get(sub_invpath, {})
+def _declare_invtable_column(infoname, invpath, topic, name, column):
+    sub_invpath = invpath + "*." + name
+    hint = inventory_displayhints.get(sub_invpath, {})
 
-        cmp_func = lambda a, b: (a > b) - (a < b)
-        sortfunc = hint.get("sort", cmp_func)
-        if "paint" in hint:
-            paint_name = hint["paint"]
-            paint_function = globals()["inv_paint_" + paint_name]
+    cmp_func = lambda a, b: (a > b) - (a < b)
+    sortfunc = hint.get("sort", cmp_func)
+    if "paint" in hint:
+        paint_name = hint["paint"]
+        paint_function = globals()["inv_paint_" + paint_name]
+    else:
+        paint_name = "str"
+        paint_function = inv_paint_generic
+
+    title = _inv_titleinfo(sub_invpath, None)[1]
+
+    # Sync this with _declare_inv_column()
+    parent_class = hint.get("filter")
+    if not parent_class:
+        if paint_name == "str":
+            parent_class = FilterInvtableText
         else:
-            paint_name = "str"
-            paint_function = inv_paint_generic
+            parent_class = FilterInvtableIDRange
 
-        title = _inv_titleinfo(sub_invpath, None)[1]
-
-        # Sync this with _declare_inv_column()
-        parent_class = hint.get("filter")
-        if not parent_class:
-            if paint_name == "str":
-                parent_class = FilterInvtableText
-            else:
-                parent_class = FilterInvtableIDRange
-
-        filter_class = type(
-            "FilterInv%s" % name.title(), (parent_class,), {
-                "_inv_info": infoname,
-                "_ident": infoname + "_" + name,
-                "_title": topic + ": " + title,
-                "_invinfo": property(lambda s: s._inv_info),
-                "sort_index": property(lambda s: 800),
-                "ident": property(lambda s: s._ident),
-                "title": property(lambda s: s._title),
-            })
-
-        _declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
-                                 paint_function, filter_class)
-
-
-def _declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
-                             filter_class):
-    column = infoname + "_" + name
+    filter_class = type(
+        "FilterInv%s" % name.title(), (parent_class,), {
+            "_inv_info": infoname,
+            "_ident": infoname + "_" + name,
+            "_title": topic + ": " + title,
+            "_invinfo": property(lambda s: s._inv_info),
+            "sort_index": property(lambda s: 800),
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+        })
 
     register_painter(
         column, {
             "title": topic + ": " + title,
-            "short": short_title,
+            "short": hint.get("short", title),
             "columns": [column],
             "paint": lambda row: paint_function(row.get(column)),
             "sorter": column,
         })
+
     register_sorter(
         column, {
             "title": _("Inventory") + ": " + title,
@@ -832,14 +824,14 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         })
     data_source_registry.register(ds_class)
 
-    # Declare a painter, sorter and filters for each path with display hint
-    _declare_invtable_columns(infoname, invpath, title_singular)
-
-    # Create a nice search-view containing these columns
     painters = []
     filters = []
     for name in _inv_find_subtable_columns(invpath):
         column = infoname + "_" + name
+
+        # Declare a painter, sorter and filters for each path with display hint
+        _declare_invtable_column(infoname, invpath, title_singular, name, column)
+
         painters.append((column, '', ''))
         filters.append(column)
 

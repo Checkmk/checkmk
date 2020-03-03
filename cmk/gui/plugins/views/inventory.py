@@ -291,7 +291,7 @@ def decorate_inv_paint(f):
 def inv_paint_generic(v):
     if isinstance(v, float):
         return "number", "%.2f" % v
-    elif isinstance(v, int):
+    if isinstance(v, int):
         return "number", "%d" % v
     return "", escape_text("%s" % v)
 
@@ -391,7 +391,7 @@ def inv_paint_ipv4_network(nw):
 def inv_paint_ip_address_type(t):
     if t == "ipv4":
         return "", _("IPv4")
-    elif t == "ipv6":
+    if t == "ipv6":
         return "", _("IPv6")
     return "", t
 
@@ -460,7 +460,7 @@ def inv_paint_timestamp_as_age_days(timestamp):
     css_class = "number"
     if age_days == 0:
         return css_class, _("today")
-    elif age_days == 1:
+    if age_days == 1:
         return css_class, _("yesterday")
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 

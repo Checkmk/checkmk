@@ -40,11 +40,12 @@ enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
 
 namespace {
-template <typename Protocol>
-int native_handle(const asio::basic_socket<Protocol>& sock) {
+template <class Protocol, class SocketService>
+int native_handle(const asio::basic_socket<Protocol, SocketService>& sock) {
     // socket::native_handle is not const but we just want
     // the copy of an int here.
-    return const_cast<asio::basic_socket<Protocol>&>(sock).native_handle();
+    return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
+        .native_handle();
 }
 }  // namespace
 

@@ -1,0 +1,10 @@
+Title: LDAP: Fix WATO change of edited users containing HTML <br> tags
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1583246000
+Class: fix
+
+

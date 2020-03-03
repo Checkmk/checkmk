@@ -56,7 +56,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
-    message = html.attrencode(message).strip()
+    message = html.permissive_attrencode(message).strip()
 
     # TODO: Create a more generic referencing
     # linkinfo identifies the object operated on. It can be a Host or a Folder
@@ -151,7 +151,7 @@ class ActivateChangesWriter(object):
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)
         # escaped / allowed HTML and strings to be escaped.
-        text = html.attrencode(text)
+        text = html.permissive_attrencode(text)
 
         SiteChanges(site_id).save_change({
             "id": change_id,

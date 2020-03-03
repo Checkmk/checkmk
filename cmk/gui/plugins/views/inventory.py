@@ -142,7 +142,7 @@ def _inv_filter_info():
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
-def declare_inv_column(invpath, datatype, title, short=None):
+def _declare_inv_column(invpath, datatype, title, short=None):
     if invpath == ".":
         name = "inv"
     else:
@@ -190,7 +190,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
 
         filter_info = _inv_filter_info().get(datatype, {})
 
-        # Declare filter. Sync this with declare_invtable_columns()
+        # Declare filter. Sync this with _declare_invtable_columns()
         if datatype in ["str", "bool"]:
             parent_class = FilterInvText if datatype == "str" else FilterInvBool
             filter_class = type(
@@ -585,7 +585,7 @@ def _convert_display_hint(hint):
     return hint
 
 
-def inv_titleinfo(invpath, node):
+def _inv_titleinfo(invpath, node):
     hint = _inv_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
@@ -599,11 +599,11 @@ def inv_titleinfo(invpath, node):
 
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"
-def inv_titleinfo_long(invpath, node):
-    _icon, last_title = inv_titleinfo(invpath, node)
+def _inv_titleinfo_long(invpath, node):
+    _icon, last_title = _inv_titleinfo(invpath, node)
     parent = inventory.parent_path(invpath)
     if parent:
-        _icon, parent_title = inv_titleinfo(parent, None)
+        _icon, parent_title = _inv_titleinfo(parent, None)
         return parent_title + u" ➤ " + last_title
     return last_title
 
@@ -613,8 +613,8 @@ def declare_inventory_columns():
     for invpath, hint in inventory_displayhints.items():
         if "*" not in invpath:
             datatype = hint.get("paint", "str")
-            long_title = inv_titleinfo_long(invpath, None)
-            declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
+            long_title = _inv_titleinfo_long(invpath, None)
+            _declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
 
 
 #.
@@ -660,7 +660,7 @@ def _create_inv_rows(hostrow, invpath, infoname):
     return entries
 
 
-def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
+def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
     # Create livestatus filter for filtering out hosts
     filter_code = ""
     for filt in filters:
@@ -707,7 +707,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
     return rows
 
 
-def inv_find_subtable_columns(invpath):
+def _inv_find_subtable_columns(invpath):
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -733,8 +733,8 @@ def inv_find_subtable_columns(invpath):
     return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
-def declare_invtable_columns(infoname, invpath, topic):
-    for name in inv_find_subtable_columns(invpath):
+def _declare_invtable_columns(infoname, invpath, topic):
+    for name in _inv_find_subtable_columns(invpath):
         sub_invpath = invpath + "*." + name
         hint = inventory_displayhints.get(sub_invpath, {})
 
@@ -747,9 +747,9 @@ def declare_invtable_columns(infoname, invpath, topic):
             paint_name = "str"
             paint_function = inv_paint_generic
 
-        title = inv_titleinfo(sub_invpath, None)[1]
+        title = _inv_titleinfo(sub_invpath, None)[1]
 
-        # Sync this with declare_inv_column()
+        # Sync this with _declare_inv_column()
         parent_class = hint.get("filter")
         if not parent_class:
             if paint_name == "str":
@@ -768,12 +768,12 @@ def declare_invtable_columns(infoname, invpath, topic):
                 "title": property(lambda s: s._title),
             })
 
-        declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
-                                paint_function, filter_class)
+        _declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
+                                 paint_function, filter_class)
 
 
-def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
-                            filter_class):
+def _declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
+                             filter_class):
     column = infoname + "_" + name
 
     register_painter(
@@ -800,8 +800,8 @@ class RowTableInventory(RowTable):
         self._inventory_path = inventory_path
 
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return inv_multisite_table(self._info_name, self._inventory_path, columns, headers,
-                                   only_sites, limit, all_active_filters)
+        return _inv_multisite_table(self._info_name, self._inventory_path, columns, headers,
+                                    only_sites, limit, all_active_filters)
 
 
 # One master function that does all
@@ -836,12 +836,12 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     data_source_registry.register(ds_class)
 
     # Declare a painter, sorter and filters for each path with display hint
-    declare_invtable_columns(infoname, invpath, title_singular)
+    _declare_invtable_columns(infoname, invpath, title_singular)
 
     # Create a nice search-view containing these columns
     painters = []
     filters = []
-    for name in inv_find_subtable_columns(invpath):
+    for name in _inv_find_subtable_columns(invpath):
         column = infoname + "_" + name
         painters.append((column, '', ''))
         filters.append(column)
@@ -1213,8 +1213,8 @@ multisite_builtin_views["inv_hosts_ports"] = {
 
 class RowTableInventoryHistory(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return inv_multisite_table("invhist", None, columns, headers, only_sites, limit,
-                                   all_active_filters)
+        return _inv_multisite_table("invhist", None, columns, headers, only_sites, limit,
+                                    all_active_filters)
 
 
 def _create_hist_rows(hostname, columns):
@@ -1461,7 +1461,7 @@ class NodeRenderer(object):
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
             invpath = ".%s." % raw_invpath
 
-            icon, title = inv_titleinfo(invpath, node)
+            icon, title = _inv_titleinfo(invpath, node)
 
             # Replace placeholders in title with the real values for this path
             if "%d" in title or "%s" in title:
@@ -1521,7 +1521,7 @@ class NodeRenderer(object):
         titles = []
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
-            _icon, title = inv_titleinfo(sub_invpath, None)
+            _icon, title = _inv_titleinfo(sub_invpath, None)
             sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key))
@@ -1533,7 +1533,7 @@ class NodeRenderer(object):
         extratitles = []
         for key in keys:
             if key not in keyorder:
-                _icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
+                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key), None)
                 extratitles.append((title, key))
         titles += sorted(extratitles)
 
@@ -1611,7 +1611,7 @@ class NodeRenderer(object):
         html.open_table()
         for key, value in sorted(attributes.get_child_data().items(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
-            _icon, title = inv_titleinfo(sub_invpath, key)
+            _icon, title = _inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()

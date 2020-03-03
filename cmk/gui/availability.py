@@ -1269,7 +1269,6 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     for entry in availability_table:
         site = entry["site"]
         host = entry["host"]
-        alias = entry["alias"]
         service = entry["service"]
 
         row = {}
@@ -1290,32 +1289,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     ("history", _("Event History"), history_url_of((site, host, service),
                                                                    time_range)))
         row["urls"] = urls
-
-        # Column with host/service or aggregate name
-        objectcells = []  # List of pairs of (text, url)
-        if what == "bi":
-            bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
-                                                       ("aggr_group", host),
-                                                       ("aggr_name", service)])
-            objectcells.append((service, bi_url))
-        else:
-            host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
-                                                         ("site", site), ("host", host)])
-            if "omit_host" not in labelling or\
-                    (what == "host" and "show_alias" not in labelling):
-                objectcells.append((host, host_url))
-            if "show_alias" in labelling:
-                objectcells.append((alias, host_url))
-            if what == "service":
-                if "use_display_name" in labelling:
-                    service_name = entry["display_name"]
-                else:
-                    service_name = service
-                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
-                                                                ("site", site), ("host", host),
-                                                                ("service", service)])
-                objectcells.append((service_name, service_url))
-        row["object"] = objectcells
+        row["object"] = get_object_cells(what, entry, labelling)
 
         # Inline timeline
         if show_timeline:
@@ -1421,6 +1395,39 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         av_table["summary"] = summary_cells
 
     return av_table
+
+
+def get_object_cells(what, av_entry, labelling):
+    host = av_entry["host"]
+    service = av_entry["service"]
+
+    objectcells = []  # type: List[Tuple[str, str]]
+    if what == "bi":
+        bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
+                                                   ("aggr_group", host), ("aggr_name", service)])
+        objectcells.append((service, bi_url))
+        return objectcells
+
+    host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
+                                                 ("site", av_entry["site"]), ("host", host)])
+    if "omit_host" not in labelling or\
+            (what == "host" and "show_alias" not in labelling):
+        objectcells.append((host, host_url))
+
+    if "show_alias" in labelling:
+        objectcells.append((av_entry["alias"], host_url))
+
+    if what == "service":
+        if "use_display_name" in labelling:
+            service_name = av_entry["display_name"]
+        else:
+            service_name = service
+        service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
+                                                        ("site", av_entry["site"]), ("host", host),
+                                                        ("service", service)])
+        objectcells.append((service_name, service_url))
+
+    return objectcells
 
 
 # Compute layout of timeline independent of the output device (HTML, PDF, whatever)...

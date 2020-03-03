@@ -65,6 +65,8 @@
 #         Auto-negotiation: on
 #         Link detected: yes
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 linux_nic_check = "lnx_if"
 
 

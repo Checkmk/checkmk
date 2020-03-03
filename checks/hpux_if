@@ -57,6 +57,8 @@
 # Interface Alias              =
 # Link Up/Down Trap Enable     = Enabled
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 
 def hpux_convert_to_if64(info):
     nics = []

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 
 @network_interface_scan_registry.register
 def snmp_scan_function_if64adm(oid):

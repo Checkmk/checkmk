@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+IF_CHECK_DEFAULT_PARAMETERS = {
+    "errors": (0.01, 0.1),
+}
+
 # Functions and definitions used by if and if64
 if_inventory_porttypes = [
     '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
@@ -35,9 +39,6 @@ if_inventory_pad_portnumbers = True
 if_inventory_monitor_speed = True
 if_inventory_monitor_state = True
 inventory_if_rules = []
-factory_settings["if_default_levels"] = {
-    "errors": (0.01, 0.1),
-}
 
 # Grouping of if ports
 #if_groups = [
@@ -49,7 +50,7 @@ factory_settings["if_default_levels"] = {
 if_groups = []
 # Obsolete variable, but needed as contained in autochecks of
 # older checks. We need to keep this up for a few years...
-if_default_error_levels = factory_settings["if_default_levels"]["errors"]
+if_default_error_levels = IF_CHECK_DEFAULT_PARAMETERS["errors"]
 if_default_traffic_levels = None, None
 if_default_average = None
 if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken devices

@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 import json
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_cadvisor_if(info):
     diskstat_info = json.loads(info[0][0])

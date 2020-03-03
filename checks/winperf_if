@@ -87,6 +87,8 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 
 def winperf_if_canonize_nic_name(name):
     return name.replace("_", " ").replace("  ", " ").rstrip()

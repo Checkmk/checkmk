@@ -60,6 +60,8 @@
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 factory_settings['esx_vsphere_counters_cpu_default_levels'] = {
     'cpu_costop': (5.0, 10.0),
     'cpu_ready': (5.0, 10.0)

@@ -44,6 +44,8 @@
 #         Simplex 64BitSupport ChecksumOffload
 #                 DataRateSet
 
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_aix_if(info):
     nic_info = {}

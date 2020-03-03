@@ -124,6 +124,9 @@
 #    ]
 
 # Specify which values are to put into the resulting interface
+
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+
 tableindex = {
     "fibrechannel": {
         # a list of class  and    field

@@ -116,9 +116,9 @@ public:
         _pollfds.push_back({fd, toMask(e), 0});
     }
 
-    template <typename Protocol>
-    void addFileDescriptor(const asio::basic_socket<Protocol>& sock,
-                           PollEvents e) {
+    template <class Protocol, class SocketService>
+    void addFileDescriptor(
+        const asio::basic_socket<Protocol, SocketService>& sock, PollEvents e) {
         addFileDescriptor(native_handle(sock), e);
     }
 
@@ -128,9 +128,10 @@ public:
                (_pollfds[it->second].revents & toMask(e)) != 0;
     }
 
-    template <typename Protocol>
-    bool isFileDescriptorSet(const asio::basic_socket<Protocol>& sock,
-                             PollEvents e) const {
+    template <class Protocol, class SocketService>
+    bool isFileDescriptorSet(
+        const asio::basic_socket<Protocol, SocketService>& sock,
+        PollEvents e) const {
         return isFileDescriptorSet(native_handle(sock), e);
     }
 

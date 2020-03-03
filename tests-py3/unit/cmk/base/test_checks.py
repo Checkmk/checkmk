@@ -375,7 +375,7 @@ def test_check_plugin_header():
 
         assert shebang == "#!/usr/bin/env python3", "Check plugin '%s' has wrong shebang '%s'" % (
             checkfile.name, shebang)
-        assert encoding_header == "# -*- encoding: utf-8; py-indent-offset: 4 -*-", "Check plugin '%s' has wrong encoding header '%s'" % (
+        assert encoding_header == "# -*- coding: utf-8 -*-", "Check plugin '%s' has wrong encoding header '%s'" % (
             checkfile.name, encoding_header)
 
 

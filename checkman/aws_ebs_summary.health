@@ -11,7 +11,7 @@ description:
  Details of the single status checks are also reported.
 
 item:
- Name of the instance if all required metrics (VolumeStatus) are given.
+ Name of the instance
 
 inventory:
- One service per volume will be created.
+ One service is created for each volume if all required metrics (VolumeStatus) are given.

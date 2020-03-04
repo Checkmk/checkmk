@@ -12,4 +12,5 @@ description:
  are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (RequestCount, HTTPCode_ELB_3XX_Count,
+ HTTPCode_ELB_4XX_Count, HTTPCode_ELB_5XX_Count) are given.

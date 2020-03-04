@@ -11,7 +11,7 @@ description:
  Upper levels are configurable; no default levels are set.
 
 item:
- Summary
+ The fixed statement {{Summary}}
 
 inventory:
- One service will be created.
+ One service is created.

@@ -10,4 +10,4 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created for each connection.

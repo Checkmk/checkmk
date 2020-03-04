@@ -16,4 +16,4 @@ item:
  Name of the vault.
 
 inventory:
- One service per vault will be created.
+ One service is created for each vault.

@@ -12,4 +12,5 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (ClientTLSNegotiationErrorCount,
+ TargetTLSNegotiationErrorCount) are given.

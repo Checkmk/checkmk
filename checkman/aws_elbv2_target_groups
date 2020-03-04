@@ -13,4 +13,4 @@ description:
  state is unknown the check is UNKNOWN, otherwise OK.
 
 inventory:
- One summary service is created.
+ One service is created.

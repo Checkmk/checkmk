@@ -17,6 +17,6 @@ inventory:
  are included.
 
 item:
- The name of the sensor, which is either "internal" or "external {<id>}",
- and {<id>} is the numerical id of the sensor.
+ The name of the sensor, which is either "internal" or "external {<ID>}",
+ and {<ID>} is the numerical ID of the sensor.
 

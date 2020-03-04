@@ -27,5 +27,5 @@ inventory:
  The check will add one service per sensor.
 
 item:
- {{Unit}} followed by the id of the unit followed by the detected sensor (i.e. {{Fan}}
+ {{Unit}} followed by the ID of the unit followed by the detected sensor (i.e. {{Fan}}
  or {{Powersupply}} and his identification number

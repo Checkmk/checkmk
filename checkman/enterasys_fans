@@ -9,7 +9,7 @@ description:
  No configuration is necessary.
 
 item:
- The id of the FAN like reported in the output of the SNMP agent.
+ The ID of the FAN like reported in the output of the SNMP agent.
 
 inventory:
  One check is created for each Fan.

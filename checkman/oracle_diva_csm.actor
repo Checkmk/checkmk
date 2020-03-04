@@ -11,7 +11,7 @@ description:
   UNKNOWN.
 
 item:
- {{Actor}} plus the id of the device
+ {{Actor}} plus the ID of the device
 
 inventory:
   One item is generated per actor reported by the device.

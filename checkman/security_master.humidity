@@ -9,7 +9,7 @@ description:
  are applied the SNMP values are used.
 
 item:
- The id and name of the sensor.
+ The ID and name of the sensor.
 
 inventory:
  One sensor is discovered for each humidity sensor.

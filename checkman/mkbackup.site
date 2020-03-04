@@ -9,7 +9,7 @@ description:
  the job is overdue.
 
 item:
- The id of the site followed by the statement {{backup}} joined with the id of the job.
+ The ID of the site followed by the statement {{backup}} joined with the ID of the job.
 
 inventory:
  One service per site and backup job will be created.

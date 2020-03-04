@@ -22,7 +22,7 @@ description:
  necessary.
 
 item:
- The id of the disk as reported by OpenHardwareMonitor
+ The ID of the disk as reported by OpenHardwareMonitor
 
 inventory:
  All disks that report a supported smart reading are inventorized.

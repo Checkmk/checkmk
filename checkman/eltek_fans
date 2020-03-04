@@ -9,7 +9,7 @@ description:
  are configurable.
 
 item:
- The fan id.
+ The fan ID.
 
 inventory:
  One service per fan is created.

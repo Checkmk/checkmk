@@ -10,7 +10,7 @@ description:
   device is OFFLINE and {WARN} in device status UNKNOWN.
 
 item:
- {{Manager}} plus the id of the device
+ {{Manager}} plus the ID of the device
 
 inventory:
   Exactly one item is generated.

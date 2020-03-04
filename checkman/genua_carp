@@ -15,7 +15,7 @@ description:
  the state master. If it is either {0} or {>1} the check is critical.
 
  The check is known to run with genuscreen version 3.0 and supports genuas regular
- enterprise id 3717 as well as the id 3137 which was introduced in a bug in some
+ enterprise ID 3717 as well as the ID 3137 which was introduced in a bug in some
  versions of genuscreen.
 
 inventory:

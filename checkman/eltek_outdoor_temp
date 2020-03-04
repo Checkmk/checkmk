@@ -9,7 +9,7 @@ description:
  lower levels are configurable.
 
 item:
- The outdoor temperature id.
+ The outdoor temperature ID.
 
 inventory:
  One service per outdoor temperature is created.

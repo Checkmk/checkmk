@@ -11,7 +11,7 @@ description:
   UNKNOWN.
 
 item:
- {{Library}} plus the id of the device
+ {{Library}} plus the ID of the device
 
 inventory:
   One item is generated per library reported by the device.

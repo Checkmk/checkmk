@@ -7,5 +7,5 @@ description:
  This Check shows the current and total memory usage of module in a Arris CMTS device.
 
 item:
- The id of the module
+ The ID of the module
 

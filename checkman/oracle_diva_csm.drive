@@ -11,7 +11,7 @@ description:
   UNKNOWN.
 
 item:
- {{Drive}} plus the id of the device
+ {{Drive}} plus the ID of the device
 
 inventory:
   One item is generated per drive reported by the device.

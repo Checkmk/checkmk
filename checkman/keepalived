@@ -8,7 +8,7 @@ description:
  The checks also shows the IP Address of the VRRP instance.
 
 item:
- The id of the VRRP instance
+ The ID of the VRRP instance
 
 inventory:
  One service for each VRRP is created.

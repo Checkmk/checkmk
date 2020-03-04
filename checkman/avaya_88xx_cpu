@@ -8,4 +8,4 @@ description:
  The levels can be configured (default 90, 95).
 
 inventory:
- Creates one service for each CPU.
+ One service is created for each CPU.

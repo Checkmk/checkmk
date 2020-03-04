@@ -16,5 +16,5 @@ item:
  The WLAN accesspoint name.
 
 inventory:
- One service for each access point is created.
+ One service is created for each provisioned access point.
 

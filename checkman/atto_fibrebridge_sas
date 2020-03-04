@@ -11,4 +11,4 @@ item:
  The number of the SAS port.
 
 inventory:
- One service per enabled SAS port is created
+ One service is created for each enabled SAS port

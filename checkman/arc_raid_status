@@ -15,5 +15,5 @@ item:
  The numeric number of the array, reported by areca cli tool
 
 inventory:
- One check is created for array
+ One service is created for each array
 

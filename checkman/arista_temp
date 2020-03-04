@@ -12,7 +12,7 @@ description:
  device provides their own thershold levels.
 
 item:
- Every recognized temperature sensor generates an individual service
+ One service is created for each recognized temperature sensor
 
 inventory:
  All temperature known sensors with complete Physical description are detected

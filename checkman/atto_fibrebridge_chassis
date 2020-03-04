@@ -7,4 +7,4 @@ description:
  Monitors the throughput status. Possible values are OK and WARN
 
 inventory:
- One service per device is created
+ One service is created for each device

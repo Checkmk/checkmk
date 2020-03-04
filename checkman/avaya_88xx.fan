@@ -11,4 +11,4 @@ item:
  The index of the chassis fan.
 
 inventory:
- Creates one service for each chassis fan.
+ One service is created for each chassis fan.

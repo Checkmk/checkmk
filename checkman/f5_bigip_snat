@@ -10,7 +10,7 @@ description:
  and the current connections.
 
 item:
- Name of the Source NAT
+ Name of the Source NAT (network address translation)
 
 inventory:
  One check is generated per source NAT.

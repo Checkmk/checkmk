@@ -12,9 +12,6 @@ description:
  and states. This check converts them to numeric
  values and passes it on to the if64 check.
 
-item:
- The network interface
-
 inventory:
  One service per interface is created.
 

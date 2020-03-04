@@ -11,6 +11,9 @@ description:
  the plugin {psperf.bat} into the {plugins} directory of you Windows agent.
  Do not use {wmicchecks.bat}. This is obsolete.
 
+item:
+ Name of the process
+
 inventory:
  {ps.perf} supports inventory in exactly the same way as {ps}, just
  that the variable {inventory_processes_perf} is used instead of

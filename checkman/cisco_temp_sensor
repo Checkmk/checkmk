@@ -13,12 +13,7 @@ description:
  via SNMP or can be set in WATO.
 
 item:
- The name of the sensors as found in the OID tree below.
- .1.3.6.1.2.1.47.1.1.1.1.2.
-
- The sensor is retrived from the OID tree below.
- .1.3.6.1.4.1.9.9.91
-
+ The description of the temperature sensor
 
 inventory:
  One separate service per sensor is being created.

@@ -11,5 +11,8 @@ description:
  suggestions published on microsofts technet regarding use with
  MS Exchange.
 
+item:
+ Name of the instance
+
 inventory:
  Exactly one item will be discovered.

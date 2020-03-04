@@ -15,6 +15,9 @@ description:
  collect performance data. Levels you set to {None} will not
  be checked.
 
+item:
+ The kernel counter
+
 inventory:
  Per default one check for {"Major Page Faults"},
  {"Context Switches"} and {"Process Creations"}

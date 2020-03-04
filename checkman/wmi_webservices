@@ -9,5 +9,8 @@ description:
 
  The check is always in state {OK}.
 
+item:
+ Name of the instance
+
 inventory:
  One item per web service is discovered.

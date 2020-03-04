@@ -3,10 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import six
 
 import cmk
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.render
 
 import cmk.gui.i18n
 import cmk.gui.sites as sites
@@ -473,12 +475,12 @@ class JobRenderer(object):
 
         # Dynamic data
         loginfo = job_status.get("loginfo")
-        runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
+        runtime_info = six.ensure_text(cmk.utils.render.timespan(job_status.get("duration", 0)))
         if job_status["state"] == background_job.JobStatusStates.RUNNING \
             and job_status.get("estimated_duration") is not None:
-            runtime_info += " (%s: %s)" % (_("estimated duration"),
-                                           cmk.utils.render.timespan(
-                                               job_status["estimated_duration"]))
+            runtime_info += u" (%s: %s)" % (
+                _("estimated duration"),
+                six.ensure_text(cmk.utils.render.timespan(job_status["estimated_duration"])))
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), job_status["pid"] or ""),

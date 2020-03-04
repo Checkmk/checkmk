@@ -7,6 +7,7 @@
 import os
 import pprint
 import time
+from typing import Any, Dict  # pylint: disable=unused-import
 
 # This is needed for at least CentOS 5.5
 # TODO: Drop this until all supported platforms have newer versions available.
@@ -36,6 +37,7 @@ from cmk.gui.exceptions import MKUserError
 
 class KeypairStore(object):
     def __init__(self, path, attr):
+        # type: (str, str) -> None
         self._path = path
         self._attr = attr
         super(KeypairStore, self).__init__()
@@ -45,7 +47,7 @@ class KeypairStore(object):
         if not os.path.exists(filename):
             return {}
 
-        variables = {self._attr: {}}
+        variables = {self._attr: {}}  # type: Dict[str, Any]
         exec(open(filename).read(), variables, variables)
         return variables[self._attr]
 
@@ -105,7 +107,10 @@ class PageKeyManagement(object):
 
     def action(self):
         if self._may_edit_config() and html.request.has_var("_delete"):
-            key_id = int(html.request.var("_delete"))
+            key_id_as_str = html.request.var("_delete")
+            if key_id_as_str is None:
+                raise Exception("cannot happen")
+            key_id = int(key_id_as_str)
             if key_id not in self.keys:
                 return
 
@@ -377,7 +382,10 @@ class PageDownloadKey(object):
             keys = self.load()
 
             try:
-                key_id = int(html.request.var("key"))
+                key_id_str = html.request.var("key")
+                if key_id_str is None:
+                    raise Exception("cannot happen")  # is this really the case?
+                key_id = int(key_id_str)
             except ValueError:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 

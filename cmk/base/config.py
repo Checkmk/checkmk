@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
     LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
-from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
+from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
 import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config

@@ -24,7 +24,7 @@ import cmk
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel

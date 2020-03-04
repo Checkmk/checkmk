@@ -141,3 +141,14 @@ class ListCache(list, Cache):
         # type: () -> None
         del self[:]  # Clear the list in place
         self.set_not_populated()
+
+
+# This cache manager holds all caches that rely on the configuration
+# and have to be flushed once the configuration is reloaded in the
+# keepalive mode
+config_cache = CacheManager()
+
+# These caches are not automatically cleared during the whole execution
+# time of the current Check_MK process. Single cached may be cleaned
+# manually during execution.
+runtime_cache = CacheManager()

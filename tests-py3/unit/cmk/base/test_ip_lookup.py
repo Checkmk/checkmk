@@ -22,7 +22,7 @@ import cmk.base.ip_lookup as ip_lookup
 # tests-py3/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch):
-    from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache  # pylint: disable=import-outside-toplevel
+    from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache  # pylint: disable=import-outside-toplevel
     _config_cache.reset()
     _runtime_cache.reset()
 

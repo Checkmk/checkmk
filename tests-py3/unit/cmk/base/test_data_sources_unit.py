@@ -12,7 +12,6 @@ from testlib.base import Scenario
 
 import cmk.utils.paths
 
-import cmk.base
 import cmk.base.caching
 import cmk.base.data_sources
 import cmk.base.data_sources.abstract

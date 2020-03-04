@@ -19,7 +19,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.cmk_subprocess as subprocess
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

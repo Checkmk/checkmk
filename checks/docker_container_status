@@ -78,9 +78,10 @@ def discover_docker_container_status_health(parsed_extra):
     parsed = parsed_extra[0]
     if not _is_active_container(parsed):
         return
-    # Only discover if a healthcheck is configured.
+    # Only discover if a healthcheck and health is configured.
     # Stopped containers may have the 'Health' key anyway, so that's no criteria.
-    if "Healthcheck" in parsed:
+    # Blocked Healthcheck results in Health key not being present
+    if {"Healthcheck", "Health"}.issubset(parsed):
         yield None, {}
 
 

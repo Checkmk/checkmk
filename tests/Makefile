@@ -62,6 +62,9 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
+test-integration: $(NODE_MODULES)
+	$(PIPENV2) run ../tests-py3/scripts/run-integration-test.py $(realpath ../tests/integration)
+
 test-unit:
 	$(PYTEST) -T unit unit
 

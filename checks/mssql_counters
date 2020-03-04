@@ -165,7 +165,12 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
 
 def check_mssql_counters_cache_hits(item, params, parsed):
     obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
+
+    if node_data is None:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
     for node_name, counters in node_data.iteritems():
         value = counters.get(counter)
@@ -221,9 +226,9 @@ check_info['mssql_counters.cache_hits'] = {
 
 def check_mssql_counters_transactions(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -267,9 +272,9 @@ check_info['mssql_counters.transactions'] = {
 
 def check_mssql_counters_locks(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -336,9 +341,9 @@ def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
 
 def check_mssql_counters_sqlstats(item, params, parsed):
     obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -385,9 +390,9 @@ check_info["mssql_counters.sqlstats"] = {
 
 def check_mssql_counters_pageactivity(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -522,9 +527,9 @@ check_info["mssql_counters.locks_per_batch"] = {
 
 def check_mssql_file_sizes(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")

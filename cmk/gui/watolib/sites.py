@@ -350,7 +350,7 @@ class SiteManagement(object):
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
-                                           _("Deleted site %s") % html.render_tt(site_id),
+                                           _("Deleted site %s") % site_id,
                                            domains=domains,
                                            sites=[default_site()])
 

@@ -1259,7 +1259,7 @@ class LDAPUserConnector(UserConnector):
 
         import cmk.gui.watolib as watolib
         if changes and config.wato_enabled and not config.is_wato_slave_site():
-            watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
+            watolib.add_change("edit-users", "<br>".join(changes), add_user=False)
 
         if changes or has_changed_passwords:
             userdb.save_users(users)

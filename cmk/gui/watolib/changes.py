@@ -72,7 +72,7 @@ def log_audit(linkinfo, action, message, user_id=None):
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
-    message = escaping.escape_attribute(message).strip()
+    message = escaping.escape_text(message).strip()
     log_entry(linkinfo, action, message, user_id)
 
 
@@ -135,7 +135,7 @@ class ActivateChangesWriter(object):
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)
         # escaped / allowed HTML and strings to be escaped.
-        text = escaping.escape_attribute(text)
+        text = escaping.escape_text(text)
 
         SiteChanges(site_id).save_change({
             "id": change_id,

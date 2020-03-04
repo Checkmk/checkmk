@@ -76,16 +76,32 @@ def current_base_branch_name():
     for commit in commits.strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out by jenkins do not create all
         # the branches locally
-        heads = subprocess.check_output(
-            ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
-        if not isinstance(heads, six.text_type):
-            heads = heads.decode("utf-8")
 
-        for head in heads.strip().split("\n"):
-            if head == "refs/remotes/origin/master":
+        # --format=%(refname): Is not supported by all distros :(
+        #
+        #heads = subprocess.check_output(
+        #    ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
+        #if not isinstance(heads, six.text_type):
+        #    heads = heads.decode("utf-8")
+
+        #for head in heads.strip().split("\n"):
+        #    if head == "refs/remotes/origin/master":
+        #        return "master"
+
+        #    if re.match(r"^refs/remotes/origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
+        #        return head
+
+        lines = subprocess.check_output(["git", "branch", "-r", "--contains", commit])
+        if not isinstance(lines, six.text_type):
+            lines = lines.decode("utf-8")
+
+        for line in lines.strip().split("\n"):
+            head = line.split()[0]
+
+            if head == "origin/master":
                 return "master"
 
-            if re.match(r"^refs/remotes/origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
+            if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
                 return head
 
     logger.warning("Could not determine base branch, using %s", branch_name)

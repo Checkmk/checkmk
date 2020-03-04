@@ -192,7 +192,7 @@ def get_agent_list(EDITION) {
     if (EDITION == "raw") {
         return ["windows", "windows-legacy"]
     } else {
-        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
+        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy"]
     }
 }
 
@@ -278,10 +278,9 @@ def set_version(CMK_VERS) {
 // TODO: Clean this up
 // - AGENT variable handling is confusing
 // - Naming is misleading here. We build:
-//   a) legacy windows agent
-//   b) windows agent updater
-//   c) linux32 agent updater
-//   d) linux64 agent updater
+//   a) windows agent updater
+//   b) linux32 agent updater
+//   c) linux64 agent updater
 // - Split agent logic from agent updater
 def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
     stage('Build agent ' + AGENT) {
@@ -296,23 +295,13 @@ def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
         sh 'rm -rf *'
         mount_overlay("${DAILY_DATA}/git","${WORKSPACE}/agent${AGENT}-dest")
         if (AGENT == '-windows') {
-            // Legacy windows agent
-            sh script: """
-                mkdir -p ${DAILY_DATA}/agents
-                cd agent${AGENT}-dest/agents/windows/
-                CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                    CHROOT_NAME="agent-builder-windows" \
-                    ./build-agent
-                cp check_mk_agent-64.exe ${DAILY_DATA}/agents/check_mk_agent_legacy-64.exe
-                cp check_mk_agent.exe ${DAILY_DATA}/agents/check_mk_agent_legacy.exe
-                cp check_mk_agent.msi ${DAILY_DATA}/agents/check_mk_agent_legacy.msi
-            """
             // Windows agent updater
             if(EDITION != 'raw') {
                 sh script: """
                     cd agent${AGENT}-dest/enterprise/agents/windows/plugins
                     CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
                         make
+                    mkdir -p ${DAILY_DATA}/agents/
                     cp cmk-update-agent.exe ${DAILY_DATA}/agents/
                 """
             }
@@ -351,7 +340,6 @@ def create_source_package(DAILY_DATA) {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
             }
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip} agents/windows"
-            sh "cp ${DAILY_DATA}/agents/{check_mk_agent_legacy-64.exe,check_mk_agent_legacy.exe,check_mk_agent_legacy.msi} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }

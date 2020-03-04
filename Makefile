@@ -58,13 +58,6 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
 
-FILES_TO_FORMAT_WINDOWS := \
-                      $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/sections,*.cc *.h)) \
-
 FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
@@ -95,7 +88,7 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-windows format-linux format-python format-python2 format-python3 \
+        format-linux format-python format-python2 format-python3 \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel .venv .venv-2.7 .venv-3.7
@@ -154,7 +147,8 @@ endif
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} agents/windows/{build64,build} enterprise/agents/winbuild; do \
+# TODO: Remove uneccesary includes, probably 'enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild'
+	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \
@@ -186,8 +180,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
-	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
-	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
 	$(PIPENV2) run python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
@@ -244,9 +236,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.zip \
-		windows/check_mk_agent_legacy-64.exe \
-		windows/check_mk_agent_legacy.exe \
-		windows/check_mk_agent_legacy.msi \
 		windows/check_mk.example.ini \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
@@ -524,10 +513,7 @@ format: format-python format-c format-shell
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c: format-windows format-linux
-
-format-windows:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_WINDOWS)
+format-c: format-linux
 
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)

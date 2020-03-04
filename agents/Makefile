@@ -12,7 +12,6 @@ RPM_TOPDIR := $$(pwd)/.rpm.topdir
 RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
-WIN_PACKAGE := windows/check_mk_agent.msi
 usage:
 	@echo "make waitmax  -- compile waitmax.c"
 	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
@@ -41,21 +40,10 @@ setversion:
 	        sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' $$agent; \
 	    fi ; \
 	done
-	package="Check_MK Windows Agent" ; \
-	mail=feedback@checkmk.com; \
-	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
-	    windows/configure.ac
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/"\
 		wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
-
-$(WIN_PACKAGE):
-	cd windows && sudo \
-		CHROOT_NAME=$$CHROOT_NAME \
-		CHROOT_BASE_PATH=$$CHROOT_BASE_PATH \
-		CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
-		./make-agent
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

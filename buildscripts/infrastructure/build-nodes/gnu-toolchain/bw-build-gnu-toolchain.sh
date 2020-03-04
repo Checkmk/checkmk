@@ -5,6 +5,9 @@
 
 set -e -o pipefail
 
+# Increase this to enforce a recreation of the build cache
+BUILD_ID="1"
+
 GCC_MAJOR="8"
 GCC_MINOR="3"
 GCC_PATCHLEVEL="0"
@@ -18,6 +21,8 @@ PREFIX="/opt/gcc-${GCC_VERSION}"
 
 BUILD_DIR=/tmp/build-gcc-toolchain
 
+USERNAME=${USERNAME:-$NEXUS_USERNAME}
+PASSWORD=${PASSWORD:-$NEXUS_PASSWORD}
 
 log() {
     echo "+++ $1"
@@ -40,7 +45,7 @@ download-from-mirror() {
 upload-to-nexus() {
     FILE=$1
     log "Uploading ${FILE} to ${NEXUS_ARCHIVES_URL}"
-    curl --silent --user "${USERNAME}:${PASSWORD}" --upload-file "${FILE}" "${NEXUS_ARCHIVES_URL}"
+    curl --silent --fail --user "${USERNAME}:${PASSWORD}" --upload-file "${FILE}" "${NEXUS_ARCHIVES_URL}"
     log "Upload of ${FILE} done"
 }
 
@@ -127,14 +132,29 @@ build-all() {
     log "Build all"
     mkdir -p ${BUILD_DIR}
     cd ${BUILD_DIR}
-    download-sources
-    build-binutils
-    build-gcc
-    build-gdb
+
+    # Quick build artifact caching hack. Will be replaced later by generic mechanism
+    ARTIFACT_FILE="gnu-toolchain-${DISTRO}-$BUILD_ID-$GCC_MAJOR.$GCC_MINOR.$GCC_PATCHLEVEL-$BINUTILS_VERSION-$GDB_VERSION.tar.gz"
+    log "Try to gather ${ARTIFACT_FILE} from nexus.."
+    if ! download-from-nexus "${ARTIFACT_FILE}"; then
+        log "Not found, building..."
+        download-sources
+        build-binutils
+        build-gcc
+        build-gdb
+
+        log "Upload to nexus..."
+        tar -cvz -C /opt -f "${ARTIFACT_FILE}" gcc-${GCC_VERSION}
+        upload-to-nexus "${ARTIFACT_FILE}"
+    else
+        log "Unpacking from nexus..."
+        tar -xvz -C /opt -f "${ARTIFACT_FILE}"
+    fi
+
     set-symlinks
 }
 
-while getopts ":hdbucgsr:" opt; do
+while getopts ":hdbucgi:sr:" opt; do
     case ${opt} in
     h)
         echo "Usage: cmd [-d] [-b] [-h]"
@@ -158,6 +178,9 @@ while getopts ":hdbucgsr:" opt; do
         ;;
     s)
         set-symlinks
+        ;;
+    i)
+        DISTRO="${OPTARG}"
         ;;
     r)
         # Set URL to the repository where the binaries are stored

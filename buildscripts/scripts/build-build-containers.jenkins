@@ -55,7 +55,9 @@ DISTRO_LIST.each { DISTRO ->
                         dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {
                             unstash name: 'bw-build-gnu-toolchain'
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                            def Image = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' .")
+                            withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                def Image = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' .")
+                            }
                             Image.push()
                             Image.push(BRANCH + '-latest')
                         }

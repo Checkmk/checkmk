@@ -15,4 +15,4 @@ item:
  The name of the cluster node.
 
 inventory:
- One service per cluster node.
+ One service is created for each cluster node.

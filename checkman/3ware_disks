@@ -9,11 +9,13 @@ description:
  is found in the shells search path. The usual way is to install it into
  {/usr/local/bin} or {/usr/bin}.
 
+ States like {OK} and {VERIFYING} are status OK. States like {SMART_FAILURE} are status warning.
+ All other states are considered critical.
+
  The utility {tw_cli} can be downloaded from {http://3ware.com/support/downloadpage.asp}.
 
 item:
  The port identifier of the disk, e.g. {p0} or {p1}.
 
 inventory:
- All logical units which don't have the status NOT-PRESENT are automatically inventorized. States like
- {OK} and {VERIFYING} are status OK. States like {SMART_FAILURE} are status warning. All other states are considered critical.
+ One service is created for each logical unit which doesn't have the status NOT-PRESENT.

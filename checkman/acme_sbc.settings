@@ -8,4 +8,4 @@ description:
  If e.g. Media Synchronized changes from true to disabled/ false, a {CRIT} is raised.
 
 inventory:
- One check will be created.
+ One service is created.

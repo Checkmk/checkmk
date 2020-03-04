@@ -16,4 +16,4 @@ item:
  {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP or SAS) and {{Node}}, {{Slot}} and {{Cardport}} values.
 
 inventory:
- One service is created for each port connection.
+ One service is created for each port connection if type is not 3 (FREE).

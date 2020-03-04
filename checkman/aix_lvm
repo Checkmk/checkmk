@@ -21,5 +21,3 @@ item:
 
 inventory:
  On service is created for each logical volume in rootvg.
- If the agent is modified to report volumes from other volume groups,
- those will also be monitored.

@@ -29,8 +29,5 @@ item:
  The default is to use the {ifDescr}.
 
 inventory:
- The inventory creates one service for each interface that fulfills
- configurable conditions.  Per default these are interfaces which currently
- are {up} and are of type {1} (other), {6} (ethernetCsmacd), and {56}
- (fibreChannel).
+ One service is created for each interface that fulfills configurable conditions (porttype and portstate).
 

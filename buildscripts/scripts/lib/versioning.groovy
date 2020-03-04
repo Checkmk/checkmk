@@ -6,6 +6,10 @@ def get_branch(scm) {
     return BRANCH
 }
 
+def get_branch_version() {
+    return sh(returnStdout: true, script: "grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'").trim()
+}
+
 def get_git_hash() {
     def HASH = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
     return HASH

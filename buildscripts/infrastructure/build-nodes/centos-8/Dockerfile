@@ -35,7 +35,7 @@ RUN yum -y makecache \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
-    openssh-clients \ 
+    openssh-clients \
     openssl-devel \
     pango-devel \
     patch \
@@ -66,14 +66,6 @@ RUN yum -y makecache \
     --nogpgcheck \
     && yum clean all
 
-ARG ARTIFACT_STORAGE
-COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
-RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
-
 # epel release is needed for joe
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
@@ -93,6 +85,29 @@ RUN yum -y makecache \
     vim \
     --nogpgcheck \
     && yum clean all
+
+# Install our standard tool chain for building
+# - gnu-toolchain is needed for compiling all the C++ stuff
+# - cmake is needed for e.g. building re2
+# - openssl is needed by Python 3.7+
+# - python is needed by our build / test chain
+ARG ARTIFACT_STORAGE
+ARG NEXUS_ARCHIVES_URL
+ARG NEXUS_USERNAME
+ARG NEXUS_PASSWORD
+ARG DISTRO
+ARG BRANCH_VERSION
+COPY scripts/* /opt/
+RUN export NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" \
+    NEXUS_USERNAME="$NEXUS_USERNAME" \
+    NEXUS_PASSWORD="$NEXUS_PASSWORD" \
+    BRANCH_VERSION="$BRANCH_VERSION" \
+    DISTRO="$DISTRO" \
+    && /opt/install-gnu-toolchain.sh \
+    && /opt/install-cmake.sh \
+    && /opt/install-openssl.sh \
+    && /opt/install-python.sh \
+    && rm -rf /opt/src
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

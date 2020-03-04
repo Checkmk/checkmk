@@ -10,7 +10,7 @@ import ast
 import re
 import socket
 import time
-from typing import Optional, List, Tuple, Text  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -185,7 +185,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", list(map(six.ensure_text, rfc)), site=event["site"])
+    execute_command("CREATE", [six.ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
@@ -260,7 +260,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}
+    total_stats = {}  # type: Dict[str, float]
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):

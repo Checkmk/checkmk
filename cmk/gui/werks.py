@@ -11,6 +11,8 @@ import itertools
 import os
 import re
 import time
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.store as store
@@ -37,7 +39,7 @@ from cmk.gui.valuespec import (
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
-g_werks = None
+g_werks = {}  # type: Dict[int, Dict[str, Any]]
 
 
 @cmk.gui.pages.register("version")
@@ -127,7 +129,7 @@ def page_werk():
 
 def load_werks():
     global g_werks
-    if g_werks is None:
+    if not g_werks:
         g_werks = cmk.utils.werks.load()
 
     ack_ids = load_acknowledgements()
@@ -379,7 +381,8 @@ def werk_matches_options(werk, werk_table_options):
 
 def _default_werk_table_options():
     werk_table_options = {
-        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()
+        name: default_value  #
+        for name, _height, _vs, default_value in _werk_table_option_entries()
     }
     werk_table_options["date_range"] = (1, time.time())
     werk_table_options["compatibility"] = ["incomp_unack"]
@@ -387,7 +390,7 @@ def _default_werk_table_options():
 
 
 def _render_werk_table_options():
-    werk_table_options = {}
+    werk_table_options = {}  # type: Dict[str, Any]
 
     for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value

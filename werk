@@ -874,7 +874,7 @@ def main_fetch_ids(args):
         new_first_free = first_free + num
 
     # Store the werk_ids to reserve
-    my_ids = get_werk_ids() + range(first_free, new_first_free)
+    my_ids = get_werk_ids() + list(range(first_free, new_first_free))
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids

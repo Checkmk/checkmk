@@ -667,8 +667,11 @@ def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, li
     host_columns = ["host_name"] + list(
         {c for c in columns if c.startswith("host_") and c != "host_name"})
 
-    if infoname != "invhist":
+    if infoname == "invhist":
+        get_subrows = _create_hist_rows
+    else:
         host_columns.append("host_structured_status")
+        get_subrows = lambda hostrow: _create_inv_rows(hostrow, infoname, invpath)
 
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
@@ -682,16 +685,7 @@ def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, li
         html.close_tt()
         html.close_div()
 
-    sites.live().set_only_sites(only_sites)
-    sites.live().set_prepend_site(True)
-    data = sites.live().query(query)
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
-
-    if infoname == "invhist":
-        get_subrows = _create_hist_rows
-    else:
-        get_subrows = lambda hostrow: _create_inv_rows(hostrow, infoname, invpath)
+    data = _get_inv_data(only_sites, query)
 
     # Now create big table of all inventory entries of these hosts
     headers = ["site"] + host_columns
@@ -702,6 +696,15 @@ def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, li
             subrow.update(hostrow)
             rows.append(subrow)
     return rows
+
+
+def _get_inv_data(only_sites, query):
+    sites.live().set_only_sites(only_sites)
+    sites.live().set_prepend_site(True)
+    data = sites.live().query(query)
+    sites.live().set_prepend_site(False)
+    sites.live().set_only_sites(None)
+    return data
 
 
 def _inv_find_subtable_columns(invpath):

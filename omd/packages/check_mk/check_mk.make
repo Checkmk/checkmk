@@ -46,7 +46,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CAC
 	export agentslibdir='/usr/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \
 	export check_icmp_path='$(OMD_ROOT)/lib/nagios/plugins/check_icmp' ; \
-	export pnptemplates='$(OMD_ROOT)/share/check_mk/pnp-templates' ; \
 	export livebackendsdir='$(OMD_ROOT)/share/check_mk/livestatus' ; \
 	export libdir='$(OMD_ROOT)/lib/check_mk' ; \
 	export python_lib_dir='$(OMD_ROOT)/lib/python' ; \

@@ -407,10 +407,6 @@ def test_cmk_run_cron(wsgi_app):
     wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
 
 
-def test_cmk_pnp_template(wsgi_app):
-    wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=200)
-
-
 def test_cmk_automation(wsgi_app):
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
     assert response.body == "Missing secret for automation command."

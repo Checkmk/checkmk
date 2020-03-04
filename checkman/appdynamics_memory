@@ -14,4 +14,4 @@ item:
  Name of the disk and either {{Heap}} or {{Non-Heap}}.
 
 inventory:
- One item per Application and memory type (Heap, Non-Heap) is generated.
+ One service is created for each application and memory type (Heap, Non-Heap).

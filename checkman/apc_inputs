@@ -9,7 +9,7 @@ description:
  the current alarm status. The Check has no configuration.
 
 inventory:
- One service will be created for each contact
+ One service is created for each contact
 
 item:
  The Name of the contact

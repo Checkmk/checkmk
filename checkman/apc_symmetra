@@ -15,5 +15,5 @@ description:
  Default level for an invalid calibration is OK, but can be configured to another state.
 
 inventory:
- One check is created.
+ One service is created.
 

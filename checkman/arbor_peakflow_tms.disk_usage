@@ -13,7 +13,7 @@ description:
  regular levels, specified in percent, are supported.
 
 inventory:
- One service is discovered.
+ One service is created.
 
 item:
  The sole item is named "/".

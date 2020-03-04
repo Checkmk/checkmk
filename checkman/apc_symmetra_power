@@ -13,5 +13,4 @@ item:
  The index of the phase, e.g. {"1"}.
 
 inventory:
- Supported.
-
+ One service is created for each power supply if the status is not 0 or -1

@@ -12,5 +12,5 @@ item:
  The single power outlet port with it's number as delivered by SNMP.
 
 inventory:
- One item per power outlet will be found.
+ One service is created for each power outlet.
 

@@ -14,4 +14,4 @@ item:
  The name of the PDU as set in the PDU
 
 inventory:
- One service per PDU
+ One service is created for each PDU

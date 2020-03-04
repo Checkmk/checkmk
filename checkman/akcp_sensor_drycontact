@@ -12,5 +12,5 @@ item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available sensors are automatically inventorized.
+ One service is created for each sensor if the sensor is online.
 

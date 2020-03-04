@@ -16,5 +16,5 @@ item:
  The name of the device.
 
 inventory:
- One check is created for each device.
+ One service is created for each active device.
 

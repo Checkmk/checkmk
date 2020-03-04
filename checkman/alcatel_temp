@@ -21,4 +21,4 @@ item:
  The slot index and the name of the CPU. The slot index is optional
 
 inventory:
- One check is created
+ One service is created for each board and CPU

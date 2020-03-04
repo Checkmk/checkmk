@@ -19,4 +19,4 @@ description:
  The value is a average in percent over the last hour. This average is calculated by the device.
 
 inventory:
- One check is created
+ One service is created

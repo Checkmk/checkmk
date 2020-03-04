@@ -5,12 +5,13 @@ license: GPL
 distribution:
 description:
  This check monitors the temperature of sensors attached
- to AKCP daisyTemp sensor chain. The first attached sensor will be irgnored,
+ to AKCP daisyTemp sensor chain. The first attached sensor will be ignored,
  because this sensor is already represented by the the check akcp_sensor_temp.
 
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available (without the first, see description) temperature sensors are automatically inventorized.
+ One service is created for each available (without the first, see description) temperature sensor
+ if the port of the sensor is not -1 or 1.
 

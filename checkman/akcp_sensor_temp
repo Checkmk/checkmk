@@ -11,5 +11,5 @@ item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor if the sensor is online.
 

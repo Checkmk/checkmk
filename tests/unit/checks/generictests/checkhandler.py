@@ -1,13 +1,26 @@
 import copy
+import contextlib
 
+import cmk.utils.debug
 import cmk.base.config as config
 import cmk.base.check_api as check_api
+
+
+@contextlib.contextmanager
+def _cmk_debug_enabled():
+    cmk.utils.debug.enable()
+    try:
+        yield
+    finally:
+        cmk.utils.debug.disable()
 
 
 class CheckHandler(object):  # pylint: disable=useless-object-inheritance
     """Collect the info on all checks"""
     def __init__(self):
-        config.load_all_checks(check_api.get_check_api_context)
+        with _cmk_debug_enabled():  # fail if any check plugin cannot be loaded!
+            config.load_all_checks(check_api.get_check_api_context)
+
         self.info = copy.deepcopy(config.check_info)
         self.cache = {}
 

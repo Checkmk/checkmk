@@ -179,6 +179,9 @@ def test_grouped_rulespecs():
             'agent_config:win_printers',
             'agent_config:mcafee_av_client',
         ],
+        'agents/windows_modules': [
+            'agent_config:install_python',
+        ],
         'datasource_programs': [
             'datasource_programs',
             'special_agents:ddn_s2a',
@@ -1289,6 +1292,7 @@ def _expected_rulespec_group_choices():
         ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
         ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
         ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
+        ('agents/windows_modules', u'&nbsp;&nbsp;\u2319 Windows Modules'),
 
         ]
 
@@ -1394,6 +1398,7 @@ def test_rulespec_get_all_groups():
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
+        'agents/windows_modules',
         'agents/agent_plugins',
 
         ]
@@ -1426,6 +1431,7 @@ def test_rulespec_get_host_groups():
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
+        'agents/windows_modules',
         ]
 
     group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()

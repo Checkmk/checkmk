@@ -34,10 +34,12 @@
 #-A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 #COMMIT
 
+import hashlib
+import difflib
+
 
 def iptables_hash(config):
-    import hashlib
-    return hashlib.sha256(config).hexdigest()
+    return hashlib.sha256(config.encode('utf-8')).hexdigest()
 
 
 def parse_iptables(info):
@@ -65,8 +67,6 @@ def check_iptables(_no_item, params, parsed):
             set_item_state("iptables.config", {"config": parsed, "hash": new_config_hash})
             return 0, "accepted new filters after service rediscovery / reboot"
         return 0, "no changes in filters table detected"
-
-    import difflib
 
     reference_config = item_state["config"].splitlines()
     actual_config = parsed.splitlines()

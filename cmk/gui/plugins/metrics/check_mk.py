@@ -4952,7 +4952,7 @@ metric_info["quarantine"] = {
 metric_info["messages_in_queue"] = {
     "title": _("Messages in queue"),
     "unit": "count",
-    "color": "#701141",
+    "color": "16/a",
 }
 
 metric_info["mail_queue_hold_length"] = {

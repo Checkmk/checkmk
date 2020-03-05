@@ -210,6 +210,7 @@ catalog_titles = {
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
         "zerto"         : "Zerto",
+        "ibm_mq"        : "IBM MQ",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

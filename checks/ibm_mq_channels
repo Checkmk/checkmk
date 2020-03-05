@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# <<<ibm_mq_channels:sep(10)>>>
+# QMNAME(MY.TEST)                                           STATUS(RUNNING)
+# 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
+# Starting MQSC for queue manager MY.TEST.
+#
+# AMQ8414: Display Channel details.
+#    CHANNEL(MY.SENDER.ONE)                  CHLTYPE(SDR)
+#    XMITQ(MY.SENDER.ONE.XMIT)
+# AMQ8417: Display Channel Status details.
+#    CHANNEL(MY.SENDER.ONE)                  CHLTYPE(SDR)
+#    CONNAME(99.999.999.999(1414),44.555.666.777(1414))
+#    CURRENT                                 RQMNAME( )
+#    STATUS(RETRYING)                        SUBSTATE( )
+#    XMITQ(MY.SENDER.ONE.XMIT)
+# 3 MQSC commands read.
+# No commands have a syntax error.
+# One valid MQSC command could not be processed.
+
+factory_settings["ibm_mq_channels_default_levels"] = {
+    'status': {
+        'INACTIVE': 0,
+        'INITIALIZING': 0,
+        'BINDING': 0,
+        'STARTING': 0,
+        'RUNNING': 0,
+        'RETRYING': 1,
+        'STOPPING': 0,
+        'STOPPED': 2,
+    }
+}
+
+
+def parse_ibm_mq_channels(info):
+    return parse_runmqsc_display_output(info, "CHANNEL")
+
+
+def inventory_ibm_mq_channels(parsed):
+    for service_name in parsed:
+        if ':' not in service_name:
+            # Do not show queue manager entry in inventory
+            continue
+        yield service_name, {}
+
+
+#
+# See http://www-01.ibm.com/support/docview.wss?uid=swg21667353
+# or search for 'inactive channels' in 'display chstatus' command manual
+# to learn more about INACTIVE status of channels
+#
+def check_ibm_mq_channels(item, params, parsed):
+    if is_ibm_mq_service_vanished(item, parsed):
+        return
+    data = parsed[item]
+    status = data.get("STATUS", "INACTIVE")
+    state = params['status'].get(status, 3)
+    chltype = data.get("CHLTYPE")
+    infotext = "Status: %s, Type: %s" % (status, chltype)
+    if "XMITQ" in data:
+        infotext += ", Xmitq: %s" % data["XMITQ"]
+    yield state, infotext, []
+
+
+check_info["ibm_mq_channels"] = {
+    "parse_function": parse_ibm_mq_channels,
+    "check_function": check_ibm_mq_channels,
+    "inventory_function": inventory_ibm_mq_channels,
+    "service_description": "IBM MQ Channel %s",
+    "has_perfdata": False,
+    "default_levels_variable": "ibm_mq_channels_default_levels",
+    "group": "ibm_mq_channels",
+    "includes": ["ibm_mq.include"],
+}

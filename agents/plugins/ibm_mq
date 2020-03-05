@@ -1,0 +1,93 @@
+#!/bin/sh
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+#
+# Collects monitoring information of all IBM MQ Queue Managers.
+#
+# Environment configuration options:
+#
+# - Only monitor specific Queue Managers, e.g:
+#     ONLY_QM="FOO BAR"
+#
+# - Explicitly skip certain Queue Managers, e.g:
+#     SKIP_QM="FAULTY TOWER"
+#
+# Daniel Steinmann, Swisscom, December 2017
+#
+
+load_config() {
+    # shellcheck source=/dev/null
+    if test -s "$MK_CONFDIR/ibm_mq.cfg"; then
+        . "$MK_CONFDIR"/ibm_mq.cfg
+    fi
+}
+
+# Returns true (0) if list ($1) contains a value ($2).
+contains() {
+    for x in $1; do
+        if test "$x" = "$2"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Returns true (0) if value ($1) is matched against configuration options
+# SKIP_QM and ONLY_QM.
+is_qm_monitored() {
+    if test -n "$SKIP_QM"; then
+        if contains "$SKIP_QM" "$1"; then
+            echo "$1: Ignored because SKIP_QM: $SKIP_QM" >&2
+            return 1
+        fi
+    fi
+    if test -n "$ONLY_QM"; then
+        if contains "$ONLY_QM" "$1"; then
+            return 0
+        else
+            echo "$1: Ignored because ONLY_QM: $ONLY_QM" >&2
+            return 1
+        fi
+    fi
+    return 0
+}
+
+check_tool() {
+    if command -v "$1" >/dev/null 2>&1; then
+        echo "$1: OK"
+    else
+        echo "$1: Not found or not executable"
+    fi
+}
+
+load_config
+
+echo "<<<ibm_mq_plugin:sep(58)>>>"
+echo "version: 1.6.0"
+check_tool dspmq
+check_tool runmqsc
+
+dspmq -n | while read -r dspmqline
+do
+    QM=$(echo "$dspmqline" | sed 's,QMNAME(\([^)]*\).*,\1,')
+    if is_qm_monitored "$QM"; then
+        echo '<<<ibm_mq_channels:sep(10)>>>'
+        echo "$dspmqline"
+        runmqsc -e "$QM" <<EOF
+display channel(*) xmitq
+display chstatus(*)
+EOF
+        echo '<<<ibm_mq_queues:sep(10)>>>'
+        echo "$dspmqline"
+        runmqsc -e "$QM" <<EOF
+display qlocal(*) maxdepth maxmsgl
+display qstatus(*) all
+EOF
+    fi
+done
+
+echo "<<<ibm_mq_managers:sep(10)>>>"
+dspmq -o all -x -n

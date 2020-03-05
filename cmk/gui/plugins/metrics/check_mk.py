@@ -5837,6 +5837,12 @@ metric_info["open_file_descriptors"] = {
     "color": "14/a",
 }
 
+metric_info["available_file_descriptors"] = {
+    "title": _("Number of available file descriptors"),
+    "unit": "count",
+    "color": "21/a",
+}
+
 metric_info["app"] = {
     "title": _("Available physical processors in shared pool"),
     "unit": "count",
@@ -6039,6 +6045,18 @@ metric_info["open_file_descriptors"] = {
     "title": _("Open file descriptors"),
     "unit": "count",
     "color": "14/a",
+}
+
+metric_info["file_descriptors_open_attempts"] = {
+    "title": _("File descriptor open attempts"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["file_descriptors_open_attempts_rate"] = {
+    "title": _("File descriptor open attempts rate"),
+    "unit": "1/s",
+    "color": "21/a",
 }
 
 metric_info["max_file_descriptors"] = {
@@ -6465,6 +6483,102 @@ metric_info["mem_high_wat"] = {
     "title": _("High watermark"),
     "unit": "bytes",
     "color": "23/b",
+}
+
+metric_info['channels'] = {
+    "title": _("Channels"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info['consumers'] = {
+    "title": _("Consumers"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info['exchanges'] = {
+    "title": _("Exchanges"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info['queues'] = {
+    "title": _("Queues"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['messages_rate'] = {
+    "title": _("Message Rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info['messages_ready'] = {
+    "title": _("Ready messages"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info['messages_unacknowledged'] = {
+    "title": _("Unacknowledged messages"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info['messages_publish'] = {
+    "title": _("Published messages"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['messages_publish_rate'] = {
+    "title": _("Published message rate"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+
+metric_info['messages_deliver'] = {
+    "title": _("Delivered messages"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info['messages_deliver_rate'] = {
+    "title": _("Delivered message rate"),
+    "unit": "1/s",
+    "color": "53/a",
+}
+
+metric_info['gc_runs'] = {
+    "title": _("GC runs"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['gc_runs_rate'] = {
+    "title": _("GC runs rate"),
+    "unit": "1/s",
+    "color": "53/a",
+}
+
+metric_info['runtime_run_queue'] = {
+    "title": _("Runtime run queue"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info['gc_bytes'] = {
+    "title": _("Bytes reclaimed by GC"),
+    "unit": "bytes",
+    "color": "32/a",
+}
+
+metric_info['gc_bytes_rate'] = {
+    "title": _("Bytes reclaimed by GC rate"),
+    "unit": "bytes/s",
+    "color": "42/a",
 }
 
 #.

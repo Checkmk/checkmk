@@ -30,6 +30,9 @@ REQUIRED_ARGUMENTS = {
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
     'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
     'agent_prometheus': [],
+    'agent_rabbitmq': [
+        '-P', 'PROTOCOL', '-m', 'SECTIONS', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'
+    ],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],

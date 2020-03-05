@@ -2848,3 +2848,81 @@ rulespec_registry.register(
         name="special_agents:jira",
         valuespec=_valuespec_special_agents_jira,
     ))
+
+
+def _factory_default_special_agents_rabbitmq():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_rabbitmq():
+    return Dictionary(
+        title=_("Check state of RabbitMQ"),
+        help=_("Requests data from a RabbitMQ instance."),
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("RabbitMQ instance to query"),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_rabbitmq.com. If not set, the "
+                        "assigned host is used as instance."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "RabbitMQ API."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            ("port",
+             Integer(
+                 title=_("Port"),
+                 default_value=15672,
+                 help=_("The port that is used for the api call."),
+             )),
+            ("sections",
+             ListChoice(
+                 title=_("Informations to query"),
+                 help=_("Defines what information to query. You can choose "
+                        "between the cluster, nodes, vhosts and queues."),
+                 choices=[
+                     ("cluster", _("Clusterwide")),
+                     ("nodes", _("Nodes")),
+                     ("vhosts", _("Vhosts")),
+                     ("queues", _("Queues")),
+                 ],
+                 default_value=["cluster", "nodes", "vhosts", "queues"],
+                 allow_empty=False,
+             )),
+        ],
+        optional_keys=[
+            "instance",
+            "port",
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_rabbitmq(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:rabbitmq",
+        valuespec=_valuespec_special_agents_rabbitmq,
+    ))

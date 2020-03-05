@@ -197,6 +197,7 @@ catalog_titles = {
         "prometheus"    : "Prometheus",
         "proxmox"       : "Proxmox",
         "qmail"         : "qmail",
+        "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",

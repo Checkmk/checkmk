@@ -19,7 +19,7 @@ AgentParseFunction = Callable[[AgentSectionContent], Any]
 # is more specific.
 SNMPParseFunction = Callable[[List[SNMPTable]], Any]
 
-SNMPDetectAtom = Tuple[str, Optional[str], bool]  # (oid, regex_pattern, expected_match)
+SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 SNMPDetectSpec = List[List[SNMPDetectAtom]]
 
 

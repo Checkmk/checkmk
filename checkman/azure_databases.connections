@@ -11,5 +11,6 @@ item:
  The name of the resource.
 
 inventory:
- One service per database.
+ One service is created for each database if all required metrics
+ (average_connection_successful, average_connection_failed) are given.
 

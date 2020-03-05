@@ -9,6 +9,6 @@ description:
  the monitored groups and encountered issues.
 
 inventory:
- One service is created per monitored resource group and one for the
+ One service is created for each monitored resource group and one for the
  host that the agent is assigned to.
 

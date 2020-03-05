@@ -13,5 +13,4 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per storage account.
-
+ One service is created for each storage account.

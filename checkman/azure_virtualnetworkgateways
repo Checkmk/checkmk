@@ -14,5 +14,5 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per virtual network gateway.
+ One service is created for each virtual network gateway.
 

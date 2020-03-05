@@ -12,5 +12,5 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per site.
+ One service is created for each site.
 

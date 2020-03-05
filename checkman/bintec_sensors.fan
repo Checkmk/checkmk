@@ -10,5 +10,5 @@ item:
  The sensorDescr from SNMP.
 
 inventory:
- For each fan one service is created
+ One service is created for each fan.
 

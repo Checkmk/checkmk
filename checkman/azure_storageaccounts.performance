@@ -14,5 +14,7 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per storage account.
+ One service is created for each storage account if all required metrics
+ (total_SuccessServerLatency, total_SuccessE2ELatency, total_Availability) are given.
+
 

@@ -45,11 +45,11 @@ def get_docker_tag(scm) {
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
     // Empty folder prperties are null pointers
     // Other emput string variables have the value ''
-    if (FOLDER_TAG != null) {
-        return FOLDER_TAG
-    }
     if (BUILD_TAG != '') {
         return BUILD_TAG
+    }
+    if (FOLDER_TAG != null) {
+        return FOLDER_TAG
     }
     return BRANCH + '-latest'
 }

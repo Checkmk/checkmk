@@ -27,8 +27,8 @@ _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(distro_name, version, result_path, command, interactive):
-    # type: (str, CMKVersion, Path, List[str], bool) -> int
+def execute_tests_in_container(distro_name, docker_tag, version, result_path, command, interactive):
+    # type: (str, str, CMKVersion, Path, List[str], bool) -> int
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -41,12 +41,12 @@ def execute_tests_in_container(distro_name, version, result_path, command, inter
 
     # TODO: Why don't we use our official containers here? We should have all the code
     # ready for using it in either "docker" or "tests-py3/docker" directory.
-    image_name = _create_cmk_image(client, base_image_name, version)
+    image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
 
     # Start the container
     with _start(
             client,
-            image=image_name,
+            image=image_name_with_tag,
             command="/bin/bash",
             volumes=list(_runtime_volumes().keys()),
             host_config=client.api.create_host_config(
@@ -117,22 +117,24 @@ def _docker_client():
     return docker.from_env()
 
 
-def _get_or_load_image(client, image_name):
+def _get_or_load_image(client, image_name_with_tag):
     # type: (docker.DockerClient, str) -> Optional[docker.Image]
     try:
-        image = client.images.get(image_name)
-        logger.info("Image %s is already available locally (%s)", image_name, image.short_id)
+        image = client.images.get(image_name_with_tag)
+        logger.info("Image %s is already available locally (%s)", image_name_with_tag,
+                    image.short_id)
         return image
     except docker.errors.ImageNotFound:
         logger.info("Image %s is not available locally, trying to download from registry",
-                    image_name)
+                    image_name_with_tag)
 
     try:
-        image = client.images.pull("%s:latest" % image_name)
-        logger.info("Image %s has been loaded from registry (%s)", image_name, image.short_id)
+        image = client.images.pull(image_name_with_tag)
+        logger.info("Image %s has been loaded from registry (%s)", image_name_with_tag,
+                    image.short_id)
         return image
     except docker.errors.NotFound:
-        logger.info("Image %s is not available from registry", image_name)
+        logger.info("Image %s is not available from registry", image_name_with_tag)
     except docker.errors.APIError as e:
         if "no basic auth" in "%s" % e:
             raise Exception(
@@ -149,30 +151,31 @@ def _get_or_load_image(client, image_name):
     return None
 
 
-def _create_cmk_image(client, base_image_name, version):
-    # type: (docker.DockerClient, str, CMKVersion) -> str
-    image_name = "%s-%s-%s-%s" % (base_image_name, version.edition_short, version.version,
-                                  version.branch())
+def _create_cmk_image(client, base_image_name, docker_tag, version):
+    # type: (docker.DockerClient, str, str, CMKVersion) -> str
+    base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+    image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
+    image_name_with_tag = "%s:%s" % (image_name, docker_tag)
 
-    logger.info("Preparing %s image from %s", image_name, base_image_name)
+    logger.info("Preparing %s image from %s", image_name_with_tag, base_image_name_with_tag)
     # First try to get the image from the local or remote registry
     # TODO: How to handle image updates?
-    image = _get_or_load_image(client, image_name)
+    image = _get_or_load_image(client, image_name_with_tag)
     if image:
-        return image_name  # already found, nothing to do.
+        return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("Create new image %s from %s", image_name, base_image_name)
+    logger.info("Create new image %s from %s", image_name, base_image_name_with_tag)
     # TODO: How to handle image updates?
-    base_image = _get_or_load_image(client, base_image_name)
+    base_image = _get_or_load_image(client, base_image_name_with_tag)
     if base_image is None:
         raise Exception(
             "Image %s is not available locally and the registry \"%s\" is not reachable. It is "
             "not implemented yet to build the image locally. Terminating." %
-            (base_image_name, _DOCKER_REGISTRY_URL))
+            (base_image_name_with_tag, _DOCKER_REGISTRY_URL))
 
     with _start(
             client,
-            image=base_image_name,
+            image=base_image_name_with_tag,
             command=["tail", "-f", "/dev/null"],  # keep running
             volumes=list(_image_build_volumes().keys()),
             host_config=client.api.create_host_config(
@@ -186,7 +189,7 @@ def _create_cmk_image(client, base_image_name, version):
     ) as container:
 
         logger.info("Building in container %s (created from %s)", container.short_id,
-                    base_image_name)
+                    base_image_name_with_tag)
 
         assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
 
@@ -211,12 +214,12 @@ def _create_cmk_image(client, base_image_name, version):
 
         container.stop()
 
-        image = container.commit(image_name)
-        logger.info("Commited image %s (%s)", image_name, image.short_id)
+        image = container.commit(image_name_with_tag)
+        logger.info("Commited image %s (%s)", image_name_with_tag, image.short_id)
 
         # TODO: Push image to the registry?
 
-    return image_name
+    return image_name_with_tag
 
 
 def _image_build_volumes():

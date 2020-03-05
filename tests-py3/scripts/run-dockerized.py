@@ -41,6 +41,7 @@ def main(raw_args):
         tmp_path = Path(tmpdir)
 
         distro_name = os.environ.get("DISTRO", "ubuntu-19.04")
+        docker_tag = os.environ.get("DOCKER_TAG", "latest")
         version_spec = os.environ.get("VERSION", CMKVersion.GIT)
         edition = os.environ.get("EDITION", CMKVersion.CEE)
         branch = os.environ.get("BRANCH", current_base_branch_name())
@@ -54,6 +55,7 @@ def main(raw_args):
 
         return execute_tests_in_container(
             distro_name=distro_name,
+            docker_tag=docker_tag,
             command=["make", "-C", "tests-py3", args.make_target],
             version=version,
             result_path=result_path,

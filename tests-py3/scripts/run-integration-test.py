@@ -31,6 +31,7 @@ sys.path.insert(0, str(script_path.parent.parent.parent))
 
 from testlib.utils import is_running_as_site_user, cmk_path, current_base_branch_name
 from testlib.site import get_site_factory
+from testlib.version import CMKVersion
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()
@@ -44,7 +45,10 @@ def main(args):
     logger.info("Setting up site")
     logger.info("===============================================")
 
-    sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+    sf = get_site_factory(prefix="int_",
+                          update_from_git=version == "git",
+                          install_test_python_modules=True)
     site = sf.get_site(current_base_branch_name())
     logger.info("Site %s is ready!", site.id)
 

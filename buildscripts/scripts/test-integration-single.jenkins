@@ -1,6 +1,8 @@
 def NODE
+def DOCKER_TAG_DEFAULT
 withFolderProperties{
     NODE = env.BUILD_NODE
+    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
 properties([
@@ -10,6 +12,7 @@ properties([
 node (NODE) {
     stage('checkout sources') {
         checkout(scm)
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
         integration = load 'buildscripts/scripts/lib/integration.groovy'
     }
 
@@ -17,6 +20,7 @@ node (NODE) {
         DISTRO_LIST: ["ubuntu-19.04"],
         EDITION: "cee",
         VERSION: "git",
+        DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT),
         MAKE_TARGET: "test-integration-docker",
     )
 }

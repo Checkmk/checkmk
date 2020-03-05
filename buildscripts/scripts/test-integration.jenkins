@@ -1,8 +1,10 @@
-def NODE = ''
-def DISTRO_LIST_DEFAULT = ''
+def NODE
+def DISTRO_LIST_DEFAULT
+def DOCKER_TAG_DEFAULT
 withFolderProperties{
     NODE = env.BUILD_NODE
     DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
 properties([
@@ -11,7 +13,7 @@ properties([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" builds current git state of the branch. You also can specify a git tag here.' ),
-    //string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'Custom docker tag to use for this build. Leave empty for default' )
+    string(name: 'DOCKER_TAG', defaultValue: '', description: 'Custom docker tag to use for this build. Leave empty for default' )
   ])
 ])
 
@@ -27,12 +29,14 @@ currentBuild.description = '\nVersion: ' + VERSION + '\nEdition: ' + EDITION + '
 node (NODE) {
     stage('checkout sources') {
         checkout(scm)
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
         integration= load 'buildscripts/scripts/lib/integration.groovy'
     }
     integration.build(
         DISTRO_LIST: DISTRO_LIST,
         EDITION: EDITION,
         VERSION: VERSION,
+        DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), DOCKER_TAG, DOCKER_TAG_DEFAULT),
         MAKE_TARGET: "test-integration-docker",
     )
 }

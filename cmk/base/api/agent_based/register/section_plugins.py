@@ -75,7 +75,7 @@ def _create_supercedes(supercedes):
 
 
 def create_agent_section_plugin(
-#    *,
+    #    *,
     name,
     parsed_section_name=None,
     parse_function=None,  # TODO: Remove None

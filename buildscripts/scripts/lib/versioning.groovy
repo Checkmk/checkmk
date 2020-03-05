@@ -6,6 +6,20 @@ def get_branch(scm) {
     return BRANCH
 }
 
+def get_cmk_version(scm, VERSION) {
+    def BRANCH = get_branch(scm)
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if (BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
+    }
+}
+
 def get_branch_version() {
     return sh(returnStdout: true, script: "grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'").trim()
 }

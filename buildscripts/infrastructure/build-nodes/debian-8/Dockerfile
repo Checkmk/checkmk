@@ -2,6 +2,8 @@ FROM debian:8
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y \
@@ -48,6 +50,7 @@ RUN apt-get update \
     joe \
     iputils-ping \
     vim \
+    gdebi \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

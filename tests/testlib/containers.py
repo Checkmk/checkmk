@@ -23,13 +23,12 @@ from testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
-_DOCKER_IMAGE = "%s/ubuntu-19.04-os-image" % _DOCKER_REGISTRY
 
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(version, result_path, command, interactive):
-    # type: (CMKVersion, Path, List[str], bool) -> int
+def execute_tests_in_container(distro_name, version, result_path, command, interactive):
+    # type: (str, CMKVersion, Path, List[str], bool) -> int
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -38,9 +37,11 @@ def execute_tests_in_container(version, result_path, command, interactive):
     # the current daily build. The git is patched into that version later in the
     # test container
 
+    base_image_name = "%s/%s-os-image" % (_DOCKER_REGISTRY, distro_name)
+
     # TODO: Why don't we use our official containers here? We should have all the code
     # ready for using it in either "docker" or "tests-py3/docker" directory.
-    image_name = _create_cmk_image(client, _DOCKER_IMAGE, version)
+    image_name = _create_cmk_image(client, base_image_name, version)
 
     # Start the container
     with _start(
@@ -271,6 +272,8 @@ def _container_env(version):
         "EDITION": version.edition_short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
+        # Write to this result path by default (may be overridden e.g. by integration tests)
+        "PYTEST_ADDOPTS": "--junitxml=/results/junit.xml",
     }
 
 

@@ -364,7 +364,6 @@ class Crawler:
     # TODO: Better write it as report XML that can be parsed by jenkins?
     def report(self):
         self._write_report_file()
-        self._copy_logs()
 
         if self.errors:
             raise Exception("Crawled %d URLs in %d seconds. Failures:\n%s" %
@@ -390,9 +389,6 @@ class Crawler:
 
         os.rename(self.report_file() + ".tmp", self.report_file())
         logger.info("Wrote report file: %s", self.report_file())
-
-    def _copy_logs(self):
-        shutil.copytree(self.site.path("var/log"), Path(self.result_dir(), "logs"))
 
     def error(self, msg):
         logger.error(msg)

@@ -40,6 +40,7 @@ def main(raw_args):
     with tempfile.TemporaryDirectory(prefix="cmk-run-dockerized-") as tmpdir:
         tmp_path = Path(tmpdir)
 
+        distro_name = os.environ.get("DISTRO", "ubuntu-19.04")
         version_spec = os.environ.get("VERSION", CMKVersion.GIT)
         edition = os.environ.get("EDITION", CMKVersion.CEE)
         branch = os.environ.get("BRANCH", current_base_branch_name())
@@ -52,6 +53,7 @@ def main(raw_args):
         logger.info("Prepared result path: %s", result_path)
 
         return execute_tests_in_container(
+            distro_name=distro_name,
             command=["make", "-C", "tests-py3", args.make_target],
             version=version,
             result_path=result_path,

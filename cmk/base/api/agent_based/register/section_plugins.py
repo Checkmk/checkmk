@@ -75,17 +75,19 @@ def _create_supercedes(supercedes):
 
 
 def create_agent_section_plugin(
-    *,
+#    *,
     name,
     parsed_section_name=None,
-    parse_function,
+    parse_function=None,  # TODO: Remove None
     host_label_function=None,
     supercedes=None,
-    forbidden_names,
+    forbidden_names=None,  # TODO: Remove None
 ):
-    # type: (str, Optional[str], AgentParseFunction, Optional[HostLabelFunction], Optional[List[str]], List[PluginName]) -> AgentSectionPlugin
+    # type: (str, Optional[str], Optional[AgentParseFunction], Optional[HostLabelFunction], Optional[List[str]], Optional[List[PluginName]]) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one"""
 
+    if parse_function is None or forbidden_names is None:  # TODO: Remove this conditional
+        raise ValueError()
     plugin_name = PluginName(name, forbidden_names=forbidden_names)
 
     _validate_parse_function(parse_function)

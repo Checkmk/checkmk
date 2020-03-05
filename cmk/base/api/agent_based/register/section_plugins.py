@@ -78,15 +78,15 @@ def create_agent_section_plugin(
     #    *,
     name,
     parsed_section_name=None,
-    parse_function=None,  # TODO: Remove None
+    parse_function=None,  # CMK-3983: Remove None
     host_label_function=None,
     supercedes=None,
-    forbidden_names=None,  # TODO: Remove None
+    forbidden_names=None,  # CMK-3983: Remove None
 ):
     # type: (str, Optional[str], Optional[AgentParseFunction], Optional[HostLabelFunction], Optional[List[str]], Optional[List[PluginName]]) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one"""
 
-    if parse_function is None or forbidden_names is None:  # TODO: Remove this conditional
+    if parse_function is None or forbidden_names is None:  # CMK-3983: Remove this conditional
         raise ValueError()
     plugin_name = PluginName(name, forbidden_names=forbidden_names)
 

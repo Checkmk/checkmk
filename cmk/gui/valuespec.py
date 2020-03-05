@@ -33,8 +33,8 @@ import sre_constants
 import time
 import types
 from typing import (  # pylint: disable=unused-import
-    Dict, Pattern, Type, Union, Callable, Text, Any, List, Optional as TypingOptional, Tuple as
-    TypingTuple,
+    Any, Callable, Dict, List, Optional as TypingOptional, Pattern, Set, Text, Tuple as TypingTuple,
+    Type, Union,
 )
 from PIL import Image  # type: ignore[import]
 
@@ -2999,7 +2999,7 @@ class ListChoice(ValueSpec):
         self._columns = columns
         self._allow_empty = allow_empty
         self._empty_text = empty_text if empty_text is not None else _("(nothing selected)")
-        self._loaded_at = None
+        self._loaded_at = None  # type: TypingOptional[int]
         self._render_function = render_function if render_function is not None else (
             lambda id, val: val)
         self._toggle_all = toggle_all
@@ -3247,12 +3247,16 @@ class DualListChoice(ListChoice):
         try:
             super(DualListChoice, self)._validate_value(value, varprefix)
         except MKUserError as e:
-            raise MKUserError(e.varname + "_selected", e.message)
+            v = "" if e.varname is None else e.varname
+            raise MKUserError(v + "_selected", e.message)
 
     def from_html_vars(self, varprefix):
         self.load_elements()
-        selected = html.request.var(varprefix, '').split('|')
-        value = []
+        value = []  # type: List
+        selection_str = html.request.var(varprefix, '')
+        if selection_str is None:
+            return value
+        selected = selection_str.split('|')
         if self._custom_order:
             edict = dict(self._elements)
             allowed_keys = edict.keys()
@@ -3596,7 +3600,10 @@ class AbsoluteDate(ValueSpec):
         for what, title, mmin, mmax in entries:
             try:
                 varname = varprefix + "_" + what
-                part = int(html.request.var(varname, ""))
+                part_str = html.request.var(varname, "")
+                if part_str is None:
+                    raise ValueError()
+                part = int(part_str)
             except ValueError:
                 if self._allow_empty:
                     return None
@@ -3611,13 +3618,33 @@ class AbsoluteDate(ValueSpec):
         # Construct broken time from input fields. Assume no-dst
         parts += [0] * (3 if self._include_time else 6)
         # Convert to epoch
-        epoch = time.mktime(tuple(parts))
+        epoch = time.mktime((
+            parts[0],  # tm_year
+            parts[1],  # tm_mon
+            parts[2],  # tm_mday
+            parts[3],  # tm_hour
+            parts[4],  # tm_min
+            parts[5],  # tm_sec
+            parts[6],  # tm_wday
+            parts[7],  # tm_yday
+            parts[8],  # tm_isdst
+        ))
         # Convert back to localtime in order to know DST setting
         localtime = time.localtime(epoch)
         # Enter DST setting of that time
         parts[-1] = localtime.tm_isdst
         # Convert to epoch again
-        return time.mktime(tuple(parts))
+        return time.mktime((
+            parts[0],  # tm_year
+            parts[1],  # tm_mon
+            parts[2],  # tm_mday
+            parts[3],  # tm_hour
+            parts[4],  # tm_min
+            parts[5],  # tm_sec
+            parts[6],  # tm_wday
+            parts[7],  # tm_yday
+            parts[8],  # tm_isdst
+        ))
 
     def validate_datatype(self, value, varprefix):
         if value is None and self._allow_empty:
@@ -3830,20 +3857,31 @@ class TimeofdayRange(ValueSpec):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."))
 
 
+# TODO: We should *really* nuke that code below and use time/datetime.
 class TimeHelper(object):
     @staticmethod
     def round(timestamp, unit):
-        time_s = list(time.localtime(timestamp))
-        time_s[3] = time_s[4] = time_s[5] = 0
-        time_s[8] = -1
+        lt = time.localtime(timestamp)
+        time_s = time.struct_time((
+            lt.tm_year,
+            lt.tm_mon,
+            lt.tm_mday,
+            0,  # tm_hour
+            0,  # tm_min
+            0,  # tm_sec
+            lt.tm_wday,
+            lt.tm_yday,
+            -1,  # tm_isdst
+        ))
+
         if unit == 'd':
             return time.mktime(time_s)
         elif unit == 'w':
-            days = time_s[6]  # 0 based
+            days = time_s.tm_wday  # 0 based
         elif unit == 'm':
-            days = time_s[2] - 1  # 1 based
+            days = time_s.tm_mday - 1  # 1 based
         elif unit == 'y':
-            days = time_s[7] - 1  # 1 based
+            days = time_s.tm_yday - 1  # 1 based
         else:
             raise MKGeneralException("invalid time unit %s" % unit)
 
@@ -3853,31 +3891,41 @@ class TimeHelper(object):
     def add(timestamp, count, unit):
         if unit == 'h':
             return timestamp + 3600 * count
-        elif unit == 'd':
+        if unit == 'd':
             return timestamp + 86400 * count
-        elif unit == 'w':
+        if unit == 'w':
             return timestamp + (7 * 86400) * count
-        elif unit == 'm':
-            time_s = list(time.localtime(timestamp))
+        if unit == 'm':
+            time_s = time.localtime(timestamp)
             years, months = divmod(abs(count), 12)
-
             if count < 0:
                 years *= -1
                 months *= -1
-
-            time_s[0] += years
-            time_s[1] += months
-            if time_s[1] <= 0:
-                time_s[0] -= 1
-                time_s[1] = 12 + time_s[1]
-            time_s[8] = -1
-            return time.mktime(time_s)
-        elif unit == 'y':
-            time_s = list(time.localtime(timestamp))
-            time_s[0] += count
-            return time.mktime(time_s)
-        else:
-            MKGeneralException("invalid time unit %s" % unit)
+            return time.mktime((
+                time_s.tm_year + years + (-1 if time_s.tm_mon <= 0 else 0),
+                time_s.tm_mon + months + (12 if time_s.tm_mon <= 0 else 0),
+                time_s.tm_mday,
+                time_s.tm_hour,
+                time_s.tm_min,
+                time_s.tm_sec,
+                time_s.tm_wday,
+                time_s.tm_yday,
+                -1,  # tm_isdst
+            ))
+        if unit == 'y':
+            time_s = time.localtime(timestamp)
+            return time.mktime((
+                time_s.tm_year + count,
+                time_s.tm_mon,
+                time_s.tm_mday,
+                time_s.tm_hour,
+                time_s.tm_min,
+                time_s.tm_sec,
+                time_s.tm_wday,
+                time_s.tm_yday,
+                time_s.tm_isdst,
+            ))
+        MKGeneralException("invalid time unit %s" % unit)
 
 
 class Timerange(CascadingDropdown):
@@ -4701,10 +4749,13 @@ class Dictionary(ValueSpec):
         if self._headers:
             for entry in self._headers:
                 if len(entry) == 2:
-                    header, section_elements = entry
+                    header = entry[0]
                     css = None
+                    section_elements = entry[1]
                 else:
-                    header, css, section_elements = entry
+                    header = entry[0]
+                    css = entry[1]
+                    section_elements = entry[2]
                 self.render_input_form_header(varprefix,
                                               value,
                                               header,
@@ -4781,22 +4832,30 @@ class Dictionary(ValueSpec):
             return self._default_text
 
         elem = self._get_elements()
-        s = '' if oneline else HTML()
+        return self._value_to_text_oneline(
+            elem, value) if oneline else self._value_to_text_multiline(elem, value)
+
+    def _value_to_text_oneline(self, elem, value):
+        s = ''
         for param, vs in elem:
             if param in value:
-                # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-                text = HTML(vs.value_to_text(value[param]))
-                if oneline:
-                    if param != elem[0][0]:
-                        s += ", "
-                    s += "%s: %s" % (vs.title(), text)
-                else:
-                    s += html.render_tr(
-                        html.render_td("%s:&nbsp;" % vs.title(), class_="title") +
-                        html.render_td(text))
-        if not oneline:
-            s = html.render_table(s)
-        return "%s" % s
+                if param != elem[0][0]:
+                    s += ", "
+                s += "%s: %s" % (vs.title(), self._funny_workaround(vs, value[param]))
+        return s
+
+    def _value_to_text_multiline(self, elem, value):
+        s = HTML()
+        for param, vs in elem:
+            if param in value:
+                s += html.render_tr(
+                    html.render_td("%s:&nbsp;" % vs.title(), class_="title") +
+                    html.render_td(self._funny_workaround(vs, value[param])))
+        return str(html.render_table(s))
+
+    def _funny_workaround(self, vs, value):
+        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+        return HTML(vs.value_to_text(value))
 
     def value_to_json(self, value):
         json_value = {}
@@ -5432,7 +5491,7 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
-        labels = {}
+        labels = {}  # type: Dict[str, Any]
 
         try:
             decoded_labels = json.loads(html.request.get_unicode_input(varprefix) or "[]")
@@ -5519,7 +5578,7 @@ class PageAutocompleteLabels(AjaxPage):
             "Cache: reload\n"  #
             "Columns: host_labels labels\n")
 
-        labels = set()
+        labels = set()  # type: Set
         for row in sites.live().query(query):
             labels.update(row[0].items())
             labels.update(row[1].items())
@@ -5603,7 +5662,7 @@ class IconSelector(ValueSpec):
         return icons
 
     def available_icons_by_category(self, icons):
-        by_cat = {}
+        by_cat = {}  # type: Dict[str, List[str]]
         for icon_name, category_name in icons.items():
             by_cat.setdefault(category_name, [])
             by_cat[category_name].append(icon_name)
@@ -5908,7 +5967,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             "O": _("Organization Name"),
             "CN": _("Common Name"),
         }
-        cert_info = {}
+        cert_info = {}  # type: Dict[str, Dict]
         for what, x509 in [
             ("issuer", cert.get_issuer()),
             ("subject", cert.get_subject()),

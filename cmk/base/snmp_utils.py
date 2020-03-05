@@ -92,6 +92,12 @@ class OIDSpec:
             raise ValueError("can only add full OIDs to partial OIDs")
         return right.__class__("%s.%s" % (self, right))
 
+    def __eq__(self, other):
+        # type: (Any) -> bool
+        if other.__class__ != self.__class__:
+            return False
+        return self._value == other._value
+
     def __str__(self):
         # type: () -> str
         return self._value

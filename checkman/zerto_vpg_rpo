@@ -1,6 +1,6 @@
 title: Zerto VPG RPO
 agents: linux
-catalog: hw/app/zerto
+catalog: app/zerto
 license: GPL
 distribution: check_mk
 description:

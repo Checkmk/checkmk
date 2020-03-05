@@ -1,6 +1,6 @@
 title: Proxmox Virtual Environment: Node Status
 agents: linux
-catalog: os/services
+catalog: app/proxmox
 license: GPL
 distribution: check_mk
 description:

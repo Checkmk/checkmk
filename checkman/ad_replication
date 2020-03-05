@@ -1,6 +1,6 @@
 title: State of Microsoft Active Directory Replication between DCs
 agents: windows
-catalog: os/ad
+catalog: app/ad
 license: GPL
 distribution: check_mk
 description:

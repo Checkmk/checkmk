@@ -1,6 +1,6 @@
 title: SuSE Linux Enterprise Server license information
 agents: linux
-catalog: os/linux
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

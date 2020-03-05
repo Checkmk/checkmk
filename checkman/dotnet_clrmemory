@@ -1,6 +1,6 @@
 title: dotNet Common Language Runtime Memory
 agents: windows
-catalog: app/exchange
+catalog: app/dotnet
 license: GPL
 distribution: check_mk
 description:

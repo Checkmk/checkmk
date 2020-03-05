@@ -1,10 +1,10 @@
-title: Check_MK Appliance backup job state
+title: Checkmk Appliance: Backup job state
 agents: linux
-catalog: app/check_mk
+catalog: app/checkmk
 license: GPL
-distribution: check_mk
+distribution: checkmk
 description:
- This check checks the status of Check_MK Appliance device backup jobs. It
+ This check checks the status of Checkmk Appliance device backup jobs. It
  will raise a {CRIT} state in case the job failed or the next execution of
  the job is overdue.
 

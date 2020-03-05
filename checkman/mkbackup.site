@@ -1,10 +1,10 @@
-title: Check_MK site backup job state
+title: Checkmk site: Backup job state
 agents: linux
-catalog: app/check_mk
+catalog: app/checkmk
 license: GPL
-distribution: check_mk
+distribution: checkmk
 description:
- This check checks the status of Check_MK site backup jobs. It
+ This check checks the status of Checkmk site backup jobs. It
  will raise a {CRIT} state in case the job failed or the next execution of
  the job is overdue.
 

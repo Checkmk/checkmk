@@ -1,11 +1,11 @@
-title: Check_MK Notification Spooler Connection
+title: Checkmk Notification Spooler: Connection
 agents: linux
-catalog: app/check_mk
+catalog: app/checkmk
 license: GPL
-distribution: check_mk
+distribution: checkmk
 description:
  This check checks the status of indiviual TCP connections from a
- Check_MK Notification Spooler to a remote spooler. For each incoming
+ Checkmk Notification Spooler to a remote spooler. For each incoming
  and outoing TCP connection one service will be created the goes
  critical if the connection is not up.
 

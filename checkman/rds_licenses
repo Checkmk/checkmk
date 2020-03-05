@@ -1,6 +1,6 @@
 title: Remote desktop licenses
 agents: windows
-catalog: os/windows
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: Check for hardware sensors on OpenBSD devices
 agents: snmp, openbsd
-catalog: os/openbsd
+catalog: os/hardware
 license: GPL
 distribution: check_mk
 

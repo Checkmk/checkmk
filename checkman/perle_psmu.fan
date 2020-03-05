@@ -1,6 +1,6 @@
 title: Perle Mediaconverter: Fan status
 agents: snmp
-catalog: hw/app/perle
+catalog: hw/network/perle
 license: GPL
 distribution: check_mk
 description:

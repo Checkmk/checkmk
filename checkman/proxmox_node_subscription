@@ -1,6 +1,6 @@
 title: Proxmox: Node subscription
 agents: proxmox
-catalog: os/misc
+catalog: app/proxmox
 license: GPL
 distribution: check_mk
 description:

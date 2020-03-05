@@ -1,12 +1,43 @@
 FROM debian:8
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \
+    gdebi \
+    git \
+    libenchant1c2a \
+    libkrb5-dev \
+    libldap2-dev \
+    libmysqlclient-dev \
+    librrd-dev \
+    librrd4 \
+    libsasl2-dev \
+    libssl-dev \
+    make \
+    python-dev \
+    python-pip \
+    rrdtool \
+    strace \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+    gdebi \
+    git \
+    libenchant1c2a \
+    libkrb5-dev \
+    libldap2-dev \
+    libmysqlclient-dev \
+    librrd-dev \
+    librrd4 \
+    libsasl2-dev \
+    make \
+    rrdtool \
+    strace \
+    \
     apache2 \
     apache2-threaded-dev \
     build-essential \
@@ -26,7 +57,6 @@ RUN apt-get update \
     libglib2.0-dev \
     libgnutls28-dev \
     libgsf-1-dev \
-    libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
     libmysqlclient15-dev \
@@ -39,6 +69,7 @@ RUN apt-get update \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \
+    libxml2 \
     openssh-client \
     patch \
     rpcbind \
@@ -50,7 +81,6 @@ RUN apt-get update \
     joe \
     iputils-ping \
     vim \
-    gdebi \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building
@@ -58,23 +88,22 @@ RUN apt-get update \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-ARG ARTIFACT_STORAGE
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
 COPY scripts/* /opt/
-RUN export NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" \
-    NEXUS_USERNAME="$NEXUS_USERNAME" \
-    NEXUS_PASSWORD="$NEXUS_PASSWORD" \
-    BRANCH_VERSION="$BRANCH_VERSION" \
-    DISTRO="$DISTRO" \
-    && /opt/install-gnu-toolchain.sh \
-    && /opt/install-cmake.sh \
-    && /opt/install-openssl.sh \
-    && /opt/install-python.sh \
-    && rm -rf /opt/src
+RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-cmake.sh
+RUN /opt/install-openssl.sh
+RUN /opt/install-python2.sh
+RUN /opt/install-python.sh
+RUN /opt/install-pipenv.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-freetds.sh
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

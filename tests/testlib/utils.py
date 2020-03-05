@@ -102,6 +102,8 @@ def current_base_branch_name():
             lines = lines.decode("utf-8")
 
         for line in lines.strip().split("\n"):
+            if not line:
+                continue
             head = line.split()[0]
 
             if head == "origin/master":

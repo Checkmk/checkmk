@@ -1,10 +1,32 @@
 FROM ubuntu:19.04
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \
+    gdebi \
+    git \
+    libenchant1c2a \
+    libkrb5-dev \
+    libldap2-dev \
+    libmysqlclient-dev \
+    librrd-dev \
+    libsasl2-dev \
+    libssl-dev \
+    make \
+    nullmailer \
+    python-dev \
+    python-dev \
+    python3-pip \
+    rrdtool \
+    strace \
+    sudo \
+    graphviz \
+    php7.2-common \
+    dialog \
+    libxml2 \
+    \
     apache2 \
     apache2-dev \
     autoconf \
@@ -58,23 +80,22 @@ RUN apt-get update \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-ARG ARTIFACT_STORAGE
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
 COPY scripts/* /opt/
-RUN export NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" \
-    NEXUS_USERNAME="$NEXUS_USERNAME" \
-    NEXUS_PASSWORD="$NEXUS_PASSWORD" \
-    BRANCH_VERSION="$BRANCH_VERSION" \
-    DISTRO="$DISTRO" \
-    && /opt/install-gnu-toolchain.sh \
-    && /opt/install-cmake.sh \
-    && /opt/install-openssl.sh \
-    && /opt/install-python.sh \
-    && rm -rf /opt/src
+RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-cmake.sh
+RUN /opt/install-openssl.sh
+RUN /opt/install-python2.sh
+RUN /opt/install-python.sh
+RUN /opt/install-pipenv.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-freetds.sh
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

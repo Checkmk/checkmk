@@ -12,6 +12,12 @@ import sys
 import platform
 import logging
 
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
 import requests
 
 from testlib.utils import get_cmk_download_credentials
@@ -187,6 +193,13 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
         while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
             logger.info("Waiting for other dpkg process to complete...")
             time.sleep(1)
+
+        # Workaround to fix package installation issues
+        # - systemctl in docker leads to: Failed to connect to bus: No such file or directory
+        systemctl = Path("/bin/systemctl")
+        if systemctl.exists():
+            systemctl.unlink()
+        systemctl.symlink_to("/bin/true")
 
         # Improve the protection against other test runs installing packages
         cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path

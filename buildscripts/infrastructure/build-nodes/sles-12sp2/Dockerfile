@@ -2,11 +2,32 @@ ARG DOCKER_REGISTRY
 FROM ${DOCKER_REGISTRY}/sles-12sp2-base
 
 SHELL ["/bin/bash", "-c"]
+ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp2 sles12sp2 \
-    && zypper ref -s \
+    && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
+    && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
+    curl \
+    cyrus-sasl-devel \
+    enchant-devel \
+    git \
+    krb5-devel \
+    libmysqlclient-devel \
+    make \
+    nodejs10 \
+    npm10 \
+    openldap2-devel \
+    python \
+    python-devel \
+    python-pyOpenSSL \
+    python-xml \
+    rrdtool-devel \
+    sudo \
+    && zypper clean -a
+
+RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
@@ -70,23 +91,22 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp2 sles12sp2 \
 # - cmake is needed for e.g. building re2
 # - openssl is needed by Python 3.7+
 # - python is needed by our build / test chain
-ARG ARTIFACT_STORAGE
 ARG NEXUS_ARCHIVES_URL
 ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
 COPY scripts/* /opt/
-RUN export NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" \
-    NEXUS_USERNAME="$NEXUS_USERNAME" \
-    NEXUS_PASSWORD="$NEXUS_PASSWORD" \
-    BRANCH_VERSION="$BRANCH_VERSION" \
-    DISTRO="$DISTRO" \
-    && /opt/install-gnu-toolchain.sh \
-    && /opt/install-cmake.sh \
-    && /opt/install-openssl.sh \
-    && /opt/install-python.sh \
-    && rm -rf /opt/src
+RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-cmake.sh
+RUN /opt/install-openssl.sh
+RUN /opt/install-python2.sh
+RUN /opt/install-python.sh
+RUN /opt/install-pipenv.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-freetds.sh
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

@@ -33,14 +33,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    # When invoking the test based on the current git, use the container based on
-    # the current daily build. The git is patched into that version later in the
-    # test container
-
-    base_image_name = "%s/%s-os-image" % (_DOCKER_REGISTRY, distro_name)
-
-    # TODO: Why don't we use our official containers here? We should have all the code
-    # ready for using it in either "docker" or "tests-py3/docker" directory.
+    base_image_name = "%s/%s" % (_DOCKER_REGISTRY, distro_name)
     image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
 
     # Start the container

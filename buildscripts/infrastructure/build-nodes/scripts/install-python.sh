@@ -37,11 +37,15 @@ build_package() {
         --enable-shared
     make -j2
     make install
+
+    cd /opt
+    rm -rf /opt/src
 }
 
 set_symlinks() {
     log "Set symlink"
-    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* /usr/bin
+    mkdir -p "${TARGET_DIR}/bin"
+    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

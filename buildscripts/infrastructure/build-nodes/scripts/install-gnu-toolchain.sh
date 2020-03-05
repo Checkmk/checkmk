@@ -113,6 +113,9 @@ build_package() {
     build_binutils
     build_gcc
     build_gdb
+
+    cd /opt
+    rm -rf /opt/src
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

@@ -6,6 +6,7 @@
 
 from __future__ import division
 import time
+import abc
 import six
 
 from cmk.utils.regex import regex
@@ -265,6 +266,50 @@ class PainterInventoryTree(Painter):
 
     def render(self, row, cell):
         return paint_host_inventory_tree(row)
+
+
+class ABCRowTable(RowTable):
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        # Create livestatus filter for filtering out hosts
+        host_columns = ["host_name"] + list({
+            c for c in columns if c.startswith("host_") and c != "host_name"
+        }) + self._add_host_columns
+
+        query = "GET hosts\n"
+        query += "Columns: " + (" ".join(host_columns)) + "\n"
+        query += "".join(filt.filter(self._info_name) for filt in all_active_filters)
+
+        if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
+                display_options.W):
+            html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
+            html.open_tt()
+            html.write(query.replace('\n', '<br>\n'))
+            html.close_tt()
+            html.close_div()
+
+        data = self._get_inv_data(only_sites, query)
+
+        # Now create big table of all inventory entries of these hosts
+        headers = ["site"] + host_columns
+        rows = []
+        for row in data:
+            hostrow = dict(zip(headers, row))
+            for subrow in self._get_rows(hostrow):
+                subrow.update(hostrow)
+                rows.append(subrow)
+        return rows
+
+    def _get_inv_data(self, only_sites, query):
+        sites.live().set_only_sites(only_sites)
+        sites.live().set_prepend_site(True)
+        data = sites.live().query(query)
+        sites.live().set_prepend_site(False)
+        sites.live().set_only_sites(None)
+        return data
+
+    @abc.abstractmethod
+    def _get_rows(self, hostrow):
+        raise NotImplementedError()
 
 
 #.
@@ -636,77 +681,6 @@ def declare_inventory_columns():
 #   '----------------------------------------------------------------------'
 
 
-def _create_inv_rows(hostrow, infoname, invpath):
-    try:
-        merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
-    except inventory.LoadStructuredDataError:
-        html.add_user_error(
-            "load_inventory_tree",
-            _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
-            inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
-        return []
-
-    if merged_tree is None:
-        return []
-
-    invdata = inventory.get_inventory_data(merged_tree, invpath)
-    if invdata is None:
-        return []
-
-    entries = []
-    for entry in invdata:
-        newrow = {}
-        for key, value in entry.items():
-            newrow[infoname + "_" + key] = value
-        entries.append(newrow)
-    return entries
-
-
-def _inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
-    # Create livestatus filter for filtering out hosts
-    host_columns = ["host_name"] + list(
-        {c for c in columns if c.startswith("host_") and c != "host_name"})
-
-    if infoname == "invhist":
-        get_subrows = _create_hist_rows
-    else:
-        host_columns.append("host_structured_status")
-        get_subrows = lambda hostrow: _create_inv_rows(hostrow, infoname, invpath)
-
-    query = "GET hosts\n"
-    query += "Columns: " + (" ".join(host_columns)) + "\n"
-    query += "".join(filt.filter(infoname) for filt in filters)
-
-    if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
-            display_options.W):
-        html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
-        html.open_tt()
-        html.write(query.replace('\n', '<br>\n'))
-        html.close_tt()
-        html.close_div()
-
-    data = _get_inv_data(only_sites, query)
-
-    # Now create big table of all inventory entries of these hosts
-    headers = ["site"] + host_columns
-    rows = []
-    for row in data:
-        hostrow = dict(zip(headers, row))
-        for subrow in get_subrows(hostrow):
-            subrow.update(hostrow)
-            rows.append(subrow)
-    return rows
-
-
-def _get_inv_data(only_sites, query):
-    sites.live().set_only_sites(only_sites)
-    sites.live().set_prepend_site(True)
-    data = sites.live().query(query)
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
-    return data
-
-
 def _inv_find_subtable_columns(invpath):
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
@@ -786,14 +760,36 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
     filter_registry.register(filter_class)
 
 
-class RowTableInventory(RowTable):
+class RowTableInventory(ABCRowTable):
     def __init__(self, info_name, inventory_path):
         self._info_name = info_name
         self._inventory_path = inventory_path
+        self._add_host_columns = ["host_structured_status"]
 
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return _inv_multisite_table(self._info_name, self._inventory_path, columns, headers,
-                                    only_sites, limit, all_active_filters)
+    def _get_rows(self, hostrow):
+        try:
+            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            return []
+
+        if merged_tree is None:
+            return []
+
+        invdata = inventory.get_inventory_data(merged_tree, self._inventory_path)
+        if invdata is None:
+            return []
+
+        entries = []
+        for entry in invdata:
+            newrow = {}
+            for key, value in entry.items():
+                newrow[self._info_name + "_" + key] = value
+            entries.append(newrow)
+        return entries
 
 
 # One master function that does all
@@ -1203,31 +1199,31 @@ multisite_builtin_views["inv_hosts_ports"] = {
 #   '----------------------------------------------------------------------'
 
 
-class RowTableInventoryHistory(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return _inv_multisite_table("invhist", None, columns, headers, only_sites, limit,
-                                    all_active_filters)
+class RowTableInventoryHistory(ABCRowTable):
+    def __init__(self):
+        self._info_name = "invhist"
+        self._inventory_path = None
+        self._add_host_columns = []
 
+    def _get_rows(self, hostrow):
+        hostname = hostrow.get("host_name")
+        history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+        if corrupted_history_files:
+            html.add_user_error(
+                "load_inventory_delta_tree",
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                  % ", ".join(sorted(corrupted_history_files))))
 
-def _create_hist_rows(hostrow):
-    hostname = hostrow.get("host_name")
-    history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
-    if corrupted_history_files:
-        html.add_user_error(
-            "load_inventory_delta_tree",
-            _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files." %
-              ", ".join(sorted(corrupted_history_files))))
-
-    for timestamp, delta_info in history_deltas:
-        new, changed, removed, delta_tree = delta_info
-        newrow = {
-            "invhist_time": int(timestamp),
-            "invhist_delta": delta_tree,
-            "invhist_removed": removed,
-            "invhist_new": new,
-            "invhist_changed": changed,
-        }
-        yield newrow
+        for timestamp, delta_info in history_deltas:
+            new, changed, removed, delta_tree = delta_info
+            newrow = {
+                "invhist_time": int(timestamp),
+                "invhist_delta": delta_tree,
+                "invhist_removed": removed,
+                "invhist_new": new,
+                "invhist_changed": changed,
+            }
+            yield newrow
 
 
 @data_source_registry.register

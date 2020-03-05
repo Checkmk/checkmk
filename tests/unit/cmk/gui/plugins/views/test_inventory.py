@@ -47,9 +47,9 @@ INV_HIST_ROWS = [
 
 
 def test_query_row_table_inventory(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(inventory, "_create_inv_rows", lambda hostrow, info, path: INV_ROWS)
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_ROWS)
     rows = row_table.query(None, [], None, None, None, [])
     for row in rows:
         assert 'site' in row
@@ -57,9 +57,9 @@ def test_query_row_table_inventory(monkeypatch):
 
 
 def test_query_row_table_inventory_unknown_columns(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(inventory, "_create_inv_rows", lambda hostrow, info, path: INV_ROWS)
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_ROWS)
     rows = row_table.query(None, ['foo'], None, None, None, [])
     for row in rows:
         assert 'site' in row
@@ -68,9 +68,9 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch):
 
 
 def test_query_row_table_inventory_add_columns(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS2)
-    monkeypatch.setattr(inventory, "_create_inv_rows", lambda hostrow, info, path: INV_ROWS)
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS2)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_ROWS)
     rows = row_table.query(None, ['host_foo'], None, None, None, [])
     for row in rows:
         assert 'site' in row
@@ -79,9 +79,9 @@ def test_query_row_table_inventory_add_columns(monkeypatch):
 
 
 def test_query_row_table_inventory_history(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(inventory, "_create_hist_rows", lambda hostrow: INV_HIST_ROWS)
     row_table = inventory.RowTableInventoryHistory()
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_HIST_ROWS)
     rows = row_table.query(None, [], None, None, None, [])
     for row in rows:
         assert 'site' in row
@@ -89,9 +89,9 @@ def test_query_row_table_inventory_history(monkeypatch):
 
 
 def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(inventory, "_create_hist_rows", lambda hostrow: INV_HIST_ROWS)
     row_table = inventory.RowTableInventoryHistory()
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_HIST_ROWS)
     rows = row_table.query(None, ['foo'], None, None, None, [])
     for row in rows:
         assert 'site' in row
@@ -100,9 +100,9 @@ def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
 
 
 def test_query_row_table_inventory_history_add_columns(monkeypatch):
-    monkeypatch.setattr(inventory, "_get_inv_data", lambda only_sites, query: RAW_ROWS2)
-    monkeypatch.setattr(inventory, "_create_hist_rows", lambda hostrow: INV_HIST_ROWS)
     row_table = inventory.RowTableInventoryHistory()
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda only_sites, query: RAW_ROWS2)
+    monkeypatch.setattr(row_table, "_get_rows", lambda hostrow: INV_HIST_ROWS)
     rows = row_table.query(None, ['host_foo'], None, None, None, [])
     for row in rows:
         assert 'site' in row

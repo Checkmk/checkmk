@@ -1,4 +1,4 @@
-title: Meinberg LANTIME Devices: Non-GPS Refclock State (NG MIB)
+title: Meinberg LANTIME devices: Non-GPS Refclock State (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

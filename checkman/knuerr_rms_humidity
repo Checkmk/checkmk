@@ -1,4 +1,4 @@
-title: Knürr RMS Humidity
+title: Knürr RMS: Humidity
 agents: snmp
 catalog: hw/environment/knuerr
 license: GPL

@@ -1,4 +1,4 @@
-title: Knürr RMS Temperature
+title: Knürr RMS: Temperature
 agents: snmp
 catalog: hw/environment/knuerr
 license: GPL

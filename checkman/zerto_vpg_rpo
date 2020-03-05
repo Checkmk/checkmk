@@ -1,4 +1,4 @@
-title: Zerto VPG RPO
+title: Zerto: Virtual Protected Groups
 agents: linux
 catalog: app/zerto
 license: GPL

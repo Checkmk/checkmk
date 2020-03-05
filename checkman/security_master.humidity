@@ -1,4 +1,4 @@
-title: Security Master humidity sensors
+title: Security Master: Humidity
 agents: snmp
 catalog: hw/environment/maykg
 license: GPL

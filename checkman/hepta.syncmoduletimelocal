@@ -1,4 +1,4 @@
-title: Hepta 8030
+title: Hepta 8030: Local time
 agents: snmp
 catalog: hw/time/hopf
 license: GPL

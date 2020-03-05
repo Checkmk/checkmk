@@ -1,4 +1,4 @@
-title: Security Master smoke sensors
+title: Security Master: Smoke
 agents: snmp
 catalog: hw/environment/maykg
 license: GPL

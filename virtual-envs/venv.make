@@ -1,9 +1,7 @@
 SHELL := /bin/bash -e -o pipefail
+PIPENV := SKIP_MAKEFILE_CALL=1 ../../scripts/run-pipenv $(PYTHON_VERSION)
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
-MAKEFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-ROOT_DIR := $(shell realpath $(MAKEFILE_DIR)/..)
-PIPENV := SKIP_MAKEFILE_CALL=1 $(ROOT_DIR)/scripts/run-pipenv $(PYTHON_VERSION)
 
 # TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
 # can be removed if pipenv fixes this issue.
@@ -20,7 +18,7 @@ PIPENV := SKIP_MAKEFILE_CALL=1 $(ROOT_DIR)/scripts/run-pipenv $(PYTHON_VERSION)
 # We should do this via some move-if-change Kung Fu, but for now rm suffices.
 Pipfile.lock: Pipfile
 	@( \
-	    echo "Locking .venv for locking..." ; \
+	    echo "Locking .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(PIPENV) lock; \
 	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
@@ -38,11 +36,8 @@ Pipfile.lock: Pipfile
 	    exit 1 \
 	)
 	@( \
-	    echo "Locking .venv for syncing..." ; \
+	    echo "Locking .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    ($(PIPENV) sync --dev && \
-			echo "export PYTHONPATH=$(ROOT_DIR)" >> .venv/bin/activate && \
-			touch .venv) || \
-	    ($(RM) -r .venv ; exit 1) \
+	    ($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1) \
 	) $(LOCK_FD)>$(LOCK_PATH)

@@ -51,6 +51,46 @@ EXPECTED_INV_HIST_KEYS = [
     "invhist_changed",
 ]
 
+INV_ROWS_MULTI = [
+    ('invtesttable1', [
+        {
+            'sid': 'A',
+            'value1': 1,
+        },
+        {
+            'sid': 'B',
+            'value1': 2,
+        },
+        {
+            'sid': 'C',
+            'value1': 3,
+        },
+    ]),
+    ('invtesttable2', [
+        {
+            'sid': 'A',
+            'value2': 4,
+        },
+        {
+            'sid': 'B',
+            'value2': 5,
+        },
+        {
+            'sid': 'C',
+            'value2': 6,
+        },
+    ]),
+]
+
+EXPECTED_INV_MULTI_KEYS = [
+    'site',
+    'host_name',
+    'invtesttable1_sid',
+    'invtesttable1_value1',
+    'invtesttable2_sid',
+    'invtesttable2_value2',
+]
+
 
 def test_query_row_table_inventory(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
@@ -104,3 +144,33 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
     rows = row_table.query(None, ['host_foo'], None, None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ['host_foo'])
+
+
+def test_query_row_multi_table_inventory(monkeypatch):
+    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
+    rows = row_table.query(None, [], None, None, None, [])
+    for row in rows:
+        assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
+
+
+def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
+    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
+    rows = row_table.query(None, ['foo'], None, None, None, [])
+    for row in rows:
+        assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
+
+
+def test_query_row_multi_table_inventory_add_columns(monkeypatch):
+    sources = zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"])
+    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
+    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
+    rows = row_table.query(None, ['host_foo'], None, None, None, [])
+    for row in rows:
+        assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ['host_foo'])

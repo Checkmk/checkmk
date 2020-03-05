@@ -211,7 +211,8 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     hostname = context.get("host")
     if hostname is None:
         return True  # No host data? Keep old behaviour
-    elif hostname == "":
+
+    if hostname == "":
         return False
 
     # TODO: host is not correctly validated by visuals. Do it here for the moment.
@@ -233,6 +234,14 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     if struct_tree.is_empty():
         return False
 
+    if isinstance(invpath, list):
+        # For plugins/views/inventory.py:RowMultiTableInventory we've to check
+        # if a given host has inventory data below several inventory paths
+        return any(_has_children(struct_tree, ipath) for ipath in invpath)
+    return _has_children(struct_tree, invpath)
+
+
+def _has_children(struct_tree, invpath):
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)

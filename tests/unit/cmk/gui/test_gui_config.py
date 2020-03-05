@@ -378,6 +378,8 @@ def test_registered_permissions():
         'view.invorarecoveryarea_search',
         'view.invorasga_of_host',
         'view.invorasga_search',
+        'view.invorapga_of_host',
+        'view.invorapga_search',
         'view.invoratablespace_of_host',
         'view.invoratablespace_search',
         'view.invother_of_host',

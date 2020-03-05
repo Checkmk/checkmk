@@ -1164,8 +1164,14 @@ declare_invtable_view(
 declare_invtable_view(
     "invorasga",
     ".software.applications.oracle.sga:",
-    _("Oracle performance"),
-    _("Oracle performance"),
+    _("Oracle SGA performance"),
+    _("Oracle SGA performance"),
+)
+declare_invtable_view(
+    "invorapga",
+    ".software.applications.oracle.pga:",
+    _("Oracle PGA performance"),
+    _("Oracle PGA performance"),
 )
 declare_invtable_view("invibmmqmanagers", ".software.applications.ibm_mq.managers:", _("Manager"),
                       _("IBM MQ Managers"))

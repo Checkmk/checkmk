@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """ Driver to consume a Clang compilation database and invoke IWYU.
 
 Example usage with CMake:
@@ -29,7 +33,6 @@ import argparse
 import tempfile
 import subprocess
 
-
 CORRECT_RE = re.compile(r'^\((.*?) has correct #includes/fwd-decls\)$')
 SHOULD_ADD_RE = re.compile(r'^(.*?) should add these lines:$')
 ADD_RE = re.compile('^(.*?) +// (.*)$')
@@ -38,7 +41,6 @@ SHOULD_REMOVE_RE = re.compile(r'^(.*?) should remove these lines:$')
 FULL_LIST_RE = re.compile(r'The full include-list for (.*?):$')
 END_RE = re.compile(r'^---$')
 LINES_RE = re.compile(r'^- (.*?)  // lines ([0-9]+)-[0-9]+$')
-
 
 GENERAL, ADD, REMOVE, LIST = range(4)
 
@@ -52,8 +54,7 @@ def clang_formatter(output):
     for line in output.splitlines():
         match = CORRECT_RE.match(line)
         if match:
-            formatted.append('%s:1:1: note: #includes/fwd-decls are correct' %
-                             match.groups(1))
+            formatted.append('%s:1:1: note: #includes/fwd-decls are correct' % match.groups(1))
             continue
         match = SHOULD_ADD_RE.match(line)
         if match:
@@ -76,13 +77,12 @@ def clang_formatter(output):
             match = ADD_RE.match(line)
             if match:
                 formatted.append("%s:1:1: error: add '%s' (%s)" %
-                                    (state[1], match.group(1), match.group(2)))
+                                 (state[1], match.group(1), match.group(2)))
                 num_errors += 1
                 continue
             match = ADD_FWD_DECL_RE.match(line)
             if match:
-                formatted.append("%s:1:1: error: add '%s'" %
-                                    (state[1], match.group(1)))
+                formatted.append("%s:1:1: error: add '%s'" % (state[1], match.group(1)))
                 num_errors += 1
                 continue
             raise ValueError("failed to parse %r", line)
@@ -103,12 +103,12 @@ FORMATTERS = {
     'clang': clang_formatter
 }
 
-
 if sys.platform.startswith('win'):
     # Case-insensitive match on Windows
     def normcase(s):
         return s.lower()
 else:
+
     def normcase(s):
         return s
 
@@ -264,11 +264,10 @@ class Process(object):
     def start(cls, invocation):
         """ Start a Process for the invocation and capture stdout+stderr. """
         outfile = tempfile.TemporaryFile(prefix='iwyu')
-        process = subprocess.Popen(
-            invocation.command,
-            cwd=invocation.cwd,
-            stdout=outfile,
-            stderr=subprocess.STDOUT)
+        process = subprocess.Popen(invocation.command,
+                                   cwd=invocation.cwd,
+                                   stdout=outfile,
+                                   stderr=subprocess.STDOUT)
         return cls(process, outfile)
 
 
@@ -350,6 +349,7 @@ def slice_compilation_db(compilation_db, selection):
 def execute(invocations, verbose, formatter, jobs):
     """ Launch processes described by invocations. """
     num_all_errors = [0]  # emulate nonlocal
+
     def process_result(p):
         messages, num_errors = formatter(p.get_output())
         print(messages)
@@ -378,14 +378,12 @@ def execute(invocations, verbose, formatter, jobs):
     return num_all_errors[0]
 
 
-def main(compilation_db_path, source_files, verbose, formatter, jobs,
-         extra_args):
+def main(compilation_db_path, source_files, verbose, formatter, jobs, extra_args):
     """ Entry point. """
 
     try:
         if os.path.isdir(compilation_db_path):
-            compilation_db_path = os.path.join(compilation_db_path,
-                                               'compile_commands.json')
+            compilation_db_path = os.path.join(compilation_db_path, 'compile_commands.json')
 
         # Read compilation db from disk.
         compilation_db_path = os.path.realpath(compilation_db_path)
@@ -399,9 +397,7 @@ def main(compilation_db_path, source_files, verbose, formatter, jobs,
     compilation_db = slice_compilation_db(compilation_db, source_files)
 
     # Transform compilation db entries into a list of IWYU invocations.
-    invocations = [
-        Invocation.from_compile_command(e, extra_args) for e in compilation_db
-    ]
+    invocations = [Invocation.from_compile_command(e, extra_args) for e in compilation_db]
 
     return 2 if execute(invocations, verbose, formatter, jobs) else 0
 
@@ -437,16 +433,25 @@ def _bootstrap(sys_argv):
     customize_usage(parser)
     customize_help(parser)
 
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Print IWYU commands')
-    parser.add_argument('-o', '--output-format', type=str,
-                        choices=FORMATTERS.keys(), default=DEFAULT_FORMAT,
+    parser.add_argument('-v', '--verbose', action='store_true', help='Print IWYU commands')
+    parser.add_argument('-o',
+                        '--output-format',
+                        type=str,
+                        choices=FORMATTERS.keys(),
+                        default=DEFAULT_FORMAT,
                         help='Output format (default: %s)' % DEFAULT_FORMAT)
-    parser.add_argument('-j', '--jobs', type=int, default=1,
+    parser.add_argument('-j',
+                        '--jobs',
+                        type=int,
+                        default=1,
                         help='Number of concurrent subprocesses')
-    parser.add_argument('-p', metavar='<build-path>', required=True,
-                        help='Compilation database path', dest='dbpath')
-    parser.add_argument('source', nargs='*',
+    parser.add_argument('-p',
+                        metavar='<build-path>',
+                        required=True,
+                        help='Compilation database path',
+                        dest='dbpath')
+    parser.add_argument('source',
+                        nargs='*',
                         help=('Zero or more source files (or directories) to '
                               'run IWYU on. Defaults to all in compilation '
                               'database.'))
@@ -455,14 +460,15 @@ def _bootstrap(sys_argv):
         """ Split around '--' into driver args and IWYU args. """
         try:
             double_dash = argv.index('--')
-            return argv[:double_dash], argv[double_dash+1:]
+            return argv[:double_dash], argv[double_dash + 1:]
         except ValueError:
             return argv, []
+
     argv, extra_args = partition_args(sys_argv[1:])
     args = parser.parse_args(argv)
 
-    return main(args.dbpath, args.source, args.verbose,
-                FORMATTERS[args.output_format], args.jobs, extra_args)
+    return main(args.dbpath, args.source, args.verbose, FORMATTERS[args.output_format], args.jobs,
+                extra_args)
 
 
 if __name__ == '__main__':

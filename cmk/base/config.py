@@ -61,6 +61,7 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
     ScanFunction, SNMPCredentials,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import

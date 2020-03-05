@@ -7,9 +7,11 @@
 import abc
 import functools
 from typing import (  # pylint: disable=unused-import
-    Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict,
+    Any, Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict,
 )
+import string
 import six
+
 from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
@@ -51,17 +53,60 @@ OID_END_BIN = -3  # Same, but just the end part
 OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
-def BINARY(oid):
-    # type: (OID) -> Tuple[str, str]
-    """Tell Check_MK to process this OID as binary data to the check."""
-    return "binary", oid
+class OIDSpec:
+    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
+    """
+    VALID_CHARACTERS = '.' + string.digits
+
+    @classmethod
+    def validate(cls, value):
+        # type: (str) -> None
+        if not isinstance(value, str):
+            raise TypeError("expected a non-empty string: %r" % (value,))
+        if not value:
+            raise ValueError("expected a non-empty string: %r" % (value,))
+
+        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
+        if invalid:
+            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
+
+        if value.endswith('.'):
+            raise ValueError("%r should not end with '.'" % (value,))
+
+    def __init__(self, value):
+        # type: (str) -> None
+        self.validate(value)
+        self._value = value
+
+    def __add__(self, right):
+        # type: (Any) -> OIDSpec
+        """Concatenate two OID specs
+
+        We only allow adding (left to right) a "base" (starting with a '.')
+        to an "column" (not starting with '.').
+        We preserve the type of the column, which may signal caching or byte encoding.
+        """
+        if not isinstance(right, OIDSpec):
+            raise TypeError("cannot add %r" % (right,))
+        if not self._value.startswith('.') or right._value.startswith('.'):
+            raise ValueError("can only add full OIDs to partial OIDs")
+        return right.__class__("%s.%s" % (self, right))
+
+    def __str__(self):
+        # type: () -> str
+        return self._value
+
+    def __repr__(self):
+        # type: () -> str
+        return "%s(%r)" % (self.__class__.__name__, self._value)
 
 
-def CACHED_OID(oid):
-    # type: (OID) -> Tuple[str, str]
-    """Use this to mark OIDs as being cached for regular checks,
-    but not for discovery"""
-    return "cached", oid
+class OIDCached(OIDSpec):
+    pass
+
+
+class OIDBytes(OIDSpec):
+    pass
 
 
 def binstring_to_int(binstring):

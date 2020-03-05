@@ -557,7 +557,7 @@ def _snmpv3_contexts_of(snmp_config, check_plugin_name):
 
 def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool) -> SNMPRowInfo
-    is_cachable = _is_snmpwalk_cachable(column)
+    is_cachable = isinstance(column, snmp_utils.OIDCached)
     rowinfo = None  # type: Optional[SNMPRowInfo]
     if is_cachable and use_snmpwalk_cache:
         # Returns either the cached SNMP walk or None when nothing is cached
@@ -618,13 +618,10 @@ def _compute_fetch_oid(oid, suboid, column):
     if suboid:
         fetchoid += "." + str(suboid)
 
-    if column != "":
-        if isinstance(column, tuple):
-            fetchoid += "." + str(column[1])
-            if column[0] == "binary":
-                value_encoding = "binary"
-        else:
-            fetchoid += "." + str(column)
+    if str(column) != "":
+        fetchoid += "." + str(column)
+        if isinstance(column, snmp_utils.OIDBytes):
+            value_encoding = "binary"
 
     return fetchoid, value_encoding
 
@@ -720,11 +717,6 @@ def _construct_snmp_table_of_rows(columns):
         row = [c[index] for c in columns]
         new_info.append(row)
     return new_info
-
-
-def _is_snmpwalk_cachable(column):
-    # type: (Column) -> bool
-    return isinstance(column, tuple) and column[0] == "cached"
 
 
 def _get_cached_snmpwalk(hostname, fetchoid):

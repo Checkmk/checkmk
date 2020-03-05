@@ -1891,3 +1891,13 @@ cmc_host_rrd_config = [
 {'condition': %s, 'value': '%s'},
 ] + cmc_host_rrd_config
 """ % (condition, value))
+
+
+@pytest.mark.parametrize("pack_string", [
+    "_test_var = OIDBytes('6')\n\n",
+    "_test_var = OIDCached('6')\n\n",
+])
+def test_packed_config(pack_string):
+    packed_config = config.PackedConfig()
+    packed_config._write(pack_string)
+    packed_config.load()

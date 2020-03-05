@@ -148,8 +148,9 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY = _snmp_utils.BINARY
-CACHED_OID = _snmp_utils.CACHED_OID
+# backwards compatibility: allow to pass integer.
+BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
+CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
 
 OID_END = _snmp_utils.OID_END
 OID_STRING = _snmp_utils.OID_STRING

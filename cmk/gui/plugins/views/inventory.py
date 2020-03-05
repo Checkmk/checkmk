@@ -794,18 +794,7 @@ class RowTableInventory(ABCRowTable):
 
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
-    # Declare the "info" (like a database table)
-    info_class = type(
-        "VisualInfo%s" % infoname.title(), (VisualInfo,), {
-            "_ident": infoname,
-            "ident": property(lambda self: self._ident),
-            "_title": title_singular,
-            "title": property(lambda self: self._title),
-            "_title_plural": title_plural,
-            "title_plural": property(lambda self: self._title_plural),
-            "single_spec": property(lambda self: None),
-        })
-    visual_info_registry.register(info_class)
+    _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
     ds_class = type(
@@ -834,9 +823,27 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         painters.append((column, '', ''))
         filters.append(column)
 
+    _declare_views(infoname, title_plural, painters, filters, invpath)
+
+
+def _register_info_class(infoname, title_singular, title_plural):
+    # Declare the "info" (like a database table)
+    info_class = type(
+        "VisualInfo%s" % infoname.title(), (VisualInfo,), {
+            "_ident": infoname,
+            "ident": property(lambda self: self._ident),
+            "_title": title_singular,
+            "title": property(lambda self: self._title),
+            "_title_plural": title_plural,
+            "title_plural": property(lambda self: self._title_plural),
+            "single_spec": property(lambda self: None),
+        })
+    visual_info_registry.register(info_class)
+
+
+def _declare_views(infoname, title_plural, painters, filters, invpath):
     # Declare two views: one for searching globally. And one
     # for the items of one host.
-
     view_spec = {
         'datasource': infoname,
         'topic': _('Inventory'),

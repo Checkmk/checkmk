@@ -1,4 +1,4 @@
-title: Fortinet FortiSandbox Queues
+title: Fortinet FortiSandbox: Queues
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

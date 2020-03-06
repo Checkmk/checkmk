@@ -1,4 +1,4 @@
-title: CPU utilization of the last 5 minutes
+title: Cisco devices: CPU utilization (multiple items)
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

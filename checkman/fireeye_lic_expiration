@@ -1,4 +1,4 @@
-title: FireEye Appliances: Active VMs
+title: FireEye Appliances: License expiration
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

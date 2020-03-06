@@ -1,4 +1,4 @@
-title: Input Sensors from HWgroup Poseidon devices
+title: HWgroup Poseidon: Digital inputs
 agents: snmp
 catalog: hw/network/hwgroup
 license: GPL

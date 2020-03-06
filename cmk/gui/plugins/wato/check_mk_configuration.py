@@ -4511,7 +4511,8 @@ def _factory_default_check_mk_exit_status():
         'wrong_version': 1,
         'exception': 3,
         'empty_output': 2,
-        'missing_sections': 1
+        'missing_sections': 1,
+        'unexpected_ip_ranges': 1
     }
 
 
@@ -4550,6 +4551,12 @@ def _valuespec_check_mk_exit_status():
                                  title=_("State if specific sections are missing"),
                              ),
                          ),
+                         (
+                             "unexpected_ip_ranges",
+                             MonitoringState(
+                                 default_value=1,
+                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges are detected")),
+                         ),
                      ])),
                 ("individual",
                  Dictionary(title=_("Individual states per data source"),
@@ -4563,6 +4570,12 @@ def _valuespec_check_mk_exit_status():
                                              MonitoringState(
                                                  default_value=1,
                                                  title=_("State in case of wrong agent version")),
+                                         ),
+                                         (
+                                             "unexpected_ip_ranges",
+                                             MonitoringState(
+                                                 default_value=1,
+                                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges are detected")),
                                          ),
                                      ])),
                                 ("programs",

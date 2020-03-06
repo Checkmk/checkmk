@@ -115,7 +115,23 @@ def _get_or_load_image(client, image_name_with_tag):
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
-        return image
+
+        # Verify that this is in sync with remote version
+        try:
+            registry_data = client.images.get_registry_data(image_name_with_tag)
+            reg_image = registry_data.pull()
+            if reg_image.short_id == image.short_id:
+                logger.info("  Is in sync with registry")
+                return image
+
+            logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
+        except docker.errors.NotFound:
+            logger.info("  Not available from registry")
+            return image
+        except docker.errors.APIError as e:
+            _handle_api_error(e)
+            return image
+
     except docker.errors.ImageNotFound:
         logger.info("  Not available locally, try to pull")
 
@@ -153,13 +169,11 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
 
     logger.info("Preparing [%s]", image_name_with_tag)
     # First try to get the image from the local or remote registry
-    # TODO: How to handle image updates?
     image = _get_or_load_image(client, image_name_with_tag)
     if image:
         return image_name_with_tag  # already found, nothing to do.
 
     logger.info("  Create from [%s]", base_image_name_with_tag)
-    # TODO: How to handle image updates?
     base_image = _get_or_load_image(client, base_image_name_with_tag)
     if base_image is None:
         raise Exception(

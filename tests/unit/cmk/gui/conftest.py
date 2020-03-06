@@ -118,6 +118,13 @@ def recreate_openapi_spec(mocker):
     yield
 
 
+@pytest.fixture()
+def suppress_automation_calls(mocker):
+    mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
+    mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
+    yield
+
+
 @pytest.fixture(scope='function')
 def with_automation_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=True) as user:

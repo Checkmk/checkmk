@@ -153,6 +153,91 @@ def test_openapi_missing_folder(
     wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder/asdf" + uuid.uuid4().hex, status=404)
 
 
+def test_openapi_hosts(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/collections/host",
+        params='{"hostname": "foobar", "folder": "root"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        status=200,
+        params='{"attributes": {}}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    # TODO: Have to fix automation call for delete.
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../delete',
+        base=base,
+        status=204,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+
+def test_openapi_host_groups(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/v0"
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/collections/host_group",
+        params='{"name": "new_group", "alias": "foo"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        params='{"name": "new_group name", "alias": "foo"}',
+        headers={'If-Match': 'foo bar'},
+        status=412,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        params='{"name": "new_group name", "alias": "foo"}',
+        headers={'If-Match': resp.headers['ETag']},
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../delete',
+        base=base,
+        headers={'If-Match': resp.headers['ETag']},
+        status=204,
+        content_type='application/json',
+    )
+
+
 def test_openapi_folders(
     wsgi_app,  # type: WebTestAppForCMK
     with_automation_user,

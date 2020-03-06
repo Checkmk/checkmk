@@ -69,6 +69,42 @@ components:
       - domainType
       - links
       type: object
+    Host:
+      properties:
+        domainType:
+          default: host
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    HostGroup:
+      properties:
+        domainType:
+          default: host_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
     InputAttribute:
       properties:
         key:
@@ -92,6 +128,24 @@ components:
       required:
       - name
       - title
+      type: object
+    InputHost:
+      properties:
+        attributes:
+          type: object
+        folder_id:
+          type: string
+        hostname:
+          type: string
+      type: object
+    InputHostGroup:
+      properties:
+        alias:
+          type: string
+        name:
+          type: string
+      required:
+      - name
       type: object
     InstalledVersions:
       properties: {}
@@ -446,6 +500,222 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /collections/host:
+    post:
+      operationId: cmk.gui.plugins.openapi.endpoints.host.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /objects/host/{hostname}:
+    delete:
+      operationId: cmk.gui.plugins.openapi.endpoints.host.delete
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.host.get
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+    put:
+      operationId: cmk.gui.plugins.openapi.endpoints.host.update
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /collections/host_group:
+    post:
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /objects/host_group/{name}:
+    delete:
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.get
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+    put:
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
           description: ''
           headers:
             ETag:

@@ -78,7 +78,7 @@ headrify ()
           *.openvms) comment="$!# " ;;
           *.php)    comment="# " ; bangpath="<?php" ;;
           *.scss|*.css)    comment="// " ;  bangpath="@charset \"UTF-8\";" ;;
-          *.h|*.c|*.cc|*.h.in) comment="// " ; isCFile=true ;;
+          *.h|*.c|*.cc|*.h.in|*.cpp) comment="// " ; isCFile=true ;;
           *.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
@@ -161,7 +161,7 @@ headrify ()
 if [ "$#" -gt 0 ] ; then
   #echo "Headrifying to version $VERSION"
   force=false
-  if [[ "$*" == *" -f"* ]]; then
+  if [[ "$*" == *"-f "* || "$*" == *" -f" ]]; then
       force=true
       echo "Entering 'force' mode. Headrifying will be forced ignoring shebang and suffix constraints."
   fi

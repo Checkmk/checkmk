@@ -1,4 +1,4 @@
-dtitle: Meinberg LANTIME devices: Temperature (NG MIB)
+title: Meinberg LANTIME devices: Temperature (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

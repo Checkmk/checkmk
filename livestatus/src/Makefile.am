@@ -65,6 +65,7 @@ bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
 
 unixcat_SOURCES = unixcat.cc
+$(unixcat_SOURCES): $(ASIO_INCLUDE)
 unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \

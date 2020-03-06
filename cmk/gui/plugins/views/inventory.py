@@ -287,7 +287,7 @@ class ABCRowTable(RowTable):
             html.close_tt()
             html.close_div()
 
-        data = self._get_inv_data(only_sites, query)
+        data = self._get_raw_data(only_sites, query)
 
         # Now create big table of all inventory entries of these hosts
         headers = ["site"] + host_columns
@@ -299,7 +299,7 @@ class ABCRowTable(RowTable):
                 rows.append(subrow)
         return rows
 
-    def _get_inv_data(self, only_sites, query):
+    def _get_raw_data(self, only_sites, query):
         sites.live().set_only_sites(only_sites)
         sites.live().set_prepend_site(True)
         data = sites.live().query(query)
@@ -307,8 +307,16 @@ class ABCRowTable(RowTable):
         sites.live().set_only_sites(None)
         return data
 
-    @abc.abstractmethod
     def _get_rows(self, hostrow):
+        inv_data = self._get_inv_data(hostrow)
+        return self._prepare_rows(inv_data)
+
+    @abc.abstractmethod
+    def _get_inv_data(self, hostrow):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _prepare_rows(self, inv_data):
         raise NotImplementedError()
 
 
@@ -766,7 +774,7 @@ class RowTableInventory(ABCRowTable):
         self._inventory_path = inventory_path
         self._add_host_columns = ["host_structured_status"]
 
-    def _get_rows(self, hostrow):
+    def _get_inv_data(self, hostrow):
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -782,9 +790,11 @@ class RowTableInventory(ABCRowTable):
         invdata = inventory.get_inventory_data(merged_tree, self._inventory_path)
         if invdata is None:
             return []
+        return invdata
 
+    def _prepare_rows(self, inv_data):
         entries = []
-        for entry in invdata:
+        for entry in inv_data:
             newrow = {}
             for key, value in entry.items():
                 newrow[self._info_name + "_" + key] = value
@@ -1218,7 +1228,7 @@ class RowTableInventoryHistory(ABCRowTable):
         self._inventory_path = None
         self._add_host_columns = []
 
-    def _get_rows(self, hostrow):
+    def _get_inv_data(self, hostrow):
         hostname = hostrow.get("host_name")
         history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
         if corrupted_history_files:
@@ -1226,8 +1236,10 @@ class RowTableInventoryHistory(ABCRowTable):
                 "load_inventory_delta_tree",
                 _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                   % ", ".join(sorted(corrupted_history_files))))
+        return history_deltas
 
-        for timestamp, delta_info in history_deltas:
+    def _prepare_rows(self, inv_data):
+        for timestamp, delta_info in inv_data:
             new, changed, removed, delta_tree = delta_info
             newrow = {
                 "invhist_time": int(timestamp),

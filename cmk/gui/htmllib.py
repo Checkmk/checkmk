@@ -258,11 +258,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_text(self, text):
-        # type: (Union[None, str, Text, HTML]) -> HTML
+        # type: (Union[None, int, str, Text, HTML]) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
-        # type: (Union[None, str, Text, HTML]) -> None
+        # type: (Union[None, int, str, Text, HTML]) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
@@ -2308,7 +2308,15 @@ class html(ABCHTMLGenerator):
         submit=None,  # type: Optional[str]
         try_max_width=False,  # type: bool
         read_only=False,  # type: bool
-        **args  # type: HTMLTagAttributeValue
+        autocomplete=None,  # type: Optional[str]
+        style=None,  # type: Optional[str]
+        omit_css_width=False,  # type: bool
+        type_=None,  # type: Optional[str]
+        onkeyup=None,  # type: Optional[Text]
+        onblur=None,  # type: Optional[str]
+        placeholder=None,  # type: Optional[str]
+        data_world=None,  # type: Optional[str]
+        data_max_labels=None  # type: Optional[int]
     ):
         # type: (...) -> None
 
@@ -2339,36 +2347,25 @@ class html(ABCHTMLGenerator):
             else:
                 assert isinstance(size, int)
                 field_size = "%d" % (size + 1)
-
-                style_arg = args.get("style", "")
-                assert isinstance(style_arg, str)
-
-                if not args.get('omit_css_width', False) \
-                   and "width:" not in style_arg and not self.mobile:
+                if not omit_css_width and (style is None or
+                                           "width:" not in style) and not self.mobile:
                     style_size = "width: %d.8ex;" % size
-
-        style_arg = args.get("style")
-        if style_arg:
-            assert isinstance(style_arg, str)
-            style = [style_size, style_arg]
-        else:
-            style = [style_size]
-
-        if (submit or label) and not id_:
-            id_ = "ti_%s" % varname
-
-        onkeydown = None if not submit else ('cmk.forms.textinput_enter_submit(event, %s);' %
-                                             json.dumps(submit))
 
         attributes = {
             "class": cssclass,
-            "id": id_,
-            "style": style,
+            "id": ("ti_%s" % varname) if (submit or label) and not id_ else id_,
+            "style": [style_size] + ([] if style is None else [style]),
             "size": field_size,
-            "autocomplete": args.get("autocomplete"),
+            "autocomplete": autocomplete,
             "readonly": "true" if read_only else None,
             "value": value,
-            "onkeydown": onkeydown,
+            "onblur": onblur,
+            "onkeyup": onkeyup,
+            "onkeydown": ('cmk.forms.textinput_enter_submit(event, %s);' %
+                          json.dumps(submit)) if submit else None,
+            "placeholder": placeholder,
+            "data-world": data_world,
+            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
         }  # type: HTMLTagAttributes
 
         if error:
@@ -2378,7 +2375,7 @@ class html(ABCHTMLGenerator):
             assert id_ is not None
             self.label(label, for_=id_)
 
-        input_type = args.get("type_", "text")
+        input_type = "text" if type_ is None else type_
         assert isinstance(input_type, str)
         self.write_html(self.render_input(varname, type_=input_type, **attributes))
 
@@ -2430,8 +2427,8 @@ class html(ABCHTMLGenerator):
                        submit=None,
                        try_max_width=False,
                        read_only=False,
-                       **attrs):
-        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], bool, bool, **HTMLTagAttributeValue) -> None
+                       autocomplete=None):
+        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], bool, bool, Optional[str]) -> None
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2442,7 +2439,7 @@ class html(ABCHTMLGenerator):
                         type_="password",
                         try_max_width=try_max_width,
                         read_only=read_only,
-                        **attrs)
+                        autocomplete=autocomplete)
 
     def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
         # type: (str, Union[Text, str], int, int, bool, **HTMLTagAttributeValue) -> None

@@ -5536,11 +5536,9 @@ class Labels(ValueSpec):
         html.text_input(varprefix,
                         default_value=ensure_unicode(json.dumps(labels)) if labels else "",
                         cssclass="labels",
-                        attrs={
-                            "placeholder": _("Add some label"),
-                            "data-world": self._world.value,
-                            "data-max-labels": self._max_labels,
-                        })
+                        placeholder=_("Add some label"),
+                        data_world=self._world.value,
+                        data_max_labels=self._max_labels)
 
 
 def SingleLabel(world, label_source=None, **kwargs):

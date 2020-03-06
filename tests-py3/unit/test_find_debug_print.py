@@ -65,7 +65,7 @@ def test_find_debug_code(path):
             if [folder for folder in exclude_folders if folder in file_path]:
                 continue
 
-            if file_path.endswith((".pyc", ".whl", ".tar.gz")):
+            if file_path.endswith((".pyc", ".whl", ".tar.gz", ".swp")):
                 continue
 
             if os.path.relpath(file_path, cmk_path()) in exclude_files:

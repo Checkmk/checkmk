@@ -147,7 +147,6 @@ endif
 		fi ; \
 	    done ; \
 	else \
-# TODO: Remove uneccesary includes, probably 'enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild'
 	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \

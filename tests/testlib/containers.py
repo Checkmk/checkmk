@@ -114,20 +114,17 @@ def _get_or_load_image(client, image_name_with_tag):
     # type: (docker.DockerClient, str) -> Optional[docker.Image]
     try:
         image = client.images.get(image_name_with_tag)
-        logger.info("Image %s is already available locally (%s)", image_name_with_tag,
-                    image.short_id)
+        logger.info("  Available locally (%s)", image.short_id)
         return image
     except docker.errors.ImageNotFound:
-        logger.info("Image %s is not available locally, trying to download from registry",
-                    image_name_with_tag)
+        logger.info("  Not available locally, try to pull")
 
     try:
         image = client.images.pull(image_name_with_tag)
-        logger.info("Image %s has been loaded from registry (%s)", image_name_with_tag,
-                    image.short_id)
+        logger.info("  Downloaded (%s)", image.short_id)
         return image
     except docker.errors.NotFound:
-        logger.info("Image %s is not available from registry", image_name_with_tag)
+        logger.info("  Not available from registry")
     except docker.errors.APIError as e:
         _handle_api_error(e)
 
@@ -154,19 +151,19 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
     image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
     image_name_with_tag = "%s:%s" % (image_name, docker_tag)
 
-    logger.info("Preparing %s image from %s", image_name_with_tag, base_image_name_with_tag)
+    logger.info("Preparing [%s]", image_name_with_tag)
     # First try to get the image from the local or remote registry
     # TODO: How to handle image updates?
     image = _get_or_load_image(client, image_name_with_tag)
     if image:
         return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("Create new image %s from %s", image_name, base_image_name_with_tag)
+    logger.info("  Create from [%s]", base_image_name_with_tag)
     # TODO: How to handle image updates?
     base_image = _get_or_load_image(client, base_image_name_with_tag)
     if base_image is None:
         raise Exception(
-            "Image %s is not available locally and the registry \"%s\" is not reachable. It is "
+            "Image [%s] is not available locally and the registry \"%s\" is not reachable. It is "
             "not implemented yet to build the image locally. Terminating." %
             (base_image_name_with_tag, _DOCKER_REGISTRY_URL))
 
@@ -185,7 +182,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
             ),
     ) as container:
 
-        logger.info("Building in container %s (created from %s)", container.short_id,
+        logger.info("Building in container %s (from [%s])", container.short_id,
                     base_image_name_with_tag)
 
         assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
@@ -212,13 +209,12 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
         container.stop()
 
         image = container.commit(image_name_with_tag)
-        logger.info("Commited image %s (%s)", image_name_with_tag, image.short_id)
+        logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
         try:
-            logger.info("Uploading %s to registry (%s)", image_name_with_tag, image.short_id)
+            logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
             client.images.push(image_name_with_tag)
-            logger.info("Image %s has been uploaded to registry (%s)", image_name_with_tag,
-                        image.short_id)
+            logger.info("  Upload complete")
         except docker.errors.APIError as e:
             _handle_api_error(e)
 
@@ -285,12 +281,12 @@ def _container_env(version):
 
 @contextmanager
 def _start(client, **kwargs):
-    logger.info("Start new container from %s (Args: %s)", kwargs["image"], kwargs)
+    logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
 
     try:
         client.images.get(kwargs["image"])
     except docker.errors.ImageNotFound:
-        raise Exception("Image %s could not be found locally" % kwargs["image"])
+        raise Exception("Image [%s] could not be found locally" % kwargs["image"])
 
     # Start the container with lowlevel API to be able to attach with a debug shell
     # after initialization

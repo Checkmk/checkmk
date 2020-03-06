@@ -1,4 +1,4 @@
-title: General state of MSSQL instances
+title: MS SQL: General state
 agents: windows
 catalog: app/mssql
 license: GPL

@@ -1,4 +1,4 @@
-title: Last successful backup of MSSQL tablespaces
+title: MS SQL Tablespaces: Successful backups (by type)
 agents: windows
 catalog: app/mssql
 license: GPL

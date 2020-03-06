@@ -1,4 +1,4 @@
-title: MS Exchange DAG DBCopy State
+title: MS Exchange: DAG DBCopy State
 agents: windows
 catalog: app/exchange
 license: GPL

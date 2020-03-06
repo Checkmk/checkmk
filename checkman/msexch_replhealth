@@ -1,4 +1,4 @@
-title: MS Exchange DAG Replication Health Test
+title: MS Exchange: DAG Replication Health Test
 agents: windows
 catalog: app/exchange
 license: GPL

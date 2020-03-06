@@ -1,4 +1,4 @@
-title: MS Exchange DAG CopyQueue Length
+title: MS Exchange: DAG CopyQueue Length
 agents: windows
 catalog: app/exchange
 license: GPL

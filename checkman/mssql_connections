@@ -1,4 +1,4 @@
-title: MSSQL Connections
+title: MS SQL Database: Connections
 agents: windows
 catalog: app/mssql
 license: GPL

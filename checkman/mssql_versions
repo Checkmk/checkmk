@@ -1,4 +1,4 @@
-title: versions of MSSQL server processes
+title: MS SQL Server: Version
 agents: windows
 catalog: app/mssql
 license: GPL

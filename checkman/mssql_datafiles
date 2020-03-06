@@ -1,4 +1,4 @@
-title: Size of MSSQL datafiles
+title: MS SQL: Size of datafiles
 agents: windows
 catalog: app/mssql
 license: GPL

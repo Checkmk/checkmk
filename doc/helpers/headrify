@@ -92,6 +92,11 @@ headrify ()
       esac
   fi
 
+  if [[ "$bangpath" == *"python"* && "$(realpath $file)" == *"/tests-py3/"* ]]; then
+      bangpath="#!/usr/bin/env python3
+# -*- coding: utf-8 -*-"
+  fi
+
   figletline="---------------------------------------------------"
   up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
   endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
@@ -162,7 +167,9 @@ if [ "$#" -gt 0 ] ; then
   fi
   for file in "$@"
   do
-    headrify "$file" $force
+    if [ ! "$file" = "-f" ]; then
+        headrify "$file" $force
+    fi
   done
 else
   echo "Provide at least one file as an argument."

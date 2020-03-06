@@ -1,0 +1,46 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Build MinGW libraries for Google Test and Google Mock.
+
+set -x
+set -e
+version=release-1.10.0
+[[ -z $CHROOT_BUILD_DIR ]] && exit 1
+
+. $CHROOT_BUILD_DIR/agents/windows/build.sh
+parse-args "$@"
+
+cd $CHROOT_BUILD_DIR/agents/windows
+tar xzf /$CHROOT_BUILD_DIR/omd/packages/googletest/googletest-${version}.tar.gz
+cd googletest-${version}
+
+for project in test mock ; do
+    cd google${project}
+    # we only need the libs...
+    targets=lib/libg${project}.la
+    autoreconf --install
+    # Build 32 and 64 bit in parallel, wait for child processes to terminate.
+    children=()
+    for arch in 32 64 ; do
+        build $arch &
+        children+=($!)
+    done
+    for pid in "${children[@]}" ; do
+        # If any subprocess fails, wait for the rest to exit in a controlled way.
+        wait $pid || { wait; exit 1; }
+    done
+
+    # make install is not supported by Google -> copy headers and libs
+    cp -r include/g${project} /usr/share/mingw-w64/include/
+    for arch in 32 64 ; do
+        cp ${builddirs[$arch]}/lib/.libs/libg${project}.a /usr/${archs[$arch]}${common}/lib/
+        ln -sf ../../share/mingw-w64/include/g${project} /usr/${archs[$arch]}${common}/include/g${project}
+    done
+    cd ..
+done
+
+cd ..
+rm -rf googletest-${version}

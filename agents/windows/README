@@ -1,0 +1,118 @@
+*** Components
+
+** Agent base functionality
+    check_mk_agent.cc     - Main entry point of the agent. Initialises things, opens network
+                            connections, drives the section output, ...
+    Environment           - Wraps information (mostly pathes) passed in through the environment
+    Configuration         - Parser for the configuration files (check_mk.ini and check_mk_local.ini)
+                            Originally this also held the configuration data
+    Configurable          - High-Level abstraction for configuration. Each Configurable object
+                            represents a configurable parameter, which may be aggregated from
+                            multiple lines from the ini.
+    SettingsCollector     - Helper classes for Configurables that abstract away some of the
+                            peculiarities of using two ini files. This originally contained
+                            predecessor classes for Configurable, hence the incorrect name.
+                            ---
+                            This contains two sets of classes: BlockMode and AddMode. Both
+                            are aspects attached to a Configurable. The BlockMode controls
+                            how/if settings from different files overwrite each other, the
+                            AddMode controls how settings from different files are combined
+                            (appended, appended but with data from the second file prepended
+                            to that of the first file, ...)
+    Section               - Base class for all section wrappers
+    SectionManager        - Holds the list of Sections (see below) and configuration on which
+                            sections get generated
+** Sections
+    sections/*            - Implementations of section wrappers.
+                            Each Section implements a separate API/functionality to get at
+                            data from the os. Most sections require a separate interface but
+                            some (wmi, perfcounter) can be used to get at information about
+                            different components
+    sections/SectionGroup - Proxy-Section that allows handling several section as one unit,
+                            i.e. so they can be collectively disabled
+    plugins/*             - Various bundled plugins (scripts)
+                            Currently, all plugins are handled in the agent by a single
+                            Section-object (SectionPluginGroup) It would be neater if each
+                            plugin was handled by a separate Section.
+** Wrappers for various APIs
+    Crypto                - Wrapper for windows crypto API
+    ExternalCmd           - Wrapper for process starting/stoping
+    EventLog              - Wrapper for windows eventlog API
+                            (implementation variants for two separate APIs with common interface)
+    PerfCounter           - Wrapper for windows performance counter API
+                            (implementation variants for two separate APIs, currently no common
+                            interface but shared code in PerfCounterCommon)
+    wmiHelper             - Wrapper for windows wmi API
+    ListenSocket          - Wrapper for listening network socket (6556)
+    Thread                - Wrapper for windows threading api (very basic)
+    WinApi(Adaptor)       - Wrapper for all windows API calls
+** Other helpers
+    OHMMontior            - Manages the OpenHardwareMonitorCLI process for SectionOHM
+    OutputProxy           - proxy for the regular agent output
+                            (subclasses implement buffering and encryption)
+    Logger                - logging utility (implementation from CMC / livestatus)
+    RotatingFileHandler   - (log)file rotation utility
+    stringutil            - helper functions for string operations (some very crude, some are
+                            probably obsolete)
+    types                 - declaration of data types 
+    CrashHandler          - produces backtraces on crashes
+    dynamic_func          - small helper to get function handles dynamically
+                            (for those functions not available on all windowses)
+    WritableFile          - Wrapper for managing (a) writable file handle(s) over WinAPI
+
+** Tests
+    test/*                - Unit tests (Google Test / Google Mock) for Windows agent
+    test/section          - Unit tests for section wrappers
+    it/*                  - Integration tests (pytest) using a remote Windows VM
+
+** Remaining files are not part of the agent
+    perftest.cc           - commandline tool to test perfcounter interface (old api)
+    pdhtest.cc            - commandline tool to test perfcounter interface (pdh api)
+    wmitest.cc            - commandline tool to test wmi interface
+    openhardwaremonitor   - The sources for our modified (headless) version of the open
+                            hardware monitor (available under the MPL).
+                            However, this is not built from the makefile, the OHM bundled
+                            with omd is build from the same sources but on our build
+                            system.
+
+*** Building
+
+** Compilation dependencies
+
+Currently mingw-w64 5.0.3 (http://mingw-w64.org), based on gcc 7.2.0, is used to build the agent.
+The compilation uses GNU autotools and takes place within a chroot jail. The bash script
+'make-agent' (sudo necessary!) is used for setting up the chroot jail and executing the desired
+build steps within it.
+
+** Build output
+
+The default make ('sudo ./make-agent' without parameters) generates 4 binaries (2 for x86, 2 for
+x64):
+    check_mk_agent.exe             (debugging symbols removed)
+    check_mk_agent-64.exe          (debugging symbols removed)
+    wmitest.exe                    (debugging symbols removed)
+    wmitest-64.exe                 (debugging symbols removed)
+
+In order to create executables with all debugging symbols (that is, without stripping the symbols
+during the installation step), please call 'sudo ./make-agent install'.
+
+Object files and other intermediate build artifacts are stored in the subdirectories "build" and
+"build64".
+
+Unit tests are by default executed at the end of each build (make-agent without parameters). Unit
+tests (only 64 bit) can be built and run exclusively using 'sudo ./make-agent unittest'.
+
+Integration tests can be run using 'sudo ./make-agent integrationtest'. In order to do this, special
+SSH keys must be generated for the current user without password and saved as
+~/.ssh/id_rsa_windows_test[.pub]
+
+** Debugging
+
+* Debugger: mingw gdb
+* Profiling: Very Sleepy
+* Memory debugging: Dr. Memory
+
+*** MSI
+
+during the make project, the msitools are downloaded if necessary and a msi is generated.
+(details plx)

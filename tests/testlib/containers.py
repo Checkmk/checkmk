@@ -136,19 +136,23 @@ def _get_or_load_image(client, image_name_with_tag):
     except docker.errors.NotFound:
         logger.info("Image %s is not available from registry", image_name_with_tag)
     except docker.errors.APIError as e:
-        if "no basic auth" in "%s" % e:
-            raise Exception(
-                "No authentication information stored for %s. You will have to login to the "
-                "registry using \"docker login %s\" to be able to execute the tests." %
-                (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
-        if "request canceled while waiting for connection" in "%s" % e:
-            return None
-        if "dial tcp: lookup " in "%s" % e:
-            # May happen when offline on ubuntu
-            return None
-        raise
+        _handle_api_error(e)
 
     return None
+
+
+def _handle_api_error(e):
+    if "no basic auth" in "%s" % e:
+        raise Exception(
+            "No authentication information stored for %s. You will have to login to the "
+            "registry using \"docker login %s\" to be able to execute the tests." %
+            (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
+    if "request canceled while waiting for connection" in "%s" % e:
+        return None
+    if "dial tcp: lookup " in "%s" % e:
+        # May happen when offline on ubuntu
+        return None
+    raise e
 
 
 def _create_cmk_image(client, base_image_name, docker_tag, version):
@@ -217,7 +221,13 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
         image = container.commit(image_name_with_tag)
         logger.info("Commited image %s (%s)", image_name_with_tag, image.short_id)
 
-        # TODO: Push image to the registry?
+        try:
+            logger.info("Uploading %s to registry (%s)", image_name_with_tag, image.short_id)
+            client.images.push(image_name_with_tag)
+            logger.info("Image %s has been uploaded to registry (%s)", image_name_with_tag,
+                        image.short_id)
+        except docker.errors.APIError as e:
+            _handle_api_error(e)
 
     return image_name_with_tag
 

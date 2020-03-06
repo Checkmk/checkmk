@@ -1,4 +1,4 @@
-title: DB2 Logfile Usage
+title: DB2: Instance Logfile Usage
 agents: aix, linux
 catalog: app/db2
 license: GPL

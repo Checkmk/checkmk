@@ -1,4 +1,4 @@
-title: DB2 Bufferpool Hitratios
+title: DB2: Databases Bufferpool Hitratios
 agents: aix, linux
 catalog: app/db2
 license: GPL

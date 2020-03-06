@@ -1,4 +1,4 @@
-title: DB2 Sort Overflow Percentage
+title: DB2: Instance Sort Overflow Percentage
 agents: aix, linux
 catalog: app/db2
 license: GPL

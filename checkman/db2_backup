@@ -1,4 +1,4 @@
-title: Last successful backup of DB2 databases
+title: DB2: Database backups
 agents: aix, linux
 catalog: app/db2
 license: GPL

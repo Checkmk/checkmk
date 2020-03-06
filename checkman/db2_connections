@@ -1,4 +1,4 @@
-title: DB2 Connections and Query Latency
+title: DB2: Databases Connections and Query Latency
 agents: aix, linux
 catalog: app/db2
 license: GPL

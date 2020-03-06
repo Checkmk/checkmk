@@ -1,4 +1,4 @@
-title: Memory usage of Java application server via JMX and j4p.war - DEPRECATED
+title: Java application server: Memory usage (deprecated)
 agents: linux
 catalog: app/java
 license: GPL

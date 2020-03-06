@@ -107,7 +107,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
 
 
 def _docker_client():
-    return docker.from_env()
+    return docker.from_env(timeout=600)
 
 
 def _get_or_load_image(client, image_name_with_tag):
@@ -164,6 +164,9 @@ def _handle_api_error(e):
 def _create_cmk_image(client, base_image_name, docker_tag, version):
     # type: (docker.DockerClient, str, str, CMKVersion) -> str
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+
+    # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
+    # these parts to the target image name. The tag is equal to the origin image.
     image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
     image_name_with_tag = "%s:%s" % (image_name, docker_tag)
 

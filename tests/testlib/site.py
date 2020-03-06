@@ -352,7 +352,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def create(self):
         if not self.version.is_installed():
-            self.version.install()
+            raise Exception("Version %s not installed. "
+                            "Use \"tests-py3/scripts/install-cmk.py\" or install it manually." %
+                            self.version.version)
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)

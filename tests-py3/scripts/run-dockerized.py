@@ -46,7 +46,7 @@ def main(raw_args):
         edition = os.environ.get("EDITION", CMKVersion.CEE)
         branch = os.environ.get("BRANCH", current_base_branch_name())
 
-        version = CMKVersion(version_spec, edition, branch, check_version_available=False)
+        version = CMKVersion(version_spec, edition, branch)
         logger.info("Version: %s, Edition: %s, Branch: %s", version.version, edition, branch)
 
         result_path = Path(os.environ.get("RESULT_PATH", tmp_path.joinpath("results")))

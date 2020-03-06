@@ -1,4 +1,4 @@
-title: State of network interfaces
+title: NetApp Filer: State of network interfaces
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL

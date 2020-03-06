@@ -1,4 +1,4 @@
-title: Memory
+title: EMC ECS: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

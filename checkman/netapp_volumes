@@ -1,4 +1,4 @@
-title: NetApp Filers: Health and State of Volumes
+title: NetApp Filer: Health and State of Volumes
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

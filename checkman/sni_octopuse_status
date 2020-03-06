@@ -1,4 +1,4 @@
-title: Siemens Octopus E global status
+title: Siemens Octopus E: Global status
 agents: snmp
 catalog: hw/phone
 license: GPL

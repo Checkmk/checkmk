@@ -1,4 +1,4 @@
-title: Siemens Octopus E trunk ports
+title: Siemens Octopus E: Trunk ports
 agents: snmp
 catalog: hw/phone
 license: GPL

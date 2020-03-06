@@ -1,4 +1,4 @@
-title: NetApp Filers: Used space in Filesystem Using 32-Bit Counters
+title: NetApp Filer: Used space in Filesystem Using 32-Bit Counters
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

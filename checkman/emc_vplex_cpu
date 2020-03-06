@@ -1,4 +1,4 @@
-title: EMC VPLEX Director CPU Utilization
+title: EMC VPLEX Director: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

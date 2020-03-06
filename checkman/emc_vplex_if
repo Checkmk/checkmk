@@ -1,4 +1,4 @@
-title: Traffic and status of network interfaces using 32 bit counters
+title: EMC VPLEX: Traffic and status of network interfaces
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

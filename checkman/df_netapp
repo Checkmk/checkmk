@@ -1,4 +1,4 @@
-title: NetApp Filers: Used Space in Filesystems
+title: NetApp Filer: Used Space in Filesystems
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

@@ -1,4 +1,4 @@
-title: Temperature Sensors via IBM Integrated Management Module (IMM)
+title: IBM Integrated Management Module (IMM): Temperature sensors
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

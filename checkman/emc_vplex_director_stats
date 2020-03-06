@@ -1,4 +1,4 @@
-title: EMC VPLEX Director Throughput
+title: EMC VPLEX Director: Throughput
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

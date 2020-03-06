@@ -1,4 +1,4 @@
-title: diskIO
+title: EMC ECS: diskIO
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

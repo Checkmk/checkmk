@@ -1,4 +1,4 @@
-title: Supermicro Health Sensors
+title: Supermicro: Health Sensors
 agents: snmp
 catalog: hw/server/supermicro
 license: GPL

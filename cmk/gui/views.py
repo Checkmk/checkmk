@@ -931,192 +931,198 @@ def view_editor_options():
     ]
 
 
-def view_editor_specs(ds_name, general_properties=True):
-    specs = []
-    if general_properties:
-        specs.append(('view',
-                      Dictionary(
-                          title=_('View Properties'),
-                          render='form',
-                          optional_keys=False,
-                          elements=[
-                              ('datasource',
-                               FixedValue(
-                                   ds_name,
-                                   title=_('Datasource'),
-                                   totext=data_source_registry[ds_name]().title,
-                                   help=_('The datasource of a view cannot be changed.'),
-                               )),
-                              ('options',
-                               ListChoice(
-                                   title=_('Options'),
-                                   choices=view_editor_options(),
-                                   default_value=['user_sortable'],
-                               )),
-                              ('browser_reload',
-                               Integer(
-                                   title=_('Automatic page reload'),
-                                   unit=_('seconds'),
-                                   minvalue=0,
-                                   help=_('Set to \"0\" to disable the automatic reload.'),
-                               )),
-                              ('layout',
-                               DropdownChoice(
-                                   title=_('Basic Layout'),
-                                   choices=layout_registry.get_choices(),
-                                   default_value='table',
-                                   sorted=True,
-                               )),
-                              ('num_columns',
-                               Integer(
-                                   title=_('Number of Columns'),
-                                   default_value=1,
-                                   minvalue=1,
-                                   maxvalue=50,
-                               )),
-                              ('column_headers',
-                               DropdownChoice(
-                                   title=_('Column Headers'),
-                                   choices=[
-                                       ("off", _("off")),
-                                       ("pergroup", _("once per group")),
-                                       ("repeat", _("repeat every 20'th row")),
-                                   ],
-                                   default_value='pergroup',
-                               )),
-                          ],
-                      )))
+def view_editor_general_properties(ds_name):
+    return Dictionary(
+        title=_('View Properties'),
+        render='form',
+        optional_keys=False,
+        elements=[
+            ('datasource',
+             FixedValue(
+                 ds_name,
+                 title=_('Datasource'),
+                 totext=data_source_registry[ds_name]().title,
+                 help=_('The datasource of a view cannot be changed.'),
+             )),
+            ('options',
+             ListChoice(
+                 title=_('Options'),
+                 choices=view_editor_options(),
+                 default_value=['user_sortable'],
+             )),
+            ('browser_reload',
+             Integer(
+                 title=_('Automatic page reload'),
+                 unit=_('seconds'),
+                 minvalue=0,
+                 help=_('Set to \"0\" to disable the automatic reload.'),
+             )),
+            ('layout',
+             DropdownChoice(
+                 title=_('Basic Layout'),
+                 choices=layout_registry.get_choices(),
+                 default_value='table',
+                 sorted=True,
+             )),
+            ('num_columns',
+             Integer(
+                 title=_('Number of Columns'),
+                 default_value=1,
+                 minvalue=1,
+                 maxvalue=50,
+             )),
+            ('column_headers',
+             DropdownChoice(
+                 title=_('Column Headers'),
+                 choices=[
+                     ("off", _("off")),
+                     ("pergroup", _("once per group")),
+                     ("repeat", _("repeat every 20'th row")),
+                 ],
+                 default_value='pergroup',
+             )),
+        ],
+    )
 
-    def column_spec(ident, title, ds_name):
-        painters = painters_of_datasource(ds_name)
 
-        allow_empty = True
-        empty_text = None
-        if ident == 'columns':
-            allow_empty = False
-            empty_text = _("Please add at least one column to your view.")
+def view_editor_column_spec(ident, title, ds_name):
+    painters = painters_of_datasource(ds_name)
 
-        vs_column = Tuple(
-            title=_('Column'),
+    allow_empty = True
+    empty_text = None
+    if ident == 'columns':
+        allow_empty = False
+        empty_text = _("Please add at least one column to your view.")
+
+    vs_column = Tuple(
+        title=_('Column'),
+        elements=[
+            CascadingDropdown(
+                title=_('Column'),
+                choices=painter_choices_with_params(painters),
+                no_preselect=True,
+                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                render_sub_vs_request_vars={
+                    "ds_name": ds_name,
+                    "painter_type": "painter",
+                },
+            ),
+            DropdownChoice(
+                title=_('Link'),
+                choices=view_choices,
+                sorted=True,
+            ),
+            DropdownChoice(
+                title=_('Tooltip'),
+                choices=[(None, "")] + painter_choices(painters),
+            ),
+        ],
+    )
+
+    join_painters = join_painters_of_datasource(ds_name)
+    if ident == 'columns' and join_painters:
+        vs_column = Alternative(
             elements=[
-                CascadingDropdown(
-                    title=_('Column'),
-                    choices=painter_choices_with_params(painters),
-                    no_preselect=True,
-                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                    render_sub_vs_request_vars={
-                        "ds_name": ds_name,
-                        "painter_type": "painter",
-                    },
-                ),
-                DropdownChoice(
-                    title=_('Link'),
-                    choices=view_choices,
-                    sorted=True,
-                ),
-                DropdownChoice(
-                    title=_('Tooltip'),
-                    choices=[(None, "")] + painter_choices(painters),
+                vs_column,
+                Tuple(
+                    title=_('Joined column'),
+                    help=_("A joined column can display information about specific services for "
+                           "host objects in a view showing host objects. You need to specify the "
+                           "service description of the service you like to show the data for."),
+                    elements=[
+                        CascadingDropdown(
+                            title=_('Column'),
+                            choices=painter_choices_with_params(join_painters),
+                            no_preselect=True,
+                            render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                            render_sub_vs_request_vars={
+                                "ds_name": ds_name,
+                                "painter_type": "join_painter",
+                            },
+                        ),
+                        TextUnicode(
+                            title=_('of Service'),
+                            allow_empty=False,
+                        ),
+                        DropdownChoice(
+                            title=_('Link'),
+                            choices=view_choices,
+                            sorted=True,
+                        ),
+                        DropdownChoice(
+                            title=_('Tooltip'),
+                            choices=[(None, "")] + painter_choices(join_painters),
+                        ),
+                        TextUnicode(title=_('Title'),),
+                    ],
                 ),
             ],
+            style='dropdown',
+            match=lambda x: 1 * (x is not None and len(x) == 5),
         )
 
-        join_painters = join_painters_of_datasource(ds_name)
-        if ident == 'columns' and join_painters:
-            vs_column = Alternative(
+    return (ident,
+            Dictionary(
+                title=title,
+                render='form',
+                optional_keys=False,
                 elements=[
-                    vs_column,
-                    Tuple(
-                        title=_('Joined column'),
-                        help=_(
-                            "A joined column can display information about specific services for "
-                            "host objects in a view showing host objects. You need to specify the "
-                            "service description of the service you like to show the data for."),
-                        elements=[
-                            CascadingDropdown(
-                                title=_('Column'),
-                                choices=painter_choices_with_params(join_painters),
-                                no_preselect=True,
-                                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                                render_sub_vs_request_vars={
-                                    "ds_name": ds_name,
-                                    "painter_type": "join_painter",
-                                },
-                            ),
-                            TextUnicode(
-                                title=_('of Service'),
-                                allow_empty=False,
-                            ),
-                            DropdownChoice(
-                                title=_('Link'),
-                                choices=view_choices,
-                                sorted=True,
-                            ),
-                            DropdownChoice(
-                                title=_('Tooltip'),
-                                choices=[(None, "")] + painter_choices(join_painters),
-                            ),
-                            TextUnicode(title=_('Title'),),
-                        ],
-                    ),
+                    (ident,
+                     ListOf(
+                         vs_column,
+                         title=title,
+                         add_label=_('Add column'),
+                         allow_empty=allow_empty,
+                         empty_text=empty_text,
+                     )),
                 ],
-                style='dropdown',
-                match=lambda x: 1 * (x is not None and len(x) == 5),
-            )
+            ))
 
-        return (ident,
-                Dictionary(
-                    title=title,
-                    render='form',
-                    optional_keys=False,
-                    elements=[
-                        (ident,
-                         ListOf(
-                             vs_column,
-                             title=title,
-                             add_label=_('Add column'),
-                             allow_empty=allow_empty,
-                             empty_text=empty_text,
-                         )),
-                    ],
-                ))
 
-    specs.append(column_spec('columns', _('Columns'), ds_name))
+def view_editor_sorter_specs(view):
+    def _sorter_choices(view):
+        ds_name = view['datasource']
 
-    specs.append(
-        ('sorting',
-         Dictionary(
-             title=_('Sorting'),
-             render='form',
-             optional_keys=False,
-             elements=[
-                 ('sorters',
-                  ListOf(
-                      Tuple(
-                          elements=[
-                              DropdownChoice(
-                                  title=_('Column'),
-                                  choices=[(name, get_sorter_title_for_choices(p))
-                                           for name, p in sorters_of_datasource(ds_name).items()],
-                                  sorted=True,
-                                  no_preselect=True,
-                              ),
-                              DropdownChoice(
-                                  title=_('Order'),
-                                  choices=[(False, _("Ascending")), (True, _("Descending"))],
-                              ),
-                          ],
-                          orientation='horizontal',
-                      ),
-                      title=_('Sorting'),
-                      add_label=_('Add sorter'),
-                  )),
-             ],
-         )),)
+        for name, p in sorters_of_datasource(ds_name).items():
+            yield name, get_sorter_title_for_choices(p)
 
-    specs.append(column_spec('grouping', _('Grouping'), ds_name))
+        for painter_spec in view.get('painters', []):
+            if isinstance(painter_spec[0], tuple) and painter_spec[0][0] == "svc_metrics_hist":
+                hash_id = hash(str(painter_spec[0][1]))
+                hist_sort = sorters_of_datasource(ds_name).get(painter_spec[0][0])
+                if hist_sort:
+                    yield ('svc_metrics_hist:%d' % hash_id,
+                           "Services: Historic Metrics - Column: %s" %
+                           painter_spec[0][1]['column_title'])
 
-    return specs
+    return ('sorting',
+            Dictionary(
+                title=_('Sorting'),
+                render='form',
+                optional_keys=False,
+                elements=[
+                    ('sorters',
+                     ListOf(
+                         Tuple(
+                             elements=[
+                                 DropdownChoice(
+                                     title=_('Column'),
+                                     choices=list(_sorter_choices(view)),
+                                     sorted=True,
+                                     no_preselect=True,
+                                 ),
+                                 DropdownChoice(
+                                     title=_('Order'),
+                                     choices=[(False, _("Ascending")), (True, _("Descending"))],
+                                 ),
+                             ],
+                             orientation='horizontal',
+                         ),
+                         title=_('Sorting'),
+                         add_label=_('Add sorter'),
+                     )),
+                ],
+            ))
 
 
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
@@ -1155,7 +1161,14 @@ def render_view_config(view, general_properties=True):
 
     view['datasource'] = ds_name
 
-    for ident, vs in view_editor_specs(ds_name, general_properties):
+    if general_properties:
+        view_editor_general_properties(ds_name).render_input('view', view.get('view'))
+
+    for ident, vs in [
+            view_editor_column_spec('columns', _('Columns'), ds_name),
+            view_editor_sorter_specs(view),
+            view_editor_column_spec('grouping', _('Grouping'), ds_name),
+    ]:
         vs.render_input(ident, view.get(ident))
 
 
@@ -1163,6 +1176,9 @@ def render_view_config(view, general_properties=True):
 # the valuespec This needs to perform the inverted steps of the
 # transform_valuespec_value_to_view() function. FIXME: One day we should
 # rewrite this to make no transform needed anymore
+# FIXME: For the painters spec we need to stop relying on tuple length and
+# accessing by location. Change to namedtuple and access by name. Keep in
+# mind the Nasty join_index, viewname position shift/swap/rearrangement
 def transform_view_to_valuespec_value(view):
     view["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
@@ -1203,54 +1219,45 @@ def transform_view_to_valuespec_value(view):
             columns.append((pname, viewname, None))
 
 
-def transform_valuespec_value_to_view(view):
-    for ident, attrs in view.items():
-        # Transform some valuespec specific options to legacy view
-        # format. We do not want to change the view data structure
-        # at the moment.
-        if ident == 'view':
-            if "options" in attrs:
-                # First set all options to false
-                for option, _title in view_editor_options():
-                    view[option] = False
+def transform_valuespec_value_to_view(ident, attrs):
+    # Transform some valuespec specific options to legacy view format.
+    # We do not want to change the view data structure at the moment.
 
-                # Then set the selected single options
-                for option in attrs['options']:
-                    view[option] = True
+    if ident == 'view':
+        options = attrs.pop("options", [])
+        if options:
+            for option, _title in view_editor_options():
+                attrs[option] = option in options
 
-                # And cleanup
-                del attrs['options']
+        return attrs
 
-            view.update(attrs)
-            del view["view"]
+    if ident == 'sorting':
+        return attrs
 
-        elif ident == 'sorting':
-            view.update(attrs)
-            del view["sorting"]
+    if ident == 'grouping':
+        return {'group_painters': attrs['grouping']}
 
-        elif ident == 'grouping':
-            view['group_painters'] = attrs['grouping']
-            del view["grouping"]
+    if ident == 'columns':
+        painters = []
+        for column in attrs['columns']:
+            if len(column) == 5:
+                pname, join_index, viewname, tooltip, col_title = column
+            else:
+                pname, viewname, tooltip = column
+                join_index, col_title = None, None
 
-        elif ident == 'columns':
-            painters = []
-            for column in attrs['columns']:
-                if len(column) == 5:
-                    pname, join_index, viewname, tooltip, col_title = column
-                else:
-                    pname, viewname, tooltip = column
-                    join_index, col_title = None, None
+            viewname = viewname if viewname else None
 
-                viewname = viewname if viewname else None
+            if join_index and col_title:
+                painters.append((pname, viewname, tooltip, join_index, col_title))
+            elif join_index:
+                painters.append((pname, viewname, tooltip, join_index))
+            else:
+                painters.append((pname, viewname, tooltip))
 
-                if join_index and col_title:
-                    painters.append((pname, viewname, tooltip, join_index, col_title))
-                elif join_index:
-                    painters.append((pname, viewname, tooltip, join_index))
-                else:
-                    painters.append((pname, viewname, tooltip))
-            view['painters'] = painters
-            del view["columns"]
+        return {'painters': painters}
+
+    return {ident: attrs}
 
 
 # Extract properties of view from HTML variables and construct
@@ -1261,14 +1268,18 @@ def transform_valuespec_value_to_view(view):
 def create_view_from_valuespec(old_view, view):
     ds_name = old_view.get('datasource', html.request.var('datasource'))
     view['datasource'] = ds_name
-    vs_value = {}
-    for ident, vs in view_editor_specs(ds_name):
+
+    def update_view(ident, vs):
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
-        vs_value[ident] = attrs
+        view.update(transform_valuespec_value_to_view(ident, attrs))
 
-    transform_valuespec_value_to_view(vs_value)
-    view.update(vs_value)
+    for ident, vs in [('view', view_editor_general_properties(ds_name)),
+                      view_editor_column_spec('columns', _('Columns'), ds_name),
+                      view_editor_column_spec('grouping', _('Grouping'), ds_name)]:
+        update_view(ident, vs)
+
+    update_view(*view_editor_sorter_specs(view))
     return view
 
 

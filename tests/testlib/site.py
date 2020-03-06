@@ -15,6 +15,12 @@ import pipes
 import time
 import shutil
 import logging
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import six
 from six.moves.urllib.parse import urlparse
 
@@ -312,6 +318,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
+            parent_path = os.path.dirname(self.path(rel_path))
+            if not os.path.exists(parent_path):
+                os.makedirs(parent_path)
             return open(self.path(rel_path), "wb").write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):

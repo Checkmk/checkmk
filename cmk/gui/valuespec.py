@@ -5923,20 +5923,20 @@ def SchedulePeriod(from_end=True, **kwargs):
         from_end_choice = [
             ("month_end", _("At the end of every month at day"),
              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-        ]
+        ]  # type: CascadingDropdownCleanChoices
     else:
         from_end_choice = []
 
-    return CascadingDropdown(
-        title=_("Period"),
-        orientation="horizontal",
-        choices=[
-            ("day", _("Every day")),
-            ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
-            ("month_begin", _("At the beginning of every month at day"),
-             Integer(minvalue=1, maxvalue=28)),
-        ] + from_end_choice,
-        **kwargs)
+    dwm = [
+        ("day", _("Every day"), None),
+        ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
+        ("month_begin", _("At the beginning of every month at day"), Integer(minvalue=1,
+                                                                             maxvalue=28)),
+    ]  # type: CascadingDropdownCleanChoices
+    return CascadingDropdown(title=_("Period"),
+                             orientation="horizontal",
+                             choices=dwm + from_end_choice,
+                             **kwargs)
 
 
 class CAorCAChain(UploadOrPasteTextFile):
@@ -5980,16 +5980,16 @@ class CAorCAChain(UploadOrPasteTextFile):
 
     def value_to_text(self, value):
         cert_info = self.analyse_cert(value)
-        text = "<table>"
+        text = u"<table>"
         for what, title in [
             ("issuer", _("Issuer")),
             ("subject", _("Subject")),
         ]:
-            text += "<tr><td>%s:</td><td>" % title
+            text += u"<tr><td>%s:</td><td>" % title
             for title1, val in sorted(cert_info[what].items()):
-                text += "%s: %s<br>" % (title1, val)
-            text += "</tr>"
-        text += "</table>"
+                text += u"%s: %s<br>" % (title1, val)
+            text += u"</tr>"
+        text += u"</table>"
         return text
 
 
@@ -6060,4 +6060,4 @@ def _type_name(v):
     try:
         return type(v).__name__
     except Exception:
-        return escaping.escape_attribute(type(v))
+        return escaping.escape_attribute(str(type(v)))

@@ -297,13 +297,15 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_opening_tag('base', close_tag=True, target=target))
 
     def open_a(self, href, **attrs):
-        # type: (str, **HTMLTagAttributeValue) -> None
-        attrs['href'] = href
+        # type: (Optional[str], **HTMLTagAttributeValue) -> None
+        if href is not None:
+            attrs['href'] = href
         self.write_html(self._render_opening_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, Union[Text, str], **HTMLTagAttributeValue) -> HTML
-        attrs['href'] = href
+        # type: (HTMLTagContent, Optional[Union[Text, str]], **HTMLTagAttributeValue) -> HTML
+        if href is not None:
+            attrs['href'] = href
         return self._render_content_tag('a', content, **attrs)
 
     def a(self, content, href, **attrs):

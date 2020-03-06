@@ -70,3 +70,29 @@ def test_exception_handling(register_builtin_html):
         raise Exception("Test")
     except Exception as e:
         assert compare_html(html.render_div(e), "<div>%s</div>" % e)
+
+
+def test_text_input(register_builtin_html):
+    with html.plugged():
+        html.text_input('tralala')
+        written_text = "".join(html.drain())
+    assert compare_html(written_text,
+                        '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+
+    with html.plugged():
+        html.text_input('blabla', cssclass='blubb')
+        written_text = "".join(html.drain())
+    assert compare_html(written_text,
+                        '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
+
+    # FIXME: Huh??? attrs seems to be ignored, but we use it at various places...
+    with html.plugged():
+        html.text_input('blabla',
+                        attrs={
+                            "placeholder": u'placido',
+                            "data-world": 'welt',
+                            "data-max-labels": 'maximus',
+                        })
+        written_text = "".join(html.drain())
+    assert compare_html(written_text,
+                        '<input style="" name="tralala" type="text" class="text" value=\'\' />')

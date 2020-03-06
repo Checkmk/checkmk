@@ -1,4 +1,4 @@
-title: Citrix VM Controller
+title: Citrix: VM Controller
 agents: windows
 catalog: app/citrix
 license: GPL

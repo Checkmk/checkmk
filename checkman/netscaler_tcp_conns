@@ -1,4 +1,4 @@
-title: Citrix Netscaler TCP Connections
+title: Citrix Netscaler: TCP Connections
 agents: snmp
 catalog: app/netscaler
 license: GPL

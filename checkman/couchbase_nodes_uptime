@@ -1,4 +1,4 @@
-title: Uptime of couchbase nodes
+title: Couchbase nodes: Uptime
 agents: special
 catalog: app/couchbase
 license: GPL

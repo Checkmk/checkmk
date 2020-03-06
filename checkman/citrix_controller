@@ -1,4 +1,4 @@
-title: Citrix Controller State
+title: Citrix XenApp Controller: Overall state
 agents: windows
 catalog: app/citrix
 license: GPL

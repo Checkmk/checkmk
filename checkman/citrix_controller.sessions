@@ -1,4 +1,4 @@
-title: Citrix Controller Sessions
+title: Citrix XenApp Controller: Sessions
 agents: windows
 catalog: app/citrix
 license: GPL

@@ -1,4 +1,4 @@
-title: CPU utilization of couchbase nodes
+title: Coubase nodes: CPU utilization
 agents: special
 catalog: app/couchbase
 license: GPL

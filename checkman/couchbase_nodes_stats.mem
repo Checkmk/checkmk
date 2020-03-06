@@ -1,4 +1,4 @@
-title: Memory usage of couchbase nodes
+title: Couchbase nodes: Memory usage
 agents: special
 catalog: app/couchbase
 license: GPL

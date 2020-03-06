@@ -1,4 +1,4 @@
-title: Citrix Netscaler High Availability
+title: Citrix Netscaler: High Availability
 agents: snmp
 catalog: app/netscaler
 license: GPL

@@ -1,4 +1,4 @@
-title: Caches of couchbase buckets
+title: Couchbase buckets: Caches performance
 agents: special
 catalog: app/couchbase
 license: GPL

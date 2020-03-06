@@ -1,4 +1,4 @@
-title: Caches on couchbase nodes
+title: Couchbase nodes: Caches
 agents: special
 catalog: app/couchbase
 license: GPL

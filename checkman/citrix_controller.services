@@ -1,4 +1,4 @@
-title: Citrix Controller: Active Site Services
+title: Citrix XenApp Controller: Active Site Services
 agents: windows
 catalog: app/citrix
 license: GPL

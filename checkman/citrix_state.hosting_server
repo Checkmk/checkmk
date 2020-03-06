@@ -1,4 +1,4 @@
-title: Citrix VM Hosting Server
+title: Citrix: VM Hosting Server
 agents: windows
 catalog: app/citrix
 license: GPL

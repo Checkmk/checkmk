@@ -1,4 +1,4 @@
-title: Services on couchbase nodes
+title: Couchbase nodes: Services
 agents: special
 catalog: app/couchbase
 license: GPL

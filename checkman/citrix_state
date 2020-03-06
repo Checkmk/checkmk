@@ -1,4 +1,4 @@
-title: Citrix VM State
+title: Citrix XenApp Virtual Machine: State
 agents: windows
 catalog: app/citrix
 license: GPL

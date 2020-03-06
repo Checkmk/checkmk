@@ -1,4 +1,4 @@
-title: Size of couchbase documents on nodes
+title: Couchbase nodes: Size of documents
 agents: special
 catalog: app/couchbase
 license: GPL

@@ -1,4 +1,4 @@
-title: Citrix Host VMs
+title: Citrix XenApp Hostsystem: Virtual Machine
 agents: windows
 catalog: app/citrix
 license: GPL

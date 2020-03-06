@@ -4245,7 +4245,8 @@ class Optional(ValueSpec):
         if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
-            html.write(self._valuespec.title() + " ")
+            the_title = self._valuespec.title()
+            html.write(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
 
@@ -4323,6 +4324,7 @@ class Alternative(ValueSpec):
         else:
             self.render_input_dropdown(varprefix, value)
 
+    # TODO: The None cases below look very fishy...
     def render_input_dropdown(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
         options = []
@@ -4330,15 +4332,19 @@ class Alternative(ValueSpec):
         for nr, vs in enumerate(self._elements):
             if not sel_option and vs == mvs:
                 sel_option = str(nr)
-            options.append((str(nr), vs.title()))
-        onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(options))
+            the_title = vs.title()
+            options.append((str(nr), "???" if the_title is None else the_title))
+        onchange = u"cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(options))
         if self._on_change:
             onchange += self._on_change
         if self._orientation == "horizontal":
             html.open_table()
             html.open_tr()
             html.open_td()
-        html.dropdown(varprefix + "_use", options, deflt=sel_option, onchange=onchange)
+        html.dropdown(varprefix + "_use",
+                      options,
+                      deflt=("???" if sel_option is None else sel_option),
+                      onchange=onchange)
         if self._orientation == "vertical":
             html.br()
             html.br()
@@ -4378,7 +4384,8 @@ class Alternative(ValueSpec):
                 html.nbsp()
                 html.nbsp()
 
-            html.radiobutton(varprefix + "_use", str(nr), checked, title)
+            html.radiobutton(varprefix + "_use", str(nr), checked,
+                             None if title is None else six.ensure_str(title))
             if title:
                 html.open_ul()
             if vs == mvs:
@@ -4488,7 +4495,7 @@ class Tuple(ValueSpec):
             if self._show_titles:
                 elem_title = element.title()
                 if elem_title:
-                    title = element.title()[0].upper() + element.title()[1:]
+                    title = elem_title[0].upper() + elem_title[1:]
                 else:
                     title = ""
                 if self._orientation == "vertical":
@@ -4941,7 +4948,7 @@ class ElementSelection(ValueSpec):
                                                help=help,
                                                default_value=default_value,
                                                validate=validate)
-        self._loaded_at = None
+        self._loaded_at = None  # type: TypingOptional[int]
         self._label = label
         self._empty_text = empty_text if empty_text is not None else \
             _("There are no elements defined for this selection yet.")

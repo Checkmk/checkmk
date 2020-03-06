@@ -2314,7 +2314,7 @@ class html(ABCHTMLGenerator):
         type_=None,  # type: Optional[str]
         onkeyup=None,  # type: Optional[Text]
         onblur=None,  # type: Optional[str]
-        placeholder=None,  # type: Optional[str]
+        placeholder=None,  # type: Optional[Text]
         data_world=None,  # type: Optional[str]
         data_max_labels=None  # type: Optional[int]
     ):

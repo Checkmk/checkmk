@@ -72,6 +72,9 @@ class CheckmkApiApp(AbstractApp):
         return Path(self.app.root_path)
 
     def add_api_blueprint(self, specification, **kwargs):
+        kwargs.setdefault('resolver_error', 501)  # not implemented
+        kwargs.setdefault('strict_validation', False)  # 500 on invalid request params
+        kwargs.setdefault('validate_responses', False)
         api = self.add_api(specification, **kwargs)  # type: CheckmkApi
         api.add_swagger_ui()
         self.app.register_blueprint(api.blueprint)

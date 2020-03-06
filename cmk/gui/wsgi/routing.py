@@ -32,7 +32,6 @@ def create_url_map():
     _api_app.add_api_blueprint(
         'checkmk.yaml',
         base_path='/%s/check_mk/api/v0/' % cmk.omd_site(),
-        validate_responses=True,
     )
 
     wrapped_api_app = with_context_middleware(OverrideRequestMethod(_api_app).wsgi_app)

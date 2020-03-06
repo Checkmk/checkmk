@@ -9,8 +9,11 @@ import sys
 import cmk
 from cmk.gui.globals import request
 
+from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, response_schemas
 
-def search(user=None, token_info=None):
+
+@endpoint_schema('/version', method='get', response_schema=response_schemas.InstalledVersions)
+def search(param):
     if request.args.get('fail'):
         raise Exception("This is an intentional failure.")
     return {

@@ -22,7 +22,7 @@ from cmk.gui.wsgi import make_app
 
 
 def get_link(resp, rel):
-    for link in resp['links']:
+    for link in resp.get('links', []):
         if link['rel'].startswith(rel):
             return link
     for member in resp.get('members', {}).values():
@@ -44,11 +44,13 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
+    def call_method(self, method, url, *args, **kw):
+        return getattr(self, method.lower())(url, *args, **kw)
+
     def follow_link(self, resp, rel, base='', **kw):
         """Follow a link description as defined in a restful-objects entity"""
         link = get_link(resp.json, rel)
-        method = getattr(self, link.get('method', 'GET').lower())
-        return method(base + link['href'], **kw)
+        return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
 
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
@@ -66,13 +68,14 @@ class WebTestAppForCMK(webtest.TestApp):
         else:
             raise NotImplementedError("Format %s not implemented" % output_format)
 
-        _resp = self.post('/NO_SITE/check_mk/webapi.py?' + qs,
-                          params={
-                              'request': request,
-                              '_username': self.username,
-                              '_secret': self.password
-                          },
-                          **kw)
+        _resp = self.call_method('post',
+                                 '/NO_SITE/check_mk/webapi.py?' + qs,
+                                 params={
+                                     'request': request,
+                                     '_username': self.username,
+                                     '_secret': self.password
+                                 },
+                                 **kw)
         assert "Invalid automation secret for user" not in _resp.body
         assert "API is only available for automation users" not in _resp.body
 
@@ -85,7 +88,7 @@ class WebTestAppForCMK(webtest.TestApp):
 
 
 @pytest.fixture(scope='function')
-def wsgi_app(monkeypatch):
+def wsgi_app(monkeypatch, recreate_openapi_spec):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
     store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/web')
     store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/php-api')
@@ -124,7 +127,8 @@ def test_openapi_version(
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    assert resp.json['site'] == cmk.omd_site()
 
 
 def test_openapi_app_exception(
@@ -155,10 +159,14 @@ def test_openapi_folders(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    resp = wsgi_app.post("/NO_SITE/check_mk/api/v0/collections/folder",
-                         params='{"name": "new_folder", "title": "foo", "parent": null}',
-                         status=200,
-                         content_type='application/json')
+    resp = wsgi_app.call_method('get', "/NO_SITE/check_mk/api/v0/collections/folder", status=200)
+    assert resp.json['value'] == []
+
+    resp = wsgi_app.call_method('post',
+                                "/NO_SITE/check_mk/api/v0/collections/folder",
+                                params='{"name": "new_folder", "title": "foo", "parent": null}',
+                                status=200,
+                                content_type='application/json')
 
     base = '/NO_SITE/check_mk/api/v0'
 
@@ -166,7 +174,14 @@ def test_openapi_folders(
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,
+                         status=400,
+                         params='{"title": "foobar"}',
+                         content_type='application/json')
+    wsgi_app.follow_link(resp,
+                         '.../update',
+                         base=base,
                          status=412,
+                         headers={'If-Match': 'Witty Sensationalist Header!'},
                          params='{"title": "foobar"}',
                          content_type='application/json')
     # With the right ETag, the operation shall succeed

@@ -1,4 +1,4 @@
-title: Radios data and sessions of online access points
+title: Juniper devices: Radios data and sessions of online access points
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

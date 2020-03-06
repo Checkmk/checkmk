@@ -1,4 +1,4 @@
-title: dell OpenManage: Fans
+title: Dell OpenManage: Fans
 agents: snmp
 catalog: hw/server/dell
 license: GPL

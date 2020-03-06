@@ -1,4 +1,4 @@
-title: IBM Datapower Physical Drives
+title: IBM Datapower: Physical Drives
 agents: snmp
 catalog: hw/network/ibm
 license: GPL

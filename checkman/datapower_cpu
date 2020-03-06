@@ -1,4 +1,4 @@
-title: IBM Datapower CPU Utilization
+title: IBM Datapower: CPU Utilization
 agents: snmp
 catalog: hw/network/ibm
 license: GPL

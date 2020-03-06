@@ -1,4 +1,4 @@
-title: IBM Datapower Fans
+title: IBM Datapower: Fans
 agents: snmp
 catalog: hw/network/ibm
 license: GPL

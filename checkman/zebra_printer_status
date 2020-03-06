@@ -1,4 +1,4 @@
-title: Zebra Printer Status
+title: Zebra Printer: Status
 agents: snmp
 catalog: hw/printer
 license: GPL

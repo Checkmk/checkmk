@@ -1,4 +1,4 @@
-title: FANs of Fujitsu Siemens (FSC) Servers using ServerView Agent
+title:  Fujitsu Siemens FSC: Fan status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL

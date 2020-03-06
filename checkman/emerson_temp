@@ -1,4 +1,4 @@
-title: Emerson UPS Device: Temperature sensor
+title: Emerson UPS: Temperature sensor
 agents: snmp
 catalog: hw/power/emerson
 license: GPL

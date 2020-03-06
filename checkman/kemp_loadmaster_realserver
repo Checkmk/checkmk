@@ -1,4 +1,4 @@
-title: Kemp Loadmaster Realserver
+title: Kemp Loadmaster: State of Real Servers
 agents: snmp
 catalog: hw/network/kemp
 license: GPL

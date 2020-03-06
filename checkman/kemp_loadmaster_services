@@ -1,4 +1,4 @@
-title: Kemp Loadmaster Services
+title: Kemp Loadmaster: Active connections
 agents: snmp
 catalog: hw/network/kemp
 license: GPL

@@ -1,4 +1,4 @@
-title: Sentry PDU Devices
+title: Sentry PDU Devices: Plugs
 agents: snmp
 catalog: hw/power/servertech
 license: GPL

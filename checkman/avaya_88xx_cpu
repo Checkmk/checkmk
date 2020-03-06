@@ -1,4 +1,4 @@
-title: Avaya 88xx CPU utilization
+title: Avaya 88xx: CPU utilization
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

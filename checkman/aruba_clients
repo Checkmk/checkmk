@@ -1,6 +1,6 @@
-title: Aruba WLAN controller Clients
+title: Aruba WLAN controller: Clients
 agents: snmp
-catalog: hw/network/aruba 
+catalog: hw/network/aruba
 license: GPL
 distribution: check_mk
 description:

@@ -1,4 +1,4 @@
-title: State of WAN network interface of Fritz!Box
+title: AVM Fritz!Box: WAN network interface
 agents: fritzbox
 catalog: hw/network/avm
 license: GPL

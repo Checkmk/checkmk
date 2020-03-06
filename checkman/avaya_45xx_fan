@@ -1,4 +1,4 @@
-title: Avaya 45xx Chassis Fans
+title: Avaya 45xx: Chassis Fans
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

@@ -1,4 +1,4 @@
-title: Avaya Power Supplies
+title: Avaya devices: Power Supplies
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

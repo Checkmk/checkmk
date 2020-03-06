@@ -1,4 +1,4 @@
-title: Arris CMTS CPU utilization
+title: Arris CMTS: CPU utilization
 agents: snmp
 catalog: hw/network/arris
 license: GPL

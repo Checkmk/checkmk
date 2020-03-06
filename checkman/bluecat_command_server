@@ -1,4 +1,4 @@
-title: Bluecat Adonis Command Server State
+title: Bluecat Adonis: Command Server State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL

@@ -1,4 +1,4 @@
-title: Aruba CPU Utilization
+title: Aruba WLAN controller: CPU Utilization
 agents: snmp
 catalog: hw/network/aruba
 license: GPL

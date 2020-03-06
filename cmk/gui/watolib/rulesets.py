@@ -28,6 +28,7 @@ import re
 import os
 import pprint
 from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -80,7 +81,8 @@ class RuleConditions(object):
         # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
         # strings.  After reading the config into the GUI ensure we really
         # process the host names as str. TODO: Can be removed with Python 3.
-        self.host_name = list(map(str, host_name)) if host_name else host_name
+        self.host_name = [str(h) if isinstance(h, six.text_type) else h for h in host_name
+                         ] if host_name else host_name
         self.service_description = service_description
         self.service_labels = service_labels or {}
 
@@ -92,7 +94,8 @@ class RuleConditions(object):
         # strings.  After reading the config into the GUI ensure we really
         # process the host names as str. TODO: Can be removed with Python 3.
         host_name = conditions.get("host_name")
-        self.host_name = list(map(str, host_name)) if host_name else host_name
+        self.host_name = [str(h) if isinstance(h, six.text_type) else h for h in host_name
+                         ] if host_name else host_name
         self.service_description = conditions.get("service_description")
         self.service_labels = conditions.get("service_labels", {})
         return self

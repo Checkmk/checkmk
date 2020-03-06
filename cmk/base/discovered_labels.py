@@ -5,8 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
 from typing import Iterator, Any, Union, Optional, Text, List, Dict  # pylint: disable=unused-import
+
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore[import]
+except ImportError:
+    from collections import MutableMapping
+
 import six
 
 from cmk.utils.exceptions import MKGeneralException
@@ -16,7 +29,7 @@ HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
 DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object)):
     def __init__(self, *args):
         # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()
@@ -58,7 +71,7 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMap
         return self._labels
 
 
-class DiscoveredHostLabels(ABCDiscoveredLabels):
+class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
     @classmethod
     def from_dict(cls, dict_labels):
@@ -200,7 +213,7 @@ class HostLabel(ABCLabel):
         return not self.__eq__(other)
 
 
-class DiscoveredServiceLabels(ABCDiscoveredLabels):
+class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
     def __init__(self, *args):
         # type: (ServiceLabel) -> None

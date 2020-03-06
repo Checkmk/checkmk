@@ -1,4 +1,4 @@
-title: MySQL Database: Slave Sync Status
+title: MySQL: Slave Sync Status
 agents: linux
 catalog: app/mysql
 license: GPL

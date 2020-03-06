@@ -1,4 +1,4 @@
-title: MySQL Database sessions
+title: MySQL: Sessions
 agents: linux
 catalog: app/mysql
 license: GPL

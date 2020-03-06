@@ -1,4 +1,4 @@
-title: Checkmk site objects
+title: Checkmk: Site objects
 agents: linux
 catalog: app/omd
 license: GPL

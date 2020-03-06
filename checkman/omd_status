@@ -1,4 +1,4 @@
-title: Status of OMD sites
+title: Checkmk: Site Status
 agents: linux
 catalog: app/omd
 license: GPL

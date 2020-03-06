@@ -1,4 +1,4 @@
-title: Performance and settings of a Checkmk/OMD instance
+title: Checkmk: Performance and settings
 agents: linux
 catalog: app/omd
 license: GPL

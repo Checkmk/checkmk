@@ -1,4 +1,4 @@
-title: Teracom Ethernet IO module TCW241
+title: Teracom Ethernet IO module TCW241: Digital inputs
 agents: snmp
 catalog: hw/environment/teracom
 license: GPL

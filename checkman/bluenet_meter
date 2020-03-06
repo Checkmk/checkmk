@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored PLC Powermeter
+title: Bachmann Bluenet Monitored Power Line Connectors: Voltage, current and power
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPL

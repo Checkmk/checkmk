@@ -1,4 +1,4 @@
-title: ENTITY-SENSORS MIB: Fan Speed RPM
+title: Palo Alto Networks Series 200/3000: Fan Speed RPM
 agents: snmp
 catalog: hw/environment/palo_alto
 license: GPL

@@ -1,4 +1,4 @@
-title: Temperature sensors (by QCT-RACK-MIB)
+title: Quanta devices: Temperature sensors
 agents: snmp
 catalog: hw/environment/quanta
 license: GPL

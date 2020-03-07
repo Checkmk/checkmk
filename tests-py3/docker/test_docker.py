@@ -23,7 +23,7 @@ branch_name = os.environ.get("BRANCH", "master")
 
 def build_version():
     return testlib.CMKVersion(
-        version=testlib.CMKVersion.DAILY,
+        version_spec=testlib.CMKVersion.DAILY,
         edition=testlib.CMKVersion.CEE,
         branch=branch_name,
     )
@@ -358,7 +358,7 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version="1.5.0p5",
+        version_spec="1.5.0p5",
         branch="1.5.0",
         edition=testlib.CMKVersion.CRE,
     )

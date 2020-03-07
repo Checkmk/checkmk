@@ -212,8 +212,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
                                   expected_state, plugin_output, wait_timeout):
-        logger.debug("processing check result took %0.2f seconds" %
-                     (time.time() - command_timestamp))
+        logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
@@ -573,7 +572,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        logger.debug("omd config: %s is set to %r" % (key, stdout.strip()))
+        logger.debug("omd config: %s is set to %r", key, stdout.strip())
         if stderr:
             logger.error(stderr)
         return stdout.strip()
@@ -705,7 +704,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         while port in used_ports:
             port += 1
 
-        logger.debug("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
+        logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
 
 
@@ -752,9 +751,9 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         elif name in self._sites:
             site_id = name
         else:
-            logger.debug("Found no site for name %s." % name)
+            logger.debug("Found no site for name %s.", name)
             return
-        logger.info("Removing site %s" % site_id)
+        logger.info("Removing site %s", site_id)
         self._sites[site_id].rm()
         del self._sites[site_id]
 
@@ -782,7 +781,7 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
-        logger.debug("Created site %s" % site.id)
+        logger.debug("Created site %s", site.id)
         self._sites[site.id] = site
         return site
 

@@ -16,6 +16,9 @@ def build(Map args) {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
 
+            // Initialize our virtual environment before parallelization
+            sh("make .venv-3.7")
+
             // Then execute the tests
             try {
                 args.DISTRO_LIST.each { DISTRO ->

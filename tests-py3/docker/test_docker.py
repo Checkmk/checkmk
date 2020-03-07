@@ -278,8 +278,7 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-enterprise-%s_0.%s_amd64.deb" % (version.edition(), version.version,
-                                                              "stretch")
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
     pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:

@@ -11,10 +11,8 @@ import os
 import logging
 import time
 import threading
-import shutil
 import queue
 import traceback
-from pathlib import Path
 from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
 from bs4 import BeautifulSoup  # type: ignore[import]
 

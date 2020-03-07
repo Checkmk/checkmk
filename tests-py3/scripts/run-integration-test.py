@@ -41,6 +41,8 @@ def main(args):
     if is_running_as_site_user():
         raise Exception()
 
+    _centos6_mtab_fix()
+
     logger.info("===============================================")
     logger.info("Setting up site")
     logger.info("===============================================")
@@ -61,6 +63,19 @@ def main(args):
     finally:
         shutil.copy(site.path("junit.xml"), "/results")
         shutil.copytree(site.path("var/log"), "/results/logs")
+
+
+def _centos6_mtab_fix():
+    # Workaround to fix site tmpfs unmount issue during mkbackup restore tests.
+    # unmount of /opt/omd/sites/[site]/tmp does not work as site user in case
+    # /etc/mtab is the symlink to /proc/mounts.
+    # Don't try to move this to the Dockerfile. It does not work.
+    if os.environ.get("DISTRO") == "centos-6" and Path("/.dockerenv").exists():
+        mtab = Path("/etc/mtab")
+        if mtab.exists():
+            mtab.unlink()
+        with mtab.open("w") as f, Path("/proc/mounts").open() as s:
+            f.write(s.read())
 
 
 def _execute_as_site_user(site, args):

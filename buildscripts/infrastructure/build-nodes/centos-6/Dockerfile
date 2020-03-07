@@ -114,9 +114,7 @@ RUN /opt/install-freetds.sh
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
 # simply solve this by pre-creating the empty file here.
-RUN touch /etc/fstab \
-    && rm -f /etc/mtab \
-    && cp /proc/mounts /etc/mtab
+RUN touch /etc/fstab
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

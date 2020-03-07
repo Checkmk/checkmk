@@ -91,7 +91,7 @@ class SNMPTree:
         # make sure the base is as long as possible
         heads_counter = collections.Counter(str(oid).split('.', 1)[0] for oid in oid_specs)
         head, count = max(heads_counter.items(), key=lambda x: x[1])
-        if count == len(oid_specs):
+        if count == len(oid_specs) and all(str(o) != head for o in oid_specs):
             raise ValueError("base can be extended by '.%s'" % head)
 
         return typed_oids

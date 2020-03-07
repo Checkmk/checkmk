@@ -23,12 +23,12 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
     CRE = "cre"
     CME = "cme"
 
-    def __init__(self, version, edition, branch):
-        self._version = version
+    def __init__(self, version_spec, edition, branch):
+        self.version_spec = version_spec
         self._branch = branch
 
         self._set_edition(edition)
-        self.set_version(version, branch)
+        self.set_version(version_spec, branch)
 
     def _set_edition(self, edition):
         # Allow short (cre) and long (raw) notation as input

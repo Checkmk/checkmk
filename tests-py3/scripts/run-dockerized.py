@@ -47,7 +47,8 @@ def main(raw_args):
         branch = os.environ.get("BRANCH", current_base_branch_name())
 
         version = CMKVersion(version_spec, edition, branch)
-        logger.info("Version: %s, Edition: %s, Branch: %s", version.version, edition, branch)
+        logger.info("Version: %s (%s), Edition: %s, Branch: %s", version.version,
+                    version.version_spec, edition, branch)
 
         result_path = Path(os.environ.get("RESULT_PATH", tmp_path.joinpath("results")))
         result_path.mkdir(parents=True, exist_ok=True)

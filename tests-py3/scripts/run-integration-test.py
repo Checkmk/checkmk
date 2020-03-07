@@ -65,7 +65,7 @@ def main(args):
 
 def _execute_as_site_user(site, args):
     env_vars = {
-        "VERSION": site.version._version,
+        "VERSION": site.version.version_spec,
         "REUSE": "1" if site.reuse else "0",
         "BRANCH": site.version._branch,
     }

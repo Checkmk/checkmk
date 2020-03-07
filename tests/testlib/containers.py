@@ -287,7 +287,7 @@ def _container_env(version):
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
         "PIPENV_VENV_IN_PROJECT": "true",
-        "VERSION": version.version,
+        "VERSION": version.version_spec,
         "EDITION": version.edition_short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",

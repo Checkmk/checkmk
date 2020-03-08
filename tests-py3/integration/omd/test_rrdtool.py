@@ -171,6 +171,7 @@ def test_cli_xport(rrd_database, bounds, out_fmt, result):
         str(qstart),
         "-e",
         str(qend),
-    ] + out_fmt)
+    ] + out_fmt,
+                                     encoding="utf-8")
 
     assert stdout == result

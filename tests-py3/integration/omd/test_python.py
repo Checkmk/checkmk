@@ -59,7 +59,6 @@ def test_03_pip_interpreter_version(site):
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile
 @pytest.mark.parametrize("module_name", [
     "netsnmp",
-    "pysphere",
     "ldap",
     "OpenSSL",
     "cryptography",
@@ -67,7 +66,7 @@ def test_03_pip_interpreter_version(site):
     "pysnmp",
     "pymssql",
     "ldap",
-    "MySQLdb",
+    "pymysql",
     "psycopg2",
     "dicttoxml",
     "enum",
@@ -76,7 +75,6 @@ def test_03_pip_interpreter_version(site):
     "PyPDF2",
     "psutil",
     "ipaddress",
-    "netifaces",
     "requests",
     "paramiko",
     "pyghmi",

@@ -43,18 +43,19 @@ def test_cfg(request, web, site):
 
 def test_active_check_execution(test_cfg, site, web):
     try:
+        # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            "custom_checks",
+            b"custom_checks",
             {
-                "ruleset": {
+                b"ruleset": {
                     # Main folder
-                    "": [{
-                        "value": {
-                            'service_description': u'\xc4ctive-Check',
-                            'command_line': 'echo "123"'
+                    b"": [{
+                        b"value": {
+                            b'service_description': u'\xc4ctive-Check',
+                            b'command_line': b'echo "123"'
                         },
-                        "condition": {},
-                        "options": {},
+                        b"condition": {},
+                        b"options": {},
                     },],
                 }
             })
@@ -63,7 +64,7 @@ def test_active_check_execution(test_cfg, site, web):
         site.schedule_check("test-host", u'\xc4ctive-Check', 0)
 
         result = site.live.query_row(
-            "GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check"
+            u"GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = \xc4ctive-Check"
         )
         print("Result: %r" % result)
         assert result[4] == 1
@@ -72,11 +73,12 @@ def test_active_check_execution(test_cfg, site, web):
         assert result[2] == 0
         assert result[3] == "123"
     finally:
+        # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            "custom_checks",
+            b"custom_checks",
             {
-                "ruleset": {
-                    "": [],  # -> folder
+                b"ruleset": {
+                    b"": [],  # -> folder
                 }
             })
         web.activate_changes()
@@ -109,7 +111,8 @@ def test_active_check_macros(test_cfg, site, web):
         ruleset.append({
             "value": {
                 'service_description': descr(var),
-                'command_line': 'echo "Output: %s"' % var,
+                # TODO: Remove this once the GUI uses Python 3
+                'command_line': ('echo "Output: %s"' % var).encode("utf-8"),
             },
             "condition": {},
         })

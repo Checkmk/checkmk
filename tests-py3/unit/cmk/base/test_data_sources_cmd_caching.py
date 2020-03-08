@@ -20,9 +20,9 @@ else:
 
 import pytest  # type: ignore[import]
 
-from testlib import repo_path
 from testlib.base import Scenario
 from testlib import CheckManager, InventoryPluginManager
+from testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
 import cmk.base.config as config
@@ -60,9 +60,7 @@ def test_cfg(monkeypatch):
         ('cat %s/<HOST>' % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
     ])
 
-    with Path("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
-              repo_path()).open(encoding="utf-8") as f:
-        linux_agent_output = f.read()
+    linux_agent_output = get_standard_linux_agent_output()
 
     for h in test_hosts:
         cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)

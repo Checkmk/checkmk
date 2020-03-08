@@ -14,7 +14,8 @@ import subprocess
 import pytest  # type: ignore[import]
 import six
 
-from testlib import web, repo_path  # pylint: disable=unused-import
+from testlib import web  # pylint: disable=unused-import
+from testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
 
@@ -49,15 +50,9 @@ def test_cfg(web, site):
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host2",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host3",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
+    site.write_file("var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -370,7 +365,7 @@ def test_automation_get_agent_output(test_cfg, site):
 
     assert data[1] == ""
     assert isinstance(data[2], bytes)
-    assert "<<<uptime>>>" in data[2]
+    assert b"<<<uptime>>>" in data[2]
     assert data[0] is True
 
 
@@ -380,7 +375,7 @@ def test_automation_get_agent_output_unknown_host(test_cfg, site):
     assert len(data) == 3
 
     assert data[1].startswith("Failed to fetch data from ")
-    assert data[2] == ""
+    assert data[2] == b""
     assert data[0] is False
 
 

@@ -54,6 +54,12 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
                     docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
                 ],
                 binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
+                # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
+                # docker daemon wide, but set some fixed local network which is not being routed.
+                # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
+                sysctls={
+                    "net.ipv6.conf.eth0.disable_ipv6": 1,
+                },
             ),
             stdin_open=True,
             tty=True,
@@ -292,7 +298,7 @@ def _container_env(version):
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
         # Write to this result path by default (may be overridden e.g. by integration tests)
-        "PYTEST_ADDOPTS": "--junitxml=/results/junit.xml",
+        "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }
 
 

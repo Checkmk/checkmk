@@ -69,6 +69,9 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
+        if os.path.exists("/results"):
+            shutil.rmtree("/results")
+            os.mkdir("/results")
         shutil.copy(site.path("junit.xml"), "/results")
         shutil.copytree(site.path("var/log"), "/results/logs")
 

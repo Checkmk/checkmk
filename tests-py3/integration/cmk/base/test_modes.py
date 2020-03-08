@@ -12,7 +12,8 @@ import re
 import subprocess
 import pytest  # type: ignore[import]
 
-from testlib import web, repo_path  # pylint: disable=unused-import
+from testlib import web  # pylint: disable=unused-import
+from testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(scope="module")
@@ -42,15 +43,9 @@ def test_cfg(web, site):
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host2",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
-    site.write_file(
-        "var/check_mk/agent_output/modes-test-host3",
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
+    site.write_file("var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output())
+    site.write_file("var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -230,8 +225,7 @@ def test_dump_agent_test(execute):
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
         assert p.stderr == ""
-        assert p.stdout == open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
-                                repo_path()).read()
+        assert p.stdout == get_standard_linux_agent_output()
 
 
 #.

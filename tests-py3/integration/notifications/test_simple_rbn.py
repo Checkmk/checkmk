@@ -41,7 +41,7 @@ def test_log(request, web, site, fake_sendmail):
         },
     }
 
-    expected_users = set(["cmkadmin", "automation"] + users.keys())
+    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
     web.add_htpasswd_users(users)
     all_users = web.get_all_users()
     assert not expected_users - set(all_users.keys())
@@ -61,7 +61,7 @@ def test_log(request, web, site, fake_sendmail):
     site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     web.delete_host("notify-test")
-    web.delete_htpasswd_users(users.keys())
+    web.delete_htpasswd_users(list(users.keys()))
     web.activate_changes()
 
 

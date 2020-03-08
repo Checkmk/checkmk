@@ -27,12 +27,14 @@ def cfg_setup(request, web, site):
     # Enforce use of the pre-created RRD file from the git. The restart of the core
     # is needed to make it renew it's internal RRD file cache
     site.makedirs("var/check_mk/rrd/test-prediction")
-    site.write_file(
-        "var/check_mk/rrd/test-prediction/CPU_load.rrd",
-        open("%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path()).read())
+    with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
+        f.write(
+            open("%s/tests-py3/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(),
+                 "rb").read())
+
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        open("%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()).read())
+        open("%s/tests-py3/integration/cmk/base/test-files/CPU_load.info" % repo_path()).read())
 
     site.restart_core()
 
@@ -209,7 +211,7 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
                                                         "MAX")
     data_for_pred = prediction.calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
-    path = "%s/tests/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
+    path = "%s/tests-py3/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
     reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
     data_points = data_for_pred.pop('points')
     ref_points = reference.pop('points')

@@ -21,7 +21,8 @@ import pytest  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 
 import cmk
-from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import # noqa: F401
+from testlib import web, APIError, wait_until  # pylint: disable=unused-import # noqa: F401
+from testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="local_test_hosts")
@@ -43,10 +44,8 @@ def fixture_local_test_hosts(web, site):
     )
 
     for hostname in ["test-host", "test-host2"]:
-        site.write_file(
-            "var/check_mk/agent_output/%s" % hostname,
-            open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
-                 repo_path()).read())
+        site.write_file("var/check_mk/agent_output/%s" % hostname,
+                        get_standard_linux_agent_output())
 
     yield
 
@@ -417,7 +416,7 @@ def test_write_host_labels(web, site):
             u"blä": u"blüb",
         }
 
-        for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
+        for label_id, label_value in cfg["host_labels"]["test-host-lan"].items():
             assert isinstance(label_id, six.text_type)
             assert isinstance(label_value, six.text_type)
 
@@ -558,13 +557,13 @@ def test_get_all_users(web):
             "alias": "mr. monroe"
         }
     }
-    expected_users = set(["cmkadmin", "automation"] + users.keys())
+    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
     try:
         _response = web.add_htpasswd_users(users)
         all_users = web.get_all_users()
         assert not expected_users - set(all_users.keys())
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
 def test_add_htpasswd_users(web):
@@ -581,7 +580,7 @@ def test_add_htpasswd_users(web):
     try:
         web.add_htpasswd_users(users)
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
 def test_edit_htpasswd_users(web):
@@ -611,7 +610,7 @@ def test_edit_htpasswd_users(web):
         assert not "pager" in all_users["klaus"]
         assert all_users["monroe"]["alias"] == "ms. monroe"
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
 def test_discover_services(web):
@@ -735,10 +734,8 @@ def graph_test_config(web, site):
         )
 
         site.makedirs("var/check_mk/agent_output/")
-        site.write_file(
-            "var/check_mk/agent_output/test-host-get-graph",
-            open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
-                 repo_path()).read())
+        site.write_file("var/check_mk/agent_output/test-host-get-graph",
+                        get_standard_linux_agent_output())
 
         web.discover_services("test-host-get-graph")
         web.activate_changes()
@@ -752,7 +749,8 @@ def graph_test_config(web, site):
                                      site.path("tmp/run/rrdcached.sock")],
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE,
+                                    encoding="utf-8")
             out, err = proc.communicate("FLUSH %s\n" % rrd_path)
             if os.path.exists(rrd_path):
                 break
@@ -800,7 +798,7 @@ def test_get_graph_image(web, graph_test_config):
 
     content = result.content
 
-    assert content.startswith('\x89PNG')
+    assert content.startswith(b'\x89PNG')
 
     try:
         Image.open(BytesIO(content))
@@ -819,7 +817,7 @@ def test_get_graph_notification_image(web, graph_test_config):
     for encoded_graph_image in encoded_graph_list:
         graph_image = base64.b64decode(encoded_graph_image)
 
-        assert graph_image.startswith('\x89PNG')
+        assert graph_image.startswith(b'\x89PNG')
 
         try:
             Image.open(BytesIO(graph_image))

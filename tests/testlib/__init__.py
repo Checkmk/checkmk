@@ -39,6 +39,7 @@ from testlib.utils import (
     add_python_paths,
     is_enterprise_repo,
     is_managed_repo,
+    get_standard_linux_agent_output,
 )
 from testlib.fixtures import web, ec
 from testlib.site import Site, SiteFactory
@@ -264,9 +265,7 @@ def create_linux_test_host(request, web, site, hostname):
         hostname)
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/%s" % hostname,
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
+    site.write_file("var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output())
 
 
 #.

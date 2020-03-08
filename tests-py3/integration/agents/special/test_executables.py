@@ -23,7 +23,6 @@ def test_no_exeption(site):
         p = site.execute(command,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
-                         stdin=open(os.devnull),
-                         encoding="utf-8")
+                         stdin=open(os.devnull))
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

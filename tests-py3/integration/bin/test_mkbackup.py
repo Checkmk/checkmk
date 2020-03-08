@@ -16,6 +16,8 @@ import pytest  # type: ignore[import]
 
 from testlib import web  # pylint: disable=unused-import
 
+from cmk.utils.python_printer import pformat
+
 
 @pytest.fixture()
 def backup_path(tmp_path):
@@ -71,7 +73,7 @@ def test_cfg(web, site, backup_path):
             },
         },
     }
-    site.write_file("etc/check_mk/backup.mk", repr(cfg))
+    site.write_file("etc/check_mk/backup.mk", pformat(cfg))
 
     keys = {
         1: {
@@ -84,7 +86,7 @@ def test_cfg(web, site, backup_path):
         }
     }
 
-    site.write_file("etc/check_mk/backup_keys.mk", "keys.update(%r)" % keys)
+    site.write_file("etc/check_mk/backup_keys.mk", "keys.update(%s)" % pformat(keys))
 
     yield None
 

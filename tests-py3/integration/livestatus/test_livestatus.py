@@ -170,14 +170,14 @@ class TestCrashReport:
 
     @pytest.fixture
     def crash_info(self, component, uuid):
-        return _json.dumps({"component": component, "id": uuid})
+        return {"component": component, "id": uuid}
 
     @pytest.fixture(autouse=True)
     def crash_report(self, site, component, uuid, crash_info):
         assert site.file_exists("var/check_mk/crashes")
         dir_path = "var/check_mk/crashes/%s/%s/" % (component, uuid)
         site.makedirs(dir_path)
-        site.write_file(dir_path + "crash.info", crash_info)
+        site.write_file(dir_path + "crash.info", _json.dumps(crash_info))
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 
@@ -192,9 +192,9 @@ class TestCrashReport:
             ("GET crashreports", "Columns: file:f0:%s/%s/crash.info" % (component, uuid),
              "Filter: id = %s" % uuid)))
         assert rows
-        assert rows[0][0] == crash_info
+        assert _json.loads(rows[0][0]) == crash_info
 
-    def test_del_crash_report(self, site, component, uuid, crash_info):
+    def test_del_crash_report(self, site, component, uuid):
         before = site.live.query("GET crashreports")
         site.live.command("[%i] DEL_CRASH_REPORT;%s" % (_time.mktime(_time.gmtime()), uuid))
         _time.sleep(0.1)  # Kindly let it complete.
@@ -203,7 +203,7 @@ class TestCrashReport:
         assert [component, uuid] in before
         assert [component, uuid] not in after
 
-    def test_other_crash_report(self, site, component, uuid, crash_info):
+    def test_other_crash_report(self, site, component, uuid):
         before = site.live.query("GET crashreports")
         site.live.command("[%i] DEL_CRASH_REPORT;%s" %
                           (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab"))

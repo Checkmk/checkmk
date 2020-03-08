@@ -14,6 +14,7 @@ MYPY     := ../scripts/run-mypy
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker \
 	test-integration-docker-debug \
+	test-composition-docker test-composition \
 	test-format-python test-format-python3 \
 
 help:
@@ -33,6 +34,8 @@ help:
 	@echo "test-integration              - Run integration tests locally"
 	@echo "test-integration-docker       - Run integration tests in container"
 	@echo "test-integration-docker-debug - Run test container for manual debugging"
+	@echo "test-composition              - Run composition tests locally"
+	@echo "test-composition-docker       - Run composition tests in container"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -149,6 +152,15 @@ test-integration-docker:
 
 test-integration-docker-debug: $(NODE_MODULES)
 	$(PIPENV3) run scripts/run-dockerized.py debug
+
+test-composition-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
+
+# TODO: Need to either untie composition tests with agent updater code or migrate
+# the agent updater to Python 3. The composition tests currently import the agent
+# updater code for the test execution, which should not be done.
+test-composition: $(NODE_MODULES)
+	../scripts/run-pipenv 2 run py.test -vv -T composition $(realpath ../tests/composition)
 
 clean:
 	rm -rf .mypy_cache

@@ -49,9 +49,6 @@ test-format-shell:
 test-agent-integration:
 	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
-test-composition: $(NODE_MODULES)
-	$(PYTEST) -T composition $(realpath composition)
-
 test-pylint:
 	$(PYTEST) -T pylint pylint
 

@@ -467,12 +467,12 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path(version=2)
+        venv = virtualenv_path(version=3)
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python2.7/site-packages"
+        platlib64 = venv / "lib64/python3.7/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -487,10 +487,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):

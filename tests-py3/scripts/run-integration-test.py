@@ -102,8 +102,8 @@ def _execute_as_site_user(site, args):
     env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
     cmd_parts = [
-        "python",
-        site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov", "--junitxml",
+        "python3",
+        site.path("local/bin/pytest"), "-T", "integration", "-p", "no:cov", "--junitxml",
         site.path("junit.xml")
     ] + args
 

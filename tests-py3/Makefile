@@ -147,7 +147,7 @@ test-gui-crawl-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-integration: $(NODE_MODULES)
-	$(PIPENV3) run scripts/run-integration-test.py $(realpath ../tests/integration)
+	$(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-integration"

@@ -230,7 +230,7 @@ def test_openapi_folders(
         wsgi_app.follow_link(resp,
                              '.../delete',
                              base=base,
-                             status=200,
+                             status=204,
                              headers={'If-Match': resp.headers['ETag']})
 
 

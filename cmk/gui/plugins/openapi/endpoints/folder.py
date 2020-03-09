@@ -88,7 +88,7 @@ def delete(params):
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
 
-    return constructors.sucess()
+    return constructors.sucess(status=204)
 
 
 @endpoint_schema('/objects/folder/{ident}/actions/move/invoke',

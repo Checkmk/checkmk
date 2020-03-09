@@ -78,7 +78,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_runmqsc_display_output(section, "QUEUE")  # pylint: disable=undefined-variable
         assert 2 + 2 == len(parsed)
 
         assert parsed['FOO.BAR']['STATUS'] == 'ENDED UNEXPECTEDLY'
@@ -138,7 +138,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_runmqsc_display_output(section, "QUEUE")  # pylint: disable=undefined-variable
         assert "QM.ONE:MY.QUEUE" in parsed
         assert "QM.TWO:MY.QUEUE" in parsed
         assert len(parsed["QM.ONE:MY.QUEUE"]) == 16
@@ -167,7 +167,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_runmqsc_display_output(section, "QUEUE")  # pylint: disable=undefined-variable
         attrs = parsed['MY.TEST:MY.QUEUE']
         assert attrs['IPPROCS'] == '2'
         assert attrs['MSGAGE'] == ''
@@ -187,7 +187,7 @@ No commands have a syntax error.
 One valid MQSC command could not be processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")
+        parsed = parse_runmqsc_display_output(section, "CHANNEL")  # pylint: disable=undefined-variable
         assert 'MY.TEST:HERE.TO.THERE.TWO' in parsed
         assert 'STATUS' not in parsed['MY.TEST:HERE.TO.THERE.TWO']
 
@@ -224,7 +224,7 @@ AMQ8417I: Display Channel Status details.
    STATUS(RUNNING)                         SUBSTATE(MQGET)
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")
+        parsed = parse_runmqsc_display_output(section, "CHANNEL")  # pylint: disable=undefined-variable
 
         attrs = parsed['MY.TEST']
         assert attrs['STATUS'] == 'RUNNING'
@@ -248,7 +248,7 @@ class TestServiceVanished:
                 'CURDEPTH': '0'
             },
         }
-        assert is_ibm_mq_service_vanished('QM1:QUEUE1', parsed) is False
+        assert is_ibm_mq_service_vanished('QM1:QUEUE1', parsed) is False  # pylint: disable=undefined-variable
 
     def test_vanished_for_running_qmgr(self):
         parsed = {
@@ -259,44 +259,44 @@ class TestServiceVanished:
                 'CURDEPTH': '0'
             },
         }
-        assert is_ibm_mq_service_vanished('QM1:VANISHED', parsed) is True
+        assert is_ibm_mq_service_vanished('QM1:VANISHED', parsed) is True  # pylint: disable=undefined-variable
 
     def test_stale_for_not_running_qmgr(self):
         parsed = {'QM1': {'STATUS': 'ENDED NORMALLY'}}
         with pytest.raises(MKCounterWrapped, match=r"^Stale because .* ENDED NORMALLY"):
-            is_ibm_mq_service_vanished('QM1:QUEUE1', parsed)
+            is_ibm_mq_service_vanished('QM1:QUEUE1', parsed)  # pylint: disable=undefined-variable
 
 
 class TestCheckVersion:
     def test_specific(self):
         params = {'version': ('specific', '2.1.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
         params = {'version': ('specific', '2.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (2, 'MyLabel: 2.1.0 (should be 2.0)')
         assert expected == actual
 
     def test_at_least(self):
         params = {'version': ('at_least', '2.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
         params = {'version': ('at_least', '2.2')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (2, 'MyLabel: 2.1.0 (should be at least 2.2)')
         assert expected == actual
 
         params = {'version': ('at_least', '0.1.0')}
-        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 1.0.0')
         assert expected == actual
 
         params = {'version': ('at_least', '8.0.0.1')}
-        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (0, 'MyLabel: 9.0.0.0')
         assert expected == actual
 
@@ -304,23 +304,23 @@ class TestCheckVersion:
         const_error = "Only characters 0-9 and . are allowed for a version."
 
         params = {'version': ('specific', '2.a')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (3, "Can not compare 2.1.0 and 2.a. " + const_error)
         assert expected == actual
 
         params = {'version': ('specific', '2.2')}
-        actual = ibm_mq_check_version('2.x', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (3, "Can not compare 2.x and 2.2. " + const_error)
         assert expected == actual
 
     def test_unparseable_without_wato_rule(self):
         params = {}
-        actual = ibm_mq_check_version('2.x', params, 'MyLabel')
+        actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
     def test_no_version(self):
         params = {}
-        actual = ibm_mq_check_version(None, params, 'MyLabel')
+        actual = ibm_mq_check_version(None, params, 'MyLabel')  # pylint: disable=undefined-variable
         expected = (3, "MyLabel: None (no agent info)")
         assert expected == actual

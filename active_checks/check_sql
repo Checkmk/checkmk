@@ -228,6 +228,9 @@ def postgres_execute(cursor, cmd, inpt, procedure):
 
 
 def mysql_connect(host, port, db_name, user, pwd):
+    # TODO: Python3: Switch to
+    # import pymysql
+    # pymysql.connect(...)
     import MySQLdb
     return MySQLdb.connect(host=host, port=port, db=db_name, \
                            user=user, passwd=pwd)

@@ -11,7 +11,6 @@ pytestmark = pytest.mark.checks
 
 @pytest.mark.parametrize('params,expected_args', [
     ({
-        'use_pysphere': False,
         'tcp_port': 443,
         'direct': True,
         'skip_placeholder_vms': True,
@@ -26,7 +25,6 @@ pytestmark = pytest.mark.checks
         "--spaces", "cut", "--no-cert-check", "address"
     ]),
     ({
-        'use_pysphere': False,
         'tcp_port': 443,
         'host_pwr_display': None,
         'vm_pwr_display': None,

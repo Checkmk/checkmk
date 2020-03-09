@@ -1,4 +1,4 @@
-title: Stormshield Policy
+title: Stormshield: Policies Sync
 agents: snmp
 catalog: app/stormshield
 license: GPL

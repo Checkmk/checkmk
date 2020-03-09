@@ -1,4 +1,4 @@
-title: IBM Websphere MQ Instances (deprecated)
+title: IBM Websphere MQ: Instances (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL

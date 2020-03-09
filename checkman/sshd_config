@@ -1,4 +1,4 @@
-title: Monitor parameters of the SSH daemon configuration
+title: SSH daemon configuration: Parameters
 agents: linux
 catalog: app/sshd
 license: GPL

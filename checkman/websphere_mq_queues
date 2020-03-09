@@ -1,4 +1,4 @@
-title: IBM Websphere MQ Queue Status and Message count (deprecated)
+title: IBM Websphere MQ: Queue Status and Message Count (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL

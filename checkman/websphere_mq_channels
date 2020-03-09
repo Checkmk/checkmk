@@ -1,4 +1,4 @@
-title: IBM Websphere MQ Channel Message count (deprecated)
+title: IBM Websphere MQ: Channel Message Count (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL

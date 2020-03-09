@@ -1,4 +1,4 @@
-title: IBM Websphere MQ Manager (deprecated)
+title: IBM Websphere MQ: Manager (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL

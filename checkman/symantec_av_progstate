@@ -1,10 +1,10 @@
-title: Symantec Anti Virus Program state
+title: Symantec Antivirus: Program state
 agents: linux
 catalog: app/symantec
 license: GPL
 distribution: check_mk
 description:
- This check triggers a {CRITICAL} state if Symantec Anti Virus isn't activated.
+ This check triggers a {CRITICAL} state if Symantec Antivirus isn't activated.
  You just need to install the plugin {symantec_av} into the {plugins} directory of your agent.
 
 inventory:

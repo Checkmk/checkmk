@@ -10,7 +10,7 @@ description:
  Rittal device itself. The state given by the Rittal device is
  taken as the state of the check as follows:
  If the Rittal device returns {Closed}, the check is {OK}, if it is
- {Open} Check_MK reports WARN, otherwise {CRIT}.
+ {Open} Checkmk reports WARN, otherwise {CRIT}.
 
 item:
  The unit number and the internal name of the access module

@@ -29,7 +29,7 @@ item:
 
 inventory:
  The inventory function of this check helps you to auto-detect then services
- that should be monitored on your hosts. Because Check_MK cannot know, which
+ that should be monitored on your hosts. Because Checkmk cannot know, which
  services are important for you, you have to configure some rules.
 
  The option {inventory_services_rules} holds a list of rules where each rule

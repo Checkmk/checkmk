@@ -8,10 +8,10 @@ description:
  S.M.A.R.T. This check works only for HDDs which report the value {Temperature_Celsius}
  via {smartctl -A <device>}.
 
- The check uses information provided by the Check_MK linux agent which are available when the agent
+ The check uses information provided by the Checkmk linux agent which are available when the agent
  has been extended with the {smart} agent plugin.
 
- The original check has been created by Benjamin Odenthal and provided on Check_MK exchange and
+ The original check has been created by Benjamin Odenthal and provided on Checkmk exchange and
  improved, integrated and documented by Lars Michelsen.
 
 inventory:

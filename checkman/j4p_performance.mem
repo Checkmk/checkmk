@@ -13,7 +13,7 @@ description:
 
  In order for the check to work, you need to load the j4p.war into your
  application server. Furthermore you need the agent plugin {j4p_performance}
- in your Check_MK agent's plugins directory. If you do not use the
+ in your Checkmk agent's plugins directory. If you do not use the
  default port 8080 for j4p - lets say {9090} - then you have to create
  a configuration file {j4p.conf} in the agents configuration directory
  (usually {/etc/check_mk/j4p.conf}) with the single line {port = 9090}.

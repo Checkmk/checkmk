@@ -8,7 +8,7 @@ description:
  database instance in the last 60 minutes. You can set levels
  for upper and lower bounds.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

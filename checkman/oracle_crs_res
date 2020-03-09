@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check needs the agent pluing mk_oracle_crs from our plugin directory.
- After copying to the agent plugin directory, Check_MK will find all resources
+ After copying to the agent plugin directory, Checkmk will find all resources
  of a running Oracle Clusterware/Grid-Infrastructure or Restart.
 
  All resources are stale when RA-GI ora.cssd Resource is CRIT to reduced

@@ -27,7 +27,7 @@ inventory:
  during inventory to filter the list of all available nodes by their paths
  and add the matching ones to the list of inventorized services.
 
- During inventory Check_MK tries to match all entries on each
+ During inventory Checkmk tries to match all entries on each
  node found on the target host. If an entry matches, a new check will
  be created according to the entry (if it's not already existing).
 

@@ -9,7 +9,7 @@ description:
  on the monitoring server with that measured by the agent on the
  target host. It is not very accurate since it does not account for
  the systematic time delay between the output of the time by the agent
- and the actual processing of that data by Check_MK.
+ and the actual processing of that data by Checkmk.
 
  Its advantage - however - is that it works on any Windows host (with
  an agent of version of 1.1.10 or later) - regardless of the method used

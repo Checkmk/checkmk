@@ -9,7 +9,7 @@ description:
  execution was successfull and the next execution is
  scheduled. It also records the execution time of the jobs.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

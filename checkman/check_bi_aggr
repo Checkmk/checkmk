@@ -8,5 +8,5 @@ item:
  Aggregation name
 
 description:
- Connects to the local or a remote Check_MK monitoring server to gather the state of a Check_MK
+ Connects to the local or a remote Checkmk monitoring server to gather the state of a Checkmk
  BI to aggregation and reports the state of this aggregation as result.

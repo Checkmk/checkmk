@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check measures the throughput of physical disk on Windows
- hosts by using the performance counter object {234}. The Check_MK
+ hosts by using the performance counter object {234}. The Checkmk
  agent for Windows sends this object in the section {<<<winperf_phydisk>>>}
  starting from version {1.1.11i1}. If you have defined the {counters}
  in {check_mk.ini}, please make sure, that the entry {234:phydisk}

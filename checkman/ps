@@ -16,11 +16,11 @@ item:
  it is another service.
 
 inventory:
- The Check_MK check {ps} supports discovering running services on your monitored
- systems. Since Check_MK cannot know which processes are of relevance to you,
+ The Checkmk check {ps} supports discovering running services on your monitored
+ systems. Since Checkmk cannot know which processes are of relevance to you,
  some configuration is needed. The configuration is done via the ruleset
  {inventory_processes_rules}.
 
- During inventory Check_MK tries to match all entries on each
+ During inventory Checkmk tries to match all entries on each
  process found on the target host. If an entry matches, a new check will
  be created according to the entry (if it's not already existing).

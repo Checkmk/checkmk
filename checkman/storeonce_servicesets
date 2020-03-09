@@ -7,7 +7,7 @@ description:
  This check displays the overall health and status of a service set. Also name
  and/or alias will be displayed if available. The appliance reports states
  for the Service set, the replication and the housekeeping. All of them are
- compatible to states in Check_MK and will be displayed, if they change to
+ compatible to states in Checkmk and will be displayed, if they change to
  {WARN}, {CRIT}, or {UNKNOWN}. The "Information"-State will be treated as {OK}
 
 item:

@@ -12,6 +12,6 @@ description:
  rule "Azure Virtual Machines Summary".
 
 inventory:
- One service is created on every Check_MK host that receives information
+ One service is created on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.
  To configure which those are, see the configuration of the Azure agent.

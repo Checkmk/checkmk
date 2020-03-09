@@ -36,7 +36,7 @@ item:
  (depends on the order of the data reported by the agent), the {ifDescr} of
  the port or the {ifAlias} of the port. If you are using the alias, you have to
  make sure that it is unique by configuring useful aliases in the switch.
- Check_MK does not check for uniqueness.
+ Checkmk does not check for uniqueness.
 
 inventory:
  The inventory creates one service for each port that fulfills configurable conditions.

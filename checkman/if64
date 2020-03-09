@@ -21,7 +21,7 @@ description:
  absolute or procentual traffic of a port exceeds certain levels or if the
  rate of errors or discards exceeds configurable limits.
 
- As of Check_MK version 1.1.9i1 this check supports averaging the in- and
+ As of Checkmk version 1.1.9i1 this check supports averaging the in- and
  outgoing traffic over a configurable range of time by using an exponentially
  weighted moving average - just as Linux does for the CPU load averages.
  The averaging can be configured on a per host and per port base. This is
@@ -41,7 +41,7 @@ item:
  There are three allowed ways to specify a port: {1}: the last component of
  the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
  the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Check_MK does not check for uniqueness.
+ by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
  The inventory creates one service for each port that fulfills configurable conditions.

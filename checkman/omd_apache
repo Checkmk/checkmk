@@ -7,7 +7,7 @@ description:
  This check creates statistics about the requests handled by the apache
  webserver running in OMD sites. It records the number of requests,
  bytes sent and time needed for processing the requests. These statistics
- are grouped by type of the request, for example Check_MK Views, NagVis
+ are grouped by type of the request, for example Checkmk Views, NagVis
  AJAX calls, but also by type e.g. for images, stylesheets etc.
 
  The check uses a specific log file which must be located at

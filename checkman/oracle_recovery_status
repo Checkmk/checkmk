@@ -38,7 +38,7 @@ description:
  limit when a backup is running! This is not the case for Backups with
  RMAN.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

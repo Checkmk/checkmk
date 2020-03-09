@@ -40,6 +40,7 @@ if [ ! -z "$PYTHON2_FILES" ]; then
         --config-file "$REPO_PATH/mypy-raw.ini" \
         --python-version 2.7 \
         --scripts-are-modules \
+        --show-error-codes \
         $PYTHON2_FILES
 fi
 
@@ -48,5 +49,6 @@ if [ ! -z "$PYTHON3_FILES" ]; then
         --config-file "$REPO_PATH/mypy-raw.ini" \
         --python-version 3.7 \
         --scripts-are-modules \
+        --show-error-codes \
         $PYTHON3_FILES
 fi

@@ -1,4 +1,4 @@
-title: Uptime of Docker containers
+title: Docker: Container Uptime
 agents: linux
 catalog: containerization/docker
 license: GPL

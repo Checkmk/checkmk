@@ -1,4 +1,4 @@
-title: Kubernetes persistent volumes
+title: Kubernetes: Persistent volumes
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

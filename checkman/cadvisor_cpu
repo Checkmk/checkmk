@@ -1,4 +1,4 @@
-title: cAdvisor CPU utilisation
+title: cAdvisor Pods/Containers: CPU utilisation
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL

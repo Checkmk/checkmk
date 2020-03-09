@@ -1,4 +1,4 @@
-title: Kubernetes CPU resources
+title: Kubernetes: CPU resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

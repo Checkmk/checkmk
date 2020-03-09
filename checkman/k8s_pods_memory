@@ -1,4 +1,4 @@
-title: Kubernetes pods memory resources
+title: Kubernetes: Pods memory resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

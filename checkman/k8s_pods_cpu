@@ -1,4 +1,4 @@
-title: Kubernetes pods CPU resources
+title: Kubernetes: Pods CPU resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

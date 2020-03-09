@@ -1,4 +1,4 @@
-title: Kubernetes component status
+title: Kubernetes: Component status
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

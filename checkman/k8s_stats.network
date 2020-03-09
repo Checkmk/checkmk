@@ -1,4 +1,4 @@
-title: Kubernetes node and cluster level network usage
+title: Kubernetes: Node and cluster level network usage
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

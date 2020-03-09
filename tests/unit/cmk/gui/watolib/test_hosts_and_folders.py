@@ -36,8 +36,8 @@ def test_env(mocked_user, load_config, load_plugins):
     yield
 
     # Cleanup WATO folders created by the test
-    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path())
-    os.mkdir(hosts_and_folders.Folder.root_folder().filesystem_path())
+    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
 
 
 @pytest.mark.parametrize("attributes,expected_tags", [
@@ -367,3 +367,12 @@ def test_recursive_subfolder_choices_function_calls(mocker, make_folder):
     tree.recursive_subfolder_choices()
 
     assert spy.call_count == 7
+
+
+def test_subfolder_creation():
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.create_subfolder('foo', 'Foo Folder', {})
+
+    # Upon instantiation, all the subfolders should be already known.
+    folder = hosts_and_folders.Folder.root_folder()
+    assert len(folder._subfolders) == 1

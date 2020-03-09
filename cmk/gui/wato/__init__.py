@@ -683,10 +683,7 @@ def add_scanned_hosts_to_folder(folder, found):
         host_name = six.ensure_str(
             cmk.utils.translations.translate_hostname(translation, ensure_unicode(host_name)))
 
-        attrs = {
-            "meta_data":
-                cmk.gui.watolib.hosts_and_folders.get_meta_data(created_by=_("Network scan"))
-        }
+        attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")

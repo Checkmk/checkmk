@@ -4,12 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+import collections
 import operator
 import os
 import time
 import re
 import shutil
 import uuid
+import types  # pylint: disable=unused-import
+
+try:
+    collections_abc = collections.abc  # type: types.ModuleType
+except AttributeError:
+    collections_abc = collections
 
 from typing import (  # pylint: disable=unused-import
     Type, Union, List, Text, Dict, Optional, Any, Set,
@@ -19,7 +26,6 @@ import six
 from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk
-
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
@@ -33,7 +39,6 @@ from cmk.gui.exceptions import (
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
 from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
-
 from cmk.gui.valuespec import Choices  # pylint: disable=unused-import
 from cmk.gui.watolib.utils import (
     wato_root_dir,
@@ -49,7 +54,6 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 from cmk.utils import store as store
 from cmk.utils.iterables import first
@@ -137,13 +141,13 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
         data = self._get_instance_data()
         data = self._upgrade_keys(data)
-        data['attributes']['meta_data']['updated_at'] = time.time()
+        data['attributes'] = update_metadata(data['attributes'])
         data['__id'] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
         store.save_object_to_file(self._store_file_name(), data)
 
     def load_instance(self):
-        # type: () -> Dict[str, Any]
+        # type: () -> None
         """Load the data of this instance and return it.
 
         The internal state of the object will not be changed.
@@ -156,7 +160,14 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         unique_id = data.get('__id')
         if self._id is None:
             self._id = unique_id
-        return data
+        self._set_instance_data(data)
+
+    @abc.abstractmethod
+    def _set_instance_data(self, wato_info):
+        """Hook method which is called by 'load_instance'.
+
+        This method should assign to the instance the information just loaded from the file."""
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _get_identifier(self):
@@ -230,6 +241,10 @@ class WithAttributes(object):
 
     def drop_caches(self):
         self._effective_attributes = None
+
+    def updated_at(self):
+        md = self._attributes.get('meta_data', {})
+        return md.get('updated_at')
 
     def _cache_effective_attributes(self, effective):
         self._effective_attributes = effective.copy()
@@ -422,6 +437,93 @@ class BaseFolder(object):
         raise NotImplementedError()
 
 
+def deep_update(original, update, overwrite=True):
+    """Update a dictionary with another's keys.
+
+    Args:
+        original: The original dictionary. This is being updated.
+        update: The keys to be set on the original dictionary. May contain new keys.
+        overwrite (bool): Also set already set values, even if they aren't None.
+
+    Examples:
+
+        If we don't want to overwrite the original's keys we can set the overwrite
+        parameter to false.
+
+        >>> res = deep_update({'meta_data': {'ca': 123, 'cb': 'foo'}},
+        ...                   {'meta_data': {'ca': 234, 'ua': 123}}, overwrite=False)
+        >>> assert res == {'meta_data': {'ca': 123, 'ua': 123, 'cb': 'foo'}}, res
+
+        When 'overwrite' is set to true, every key is always set.
+
+        >>> res = deep_update({'meta_data': {'ca': 123, 'cb': 'foo'}},
+        ...                   {'meta_data': {'ca': 234, 'ua': 123}}, overwrite=True)
+        >>> assert res == {'meta_data': {'ca': 234, 'ua': 123, 'cb': 'foo'}}, res
+
+    Returns:
+        The updated original dictionary, changed in place.
+
+    """
+    # Adapted from https://stackoverflow.com/a/3233356
+    for k, v in six.iteritems(update):
+        if isinstance(v, collections_abc.Mapping):
+            original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
+        else:
+            if overwrite or k not in original or original[k] is None:
+                original[k] = v
+    return original
+
+
+def update_metadata(
+    attributes,  # type: Dict[str, Any]
+    created_by=None,  # type: Optional[Text]
+):  # type: (...) -> Dict[str, Any]
+    """Update meta_data timestamps and set created_by if provided.
+
+    Args:
+        attributes (dict): The attributes dictionary
+        created_by (str): The user or script which created this object.
+
+    Returns:
+        The modified 'attributes' dictionary. It is actually modified in-place.
+
+    Examples:
+
+        >>> res = update_metadata({'meta_data': {'updated_at': 123}}, created_by='Dog')
+        >>> assert res['meta_data']['created_by'] == 'Dog'
+        >>> assert res['meta_data']['created_at'] == 123
+        >>> assert 123 < res['meta_data']['updated_at'] <= time.time()
+
+    Notes:
+
+        New in 1.6:
+            'meta_data' struct added.
+        New in 1.7:
+            Key 'updated_at' in 'meta_data' added for use in the REST API.
+
+    """
+    attributes.setdefault("meta_data", {})
+
+    now_ = time.time()
+    last_update = attributes['meta_data'].get('updated_at', None)
+    # These attributes are only set if they don't exist or were set to None before.
+    deep_update(
+        attributes,
+        {
+            'meta_data': {
+                'created_at': last_update if last_update is not None else now_,  # fix empty field
+                'updated_at': now_,
+                'created_by': created_by,
+            }
+        },
+        overwrite=False)
+
+    # Intentionally overwrite updated_at every time
+    deep_update(attributes, {'meta_data': {'updated_at': now_}}, overwrite=True)
+
+    return attributes
+
+
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
     """This class represents a WATO folder that contains other folders and hosts."""
 
@@ -550,21 +652,19 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         self._root_dir = root_dir
         if self._root_dir:
-            self._root_dir = root_dir.rstrip("/") + "/"  # FIXME: ugly
+            self._root_dir = _ensure_trailing_slash(root_dir)
         else:
             self._root_dir = wato_root_dir()
 
         if folder_path is not None:
             self._hosts = None
-            self._load()
+            self.load_instance()
             self.load_subfolders()
         else:
             self._hosts = {}
             self._num_hosts = 0
             self._title = title or self._fallback_title()
-            self._attributes = attributes
-            self._attributes['meta_data']['created_at'] = time.time()
-            self._attributes['meta_data']['update_at'] = time.time()
+            self._attributes = update_metadata(attributes)
             self._locked = False
             self._locked_hosts = False
             self._locked_subfolders = False
@@ -577,7 +677,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     # Dangerous operation! Only use this if you have a good knowledge of the internas
     def set_root_dir(self, root_dir):
-        self._root_dir = root_dir.rstrip("/") + "/"  # O.o
+        self._root_dir = _ensure_trailing_slash(root_dir)
 
     def parent(self):
         # type: () -> CREFolder
@@ -697,10 +797,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             The modified 'attributes' dictionary. In actually is modified in-place though.
 
         """
-        attributes.setdefault("meta_data", {})
-        for key in ['created_at', 'updated_at', 'created_by']:
-            attributes['meta_data'].setdefault(key, None)
-
+        meta_data = attributes.setdefault('meta_data', {})
+        meta_data.setdefault('created_at', None)
+        meta_data.setdefault('updated_at', None)
+        meta_data.setdefault('created_by', None)
         return attributes
 
     # Old tag group trans:
@@ -833,6 +933,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             host = self.hosts()[hostname]
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = host.attributes()
+            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname],
+                                                      created_by=config.user.id)
 
             tag_groups = host.tag_groups()
             if tag_groups:
@@ -953,7 +1055,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # values stored for check_mk as well.
         out.write("\n# Host attributes (needed for WATO)\n")
         out.write("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
-
         store.save_file(self.hosts_file_path(), out.getvalue())
 
     def _get_alias_from_extra_conf(self, host_name, variables):
@@ -970,8 +1071,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 return [value]
         return []
 
-    def _load(self):
-        wato_info = self.load_instance()
+    def _set_instance_data(self, wato_info):
         self._title = wato_info.get("title", self._fallback_title())
         self._attributes = wato_info.get("attributes", {})
         # Can either be set to True or a string (which will be used as host lock message)
@@ -982,12 +1082,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if "num_hosts" in wato_info:
             self._num_hosts = wato_info.get("num_hosts", None)
         else:
-            self._num_hosts = len(self.hosts())
-            self.persist_instance()
+            # We don't want to trigger any state modifying methods on loading, as this leads to
+            # very unpredictable behaviour. We dictate that `hosts()` will only ever be called
+            # intentionally.
+            self._num_hosts = len(self._hosts or {})
 
     def save(self):
         self.persist_instance()
         Folder.invalidate_caches()
+        self.load_instance()
 
     def _get_identifier(self):
         return uuid.uuid4().hex
@@ -1011,6 +1114,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def load_subfolders(self):
         dir_path = self._root_dir + self.path()
+        if not os.path.exists(dir_path):
+            return
         for entry in os.listdir(dir_path):
             subfolder_dir = dir_path + "/" + entry
             if os.path.isdir(subfolder_dir):
@@ -1066,7 +1171,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def path(self):
         if self.parent() and not self.parent().is_root() and not self.is_root():
-            return self.parent().path() + "/" + self.name()
+            return _ensure_trailing_slash(self.parent().path()) + self.name()
 
         return self.name()
 
@@ -1554,7 +1659,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_unlocked_subfolders()
         must_be_in_contactgroups(attributes.get("contactgroups"))
 
-        attributes.setdefault("meta_data", get_meta_data(created_by=config.user.id))
+        attributes = update_metadata(attributes, created_by=config.user.id)
 
         # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
@@ -1685,8 +1790,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for host_name, attributes, cluster_nodes in entries:
             must_be_in_contactgroups(attributes.get("contactgroups"))
             validate_host_uniqueness("host", host_name)
-
-            attributes.setdefault("meta_data", get_meta_data(created_by=config.user.id))
+            attributes = update_metadata(attributes, created_by=config.user.id)
 
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2800,9 +2904,25 @@ def check_wato_foldername(htmlvarname, name, just_name=False):
             _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-def get_meta_data(created_by):
-    return {
-        "created_at": time.time(),
-        "updated_at": None,
-        "created_by": created_by,
-    }
+def _ensure_trailing_slash(path):
+    # type: (str) -> str
+    """Ensure one single trailing slash on a pathname.
+
+    Examples:
+        >>> _ensure_trailing_slash('/foo/bar')
+        '/foo/bar/'
+
+        >>> _ensure_trailing_slash('/foo/bar/')
+        '/foo/bar/'
+
+        >>> _ensure_trailing_slash('/foo/bar//')
+        '/foo/bar/'
+
+    Args:
+        path: A pathname
+
+    Returns:
+        A pathname with a single trailing slash
+
+    """
+    return path.rstrip("/") + "/"

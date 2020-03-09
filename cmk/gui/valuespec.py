@@ -2463,10 +2463,10 @@ class DropdownChoice(ValueSpec):
 
     def choices(self):
         # type: () -> List[TypingTuple[Any, Text]]
-        if isinstance(self._choices, list):
-            result = self._choices
-        else:
+        if callable(self._choices):
             result = self._choices()
+        else:
+            result = self._choices
         if self._no_preselect:
             return [(self._no_preselect_value, self._no_preselect_title)] + result
         return result
@@ -3448,11 +3448,11 @@ class RelativeDate(OptionalDropdownChoice):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
-        elif reldays == -2:
+        if reldays == -2:
             return _("two days ago")
-        elif reldays < 0:
+        if reldays < 0:
             return _("%d days ago") % -reldays
-        elif reldays < len(self._choices):
+        if reldays < len(self._choices):
             return self._choices[reldays][1]
         return _("in %d days") % reldays
 
@@ -3501,13 +3501,14 @@ class AbsoluteDate(ValueSpec):
         return self.default_value()
 
     def split_date(self, value):
+        # type: (TypingOptional[float]) -> TypingTuple[TypingOptional[int], TypingOptional[int], TypingOptional[int], TypingOptional[int], TypingOptional[int], TypingOptional[int]]
         if self._none_means_empty and value is None:
-            return (None,) * 6
+            return None, None, None, None, None, None
         lt = time.localtime(value)
-        return lt.tm_year, lt.tm_mon, lt.tm_mday, \
-               lt.tm_hour, lt.tm_min, lt.tm_sec
+        return lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, lt.tm_min, lt.tm_sec
 
     def render_input(self, varprefix, value):
+        # type: (Any, Any) -> None
         if self._label:
             html.write("%s" % self._label)
             html.nbsp()
@@ -3517,7 +3518,7 @@ class AbsoluteDate(ValueSpec):
             ("_year", year, 6),
             ("_month", month, 3),
             ("_day", day, 3),
-        ]
+        ]  # type: List[TypingOptional[TypingTuple[str, TypingOptional[int], int]]]
         if self._include_time:
             values += [
                 None,
@@ -3534,7 +3535,8 @@ class AbsoluteDate(ValueSpec):
             html.open_table(class_=["vs_date"])
 
             html.open_tr()
-            map(html.th, titles)
+            for t in titles:
+                html.th(t)
             html.close_tr()
 
             html.open_tr()
@@ -4210,22 +4212,11 @@ class Optional(ValueSpec):
                 checked = value != self._none_value
 
         html.open_span()
-
-        if self._label is not None:
-            label = self._label
-        elif self.title():
-            label = self.title()
-        elif self._negate:
-            label = _(" Ignore this option")
-        else:
-            label = _(" Activate this option")
-
         html.checkbox("%s_use" % varprefix,
                       checked,
-                      label=label,
+                      label=self._get_label(),
                       onclick="cmk.valuespecs.toggle_option(this, %s, %r)" %
                       (json.dumps(div_id), 1 if self._negate else 0))
-
         if self._sameline:
             html.nbsp()
         else:
@@ -4249,6 +4240,17 @@ class Optional(ValueSpec):
             html.write(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
+
+    def _get_label(self):
+        # type: () -> Text
+        if self._label is not None:
+            return self._label
+        t = self.title()
+        if t:
+            return t
+        if self._negate:
+            return _(" Ignore this option")
+        return _(" Activate this option")
 
     def value_to_text(self, value):
         if value == self._none_value:
@@ -4586,7 +4588,7 @@ class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements,  # type: List[TypingTuple[str, ValueSpec]]
+        elements,  # type: Union[List[TypingTuple[str, ValueSpec]], Callable[[], List[TypingTuple[str, ValueSpec]]]]
         empty_text=None,  # type: TypingOptional[Text]
         default_text=None,  # type: TypingOptional[Text]
         optional_keys=True,  # type: Union[bool, List[str]]
@@ -4645,7 +4647,7 @@ class Dictionary(ValueSpec):
         return value
 
     def _get_elements(self):
-        if hasattr(self._elements, '__call__') or isinstance(self._elements, types.MethodType):
+        if callable(self._elements):
             return self._elements()
         elif isinstance(self._elements, list):
             return self._elements
@@ -5928,7 +5930,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         from_end_choice = [
             ("month_end", _("At the end of every month at day"),
              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-        ]  # type: CascadingDropdownCleanChoices
+        ]  # type: List[Union[TypingTuple[Text, Text], CascadingDropdownCleanChoice]]
     else:
         from_end_choice = []
 
@@ -5937,7 +5939,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         ("month_begin", _("At the beginning of every month at day"), Integer(minvalue=1,
                                                                              maxvalue=28)),
-    ]  # type: CascadingDropdownCleanChoices
+    ]  # type:  List[Union[TypingTuple[Text, Text], CascadingDropdownCleanChoice]]
     return CascadingDropdown(title=_("Period"),
                              orientation="horizontal",
                              choices=dwm + from_end_choice,

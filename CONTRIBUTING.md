@@ -12,8 +12,8 @@ Here are the links to major sections of this document:
 
 * [Contributing Code](#contributing-code)
 * [How to prepare for contributing](#how-to-prepare-for-contributing)
-* [How to change Checkmk](#how-to-change-Checkmk?)
-* [How to execute tests](#how-to-execute-tests?)
+* [How to change Checkmk](#how-to-change-checkmk)
+* [How to execute tests](#how-to-execute-tests)
 * [Style Guide](#style-guide)
 
 If you have questions, please create a post at the [Checkmk Forum](https://forum.checkmk.com). For bug reports, please send an e-mail to feedback@checkmk.com

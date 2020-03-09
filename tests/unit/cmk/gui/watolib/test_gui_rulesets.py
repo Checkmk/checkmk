@@ -505,7 +505,7 @@ def test_rule_clone(register_builtin_html):
     rule.from_config({
         "value": True,
         "condition": {
-            'host_name': 'HOSTLIST',
+            'host_name': ['HOSTLIST'],
             'service_description': [{
                 '$regex': 'SVC'
             }, {

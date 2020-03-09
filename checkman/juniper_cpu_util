@@ -1,4 +1,4 @@
-title: Juniper: CPU utilization
+title: Juniper devices: CPU utilization
 agents: snmp
 catalog: hw/network/juniper
 license: GPL
@@ -11,7 +11,7 @@ description:
  These levels are configurable.
 
 item:
- The name of the routing engine.
+ The name or the description of the routing engine.
 
 inventory:
  One service for each routing engine will be created.

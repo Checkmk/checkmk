@@ -1,4 +1,4 @@
-title: Bluecat Adonis HA State
+title: Bluecat Adonis: HA State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL

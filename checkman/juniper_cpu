@@ -1,4 +1,4 @@
-title: CPU utilization of the last 1/5/15 minutes
+title: Juniper devices: Load readings
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

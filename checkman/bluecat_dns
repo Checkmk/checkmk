@@ -1,4 +1,4 @@
-title: Bluecat Adonis DNS State
+title: Bluecat Adonis: DNS State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL

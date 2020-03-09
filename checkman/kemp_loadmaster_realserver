@@ -1,4 +1,4 @@
-title: Kemp Loadmaster Realserver
+title: Kemp Loadmaster: State of Real Servers
 agents: snmp
 catalog: hw/network/kemp
 license: GPL
@@ -7,6 +7,9 @@ description:
  This check monitors the state of all enabled backend servers which are connected to a Kemp
  Loadmaster. The check result is OK if the server's state is 'in service'. When the detected server state
  is 'out of service' or 'failed' the check's result will be CRIT.
+
+item:
+ IP address of the realserver
 
 inventory:
  All backend servers which are not disabled are automatically detected. Each one is defined by its ID.

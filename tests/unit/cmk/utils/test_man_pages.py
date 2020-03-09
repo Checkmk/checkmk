@@ -1,7 +1,16 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib2 import Path
-import pytest  # type: ignore
+import sys
+import pytest  # type: ignore[import]
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
 
 from testlib import cmk_path
 
@@ -143,11 +152,13 @@ def _is_pure_section_declaration(check):
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
-    import cmk.base.check_api as check_api
+    import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
     config.load_all_checks(check_api.get_check_api_context)
-    checks_sorted = sorted([ (name, entry) for (name, entry) in config.check_info.items()
-                      if not _is_pure_section_declaration(entry) ] + \
-       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
+    checks_sorted = sorted([(name, entry)
+                            for (name, entry) in config.check_info.items()
+                            if not _is_pure_section_declaration(entry)] +
+                           [("check_" + name, entry)
+                            for (name, entry) in config.active_check_info.items()])
     assert len(checks_sorted) > 1000
 
     for check_plugin_name, _check in checks_sorted:

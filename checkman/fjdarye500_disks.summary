@@ -18,9 +18,6 @@ description:
  readying, recovering, partbroken, spare, notexist or copying,
  OK otherise.
 
-item:
- {None}
-
 inventory:
  If at least one disk is found, exactly one check will be created for
  the host.

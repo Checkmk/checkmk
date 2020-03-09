@@ -1,32 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import sys
 from typing import Dict, Text  # pylint: disable=unused-import
+import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -35,8 +16,8 @@ else:
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
-from passlib.context import CryptContext  # type: ignore
-from passlib.hash import sha256_crypt  # type: ignore
+from passlib.context import CryptContext  # type: ignore[import]
+from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -85,7 +66,7 @@ class Htpasswd(object):
         # type: (Dict[Text, Text]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
         output = "\n".join("%s:%s" % entry for entry in sorted(entries.items())) + "\n"
-        store.save_file("%s" % self._path, output.encode("utf-8"))
+        store.save_text_to_file("%s" % self._path, output)
 
 
 # Check_MK supports different authentication frontends for verifying the
@@ -144,7 +125,7 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function

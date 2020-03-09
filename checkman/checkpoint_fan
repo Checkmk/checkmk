@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
 distribution: check_mk
+
+item:
+ Name of fan.
+
 description:
  This check monitors speed and health of fans in checkpoint firewalls.
  The status of this check is translated directly from a device status and

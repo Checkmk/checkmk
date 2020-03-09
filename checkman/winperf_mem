@@ -1,6 +1,6 @@
 title: Windows memory statistics
 agents: windows
-catalog: os/networking
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

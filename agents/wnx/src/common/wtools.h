@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // wtools.h
 //
 // Windows Specific Tools
@@ -1059,6 +1063,21 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group_name) noexcept;
 bool RemoveCmaUser(const std::wstring& user_name) noexcept;
 std::wstring GenerateRandomString(size_t max_length) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
+
+class Bstr {
+public:
+    Bstr(const Bstr&) = delete;
+    Bstr(Bstr&&) = delete;
+    Bstr& operator=(const Bstr&) = delete;
+    Bstr& operator=(Bstr&&) = delete;
+
+    Bstr(std::wstring_view str) { data_ = ::SysAllocString(str.data()); }
+    ~Bstr() { ::SysFreeString(data_); }
+    operator BSTR() { return data_; }
+
+public:
+    BSTR data_;
+};
 
 }  // namespace wtools
 

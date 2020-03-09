@@ -19,5 +19,8 @@ description:
  of services always in UNKNOWN state), and is therefore strongly
  discouraged.
 
+item:
+ The name of the instance and the MBean value
+
 inventory:
  One check is created for each MBean string value sent by the agent.

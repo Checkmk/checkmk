@@ -40,16 +40,44 @@ TEST(PsTest, Time) {
         EXPECT_EQ(ConvertWmiTimeToHumanTime(""), 0);
     }
 
-    std::string in = "20190523131406.074948+120";
+    {
+        std::string in = "20190523131406.074948+120";
 
-    auto check_time = ConvertWmiTimeToHumanTime(in);
-    auto check_tm = *std::localtime(&check_time);
-    EXPECT_EQ(check_tm.tm_hour, 13);
-    EXPECT_EQ(check_tm.tm_sec, 06);
-    EXPECT_EQ(check_tm.tm_min, 14);
-    EXPECT_EQ(check_tm.tm_year, 119);
-    EXPECT_EQ(check_tm.tm_mon, 4);
-    EXPECT_EQ(check_tm.tm_mday, 23);
+        auto check_time = ConvertWmiTimeToHumanTime(in);
+        auto check_tm = *std::localtime(&check_time);
+        EXPECT_EQ(check_tm.tm_hour, 13);
+        EXPECT_EQ(check_tm.tm_sec, 06);
+        EXPECT_EQ(check_tm.tm_min, 14);
+        EXPECT_EQ(check_tm.tm_year, 119);
+        EXPECT_EQ(check_tm.tm_mon, 4);
+        EXPECT_EQ(check_tm.tm_mday, 23);
+    }
+
+    {
+        std::string in = "20190323090106.074948+120";
+
+        auto check_time = ConvertWmiTimeToHumanTime(in);
+        auto check_tm = *std::localtime(&check_time);
+        EXPECT_EQ(check_tm.tm_hour, 9);
+        EXPECT_EQ(check_tm.tm_sec, 6);
+        EXPECT_EQ(check_tm.tm_min, 1);
+        EXPECT_EQ(check_tm.tm_year, 119);
+        EXPECT_EQ(check_tm.tm_mon, 2);
+        EXPECT_EQ(check_tm.tm_mday, 23);
+    }
+
+    {
+        std::string in = "20000209090909.074948+120";
+
+        auto check_time = ConvertWmiTimeToHumanTime(in);
+        auto check_tm = *std::localtime(&check_time);
+        EXPECT_EQ(check_tm.tm_hour, 9);
+        EXPECT_EQ(check_tm.tm_sec, 9);
+        EXPECT_EQ(check_tm.tm_min, 9);
+        EXPECT_EQ(check_tm.tm_year, 100);
+        EXPECT_EQ(check_tm.tm_mon, 1);
+        EXPECT_EQ(check_tm.tm_mday, 9);
+    }
 }
 
 TEST(PsTest, All) {  //

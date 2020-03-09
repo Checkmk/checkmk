@@ -1,4 +1,4 @@
-title: Supermicro Health Sensors
+title: Supermicro: Health Sensors
 agents: snmp
 catalog: hw/server/supermicro
 license: GPL
@@ -14,6 +14,9 @@ description:
   lower levels reported by the device. On top of that, the device
   itself reports a status which is applied if it's worse than the
   calculated one.
+
+item:
+ Name of the sensor
 
 inventory:
   One item is reported per sensor.

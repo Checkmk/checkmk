@@ -1,4 +1,4 @@
-title: Check for Check_MK's discovery procedure
+title: Check for Checkmk's discovery procedure
 agents: aix, freebsd, hpux, linux, macosx, netbsd, openwbsd, openwrt, solaris
 catalog: generic
 license: GPL

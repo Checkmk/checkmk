@@ -13,7 +13,7 @@ description:
  Needs the datasource "Check state of Jenkins jobs and builds" to be configured.
 
 item:
- The item is the display name of the node
+ The display name of the node
 
 inventory:
  One service per node {"Jenkins Node"} will be created

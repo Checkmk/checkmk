@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the LDAP connection.
+
 description:
  This is an active check that connects to an LDAP server by LDAP or
  LDAPS protocol and reports the status of the connection.

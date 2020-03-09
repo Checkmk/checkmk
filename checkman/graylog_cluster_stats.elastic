@@ -8,7 +8,7 @@ description:
  Beside the name, version and status it outputs the number of nodes, data nodes,
  active shards, active primary shards, initializing shards, relocating shards
  and unassigned shards. Further more, it shows timeouts, the number of indices,
- and the store, id cache and field data size.
+ and the store, ID cache and field data size.
 
  Needs the datasource "Check state of Graylog" to be configured.
 

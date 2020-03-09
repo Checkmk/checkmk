@@ -7,6 +7,9 @@ description:
  This check checks the state of the internal power supplies in Juniper switches.
  There is no configuration needed, the check returns a {Critical} for each not OK state.
 
+item:
+ Name of the power supply
+
 inventory:
  One item for each psu will be created
 

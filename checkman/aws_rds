@@ -1,4 +1,4 @@
-title: AWS/RDS CPU Utilization
+title: AWS RDS: CPU Utilization
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -10,6 +10,9 @@ description:
 
  Upper default levels are set to 80, 90 percent. These levels
  are configurable.
+
+item:
+ Name of the instance if all required metrics (CPUUtilization) are given.
 
 inventory:
  One service per database will be created.

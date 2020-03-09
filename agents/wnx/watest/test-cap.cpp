@@ -3,12 +3,12 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cap.h"
 #include "cfg.h"
+#include "cma_core.h"
+#include "common/yaml.h"
 #include "lwa/types.h"
 #include "read_file.h"
 #include "test_tools.h"
@@ -17,15 +17,7 @@
 #include "tools/_tgt.h"
 
 namespace cma::cfg::cap {
-
 TEST(CapTest, CheckAreFilesSame) {
-    EXPECT_TRUE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
-
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     auto [file1, file2] = tst::CreateInOut();
@@ -35,7 +27,7 @@ TEST(CapTest, CheckAreFilesSame) {
     {
         tst::ConstructFile(file1 / name, "abcde0");
         tst::ConstructFile(file2 / name, "abcde1");
-        EXPECT_FALSE(AreFilesSame(file1 / name, file2 / name));
+        EXPECT_FALSE(cma::tools::AreFilesSame(file1 / name, file2 / name));
         EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
     }
 }
@@ -447,6 +439,85 @@ TEST(CapTest, Check) {
     auto out = ProcessPluginPath(name);
     fs::path expected_path = cma::cfg::GetUserDir() + L"\\a\\b.txt";
     EXPECT_EQ(out, expected_path.lexically_normal());
+}
+
+TEST(CapTest, IsAllowedToKill) {
+    using namespace cma::cfg;
+    cma::OnStartTest();
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
+
+    EXPECT_FALSE(IsAllowedToKill(L"smss_log.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    auto yaml = cma::cfg::GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] =
+        YAML::Load(values::kTryKillNo);
+    EXPECT_FALSE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] = YAML::Load("aaa");
+    EXPECT_FALSE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] =
+        YAML::Load(values::kTryKillAll);
+    EXPECT_TRUE(IsAllowedToKill(L"smss_log.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+}
+
+TEST(CapTest, GetProcessToKill) {
+    cma::OnStartTest();
+    EXPECT_TRUE(GetProcessToKill(L"").empty());
+    EXPECT_TRUE(GetProcessToKill(L"smss.exe").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss.com").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss").empty());
+    EXPECT_TRUE(GetProcessToKill(L"c:\\windows\\system32\\ping.exe").empty());
+    EXPECT_TRUE(GetProcessToKill(L"c:\\windows\\system32\\a_the_ping.eXe") ==
+                L"a_the_ping.eXe");
+}
+
+TEST(CapTest, StoreFileAgressive) {
+    ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
+
+    using namespace std::chrono;
+    namespace fs = std::filesystem;
+    if (!cma::ConfigLoaded()) cma::OnStartTest();
+
+    tst::SafeCleanTempDir();
+    auto [work, _] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    fs::path ping(R"(c:\windows\system32\ping.exe)");
+    if (!fs::exists(ping))
+        GTEST_SKIP() << "there is no notepad to test something";
+    fs::path cmk_test_ping = work / "cmk-update-aGent.exe";
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
+    cma::tools::sleep(200ms);
+    ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
+                              fs::copy_options::overwrite_existing));
+    ASSERT_TRUE(cma::tools::RunDetachedCommand(cmk_test_ping.u8string() +
+                                               " -t 8.8.8.8"));
+    cma::tools::sleep(200ms);
+    std::vector<char> buf = {'_', '_'};
+    ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
+    ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
+    ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
+                              fs::copy_options::overwrite_existing));
+    ASSERT_TRUE(cma::tools::RunDetachedCommand(cmk_test_ping.u8string() +
+                                               " -t 8.8.8.8"));
+    cma::tools::sleep(200ms);
+
+    std::error_code ec;
+    fs::remove(cmk_test_ping, ec);
+    ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
+    ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
 }
 
 TEST(CapTest, CheckValid) {

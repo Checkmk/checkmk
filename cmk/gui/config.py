@@ -1,35 +1,18 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import errno
 import os
 import copy
 import json
-from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from types import ModuleType  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
+)
 import time
 import six
 
@@ -40,13 +23,17 @@ else:
 
 from werkzeug.local import LocalProxy
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
+from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
+    SiteId, SiteConfiguration, SiteConfigurations,
+)
 
 import cmk
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
+
 from cmk.gui.globals import local
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -67,6 +54,8 @@ if not cmk.is_raw_edition():
 
 if cmk.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+
+UserType = Union["LoggedInUser", LocalProxy]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -271,7 +260,7 @@ def _apply_default_config():
 
 
 def _load_default_config(vars_before_plugins, vars_after_plugins):
-    # type: (Set, Set) -> None
+    # type: (Set[str], Set[str]) -> None
     default_config.clear()
     _load_default_config_from_module_plugins()
     _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
@@ -296,13 +285,13 @@ def _load_default_config_from_module_plugins():
 
 
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
-    # type: (Set, Set) -> None
+    # type: (Set[str], Set[str]) -> None
     new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
+    default_config.update({k: copy.deepcopy(globals()[k]) for k in new_vars})
 
 
 def _config_plugin_modules():
-    # type: () -> List
+    # type: () -> List[ModuleType]
     return [
         module for name, module in sys.modules.items()
         if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
@@ -313,22 +302,13 @@ def _config_plugin_modules():
 
 def reporting_available():
     # type: () -> bool
-    try:
-        # Check the existance of one arbitrary config variable from the
-        # reporting module
-        _dummy = reporting_filename  # type: ignore # pylint: disable=undefined-variable
-        return True
-    except NameError:
-        return False
+    # Check the existance of one arbitrary config variable from the reporting module
+    return 'reporting_filename' in globals()
 
 
 def combined_graphs_available():
     # type: () -> bool
-    try:
-        _dummy = have_combined_graphs  # type: ignore # pylint: disable=undefined-variable
-        return True
-    except NameError:
-        return False
+    return 'have_combined_graphs' in globals()
 
 
 def hide_language(lang):
@@ -337,7 +317,7 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    # type: (Dict) -> Set
+    # type: (Dict[str, Any]) -> Set[str]
     return {
         name for name, value in var_dict.items()
         if name[0] != '_' and not hasattr(value, '__call__')
@@ -345,6 +325,7 @@ def all_nonfunction_vars(var_dict):
 
 
 def get_language():
+    # type: () -> Optional[str]
     return default_language
 
 
@@ -394,7 +375,7 @@ def get_role_permissions():
     for perm_class in permissions.permission_registry.values():
         perm = perm_class()
         for role_id in roleids:
-            if not role_id in role_permissions:
+            if role_id not in role_permissions:
                 role_permissions[role_id] = []
 
             if _may_with_roles([role_id], perm.name):
@@ -481,7 +462,7 @@ def _confdir_for_user_id(user_id):
     if user_id is None:
         return None
 
-    confdir = config_dir + "/" + user_id.encode("utf-8")
+    confdir = config_dir + "/" + six.ensure_str(user_id)
     store.mkdir(confdir)
     return confdir
 
@@ -519,12 +500,9 @@ class LoggedInUser(object):
         # type: (Optional[UserId], List[str]) -> Any
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
-            if user_id in multisite_users:
-                attributes = multisite_users[user_id]
-            else:
-                attributes = {
-                    "roles": role_ids,
-                }
+            attributes = multisite_users.get(user_id, {
+                "roles": role_ids,
+            })
         return attributes
 
     def get_attribute(self, key, deflt=None):
@@ -780,23 +758,19 @@ class LoggedInUser(object):
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return SiteConfigurations(dict(unfiltered_sites))
+            return dict(unfiltered_sites)
 
-        return SiteConfigurations({
+        return {
             site_id: s  #
             for site_id, s in unfiltered_sites.items()
             if site_id in authorized_sites
-        })
+        }
 
     def authorized_login_sites(self):
         # type: () -> SiteConfigurations
         login_site_ids = get_login_slave_sites()
         return self.authorized_sites(
-            SiteConfigurations({
-                site_id: s  #
-                for site_id, s in allsites().items()
-                if site_id in login_site_ids
-            }))
+            {site_id: s for site_id, s in allsites().items() if site_id in login_site_ids})
 
     def may(self, pname):
         # type: (str) -> bool
@@ -838,8 +812,7 @@ class LoggedInUser(object):
         except OSError as e:
             if e.errno == errno.ENOENT:
                 return 0
-            else:
-                raise
+            raise
 
 
 # Login a user that has all permissions. This is needed for making
@@ -894,7 +867,7 @@ def _set_user(_user):
 
 
 # This holds the currently logged in user object
-user = LocalProxy(lambda: local.user)
+user = LocalProxy(lambda: local.user)  # type: UserType
 
 #.
 #   .--User Handling-------------------------------------------------------.
@@ -919,18 +892,18 @@ def roles_of_user(user_id):
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    elif user_id in admin_users:
+    if user_id in admin_users:
         return ["admin"]
-    elif user_id in guest_users:
+    if user_id in guest_users:
         return ["guest"]
-    elif users is not None and user_id in users:
+    if users is not None and user_id in users:
         return ["user"]
-    elif user_id is not None and os.path.exists(config_dir + "/" + user_id.encode("utf-8") +
-                                                "/automation.secret"):
+    if user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
+                                              "/automation.secret"):
         return ["guest"]  # unknown user with automation account
-    elif 'roles' in default_user_profile:
+    if 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])
-    elif default_user_role:
+    if default_user_role:
         return existing_role_ids([default_user_role])
     return []
 
@@ -953,7 +926,7 @@ def save_user_file(name, data, user_id):
     if user_id is None:
         raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
 
-    path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
+    path = config_dir + "/" + six.ensure_str(user_id) + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
 
@@ -999,12 +972,12 @@ def migrate_old_site_config(site_config):
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
-    # type: (Dict[AnyStr, Any]) -> None
-    if site_cfg.get("socket") is None:
+    # type: (Dict[str, Any]) -> None
+    socket = site_cfg.get("socket")
+    if socket is None:
         site_cfg["socket"] = ("local", None)
         return
 
-    socket = site_cfg["socket"]
     if isinstance(socket, tuple) and socket[0] == "proxy":
         site_cfg["proxy"] = socket[1]
 
@@ -1034,12 +1007,13 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 
 def _migrate_string_encoded_socket(value):
-    # type: (AnyStr) -> Tuple[AnyStr, Union[Dict]]
-    family_txt, address = value.split(":", 1)  # pylint: disable=no-member
+    # type: (AnyStr) -> Tuple[str, Union[Dict]]
+    str_value = six.ensure_str(value)
+    family_txt, address = str_value.split(":", 1)
 
     if family_txt == "unix":
         return "unix", {
-            "path": value.split(":", 1)[1],
+            "path": str_value.split(":", 1)[1],
         }
 
     if family_txt in ["tcp", "tcp6"]:
@@ -1075,13 +1049,10 @@ def url_prefix():
     return "/%s/" % cmk.omd_site()
 
 
-use_siteicons = False
-
-
 def default_single_site_configuration():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
-        omd_site(): SiteConfiguration({
+    return {
+        omd_site(): {
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
             'disable_wato': True,
@@ -1095,16 +1066,16 @@ def default_single_site_configuration():
             'timeout': 5,
             'user_login': True,
             'proxy': None,
-        })
-    })
+        }
+    }
 
 
-sites = SiteConfigurations({})
+sites = {}  # type: SiteConfigurations
 
 
 def sitenames():
-    # () -> List[SiteId]
-    return sites.keys()
+    # type: () -> List[SiteId]
+    return list(sites)
 
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
@@ -1113,16 +1084,16 @@ def sitenames():
 # TODO: Rename this!
 def allsites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         name: site(name)  #
         for name in sitenames()
         if not site(name).get("disabled", False)
-    })
+    }
 
 
 def configured_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({site_id: site(site_id) for site_id in sitenames()})
+    return {site_id: site(site_id) for site_id in sitenames()}
 
 
 def has_wato_slave_sites():
@@ -1161,11 +1132,11 @@ def get_login_slave_sites():
 
 def wato_slave_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         site_id: s  #
         for site_id, s in sites.items()
         if s.get("replication")
-    })
+    }
 
 
 def sorted_sites():
@@ -1176,7 +1147,7 @@ def sorted_sites():
 
 def site(site_id):
     # type: (SiteId) -> SiteConfiguration
-    s = SiteConfiguration(dict(sites.get(site_id, {})))
+    s = dict(sites.get(site_id, {}))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
@@ -1215,11 +1186,11 @@ def is_single_local_site():
     # type: () -> bool
     if len(sites) > 1:
         return False
-    elif len(sites) == 0:
+    if len(sites) == 0:
         return True
 
     # Also use Multisite mode if the one and only site is not local
-    sitename = sites.keys()[0]
+    sitename = list(sites.keys())[0]
     return site_is_local(sitename)
 
 
@@ -1233,13 +1204,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, str]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1255,9 +1226,9 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, str]]
     return site_choices(
-        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
+        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 
 
 #.
@@ -1292,10 +1263,10 @@ def theme_choices():
             continue
 
         theme_base_dir = base_dir / "htdocs" / "themes"
-        if not theme_base_dir.exists():  # pylint: disable=no-member
+        if not theme_base_dir.exists():
             continue
 
-        for theme_dir in theme_base_dir.iterdir():  # pylint: disable=no-member
+        for theme_dir in theme_base_dir.iterdir():
             meta_file = theme_dir / "theme.json"
             if not meta_file.exists():
                 continue
@@ -1314,7 +1285,7 @@ def theme_choices():
 
 
 def get_page_heading():
-    # type: () -> AnyStr
+    # type: () -> Text
     if "%s" in page_heading:
-        return page_heading % (site(omd_site()).get('alias', _("GUI")))
-    return page_heading
+        return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_unicode(page_heading)

@@ -11,8 +11,5 @@ description:
  the test was 'aborted' and CRIT is reported in case of
  'failed' or 'load failure'.
 
-item:
- The item is called 'Battery'.
-
 inventory:
  One service for each item is generated.

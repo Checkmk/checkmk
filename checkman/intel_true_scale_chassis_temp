@@ -11,8 +11,5 @@ description:
  high or low. The check goes CRIT if the status is excessively high or low.
  Otherwise the check is UNKNOWN.
 
-item:
- No item.
-
 inventory:
  One service is created.

@@ -21,7 +21,7 @@ description:
  This check requires the new agent plugin mk_oracle from our plugin directory.
 
  You can find a description for a basic configuration below. More details for
- special setups will be available on the homepage of the Check_MK project.
+ special setups will be available on the homepage of the Checkmk project.
  https://mathias-kettner.de/checkmk_oracle.html
 
  There are two configuration files important and stored in $MK_CONFDIR.
@@ -110,5 +110,5 @@ description:
  https://mathias-kettner.de/checkmk_oracle.html
 
 item:
- ORA <ORACLE_SID> Instance
+ The ORACLE_SID
 

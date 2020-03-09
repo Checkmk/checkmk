@@ -12,7 +12,3 @@ description:
  generation of cAdvisor related df services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
  This check uses the same mechanisms as the df check.
-
-item:
- One service for each pod/container is created
-

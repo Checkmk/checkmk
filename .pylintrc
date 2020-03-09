@@ -124,6 +124,12 @@ disable=
     # to our dev dependencies.
     wrong-spelling-in-comment,
     wrong-spelling-in-docstring,
+    #---------------------------------------------------------------------------
+    # Pylint is full of bugs regarding this, leading to tons of false positives
+    # when pathlib.path is used. Furthermore, the handling of NewTypes is totally
+    # broken, see e.g. https://github.com/PyCQA/pylint/issues/2296 and
+    # https://github.com/PyCQA/pylint/issues/3162.
+    no-member,
 
 [REPORTS]
 output-format=cmk_colorized

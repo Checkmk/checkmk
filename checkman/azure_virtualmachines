@@ -12,7 +12,10 @@ description:
  The service state resulting from the different provisioning and power states can be
  configured using the rule "Azure Virtual Machines".
 
+item:
+ The name of the resource.
+
 inventory:
- One service per VM is created, on every Check_MK host that receives information
+ One service per VM is created, on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.
  To configure which those are, see the configuration of the Azure agent.

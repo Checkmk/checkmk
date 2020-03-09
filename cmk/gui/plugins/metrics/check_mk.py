@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.render
 
@@ -803,7 +783,7 @@ metric_info["pagefile_used"] = {
 
 metric_info["mem_used_percent"] = {
     "color": "#80ff40",
-    "title": _("RAM used"),
+    "title": _("RAM used %"),
     "unit": "%",
 }
 
@@ -3159,7 +3139,7 @@ metric_info["pages_bw_a3"] = {
 
 metric_info["pages"] = {
     "title": _("Remaining supply"),
-    "unit": "%",
+    "unit": "count",
     "color": "34/a",
 }
 
@@ -3846,6 +3826,18 @@ metric_info["nvme_data_units_written"] = {
     "title": _("Data units written"),
     "unit": "bytes",
     "color": "24/a",
+}
+
+metric_info["data_usage"] = {
+    "title": _("Data usage"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["meta_usage"] = {
+    "title": _("Meta usage"),
+    "unit": "%",
+    "color": "31/a",
 }
 
 metric_info["ap_devices_total"] = {
@@ -4960,7 +4952,7 @@ metric_info["quarantine"] = {
 metric_info["messages_in_queue"] = {
     "title": _("Messages in queue"),
     "unit": "count",
-    "color": "#701141",
+    "color": "16/a",
 }
 
 metric_info["mail_queue_hold_length"] = {
@@ -6384,6 +6376,12 @@ metric_info['jira_avg'] = {
     "color": "14/a",
 }
 
+metric_info['jira_diff'] = {
+    "title": _("Difference"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -6685,15 +6683,48 @@ check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
 ram_used_swap_translation = {
     "ramused": {
         "name": "mem_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True,
+    },
+    "mem_used_percent": {
+        "auto_graph": False,
     },
     "swapused": {
         "name": "swap_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True,
     },
     "memused": {
         "name": "mem_lnx_total_used",
         "auto_graph": False,
+        "scale": MB,
+        "deprecated": True,
+    },
+    "mem_lnx_total_used": {
+        "auto_graph": False,
+    },
+    "memusedavg": {
+        "name": "memory_avg",
+        "scale": MB
+    },
+    "shared": {
+        "name": "mem_lnx_shmem",
+        "deprecated": True,
+        "scale": MB
+    },
+    "pagetables": {
+        "name": "mem_lnx_page_tables",
+        "deprecated": True,
+        "scale": MB
+    },
+    "mapped": {
+        "name": "mem_lnx_mapped",
+        "deprecated": True,
+        "scale": MB
+    },
+    "committed_as": {
+        "name": "mem_lnx_committed_as",
+        "deprecated": True,
         "scale": MB
     },
 }
@@ -6703,37 +6734,8 @@ check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 check_metrics["check_mk-solaris_mem"] = ram_used_swap_translation
 check_metrics["check_mk-docker_container_mem"] = ram_used_swap_translation
 check_metrics["check_mk-emc_ecs_mem"] = ram_used_swap_translation
-
-check_metrics["check_mk-mem.used"] = {
-    "ramused": {
-        "name": "mem_used",
-        "scale": MB
-    },
-    "swapused": {
-        "name": "swap_used",
-        "scale": MB
-    },
-    "memused": {
-        "name": "mem_lnx_total_used",
-        "scale": MB
-    },
-    "shared": {
-        "name": "mem_lnx_shmem",
-        "scale": MB
-    },
-    "pagetable": {
-        "name": "mem_lnx_page_tables",
-        "scale": MB
-    },
-    "mapped": {
-        "name": "mem_lnx_mapped",
-        "scale": MB
-    },
-    "committed_as": {
-        "name": "mem_lnx_committed_as",
-        "scale": MB
-    },
-}
+check_metrics["check_mk-aix_memory"] = ram_used_swap_translation
+check_metrics["check_mk-mem.used"] = ram_used_swap_translation
 
 check_metrics["check_mk-esx_vsphere_vm.mem_usage"] = {
     "host": {
@@ -6839,29 +6841,11 @@ check_metrics["check_mk-jolokia_metrics.tp"] = {
     },
 }
 
-check_metrics["check_mk-aix_memory"] = {
-    "ramused": {
-        "name": "mem_used",
-        "scale": MB
-    },
-    "swapused": {
-        "name": "swap_used",
-        "scale": MB
-    },
-    "memused": {
-        "name": "mem_lnx_total_used",
-        "scale": MB
-    },
-    "memusedavg": {
-        "name": "memory_avg",
-        "scale": MB
-    },
-}
-
 check_metrics["check_mk-mem.win"] = {
     "memory": {
         "name": "mem_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "pagefile": {
         "name": "pagefile_used",
@@ -7354,6 +7338,7 @@ check_metrics["check_mk-if_lancom"] = if_translation
 check_metrics["check_mk-if_brocade"] = if_translation
 check_metrics["check_mk-if"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
+check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
 check_metrics["check_mk-statgrab_net"] = if_translation
@@ -8544,49 +8529,27 @@ check_metrics["check_mk-mssql_counters.file_sizes"] = {
     },
 }
 
-check_metrics["check_mk-cisco_mem"] = {
+cisco_mem_translation = {
     "mem_used": {
-        "name": "mem_used_percent"
+        "name": "mem_used_percent",
+        "deprecated": True
     },
+}
+check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation
+check_metrics["check_mk-cisco_sys_mem"] = cisco_mem_translation
+
+cisco_mem_translation_with_trend = dict(cisco_mem_translation)
+cisco_mem_translation_with_trend.update({
     "growth": {
         "name": "mem_growth"
     },
     "trend": {
         "name": "mem_trend"
     },
-}
-
-check_metrics["check_mk-cisco_cpu_memory"] = {"mem_used": {"name": "cpu_mem_used_percent"}}
-
-check_metrics["check_mk-cisco_sys_mem"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-}
-
-check_metrics["check_mk-cisco_mem_asa"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-    "growth": {
-        "name": "mem_growth"
-    },
-    "trend": {
-        "name": "mem_trend"
-    },
-}
-
-check_metrics["check_mk-cisco_mem_asa64"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-    "growth": {
-        "name": "mem_growth"
-    },
-    "trend": {
-        "name": "mem_trend"
-    },
-}
+})
+check_metrics["check_mk-cisco_mem"] = cisco_mem_translation_with_trend
+check_metrics["check_mk-cisco_mem_asa"] = cisco_mem_translation_with_trend
+check_metrics["check_mk-cisco_mem_asa64"] = cisco_mem_translation_with_trend
 
 check_metrics["check_mk-fortigate_sessions_base"] = {
     "session": {

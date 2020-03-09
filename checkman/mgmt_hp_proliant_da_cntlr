@@ -16,6 +16,9 @@ description:
  This check has been developed with ProLiant DL360 G5 systems but should work
  on other HP Proliant Servers too.
 
+item:
+ Index of the controller
+
 inventory:
  One check is automatically created for each raid controller which is
  provided in the SNMP output.

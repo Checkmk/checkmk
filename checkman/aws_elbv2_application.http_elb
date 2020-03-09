@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB HTTP ELB
+title: AWS ApplicationELB: HTTP ELB
 agents: aws
 catalog: cloud/aws
 license: GPL

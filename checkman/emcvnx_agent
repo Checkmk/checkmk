@@ -17,8 +17,5 @@ description:
  your Storage device you can switch this off and save one call of naviseccli in
  every check interval.
 
-item:
- No item.
-
 inventory:
  Finds exactly one item on every EMC VNX storage system called EMC VNX Agent

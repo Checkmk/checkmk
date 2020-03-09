@@ -12,7 +12,7 @@ description:
  are configurable.
 
 item:
- Instance name.
+ Name of the instance
 
 inventory:
  One service per instance.

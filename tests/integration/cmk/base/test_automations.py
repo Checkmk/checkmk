@@ -1,17 +1,24 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import print_function
 # pylint: disable=redefined-outer-name
 import re
 import os
 import ast
 import subprocess
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 
+import cmk.utils.paths
+
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.utils.paths
 
 
 @pytest.fixture(scope="module")
@@ -95,17 +102,9 @@ def _execute_automation(site,
                         expect_stderr_pattern="",
                         expect_exit_code=0,
                         parse_data=True):
-    if args is None:
-        args = []
-
-    if args:
-        args = ["--"] + args
-
-    print(["cmk", "--automation", cmd] + args)
-    p = site.execute(["cmk", "--automation", cmd] + args,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE,
-                     stdin=subprocess.PIPE)
+    cmdline = ["cmk", "--automation", cmd] + ([] if args is None else args)
+    print(cmdline)
+    p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
     stdout, stderr = p.communicate(stdin)
 
@@ -125,7 +124,8 @@ def _execute_automation(site,
 
 
 def test_automation_discovery_no_host(test_cfg, site):
-    p = site.execute(["cmk", "--automation", "inventory", "@raiseerrors", "new"],
+    # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
+    p = site.execute(["cmk", "--automation", "inventory", "@scan", "new"],
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE)
 
@@ -203,11 +203,13 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
-    _execute_automation(site, "try-inventory",
+    _execute_automation(
+        site,
+        "try-inventory",
         args=["xxx-not-existing-host"],
-        expect_stderr_pattern=r"Failed to lookup IPv4 address of xxx-not-existing-host " \
-                              r"via DNS: (\[Errno -2\] Name or service not known"
-                              r"|\[Errno -3\] Temporary failure in name resolution)\n",
+        expect_stderr_pattern=(r"Failed to lookup IPv4 address of xxx-not-existing-host "
+                               r"via DNS: (\[Errno -2\] Name or service not known"
+                               r"|\[Errno -3\] Temporary failure in name resolution)\n"),
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,
@@ -215,9 +217,10 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
 
 
 def test_automation_try_discovery_host(test_cfg, site):
+
     data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
     assert isinstance(data, dict)
-    assert isinstance(data["output"], str)
+    assert isinstance(data["output"], six.text_type)
     assert isinstance(data["check_table"], list)
 
 
@@ -315,7 +318,7 @@ def test_automation_get_real_time_checks(test_cfg, site):
     assert len(data) > 5
 
     for check_type, title in data:
-        assert isinstance(check_type, str)
+        assert isinstance(check_type, six.text_type)
         assert isinstance(title, six.text_type)
 
 

@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored PDU Temperature Sensors
+title: Bachmann Bluenet Monitored Power Distribution Unit: Temperature
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPL
@@ -17,6 +17,6 @@ inventory:
  are included.
 
 item:
- The name of the sensor, which is either "internal" or "external {<id>}",
- and {<id>} is the numerical id of the sensor.
+ The name of the sensor, which is either "internal" or "external {<ID>}",
+ and {<ID>} is the numerical ID of the sensor.
 

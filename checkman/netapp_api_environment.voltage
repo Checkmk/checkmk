@@ -16,5 +16,8 @@ description:
  Please note: You need the Special Agent "NetApp via WebAPI" to retrieve the monitoring
  data from the device. The Special Agent itself can be configured by WATO.
 
+item:
+ Name of the sensor
+
 inventory:
  One check is created for each sensor giving voltage information.

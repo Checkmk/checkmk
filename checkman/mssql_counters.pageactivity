@@ -7,9 +7,12 @@ description:
  This check monitors the read/write/lookup activities on database pages of
  the MSSQL server.
 
- This check needs the Check_MK mssql.vbs -plugin installed in
+ This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
+
+item:
+ The MSSQL instance name and the tablespace name separated by a space.
 
 inventory:
  One check per instance is created.

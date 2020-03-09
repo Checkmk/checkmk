@@ -1,33 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
 import pprint
-from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Union, List, Optional  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -79,7 +60,7 @@ class RuleConditions(object):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
-        self.host_name = host_name
+        self.host_name = self._fixup_unicode_hosts(host_name)
         self.service_description = service_description
         self.service_labels = service_labels or {}
 
@@ -87,10 +68,31 @@ class RuleConditions(object):
         self.host_folder = conditions.get("host_folder", self.host_folder)
         self.host_tags = conditions.get("host_tags", {})
         self.host_labels = conditions.get("host_labels", {})
-        self.host_name = conditions.get("host_name")
+        self.host_name = self._fixup_unicode_hosts(conditions.get("host_name"))
         self.service_description = conditions.get("service_description")
         self.service_labels = conditions.get("service_labels", {})
         return self
+
+    # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+    # strings.  After reading the config into the GUI ensure we really
+    # process the host names as str. TODO: Can be removed with Python 3.
+    def _fixup_unicode_hosts(self, host_conditions):
+        # type: (Optional[Union[Dict[str, List[str]], List[str]]]) -> Optional[Union[Dict[str, List[str]], List[str]]]
+        if not host_conditions:
+            return host_conditions
+
+        if isinstance(host_conditions, list):
+            return [str(h) if isinstance(h, six.text_type) else h for h in host_conditions]
+
+        if isinstance(host_conditions, dict) and "$nor" in host_conditions:
+            assert len(host_conditions) == 1
+            return {
+                "$nor": [
+                    str(h) if isinstance(h, six.text_type) else h for h in host_conditions["$nor"]
+                ]
+            }
+
+        raise NotImplementedError()
 
     def to_config_with_folder_macro(self):
         """Create serializable data structure for the conditions
@@ -330,7 +332,7 @@ class RulesetCollection(object):
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(self, folder, only_varname=None):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
@@ -348,7 +350,7 @@ class AllRulesets(RulesetCollection):
         self._save_rulesets_recursively(Folder.root_folder())
 
     def _save_rulesets_recursively(self, folder):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
         self._save_folder(folder)
@@ -750,7 +752,7 @@ class Ruleset(object):
                           "for editing and save the rule again without modification.") %
                         (rule_index, self.title(), folder.title()))
 
-                new_result = rule.value.copy()  # pylint: disable=no-member
+                new_result = rule.value.copy()
                 new_result.update(resultdict)
                 resultdict = new_result
                 effectiverules.append((folder, rule_index, rule))
@@ -964,16 +966,18 @@ class Rule(object):
     #    # (that is not useful in this situation)
     #    matcher.ruleset_optimizer.clear_host_ruleset_cache()
 
+    #    ruleset = [rule_dict]
+
     #    if match_service_conditions:
     #        if list(
     #                matcher.get_service_ruleset_values(
-    #                    match_object, [rule_dict],
+    #                    match_object, ruleset,
     #                    is_binary=self.ruleset.rulespec.is_binary_ruleset)):
     #            return
     #    else:
     #        if list(
     #                matcher.get_host_ruleset_values(
-    #                    match_object, [rule_dict],
+    #                    match_object, ruleset,
     #                    is_binary=self.ruleset.rulespec.is_binary_ruleset)):
     #            return
 

@@ -9,7 +9,7 @@ description:
  It uses the state reported by SNMP and prints the role name and serial
  number reported of each manager board.
 
- Each manager which is present while the Check_MK service discovery will result in an
+ Each manager which is present while the Checkmk service discovery will result in an
  own service. If the manager is not available anymore this service will be shown
  as CRITICAL service.
 
@@ -18,7 +18,7 @@ description:
  other information like role name and serial number will be printed anyway.
 
 item:
- Number of the manager (as string, not int).
+ Number of the manager
 
 inventory:
  All manager boards with the present state "present" are automatically inventorized.

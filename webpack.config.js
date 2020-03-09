@@ -102,6 +102,9 @@ if (process.env.WEBPACK_MODE === "quick") {
         include: [
             path.resolve(__dirname, "web/htdocs/js"),
             path.resolve(__dirname, "node_modules/d3"),
+            path.resolve(__dirname, "node_modules/d3-flextree"),
+            path.resolve(__dirname, "node_modules/d3-sankey"),
+            path.resolve(__dirname, "node_modules/crossfilter2"),
         ],
         use: {
             loader: "babel-loader",

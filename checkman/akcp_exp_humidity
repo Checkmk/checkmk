@@ -1,4 +1,4 @@
-title: AKCP Expansion Humidity Sensor
+title: AKCP securityProbe: Humidity
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

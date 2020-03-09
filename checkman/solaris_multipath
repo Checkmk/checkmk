@@ -22,7 +22,7 @@ description:
  last inventory.
 
 item:
- A service the WWID of the LUN.
+ The WWID (Word Wide Identifier) of the logical unit number.
 
 inventory:
  One service is created for each LUN that is reported by mpathadm. The total

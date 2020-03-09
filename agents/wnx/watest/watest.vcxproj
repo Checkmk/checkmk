@@ -147,12 +147,7 @@
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-
+copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -188,14 +183,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -233,13 +222,7 @@
     </CustomBuildStep>
     <PostBuildEvent>
       <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-
-)
-
+copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -277,15 +260,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-
-)
-
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -313,6 +289,7 @@
     <ClCompile Include="test-cfg_engine.cpp" />
     <ClCompile Include="test-cma-tools.cpp" />
     <ClCompile Include="test-commander.cpp" />
+    <ClCompile Include="test-common.cpp" />
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
@@ -321,6 +298,7 @@
     <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />
+    <ClCompile Include="test-modules.cpp" />
     <ClCompile Include="test-mrpe.cpp" />
     <ClCompile Include="test-object_repo.cpp" />
     <ClCompile Include="test-ohm.cpp" />
@@ -357,6 +335,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="test-zip.cpp" />
     <ClCompile Include="test_check_mk.cpp" />
     <ClCompile Include="test_tools.cpp" />
     <ClCompile Include="watest.cpp" />

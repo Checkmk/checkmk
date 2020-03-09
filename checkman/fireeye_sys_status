@@ -10,8 +10,5 @@ description:
  The check is OK if the the system status is good.
  Otherwise it is WARN.
 
-item:
- No item.
-
 inventory:
  One service is created.

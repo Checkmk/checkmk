@@ -23,7 +23,4 @@ description:
  no resources are consumed).
 
 item:
- A user definable string that is used as part of the service description.
- If you choose {"APACHE"} as item, for example, then the check will be
- named {proc_APACHE}.
-
+ The name of process

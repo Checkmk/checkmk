@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import re
@@ -43,7 +23,7 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers  # pylint: disable=unused-import
 
 
 @snapin_registry.register
@@ -58,9 +38,11 @@ class QuicksearchSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Interactive search field for direct access to hosts, services, host- and "\
-                 "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
-                 "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
+        return _(
+            "Interactive search field for direct access to hosts, services, host- and "
+            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
+            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+        )
 
     def show(self):
         html.open_div(id_="mk_side_search",
@@ -80,20 +62,22 @@ class QuicksearchSnapin(SidebarSnapin):
         return ["user", "admin", "guest"]
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {
             "ajax_search": self._ajax_search,
             "search_open": self._page_search_open,
         }
 
     def _ajax_search(self):
-        q = _maybe_strip(html.get_unicode_input('q'))
+        # type: () -> None
+        q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
 
         try:
             generate_results(q)
         except MKException as e:
-            html.show_error(e)
+            html.show_error("%s" % e)
         except Exception as e:
             logger.exception("error generating quicksearch results")
             if config.debug:
@@ -101,6 +85,7 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self):
+        # type: () -> None
         q = _maybe_strip(html.request.var('q'))
         if not q:
             return
@@ -166,7 +151,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def get_match_topic(self):
         if len(self._used_filters.keys()) > 1:
             return "Multi-Filter"
-        shortname = self._used_filters.keys()[0]
+        shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
     def _get_plugin_with_shortname(self, shortname):
@@ -505,13 +490,11 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         for search_object in self._search_objects:
             if not search_object.num_rows():
                 continue
-            elements = search_object.get_elements()
-            elements.sort(key=lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
-            for entry in elements:
+            for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],
                        id="result_%s" % self._query,
                        href=entry["url"],
@@ -657,7 +640,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
     def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
-            ### View name    url fieldname,                  key in row
+            # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
             "hostgroup": ["hostgroup", "name"],
             "hostgroups": ["hostgroup_regex", "name"],

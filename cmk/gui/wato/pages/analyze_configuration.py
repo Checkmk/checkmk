@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
@@ -51,10 +31,13 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
 )
+from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
 from cmk.gui.watolib.changes import activation_sites
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
+    ACResultOK,
+    ACResultCRIT,
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )
@@ -91,7 +74,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         test_id = html.request.var("_test_id")
         site_id = html.request.var("_site_id")
-        status_id = html.get_integer_input("_status_id", 0)
+        status_id = html.request.get_integer_input_mandatory("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
@@ -284,6 +267,12 @@ class ModeAnalyzeConfig(WatoMode):
                         result = ACResult.from_repr(result_data)
                         test_results.append(result)
 
+                    # Add general connectivity result
+                    result = ACResultOK(_("No connectivity problems"))
+                    result.from_test(ACTestConnectivity())
+                    result.site_id = site_id
+                    test_results.append(result)
+
                     results_by_site[site_id] = test_results
 
                 else:
@@ -293,8 +282,12 @@ class ModeAnalyzeConfig(WatoMode):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
+                result = ACResultCRIT("%s" % e)
+                result.from_test(ACTestConnectivity())
+                result.site_id = site_id
+                results_by_site[site_id] = [result]
+
                 logger.exception("error analyzing configuration for site %s", site_id)
-                html.show_error("%s: %s" % (site_id, e))
 
         self._logger.debug("Got test results")
 
@@ -344,7 +337,9 @@ class ModeAnalyzeConfig(WatoMode):
 
             else:
                 results_data = watolib.do_remote_automation(config.site(site_id),
-                                                            "check-analyze-config", [])
+                                                            "check-analyze-config", [],
+                                                            timeout=html.request.request_timeout -
+                                                            10)
 
             self._logger.debug("[%s] Finished" % site_id)
 

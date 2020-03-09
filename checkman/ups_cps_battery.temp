@@ -10,4 +10,4 @@ inventory:
  One check per device is created.
 
 item:
- The string "Battery"
+ The fixed statement {{Battery}}

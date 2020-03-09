@@ -1,0 +1,18 @@
+title: Monitors an IBM MQ Queue
+agents: linux, solaris, aix, hpux
+catalog: app/ibm_mq
+license: GPL
+distribution: check_mk
+description:
+ This check monitors an IBM MQ Queue. It uses following metrics of the {display
+ qstatus} command: CURDEPTH, MSGAGE, LGETDATE, LPUTDATE, IPPROCS, OPPROCS.
+
+ For each metric thresholds for WARN or CRITICAL state can be configured.
+
+item:
+ The name of the queue, prefixed by the queue manager name.
+
+inventory:
+ For each queue manager, show the queue name, maximum number of messages and
+ maximum message size.
+

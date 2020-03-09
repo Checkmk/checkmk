@@ -1,4 +1,4 @@
-title: Memory usage of Couchbase buckets
+title: Couchbase buckets: Memory usage
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -12,4 +12,4 @@ inventory:
  One service per bucket is created.
 
 item:
- The item is the name of the bucket.
+ The name of the bucket.

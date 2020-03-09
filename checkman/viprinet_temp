@@ -6,6 +6,9 @@ distribution: check_mk
 description:
  This check display the temperature of the CPU and System temperature sensors
 
+item:
+ One of the two statements: {{CPU}}, {{System}}
+
 inventory:
  Creates two checks "Temperature CPU" and "Temperature System"
 

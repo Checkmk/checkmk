@@ -1,4 +1,4 @@
-title: IBM Datapower Memory Usage
+title: IBM Datapower: Memory Usage
 agents: snmp
 catalog: hw/network/ibm
 license: GPL
@@ -14,3 +14,6 @@ description:
 
 inventory:
  On each gateway one service is created.
+
+item:
+ Empty string

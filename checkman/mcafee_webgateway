@@ -10,8 +10,5 @@ description:
  No default levels are set. Upper levels for infections and blocked connections
  are configurable.
 
-item:
- No item.
-
 inventory:
  One service is created.

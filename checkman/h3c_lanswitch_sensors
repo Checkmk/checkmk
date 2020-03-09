@@ -27,5 +27,5 @@ inventory:
  The check will add one service per sensor.
 
 item:
- The fan or powersupply sensor found by inventory (it's OID is a multiple of 65536 and will be divided to come to a sane value)
-
+ {{Unit}} followed by the ID of the unit followed by the detected sensor (i.e. {{Fan}}
+ or {{Powersupply}} and his identification number

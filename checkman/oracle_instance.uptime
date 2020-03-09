@@ -9,4 +9,4 @@ description:
  There are no default levels. Upper and lower levels can be configured in WATO.
 
 item:
- ORA <ORACLE_SID> Uptime
+ The ORACLE_SID

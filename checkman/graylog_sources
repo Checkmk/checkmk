@@ -12,7 +12,7 @@ description:
  Needs the datasource "Check state of Graylog" to be configured.
 
 item:
- The item is the name of the source.
+ The name of the source.
 
 inventory:
  One service for each source {"Graylog Source my_source"} will be created.

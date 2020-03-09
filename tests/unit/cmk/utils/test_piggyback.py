@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import time
 import os
 import pytest  # type: ignore[import]
@@ -12,20 +18,20 @@ piggyback_max_cachefile_age = 3600
 def test_config():
     piggyback_dir = cmk.utils.paths.piggyback_dir
     host_dir = piggyback_dir / "test-host"
-    host_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    host_dir.mkdir(parents=True, exist_ok=True)
 
     for f in piggyback_dir.glob("*/*"):
         f.unlink()
 
     source_file = piggyback_dir / "test-host" / "source1"
-    with source_file.open(mode="wb") as f:  # pylint: disable=no-member
+    with source_file.open(mode="wb") as f:
         f.write(b"<<<check_mk>>>\nlala\n")
 
-    cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
-    with source_status_file.open("wb") as f:  # pylint: disable=no-member
+    with source_status_file.open("wb") as f:
         f.write(b"")
-    source_stat = source_status_file.stat()  # pylint: disable=no-member
+    source_stat = source_status_file.stat()
 
     os.utime(str(source_file), (source_stat.st_atime, source_stat.st_mtime))
 
@@ -262,7 +268,7 @@ def test_store_piggyback_raw_data_second_source():
 
 def test_get_source_and_piggyback_hosts():
     time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
-    cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)
 
     piggyback.store_piggyback_raw_data("source1", {
         "test-host2": [

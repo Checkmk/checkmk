@@ -1,4 +1,9 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
@@ -6,7 +11,7 @@ import os
 import sys
 import tempfile
 import shutil
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
 import testlib.pylint_cmk as pylint_cmk
@@ -90,7 +95,7 @@ def _get_files_to_check(pylint_test_dir):
         _compile_bakery_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3
-    if sys.version_info[0] == 2:
+    if sys.version_info[0] == 3:
         files += [
             pylint_test_dir,
         ]
@@ -126,7 +131,6 @@ def inv_tree(path, default_value=None):
         node = default_value
     else:
         node = {}
-
     return node
 """)
 

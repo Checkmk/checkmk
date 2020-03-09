@@ -1,0 +1,12 @@
+[run]
+source =
+    ../active_checks
+    ../agents
+    ../bin
+    ../checkman
+    ../checks
+    ../cmk
+    ../enterprise/cmk/cee
+    ../tests/unit
+    ../web
+branch = True

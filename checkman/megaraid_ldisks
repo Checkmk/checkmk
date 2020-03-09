@@ -16,8 +16,7 @@ description:
  by the driver {megaraid_sas}.
 
 item:
- A string containing the number of the adapter and the logical disk, separated
- by a slash, e.g. {"0/0"}.
+ The number of the adapter and the logical disk, separated by a slash, e.g. {"0/0"}.
 
 inventory:
  All logical disks are automatically inventorized. All states other than

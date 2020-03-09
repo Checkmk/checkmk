@@ -1,4 +1,4 @@
-title: FANs of Fujitsu Siemens (FSC) Servers using ServerView Agent
+title:  Fujitsu Siemens FSC: Fan status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -13,6 +13,9 @@ description:
 
  The check raises a WARNING state when the fan speed is below 90% of the maximum
  fan speed. The CRITICAL state is reported when the fan speed drops below 80%.
+
+item:
+ Name of the fan
 
 inventory:
  The check creates one service for each FAN provided in the SNMP data.

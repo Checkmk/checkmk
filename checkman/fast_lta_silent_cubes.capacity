@@ -13,7 +13,7 @@ description:
  parameters and examples please refer to the man page of {df}.
 
 item:
- "Total" for now is the only item.
+ The fixed statement {{Total}}
 
 inventory:
  Finds exactly one check on every system (head unit).

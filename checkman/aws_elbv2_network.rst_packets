@@ -1,4 +1,4 @@
-title: AWS/NetworkELB Reset Packets
+title: AWS NetworkELB: Reset Packets
 agents: aws
 catalog: cloud/aws
 license: GPL

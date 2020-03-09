@@ -1,6 +1,6 @@
 title: Retrieve informational SNMP data about Brocade switches
 agents: snmp
-catalog: hw/storagehw/brocade
+catalog: os/misc 
 license: GPL
 distribution: check_mk
 description:

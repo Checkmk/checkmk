@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module contains functions that can be used in all Check_MK components
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
@@ -54,6 +34,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
 import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.encoding import ensure_unicode
 
 
 @contextlib.contextmanager
@@ -233,7 +214,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / self.type() / ident_text  # type: ignore
+        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
 
     def local_crash_report_url(self):
         # type: () -> Text
@@ -261,7 +242,7 @@ def _get_generic_crash_info(type_name, details):
     # exception.
     # Re-raising exceptions will be much easier with Python 3.x.
     if exc_type and exc_value and exc_type.__name__ == "MKParseFunctionError":
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore[attr-defined]
 
     # Unify different string types from exception messages to a unicode string
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
@@ -290,7 +271,8 @@ def _get_generic_crash_info(type_name, details):
         "python_paths": sys.path,
         "exc_type": exc_type.__name__ if exc_type else None,
         "exc_value": exc_txt,
-        "exc_traceback": tb_list,
+        # Py3: Make traceback.FrameSummary serializable
+        "exc_traceback": [tuple(e) for e in tb_list],
         "local_vars": _get_local_vars_of_last_exception(),
         "details": details,
     }
@@ -355,7 +337,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return six.text_type(
+    return ensure_unicode(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

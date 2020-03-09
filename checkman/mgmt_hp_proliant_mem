@@ -12,6 +12,9 @@ description:
 
  The check monitors the reported state of the builtin memory state sensors.
 
+item:
+ The unique memory DIMM on memort board
+
 inventory:
  One check is automatically created for each memory module which is
  provided in the SNMP output and marked as present.

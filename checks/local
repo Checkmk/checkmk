@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent:
 # 0 Service_FOO V=1 This Check is OK
@@ -55,13 +35,16 @@ def _try_convert_to_float(value):
 
 
 def _parse_cache(line, now):
+    """add cache info, if found"""
     if not line or not line[0].startswith("cached("):
-        return 0, line
+        return None, line
 
     cache_raw, stripped_line = line[0], line[1:]
-    time, maxage = (float(v) for v in cache_raw[7:-1].split(',', 1))
+    time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
+    age = now - time
 
-    return max(now - time - maxage, 0), stripped_line
+    # make sure max(..) will give the oldest/most outdated case
+    return (age, 100.0 * age / interval, interval), stripped_line
 
 
 def _is_valid_line(line):
@@ -142,7 +125,7 @@ def _parse_perftxt(string):
 
 def parse_local(info):
     LocalResult = collections.namedtuple("LocalResult",
-                                         ("node", "expired", "item", "state", "text", "perfdata"))
+                                         ("node", "cached", "item", "state", "text", "perfdata"))
 
     now = time.time()
     parsed = {}
@@ -153,11 +136,11 @@ def parse_local(info):
             # In python2 shlex uses cStringIO (if available), which is not able to deal with unicode
             # strings *urgs* (See https://docs.python.org/2/library/stringio.html#module-cStringIO).
             # To workaround this, we encode/and decode for shlex.
-            stripped_line = [s.decode("utf-8") for s in shlex.split(line[1].encode("utf-8"))]
+            stripped_line = [six.ensure_text(s) for s in shlex.split(six.ensure_str(line[1]))]
         else:
             stripped_line = line[1:]
         node = line[0]
-        expired, stripped_line = _parse_cache(stripped_line, now)
+        cached, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
             # just pass on the line, to report the offending ouput
             parsed.setdefault(None, []).append(" ".join(stripped_line))
@@ -172,7 +155,7 @@ def parse_local(info):
         if state_msg or perf_msg:
             state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed.setdefault(item, []).append(LocalResult(node, expired, item, state, text, perfdata))
+        parsed.setdefault(item, []).append(LocalResult(node, cached, item, state, text, perfdata))
 
     return parsed
 
@@ -180,13 +163,13 @@ def parse_local(info):
 # Compute state according to warn/crit levels contained in the
 # performance data.
 def local_compute_state(perfdata):
-    texts = []
-    worst = 0
-    for entry in perfdata:
-        state, text = check_levels(entry.value, None, entry.levels, infoname=entry.name)[:2]
-        worst = max(worst, state)
-        texts.append(text)
-    return worst, texts
+    return [
+        check_levels(entry.value,
+                     entry.name,
+                     entry.levels,
+                     infoname=entry.name,
+                     boundaries=entry.tuple[-2:]) for entry in perfdata
+    ]
 
 
 def inventory_local(parsed):
@@ -201,55 +184,56 @@ def inventory_local(parsed):
 def _parse_local_line(result):
 
     if result.state != 'P':
-        return result.state, result.text, [p.tuple for p in result.perfdata]
+        return [(result.state, result.text, [p.tuple for p in result.perfdata])]
 
-    state, texts = local_compute_state(result.perfdata)
-    if result.text:
-        texts.insert(0, result.text)
-    text = ", ".join(texts)
-    return state, text, [p.tuple for p in result.perfdata]
+    local_results = [(0, result.text, [])] if result.text else []
+
+    return local_results + local_compute_state(result.perfdata)
 
 
 def _calculate_local_best_state(collected_stats):
-    states = []
-    infotexts = []
-    perfdatas = []
-    for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.values():
-            if nodename is not None:
-                output = "On node %s: %s" % (nodename, output)
-            states.append(state)
-            infotexts.append(output)
-            perfdatas += perfdata
-    return min(states), ", ".join(infotexts), perfdatas
+    states, infotexts, perfdata = zip(*_iterate_all_check_results(collected_stats))
+
+    # First element might be dummy info, need to drop when calculating best state
+    best_state = min(states[1:]) if len(states) > 1 and not perfdata[0] else states[0]
+
+    return best_state, ", ".join(infotexts), sum(perfdata, [])
 
 
-def _calculate_local_worst_state(collected_stats):
+def _iterate_all_check_results(collected_stats):
     for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.values():
-            if nodename is not None:
-                output = "On node %s: %s" % (nodename, output)
-            yield state, output, perfdata
+        for entry in attrs.values():
+            for ent, (state, output, perfdata) in enumerate(entry):
+                if ent == 0 and nodename is not None:
+                    output = "On node %s: %s" % (nodename, output)
+                yield state, output, perfdata
 
 
 @get_parsed_item_data
 def check_local(_no_item, params, data):
+    cache_infos = [result.cached for result in data if result.cached is not None]
+    # We try to mimic the behaviour of cached agent sections.
+    # Problem here: We need this info on a per-service basis, so we cannot use the section header.
+    # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
+    if cache_infos:
+        cache_info = max(cache_infos)
+        infotext = "Cache generated %s ago, cache interval: %s, elapsed cache lifespan: %s" % (
+            get_age_human_readable(cache_info[0]),
+            get_age_human_readable(cache_info[2]),
+            get_percent_human_readable(cache_info[1]),
+        )
+        yield 0, infotext
+
     collected_stats = {}
     for result in data:
-        if result.expired > 0:
-            continue
         node_dict = collected_stats.setdefault(result.node, {})
         node_dict.setdefault(result.item, _parse_local_line(result))
-    if not collected_stats:
-        most_recent_expirery = min(r.expired for r in data)
-        raise MKCounterWrapped("Cached data expired %s ago." %
-                               get_age_human_readable(most_recent_expirery))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)
         return
     else:
-        for res in _calculate_local_worst_state(collected_stats):
+        for res in _iterate_all_check_results(collected_stats):
             yield res
 
 

@@ -1,6 +1,6 @@
 title: Perle Mediaconverter: Chassis temperature
 agents: snmp
-catalog: hw/app/perle
+catalog: hw/network/perle
 license: GPL
 distribution: check_mk
 description:
@@ -10,7 +10,7 @@ description:
  There are no default levels set. Upper and lower levels are configurable.
 
 item:
- The chassis.
+ The fixed statement {{chassis}}
 
 inventory:
  One service is created.

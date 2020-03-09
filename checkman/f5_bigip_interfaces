@@ -7,5 +7,8 @@ description:
  This check will monitor the special network interfaces on a F5 Bigip device.
  It shows the current bandwidth of the connection an detects changes of the port state.
 
+item:
+ Name of the interface
+
 inventory:
  Eeach interface which is up will be added as a new check.

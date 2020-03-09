@@ -1,4 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Create/Update/Remove GLPI Ticket
 # Bulk: No
 
@@ -533,9 +538,9 @@ def import_settings(base_dir):
     }
 
     if os.path.isfile(defaults_cfg):
-        exec (open(defaults_cfg).read(), settings, settings)
+        exec(open(defaults_cfg).read(), settings, settings)
     if os.path.isfile(ticket_cfg):
-        exec (open(ticket_cfg).read(), settings, settings)
+        exec(open(ticket_cfg).read(), settings, settings)
 
     # execfile put all tho globals into settings, including modules.
     # This doesn't acually hurt but let's clean up a bit anyway

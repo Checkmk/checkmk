@@ -1,39 +1,21 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """The rulespecs are the ruleset specifications registered to WATO."""
 
 import abc
 import re
-from typing import Text, Dict, List, Type, Optional, Any, Callable  # pylint: disable=unused-import
-from typing import Tuple as TypingTuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Union, Text, Dict, List, Type, Optional, Any, Callable, Tuple as TypingTuple,
+)
 import six
 
 import cmk.utils.plugin_registry
 
 from cmk.gui.globals import html
+from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     Dictionary,
@@ -55,7 +37,7 @@ class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all rulespec group types"""
     @abc.abstractproperty
     def name(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         raise NotImplementedError()
 
@@ -67,7 +49,7 @@ class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def help(self):
-        # type: () -> Text
+        # type: () -> Optional[Text]
         """Helpful description of this group"""
         raise NotImplementedError()
 
@@ -85,7 +67,7 @@ class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
 class RulespecGroup(RulespecBaseGroup):
     @abc.abstractproperty
     def name(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         raise NotImplementedError()
 
@@ -103,38 +85,46 @@ class RulespecGroup(RulespecBaseGroup):
 
     @property
     def is_sub_group(self):
+        # type: () -> bool
         return False
 
     @property
     def choice_title(self):
+        # type: () -> Text
         return self.title
 
 
 class RulespecSubGroup(six.with_metaclass(abc.ABCMeta, RulespecBaseGroup)):
     @abc.abstractproperty
     def main_group(self):
+        # type: () -> Type[RulespecGroup]
         """A reference to the main group class"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def sub_group_name(self):
+        # type: () -> str
         """The internal name of the sub group"""
         raise NotImplementedError()
 
     @property
     def name(self):
+        # type: () -> str
         return "/".join([self.main_group().name, self.sub_group_name])
 
     @property
     def choice_title(self):
+        # type: () -> Text
         return u"&nbsp;&nbsp;⌙ %s" % self.title
 
     @property
     def help(self):
+        # type: () -> None
         return None  # Sub groups currently have no help text
 
     @property
     def is_sub_group(self):
+        # type: () -> bool
         return True
 
 
@@ -146,21 +136,28 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         }  # type: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]]
 
     def plugin_base_class(self):
+        # type: () -> Type[RulespecBaseGroup]
         return RulespecBaseGroup
 
     def plugin_name(self, plugin_class):
+        # type: (Type[RulespecBaseGroup]) -> str
         return plugin_class().name
 
     def registration_hook(self, plugin_class):
+        # type: (Type[RulespecBaseGroup]) -> None
         group = plugin_class()
         if not group.is_sub_group:
+            assert issubclass(plugin_class, RulespecGroup)
             self._main_groups.append(plugin_class)
         else:
+            assert issubclass(plugin_class, RulespecSubGroup)
+            assert isinstance(group, RulespecSubGroup)
             self._sub_groups_by_main_group.setdefault(group.main_group, []).append(plugin_class)
 
     def get_group_choices(self, mode):
+        # type: (str) -> List[TypingTuple[str, Text]]
         """Returns all available ruleset groups to be used in dropdown choices"""
-        choices = []
+        choices = []  # type: List[TypingTuple[str, Text]]
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
@@ -196,8 +193,9 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return [name for name in self._entries if name == group_name]
 
     def get_host_rulespec_group_names(self):
+        # type: () -> List[str]
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
-        names = []
+        names = []  # type: List[str]
         hidden_groups = ("static", "checkparams", "activechecks")
         hidden_main_groups = ("monconf", "agents", "agent")
         for g_class in self.values():
@@ -464,7 +462,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> Optional[Text]
         if self._title:
             return self._title()
 
@@ -472,7 +470,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def help(self):
-        # type: () -> Text
+        # type: () -> Union[None, Text, HTML]
         if self._help:
             return self._help()
 
@@ -517,7 +515,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def item_help(self):
-        # type: () -> Optional[Text]
+        # type: () -> Union[None, Text, HTML]
         if self._item_help:
             return self._item_help()
 

@@ -11,8 +11,7 @@ description:
  be {OK}, {WARN}, {CRIT} or {UNKNOWN}.
 
 item:
- The description of the service as provided by
- the device.
+ The name of the subsystem
 
 inventory:
  One check for each service is created by the inventory, if the

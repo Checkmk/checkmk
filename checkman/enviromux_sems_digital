@@ -1,4 +1,4 @@
-title: enviromux_digital_sems
+title: NTI Enviromux SEMS: Digital sensors
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

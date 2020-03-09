@@ -50,6 +50,9 @@ stamp-h1
 tags
 tests/web/data/*
 .idea/
+/*.wpr
+/*.wpu
+/.tmp*
 *.iml
 .venv
 *.gcov

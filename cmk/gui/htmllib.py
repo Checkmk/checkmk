@@ -1,35 +1,15 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO:
 #
 # Notes for future rewrite:
 #
 # - Find all call sites which do something like "int(html.request.var(...))"
-#   and replace it with html.get_integer_input(...)
+#   and replace it with html.request.get_integer_input_mandatory(...)
 #
 # - Make clear which functions return values and which write out values
 #   render_*, add_*, write_* (e.g. icon() -> outputs directly,
@@ -55,20 +35,20 @@
 # - Split HTML handling (page generating) code and generic request
 #   handling (vars, cookies, ...) up into separate classes to make
 #   the different tasks clearer. For ABCHTMLGenerator() or similar.
+#
+# - Unify CSS classes attribute to "class_"
 
 import sys
 import time
 import os
-import urllib
 import ast
 import re
 import json
 import abc
 import pprint
 from contextlib import contextmanager
-# suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast, Mapping, Set,
+    Union, Text, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING,
 )
 
 import six
@@ -85,17 +65,20 @@ else:
 #
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
-    return getattr(obj.__class__, "to_json", _default.default)(obj)
+    # type: (json.JSONEncoder, object) -> Text
+    # ignore attr-defined: See hack below
+    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 
 
 # TODO: suppress mypy warnings for this monkey patch right now. See also:
 # https://github.com/python/mypy/issues/2087
 # Save unmodified default:
-_default.default = json.JSONEncoder().default  # type: ignore
+_default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
 # replacement:
-json.JSONEncoder.default = _default  # type: ignore
+json.JSONEncoder.default = _default  # type: ignore[assignment]
 
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
@@ -107,18 +90,25 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.url_encoder import URLEncoder, HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import URLEncoder  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.http import Request, Response  # pylint: disable=unused-import
-from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
+
+if TYPE_CHECKING:
+    from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 # TODO: Cleanup this mess.
-CSSSpec = Union[None, List[str], str]
+CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
+HTMLTagValue = Union[None, str, Text]
 HTMLTagContent = Optional[Union[str, Text, HTML]]
-HTMLTagAttributeValue = Union[None, CSSSpec, str, Text, List[Union[str, Text]]]
+HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
+Choices = List[Tuple[Union[None, str, Text], Text]]
+DefaultChoice = Union[str, Text]
+FoldingIndent = Union[str, None, bool]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -234,7 +224,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
             if k in attrs:
                 cls_spec = cast(CSSSpec, attrs.pop(k))
                 if isinstance(cls_spec, list):
-                    css.extend(cls_spec)
+                    css.extend([c for c in cls_spec if c is not None])
                 elif cls_spec is not None:
                     css.append(cls_spec)
         return css
@@ -268,11 +258,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_text(self, text):
-        # type: (Union[Text, HTML]) -> HTML
+        # type: (Union[None, int, str, Text, HTML]) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
-        # type: (Text) -> None
+        # type: (Union[None, int, str, Text, HTML]) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
@@ -307,13 +297,15 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_opening_tag('base', close_tag=True, target=target))
 
     def open_a(self, href, **attrs):
-        # type: (str, **HTMLTagAttributeValue) -> None
-        attrs['href'] = href
+        # type: (Optional[str], **HTMLTagAttributeValue) -> None
+        if href is not None:
+            attrs['href'] = href
         self.write_html(self._render_opening_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> HTML
-        attrs['href'] = href
+        # type: (HTMLTagContent, Optional[Union[Text, str]], **HTMLTagAttributeValue) -> HTML
+        if href is not None:
+            attrs['href'] = href
         return self._render_content_tag('a', content, **attrs)
 
     def a(self, content, href, **attrs):
@@ -378,13 +370,13 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name, type_, **attrs):
-        # type: (str, str, **HTMLTagAttributeValue) -> HTML
+        # type: (Optional[str], str, **HTMLTagAttributeValue) -> HTML
         attrs['type_'] = type_
         attrs['name'] = name
         return self._render_opening_tag('input', close_tag=True, **attrs)
 
     def input(self, name, type_, **attrs):
-        # type: (str, str, **HTMLTagAttributeValue) -> None
+        # type: (Optional[str], str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_input(name, type_, **attrs))
 
     #
@@ -488,9 +480,13 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_content_tag("th", content, **kwargs))
 
-    def td(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
-        self.write_html(self._render_content_tag("td", content, **kwargs))
+    def td(self, content, colspan=None, **kwargs):
+        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> None
+        self.write_html(
+            self._render_content_tag("td",
+                                     content,
+                                     colspan=str(colspan) if colspan is not None else None,
+                                     **kwargs))
 
     def option(self, content, **kwargs):
         # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
@@ -796,17 +792,24 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> None
         self.write_html(self._render_closing_tag("input"))
 
-    def open_td(self, **kwargs):
-        # type: (**HTMLTagAttributeValue) -> None
-        self.write_html(self._render_opening_tag("td", close_tag=False, **kwargs))
+    def open_td(self, colspan=None, **kwargs):
+        # type: (Optional[int], **HTMLTagAttributeValue) -> None
+        self.write_html(
+            self._render_opening_tag("td",
+                                     close_tag=False,
+                                     colspan=str(colspan) if colspan is not None else None,
+                                     **kwargs))
 
     def close_td(self):
         # type: () -> None
         self.write_html(self._render_closing_tag("td"))
 
-    def render_td(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
-        return self._render_content_tag("td", content, **kwargs)
+    def render_td(self, content, colspan=None, **kwargs):
+        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> HTML
+        return self._render_content_tag("td",
+                                        content,
+                                        colspan=str(colspan) if colspan is not None else None,
+                                        **kwargs)
 
     def open_thead(self, **kwargs):
         # type: (**HTMLTagAttributeValue) -> None
@@ -1122,6 +1125,8 @@ class html(ABCHTMLGenerator):
         self.enable_debug = False
         self.screenshotmode = False
         self.have_help = False
+        # TODO: Clean this foldable specific state member up
+        self.folding_indent = None  # type: FoldingIndent
 
         # browser options
         self.output_format = "html"
@@ -1172,8 +1177,7 @@ class html(ABCHTMLGenerator):
         self.response.headers["Cache-Control"] = "no-cache"
 
         try:
-            output_format = self.get_ascii_input("output_format", "html")
-            assert output_format is not None
+            output_format = self.request.get_ascii_input_mandatory("output_format", "html")
             self.set_output_format(output_format.lower())
         except (MKUserError, MKGeneralException):
             pass  # Silently ignore unsupported formats
@@ -1238,7 +1242,7 @@ class html(ABCHTMLGenerator):
     # makes it white instead.
     def _init_screenshot_mode(self):
         # type: () -> None
-        if self.request.var("screenshotmode", config.screenshotmode):
+        if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
 
     def _requested_file_name(self):
@@ -1283,10 +1287,10 @@ class html(ABCHTMLGenerator):
         # These regexes are taken from the public domain code of Matt Sullivan
         # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
         reg_b = re.compile(
-            r"android.+mobile|avantgo|bada\\/|blackberry|bb10|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|symbian|treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino",
+            r"android.+mobile|avantgo|bada\\/|blackberry|bb10|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|symbian|treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino",  # noqa: E501
             re.I | re.M)
         reg_v = re.compile(
-            r"1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\\-(n|u)|c55\\/|capi|ccwa|cdm\\-|cell|chtm|cldc|cmd\\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\\-s|devi|dica|dmob|do(c|p)o|ds(12|\\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\\-|_)|g1 u|g560|gene|gf\\-5|g\\-mo|go(\\.w|od)|gr(ad|un)|haie|hcit|hd\\-(m|p|t)|hei\\-|hi(pt|ta)|hp( i|ip)|hs\\-c|ht(c(\\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\\-(20|go|ma)|i230|iac( |\\-|\\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\\/)|klon|kpt |kwc\\-|kyo(c|k)|le(no|xi)|lg( g|\\/(k|l|u)|50|54|e\\-|e\\/|\\-[a-w])|libw|lynx|m1\\-w|m3ga|m50\\/|ma(te|ui|xo)|mc(01|21|ca)|m\\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\\-2|po(ck|rt|se)|prox|psio|pt\\-g|qa\\-a|qc(07|12|21|32|60|\\-[2-7]|i\\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\\-|oo|p\\-)|sdk\\/|se(c(\\-|0|1)|47|mc|nd|ri)|sgh\\-|shar|sie(\\-|m)|sk\\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\\-|v\\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\\-|tdg\\-|tel(i|m)|tim\\-|t\\-mo|to(pl|sh)|ts(70|m\\-|m3|m5)|tx\\-9|up(\\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\\-|2|g)|yas\\-|your|zeto|zte\\-",
+            r"1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\\-(n|u)|c55\\/|capi|ccwa|cdm\\-|cell|chtm|cldc|cmd\\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\\-s|devi|dica|dmob|do(c|p)o|ds(12|\\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\\-|_)|g1 u|g560|gene|gf\\-5|g\\-mo|go(\\.w|od)|gr(ad|un)|haie|hcit|hd\\-(m|p|t)|hei\\-|hi(pt|ta)|hp( i|ip)|hs\\-c|ht(c(\\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\\-(20|go|ma)|i230|iac( |\\-|\\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\\/)|klon|kpt |kwc\\-|kyo(c|k)|le(no|xi)|lg( g|\\/(k|l|u)|50|54|e\\-|e\\/|\\-[a-w])|libw|lynx|m1\\-w|m3ga|m50\\/|ma(te|ui|xo)|mc(01|21|ca)|m\\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\\-2|po(ck|rt|se)|prox|psio|pt\\-g|qa\\-a|qc(07|12|21|32|60|\\-[2-7]|i\\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\\-|oo|p\\-)|sdk\\/|se(c(\\-|0|1)|47|mc|nd|ri)|sgh\\-|shar|sie(\\-|m)|sk\\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\\-|v\\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\\-|tdg\\-|tel(i|m)|tim\\-|t\\-mo|to(pl|sh)|ts(70|m\\-|m3|m5)|tx\\-9|up(\\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\\-|2|g)|yas\\-|your|zeto|zte\\-",  # noqa: E501
             re.I | re.M)
 
         return reg_b.search(user_agent) is not None or reg_v.search(user_agent[0:4]) is not None
@@ -1317,7 +1321,7 @@ class html(ABCHTMLGenerator):
         decoded_qs = [
             (key, value) for key, value in self.request.args.items(multi=True) if key != varname
         ]
-        self.request.environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
+        self.request.environ['QUERY_STRING'] = six.moves.urllib.parse.urlencode(decoded_qs)
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
         dict.pop(self.request.form, varname, None)
@@ -1326,60 +1330,15 @@ class html(ABCHTMLGenerator):
         self.request.__dict__.pop('args', None)
         self.request.__dict__.pop('values', None)
 
-    # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon, before moving to Python 3.
-    def get_ascii_input(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> Optional[str]
-        """Helper to retrieve a byte string and ensure it only contains ASCII characters
-        In case a non ASCII character is found an MKUserError() is raised."""
-        value = self.request.var(varname, deflt)
-
-        if value is None:
-            return value
-
-        if sys.version_info[0] >= 3:
-            if not value.isascii():
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-        else:
-            try:
-                value.decode("ascii")
-            except UnicodeDecodeError:
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-
-        return value
-
-    def get_unicode_input(self, varname, deflt=None):
-        # type: (str, Optional[Text]) -> Optional[Text]
-        try:
-            val = self.request.var(varname, deflt)
-            return val.decode("utf-8") if isinstance(val, str) else val
-        except UnicodeDecodeError:
-            raise MKUserError(
-                varname,
-                _("The given text is wrong encoded. "
-                  "You need to provide a UTF-8 encoded text."))
-
     def get_item_input(self, varname, collection):
         # type: (str, Mapping[str, str]) -> Tuple[str, str]
         """Helper to get an item from the given collection
         Raises a MKUserError() in case the requested item is not available."""
-        item = self.get_ascii_input(varname)
+        item = self.request.get_ascii_input(varname)
         if item not in collection:
             raise MKUserError(varname, _("The requested item %s does not exist") % item)
         assert item is not None
         return collection[item], item
-
-    def get_integer_input(self, varname, deflt=None):
-        # type: (str, Optional[int]) -> int
-        if deflt is not None and not self.request.has_var(varname):
-            return deflt
-
-        try:
-            return int(self.request.var(varname))
-        except TypeError:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
     # TODO: Invalid default URL is not validated. Should we do it?
     # TODO: This is only protecting against some not allowed URLs but does not
@@ -1401,6 +1360,8 @@ class html(ABCHTMLGenerator):
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
 
         url = self.request.var(varname)
+        assert url is not None
+
         if not utils.is_allowed_url(url):
             if deflt:
                 return deflt
@@ -1423,6 +1384,7 @@ class html(ABCHTMLGenerator):
         if self.request.var("request_format") == "python":
             try:
                 python_request = self.request.var("request", "{}")
+                assert python_request is not None
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
@@ -1431,6 +1393,7 @@ class html(ABCHTMLGenerator):
         else:
             try:
                 json_request = self.request.var("request", "{}")
+                assert json_request is not None
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -1439,9 +1402,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                if isinstance(val, bytes):
-                    val = val.decode("utf-8")
-                request[key] = val
+                request[key] = ensure_unicode(val) if isinstance(val, bytes) else val
 
         return request
 
@@ -1747,7 +1708,8 @@ class html(ABCHTMLGenerator):
         new_vars = [nv[0] for nv in addvars]
         vars_ = [(v, val)
                  for v, val in self.request.itervars()
-                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)]
+                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
+                ]  # type: HTTPVariables
         if remove_prefix is not None:
             vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
         vars_ = vars_ + addvars
@@ -1858,6 +1820,7 @@ class html(ABCHTMLGenerator):
     # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname):
+        # type: (str) -> Optional[str]
         filename_for_browser = None
         rel_path = "/share/check_mk/web/htdocs/js"
         if self.enable_debug:
@@ -1874,30 +1837,33 @@ class html(ABCHTMLGenerator):
         return filename_for_browser
 
     def _css_filename_for_browser(self, css):
+        # type: (str) -> Optional[str]
         rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
         if os.path.exists(cmk.utils.paths.omd_root + rel_path) or \
             os.path.exists(cmk.utils.paths.omd_root + "/local" + rel_path):
             return '%s-%s.css' % (css, cmk.__version__)
+        return None
 
     def html_head(self, title, javascripts=None, force=False):
-
+        # type: (Text, Optional[List[str]], bool) -> None
         force_new_document = force  # for backward stability and better readability
 
         if force_new_document:
             self._header_sent = False
 
         if not self._header_sent:
-            self.write_html('<!DOCTYPE HTML>\n')
+            self.write_html(HTML('<!DOCTYPE HTML>\n'))
             self.open_html()
             self._head(title, javascripts)
             self._header_sent = True
 
     def header(self,
-               title='',
+               title=u'',
                javascripts=None,
                force=False,
                show_body_start=True,
                show_top_heading=True):
+        # type: (Text, Optional[List[str]], bool, bool, bool) -> None
         if self.output_format == "html":
             if not self._header_sent:
                 if show_body_start:
@@ -1908,19 +1874,23 @@ class html(ABCHTMLGenerator):
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(title)
 
-    def body_start(self, title='', javascripts=None, force=False):
+    def body_start(self, title=u'', javascripts=None, force=False):
+        # type: (Text, Optional[List[str]], bool) -> None
         self.html_head(title, javascripts, force)
         self.open_body(class_=self._get_body_css_classes())
 
     def _get_body_css_classes(self):
+        # type: () -> List[str]
         if self.screenshotmode:
             return self._body_classes + ["screenshotmode"]
         return self._body_classes
 
     def html_foot(self):
+        # type: () -> None
         self.close_html()
 
     def top_heading(self, title):
+        # type: (Text) -> None
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
@@ -1939,20 +1909,22 @@ class html(ABCHTMLGenerator):
         self.top_heading_right()
 
     def top_heading_left(self, title):
+        # type: (Text) -> None
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
         # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
-        title = HTML(escaping.escape_attribute(title))
-        self.a(title,
+        html_title = HTML(escaping.escape_attribute(title))
+        self.a(html_title,
                href="#",
                onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()
 
     def top_heading_right(self):
+        # type: () -> None
         cssclass = "active" if config.user.show_help else "passive"
 
         self.icon_button(None,
@@ -1974,6 +1946,7 @@ class html(ABCHTMLGenerator):
             self._dump_get_vars()
 
     def footer(self, show_footer=True, show_body_end=True):
+        # type: (bool, bool) -> None
         if self.output_format == "html":
             if show_footer:
                 self.bottom_footer()
@@ -1982,6 +1955,7 @@ class html(ABCHTMLGenerator):
                 self.body_end()
 
     def bottom_footer(self):
+        # type: () -> None
         if self._header_sent:
             self.bottom_focuscode()
             if self.render_headfoot:
@@ -1995,7 +1969,7 @@ class html(ABCHTMLGenerator):
                 self.td('', class_="middle")
 
                 self.open_td(class_="right")
-                content = _("refresh: %s secs") % self.render_div(self.browser_reload,
+                content = _("refresh: %s secs") % self.render_div("%0.2f" % self.browser_reload,
                                                                   id_="foot_refresh_time")
                 style = "display:inline-block;" if self.browser_reload else "display:none;"
                 self.div(HTML(content), id_="foot_refresh", style=style)
@@ -2005,9 +1979,11 @@ class html(ABCHTMLGenerator):
                 self.close_table()
 
     def bottom_focuscode(self):
+        # type: () -> None
         if self.focus_object:
             if isinstance(self.focus_object, tuple):
                 formname, varname = self.focus_object
+                assert formname is not None
                 obj_ident = formname + "." + varname
             else:
                 obj_ident = "getElementById(\"%s\")" % self.focus_object
@@ -2023,10 +1999,12 @@ class html(ABCHTMLGenerator):
             self.javascript(js_code)
 
     def focus_here(self):
+        # type: () -> None
         self.a("", href="#focus_me", id_="focus_me")
         self.set_focus_by_id("focus_me")
 
     def body_end(self):
+        # type: () -> None
         if self.have_help:
             self.javascript("cmk.help.enable();")
         if self.final_javascript_code:
@@ -2040,8 +2018,10 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_form(self, name, action=None, method="GET", onsubmit=None, add_transid=True):
+        # type: (str, str, str, Optional[str], bool) -> None
         self.form_vars = []
         if action is None:
+            assert self.myfile is not None
             action = self.myfile + ".py"
         self.current_form = name
         self.open_form(id_="form_%s" % name,
@@ -2057,13 +2037,16 @@ class html(ABCHTMLGenerator):
         self.form_name = name
 
     def end_form(self):
+        # type: () -> None
         self.close_form()
         self.form_name = None
 
     def in_form(self):
+        # type: () -> bool
         return self.form_name is not None
 
     def prevent_password_auto_completion(self):
+        # type: () -> None
         # These fields are not really used by the form. They are used to prevent the browsers
         # from filling the default password and previous input fields in the form
         # with password which are eventually saved in the browsers password store.
@@ -2073,6 +2056,7 @@ class html(ABCHTMLGenerator):
     # Needed if input elements are put into forms without the helper
     # functions of us. TODO: Should really be removed and cleaned up!
     def add_form_var(self, varname):
+        # type: (str) -> None
         self.form_vars.append(varname)
 
     # Beware: call this method just before end_form(). It will
@@ -2080,24 +2064,26 @@ class html(ABCHTMLGenerator):
     # field to the form - *if* they are not used in any input
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).
-    def hidden_fields(self, varlist=None, **args):
-        add_action_vars = args.get("add_action_vars", False)
+    def hidden_fields(self, varlist=None, add_action_vars=False):
+        # type: (List[str], bool) -> None
         if varlist is not None:
             for var in varlist:
                 self.hidden_field(var, self.request.var(var, ""))
         else:  # add *all* get variables, that are not set by any input!
             for var, _val in self.request.itervars():
                 if var not in self.form_vars and \
-                    (var[0] != "_" or add_action_vars): # and var != "filled_in":
-                    self.hidden_field(var, self.get_unicode_input(var))
+                    (var[0] != "_" or add_action_vars):  # and var != "filled_in":
+                    self.hidden_field(var, self.request.get_unicode_input(var))
 
     def hidden_field(self, var, value, id_=None, add_var=False, class_=None):
+        # type: (str, HTMLTagValue, str, bool, CSSSpec) -> None
         self.write_html(
             self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_))
 
     def render_hidden_field(self, var, value, id_=None, add_var=False, class_=None):
+        # type: (str, HTMLTagValue, str, bool, CSSSpec) -> HTML
         if value is None:
-            return ""
+            return HTML("")
         if add_var:
             self.add_form_var(var)
         return self.render_input(
@@ -2114,12 +2100,14 @@ class html(ABCHTMLGenerator):
     #
 
     def do_actions(self):
+        # type: () -> bool
         return self.request.var("_do_actions") not in ["", None, _("No")]
 
     # Check if the given form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
     def form_submitted(self, form_name=None):
+        # type: (Optional[str]) -> bool
         if form_name is None:
             return self.request.has_var("filled_in")
         return self.request.var("filled_in") == form_name
@@ -2129,6 +2117,7 @@ class html(ABCHTMLGenerator):
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname):
+        # type: (str) -> Optional[bool]
         if self.request.has_var(varname):
             return bool(self.request.var(varname))
         if self.form_submitted(self.form_name):
@@ -2140,9 +2129,11 @@ class html(ABCHTMLGenerator):
     #
 
     def button(self, varname, title, cssclass=None, style=None, help_=None):
+        # type: (str, Text, Optional[str], Optional[str], Optional[Text]) -> None
         self.write_html(self.render_button(varname, title, cssclass, style, help_=help_))
 
     def render_button(self, varname, title, cssclass=None, style=None, help_=None):
+        # type: (str, Text, Optional[str], Optional[str], Optional[Text]) -> HTML
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -2161,6 +2152,7 @@ class html(ABCHTMLGenerator):
                    title=None,
                    disabled=None,
                    class_=None):
+        # type: (str, Text, bool, Optional[str], Optional[str], Optional[Text], Optional[str], CSSSpec) -> None
         if add_transid:
             href += "&_transid=%s" % self.transaction_manager.get()
 
@@ -2168,7 +2160,7 @@ class html(ABCHTMLGenerator):
             obj_id = utils.gen_id()
 
         # Same API as other elements: class_ can be a list or string/None
-        css_classes = ["button", "buttonlink"]
+        css_classes = ["button", "buttonlink"]  # type: List[Union[str, None]]
         if class_:
             if not isinstance(class_, list):
                 css_classes.append(class_)
@@ -2195,6 +2187,7 @@ class html(ABCHTMLGenerator):
                       disabled=False,
                       onclick=None,
                       is_context_button=True):
+        # type: (str, bool, str, Text, bool, bool, Optional[str], bool) -> None
         if is_context_button:
             self.begin_context_buttons()  # TODO: Check all calls. If done before, remove this!
 
@@ -2224,9 +2217,11 @@ class html(ABCHTMLGenerator):
         self.close_div()
 
     def empty_icon_button(self):
+        # type: () -> None
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon):
+        # type: (str) -> None
         self.write(self.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
@@ -2235,31 +2230,32 @@ class html(ABCHTMLGenerator):
                  text,
                  onclick,
                  style='',
-                 cssclass="",
+                 cssclass=None,
                  title="",
                  disabled=False,
                  class_=None):
-        # Same API as other elements: class_ can be a list or string/None
-        classes = []
-        if class_:
-            classes = class_ if isinstance(class_, list) else [class_]
+        # type: (str, Text, str, str, Optional[str], Text, bool, CSSSpec) -> None
+        if not isinstance(class_, list):
+            class_ = [class_]
+        # TODO: Investigate why mypy complains about the latest argument
+        classes = ["button", cssclass] + cast(List[Optional[str]], class_)
 
         if disabled:
-            classes.append("disabled")
-            disabled = ""
+            class_.append("disabled")
+            disabled_arg = ""  # type: Optional[str]
         else:
-            disabled = None
+            disabled_arg = None
 
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
         # when it has been set on a page via javascript before. Needed for WATO activate changes page.
         self.input(name=varname,
                    type_="button",
                    id_=varname,
-                   class_=["button", cssclass] + classes,
+                   class_=classes,
                    autocomplete="off",
                    onclick=onclick,
                    style=style,
-                   disabled=disabled,
+                   disabled=disabled_arg,
                    value=text,
                    title=title)
 
@@ -2268,6 +2264,7 @@ class html(ABCHTMLGenerator):
     #
 
     def user_error(self, e):
+        # type: (MKUserError) -> None
         assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
         self.open_div(class_="error")
         self.write("%s" % e.message)
@@ -2276,11 +2273,13 @@ class html(ABCHTMLGenerator):
 
     # user errors are used by input elements to show invalid input
     def add_user_error(self, varname, msg_or_exc):
+        # type: (Optional[str], Union[Text, str, Exception]) -> None
         if isinstance(msg_or_exc, Exception):
-            message = "%s" % msg_or_exc
+            message = u"%s" % msg_or_exc  # type: Text
         else:
-            message = msg_or_exc
+            message = ensure_unicode(msg_or_exc)
 
+        # TODO: Find the multiple varname call sites and clean this up
         if isinstance(varname, list):
             for v in varname:
                 self.add_user_error(v, message)
@@ -2288,29 +2287,42 @@ class html(ABCHTMLGenerator):
             self.user_errors[varname] = message
 
     def has_user_errors(self):
+        # type: () -> bool
         return len(self.user_errors) > 0
 
     def show_user_errors(self):
+        # type: () -> None
         if self.has_user_errors():
             self.open_div(class_="error")
             self.write('<br>'.join(self.user_errors.values()))
             self.close_div()
 
-    def text_input(self,
-                   varname,
-                   default_value="",
-                   cssclass="text",
-                   label=None,
-                   id_=None,
-                   submit=None,
-                   attrs=None,
-                   **args):
-        if attrs is None:
-            attrs = {}
+    def text_input(
+        self,
+        varname,  # type: str
+        default_value=u"",  # type: Text
+        cssclass="text",  # type: str
+        size=None,  # type: Optional[Union[str, int]]
+        label=None,  # type: Optional[Text]
+        id_=None,  # type: str
+        submit=None,  # type: Optional[str]
+        try_max_width=False,  # type: bool
+        read_only=False,  # type: bool
+        autocomplete=None,  # type: Optional[str]
+        style=None,  # type: Optional[str]
+        omit_css_width=False,  # type: bool
+        type_=None,  # type: Optional[str]
+        onkeyup=None,  # type: Optional[Text]
+        onblur=None,  # type: Optional[str]
+        placeholder=None,  # type: Optional[Text]
+        data_world=None,  # type: Optional[str]
+        data_max_labels=None  # type: Optional[int]
+    ):
+        # type: (...) -> None
 
         # Model
         error = self.user_errors.get(varname)
-        value = self.get_unicode_input(varname, default_value)
+        value = self.request.get_unicode_input(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -2318,66 +2330,66 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
 
         # View
-        style, size = None, None
-        if args.get("try_max_width"):
-            style = "width: calc(100% - 10px); "
-            if "size" in args:
-                cols = int(args["size"])
+        style_size = None  # type: Optional[str]
+        field_size = None  # type: Optional[str]
+        if try_max_width:
+            style_size = "width: calc(100% - 10px); "
+            if size is not None:
+                assert isinstance(size, int)
+                cols = size
             else:
                 cols = 16
-            style += "min-width: %d.8ex; " % cols
+            style_size += "min-width: %d.8ex; " % cols
 
-        elif "size" in args and args["size"]:
-            if args["size"] == "max":
-                style = "width: 100%;"
+        elif size is not None:
+            if size == "max":
+                style_size = "width: 100%;"
             else:
-                size = "%d" % (args["size"] + 1)
-                if not args.get('omit_css_width', False) and "width:" not in args.get(
-                        "style", "") and not self.mobile:
-                    style = "width: %d.8ex;" % args["size"]
-
-        if args.get("style"):
-            style = [style, args["style"]]
-
-        if (submit or label) and not id_:
-            id_ = "ti_%s" % varname
-
-        onkeydown = None if not submit else HTML(
-            'cmk.forms.textinput_enter_submit(event, \'%s\');' % (submit))
+                assert isinstance(size, int)
+                field_size = "%d" % (size + 1)
+                if not omit_css_width and (style is None or
+                                           "width:" not in style) and not self.mobile:
+                    style_size = "width: %d.8ex;" % size
 
         attributes = {
             "class": cssclass,
-            "id": id_,
-            "style": style,
-            "size": size,
-            "autocomplete": args.get("autocomplete"),
-            "readonly": "true" if args.get("read_only") else None,
+            "id": ("ti_%s" % varname) if (submit or label) and not id_ else id_,
+            "style": [style_size] + ([] if style is None else [style]),
+            "size": field_size,
+            "autocomplete": autocomplete,
+            "readonly": "true" if read_only else None,
             "value": value,
-            "onkeydown": onkeydown,
-        }
-
-        for key, val in attrs.items():
-            if key not in attributes and key not in ["name", "type", "type_"]:
-                attributes[key] = val
-            elif key in attributes and attributes[key] is None:
-                attributes[key] = val
+            "onblur": onblur,
+            "onkeyup": onkeyup,
+            "onkeydown": ('cmk.forms.textinput_enter_submit(event, %s);' %
+                          json.dumps(submit)) if submit else None,
+            "placeholder": placeholder,
+            "data-world": data_world,
+            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
+        }  # type: HTMLTagAttributes
 
         if error:
             self.open_x(class_="inputerror")
 
         if label:
+            assert id_ is not None
             self.label(label, for_=id_)
-        self.write_html(self.render_input(varname, type_=args.get("type_", "text"), **attributes))
+
+        input_type = "text" if type_ is None else type_
+        assert isinstance(input_type, str)
+        self.write_html(self.render_input(varname, type_=input_type, **attributes))
 
         if error:
             self.close_x()
 
-    # Shows a colored badge with text (used on WATO activation page for the site status)
     def status_label(self, content, status, title, **attrs):
+        # type: (HTMLTagContent, str, Text, **HTMLTagAttributeValue) -> None
+        """Shows a colored badge with text (used on WATO activation page for the site status)"""
         self.status_label_button(content, status, title, onclick=None, **attrs)
 
-    # Shows a colored button with text (used in site and customer status snapins)
     def status_label_button(self, content, status, title, onclick, **attrs):
+        # type: (HTMLTagContent, str, Text, Optional[str], **HTMLTagAttributeValue) -> None
+        """Shows a colored button with text (used in site and customer status snapins)"""
         button_cls = "button" if onclick else None
         self.div(content,
                  title=title,
@@ -2385,50 +2397,66 @@ class html(ABCHTMLGenerator):
                  onclick=onclick,
                  **attrs)
 
-    def toggle_switch(self, enabled, help_txt, **attrs):
+    def toggle_switch(self, enabled, help_txt, class_=None, href="javascript:void(0)", **attrs):
+        # type: (bool, Text, CSSSpec, str, **HTMLTagAttributeValue) -> None
         # Same API as other elements: class_ can be a list or string/None
-        if "class_" in attrs:
-            if not isinstance(attrs["class_"], list):
-                attrs["class_"] = [attrs["class_"]]
-        else:
-            attrs["class_"] = []
+        if not isinstance(class_, list):
+            class_ = [class_]
 
-        attrs["class_"] += [
+        class_ += [
             "toggle_switch",
             "on" if enabled else "off",
         ]
 
-        link_attrs = {
-            "href": attrs.pop("href", "javascript:void(0)"),
-            "onclick": attrs.pop("onclick", None),
-        }
-
-        self.open_div(**attrs)
-        self.a(_("on") if enabled else _("off"), title=help_txt, **link_attrs)
+        self.open_div(class_=class_, **attrs)
+        self.a(
+            content=_("on") if enabled else _("off"),
+            href=href,
+            title=help_txt,
+            onclick=attrs.pop("onclick", None),
+        )
         self.close_div()
 
-    def password_input(self, varname, default_value="", size=12, **args):
-        self.text_input(varname, default_value, type_="password", size=size, **args)
+    def password_input(self,
+                       varname,
+                       default_value="",
+                       cssclass="text",
+                       size=None,
+                       label=None,
+                       id_=None,
+                       submit=None,
+                       try_max_width=False,
+                       read_only=False,
+                       autocomplete=None):
+        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], bool, bool, Optional[str]) -> None
+        self.text_input(varname,
+                        default_value,
+                        cssclass=cssclass,
+                        size=size,
+                        label=label,
+                        id_=id_,
+                        submit=submit,
+                        type_="password",
+                        try_max_width=try_max_width,
+                        read_only=read_only,
+                        autocomplete=autocomplete)
 
-    def text_area(self, varname, deflt="", rows=4, cols=30, attrs=None, try_max_width=False):
-        if attrs is None:
-            attrs = {}
+    def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
+        # type: (str, Union[Text, str], int, int, bool, **HTMLTagAttributeValue) -> None
 
-        # Model
-        value = self.get_unicode_input(varname, deflt)
+        value = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
 
         self.form_vars.append(varname)
         if error:
             self.set_focus(varname)
 
-        # View
         style = "width: %d.8ex;" % cols
         if try_max_width:
             style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
         attrs["style"] = style
-        attrs["rows"] = rows
-        attrs["cols"] = cols
+        attrs["rows"] = str(rows)
+        attrs["cols"] = str(cols)
         attrs["name"] = varname
 
         # Fix handling of leading newlines (https://www.w3.org/TR/html5/syntax.html#element-restrictions)
@@ -2452,12 +2480,23 @@ class html(ABCHTMLGenerator):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(self, varname, choices, deflt='', ordered=False, **attrs):
-        current = self.get_unicode_input(varname, deflt)
+    def dropdown(
+        self,
+        varname,  # type: str
+        choices,  # type: Choices
+        deflt='',  # type: DefaultChoice
+        ordered=False,  # type: bool
+        label=None,  # type: Optional[Text]
+        class_=None,  # type: CSSSpec
+        size=1,  # type: int
+        read_only=False,  # type: bool
+        **attrs  # type: HTMLTagAttributeValue
+    ):
+        # type: (...) -> None
+        current = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
-        attrs.setdefault('size', 1)
 
         chs = choices[:]
         if ordered:
@@ -2467,25 +2506,31 @@ class html(ABCHTMLGenerator):
         if error:
             self.open_x(class_="inputerror")
 
-        if "read_only" in attrs and attrs.pop("read_only"):
+        if read_only:
             attrs["disabled"] = "disabled"
             self.hidden_field(varname, current, add_var=False)
 
-        if attrs.get("label"):
-            self.label(attrs["label"], for_=varname)
+        if label:
+            self.label(label, for_=varname)
 
         # Do not enable select2 for select fields that allow multiple
         # selections like the dual list choice valuespec
         if "multiple" not in attrs:
-            if "class_" in attrs:
-                if isinstance(attrs["class_"], list):
-                    attrs["class_"].insert(0, "select2-enable")
-                else:
-                    attrs["class_"] = ["select2-enable", attrs["class_"]]
-            else:
-                attrs["class_"] = ["select2-enable"]
+            css_classes = ["select2-enable"]  # type: List[Optional[str]]
+        else:
+            css_classes = []
 
-        self.open_select(name=varname, id_=varname, **attrs)
+        if isinstance(class_, list):
+            css_classes.extend(class_)
+        else:
+            css_classes.append(class_)
+
+        self.open_select(name=varname,
+                         id_=varname,
+                         label=label,
+                         class_=css_classes,
+                         size=str(size),
+                         **attrs)
         for value, text in chs:
             # if both the default in choices and current was '' then selected depended on the order in choices
             selected = (value == current) or (not value and not current)
@@ -2495,6 +2540,7 @@ class html(ABCHTMLGenerator):
             self.close_x()
 
     def icon_dropdown(self, varname, choices, deflt=""):
+        # type: (str, List[Tuple[str, Text, str]], str) -> None
         current = self.request.var(varname, deflt)
         if varname:
             self.form_vars.append(varname)
@@ -2510,12 +2556,8 @@ class html(ABCHTMLGenerator):
                         (self._theme, icon))
         self.close_select()
 
-    # Wrapper for DualListChoice
-    def multi_select(self, varname, choices, deflt='', ordered='', **attrs):
-        attrs["multiple"] = "multiple"
-        self.dropdown(varname, choices, deflt=deflt, ordered=ordered, **attrs)
-
     def upload_file(self, varname):
+        # type: (str) -> None
         error = self.user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")
@@ -2531,14 +2573,15 @@ class html(ABCHTMLGenerator):
     # such cases, the transid must be added by the confirm dialog.
     # add_header: A title can be given to make the confirm method render the HTML
     #             header when showing the confirm message.
-    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
+    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=None):
+        # type: (Union[Text, HTML], str, Optional[str], bool, Optional[str]) -> Optional[bool]
         if self.request.var("_do_actions") == _("No"):
             # User has pressed "No", now invalidate the unused transid
             self.check_transaction()
-            return  # None --> "No"
+            return None  # None --> "No"
 
         if not self.request.has_var("_do_confirm"):
-            if add_header != False:
+            if add_header:
                 self.header(add_header)
 
             if self.mobile:
@@ -2566,23 +2609,23 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_radio_group(self, horizontal=False):
+        # type: (bool) -> None
         if self.mobile:
             attrs = {'data-type': "horizontal" if horizontal else None, 'data-role': "controlgroup"}
-            self.write(self._render_opening_tag("fieldset", **attrs))
+            self.write(self._render_opening_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self):
+        # type: () -> None
         if self.mobile:
             self.write(self._render_closing_tag("fieldset"))
 
     def radiobutton(self, varname, value, checked, label):
-        # Model
+        # type: (str, str, bool, Optional[str]) -> None
         self.form_vars.append(varname)
 
-        # Controller
         if self.request.has_var(varname):
             checked = self.request.var(varname) == value
 
-        # View
         id_ = "rb_%s_%s" % (varname, value) if label else None
         self.open_span(class_="radiobutton_group")
         self.input(name=varname,
@@ -2590,7 +2633,7 @@ class html(ABCHTMLGenerator):
                    value=value,
                    checked='' if checked else None,
                    id_=id_)
-        if label:
+        if label and id_:
             self.label(label, for_=id_)
         self.close_span()
 
@@ -2599,16 +2642,19 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_checkbox_group(self, horizonal=False):
+        # type: (bool) -> None
         self.begin_radio_group(horizonal)
 
     def end_checkbox_group(self):
+        # type: () -> None
         self.end_radio_group()
 
-    def checkbox(self, *args, **kwargs):
-        self.write(self.render_checkbox(*args, **kwargs))
+    def checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
+        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> None
+        self.write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
 
     def render_checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
-
+        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> HTML
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # whether we should add the default value, we need to detect
@@ -2650,6 +2696,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url=None,
                                  title_url=None,
                                  title_target=None):
+        # type: (str, str, bool, HTMLTagContent, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
         self.folding_indent = indent
 
         isopen = self.foldable_container_is_open(treename, id_, isopen)
@@ -2663,7 +2710,7 @@ class html(ABCHTMLGenerator):
         if indent == "nform":
             self.open_thead()
             self.open_tr(class_="heading")
-            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
+            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
             if icon:
                 self.img(id_=img_id,
                          class_=["treeangle", "title"],
@@ -2721,11 +2768,13 @@ class html(ABCHTMLGenerator):
         return isopen
 
     def end_foldable_container(self):
+        # type: () -> None
         if self.folding_indent != "nform":
             self.close_ul()
             self.close_div()
 
     def foldable_container_is_open(self, treename, id_, isopen):
+        # type: (str, str, bool) -> bool
         # try to get persisted state of tree
         tree_state = config.user.get_tree_states(treename)
 
@@ -2738,12 +2787,14 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_context_buttons(self):
+        # type: () -> None
         if not self._context_buttons_open:
             self.context_button_hidden = False
             self.open_div(class_="contextlinks")
             self._context_buttons_open = True
 
     def end_context_buttons(self):
+        # type: () -> None
         if self._context_buttons_open:
             if self.context_button_hidden:
                 self.open_div(title=_("Show all buttons"),
@@ -2764,6 +2815,7 @@ class html(ABCHTMLGenerator):
                        bestof=None,
                        hover_title=None,
                        class_=None):
+        # type: (Text, str, Optional[str], bool, Optional[str], Optional[int], Optional[Text], CSSSpec) -> None
         self._context_button(title,
                              url,
                              icon=icon,
@@ -2782,11 +2834,12 @@ class html(ABCHTMLGenerator):
                         bestof=None,
                         hover_title=None,
                         class_=None):
+        # type: (Text, str, Optional[str], bool, Optional[str], Optional[int], Optional[Text], CSSSpec) -> None
         title = escaping.escape_attribute(title)
         display = "block"
         if bestof:
             counts = config.user.button_counts
-            weights = counts.items()
+            weights = list(counts.items())
             weights.sort(key=lambda x: x[1])
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type
             if id_ not in best:
@@ -2796,14 +2849,14 @@ class html(ABCHTMLGenerator):
         if not self._context_buttons_open:
             self.begin_context_buttons()
 
-        css_classes = ["contextlink"]
+        css_classes = ["contextlink"]  # type: List[Optional[str]]
         if hot:
             css_classes.append("hot")
         if class_:
             if isinstance(class_, list):
-                css_classes += class_
+                css_classes.extend(class_)
             else:
-                css_classes += class_.split(" ")
+                css_classes.append(class_)
 
         self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
@@ -2825,6 +2878,7 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_floating_options(self, div_id, is_open):
+        # type: (str, bool) -> None
         self.open_div(id_=div_id,
                       class_=["view_form"],
                       style="display: none" if not is_open else None)
@@ -2833,6 +2887,7 @@ class html(ABCHTMLGenerator):
         self.open_td()
 
     def end_floating_options(self, reset_url=None):
+        # type: (Optional[str]) -> None
         self.close_td()
         self.close_tr()
         self.open_tr()
@@ -2847,6 +2902,7 @@ class html(ABCHTMLGenerator):
         self.close_div()
 
     def render_floating_option(self, name, height, varprefix, valuespec, value):
+        # type: (str, str, str, ValueSpec, Any) -> None
         self.open_div(class_=["floatfilter", height, name])
         self.div(valuespec.title(), class_=["legend"])
         self.open_div(class_=["content"])
@@ -2859,31 +2915,40 @@ class html(ABCHTMLGenerator):
     #
 
     # FIXME: Change order of input arguments in one: icon and render_icon!!
-    def icon(self, title, icon, **kwargs):
-
-        icon_name = icon
-
-        self.write_html(self.render_icon(icon_name=icon_name, title=title, **kwargs))
+    def icon(self, title, icon, middle=True, id_=None, cssclass=None, class_=None):
+        # type: (Optional[Text], str, bool, Optional[str], Optional[str], CSSSpec) -> None
+        self.write_html(
+            self.render_icon(icon_name=icon,
+                             title=title,
+                             middle=middle,
+                             id_=id_,
+                             cssclass=cssclass,
+                             class_=class_))
 
     def empty_icon(self):
+        # type: () -> None
         self.write_html(self.render_icon("trans"))
 
     def render_icon(self, icon_name, title=None, middle=True, id_=None, cssclass=None, class_=None):
+        # type: (str, Optional[Text], bool, Optional[str], Optional[str], CSSSpec) -> HTML
+        classes = ["icon", cssclass]
+        if isinstance(class_, list):
+            classes.extend(class_)
+        else:
+            classes.append(class_)
 
-        attributes = {
-            'title': title,
-            'id': id_,
-            'class': ["icon", cssclass],
-            'align': 'absmiddle' if middle else None,
-            'src': icon_name if "/" in icon_name else self._detect_icon_path(icon_name)
-        }
-
-        if class_:
-            attributes['class'].extend(class_)
-
-        return self._render_opening_tag('img', close_tag=True, **attributes)
+        return self._render_opening_tag(
+            'img',
+            close_tag=True,
+            title=title,
+            id_=id_,
+            class_=classes,
+            align='absmiddle' if middle else None,
+            src=(icon_name if "/" in icon_name else self._detect_icon_path(icon_name)),
+        )
 
     def _detect_icon_path(self, icon_name):
+        # type: (str) -> str
         """Detect from which place an icon shall be used and return it's path relative to
  htdocs/
 
@@ -2914,32 +2979,61 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # Same API as other elements: class_ can be a list or string/None
-        classes = []
-        if cssclass:
-            classes.append(cssclass)
-        if class_:
-            classes = class_ if isinstance(class_, list) else [class_]
+        # type: (Optional[Union[Text, str]], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
-        icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
+        # Same API as other elements: class_ can be a list or string/None
+        classes = [cssclass]
+        if isinstance(class_, list):
+            classes.extend(class_)
+        else:
+            classes.append(class_)
+
+        href = url if not onclick else "javascript:void(0)"
+        assert href is not None
 
         return self.render_a(
-            icon, **{
-                'title': title,
-                'id': id_,
-                'class': classes,
-                'style': style,
-                'target': target if target else '',
-                'href': url if not onclick else "javascript:void(0)",
-                'onfocus': "if (this.blur) this.blur();",
-                'onclick': onclick
-            })
+            content=HTML(self.render_icon(icon, cssclass="iconbutton")),
+            href=href,
+            title=title,
+            id_=id_,
+            class_=classes,
+            style=style,
+            target=target if target else '',
+            onfocus="if (this.blur) this.blur();",
+            onclick=onclick,
+        )
 
-    def icon_button(self, *args, **kwargs):
-        self.write_html(self.render_icon_button(*args, **kwargs))
+    def icon_button(self,
+                    url,
+                    title,
+                    icon,
+                    id_=None,
+                    onclick=None,
+                    style=None,
+                    target=None,
+                    cssclass=None,
+                    class_=None):
+        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> None
+        self.write_html(
+            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
+                                    class_))
 
-    def popup_trigger(self, *args, **kwargs):
-        self.write_html(self.render_popup_trigger(*args, **kwargs))
+    def popup_trigger(self,
+                      content,
+                      ident,
+                      what=None,
+                      data=None,
+                      url_vars=None,
+                      style=None,
+                      menu_content=None,
+                      cssclass=None,
+                      onclose=None,
+                      resizable=False,
+                      content_body=None):
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> None
+        self.write_html(
+            self.render_popup_trigger(content, ident, what, data, url_vars, style, menu_content,
+                                      cssclass, onclose, resizable, content_body))
 
     def render_popup_trigger(self,
                              content,
@@ -2953,7 +3047,7 @@ class html(ABCHTMLGenerator):
                              onclose=None,
                              resizable=False,
                              content_body=None):
-
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> HTML
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
                      json.dumps(what if what else None),
@@ -2964,9 +3058,8 @@ class html(ABCHTMLGenerator):
                      json.dumps(resizable),
                      content_body if content_body else json.dumps(None))
 
-        #TODO: Check if HTML'ing content is correct and necessary!
         atag = self.render_a(
-            HTML(content),
+            content,
             class_="popup_trigger",
             href="javascript:void(0);",
             # Needed to prevent wrong linking when views are parts of dashlets
@@ -2980,6 +3073,7 @@ class html(ABCHTMLGenerator):
                                style=style)
 
     def element_dragger_url(self, dragging_tag, base_url):
+        # type: (str, str) -> None
         self.write_html(
             self.render_element_dragger(
                 dragging_tag,
@@ -2988,6 +3082,7 @@ class html(ABCHTMLGenerator):
                 json.dumps(base_url)))
 
     def element_dragger_js(self, dragging_tag, drop_handler, handler_args):
+        # type: (str, str, Dict[str, Any]) -> None
         self.write_html(
             self.render_element_dragger(
                 dragging_tag,
@@ -2997,6 +3092,7 @@ class html(ABCHTMLGenerator):
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
     def render_element_dragger(self, dragging_tag, drop_handler):
+        # type: (str,  str) -> HTML
         return self.render_a(self.render_icon("drag", _("Move this entry")),
                              href="javascript:void(0)",
                              class_=["element_dragger"],
@@ -3008,12 +3104,14 @@ class html(ABCHTMLGenerator):
     #
 
     def _dump_get_vars(self):
+        # type: () -> None
         self.begin_foldable_container("html", "debug_vars", True,
                                       _("GET/POST variables of this page"))
         self.debug_vars(hide_with_mouse=False)
         self.end_foldable_container()
 
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars_=None):
+        # type: (Optional[str], bool, Optional[Dict[str, str]]) -> None
         it = self.request.itervars() if vars_ is None else vars_.items()
         hover = "this.style.display=\'none\';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
@@ -3028,6 +3126,7 @@ class html(ABCHTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self):
+        # type: () -> None
         self.icon_button(self.makeuri([]),
                          _("URL to this frame"),
                          "frameurl",
@@ -3057,7 +3156,7 @@ class html(ABCHTMLGenerator):
                 if v is None:
                     v = ''
                 elif isinstance(v, six.text_type):
-                    v = v.encode('utf-8')
+                    v = six.ensure_str(v)
                 encoded_vars[k] = v
 
             self.popup_trigger(

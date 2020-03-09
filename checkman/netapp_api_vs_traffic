@@ -9,6 +9,9 @@ description:
  Supported protocols are {ethernet}, {fibrechannel}, {cifs}, {iscsi}, {nfsv3},
  {nfsv4} and {nfsv4.1}. This check is always {OK}.
 
+item:
+ Name of the virtual server
+
 inventory:
  Creates one check per vServer
 

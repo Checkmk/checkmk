@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import ast
@@ -31,6 +11,8 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
+from typing import (  # pylint: disable=unused-import
+    Optional,)
 
 import dicttoxml  # type: ignore[import]
 
@@ -48,6 +30,7 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -128,6 +111,7 @@ def sort_children(children):
 
 
 def load_filtered_inventory_tree(hostname):
+    # type: (Optional[HostName]) -> Optional[StructuredDataTree]
     """Loads the host inventory tree from the current file and returns the filtered tree"""
     return _filter_tree(_load_inventory_tree(hostname))
 
@@ -297,9 +281,10 @@ class LoadStructuredDataError(MKException):
 
 
 def _load_inventory_tree(hostname):
-    # Load data of a host, cache it in the current HTTP request
+    # type: (Optional[HostName]) -> Optional[StructuredDataTree]
+    """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
-        return
+        return None
 
     inventory_tree_cache = g.setdefault("inventory", {})
     if hostname in inventory_tree_cache:
@@ -307,13 +292,13 @@ def _load_inventory_tree(hostname):
     else:
         if '/' in hostname:
             # just for security reasons
-            return
+            return None
         cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
         try:
             inventory_tree = StructuredDataTree().load_from(cache_path)
         except Exception as e:
             if config.debug:
-                html.show_warning(e)
+                html.show_warning("%s" % e)
             raise LoadStructuredDataError()
         inventory_tree_cache[hostname] = inventory_tree
     return inventory_tree
@@ -338,8 +323,9 @@ def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
 
 
 def _filter_tree(struct_tree):
+    # type: (Optional[StructuredDataTree]) -> Optional[StructuredDataTree]
     if struct_tree is None:
-        return
+        return None
     return struct_tree.get_filtered_tree(_get_permitted_inventory_paths())
 
 
@@ -512,21 +498,21 @@ class InventoryHousekeeping(object):
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(  # pylint: disable=no-member
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
         ):
             return
 
         last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
         # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:  # pylint: disable=no-member
+        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
             return
 
         # TODO: remove with pylint 2
         inventory_archive_hosts = {
-            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
         }
         inventory_delta_cache_hosts = {
-            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()
         }
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
@@ -552,7 +538,7 @@ class InventoryHousekeeping(object):
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
 
         # TODO: remove with pylint 2
-        last_cleanup.touch()  # pylint: disable=no-member
+        last_cleanup.touch()
 
     def _get_timestamps_for_host(self, hostname):
         timestamps = {"None"}  # 'None' refers to the histories start

@@ -10,7 +10,7 @@ description:
  Temperature levels can be configured using the usual temperature rule.
 
 item:
- The item name is based on the bricks position inside the stack.
+ The bricks position inside the stack.
 
 inventory:
  All temperature bricklets are automatically inventorized.

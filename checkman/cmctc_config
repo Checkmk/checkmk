@@ -10,8 +10,5 @@ description:
  alarm relay logic in case of alarm, and the temperature unit
  are shown.
 
-item:
- None
-
 inventory:
  One check per host is created.

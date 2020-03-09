@@ -6,5 +6,8 @@ distribution: check_mk
 description:
  The check monitors the input voltage on Omnitronics IPR400 VoIP devices.
 
+item:
+ The fixed statement {{1}}
+
 inventory:
  Creates exactly one service

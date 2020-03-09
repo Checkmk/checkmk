@@ -7,6 +7,9 @@ description:
  This check monitors the current state of Juniper ScreenOS VPN tunnels. It uses the vpn ike 2 state
  to verify the VPN tunnel state.
 
+item:
+ Name of the VPN tunnel
+
 inventory:
  One service for each VPN tunnel will be create
 

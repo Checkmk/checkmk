@@ -8,8 +8,7 @@ description:
  A warning and a critical level can be set.
 
 item:
- Is the name of the library
-
+ The name of the instance (optional) and the library name seperated by a {{/}}
 
 inventory:
  Per library one check is created

@@ -30,7 +30,7 @@ description:
  We strongly recommend you switch to the rule-based configuration, which
  handles anything you want it to.
 
- In single disk mode the check now also supports being used in a Check_MK
+ In single disk mode the check now also supports being used in a Checkmk
  cluster environment. In this case it goes to CRIT if it finds more than
  one disk item in the cluster. If it finds only one disk item, it also prints
  the node name the disk was found on.

@@ -1,4 +1,4 @@
-title: Supermicro Health
+title: Supermicro: Health
 agents: snmp
 catalog: hw/server/supermicro
 license: GPL

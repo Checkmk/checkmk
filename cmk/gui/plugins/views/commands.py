@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 import livestatus
@@ -527,7 +507,7 @@ class CommandFakeCheckResult(Command):
         for s in [0, 1, 2, 3]:
             statename = html.request.var("_fake_%d" % s)
             if statename:
-                pluginoutput = html.get_unicode_input("_fake_output").strip()
+                pluginoutput = html.request.get_unicode_input("_fake_output").strip()
                 if not pluginoutput:
                     pluginoutput = _("Manually set to %s by %s") % (
                         escaping.escape_attribute(statename), config.user.id)
@@ -613,7 +593,7 @@ class CommandCustomNotification(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_customnotification"):
-            comment = html.get_unicode_input("_cusnot_comment")
+            comment = html.request.get_unicode_input("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
             command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
@@ -733,7 +713,7 @@ class CommandAcknowledge(Command):
                 specs.append((site, spec, cmdtag))
 
         if html.request.var("_acknowledge"):
-            comment = html.get_unicode_input("_ack_comment")
+            comment = html.request.get_unicode_input("_ack_comment")
             if not comment:
                 raise MKUserError("_ack_comment", _("You need to supply a comment."))
             if ";" in comment:
@@ -843,7 +823,7 @@ class CommandAddComment(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_add_comment"):
-            comment = html.get_unicode_input("_comment")
+            comment = html.request.get_unicode_input("_comment")
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -1124,7 +1104,7 @@ class CommandScheduleDowntimes(Command):
             if html.request.var("_down_adhoc"):
                 comment = config.adhoc_downtime.get("comment", "")
             else:
-                comment = html.get_unicode_input("_down_comment")
+                comment = html.request.get_unicode_input("_down_comment")
             if not comment:
                 raise MKUserError("_down_comment",
                                   _("You need to supply a comment for your downtime."))

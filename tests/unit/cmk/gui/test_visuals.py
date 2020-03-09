@@ -1,9 +1,14 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
@@ -3795,7 +3800,7 @@ def test_verify_single_infos_has_context():
 
 def test_verify_single_infos_missing_context():
     visual = {"single_infos": ["host"], "context": {},}
-    with pytest.raises(MKGeneralException, match="Missing context information"):
+    with pytest.raises(MKUserError, match="Missing context information"):
         visuals.verify_single_infos(visual, visual["context"])
 
 def test_context_uri_vars(register_builtin_html):

@@ -1,131 +1,475 @@
-openapi: 3.0.0
-info:
-  title: Checkmk REST API
-  description: API for Checkmk. Here you can do all the things.
-  license:
-    name: GNU General Public License version 2
-  contact:
-    name: Checkmk Team
-    email: feedback@check-mk.org
-  version: '0.0.1'
-externalDocs:
-  url: https://checkmk.com/cms.html
-
 components:
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        WWW_Authenticate:
-          schema:
-            type: string
-    NotFound:
-      description: The specified resource was not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   parameters:
-    ident:  # This can be used for path identifiers like /resource/{identifier}
-      name: ident
+    hostname:
+      description: A hostname.
       in: path
+      name: hostname
       required: true
-      description: The identifier.
       schema:
+        pattern: '[a-zA-Z0-9-.]+'
         type: string
-
-    HostGroup:
-      name: host_group
-      in: body
+    ident:
+      description: The identifier for this object. It's a 128bit uuid represented
+        in hexadecimal (32 characters). There are no fixed parts or parts derived
+        from the current hardware in this number.
+      in: path
+      name: ident
       required: true
       schema:
-        $ref: '#/components/schemas/HostGroup'
+        pattern: '[a-fA-F0-9]{32}'
+        type: string
+    name:
+      description: A name.
+      in: path
+      name: name
+      required: true
+      schema:
+        pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+        type: string
   schemas:
-    # Schema for error response body
-    Error:
-      type: object
+    ApiError:
       properties:
         code:
+          description: The HTTP status code.
           type: string
         message:
           type: string
+        title:
+          type: string
+      type: object
+    DomainObjectCollection:
+      properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        value:
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
       required:
-        - code
-        - message
-    Host:
+      - links
       type: object
+    Folder:
       properties:
-        alias:
+        domainType:
+          default: folder
           type: string
-          nullable: true
-        ipv4:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
           type: string
-          nullable: true
-    HostGroup:
+      required:
+      - domainType
+      - links
       type: object
+    InputAttribute:
       properties:
-        alias:
+        key:
           type: string
+        value:
+          type: string
+      required:
+      - key
+      - value
+      type: object
+    InputFolder:
+      properties:
+        attributes:
+          items:
+            $ref: '#/components/schemas/InputAttribute'
+          type: array
+        name:
+          type: string
+        title:
+          type: string
+      required:
+      - name
+      - title
+      type: object
+    InstalledVersions:
+      properties: {}
+      type: object
+    Link:
+      properties:
+        arguments:
+          description: map that may be used as the basis for any data (arguments or
+            properties) required to follow the link.
           nullable: true
-
+          type: object
+        href:
+          description: The (absolute) address of the related resource. Any characters
+            that are invalid in URLs must be URL encoded.
+          type: string
+        method:
+          description: The HTTP method to use to traverse the link (GET, POST, PUT
+            or DELETE)
+          type: string
+        rel:
+          description: Indicates the nature of the relationship of the related resource
+            to the resource that generated this representation
+          type: string
+        title:
+          description: string that the consuming application may use to render the
+            link without having to traverse the link in advance
+          nullable: true
+          type: string
+        type:
+          description: The media type that the linked resource will return
+          type: string
+      required:
+      - href
+      - method
+      - rel
+      - type
+      type: object
+    ObjectActionMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: action
+          type: string
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    ObjectCollectionMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: collection
+          type: string
+        value:
+          items:
+            type: string
+          type: array
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    ObjectMember:
+      discriminator:
+        mapping:
+          action: '#/components/schemas/ObjectActionMember'
+          collection: '#/components/schemas/ObjectCollectionMember'
+          property: '#/components/schemas/ObjectPropertyMember'
+        propertyName: memberType
+      oneOf:
+      - $ref: '#/components/schemas/ObjectActionMember'
+      - $ref: '#/components/schemas/ObjectPropertyMember'
+      - $ref: '#/components/schemas/ObjectCollectionMember'
+      properties: {}
+      type: object
+    ObjectMemberDict:
+      additionalProperties:
+        $ref: '#/components/schemas/ObjectMember'
+      properties: {}
+      type: object
+    ObjectPropertyMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: property
+          type: string
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    UpdateFolder:
+      properties:
+        attributes:
+          items:
+            $ref: '#/components/schemas/InputAttribute'
+          type: array
+        title:
+          type: string
+      required:
+      - title
+      type: object
   securitySchemes:
     BearerAuth:
-      type: http
-      scheme: bearer
       bearerFormat: username password
+      description: The format of the header-value is "Bearer $automation_user $automation_user_password"
+      in: header
+      scheme: bearer
+      type: http
       x-bearerInfoFunc: cmk.gui.wsgi.auth.bearer_auth
+externalDocs:
+  description: The Checkmk Handbook
+  url: https://checkmk.com/cms.html
+info:
+  contact:
+    email: feedback@check-mk.org
+    name: Contact the Checkmk Team
+    url: https://checkmk.com/contact.php
+  description: 'API for Checkmk.
 
-security:
-  - BearerAuth: []
 
+    This is the docstring which will be the description of the API.'
+  license:
+    name: GNU General Public License version 2
+    url: https://checkmk.com/gpl.html
+  title: Checkmk REST API
+  version: 1.0.0
+openapi: 3.0.2
 paths:
-  /version:
+  /collections/folder:
     get:
-      summary: Tell the version of various installed components.
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.list_folders
       responses:
-        200:
-          description: A JSON object with the following fields.
+        default:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  api:
-                    type: string
-                  checkmk:
-                    type: string
-                  site:
-                    type: string
-                  python:
-                    type: string
-  /host_group/{ident}:
-    parameters:
-      - $ref: '#/components/parameters/ident'
-    get:
-      summary: Retrieve the content of the host-group entry.
-      responses:
-        200:
-          description: A JSON object with the following fields.
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HostGroup'
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
     post:
-      summary: Edit the content of the host-group entry
+      description: This is the long description of the endpoint.
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.create
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HostGroup'
+              $ref: '#/components/schemas/InputFolder'
+        required: true
       responses:
-        200:
-          description: OK.
+        default:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HostGroup'
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a new folder
+  /objects/folder/{ident}:
+    delete:
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.delete
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.show_folder
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+    put:
+      description: Title and attributes can be updated, but there is no checking of
+        the attributes done.
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.update
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFolder'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a folder.
+  /objects/folder/{ident}/actions/move/invoke:
+    post:
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.move
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /version:
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.version.search
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstalledVersions'
+          description: ''
+security:
+- BearerAuth: []

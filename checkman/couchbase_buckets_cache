@@ -1,4 +1,4 @@
-title: Caches of couchbase buckets
+title: Couchbase buckets: Caches performance
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -12,4 +12,4 @@ inventory:
  One service per bucket is created.
 
 item:
- The item is the name of the bucket.
+ The name of the bucket.

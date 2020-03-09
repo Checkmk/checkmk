@@ -1,0 +1,27 @@
+From 27747ad4c03e3f31862f1958d42e98f3a18cef28 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 13:17:57 +0100
+Subject: [PATCH 01/11] Favour setuptools over distutils in a clean way.
+
+---
+ python/setup.py | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/python/setup.py b/python/setup.py
+index c520df9..bdd9878 100644
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -1,5 +1,8 @@
+-from distutils.core import setup, Extension
+-from setuptools import setup, Extension, find_packages
++try:
++    from setuptools import setup, Extension, find_packages
++except:
++    from distutils.core import setup, Extension
++    find_packages = lambda: ['netsnmp']
+ import os
+ import re
+ import string
+-- 
+2.7.4
+

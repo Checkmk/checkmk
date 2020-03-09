@@ -1,3 +1,8 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -9,6 +14,7 @@
 #include "TableQueryHelper.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
+#include "test/Utilities.h"
 
 namespace fs = std::filesystem;
 
@@ -18,7 +24,8 @@ public:
     const std::string component{"gui"};
     const std::string crash_info{"crash.info"};
     const std::string json{"{}\n"};
-    const fs::path basepath{fs::temp_directory_path() / "crash_report_tests"};
+    const fs::path basepath{fs::temp_directory_path() / "crash_report_tests" /
+                            random_string(12)};
     const fs::path fullpath{basepath / component / uuid / crash_info};
 
     void SetUp() override {

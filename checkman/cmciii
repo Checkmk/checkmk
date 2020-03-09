@@ -13,7 +13,7 @@ description:
  Otherwise the check is {UNKNOWN}.
 
 item:
- None
+ Name of the device
 
 inventory:
  None

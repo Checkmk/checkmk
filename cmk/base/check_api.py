@@ -1,29 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 The things in this module specify the official Check_MK check API. Meaning all
 variables, functions etc. and default modules that are available to checks.
@@ -85,7 +64,7 @@ Global variables:
                          function. See get_rate() documentation for details
     ZERO                 Used as value for the "onwrap" argument of the get_rate()
                          function. See get_rate() documentation for details
-""" # # pylint: disable=pointless-string-statement
+"""  # pylint: disable=pointless-string-statement
 
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
@@ -94,21 +73,22 @@ Global variables:
 
 # TODO: Move imports directly to checks?
 from __future__ import division  # pylint: disable=misplaced-future
-import collections  # pylint: disable=unused-import
-import enum  # pylint: disable=unused-import
-import fnmatch  # pylint: disable=unused-import
+import collections  # noqa: F401 # pylint: disable=unused-import
+import enum  # noqa: F401 # pylint: disable=unused-import
+import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
-import math  # pylint: disable=unused-import
+import math  # noqa: F401 # pylint: disable=unused-import
 import os
-import re  # pylint: disable=unused-import
-import socket  # pylint: disable=unused-import
+import re  # noqa: F401 # pylint: disable=unused-import
+import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # pylint: disable=unused-import
+import pprint  # noqa: F401 # pylint: disable=unused-import
+import calendar
 
 from typing import (  # pylint: disable=unused-import
-    Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, Text,
+    Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union,
 )
 
 import six
@@ -117,7 +97,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex  # pylint: disable=unused-import
+from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
 import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
@@ -126,12 +106,12 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # check context.
 import cmk.utils as _cmk_utils
 import cmk.base.config as _config
-import cmk.base.console as _console  # pylint: disable=unused-import
+import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 import cmk.base.check_api_utils as _check_api_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, CheckPluginName, MetricName,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
@@ -168,8 +148,9 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY = _snmp_utils.BINARY
-CACHED_OID = _snmp_utils.CACHED_OID
+# backwards compatibility: allow to pass integer.
+BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
+CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
 
 OID_END = _snmp_utils.OID_END
 OID_STRING = _snmp_utils.OID_STRING
@@ -187,7 +168,7 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
-from cmk.base.discovered_labels import (  # pylint: disable=unused-import
+from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
     HostLabel,
 )
@@ -230,9 +211,9 @@ class as_float(float):
     def __repr__(self):
         # type: () -> str
         if self > sys.float_info.max:
-            return '1e309'
+            return '1e%d' % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:
-            return '-1e309'
+            return '-1e%d' % (sys.float_info.max_10_exp + 1)
         return super(as_float, self).__repr__()
 
 
@@ -487,10 +468,9 @@ def check_levels(value,
             return None
         return v * factor * scale
 
+    infotext = "%s%s" % (human_readable_func(value), unit_info)
     if infoname:
-        infotext = "%s: %s%s" % (infoname, human_readable_func(value), unit_info)
-    else:
-        infotext = "%s%s" % (human_readable_func(value), unit_info)
+        infotext = "%s: %s" % (infoname, infotext)
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
@@ -564,7 +544,6 @@ def utc_mktime(time_struct):
     # type: (time.struct_time) -> int
     """Works like time.mktime() but assumes the time_struct to be in UTC,
     not in local time."""
-    import calendar
     return calendar.timegm(time_struct)
 
 
@@ -607,7 +586,8 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    import cmk.base.check_utils
+    # TODO 'import-outside-toplevel' not available in pylint for Python 2
+    import cmk.base.check_utils  # pylint: disable-all
     if cmk.base.check_utils.is_snmp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[
             0]  # type: Optional[str]
@@ -662,19 +642,18 @@ def discover_single(info):
 
 
 def validate_filter(filter_function):
-    # type: (Callable) -> Callable
+    # type: (Any) -> Callable
     """Validate function argument is a callable and return it"""
-
-    if hasattr(filter_function, '__call__'):
+    if callable(filter_function):
         return filter_function
-    if filter_function is not None:
-        raise ValueError("Filtering function is not a callable,"
-                         " a {} has been given.".format(type(filter_function)))
-    return lambda *entry: entry[0]
+    if filter_function is None:
+        return lambda *entry: entry[0]
+    raise ValueError("Filtering function is not a callable, a {} has been given.".format(
+        type(filter_function)))
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[dict, str]]) -> Callable
+    # type: (Optional[Callable], Optional[Union[Dict[Any, Any], str]]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -733,46 +712,31 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-    def roller(parsed):
-        # type: (Any) -> Any
-        if isinstance(parsed, dict):
-            return parsed.items()
-        if isinstance(parsed, (list, tuple)):
-            return parsed
-        raise ValueError("Discovery function only works with dictionaries,"
-                         " lists, and tuples you gave a {}".format(type(parsed)))
-
     def _discovery(filter_function):
         # type: (Callable) -> Callable
         @functools.wraps(filter_function)
         def discoverer(parsed):
-            # type: (Union[dict, list]) -> Iterable[Tuple]
-
+            # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
             params = default_params if isinstance(default_params, six.string_types +
                                                   (dict,)) else {}
-            filterer = validate_filter(filter_function)
-            from_dict = isinstance(parsed, dict)
-
-            for entry in roller(parsed):
-                if from_dict:
-                    key, value = entry
-                    name = filterer(key, value)
-                else:
-                    name = filterer(entry)
-
-                if isinstance(name, six.string_types):
-                    yield (name, params)
-                elif name is True and from_dict:
-                    yield (key, params)
-                elif name is True and not from_dict:
-                    yield (entry[0], params)
-                elif name and hasattr(name, '__iter__'):
-                    for new_name in name:
-                        yield (new_name, params)
+            if isinstance(parsed, dict):
+                filterer = validate_filter(filter_function)
+                for key, value in parsed.items():
+                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                        yield (n, params)
+            elif isinstance(parsed, (list, tuple)):
+                filterer = validate_filter(filter_function)
+                for entry in parsed:
+                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                        yield (n, params)
+            else:
+                raise ValueError(
+                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}"
+                    .format(type(parsed)))
 
         return discoverer
 
-    if selector is not None and hasattr(selector, '__call__'):
+    if callable(selector):
         return _discovery(selector)
 
     if selector is None and default_params is None:
@@ -781,8 +745,20 @@ def discover(selector=None, default_params=None):
     return _discovery
 
 
+def _get_discovery_iter(name, get_name):
+    # type: (Any, Callable[[], str]) -> Iterable[str]
+    if isinstance(name, six.string_types):
+        return iter((six.ensure_str(name),))
+    if name is True:
+        return iter((get_name(),))
+    try:
+        return iter(name)
+    except TypeError:
+        return iter(())
+
+
 # NOTE: Currently this is not really needed, it is just here to keep any start
 # import in sync with our intended API.
 # TODO: Do we really need this? Is there code which uses a star import for this
 # module?
-__all__ = get_check_api_context().keys()
+__all__ = list(get_check_api_context())

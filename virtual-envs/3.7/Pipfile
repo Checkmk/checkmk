@@ -12,6 +12,7 @@ bandit = "*"  # used by test/Makefile's test-bandit target
 bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "*"  # used by test_docker test and mk_docker agent plugin
+dockerpty = "*"  # used by dockerized tests for opening debug shells
 freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
@@ -28,6 +29,7 @@ polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
 pyfakefs = "*" # used for unit tests
+flake8 = "*"
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py
@@ -103,7 +105,16 @@ jmespath = "==0.9.4" # needed by boto3 (aws)
 botocore = "==1.14.11" # needed by boto3 (aws)
 s3transfer = "==0.3.2" # needed by boto3 (aws)
 boto3 = "==1.11.11" # needed by boto3 (aws)
-flake8 = "*"
+mypy_extensions = "==0.4.3"  # direct dependency
+python-snap7 = "==0.10" # needed by Siemens PLC special agent
+pymssql = "==2.1.4" # needed by check_sql active check
+PyMySQL = "==0.9.3" # needed by check_sql active check
+psycopg2-binary = "==2.8.4" # needed by check_sql active check
+rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
+marshmallow = "==2.20.5"
+marshmallow-oneofschema = "==1.0.6"
+apispec = "==2.0.2"
+apispec-oneofschema = "==2.1.1"
 
 [requires]
 python_version = "3.7"

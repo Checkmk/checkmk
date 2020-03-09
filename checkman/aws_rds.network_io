@@ -1,4 +1,4 @@
-title: AWS/RDS Network IO
+title: AWS RDS: Network IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,6 +9,9 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  No default levels are set. These are configurable.
+
+item:
+ Name of the instance if all required metrics (NetworkReceiveThroughput, NetworkTransmitThroughput) are given.
 
 inventory:
  One service per databse will be created.

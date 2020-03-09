@@ -15,7 +15,7 @@ description:
  If the active status is not YES the check goes CRIT.
 
 item:
- The instance and process name
+ The sid instance name and the process name seperated by a {{-}}
 
 inventory:
  One service is created per instance and process.

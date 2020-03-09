@@ -1,4 +1,4 @@
-title: Voltages of Power Supply and CMOS Battery via IBM Integrated Management Module (IMM)
+title: IBM Integrated Management Module (IMM): Power Supply and CMOS Battery voltages
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

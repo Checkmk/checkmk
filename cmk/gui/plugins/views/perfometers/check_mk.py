@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import cmk.utils.render
@@ -753,7 +733,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
@@ -762,12 +742,12 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     for i, color, base, scale, verbfunc in [
         (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
         (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  #age_newest
+    ]:  # age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
@@ -861,7 +841,7 @@ def perfometer_vms_system_ios(row, check_command, perf_data):
     h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
     h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
     h += '</div>'
-    return "%.0f / %.0f" % (direct, buffered), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return "%.0f / %.0f" % (direct, buffered), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios

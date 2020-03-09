@@ -17,8 +17,5 @@ description:
  {Maximum number of check attempts for service} should be
  used.
 
-item:
- No item.
-
 inventory:
  One service is created for each pod.

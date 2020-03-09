@@ -8,6 +8,10 @@ description:
 
  These metrics are purely informational, there are currently no warn/crit levels.
 
+item:
+ The name of the application server instance as configured by the agent followed
+ by the cache
+
 inventory:
  One service per cache is created.
 

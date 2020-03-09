@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import socket
@@ -450,21 +430,22 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
             continue
 
         if len(subinstance) > 1:
-            item = ",".join((inst.name,) + subinstance[:-1])
+            instance_out = ",".join((inst.name,) + subinstance[:-1])
         elif inst_add is not None:
-            item = ",".join((inst.name, inst_add))
+            instance_out = ",".join((inst.name, inst_add))
         else:
-            item = inst.name
+            instance_out = inst.name
+        instance_out = instance_out.replace(" ", "_")
 
         if title:
             if subinstance:
-                tit = title + "." + subinstance[-1]
+                title_out = title + "." + subinstance[-1]
             else:
-                tit = title
+                title_out = title
         else:
-            tit = subinstance[-1]
+            title_out = subinstance[-1]
 
-        yield (item.replace(" ", "_"), tit, value)
+        yield instance_out, title_out, value
 
 
 @cached
@@ -488,8 +469,8 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
 def _process_queries(inst, queries):
     for mbean_path, title, itemspec in queries:
         try:
-            for item, out_title, value in fetch_metric(inst, mbean_path, title, itemspec):
-                yield item, out_title, value
+            for instance_out, title_out, value in fetch_metric(inst, mbean_path, title, itemspec):
+                yield instance_out, title_out, value
         except (IOError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:
@@ -568,7 +549,7 @@ def yield_configured_instances(custom_config=None):
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        exec (open(conffile).read(), {}, custom_config)
+        exec(open(conffile).read(), {}, custom_config)
 
     # Generate list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list of dicts).

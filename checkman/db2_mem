@@ -9,6 +9,9 @@ description:
  The agent plugin greps for the instances in the process list, and try
  to switch to each instance and execute {db2pd -dptnmem}.
 
+item:
+ The DB2 instance name
+
 inventory:
  One service will be created for each instance
 

@@ -11,5 +11,8 @@ description:
 
  Additionally the serial number will be in the output.
 
+item:
+ Name of the product
+
 inventory:
  Only one service will be created.

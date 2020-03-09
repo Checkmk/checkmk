@@ -10,5 +10,8 @@ description:
 
  The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins.
 
+item:
+ Name of the virtual disk
+
 Inventory:
  One service will be created

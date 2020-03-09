@@ -15,7 +15,7 @@ description:
  check_mk can not influence these values.
 
 item:
- The item name is based on the bricks position inside the stack.
+ The bricks position inside the stack.
 
 inventory:
  All motion detector bricklets are automatically inventorized.

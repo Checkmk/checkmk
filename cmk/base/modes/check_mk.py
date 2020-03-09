@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import sys
@@ -58,7 +38,7 @@ import cmk.base.dump_host
 import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
     modes,
@@ -236,7 +216,7 @@ def _list_all_hosts(hostgroups, options):
 
     if options.get("all-sites"):
         hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
-        if not "include-offline" in options:
+        if "include-offline" not in options:
             hostnames -= config.all_configured_offline_hosts()
     else:
         hostnames.update(config_cache.all_active_hosts())
@@ -295,7 +275,7 @@ modes.register(
 def mode_list_tag(args):
     # type: (List[str]) -> None
     hosts = _list_all_hosts_with_tags(args)
-    console.output("\n".join(hosts))
+    console.output("\n".join(sorted(hosts)))
     if hosts:
         console.output("\n")
 
@@ -339,7 +319,7 @@ modes.register(
 
 def mode_list_checks():
     # type: () -> None
-    import cmk.utils.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     all_check_manuals = man_pages.all_man_pages()
 
     checks_sorted = sorted(
@@ -364,10 +344,9 @@ def mode_list_checks():
             else:
                 title = "(no man page present)"
 
-            console.output((tty.bold + "%-44s" + tty.normal
-                   + ty_color + " %-6s " + tty.normal
-                   + "%s\n") % \
-                  (check_plugin_name, what, title))
+            console.output(
+                (tty.bold + "%-44s" + tty.normal + ty_color + " %-6s " + tty.normal + "%s\n") %
+                (check_plugin_name, what, title))
         except Exception as e:
             console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
 
@@ -402,15 +381,12 @@ def mode_dump_agent(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
-
-        output = ""
-
         sources = data_sources.DataSources(hostname, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-        for source in sources.get_data_sources():
-            if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
-                output += source.run_raw()
+        output = b"".join(source.run_raw()
+                          for source in sources.get_data_sources()
+                          if isinstance(source, data_sources.abstract.CheckMKAgentDataSource))
 
         # Show errors of problematic data sources
         has_errors = False
@@ -420,7 +396,7 @@ def mode_dump_agent(hostname):
                 console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
-        console.output(output)
+        console.output(six.ensure_str(output, errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -828,19 +804,20 @@ def mode_snmptranslate(walk_filename):
     snmp.do_snmptranslate(walk_filename)
 
 
-modes.register(Mode(
-    long_option="snmptranslate",
-    handler_function=mode_snmptranslate,
-    needs_config=False,
-    argument=True,
-    argument_descr="HOST",
-    short_help="Do snmptranslate on walk",
-    long_help=[
-        "Does not contact the host again, but reuses the hosts walk from the "
-        "directory %s. You can add further MIBs to the directory %s." % \
-         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
-    ],
-))
+modes.register(
+    Mode(
+        long_option="snmptranslate",
+        handler_function=mode_snmptranslate,
+        needs_config=False,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do snmptranslate on walk",
+        long_help=[
+            "Does not contact the host again, but reuses the hosts walk from the "
+            "directory %s. You can add further MIBs to the directory %s." %
+            (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
+        ],
+    ))
 
 #.
 #   .--snmpwalk------------------------------------------------------------.
@@ -1051,7 +1028,7 @@ modes.register(
 
 def mode_dump_nagios_config(args):
     # type: (List[HostName]) -> None
-    from cmk.base.core_nagios import create_config
+    from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
     create_config(sys.stdout, args if len(args) else None)
 
 
@@ -1074,7 +1051,7 @@ modes.register(
 
 def mode_update_no_precompile(options):
     # type: (Dict) -> None
-    from cmk.base.core_config import do_update
+    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
     do_update(create_core(options), with_precompile=False)
 
 
@@ -1137,7 +1114,7 @@ modes.register(
 
 def mode_update(options):
     # type: (Dict) -> None
-    from cmk.base.core_config import do_update
+    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
     do_update(create_core(options), with_precompile=True)
 
 
@@ -1226,7 +1203,7 @@ modes.register(
 
 def mode_man(args):
     # type: (List[str]) -> None
-    import cmk.utils.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     if args:
         man_pages.ConsoleManPageRenderer(args[0]).paint()
     else:
@@ -1263,7 +1240,7 @@ modes.register(
 
 def mode_browse_man():
     # type: () -> None
-    import cmk.utils.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     man_pages.print_man_page_browser()
 
 
@@ -1341,7 +1318,7 @@ modes.register(
 
 
 def mode_inventory_as_check(options, hostname):
-    # type: (Dict, HostName) -> None
+    # type: (Dict, HostName) -> int
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)
@@ -1399,12 +1376,12 @@ modes.register(
 
 def mode_automation(args):
     # type: (List[str]) -> None
-    import cmk.base.automations as automations
+    import cmk.base.automations as automations  # pylint: disable=import-outside-toplevel
 
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
 
-    sys.exit(automations.automations.execute(args[0], args[2:]))
+    sys.exit(automations.automations.execute(args[0], args[1:]))
 
 
 modes.register(
@@ -1432,7 +1409,7 @@ modes.register(
 
 def mode_notify(options, args):
     # type: (Dict, List[str]) -> Optional[int]
-    import cmk.base.notify as notify
+    import cmk.base.notify as notify  # pylint: disable=import-outside-toplevel
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
     return notify.do_notify(options, args)
@@ -1596,12 +1573,12 @@ modes.register(
 
 def mode_check(options, args):
     # type: (Dict, List[str]) -> None
-    import cmk.base.checking as checking
-    import cmk.base.item_state as item_state
+    import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
+    import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
-        import cmk.base.cee.keepalive as keepalive
+        import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel
     except ImportError:
-        keepalive = None  # type: ignore
+        keepalive = None  # type: ignore[assignment]
 
     if keepalive and "keepalive" in options:
         # handle CMC check helper

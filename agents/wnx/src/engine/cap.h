@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // engine to install/remove cap files
 
 #ifndef cap_h__
@@ -17,6 +21,10 @@
 
 namespace cma::cfg::cap {
 
+constexpr uint32_t kMaxAttemptsToStoreFile = 5;
+constexpr size_t kMinimumProcessNameLength = 10;
+constexpr std::string_view kAllowedExtension = ".EXE";
+
 enum class Mode { normal, forced };
 
 // main API
@@ -31,9 +39,6 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
-
-bool AreFilesSame(const std::filesystem::path &Target,
-                  const std::filesystem::path &Src);
 
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
@@ -82,6 +87,16 @@ std::string ReadFileName(std::ifstream &CapFile, uint32_t Length);
 std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile);
 FileInfo ExtractFile(std::ifstream &cap_file);
 bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
+
+[[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name);
+// we will try to kill the process with name of the executable if
+// we cannot write to the file
+[[nodiscard]] bool StoreFileAgressive(const std::wstring &name,
+                                      const std::vector<char> &data,
+                                      uint32_t attempts_count);
+
+[[nodiscard]] bool IsStoreFileAgressive() noexcept;
+[[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name);
 
 // idiotic API form thje past. Do not for what hell, but let it stay
 bool CheckAllFilesWritable(const std::string &Directory);

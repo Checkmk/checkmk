@@ -1,4 +1,4 @@
-title: Lamp runtime of Epson beamers
+title: Epson beamer: Lamp runtime
 agents: snmp
 catalog: hw/environment/epson
 license: GPL

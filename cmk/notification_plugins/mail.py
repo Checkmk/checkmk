@@ -1,27 +1,8 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
 # Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
@@ -34,7 +15,6 @@ import base64
 import os
 import socket
 import sys
-import subprocess
 import urllib
 import urllib2
 import json
@@ -623,77 +603,6 @@ def send_mail(message, target, from_address, context):
     return utils.send_mail_sendmail(message, target, from_address)
 
 
-def fetch_pnp_data(context, params):
-    path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
-    php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode('utf-8')
-    env = {
-        'REMOTE_USER': "check-mk",
-        "SKIP_AUTHORIZATION": "1",
-    }
-
-    if not os.path.exists(path):
-        raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
-
-    return subprocess.check_output(["php", php_save_path, path, params], env=env)
-
-
-def fetch_num_sources(context):
-    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
-    infos = fetch_pnp_data(
-        context, '/json?host=%s&srv=%s&view=0' %
-        (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
-    if not infos.startswith('[{'):
-        raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
-
-    return infos.count('source=')
-
-
-def fetch_graph(context, source, view=1):
-    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
-    graph = fetch_pnp_data(
-        context, '/image?host=%s&srv=%s&view=%d&source=%d' %
-        (context['HOSTNAME'], svc_desc.encode('utf-8'), view, source))
-
-    if graph[:8] != '\x89PNG\r\n\x1a\n':
-        raise GraphException('Unable to fetch the graph: %s' % extract_graph_error(graph))
-
-    return graph
-
-
-def extract_graph_error(output):
-    lines = output.splitlines()
-    for nr, line in enumerate(lines):
-        if "Please check the documentation for information about the following error" in line:
-            return lines[nr + 1]
-    return output
-
-
-# Fetch graphs for this object. It first tries to detect how many sources
-# are available for this object. Then it loops through all sources and
-# fetches retrieves the images. If a problem occurs, it is printed to
-# stderr (-> notify.log) and the graph is not added to the mail.
-def render_pnp_graphs(context):
-    try:
-        num_sources = fetch_num_sources(context)
-    except GraphException as e:
-        graph_error = extract_graph_error(str(e))
-        if '.xml" not found.' not in graph_error:
-            sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
-        num_sources = 0
-
-    graph_list = []
-    for source in range(0, num_sources):
-        try:
-            content = fetch_graph(context, source)
-        except GraphException as e:
-            sys.stderr.write('Unable to fetch graph: %s\n' % e)
-            continue
-
-        graph_list.append(content)
-
-    return graph_list
-
-
 def render_cmk_graphs(context):
     if context["WHAT"] == "HOST":
         svc_desc = "_HOST_"
@@ -724,15 +633,8 @@ def render_cmk_graphs(context):
     return map(base64.b64decode, base64_strings)
 
 
-def use_cmk_graphs():
-    return site.get_omd_config("CONFIG_CORE") == "cmc"
-
-
 def render_performance_graphs(context):
-    if use_cmk_graphs():
-        graphs = render_cmk_graphs(context)
-    else:
-        graphs = render_pnp_graphs(context)
+    graphs = render_cmk_graphs(context)
 
     attachments, graph_code = [], ''
     for source, graph_png in enumerate(graphs):
@@ -781,8 +683,8 @@ def construct_content(context):
     content_html = utils.substitute_context(template_html, context)
 
     attachments = []
-    if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
-        # Add PNP or Check_MK graph
+    if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
+        # Add Checkmk graphs
         try:
             attachments, graph_code = render_performance_graphs(context)
             content_html += graph_code

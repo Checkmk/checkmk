@@ -1,10 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import os
+import sys
 import subprocess
 from collections import defaultdict
-from pathlib2 import Path
-import pytest  # type: ignore
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+
+import pytest  # type: ignore[import]
+import six
 
 import testlib
 import cmk.utils.werks
@@ -22,9 +35,9 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cre_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cre"])
-    cee_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cee"])
-    cme_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cme"])
+    cre_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cre"}
+    cee_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cee"}
+    cme_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cme"}
 
     assert len(cre_werks) > 1000
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
@@ -103,13 +116,16 @@ def _tags_containing_werk(werk_id):
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)  # type: ignore
+_werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 
 @cmk.utils.memoize.MemoizeCache
 def _werks_in_git_tag(tag):
-    werks_in_tag = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", tag, ".werks"],
-                                           cwd=testlib.cmk_path()).split("\n")
+    werks_in_tag = six.ensure_str(
+        subprocess.check_output(
+            [b"git", b"ls-tree", b"-r", b"--name-only",
+             six.ensure_binary(tag), b".werks"],
+            cwd=six.ensure_binary(testlib.cmk_path()))).split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

@@ -1,0 +1,44 @@
+From 59ae271f72bf8e5734df3a460d5d9718cbcb8590 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 13:34:02 +0100
+Subject: [PATCH 10/11] Emulate -Cc behavior in netsnmp_walk.
+
+In Check_MK we always use snmp(bulk)walk's -Cc option to handle some broken
+devices, like e.g. some bintec routers.  We need similar behavior in the
+Python binding, too.  Alas, there is no option for doing this, so we make
+this the default behavior for netsnmp_walk.
+---
+ python/netsnmp/client_intf.c | 17 -----------------
+ 1 file changed, 17 deletions(-)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index cbe23f3..6b0b15c 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -2118,23 +2118,6 @@ netsnmp_walk(PyObject *self, PyObject *args)
+                   break;
+               }
+ 
+-              if (snmp_oid_compare(vars->name, vars->name_length,
+-                                   oid_arr_broken_check[varlist_ind],
+-                                   oid_arr_broken_check_len[varlist_ind]) <= 0) {
+-                  /* The agent responded with an illegal response
+-                     as the returning OID was lexogragically less
+-                     then or equal to the requested OID...
+-                     We need to give up here because an infite
+-                     loop will result otherwise.
+-
+-                     XXX: this really should be an option to
+-                     continue like the -Cc option to the snmpwalk
+-                     application.
+-                  */
+-                  notdone = 0;
+-                  break;
+-              }
+-
+               varbind = py_netsnmp_construct_varbind();
+               if (varbind == NULL)
+                   break;
+-- 
+2.7.4
+

@@ -1,4 +1,4 @@
-title: Hepta 8030
+title: Hepta 8030 Stratum: Time sync
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -13,4 +13,4 @@ inventory:
  One service for ntpSysStratum
 
 item:
- "ntpSysStratum"
+ The fixed statement {{ntpSysStratum}}

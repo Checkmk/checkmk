@@ -1,4 +1,4 @@
-title: Emerson UPS Device: Temperature sensor
+title: Emerson UPS: Temperature sensor
 agents: snmp
 catalog: hw/power/emerson
 license: GPL
@@ -12,7 +12,7 @@ description:
 
 
 item:
- The index of the sensors found during inventory  numbered starting from 0.
+ The index of the sensors found during inventory numbered starting from 0.
 
 inventory:
  One check for each sensor is created by the inventory

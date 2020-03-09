@@ -1,6 +1,12 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // Configuration Parameters for YAML and YAML-INI related configs
 #pragma once
 #include <cstdint>
+#include <string_view>
+
 namespace cma::cfg {
 
 namespace yml_var {
@@ -19,39 +25,41 @@ constexpr const std::string_view kDataOld = "@data";
 };  // namespace yml_var
 
 namespace groups {
-constexpr const char* const kGlobal = "global";
-constexpr const char* const kWinPerf = "winperf";
-constexpr const char* const kLogFiles = "logfiles";
-constexpr const char* const kPs = "ps";
-constexpr const char* const kPlugins = "plugins";
-constexpr const char* const kFileInfo = "fileinfo";
-constexpr const char* const kMrpe = "mrpe";
-constexpr const char* const kLogWatchEvent = "logwatch";
-constexpr const char* const kLocal = "local";
-constexpr const char* const kSystem = "system";
+constexpr std::string_view kGlobal = "global";
+constexpr std::string_view kWinPerf = "winperf";
+constexpr std::string_view kLogFiles = "logfiles";
+constexpr std::string_view kPs = "ps";
+constexpr std::string_view kPlugins = "plugins";
+constexpr std::string_view kFileInfo = "fileinfo";
+constexpr std::string_view kMrpe = "mrpe";
+constexpr std::string_view kLogWatchEvent = "logwatch";
+constexpr std::string_view kLocal = "local";
+constexpr std::string_view kSystem = "system";
+constexpr std::string_view kModules = "modules";
 }  // namespace groups
 
 // ALL name of variables in the YAML
 namespace vars {
 // universal
-const char* const kEnabled = "enabled";  // bool
-const char* const kFile = "file";        // string
-const char* const kTimeout = "timeout";  // int
+constexpr std::string_view kEnabled = "enabled";  // bool
+constexpr std::string_view kFile = "file";        // string
+constexpr std::string_view kTimeout = "timeout";  // int
 
 // group "global"
 // root
-const char* const kInstall = "install";               // bool
-const char* const kName = "name";                     // string
-const char* const kPort = "port";                     // int
-const char* const kOnlyFrom = "only_from";            // seq
-const char* const kIpv6 = "ipv6";                     // bool
-const char* const kExecute = "execute";               // seq
-const char* const kHost = "host";                     // seq
-const char* const kAsync = "async";                   // bool
-const char* const kSectionFlush = "section_flush";    // bool
-const char* const kGlobalEncrypt = "encrypted";       // bool
-const char* const kGlobalPassword = "passphrase";     // string
-const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
+const char* const kInstall = "install";                               // bool
+const char* const kName = "name";                                     // string
+const char* const kPort = "port";                                     // int
+const char* const kOnlyFrom = "only_from";                            // seq
+const char* const kIpv6 = "ipv6";                                     // bool
+const char* const kExecute = "execute";                               // seq
+const char* const kHost = "host";                                     // seq
+const char* const kAsync = "async";                                   // bool
+const char* const kTryKillPluginProcess = "try_kill_plugin_process";  // string
+const char* const kSectionFlush = "section_flush";                    // bool
+const char* const kGlobalEncrypt = "encrypted";                       // bool
+const char* const kGlobalPassword = "passphrase";                     // string
+const char* const kGlobalWmiTimeout = "wmi_timeout";                  // int
 
 const char* const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -171,6 +179,13 @@ const char* const kFileInfoPath = "path";  // sequence
 const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
 
+// group "modules"
+constexpr std::string_view kModulesTable = "table";  // list of nodes
+constexpr std::string_view kModulesName = "name";    // string
+constexpr std::string_view kModulesExts = "exts";    // list of string
+constexpr std::string_view kModulesExec = "exec";    // string
+constexpr std::string_view kModulesDir = "dir";      // string
+
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
 constexpr const char* const kFirewallMode = "mode";  // string
@@ -182,10 +197,13 @@ constexpr const char* const kService = "service";                  // dictionary
 constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
 constexpr const char* const kErrorMode = "error_mode";             // string
 constexpr const char* const kStartMode = "start_mode";             // string
-
 }  // namespace vars
 
 namespace values {
+// modules.table
+constexpr std::string_view kModulesNamePython = "python-3.8";             //
+constexpr std::string_view kModulesCmdPython = "Scripts\\python.exe {}";  //
+
 // Firewall.Mode
 constexpr const char* const kModeConfigure = "configure";  // install [*]
 constexpr const char* const kModeNone = "none";            // does noting
@@ -208,6 +226,11 @@ constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 constexpr const char* const kErrorModeIgnore = "ignore";  // do nothing
 constexpr const char* const kErrorModeLog = "log";        // log situation
 
+// global.try_kill_plugin_process
+constexpr const char* const kTryKillSafe = "safe";  // only well known processes
+constexpr const char* const kTryKillAll = "all";    // all plugins
+constexpr const char* const kTryKillNo = "no";      //
+
 }  // namespace values
 
 namespace defaults {
@@ -215,6 +238,10 @@ constexpr const char* const kStartMode = values::kStartModeAuto;
 constexpr const char* const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;
 constexpr uint32_t kMrpeTimeout = 10;
+
+constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
+
+constexpr std::string_view kModulesDir = "modules\\{}";
 
 }  // namespace defaults
 

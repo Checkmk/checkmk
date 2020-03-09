@@ -9,7 +9,7 @@ description:
  and to {CRIT} if the controller is down.
 
 item:
- The controller number is the item
+ The controller number
 
 inventory:
  One service for each controller is created

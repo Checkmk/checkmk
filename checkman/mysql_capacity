@@ -21,6 +21,9 @@ description:
  The check will go to {WARN} or {CRIT} levels if a user-specified
  limit is exceeded.
 
+item:
+ Name of the instance and name of the database seperated by a colon ({{:}})
+
 inventory:
  The check generates one item per Database found.
  Internal MySQL databases are ignored.

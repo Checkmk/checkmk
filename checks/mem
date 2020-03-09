@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -185,6 +165,7 @@ def check_memory_dict(meminfo, params, render_base=1024):
             params.get("levels_ram"),
             metric_name="mem_used",
             render_base=render_base,
+            create_percent_metric=True,
         )
 
     # Swap
@@ -338,7 +319,9 @@ def check_mem_linux(_no_item, params, info):
 
     # show these always:
     yield results.pop("virtual", (0, ""))[:2]
-    yield results.pop("ram", (0, ""))[:2]
+    state, info, perfdata = results.pop("ram", (0, ""))
+    yield state, info
+    meminfo["MemUsedPercent"] = perfdata[-1][1]
     yield results.pop("swap", (0, ""))[:2]
     # show rest only if not OK:
     for state, infotext, _perf in results.values():
@@ -501,8 +484,9 @@ def check_mem_windows(_no_item, params, info):
             crit = total_mb - levels[1]
         return warn, crit
 
-    for title, prefix, paramname in [("RAM", "Mem", "memory"),
-                                     ("Commit charge", "Page", "pagefile")]:
+    for title, prefix, paramname, metric_name in [("RAM", "Mem", "memory", "mem_used"),
+                                                  ("Commit charge", "Page", "pagefile",
+                                                   "pagefile_used")]:
 
         total_kb = meminfo.get("%sTotal" % prefix)
         free_kb = meminfo.get("%sFree" % prefix)
@@ -517,14 +501,15 @@ def check_mem_windows(_no_item, params, info):
 
         warn, crit = _get_levels_on_used_mb(paramname, total_mb)
 
-        infotext = check_memory_element(
+        status, infotext, perfdata = check_memory_element(
             title,
             used_kb * 1024,
             total_kb * 1024,
             None,
-        )[1]
+            metric_name=metric_name,
+            create_percent_metric=title == "RAM",
+        )
 
-        perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
         if prefix == "Mem":
             perfdata.append(("mem_total", total_mb))
         elif prefix == "Page":

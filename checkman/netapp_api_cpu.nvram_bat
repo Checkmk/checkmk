@@ -12,7 +12,7 @@ description:
  {battery_unknown}.
 
 item:
- The name of the node
+ The name of the cluster node
 
 inventory:
  One check per node

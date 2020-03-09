@@ -1,0 +1,18 @@
+title: Arista switches DCS-7280: Temperature
+agents: snmp
+catalog: hw/network/arista
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature sensors of an Arista Networks DCS-7280 switch.
+
+ Upper and lower temperature levels are supported.
+
+ There are no default temperature levels in the check plugin nor does the
+ device provides their own thershold levels.
+
+item:
+ Every recognized temperature sensor generates an individual service
+
+inventory:
+ All temperature known sensors with complete Physical description are detected

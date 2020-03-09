@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The name of the active service
+
 description:
   This is an active check that connects to a database server, sends an SQL
   statement to that server, and checks for the following result:

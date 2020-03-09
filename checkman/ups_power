@@ -11,6 +11,9 @@ description:
  the phases must not drop. Each phase is realized as a separate
  check.
 
+item:
+ ID of the phase
+
 inventory:
  Supported.
 

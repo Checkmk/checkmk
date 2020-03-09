@@ -10,7 +10,7 @@ description:
  The device sends its state itself.
 
 item:
- The changer device name.
+ The name of the changer device
 
 inventory:
  One service for each device is created.

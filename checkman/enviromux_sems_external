@@ -1,4 +1,4 @@
-title: enviromux_external_sems
+title: NTI Enviromux SEMS: External sensor temperature
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

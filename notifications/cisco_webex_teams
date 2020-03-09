@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+# Cisco Webex Teams
+from cmk.notification_plugins.cisco_webex_teams import cisco_webex_teams_msg
+from cmk.notification_plugins.utils import post_request
+
+if __name__ == "__main__":
+    post_request(cisco_webex_teams_msg, success_code=204)

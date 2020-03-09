@@ -11,7 +11,8 @@ description:
  This check will only pick up on disks where it has support for at least
  one of the reported attributes.
  Currently supported attributes are:
-   - Remaining Life
+
+ - Remaining Life
 
  check_mk includes a stripped down version of OpenHardwareMonitor without
  a gui component which can be installed through the agent backery
@@ -21,7 +22,7 @@ description:
  necessary.
 
 item:
- The id of the disk as reported by OpenHardwareMonitor
+ The ID of the disk as reported by OpenHardwareMonitor
 
 inventory:
  All disks that report a supported smart reading are inventorized.

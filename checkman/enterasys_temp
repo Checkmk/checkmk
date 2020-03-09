@@ -10,6 +10,9 @@ description:
  Returns {WARN} or {CRIT} if reaching or exceeding given levels and {OK}
  otherwise.
 
+item:
+ The fixed statement {{Ambient}}
+
 inventory:
  Creates one service on every Enterasys Switch in which a temperature
  sensor is found to be active.

@@ -9,7 +9,7 @@ description:
  returns {CRIT}.
 
 item:
- The id of the power supply as output from the SNMP agent.
+ The ID of the power supply as output from the SNMP agent.
 
 inventory:
  One check is created for each power supply.

@@ -8,7 +8,7 @@ description:
  "Levels for disk IO" can be used to set thresholds for read/write throughput.
 
 item:
- The SP id is used as item
+ The SP id
 
 inventory:
  One service for each SP is created

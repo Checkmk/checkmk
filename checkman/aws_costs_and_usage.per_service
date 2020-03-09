@@ -1,4 +1,4 @@
-title: AWS/Costs and Usage Per Service
+title: AWS: Costs and Usage Per Service
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,6 +9,9 @@ description:
  To make this check work you have to configure the related special agent
  {Amazon Web Services (AWS)}.
  Upper levels are configurable; no default levels are set.
+
+item:
+ Service name
 
 inventory:
  One service per AWS service will be created.

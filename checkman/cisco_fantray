@@ -10,7 +10,7 @@ description:
  by the check as follows: {1}: WARN, {2}: OK, {3}: CRIT, {4}: WARN.
 
 item:
- The id of the sensor as provided by the snmp agent of the device.
+ The ID of the sensor as provided by the snmp agent of the device.
 
 inventory:
  One check for each sensor is created by the inventory.

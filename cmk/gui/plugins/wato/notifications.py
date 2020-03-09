@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
 
@@ -78,7 +58,7 @@ def transform_forth_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
-    k, v = p.items()[0]
+    k, v = list(p.items())[0]
     if k == "automatic":
         return "%s_%s" % (k, v)
 
@@ -266,7 +246,7 @@ class NotificationParameterMail(NotificationParameter):
         ])
 
         if not cmk.is_raw_edition():
-            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option  # pylint: disable=no-member
+            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         return elements
 
@@ -332,6 +312,64 @@ class NotificationParameterSlack(NotificationParameter):
 
 
 @notification_parameter_registry.register
+class NotificationParameterCiscoWebexTeams(NotificationParameter):
+    @property
+    def ident(self):
+        return "cisco_webex_teams"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            optional_keys=["url_prefix"],
+            elements=[
+                ("webhook_url",
+                 CascadingDropdown(
+                     title=_("Webhook-URL"),
+                     help=
+                     _("Webhook URL. Setup Cisco Webex Teams Webhook " +
+                       "<a href=\"https://apphub.webex.com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                      ),
+                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
+                                                                        allow_empty=False)),
+                              ("store", _("URL from password store"),
+                               DropdownChoice(
+                                   sorted=True,
+                                   choices=passwordstore_choices,
+                               ))],
+                 )),
+                ("url_prefix",
+                 Transform(CascadingDropdown(
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification message "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "Cisco Webex Teams message are armed with hyperlinks to your Check_MK "
+                         "GUI. In both cases the recipient of the message can directly visit the "
+                         "host or service in question in Check_MK. Specify an absolute URL "
+                         "including the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
+            ],
+        )
+
+
+@notification_parameter_registry.register
 class NotificationParameterVictorOPS(NotificationParameter):
     @property
     def ident(self):
@@ -351,8 +389,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
-                               HTTPUrl(size=80,
-                                       allow_empty=False,
+                               HTTPUrl(allow_empty=False,
                                        regex=r"^https://alert\.victorops\.com/integrations/.+",
                                        regex_error=_(
                                            "The Webhook-URL must begin with "

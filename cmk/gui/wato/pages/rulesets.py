@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 import abc
@@ -201,7 +181,7 @@ class RulesetMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._group_name = html.get_ascii_input("group")
+        self._group_name = html.request.get_ascii_input("group")
 
         #  Explicitly hide deprecated rulesets by default
         if not html.request.has_var("search_p_ruleset_deprecated"):
@@ -218,7 +198,7 @@ class RulesetMode(WatoMode):
 
         # Transform the search argument to the "rule search" arguments
         if html.request.has_var("search"):
-            html.request.set_var("search_p_fulltext", html.get_unicode_input("search"))
+            html.request.set_var("search_p_fulltext", html.request.get_unicode_input("search"))
             html.request.set_var("search_p_fulltext_USE", "on")
             html.request.del_var("search")
 
@@ -231,7 +211,7 @@ class RulesetMode(WatoMode):
 
         self._search_options = ModeRuleSearch().search_options
 
-        self._only_host = html.get_ascii_input("host")
+        self._only_host = html.request.get_ascii_input("host")
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -478,9 +458,9 @@ class ModeEditRuleset(WatoMode):
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
     def _from_vars(self):
-        self._name = html.get_ascii_input("varname")
-        self._back_mode = html.get_ascii_input(
-            "back_mode", html.get_ascii_input("ruleset_back_mode", "rulesets"))
+        self._name = html.request.get_ascii_input("varname")
+        self._back_mode = html.request.get_ascii_input(
+            "back_mode", html.request.get_ascii_input("ruleset_back_mode", "rulesets"))
 
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
@@ -491,7 +471,7 @@ class ModeEditRuleset(WatoMode):
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
         # take translations into account (see cmk.base.config.service_description()).
-        check_command = html.get_ascii_input("check_command")
+        check_command = html.request.get_ascii_input("check_command")
         if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")
             if check_command.startswith("check_mk-"):
@@ -523,7 +503,7 @@ class ModeEditRuleset(WatoMode):
                 except Exception:
                     pass
 
-        hostname = html.get_ascii_input("host")
+        hostname = html.request.get_ascii_input("host")
         if hostname and watolib.Folder.current().has_host(hostname):
             self._hostname = hostname
         else:
@@ -608,7 +588,7 @@ class ModeEditRuleset(WatoMode):
         if watolib.has_agent_bakery():
             import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
         else:
-            agent_bakery = None  # type: ignore
+            agent_bakery = None
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
 
@@ -700,9 +680,10 @@ class ModeEditRuleset(WatoMode):
         match_state = {"matched": False, "keys": set()}
         search_options = ModeRuleSearch().search_options
         cur = watolib.Folder.current()
-        groups = ((folder, folder_rules) \
-                  for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
-                  if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
+        groups = (
+            (folder, folder_rules)  #
+            for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0])
+            if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
 
         num_rows = 0
         for folder, folder_rules in groups:
@@ -1685,13 +1666,15 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
-    def value_to_text(self, conditions):  # pylint: disable=arguments-differ
-        # type: (RuleConditions) -> None
-        html.open_ul(class_="conditions")
-        renderer = RuleConditionRenderer()
-        for condition in renderer.render(self._rulespec, conditions):
-            html.li(condition, class_="condition")
-        html.close_ul()
+    def value_to_text(self, value):
+        # type: (RuleConditions) -> Text
+        with html.plugged():
+            html.open_ul(class_="conditions")
+            renderer = RuleConditionRenderer()
+            for condition in renderer.render(self._rulespec, value):
+                html.li(condition, class_="condition")
+            html.close_ul()
+            return html.drain()
 
 
 class LabelCondition(Transform):
@@ -1737,7 +1720,7 @@ class LabelCondition(Transform):
         label_conditions = {}
         for operator, label in valuespec_value:
             if label:
-                label_id, label_value = label.items()[0]
+                label_id, label_value = list(label.items())[0]
                 label_conditions[label_id] = self._single_label_from_valuespec(
                     operator, label_value)
         return label_conditions
@@ -1782,8 +1765,7 @@ class RuleConditionRenderer(object):
                 raise NotImplementedError()
 
         if negate:
-            # mypy had some problem with this. Need to check type annotation
-            tag_id = tag_spec["$ne"]  # type: ignore
+            tag_id = tag_spec["$ne"]
         else:
             tag_id = tag_spec
 
@@ -1828,7 +1810,7 @@ class RuleConditionRenderer(object):
         if isinstance(label_spec, dict):
             if "$ne" in label_spec:
                 negate = True
-                label_value = label_spec["$ne"]  # type: ignore
+                label_value = label_spec["$ne"]
             else:
                 raise NotImplementedError()
 
@@ -2070,13 +2052,12 @@ class ModeNewRule(EditRuleMode):
     def _save_rule(self):
         self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save()
-        add_change(
-            "edit-rule",
-            _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
-            (self._ruleset.title(), self._folder.alias_path()),  # pylint: disable=no-member
-            sites=self._folder.all_site_ids())  # pylint: disable=no-member
+        add_change("edit-rule",
+                   _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+                   (self._ruleset.title(), self._folder.alias_path()),
+                   sites=self._folder.all_site_ids())
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(),
-                  self._folder.alias_path()) # pylint: disable=no-member
+                  self._folder.alias_path())

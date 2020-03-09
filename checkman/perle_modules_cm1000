@@ -1,6 +1,6 @@
 title: Perle Mediaconverter: CM 1000 modules states
 agents: snmp
-catalog: hw/app/perle
+catalog: hw/network/perle
 license: GPL
 distribution: check_mk
 description:
@@ -20,7 +20,7 @@ description:
  remote fault, the check goes CRIT.
 
 item:
- The module name.
+ The name of the module
 
 inventory:
  One service per module is created.

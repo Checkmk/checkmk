@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU plug state
+title: Raritan PX-2000 family: PDU plug state
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL
@@ -13,7 +13,7 @@ description:
  the state {OK} when they are in the configured state, and {CRIT} otherwise.
 
 item:
- The ID Number of the plug as given by the device
+ The ID of the plug as given by the device
 
 inventory:
  One service per plug will be created

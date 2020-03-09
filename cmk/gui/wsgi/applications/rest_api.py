@@ -1,28 +1,11 @@
 #!/usr/bin/env python
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import functools
+import logging
 import sys
 import traceback
 
@@ -34,11 +17,14 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore
-from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore
+from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore[import]
+from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore[import]
+from connexion.exceptions import ProblemException  # type: ignore[import]
 
 from cmk.gui.wsgi.auth import with_user
-from cmk.utils import paths
+from cmk.utils import paths, crash_reporting
+
+logger = logging.getLogger('cmk.gui.wsgi.rest_api')
 
 
 def openapi_spec_dir():
@@ -60,6 +46,14 @@ def wrap_result(function_resolver, result_wrap):
     return wrapper
 
 
+class APICrashReport(crash_reporting.ABCCrashReport):
+    """API specific crash reporting class.
+    """
+    @classmethod
+    def type(cls):
+        return "rest_api"
+
+
 class CheckmkApiApp(AbstractApp):
     def __init__(self, import_name, **kwargs):
         resolver = RestyResolver('cmk.gui.plugins.openapi.endpoints')
@@ -78,14 +72,39 @@ class CheckmkApiApp(AbstractApp):
         return Path(self.app.root_path)
 
     def add_api_blueprint(self, specification, **kwargs):
+        kwargs.setdefault('resolver_error', 501)  # not implemented
+        kwargs.setdefault('strict_validation', False)  # 500 on invalid request params
+        kwargs.setdefault('validate_responses', False)
         api = self.add_api(specification, **kwargs)  # type: CheckmkApi
         api.add_swagger_ui()
         self.app.register_blueprint(api.blueprint)
         return api
 
     def log_error(self, exception):
-        _, exc_val, exc_tb = sys.exc_info()
-        if hasattr(exception, 'name'):
+        """Save the caught exception and store it.
+
+        Args:
+            exception: An exception instance
+
+        Returns:
+            A flask response to tell the user what happened.
+
+        """
+        # We only log a crash report when we have an unknown exception.
+        crash = APICrashReport.from_exception()
+        crash_reporting.CrashReportStore().save(crash)
+        logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+
+        # We need to return something for the user.
+        return self._make_error_response(exception)
+
+    def _make_error_response(self, exception):
+        exc_info = sys.exc_info()
+        logger.exception("Exception caught", exc_info=exc_info)
+        _, exc_val, exc_tb = exc_info
+        if hasattr(exception, 'to_problem'):
+            resp = exception.to_problem()
+        elif hasattr(exception, 'name'):
             resp = problem(
                 title=exception.name,
                 detail=exception.description,
@@ -101,7 +120,13 @@ class CheckmkApiApp(AbstractApp):
 
     def set_errors_handlers(self):
         for error_code in werkzeug.exceptions.default_exceptions:
-            self.app.register_error_handler(error_code, self.log_error)
+            # We don't want to log explicit HTTPExceptions as these are intentional.
+            self.app.register_error_handler(error_code, self._make_error_response)
+
+        # We don't catch ConnexionException specifically, because some other sub-classes handle
+        # other errors we might want to know about in a crash-report.
+        self.app.register_error_handler(ProblemException, self._make_error_response)
+
         self.app.register_error_handler(Exception, self.log_error)
 
     def run(self, port=None, server=None, debug=None, host=None, **options):

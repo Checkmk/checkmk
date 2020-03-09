@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_ceph_status(info):
@@ -38,22 +18,19 @@ def parse_ceph_status(info):
     return parsed
 
 
-def ceph_check_epoch(_id, epoch, params):
+def ceph_check_epoch(id_, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
-    epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, avg_interval_min)
-    epoch_avg = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
-    state = 0
-    infotext = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min * 60))
+    now = time.time()
+    epoch_rate = get_rate("%s.epoch.rate" % id_, now, epoch, allow_negative=True)
+    epoch_avg = get_average("%s.epoch.avg" % id_, now, epoch_rate, avg_interval_min)
 
-    if warn is not None and crit is not None:
-        if epoch_avg >= crit:
-            state = 2
-        elif epoch_avg >= warn:
-            state = 1
-        if state > 0:
-            infotext += " (warn/crit at %.1f/%.1f)" % (warn, crit)
-
-    return state, infotext
+    infoname = 'Epoch rate (%s average)' % get_age_human_readable(avg_interval_min * 60)
+    return check_levels(
+        epoch_avg,
+        None,
+        (warn, crit),
+        infoname=infoname,
+    )[:2]
 
 
 #   .--status--------------------------------------------------------------.
@@ -77,11 +54,11 @@ def inventory_ceph_status(parsed):
 
 def _extract_error_messages(parsed):
     error_messages = []
-    for err in sorted(parsed.get("health", {}).get("checks", {}).values()):
+    for err in parsed.get("health", {}).get("checks", {}).values():
         err_msg = err.get("summary", {}).get("message")
         if err_msg:
             error_messages.append(err_msg)
-    return error_messages
+    return sorted(error_messages)
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)

@@ -10,8 +10,5 @@ description:
  The check is OK if the system image is the latest,
  oherwise it goes WARN.
 
-item:
- No item.
-
 inventory:
  One service is created.

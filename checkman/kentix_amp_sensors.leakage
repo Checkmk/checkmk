@@ -16,7 +16,7 @@ description:
  an alarm.
 
 item:
- The name of the sensor provided by the device.
+ The name of the sensor.
 
 inventory:
  One service per sensor.

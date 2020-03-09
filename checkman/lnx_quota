@@ -7,7 +7,7 @@ description:
   This check monitors filesystems where linux quotas has been configured
   for users or groups which exceed their space and file quotas.
 
-  The check uses information provided by the Check_MK linux agent which is
+  The check uses information provided by the Checkmk linux agent which is
   available when the agent has been extended with the {lnx_quota} agent plugin.
 
 item:

@@ -9,7 +9,7 @@ description:
  CRIT if "call load reduction" is reported.
 
 item:
- The name of the realm.
+ Name of the realm.
 
 inventory:
  One service per realm is created.

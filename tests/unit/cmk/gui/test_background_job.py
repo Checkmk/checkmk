@@ -1,12 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import time
 import multiprocessing
 import sys
 
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
-import testlib  # type: ignore
+import testlib
 
 import cmk
 import cmk.utils.paths
@@ -57,10 +63,10 @@ def job_base_dir(tmp_path, monkeypatch):
     var_dir = tmp_path
 
     log_dir = var_dir / "log"
-    log_dir.mkdir()  # pylint: disable=no-member
+    log_dir.mkdir()
 
     job_dir = var_dir / "background_jobs"
-    job_dir.mkdir()  # pylint: disable=no-member
+    job_dir.mkdir()
 
     # Patch for web.log. Sholdn't we do this for all web tests?
     monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))

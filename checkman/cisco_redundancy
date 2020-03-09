@@ -1,4 +1,4 @@
-title: Cisco Devices: Redundancy Framework Status
+title: Cisco devices: Redundancy Framework Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -7,7 +7,7 @@ description:
  This check monitors the the status of the redundant unit of Cisco
  devices which support the CISCO-RF-MIB.
 
- At discovery the unit id, unit state, peer id, peer state and duplex mode
+ At discovery the unit ID, unit state, peer ID, peer state and duplex mode
  are saved as parameters. At check period if the parameters are still the same
  the check is OK. If they have changed the service status will turn into WARN
  if unit or peer state is 'disabled', 'standby hot' or 'active', or CRIT otherwise.

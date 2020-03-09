@@ -16,6 +16,7 @@
 #include "common/wtools.h"
 #include "glob_match.h"
 #include "logger.h"
+#include "service_processor.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
@@ -92,6 +93,45 @@ static void LogExecuteExtensions(std::string_view title,
     XLOG::d.i("{} {}", title, formatted_string);
 }
 
+void PluginsProvider::updateCommandLine() noexcept {
+    try {
+        if (getHostSp() == nullptr && !local_)
+            XLOG::l.bp("Plugins must have correctly set owner to use modules");
+
+        UpdatePluginMapCmdLine(pm_, getHostSp());
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " unexpected exception '{}'", e.what());
+    }
+}
+
+void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
+                                             cma::srv::ServiceProcessor* sp) {
+    using namespace std::literals;
+    for (auto& [name, entry] : pm) {
+        XLOG::l.i("checking entry");
+        entry.setCmdLine(L""sv);
+        if (entry.path().empty()) continue;  // skip empty files
+        XLOG::l.i("checking host");
+
+        if (sp == nullptr) continue;  // skip if no host(testing, etc)
+
+        auto& mc = sp->getModuleCommander();
+        auto fname = entry.path().u8string();
+        XLOG::l.i("checking our script");
+
+        if (!mc.isModuleScript(fname)) continue;  // skip non-module
+
+        XLOG::l.i("building commmand line");
+
+        auto cmd_line = mc.buildCommandLine(fname);
+        if (!cmd_line.empty()) {
+            XLOG::d.i("A Module changes command line of the plugin '{}'",
+                      wtools::ConvertToUTF8(cmd_line));
+            entry.setCmdLine(cmd_line);
+        }
+    }
+}
+
 void PluginsProvider::loadConfig() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering '{}'", uniq_name_);
@@ -123,6 +163,9 @@ void PluginsProvider::loadConfig() {
     LoadExeUnitsFromYaml(exe_units, yaml_units);
     UpdatePluginMap(pm_, local_, files, exe_units, true);
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
+
+    // We try to find command line among modules, if nothing leave it
+    updateCommandLine();
 
     // calculating timeout(may change in every kick)
     updateTimeout();

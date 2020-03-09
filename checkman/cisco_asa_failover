@@ -19,11 +19,6 @@ description:
 
  The check is not tested against un-clustered ASA devices.
 
-
-item:
-  No item is generated.
-
-
 inventory:
   The check detects ASA devices and saves the current cluster role on inventory.
 

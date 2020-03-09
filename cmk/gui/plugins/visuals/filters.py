@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import re
@@ -118,7 +98,7 @@ class FilterText(Filter):
 class FilterUnicode(FilterText):
     def _current_value(self):
         htmlvar = self.htmlvars[0]
-        return html.get_unicode_input(htmlvar, "")
+        return html.request.get_unicode_input(htmlvar, "")
 
 
 @filter_registry.register
@@ -2534,9 +2514,12 @@ class ABCTagFilter(six.with_metaclass(abc.ABCMeta, Filter)):
                           class_="op")
             html.close_td()
             html.open_td()
-            choices = grouped[html.request.var(prefix +
-                                               '_grp')] if html.request.var(prefix +
-                                                                            '_grp') else [("", "")]
+
+            if html.request.var(prefix + "_grp"):
+                choices = html.get_item_input(prefix + "_grp", grouped)[0]
+            else:
+                choices = [("", "")]
+
             html.dropdown(prefix + '_val', choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()
@@ -2787,12 +2770,12 @@ class ABCFilterCustomAttribute(six.with_metaclass(abc.ABCMeta, Filter)):
         raise NotImplementedError()
 
     def filter(self, infoname):
-        if not html.get_ascii_input(self.name_varname):
+        if not html.request.get_ascii_input(self.name_varname):
             return ""
 
         attribute_id = html.get_item_input(self.name_varname,
                                            dict(self._custom_attribute_choices()))[1]
-        value = html.get_unicode_input(self.value_varname)
+        value = html.request.get_unicode_input(self.value_varname)
         return "Filter: %s_custom_variables ~~ %s ^%s\n" % (
             self.info, livestatus.lqencode(attribute_id.upper()), livestatus.lqencode(value))
 
@@ -3107,7 +3090,7 @@ class FilterAggrGroup(FilterUnicodeFilter):
                       [("", "")] + [(group, group) for group in bi.get_aggregation_group_trees()])
 
     def selected_group(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
         group = self.selected_group()
@@ -3116,7 +3099,7 @@ class FilterAggrGroup(FilterUnicodeFilter):
         return [row for row in rows if row[self.column] == group]
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
 
 @filter_registry.register
@@ -3145,10 +3128,10 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
         html.dropdown(htmlvar, [("", "")] + self._get_selection())
 
     def selected_group(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def _get_selection(self):
         def _build_tree(group, parent, path):
@@ -3204,10 +3187,10 @@ class BITextFilter(FilterUnicodeFilter):
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
-        val = html.get_unicode_input(self.htmlvars[0])
+        val = html.request.get_unicode_input(self.htmlvars[0])
         if not val:
             return rows
         if self.how == "regex":
@@ -3366,13 +3349,13 @@ class FilterAggrService(Filter):
         html.text_input(self.htmlvars[2])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[1], "") \
-               + " / " + html.get_unicode_input(self.htmlvars[2], "")
+        return html.request.get_unicode_input(self.htmlvars[1], "") \
+               + " / " + html.request.get_unicode_input(self.htmlvars[2], "")
 
     def service_spec(self):
         if html.request.has_var(self.htmlvars[2]):
-            return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(
-                self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
+            return html.request.get_unicode_input(self.htmlvars[0]), html.request.get_unicode_input(
+                self.htmlvars[1]), html.request.get_unicode_input(self.htmlvars[2])
 
     # Used for linking
     def variable_settings(self, row):

@@ -1,16 +1,20 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // Configuration Parameters for whole Agent
 // Engine independent parameters
 // No C++ file
 #pragma once
 #define NOMINMAX     // must before every windows include
 #include <shlobj.h>  // known path
-#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <filesystem>
 #include <string>
 
 #include "common/cfg_yaml.h"
+#include "common/yaml.h"
 
 namespace cma {
 // set only when executable works as a service
@@ -158,15 +162,17 @@ constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 // ProgramData/checkmk/agent
 constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
 
-constexpr const wchar_t* kBackup = L"backup";           // owned by agent
-constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user
-constexpr const wchar_t* kLocal = L"local";             // owned by user
-constexpr const wchar_t* kAgentMrpe = L"mrpe";          // owned by user
-constexpr const wchar_t* kInstall = L"install";         // owned by agent
-constexpr const wchar_t* kUserInstallDir = L"install";  // owned by agent
-constexpr const wchar_t* kBakery = L"bakery";           // owned by site
-constexpr const wchar_t* kState = L"state";             // owned by plugins
-constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
+constexpr const wchar_t* kBackup = L"backup";             // owned by agent
+constexpr const wchar_t* kUserPlugins = L"plugins";       // owned by user
+constexpr const wchar_t* kLocal = L"local";               // owned by user
+constexpr const wchar_t* kAgentMrpe = L"mrpe";            // owned by user
+constexpr const wchar_t* kInstall = L"install";           // owned by agent
+constexpr const wchar_t* kUserInstallDir = L"install";    // owned by agent
+constexpr const wchar_t* kBakery = L"bakery";             // owned by site
+constexpr const wchar_t* kState = L"state";               // owned by plugins
+constexpr const wchar_t* kPluginConfig = L"config";       // owned by plugins
+constexpr const wchar_t* kUserModules = L"modules";       // owned by agent
+constexpr const wchar_t* kInstalledModules = L"modules";  // owned by agent
 
 constexpr const wchar_t* kAuStateLocation = kPluginConfig;  // owned by plugins
 
@@ -191,6 +197,7 @@ constexpr const char* const kRemoteHost = "REMOTE_HOST";
 constexpr const char* const kRemote = "REMOTE";
 
 constexpr std::string_view kMkInstallDirName = "MK_INSTALLDIR";
+constexpr std::string_view kMkModulesDirName = "MK_MODULESDIR";
 constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
 
 };  // namespace envs

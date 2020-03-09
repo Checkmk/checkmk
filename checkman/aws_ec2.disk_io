@@ -1,4 +1,4 @@
-title: AWS/EC2 Instance Disk IO
+title: AWS EC2: Instance Disk IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -8,6 +8,9 @@ description:
  instance store volumes available to the instance.
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
+
+item:
+ Name of the instance if all required metrics (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.
 
 inventory:
  One service will be created.

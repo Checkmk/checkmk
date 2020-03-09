@@ -100,6 +100,20 @@ PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special agent
+
+PYTHON3_MODULES_LIST += pymssql-2.1.4.tar.gz # needed by check_sql active check
+PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
+PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
+
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
+
+PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
@@ -175,6 +189,7 @@ python3-modules-dump-Pipfile:
 	@echo 'bson = "*"  # used by test_mk_mongodb unit test'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
+	@echo 'dockerpty = "*"  # used by dockerized tests for opening debug shells'
 	@echo 'freezegun = "*"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'
@@ -191,6 +206,7 @@ python3-modules-dump-Pipfile:
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'pyfakefs = "*" # used for unit tests'
+	@echo 'flake8 = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

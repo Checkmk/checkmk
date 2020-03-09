@@ -3,11 +3,21 @@ properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-node {
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
         COMMON_IMAGE.pull()
-        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
+        // The commands are executed with the 1001:1000 UID:GID (non-root).
+        // This is the UID of the jenkins user on the node which does not exist
+        // in the container. For the moment this does not look like a problem.
+        // But it may be that we get to the point where we need an existing
+        // user in the container.
+        COMMON_IMAGE.inside('--ulimit nofile=1024:1024') {
             stage('checkout sources') {
                 checkout(scm)
             }
@@ -15,16 +25,21 @@ node {
     }
 }
 
-node {
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def TEST_IMAGE = docker.image('ubuntu-19.04-os-image')
         TEST_IMAGE.pull()
-        TEST_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024 --init --privileged") {
-           stage('test python3 unit') {
-               dir ('tests-py3') {
-                   sh "make test-unit"
-               }
-           }
+        // The commands are executed with the 1001:1000 UID:GID (non-root).
+        // This is the UID of the jenkins user on the node which does not exist
+        // in the container. For the moment this does not look like a problem.
+        // But it may be that we get to the point where we need an existing
+        // user in the container.
+        TEST_IMAGE.inside("--ulimit nofile=1024:1024 --init") {
+            stage('test python3 unit') {
+                dir ('tests-py3') {
+                    sh "bash -c \"make test-unit\""
+                }
+            }
         }
     }
 }

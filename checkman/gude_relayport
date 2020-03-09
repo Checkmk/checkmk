@@ -11,7 +11,7 @@ description:
  These and other levels are configurable
 
 item:
- The relay port name.
+ The name of the relay port.
 
 inventory:
  One service per relay port is created.

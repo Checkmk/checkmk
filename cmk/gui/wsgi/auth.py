@@ -1,47 +1,29 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import contextlib
 import functools
 import time
 
 from typing import Optional  # pylint: disable=unused-import
 
-from connexion import problem  # type: ignore
+from connexion import problem  # type: ignore[import]
 
-from cmk.gui import crash_reporting
-from cmk.gui.config import clear_user_login
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.encoding import ensure_unicode
+
+from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
-from cmk.gui.globals import html
-from cmk.gui.log import logger
-from cmk.gui.login import verify_automation_secret, set_auth_type, login
+from cmk.gui.login import verify_automation_secret, set_auth_type
 
+from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.gui.wsgi.types import RFC7662  # pylint: disable=unused-import
 
 MK_STATUS = {
-    MKUserError: 404,
+    MKUserError: 400,
     MKAuthException: 401,
 }
 
@@ -62,7 +44,7 @@ def bearer_auth(token):
     if "/" in user_id:
         return None
 
-    if verify_automation_secret(user_id, secret):
+    if verify_automation_secret(UserId(ensure_unicode(user_id)), secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
         return _subject(user_id)
 
@@ -76,37 +58,31 @@ def _subject(user_id):
 
 
 @contextlib.contextmanager
-def verify_user(user, token_info):
-    if user and token_info and user == token_info.get('sub'):
-        login(user)
+def verify_user(user_id, token_info):
+    if user_id and token_info and user_id == token_info.get('sub'):
+        set_user_by_id(user_id)
         set_auth_type("automation")
         yield
-        html.finalize()
         clear_user_login()
     else:
-        raise MKAuthException("Unauthorized")
+        raise MKAuthException("Unauthorized by verify_user")
 
 
 def with_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kw):
-        user = kw.get('user')
+        user_id = kw.get('user')
         token_info = kw.get('token_info')
 
         try:
-            with verify_user(user, token_info):
-                try:
-                    return func(*args, **kw)
-                except MKException:
-                    crash = crash_reporting.GUICrashReport.from_exception()
-                    crash_reporting.CrashReportStore().save(crash)
-                    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-                    raise
+            with verify_user(user_id, token_info):
+                parameters = ParameterDict(kw)
+                return func(parameters)
         except MKException as exc:
             return problem(
                 status=MK_STATUS.get(type(exc), 500),
                 title=str(exc),
-                detail="",
+                detail="An exception occurred.",
             )
 
     return wrapper

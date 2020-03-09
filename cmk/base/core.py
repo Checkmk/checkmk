@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
 import fcntl
@@ -42,7 +22,7 @@ import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base import config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.cleanup
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 
@@ -128,8 +108,8 @@ def do_restart(core, only_reload=False):
         if backup_path:
             try:
                 os.remove(backup_path)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
+            except OSError as oe:
+                if oe.errno != errno.ENOENT:
                     raise
         if cmk.utils.debug.enabled():
             raise
@@ -174,8 +154,8 @@ def do_core_action(action, quiet=False):
         assert p.stdout is not None
         output = p.stdout.read()
         if not quiet:
-            console.output("ERROR: %s\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))
+            console.output("ERROR: %r\n" % output)
+        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action, output))
     if not quiet:
         console.output(tty.ok + "\n")
 
@@ -213,7 +193,7 @@ def check_timeperiod(timeperiod):
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
+    return _config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
 
 
 def timeperiod_active(timeperiod):
@@ -226,14 +206,14 @@ def timeperiod_active(timeperiod):
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    return _config_cache.get_dict("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache():
     # type: () -> None
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = config_cache.get_dict("timeperiods_cache")
+    tp_cache = _config_cache.get_dict("timeperiods_cache")
 
     if not tp_cache:
         response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
@@ -243,7 +223,7 @@ def update_timeperiods_cache():
 
 def cleanup_timeperiod_caches():
     # type: () -> None
-    config_cache.get_dict("timeperiods_cache").clear()
+    _config_cache.get_dict("timeperiods_cache").clear()
 
 
 cmk.base.cleanup.register_cleanup(cleanup_timeperiod_caches)

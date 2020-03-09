@@ -9,7 +9,7 @@ description:
  throughput.
 
 item:
- The SP id is used as item
+ The SP id
 
 inventory:
  One service for each SP is created

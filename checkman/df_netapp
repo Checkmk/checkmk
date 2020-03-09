@@ -1,4 +1,4 @@
-title: NetApp Filers: Used Space in Filesystems
+title: NetApp Filer: Used Space in Filesystems
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL
@@ -10,7 +10,7 @@ description:
  the volume usage just like normal data.
  Snapshots will also be listed, if their size is non-zero.
 
- As of version {1.1.9i9} Check_MK supports {trends}. This means that
+ As of version {1.1.9i9} Checkmk supports {trends}. This means that
  the {df} check is now able to compute the {change} of the used space
  over the time and can make a forecast into the future. It can estimate
  the point of time where the filesystem will be full.

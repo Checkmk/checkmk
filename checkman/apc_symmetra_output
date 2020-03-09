@@ -9,6 +9,8 @@ description:
  Lower default levels are set to 220, 220 voltage. These and other levels
  are configurable.
 
+item:
+ The current phase containing the device state, voltage and current.
+
 inventory:
  One service is created.
-

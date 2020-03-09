@@ -1,4 +1,4 @@
-title: NetApp Filers: Used space of qtrees in volumes
+title: NetApp Filer: Used space of qtrees in volumes
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL

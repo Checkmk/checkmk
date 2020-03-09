@@ -18,6 +18,9 @@ description:
  CRIT (is currently not available, is not available),
  UNKNOWN (is unlicensed).
 
+item:
+ Name of virtual server
+
 inventory:
  Any virtual server that is found online will be added during inventory
  and checked for it's status. Virtual servers in the various "Warning"

@@ -1,6 +1,6 @@
 title: Sophos Email Appliance: Inbound and outbound messages
 agents: snmp
-catalog: hw/app/sophos
+catalog: hw/mail/sophos
 license: GPL
 distribution: check_mk
 description:
@@ -8,7 +8,7 @@ description:
  of the Sophos Email Appliance which supports the SOPHOS-MIB.
 
 item:
- The name of the type of messages.
+ The name of the messagetype (i.e. {{Legit}}, {{Blocked}}, etc.).
 
 inventory:
  One service per type is created.

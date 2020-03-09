@@ -1,4 +1,4 @@
-title: NetApp Ontap Filers: 7Mode Cluster Status
+title: NetApp Ontap Filer: 7Mode Cluster Status
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL
@@ -13,5 +13,5 @@ inventory:
  The check creates one service per Cluster which will be named "Cluster with Partner_Name".
 
 item:
- A string named after our Cluster partner.
+ The cluster partner
 

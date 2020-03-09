@@ -17,6 +17,9 @@ description:
  You can change the default Warn/Crit levels of 80/90 percent by setting
  the service parameter "HP ProLiant Power Supply Unit".
 
+item:
+ The system chassis number followed by the bay number
+
 inventory:
  One check is automatically created for each PSU entry which is provided
  and marked as present in the SNMP output. Additionally one service is

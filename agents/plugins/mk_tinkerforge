@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.
@@ -74,13 +54,17 @@ def install():
         sys.stdout.write("already installed\n")
         return 1
 
-    import urllib2
+    if sys.version_info[0] >= 3:
+        from urllib.request import urlopen  # pylint: disable=no-name-in-module
+        from io import BytesIO
+    else:
+        from urllib2 import urlopen
+        from cStringIO import StringIO as BytesIO
     import shutil
     from zipfile import ZipFile
-    from cStringIO import StringIO
     url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
-    response = urllib2.urlopen(url)
-    buf = StringIO(response.read())
+    response = urlopen(url)
+    buf = BytesIO(response.read())
     z = ZipFile(buf)
 
     extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
@@ -119,39 +103,39 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight
+    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import]
     br = BrickletAmbientLight(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2
+    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import]
     br = BrickletAmbientLightV2(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import BrickletTemperature
+    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import]
     br = BrickletTemperature(uid, conn)
     print_generic(settings, "temperature", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_temperature_ext(conn, settings, uid):
-    from tinkerforge.bricklet_ptc import BrickletPTC
+    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import]
     br = BrickletPTC(uid, conn)
     print_generic(settings, "temperature.ext", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_humidity(conn, settings, uid):
-    from tinkerforge.bricklet_humidity import BrickletHumidity
+    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import]
     br = BrickletHumidity(uid, conn)
     print_generic(settings, "humidity", br.get_identity(), 0.1, "RH", br.get_humidity())
 
 
 def print_master(conn, settings, uid):
-    from tinkerforge.brick_master import BrickMaster
+    from tinkerforge.brick_master import BrickMaster  # type: ignore[import]
     br = BrickMaster(uid, conn)
     print_generic(
         settings,
@@ -166,7 +150,7 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
+    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import]
     br = BrickletMotionDetector(uid, conn)
     print_generic(settings, "motion", br.get_identity(), 1.0, "", br.get_motion_detected())
 
@@ -200,7 +184,7 @@ def display_on_segment(conn, settings, text):
         u"\N{DEGREE SIGN}": 0x63,
     }
 
-    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
+    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import]
     br = BrickletSegmentDisplay4x7(segment_display, conn)
     segments = []
     for letter in text:
@@ -254,7 +238,7 @@ def read_config(env):
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
     if os.path.isfile(cfg_path):
-        exec (open(cfg_path).read(), settings, settings)
+        exec(open(cfg_path).read(), settings, settings)
     return settings
 
 
@@ -305,7 +289,7 @@ def main():
         return install()
 
     try:
-        from tinkerforge.ip_connection import IPConnection
+        from tinkerforge.ip_connection import IPConnection  # type: ignore[import]
     except ImportError:
         sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
         sys.stdout.write("master,0.0.0,tinkerforge api isn't installed\n")

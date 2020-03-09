@@ -11,7 +11,7 @@ description:
  Upper and lower levels are configurable.
 
 item:
- Rack ID, Sensor Type, Sensor Name
+ The fixed statement {{Rack}} followed by the Rack ID, the sensor type and the name of the sensor
 
 inventory:
  One service per sensor will be created

@@ -25,7 +25,7 @@ description:
  This affects all models that do not have a flash / capacitor based BBU system.
 
 item:
-  A string "RAID Adapter/BBU" followed by the ID of the adapter as reported by MegaCli.
+  {{RAID Adapter/BBU}} followed by the ID of the adapter as reported by MegaCli.
 
 inventory:
   One item is generated per adapter that has an attached BBU module.

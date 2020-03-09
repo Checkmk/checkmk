@@ -1,4 +1,4 @@
-title: AWS/EC2 Instance Network IO
+title: AWS EC2: Instance Network IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -8,6 +8,9 @@ description:
  all network interfaces by the instance.
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
+
+item:
+ Name of the instance if all required metrics (NetworkIn and NetworkOut) are given.
 
 inventory:
  One service will be created.

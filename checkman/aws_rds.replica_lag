@@ -1,4 +1,4 @@
-title: AWS/RDS Replica Lag
+title: AWS RDS: Replica Lag
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -11,6 +11,9 @@ description:
 
  No default levels are set. Upper levels are configurable for the
  replica lag age and oldest replication slot lag size.
+
+item:
+ Name of the instance if all required metrics (ReplicaLag) are given.
 
 inventory:
  One service per databse will be created.

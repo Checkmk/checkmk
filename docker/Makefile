@@ -1,26 +1,7 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 #
 
 include ../defines.make
@@ -57,6 +38,9 @@ needed-packages: ../omd/distros/DEBIAN_9.mk
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
+check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
+	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo | gzip > check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz
+
 image: needed-packages
 	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
 	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
@@ -65,6 +49,17 @@ image: needed-packages
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
+	    . ; \
+	docker stop $$SECRET_CONTAINER_ID
+
+image-demo: needed-packages
+	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
+	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
+	docker build \
+	    --network=container:$$SECRET_CONTAINER_ID \
+	    --build-arg CMK_VERSION="$(VERSION).demo" \
+	    --build-arg CMK_EDITION="$(EDITION)" \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 

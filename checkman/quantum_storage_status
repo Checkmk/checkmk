@@ -1,4 +1,4 @@
-title: Status of Quantum Storage Devices
+title: Quantum Storage Devices: Storage status
 agents: snmp
 catalog: hw/storagehw/quantum
 license: GPL

@@ -13,5 +13,8 @@ description:
  case the check will return {CRITICAL}. In anycase it's possible to see the complete
  log in the long plugin output field from the core.
 
+item:
+ Name of the application
+
 inventory:
  One Service for each schedule will be created

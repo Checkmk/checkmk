@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: Cleanup this whole module.
 
@@ -49,7 +29,7 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Optional, Iterator, Any, Dict, List  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -76,19 +56,22 @@ _legacy_modules = []  # type: List[ModuleType]
 
 
 def register_handlers(handlers):
+    # type: (Dict) -> None
     pagehandlers.update(handlers)
 
 
-# Returns a list of names of all currently imported python modules
 def _imports():
+    # type: () -> Iterator[str]
+    """Returns a list of names of all currently imported python modules"""
     for val in globals().values():
         if isinstance(val, ModuleType):
             yield val.__name__
 
 
-# Loads all modules needed into memory and performs global initializations for
-# each module, when it needs some. These initializations should be fast ones.
 def init_modules():
+    # type: () -> None
+    """Loads all modules needed into memory and performs global initializations for
+    each module, when it needs some. These initializations should be fast ones."""
     global _legacy_modules
 
     _legacy_modules = []
@@ -105,8 +88,9 @@ def init_modules():
 g_all_modules_loaded = False
 
 
-# Call the load_plugins() function in all modules
 def load_all_plugins(only_modules=None):
+    # type: (Optional[List[str]]) -> None
+    """Call the load_plugins() function in all modules"""
     global g_all_modules_loaded
     # Initially, we have to load all modules, regardless of any optimization.
     if not g_all_modules_loaded:
@@ -117,7 +101,8 @@ def load_all_plugins(only_modules=None):
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
         if (only_modules is None or module.__name__ in only_modules) and \
            hasattr(module, "load_plugins"):
-            module.load_plugins(force=need_plugins_reload)
+            # hasattr above ensures the function is available. Mypy does not understand this.
+            module.load_plugins(force=need_plugins_reload)  # type: ignore[attr-defined]
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
@@ -129,6 +114,7 @@ def load_all_plugins(only_modules=None):
 
 
 def _cmk_gui_top_level_modules():
+    # type: () -> List[ModuleType]
     return [module \
             for name, module in sys.modules.items()
             # None entries are only an import optimization of cPython and can be removed:
@@ -142,6 +128,7 @@ def _cmk_gui_top_level_modules():
 
 
 def _find_local_web_plugins():
+    # type: () -> Iterator[str]
     basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
 
     try:
@@ -161,10 +148,11 @@ def _find_local_web_plugins():
                     yield dir_path + "/" + file_name
 
 
-_last_web_plugins_update = 0
+_last_web_plugins_update = 0.0
 
 
 def _local_web_plugins_have_changed():
+    # type: () -> bool
     global _last_web_plugins_update
 
     if 'local_web_plugins_have_changed' in g:

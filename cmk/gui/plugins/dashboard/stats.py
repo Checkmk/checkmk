@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 from typing import List  # pylint: disable=unused-import
@@ -103,7 +83,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
             except MKLivestatusNotFoundError:
                 result = []
 
-        pies = zip(table, result)
+        pies = list(zip(table, result))
         total = sum([x[1] for x in pies])
 
         html.open_div(class_="stats")
@@ -128,7 +108,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
                 ("view_name", self._view_name()),
                 ("filled_in", "filter"),
                 ("search", "1"),
-            ] + table_url_vars + list(self._dashlet_context_vars().items())
+            ] + table_url_vars + self._dashlet_context_vars()
             url = html.makeuri_contextless(url_vars, filename="view.py")
 
             html.open_tr()
@@ -251,19 +231,16 @@ class HostStatsDashlet(DashletStats):
             "Stats: state = 0\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("Down"), "#f00",
             [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")],
             "Stats: state = 1\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("Unreachable"), "#f80",
             [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")],
             "Stats: state = 2\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("In Downtime"), "#0af",
             [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")],
             "Stats: scheduled_downtime_depth > 0\n" \
@@ -314,20 +291,17 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("In Downtime"), "#0af",
             [("is_in_downtime", "1")],
             "Stats: scheduled_downtime_depth > 0\n" \
             "Stats: host_scheduled_downtime_depth > 0\n" \
             "StatsOr: 2\n"),
-
            ( _("On Down host"), "#048",
             [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")],
             "Stats: scheduled_downtime_depth = 0\n" \
             "Stats: host_scheduled_downtime_depth = 0\n" \
             "Stats: host_state != 0\n" \
             "StatsAnd: 3\n"),
-
            ( _("Warning"), "#ff0",
             [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")],
             "Stats: state = 1\n" \
@@ -336,7 +310,6 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("Unknown"), "#f80",
             [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")],
             "Stats: state = 3\n" \
@@ -345,7 +318,6 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("Critical"), "#f00",
             [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")],
             "Stats: state = 2\n" \

@@ -13,6 +13,9 @@ description:
  Please note: The data reported here does not match exactly the global data reported by the
  fortigate_sessions(_base) check.
 
+item:
+ Hostname of the node
+
 inventory:
  One service per node will be created
 

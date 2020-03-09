@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import base64
@@ -12,8 +16,8 @@ import sys
 import time
 import six
 
-import pytest  # type: ignore
-from PIL import Image  # type: ignore
+import pytest  # type: ignore[import]
+from PIL import Image  # type: ignore[import]
 
 import cmk
 from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import
@@ -368,7 +372,7 @@ def test_write_host_tags(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert "dmz" in cfg["host_tags"]["test-host-dmz"]["networking"]
         assert "lan" not in cfg["host_tags"]["test-host-dmz"]["networking"]
@@ -406,7 +410,7 @@ def test_write_host_labels(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert cfg["host_labels"]["test-host-lan"] == {
             u"blä": u"blüb",

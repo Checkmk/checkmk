@@ -11,7 +11,7 @@ description:
  healthy. Otherise CRIT.
 
 item:
- No disk identifier.
+ Name of the disk
 
 inventory:
  One service per disk is created.

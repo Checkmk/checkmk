@@ -8,6 +8,9 @@ description:
  destination address(es).  You can configure levels for the round trip average, the package loss and the standard deviation.
  Install agent plugin and edit agent plugin configuration {{ mtr.cfg }} Define one or more hosts in it and run inventory.
 
+item:
+ The hostname
+
 inventory:
  All sections defined in mtr.cfg will come back in the inventory as hosts.
 

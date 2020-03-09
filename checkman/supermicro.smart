@@ -1,4 +1,4 @@
-title: Supermicro Health Smart
+title: Supermicro: Health Smart
 agents: snmp
 catalog: hw/server/supermicro
 license: GPL
@@ -14,6 +14,9 @@ description:
   a {WARN} may work but is not documented.
   Status may also become {UNKNOWN} if the necessary driver is
   uninstalled.
+
+item:
+ Name of the device
 
 inventory:
   One item is reported per SMART-enabled harddisk.

@@ -1,4 +1,4 @@
-title: Avaya 88xx Temperature
+title: Avaya 88xx: Temperature
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

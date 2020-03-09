@@ -9,7 +9,7 @@ description:
  The check returns {OK}, unless the hostsystem is missing.
  In this case it returns {UNKNOWN}.
 
- See "Monitoring VMWare ESX with Check_MK" in the online documentation as well.
+ See "Monitoring VMWare ESX with Checkmk" in the online documentation as well.
 
 inventory:
  On each VM one check is generated.

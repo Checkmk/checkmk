@@ -6,17 +6,9 @@ properties([
 node('windows') {
     stage('git checkout') {
         checkout(scm)
+        windows = load 'buildscripts/scripts/lib/windows.groovy'
     }
-    stage('download artifacts') {
-        dir('artefacts') {
-            script {
-                step ([$class: 'CopyArtifact',
-                projectName: 'cmk_master/windows-agent-build',
-                ]);
-            }
-        }
-    }
-    stage('windows integration test') {
-        bat 'cd agents\\wnx && call call_integration_tests.cmd'
-    }
+    windows.build(
+        TARGET: 'test_integration'
+    ) 
 }

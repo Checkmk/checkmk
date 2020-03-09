@@ -15,7 +15,7 @@ description:
  drsPSUAmpsReading.
 
 item:
- The id of the power supply unit
+ The ID of the power supply unit
 
 inventory:
  All power units

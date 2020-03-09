@@ -18,5 +18,8 @@ description:
 
  The status is automaticly reported by the device, so no configuration is needed.
 
+item:
+ Number of the fan based on the order in info entries
+
 inventory:
  One check is created

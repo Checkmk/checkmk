@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 These functions allow checks to keep a memory until the next time
 the check is being executed. The most frequent use case is compu-
@@ -354,56 +334,58 @@ def raise_counter_wrap():
 
 def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero=True):
     # type: (str, float, float, float, bool) -> float
-    """Compute average by gliding exponential algorithm
+    """Return new average based on current value and last average
 
     itemname        : unique ID for storing this average until the next check
     this_time       : timestamp of new value
     backlog         : averaging horizon in minutes
     initialize_zero : assume average of 0.0 when now previous average is stored
+
+    This function returns the new average value aₙ as the weighted sum of the
+    current value xₙ and the last average:
+
+        aₙ = (1 - w)xₙ + waₙ₋₁
+
+           = (1-w) ∑ᵢ₌₀ⁿ wⁱxₙ₋ᵢ
+
+    This results in a so called "exponential moving average".
+
+    The weight is chosen such that for long running timeseries the "backlog"
+    (all recorded values in the last n minutes) will make up 50% of the
+    weighted average.
+
+    Assuming k values in the backlog, compute their combined weight such that
+    they sum up to the backlog weight b (0.5 in our case):
+
+       b = (1-w) ∑ᵢ₌₀ᵏ⁻¹  wⁱ  =>  w = (1 - b) ** (1/k)    ("geometric sum")
     """
-    old_state = get_item_state(itemname, None)
-
+    last_time, last_average = get_item_state(itemname, (this_time, None))
     # first call: take current value as average or assume 0.0
-    if old_state is None:
-        if initialize_zero:
-            this_val = 0
-        set_item_state(itemname, (this_time, this_val))
-        return this_val  # avoid time diff of 0.0 -> avoid division by zero
+    if last_average is None:
+        average = 0.0 if initialize_zero else this_val
+        set_item_state(itemname, (this_time, average))
+        return average
 
-    # Get previous value and time difference
-    last_time, last_val = old_state
-    timedif = this_time - last_time
+    # at the current rate, how many values are in the backlog?
+    time_diff = this_time - last_time
+    if time_diff <= 0:
+        # Gracefully handle time-anomaly of target systems
+        return last_average
+    backlog_count = (backlog_minutes * 60.) / time_diff
 
-    # Gracefully handle time-anomaly of target systems. We lose
-    # one value, but what then heck..
-    if timedif < 0:
-        timedif = 0
+    backlog_weight = 0.50
+    # TODO: For the version in the new Check API change the above line to
+    # backlog_weight = 0.5 ** min(1, (time - start_time) / (2 * backlog_minutes * 60.)
+    # And add to doc string:
+    #  For shorter timeseries we give the backlog more than those 50% weight
+    #  with the advantage that a) the initial value becomes irrelevant, and
+    #  b) for beginning timeseries we reach a meaningful value more quickly.
 
-    # Overflow error occurs if weight exceeds 1e308 or falls below 1e-308
-    # Under the conditions 0<=percentile<=1, backlog_minutes>=1 and timedif>=0
-    # first case is not possible because weight is max. 1.
-    # In the second case weight goes to zero.
-    try:
-        # Compute the weight: We do it like this: First we assume that
-        # we get one sample per minute. And that backlog_minutes is the number
-        # of minutes we should average over. Then we want that the weight
-        # of the values of the last average minutes have a fraction of W%
-        # in the result and the rest until infinity the rest (1-W%).
-        # Then the weight can be computed as backlog_minutes'th root of 1-W
-        percentile = 0.50
+    weight = (1 - backlog_weight)**(1.0 / backlog_count)
 
-        weight_per_minute = (1 - percentile)**(1.0 / backlog_minutes)
-
-        # now let's compute the weight per second. This is done
-        weight = weight_per_minute**(timedif / 60.0)
-
-    except OverflowError:
-        weight = 0
-
-    new_val = last_val * weight + this_val * (1 - weight)
-
-    set_item_state(itemname, (this_time, new_val))
-    return new_val
+    average = (1.0 - weight) * this_val + weight * last_average
+    set_item_state(itemname, (this_time, average))
+    return average
 
 
 cmk.base.cleanup.register_cleanup(cleanup_item_states)

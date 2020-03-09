@@ -12,6 +12,9 @@ description:
 
   The data is gathered from the {show global status} query.
 
+item:
+ The name of the instance
+
 inventory:
   The check generates one item per instance for the sessions connected to the MySQL daemon.
 

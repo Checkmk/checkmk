@@ -20,7 +20,7 @@ description:
  {Retry Remote Delivery} and {Poison} are monitored.
 
 item:
- The name of the queue as defined in {winperf_msx_queues}.
+ The name of the queue
 
 inventory:
  For each queue that is defined in {winperf_msx_queues} one check

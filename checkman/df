@@ -16,7 +16,7 @@ description:
  seems to use the user allocatable space instead of the total filesystem size
  as base for the percentage calculation, this might result in differences
  between the percentage values shown by that {df} version and the value
- shown in Check_MK. From our point of view, the calculation of Check_MK is
+ shown in Checkmk. From our point of view, the calculation of Checkmk is
  more accurate.
 
  {Inodes:} if the agent provides a {df} subsection for {inodes}, this check

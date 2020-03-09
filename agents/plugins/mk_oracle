@@ -1,27 +1,7 @@
 #!/bin/bash
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Check_MK agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns
@@ -507,33 +487,106 @@ set_ora_version () {
 #   | The following functions create SQL queries for ORACLE and output     |
 #   | them to stdout. All queries output the database name or the instane  |
 #   | name as first column.                                                |
+#   | V$BUFFER_POOL_STATISTICS: Convert Instancedata to cdb$root in        |
+#   |                           cdb-environments (only con_id = 0!)        |
+#   | V$SGAINFO: Convert Instancedata to cdb$root in cdb-environments      |
 #   '----------------------------------------------------------------------'
 
 #TODO Create subsections in query and parse them in related check plugin.
 sql_performance () {
 
-
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo 'PROMPT <<<oracle_performance:sep(124)>>>'
-        echo "select upper(i.INSTANCE_NAME)
+        echo "        select upper(DECODE(cdb,'NO',instance_name
+                                             ,instance_name || '.' || con_name) )
                      ||'|'|| 'sys_time_model'
-                     ||'|'|| S.STAT_NAME
-                     ||'|'|| Round(s.value/1000000)
-              from v\$instance i,
-                   v\$sys_time_model s
-              where s.stat_name in('DB time', 'DB CPU')
-              order by s.stat_name;
-              select upper(i.INSTANCE_NAME ||'.'||vd.name)
-                     ||'|'|| 'sys_time_model'
-                     ||'|'|| S.STAT_NAME
-                     ||'|'|| Round(s.value/1000000)
-              from v\$instance i
-              join v\$con_sys_time_model s on s.stat_name in('DB time', 'DB CPU')
-              join v\$containers vd on vd.con_id = s.con_id
-              join v\$database d on d.cdb = 'YES'
-              where vd.con_id <> 2
-              order by s.stat_name;
-              select upper(i.INSTANCE_NAME)
+                     ||'|'|| STAT_NAME
+                     ||'|'|| Round(value/1000000)
+              from (
+              select d.cdb, i.instance_name, s.stat_name, s.value, vd.name con_name
+                  from v\$instance i
+                  join v\$con_sys_time_model s on s.stat_name in('DB time', 'DB CPU')
+                  join v\$containers vd on vd.con_id = s.con_id
+                  join v\$database d on d.cdb = 'YES'
+                  where vd.con_id <> 2
+                  union all
+                  select d.cdb, i.instance_name, s.stat_name, s.value, null
+                  from v\$instance i
+                  join v\$sys_time_model s on s.stat_name in('DB time', 'DB CPU')
+                  join v\$database d on d.cdb = 'NO'
+                  order by stat_name);
+
+              WITH iostat_file AS (
+                   SELECT
+                       con_id,
+                       filetype_name,
+                       SUM(large_read_reqs) large_read_reqs,
+                       SUM(large_read_servicetime) large_read_servicetime,
+                       SUM(large_write_reqs) large_write_reqs,
+                       SUM(large_write_servicetime) large_write_servicetime,
+                       SUM(small_read_reqs) small_read_reqs,
+                       SUM(small_read_servicetime) small_read_servicetime,
+                       SUM(small_sync_read_reqs) small_sync_read_reqs,
+                       SUM(small_write_reqs) small_write_reqs,
+                       SUM(small_write_servicetime) small_write_servicetime,
+                       SUM(small_read_megabytes*1024*1024) small_read_bytes,
+                       SUM(large_read_megabytes*1024*1024) large_read_bytes,
+                       SUM(small_write_megabytes*1024*1024) small_write_bytes,
+                       SUM(large_write_megabytes*1024*1024) large_write_bytes
+                   FROM v\$iostat_file
+                   GROUP BY con_id, filetype_name
+               )
+               SELECT
+                   upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.' || vd.name) )
+                   || '|iostat_file'
+                   || '|' || filetype_name
+                   || '|' || small_read_reqs
+                   || '|' || large_read_reqs
+                   || '|' || small_write_reqs
+                   || '|' || large_write_reqs
+                   || '|' || small_read_servicetime
+                   || '|' || large_read_servicetime
+                   || '|' || small_write_servicetime
+                   || '|' || large_write_servicetime
+                   || '|' || small_read_bytes
+                   || '|' || large_read_bytes
+                   || '|' || small_write_bytes
+                   || '|' || large_write_bytes
+               FROM
+                   iostat_file io
+                   JOIN v\$containers vd ON io.con_id = vd.con_id
+                   JOIN v\$instance i ON 1 = 1
+                   JOIN v\$database d ON 1 = 1
+               ORDER BY vd.con_id, io.filetype_name;
+              select upper(decode(cdb, 'NO', instance_name
+                                           ,instance_name || '.'||con_name))
+                     ||'|'|| 'sys_wait_class'
+                     ||'|'|| WAIT_CLASS
+                     ||'|'|| Round(total_waits)
+                     ||'|'|| Round(time_waited)
+                     ||'|'|| Round(total_waits_fg)
+                     ||'|'|| Round(time_waited_fg)
+              from (
+                  select i.instance_name, vd.con_id, S.WAIT_CLASS
+                        , s.total_waits, s.time_waited, s.total_waits_fg
+                        , s.time_waited_fg, vd.name con_name, d.cdb
+                  from v\$instance i
+                  join v\$database d on d.cdb = 'YES'
+                  join v\$containers vd on 1=1
+                  join v\$con_system_wait_class s on vd.con_id = s.con_id
+                  where s.WAIT_CLASS <> 'Idle'
+                  union all
+                  select i.instance_name, 0, S.WAIT_CLASS
+                        , s.total_waits, s.time_waited, s.total_waits_fg
+                        , s.time_waited_fg, null, d.cdb
+                  from v\$instance i
+                  join v\$database d on d.cdb = 'NO'
+                  join v\$system_wait_class s on s.WAIT_CLASS <> 'Idle'
+                   )
+              order by con_name, wait_class;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
                      ||'|'|| 'buffer_pool_statistics'
                      ||'|'|| b.name
                      ||'|'|| b.db_block_gets
@@ -543,13 +596,19 @@ sql_performance () {
                      ||'|'|| b.physical_writes
                      ||'|'|| b.FREE_BUFFER_WAIT
                      ||'|'|| b.BUFFER_BUSY_WAIT
-              from v\$instance i, V\$BUFFER_POOL_STATISTICS b;
-              select upper(i.INSTANCE_NAME)
+              from v\$instance i
+              join V\$BUFFER_POOL_STATISTICS b on b.con_id = 0
+              join v\$database d on 1=1;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
                      ||'|'|| 'SGA_info'
                      ||'|'|| s.name
                      ||'|'|| s.bytes
-              from v\$sgainfo s, v\$instance i;
-              select upper(i.INSTANCE_NAME)
+              from v\$instance i
+              join V\$sgainfo s on s.con_id = 0
+              join v\$database d on 1=1;
+              select upper(DECODE(d.cdb,'NO',i.instance_name
+                                     ,i.instance_name || '.CDB\$ROOT') )
                      ||'|'|| 'librarycache'
                      ||'|'|| b.namespace
                      ||'|'|| b.gets
@@ -558,7 +617,63 @@ sql_performance () {
                      ||'|'|| b.pinhits
                      ||'|'|| b.reloads
                      ||'|'|| b.invalidations
-              from v\$instance i, V\$librarycache b;"
+              from v\$instance i
+              join V\$librarycache b on b.con_id = 0
+              join v\$database d on 1=1;
+SET SERVEROUTPUT ON
+SET FEEDBACK OFF
+DECLARE
+    l_i_cursor_id     INTEGER;
+    l_n_rowcount      NUMBER;
+    l_vc_name   VARCHAR2(200);
+    l_vc_value  VARCHAR2(200);
+    l_vc_unit   VARCHAR2(20);
+    l_vc_sql    VARCHAR2(200);
+    l_vc_step   VARCHAR2(20);
+BEGIN
+    dbms_output.enable(200000);
+    l_i_cursor_id := dbms_sql.open_cursor(security_level => 2);
+    l_vc_step := 'before con';
+    FOR con IN (
+        SELECT
+         upper(DECODE(d.cdb,'NO',i.instance_name
+                           ,i.instance_name || '.' || c.name
+                     )
+              ) iname, c.name
+        FROM
+            v\$containers c,
+            v\$database d,
+            v\$instance i
+        WHERE
+            c.open_mode LIKE 'READ %'
+            AND c.name <> 'PDB\$SEED'
+        ORDER BY c.con_id) LOOP
+        l_vc_sql := 'select name, value, unit from v\$pgastat order by name';
+        l_vc_step := 'parse: ' || con.name;
+        dbms_sql.parse(c => l_i_cursor_id, statement => l_vc_sql, language_flag => dbms_sql
+        .native, container => con.name);
+        dbms_sql.define_column(l_i_cursor_id, 1, l_vc_name, 200);
+        dbms_sql.define_column(l_i_cursor_id, 2, l_vc_value, 200);
+        dbms_sql.define_column(l_i_cursor_id, 3, l_vc_unit, 200);
+        l_vc_step := 'execute: ' || con.name;
+        l_n_rowcount := dbms_sql.execute_and_fetch(l_i_cursor_id);
+        LOOP
+            EXIT WHEN dbms_sql.fetch_rows(l_i_cursor_id) = 0;
+            dbms_sql.column_value(l_i_cursor_id, 1, l_vc_name);
+            dbms_sql.column_value(l_i_cursor_id, 2, l_vc_value);
+            dbms_sql.column_value(l_i_cursor_id, 3, l_vc_unit);
+            dbms_output.put_line(con.iname ||'|PGA_info|'||l_vc_name||'|'||l_vc_value||'|'||l_vc_unit);
+        END LOOP;
+    END LOOP;
+    dbms_sql.close_cursor(l_i_cursor_id);
+EXCEPTION
+    WHEN OTHERS THEN
+        FOR cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) LOOP
+            dbms_output.put_line(cur1.instance_name || '| Debug: '|| l_vc_step || ': ' || sqlerrm);
+        END LOOP;
+END;
+/
+"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
         echo "PROMPT <<<oracle_performance:sep(124)>>>"

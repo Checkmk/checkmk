@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU overcurrent protector
+title: Raritan PX-2000 family: PDU overcurrent protector
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL
@@ -11,7 +11,7 @@ description:
  as CRIT, closed as OK, and unavailable as UNKNOWN.
 
 item:
- The ID of the Overcurrent protector, eg. C1.
+ The ID of the overcurrent protector, eg. C1.
 
 inventory:
  One check per overcurrent protector is created.

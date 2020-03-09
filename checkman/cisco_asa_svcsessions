@@ -1,4 +1,4 @@
-title: Cisco ASA SVC Sessions (SSL VPN Client)
+title: Cisco ASA: SSL VPN Client Session
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk

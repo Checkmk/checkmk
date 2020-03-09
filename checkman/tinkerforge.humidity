@@ -8,7 +8,7 @@ description:
  Both upper and lower levels can be configured.
 
 item:
- The item name is based on the bricks position inside the stack.
+ The bricks position inside the stack.
 
 inventory:
  All humidity bricklets are automatically inventorized.

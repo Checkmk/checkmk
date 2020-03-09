@@ -12,9 +12,6 @@ description:
  The check goes WARN or CRIT if the number of
  received mails exceeds configurable values.
 
-item:
- No item.
-
 inventory:
  One service is created.
 

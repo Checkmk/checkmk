@@ -9,6 +9,9 @@ description:
  current mode. It will return a {Critical} if the state changes to down,
  or the mode changes since the last inventory.
 
+item:
+ Table of the Pri (primary rate interface)
+
 inventory:
  One service for each port in state UP will be created.
 

@@ -1,6 +1,6 @@
 title: State of Microsoft Active Directory Replication between DCs
 agents: windows
-catalog: os/ad
+catalog: app/ad
 license: GPL
 distribution: check_mk
 description:
@@ -20,5 +20,4 @@ inventory:
  Each replication partner results in one service.
 
 item:
- The name of the replication partner.
-
+ Site and the Domain Controller of the replication partner.

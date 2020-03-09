@@ -1,4 +1,9 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 
 import pytest
@@ -10,20 +15,10 @@ from importlib import import_module
 from testlib import cmk_path
 
 REQUIRED_ARGUMENTS = {
-    'agent_aws': [
-        '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
-        '--hostname', 'HOSTNAME'
-    ],
     'agent_azure': [
         '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
         'SECRET'
     ],
-    'agent_elasticsearch': ['HOSTNAME'],
-    'agent_graylog': ['HOSTNAME'],
-    'agent_jenkins': ['HOSTNAME'],
-    'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
-    'agent_splunk': ['HOSTNAME'],
-    'agent_vsphere': ['HOSTNAME'],
 }
 
 

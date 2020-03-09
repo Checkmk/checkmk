@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This is our home-grown version of flask.globals and flask.ctx. It
 # can be removed when fully do things the flasky way.
@@ -122,22 +102,20 @@ def _lookup_req_object(name):
 
 
 class RequestContext(object):
-    def __init__(self, html_obj):
+    def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None
+
+        if req is None and html_obj:
+            req = html_obj.request
+        if resp is None and html_obj:
+            resp = html_obj.response
+
+        self.request = req
+        self.response = resp
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
-
-    # These properties are needed so that we can replace the Request object from within html
-    # This actually is a hack which should be removed once the filtering can be done via middleware.
-    @property
-    def request(self):
-        return self.html.request
-
-    @property
-    def response(self):
-        return self.html.response
 
     def __enter__(self):
         _request_ctx_stack.push(self)
@@ -150,9 +128,11 @@ class RequestContext(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self._web_log_handler.removeFilter(self._prepend_url_filter)
-        # TODO: html.finalize needs to be called before popping the stack, because it does
-        #       something with the user object.
-        self.html.finalize()
+        # html.finalize needs to be called before popping the stack, because it does
+        # something with the user object. We make this optional, so we can use the RequestContext
+        # without the html object (for APIs for example).
+        if self.html is not None:
+            self.html.finalize()
         _request_ctx_stack.pop()
 
 

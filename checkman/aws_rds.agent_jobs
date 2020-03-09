@@ -1,4 +1,4 @@
-title: AWS/RDS Agent Jobs
+title: AWS RDS: Agent Jobs
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,6 +9,9 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  If at least one jobs fails the check goes WARN.
+
+item:
+ Name of the instance if all required metrics (FailedSQLServerAgentJobsCount) are given.
 
 inventory:
  One service per database will be created.

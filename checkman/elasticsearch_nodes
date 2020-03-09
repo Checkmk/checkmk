@@ -12,5 +12,4 @@ inventory:
  One check for each node will be created
 
 item:
- one item will be created
-
+ Description of the node

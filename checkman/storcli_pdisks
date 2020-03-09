@@ -10,7 +10,7 @@ description:
  entered in the script.
 
 item:
- A combination of the enclosure ID, slot number and device ID.
+ The enclosure ID and the slot number followed by the device ID (seperated by a {{-}}).
 
 inventory:
  One service is created for each found disk.

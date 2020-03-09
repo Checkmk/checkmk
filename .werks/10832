@@ -1,0 +1,12 @@
+Title: cpu_util: Prefer old 'levels' parameters if both 'levels' and 'util' parameters are configured
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1582882950
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

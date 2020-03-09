@@ -25,7 +25,7 @@ description:
  The state for this event could be configured with nospaceerrcnt_state.
  There is no real usable value for the minimum amount of space errors.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

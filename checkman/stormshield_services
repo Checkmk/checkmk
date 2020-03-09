@@ -8,8 +8,7 @@ description:
  the services running on your Stormshield firewall
 
 item:
- The description of the service as provided by
- the device.
+ The name of the service
 
 inventory:
  Each service which is up will be inventorized.

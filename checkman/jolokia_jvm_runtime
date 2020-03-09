@@ -11,6 +11,9 @@ description:
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 
+item:
+ The name of the application server instance as configured by the agent.
+
 inventory:
  One check is created for each application running inside an Jolokia
  instance sent by the agent.

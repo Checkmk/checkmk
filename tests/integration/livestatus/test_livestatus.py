@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
@@ -8,7 +12,7 @@ import uuid as _uuid
 import json as _json
 import time as _time
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
@@ -143,9 +147,6 @@ def configure_service_tags(site, web, default_cfg):
 
 
 def test_service_custom_variables(configure_service_tags, default_cfg, site):
-    if default_cfg.core == "nagios":
-        pytest.skip("Disabled until tags column is supported by play nagios")
-
     rows = site.live.query("GET services\n"
                            "Columns: custom_variables tags\n"
                            "Filter: host_name = livestatus-test-host\n"

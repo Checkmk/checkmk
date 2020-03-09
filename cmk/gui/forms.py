@@ -1,30 +1,11 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
+from typing import Union, Callable, Text, Dict, Optional, Tuple, List, Any, TYPE_CHECKING  # pylint: disable=unused-import
 import six
 
 import cmk.gui.escaping as escaping
@@ -33,33 +14,18 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
+if TYPE_CHECKING:
+    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform  # pylint: disable=unused-import
+
 g_header_open = False
 g_section_open = False
 
 
-# An input function with the same call syntax as htmllib.textinput()
-def textinput(valuespec, varprefix, defvalue):
-    if html.form_submitted(html.form_name):
-        value = valuespec.from_html_vars(varprefix)
-    else:
-        value = defvalue
-    valuespec.render_input(varprefix, value)
-
-
 def get_input(valuespec, varprefix):
+    # type: (ValueSpec, str) -> Any
     value = valuespec.from_html_vars(varprefix)
     valuespec.validate_value(value, varprefix)
     return value
-
-
-# TODO: Remove all call sites and clean this up! The mechanic of this
-# and the edit_dictionaries() is very uncommon compared to the other
-# usages of valuespecs.
-def edit_dictionary(entries, value, **args):
-    result = edit_dictionaries([("value", entries)], {"value": value}, **args)
-    if result:
-        return result["value"]
-    return result
 
 
 # Edit a list of several dictionaries. Those can either be dictionary
@@ -69,70 +35,48 @@ def edit_dictionary(entries, value, **args):
 # we can drop edit_dictionaries()? At least the function for editing
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
-# and the edit_dictionary() is very uncommon compared to the other
-# usages of valuespecs.
-def edit_dictionaries(dictionaries,
-                      value,
-                      focus=None,
-                      hover_help=True,
-                      validate=None,
-                      buttontext=None,
-                      title=None,
-                      buttons=None,
-                      method="GET",
-                      preview=False,
-                      varprefix="",
-                      formname="form",
-                      consume_transid=True):
+# is very uncommon compared to the other usages of valuespecs.
+def edit_dictionaries(
+    dictionaries,  # type: List[Tuple[str, Union[Transform, Dictionary]]]
+    value,  # type: Dict[str, Any]
+    focus=None,  # type: Optional[str]
+    hover_help=True,  # type: bool
+    validate=None,  # type: Optional[Callable[[Any], None]]
+    buttontext=None,  # type: Optional[Text]
+    title=None,  # type: Optional[Text]
+    buttons=None,  # type: List[Tuple[str, Text, str]]
+    method="GET",  # type: str
+    preview=False,  # type: bool
+    varprefix="",  # type: str
+    formname="form",  # type: str
+    consume_transid=True  # type: bool
+):
 
-    # Convert list of entries/dictionaries
-    sections = []
-    for keyname, d in dictionaries:
-        if isinstance(d, list):
-            sections.append((keyname, title or _("Properties"), d))
-        else:
-            sections.append((keyname, None, d))  # valuespec Dictionary, title used from dict
-
-    if html.request.var("filled_in") == formname and html.transaction_valid():
+    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
-        messages = []
-        new_value = {}
-        for keyname, _section_title, entries in sections:
-            if isinstance(entries, list):
-                new_value[keyname] = value.get(keyname, {}).copy()
-                for name, vs in entries:
-                    if len(sections) == 1:
-                        vp = varprefix
-                    else:
-                        vp = keyname + "_" + varprefix
-                    try:
-                        v = vs.from_html_vars(vp + name)
-                        vs.validate_value(v, vp + name)
-                        new_value[keyname][name] = v
-                    except MKUserError as e:
-                        messages.append("%s: %s" % (vs.title(), e))
-                        html.add_user_error(e.varname, e)
-
-            else:
-                new_value[keyname] = {}
-                try:
-                    edited_value = entries.from_html_vars(keyname)
-                    entries.validate_value(edited_value, keyname)
-                    new_value[keyname].update(edited_value)
-                except MKUserError as e:
-                    messages.append("%s: %s" % (entries.title() or _("Properties"), e))
-                    html.add_user_error(e.varname, e)
-                except Exception as e:
-                    messages.append("%s: %s" % (entries.title() or _("Properties"), e))
-                    html.add_user_error(None, e)
+        messages = []  # type: List[Text]
+        new_value = {}  # type: Dict[str, Dict[str, Any]]
+        for keyname, vs_dict in dictionaries:
+            dict_varprefix = varprefix + keyname
+            new_value[keyname] = {}
+            try:
+                edited_value = vs_dict.from_html_vars(dict_varprefix)
+                vs_dict.validate_value(edited_value, dict_varprefix)
+                new_value[keyname].update(edited_value)
+            except MKUserError as e:
+                messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
+                html.add_user_error(e.varname, e)
+            except Exception as e:
+                messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
+                html.add_user_error(None, e)
 
             if validate and not html.has_user_errors():
                 try:
                     validate(new_value[keyname])
                 except MKUserError as e:
-                    messages.append(e)
+                    messages.append("%s" % e)
                     html.add_user_error(e.varname, e)
 
         if messages:
@@ -145,28 +89,10 @@ def edit_dictionaries(dictionaries,
             return new_value
 
     html.begin_form(formname, method=method)
-    for keyname, title1, entries in sections:
+    for keyname, vs_dict in dictionaries:
+        dict_varprefix = varprefix + keyname
         subvalue = value.get(keyname, {})
-        if isinstance(entries, list):
-            header(title1)
-            first = True
-            for name, vs in entries:
-                section(vs.title())
-                html.help(vs.help())
-                if name in subvalue:
-                    v = subvalue[name]
-                else:
-                    v = vs.default_value()
-                if len(sections) == 1:
-                    vp = varprefix
-                else:
-                    vp = keyname + "_" + varprefix
-                vs.render_input(vp + name, v)
-                if (not focus and first) or (name == focus):
-                    vs.set_focus(vp + name)
-                    first = False
-        else:
-            entries.render_input_as_form(keyname, subvalue)
+        vs_dict.render_input_as_form(dict_varprefix, subvalue)
 
     end()
     if buttons:
@@ -183,17 +109,20 @@ def edit_dictionaries(dictionaries,
 
 
 # Similar but for editing an arbitrary valuespec
-def edit_valuespec(vs,
-                   value,
-                   buttontext=None,
-                   method="GET",
-                   varprefix="",
-                   validate=None,
-                   formname="form",
-                   consume_transid=True,
-                   focus=None):
+def edit_valuespec(
+    vs,  # type: Dictionary
+    value,  # type: Dict[str, Any]
+    buttontext=None,  # type: Optional[Text]
+    method="GET",  # type: str
+    varprefix="",  # type: str
+    validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
+    formname="form",  # type: str
+    consume_transid=True,  # type: bool
+    focus=None  # type: Optional[str]
+):
+    # type: (...) -> Optional[Dict[str, Any]]
 
-    if html.request.var("filled_in") == formname and html.transaction_valid():
+    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if consume_transid:
             html.check_transaction()
 
@@ -232,12 +161,14 @@ def edit_valuespec(vs,
     else:
         vs.set_focus(varprefix)
     html.end_form()
+    return None
 
 
 # New functions for painting forms
 
 
 def header(title, isopen=True, table_id="", narrow=False, css=None):
+    # type: (Text, bool, str, bool, Optional[str]) -> None
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -245,12 +176,11 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
-    html.begin_foldable_container(
-        treename=html.form_name if html.form_name else "nform",
-        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, six.text_type) else title),
-        isopen=isopen,
-        title=title,
-        indent="nform")
+    html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
+                                  id_=six.ensure_str(base64.b64encode(six.ensure_binary(title))),
+                                  isopen=isopen,
+                                  title=title,
+                                  indent="nform")
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
@@ -258,16 +188,18 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
 
 # container without legend and content
 def container():
+    # type: () -> None
     global g_section_open
     if g_section_open:
         html.close_td()
         html.close_tr()
     html.open_tr()
-    html.open_td(colspan=2, class_=container)
+    html.open_td(colspan=2)
     g_section_open = True
 
 
 def space():
+    # type: () -> None
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
@@ -278,6 +210,7 @@ def section(title=None,
             hide=False,
             legend=True,
             css=None):
+    # type: (Optional[Text], Optional[Union[Text, str, HTML]], Optional[str], bool, bool, bool, Optional[str]) -> None
     global g_section_open
     if g_section_open:
         html.close_td()
@@ -308,6 +241,7 @@ def section(title=None,
 
 
 def end():
+    # type: () -> None
     global g_header_open
     g_header_open = False
     if g_section_open:

@@ -1,30 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
-import six
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.views as views
 import cmk.gui.config as config
@@ -353,7 +331,7 @@ class MobileViewRenderer(views.ViewRenderer):
                     try:
                         show_commands = do_commands(view_spec, self.view.datasource.infos[0], rows)
                     except MKUserError as e:
-                        html.show_error(e)
+                        html.show_error("%s" % e)
                         html.add_user_error(e.varname, e)
                         show_commands = True
                 if show_commands:
@@ -458,7 +436,7 @@ def do_commands(view, what, rows):
             "count": len(rows),
             "what": title_what,
         })
-    if r != True:
+    if r is not True:
         return r is None  # Show commands on negative answer
 
     count = 0
@@ -467,8 +445,6 @@ def do_commands(view, what, rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
             if command not in already_executed:
-                if isinstance(command, six.text_type):
-                    command = command.encode("utf-8")
                 executor(command, row["site"])
                 already_executed.add(command)
                 count += 1

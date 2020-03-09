@@ -1,4 +1,10 @@
-import pytest  # type: ignore
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
@@ -185,6 +191,7 @@ def test_registered_configvars():
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',
         'wato_use_git',
+        'graph_timeranges',
     ]
 
     if not cmk.is_raw_edition():
@@ -228,7 +235,6 @@ def test_registered_configvars():
             'config',
             'dcd_log_levels',
             'dcd_web_api_connection',
-            'graph_timeranges',
             'liveproxyd_default_connection_params',
             'liveproxyd_log_levels',
             'mknotifyd_insecure_message_format',

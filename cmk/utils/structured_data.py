@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 This module handles tree structures for HW/SW inventory system and
 structured monitoring data of Check_MK.
@@ -131,9 +111,11 @@ class StructuredDataTree(object):
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
         store.save_object_to_file(filepath, output, pretty=pretty)
-        gzip.open(filepath + ".gz", "w").write(repr(output) + "\n")
+        # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
+        with gzip.open(filepath + ".gz", "wb") as f:
+            f.write(six.ensure_binary(repr(output) + "\n"))
         # Inform Livestatus about the latest inventory update
-        store.save_file("%s/.last" % path, "")
+        store.save_text_to_file("%s/.last" % path, u"")
 
     def load_from(self, filepath):
         raw_tree = store.load_object_from_file(filepath)
@@ -270,12 +252,6 @@ class StructuredDataTree(object):
             filtered_tree._root.merge_with(sub_tree)
         return filtered_tree
 
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return self._root.get_tree_repr()
-
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
 
@@ -327,12 +303,6 @@ class NodeAttribute(object):
     def copy(self):
         raise NotImplementedError()
 
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        raise NotImplementedError()
-
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
 
@@ -365,8 +335,7 @@ class Container(NodeAttribute):
         return True
 
     def is_equal(self, foreign, edges=None):
-        for _, __, my_child, foreign_child in \
-            self._get_comparable_children(foreign, edges=edges):
+        for _, __, my_child, foreign_child in self._get_comparable_children(foreign, edges=edges):
             if not my_child.is_equal(foreign_child):
                 return False
         return True
@@ -424,7 +393,9 @@ class Container(NodeAttribute):
         for edge, _, child in self.get_children():
             child_tree = child.get_raw_tree()
             if self._is_nested_numeration_tree(child):
-                tree.setdefault(edge, child_tree.values())
+                # Sort by index but forget index afterwards => nested sub nodes as before
+                sorted_values = [child_tree[k] for k in sorted(child_tree.keys())]
+                tree.setdefault(edge, sorted_values)
             elif isinstance(child, Numeration):
                 tree.setdefault(edge, child_tree)
             else:
@@ -433,7 +404,7 @@ class Container(NodeAttribute):
 
     def _is_nested_numeration_tree(self, child):
         if isinstance(child, Container):
-            for key in child._edges.keys():
+            for key in child._edges:
                 if isinstance(key, int):
                     return True
         return False
@@ -493,17 +464,6 @@ class Container(NodeAttribute):
             new_node.add_child(edge, child.copy(), abs_path)
         return new_node
 
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        tree = {}  # type: Dict
-        for edge, abs_path, child in self.get_children():
-            tree.setdefault(edge, {'__path__': abs_path})
-            key = '__%s__' % type(child).__name__[:3]
-            tree[edge].setdefault(key, child.get_tree_repr())
-        return tree
-
     #   ---container methods----------------------------------------------------
 
     def add_child(self, edge, child, abs_path=None):
@@ -550,7 +510,7 @@ class Container(NodeAttribute):
     #   ---getting [sub] nodes/node attributes----------------------------------
 
     def get_edge_nodes(self):
-        return self._edges.items()
+        return list(self._edges.items())
 
     def get_children(self, edges=None):
         """Returns a flatten list of tuples (edge, absolute path, child)"""
@@ -573,7 +533,7 @@ class Container(NodeAttribute):
         """Returns a flatten list of tuples (edge, absolute path, my child, foreign child)"""
         comparable_children = set()
         if edges is None:
-            edges = set(self._edges.keys()).union(set(foreign._edges.keys()))
+            edges = set(self._edges).union(foreign._edges)
         for edge in edges:
             my_node = self._edges.get(edge, Node())
             foreign_node = foreign._edges.get(edge, Node())
@@ -683,7 +643,13 @@ class Numeration(Leaf):
         return self._numeration == []
 
     def is_equal(self, foreign, edges=None):
-        return sorted(self._numeration) == sorted(foreign._numeration)
+        for row in self._numeration:
+            if row not in foreign._numeration:
+                return False
+        for row in foreign._numeration:
+            if row not in self._numeration:
+                return False
+        return True
 
     def count_entries(self):
         return sum(map(len, self._numeration))
@@ -803,13 +769,10 @@ class Numeration(Leaf):
                 entry.update(foreign_num[key])
                 del foreign_num[key]
 
-        self._numeration += foreign_num.values()
+        self._numeration += list(foreign_num.values())
 
     def _get_numeration_keys(self):
-        keys = set()  # type: Set
-        for entry in self._numeration:
-            keys.update(entry.keys())
-        return keys
+        return {key for row in self._numeration for key in row}
 
     def _prepare_key(self, entry, keys):
         return tuple(entry[key] for key in sorted(keys) if key in entry)
@@ -818,12 +781,6 @@ class Numeration(Leaf):
         new_node = Numeration()
         new_node.set_child_data(self._numeration[:])
         return new_node
-
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return '[:]'
 
     #   ---leaf methods---------------------------------------------------------
 
@@ -903,12 +860,6 @@ class Attributes(Leaf):
         new_node = Attributes()
         new_node.set_child_data(self._attributes.copy())
         return new_node
-
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return '{:}'
 
     #   ---leaf methods---------------------------------------------------------
 
@@ -1043,7 +994,7 @@ def _compare_dict_keys(old_dict, new_dict):
     - intersection of both
     - relative complement of old_dict in new_dict
     """
-    old_keys, new_keys = set(old_dict.keys()), set(new_dict.keys())
+    old_keys, new_keys = set(old_dict), set(new_dict)
     return old_keys - new_keys, old_keys.intersection(new_keys),\
            new_keys - old_keys
 

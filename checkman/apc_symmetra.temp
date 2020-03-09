@@ -9,6 +9,8 @@ description:
  Default levels are set to 50, 60 degree celsius. Upper and lower
  levels are configurable.
 
+item:
+ Name of the temperature sensor
+
 inventory:
  One service is created.
-

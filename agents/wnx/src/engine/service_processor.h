@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // provides basic api to start and stop service
 
@@ -23,6 +26,7 @@
 #include "common/wtools.h"
 #include "external_port.h"
 #include "logger.h"
+#include "modules.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -85,6 +89,7 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
 
 class ServiceProcessor;
 
+//
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
@@ -107,7 +112,9 @@ public:
         const AnswerId Tp,            // expected id
         ServiceProcessor* processor   // hosting object
     ) {
+        engine_.registerOwner(processor);
         engine_.loadConfig();
+
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
@@ -237,6 +244,14 @@ public:
     static void resetOhm() noexcept;
     bool isOhmStarted() const noexcept { return ohm_started_; }
 
+    cma::cfg::modules::ModuleCommander& getModuleCommander() noexcept {
+        return mc_;
+    }
+    const cma::cfg::modules::ModuleCommander& getModuleCommander() const
+        noexcept {
+        return mc_;
+    }
+
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {
         const std::string answer_test = Text;
@@ -248,12 +263,14 @@ private:
     // controlled exclusively by mainThread
     std::string internal_port_;
 
+    cma::cfg::modules::ModuleCommander mc_;
+
     // called by external port BEFORE starting context run
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device,
-                      std::string_view Ip) const noexcept;
+    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
+        noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;

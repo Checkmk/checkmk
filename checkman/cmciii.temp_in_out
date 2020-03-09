@@ -1,4 +1,4 @@
-title: Rittal CMC-III Units: Temperatures
+title: Rittal CMC-III Units: Temperatures In/Out
 agents: snmp
 catalog: hw/environment/rittal
 license: GPL

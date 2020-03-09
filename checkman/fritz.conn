@@ -1,4 +1,4 @@
-title: Connection State of Fritz!Box
+title: AVM Fritz!Box: Connection State
 agents: fritzbox
 catalog: hw/network/avm
 license: GPL

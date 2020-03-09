@@ -12,6 +12,9 @@ description:
 
  The check monitors the reported state of the builtin FAN sensors.
 
+item:
+ Index of the fan followed by a label (e.g. {{system}}, {{cpu}}, etc.) in brackets
+
 inventory:
  One check is automatically created for each FAN sensor which is
  provided in the SNMP output.

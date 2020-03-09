@@ -1,4 +1,4 @@
-title: Splunk: Health
+title: Splunk: Alerts
 agents: splunk
 catalog: app/splunk
 license: GPL

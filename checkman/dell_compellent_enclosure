@@ -10,7 +10,7 @@ description:
  the state changed.
 
 item:
- The Enclosure number is the item
+ The Enclosure number
 
 inventory:
  One service for each enclosure is created

@@ -14,7 +14,7 @@ description:
  Upper levels are set to 40 and 45 celsius.
 
 item:
- Temperature summary.
+ The fixed statement {{Disks}}
 
 inventory:
  One service is created.

@@ -26,6 +26,21 @@ namespace cma::provider {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
+class Empty : public Synchronous {
+public:
+    Empty() : Synchronous("empty") {}
+    std::string makeBody() override { return "****"; }
+};
+
+TEST(SectionProviders, Basic) {
+    Empty e;
+
+    EXPECT_TRUE(e.getHostSp() == nullptr);
+    cma::srv::ServiceProcessor sp;
+    e.host_sp_ = &sp;
+    EXPECT_EQ(e.getHostSp(), &sp);
+}
+
 TEST(SectionProviders, Construction) {
     PluginsProvider plugins;
     EXPECT_EQ(plugins.getUniqName(), cma::section::kPlugins);

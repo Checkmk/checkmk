@@ -1,32 +1,14 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing folders"""
 
 import abc
 import json
+import operator
+
 import six
 
 import cmk.gui.config as config
@@ -140,7 +122,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return
 
-        ### Operations on SUBFOLDERS
+        # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.transaction_valid():
@@ -154,7 +136,7 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
-        ### Operations on HOSTS
+        # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")
@@ -225,7 +207,7 @@ class ModeFolder(WatoMode):
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
-            self._folder.delete_subfolder(subfolder_name)  # pylint: disable=no-member
+            self._folder.delete_subfolder(subfolder_name)
             return "folder"
         elif c is False:  # not yet confirmed
             return ""
@@ -276,7 +258,8 @@ class ModeFolder(WatoMode):
         if self._folder.has_subfolders():
             html.open_div(
                 class_="folders")  # This won't hurt even if there are no visible subfolders
-            for subfolder in self._folder.visible_subfolders_sorted_by_title():  # pylint: disable=no-member
+            for subfolder in sorted(self._folder.subfolders(only_visible=True),
+                                    key=operator.methodcaller('title')):
                 self._show_subfolder(subfolder)
             html.close_div()
             html.open_div(class_=["floatfolder", "unlocked", "newfolder"],
@@ -405,8 +388,7 @@ class ModeFolder(WatoMode):
 
         show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
-        hostnames = self._folder.hosts().keys()
-        hostnames.sort(key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom
@@ -758,9 +740,9 @@ class ModeFolder(WatoMode):
             parts = aliaspath.strip("/").split("/")
             folder = watolib.Folder.root_folder()
             while len(parts) > 0:
-                # Look in current folder for subfolder with the target name
+                # Look in the current folder for a subfolder with the target title
                 subfolder = folder.subfolder_by_title(parts[0])
-                if subfolder:
+                if subfolder is not None:
                     folder = subfolder
                 else:
                     name = _create_wato_foldername(parts[0], folder)

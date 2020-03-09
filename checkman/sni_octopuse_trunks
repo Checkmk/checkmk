@@ -1,4 +1,4 @@
-title: Siemens Octopus E trunk ports
+title: Siemens Octopus E: Trunk ports
 agents: snmp
 catalog: hw/phone
 license: GPL
@@ -11,6 +11,9 @@ description:
  failed.
  Such a port can be either "active" or "inactive".
  If a port switches to "inactive" the check will mark this port as {CRIT}
+
+item:
+ The index of the card and the index of the port seperated by a {{/}}
 
 inventory:
  The check will inventorize a trunk port if two conditions are fulfilled.

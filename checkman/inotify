@@ -13,5 +13,8 @@ description:
  You can configure levels relating to the age of the last operation.
  So you can check last modified age for example.
 
+item:
+ {{file}} or {{folder}} plus the path to it
+
 inventory:
  One check is created for every explictely specified file and folder in the mk_inotify.cfg.

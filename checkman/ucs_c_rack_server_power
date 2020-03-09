@@ -41,4 +41,4 @@ inventory:
   All motherboards of the rack server are found automatically.
 
 item:
-  One service for every motherboard of the rack server.
+ {{Rack unit}} followed by the index of the rack

@@ -21,5 +21,8 @@ description:
  corrupt configuration, requires immediate attention, critical and
  UNKNOWN otherwise.
 
+item:
+ Title of the entity (e.g. {{RAID}}, {{Cooling}}, etc.)
+
 inventory:
  One service is created.

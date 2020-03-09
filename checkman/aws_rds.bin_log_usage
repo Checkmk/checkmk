@@ -1,4 +1,4 @@
-title: AWS/RDS Binary Logs
+title: AWS RDS: Binary Logs
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,6 +9,9 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  No default levels are set. Upper levels are configurable.
+
+item:
+ Name of the instance if all required metrics (BinLogDiskUsage) are given.
 
 inventory:
  One service per database will be created.

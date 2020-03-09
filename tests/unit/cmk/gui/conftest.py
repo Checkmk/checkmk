@@ -1,13 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import contextlib
 import os
 
 import pathlib2
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
 import cmk.utils.log
-import cmk.utils.paths
+import cmk.utils.paths as paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
@@ -15,6 +21,7 @@ from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import edit_users, delete_users
+from cmk.utils import store
 from testlib.utils import DummyApplication
 
 
@@ -76,14 +83,14 @@ def _mk_user_obj(username, password, automation=False):
 
 @contextlib.contextmanager
 def _create_and_destroy_user(automation=False):
-    contacts_mk = cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/contacts.mk"
+    contacts_mk = paths.omd_root + "/etc/check_mk/conf.d/wato/contacts.mk"
     contact_existed = os.path.exists(contacts_mk)
-    _touch(cmk.utils.paths.htpasswd_file)
-    _touch(cmk.utils.paths.omd_root + '/etc/diskspace.conf')
-    _makepath(cmk.utils.paths.var_dir + "/wato/auth")
+    _touch(paths.htpasswd_file)
+    _touch(paths.omd_root + '/etc/diskspace.conf')
+    _makepath(paths.var_dir + "/wato/auth")
     _makepath(config.config_dir)
-    username = 'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
-    password = 'Ischbinwischtisch'
+    username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
+    password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     config.load_config()
     yield username, password
@@ -99,6 +106,13 @@ def with_user(register_builtin_html, load_config):
 
 
 @pytest.fixture(scope='function')
+def recreate_openapi_spec():
+    from cmk.gui.plugins.openapi import specgen
+    store.save_bytes_to_file(paths.web_dir + "/htdocs/openapi/checkmk.yaml", specgen.generate())
+    yield
+
+
+@pytest.fixture(scope='function')
 def with_automation_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=True) as user:
         yield user
@@ -109,5 +123,5 @@ def _makepath(path):
 
 
 def _touch(path):
-    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)
     pathlib2.Path(path).touch()

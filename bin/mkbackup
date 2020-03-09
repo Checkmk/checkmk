@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import errno
@@ -811,7 +791,7 @@ class MKBackupStream(object):
 
         variables = {"keys": {}}
         if os.path.exists(path):
-            exec (open(path).read(), variables, variables)
+            exec(open(path).read(), variables, variables)
         return variables["keys"]
 
 
@@ -1575,6 +1555,7 @@ def do_system_restore(opts, info):
     log("Performing system data restore (system-data%s)" % archive_suffix())
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
     do_system_data_restore(opts, info)
+    fix_linux_capabilities()
     log("Finished system data restore")
 
     def exclude_sites(opts):
@@ -1686,6 +1667,21 @@ def get_system_rw_files():
         for name in file_names:
             files.append("%s/%s" % (base_dir, name))
     return files
+
+
+def fix_linux_capabilities():
+    """Make the restored Checkmk versions work again
+
+    Checkmk uses capabilities since #7344. These need to be setup explicitly,
+    because the information are not backed up before by our TarFile mechanism.
+    We could make the tarfile keep these information by extending the
+    pax_headers manually (set the attribute SCHILY.xattr.security.capability),
+    but it is easier to simply re-execute the post-install script of each Checkmk
+    version.
+    """
+    import cma  # pylint: disable=import-error
+    for version in cma.compatible_omd_versions():
+        cma.execute_post_install(version)
 
 
 def cleanup_system_rw_files(files_before, files_restored):

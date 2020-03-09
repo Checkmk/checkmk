@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This is an unsorted collection of small unrelated helper functions which are
 usable in all components of the Web GUI of Check_MK
 
@@ -33,6 +13,7 @@ import re
 import uuid
 import marshal
 import itertools
+from typing import Text, Optional, Union, Any, List, Dict, Tuple  # pylint: disable=unused-import
 import six
 
 if sys.version_info[0] >= 3:
@@ -48,12 +29,13 @@ from cmk.gui.exceptions import MKUserError
 
 
 def num_split(s):
+    # type: (Union[str, Text]) -> Tuple[Union[int, str, Text], ...]
     """Splits a word into sequences of numbers and non-numbers.
 
     Creates a tuple from these where the number are converted into int datatype.
     That way a naturual sort can be implemented.
     """
-    parts = []
+    parts = []  # type: List[Union[int, str, Text]]
     for part in re.split(r'(\d+)', s):
         try:
             parts.append(int(part))
@@ -64,16 +46,19 @@ def num_split(s):
 
 
 def cmp_num_split(a, b):
+    # type: (str, str) -> int
     """Compare two strings, separate numbers and non-numbers from before."""
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
 
 
 def key_num_split(a):
+    # type: (Union[str, Text]) -> Tuple[Union[int, str, Text], ...]
     """Return a key from a string, separate numbers and non-numbers from before."""
     return num_split(a)
 
 
 def is_allowed_url(url):
+    # type: (str) -> bool
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
     parsed = six.moves.urllib.parse.urlparse(url)
@@ -94,6 +79,7 @@ def is_allowed_url(url):
 
 
 def validate_start_url(value, varprefix):
+    # type: (str, str) -> None
     if not is_allowed_url(value):
         raise MKUserError(
             varprefix,
@@ -102,10 +88,15 @@ def validate_start_url(value, varprefix):
 
 
 def cmp_version(a, b):
+    # type: (Optional[str], Optional[str]) -> int
     """Compare two version numbers with each other
     Allow numeric version numbers, but also characters.
     """
     if a is None or b is None:
+        if a is None:
+            a = ""
+        if b is None:
+            b = ""
         return (a > b) - (a < b)
     aa = list(map(num_split, a.split(".")))
     bb = list(map(num_split, b.split(".")))
@@ -115,6 +106,7 @@ def cmp_version(a, b):
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
 def savefloat(f):
+    # type: (Any) -> float
     try:
         return float(f)
     except (TypeError, ValueError):
@@ -124,6 +116,7 @@ def savefloat(f):
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
 def saveint(x):
+    # type: (Any) -> int
     try:
         return int(x)
     except (TypeError, ValueError):
@@ -136,6 +129,7 @@ def saveint(x):
 # Furthermore we filter out non-printable characters. The byte
 # 0x00 for example does not make it through HTTP and the URL.
 def get_random_string(size, from_ascii=48, to_ascii=90):
+    # type: (int, int, int) -> str
     """Generate a random string (no cryptographic safety)"""
     secret = ""
     urandom = open("/dev/urandom")
@@ -147,6 +141,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
 
 
 def gen_id():
+    # type: () -> str
     """Generates a unique id"""
     try:
         return open('/proc/sys/kernel/random/uuid').read().strip()
@@ -158,13 +153,14 @@ def gen_id():
 
 
 # This may not be moved to g, because this needs to be request independent
-_failed_plugins = {}
+_failed_plugins = {}  # type: Dict[str, List[Tuple[str, Exception]]]
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat, globalvars):
+    # type: (str, Dict) -> None
     _failed_plugins[forwhat] = []
 
     for plugins_path in [
@@ -177,10 +173,10 @@ def load_web_plugins(forwhat, globalvars):
         for file_path in sorted(plugins_path.iterdir()):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
-                    exec (_drop_comments(file_path.open().read()), globalvars)
+                    exec(_drop_comments(file_path.open().read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
-                    code_bytes = file_path.open().read()[8:]
+                    code_bytes = file_path.open("rb").read()[8:]
                     code = marshal.loads(code_bytes)
                     exec(code, globalvars)  # yapf: disable
 
@@ -190,6 +186,7 @@ def load_web_plugins(forwhat, globalvars):
 
 
 def _drop_comments(content):
+    # type: (str) -> str
     if six.PY3:
         return content
 
@@ -204,4 +201,5 @@ def _drop_comments(content):
 
 
 def get_failed_plugins():
-    return list(itertools.chain(*_failed_plugins.values()))
+    # type: () -> List[Tuple[str, Exception]]
+    return list(itertools.chain(*list(_failed_plugins.values())))

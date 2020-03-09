@@ -11,5 +11,8 @@ description:
  The WATO ruleset {JVM threads} applies crit/warn levels to the threads part
  of this check.
 
+item:
+ Name of the disk and either {{Heap}} or {{Non-Heap}}.
+
 inventory:
  One item per application is generated.

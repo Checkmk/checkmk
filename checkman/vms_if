@@ -10,3 +10,6 @@ description:
 
   This check is compatible to {if}. Please refer to that man page for
   further details about check configuration.
+
+item:
+ The port of the interface

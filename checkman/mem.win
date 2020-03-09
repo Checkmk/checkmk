@@ -34,9 +34,6 @@ description:
  amount of memory the current process can commit) of the MEMORYSTATUSEX
  structure as returned by the windows API function 'GlobalMemoryStatusEx'.
 
-item:
- {None}
-
 inventory:
  {mem.win} creates one check for each host that provides
  data about the page file. If that information is missing,

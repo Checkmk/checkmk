@@ -9,7 +9,7 @@ description:
  at the moment. This checks only monitors input voltage.
 
 item:
- Power Supply 1 Input, Power Supply 2 Input, ...
+ {{Power Supply}} followed by the index of the power supply and {{Input}}
 
 inventory:
  Creates one service per power supply

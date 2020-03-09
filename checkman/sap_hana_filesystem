@@ -10,8 +10,5 @@ description:
  Note: This check is deprecated and replaced by newer checks.
  See werk 7100 for detailed information.
 
-item:
- Instance and filesystem name.
-
 inventory:
  One service per filesystem is created.

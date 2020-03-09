@@ -12,6 +12,9 @@ description:
 
  The check monitors the physical state of the single CPUs not the load.
 
+item:
+ The unit index of the CPU
+
 inventory:
  One check is automatically created if each CPU entry which is provided
  in the SNMP output.

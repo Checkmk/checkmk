@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import print_function
 
 import glob
@@ -9,16 +15,21 @@ import pipes
 import time
 import shutil
 import logging
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import six
 from six.moves.urllib.parse import urlparse
 
 from testlib.utils import (
-    InterProcessLock,
-    SiteActionLock,
     cmk_path,
     cme_path,
     cmc_path,
     virtualenv_path,
+    current_base_branch_name,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -32,13 +43,16 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                  reuse=True,
                  version=CMKVersion.DEFAULT,
                  edition=CMKVersion.CEE,
-                 branch="master"):
+                 branch="master",
+                 update_from_git=False,
+                 install_test_python_modules=True):
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
         self.version = CMKVersion(version, edition, branch)
 
-        self.update_with_git = version == CMKVersion.GIT
+        self.update_from_git = update_from_git
+        self.install_test_python_modules = install_test_python_modules
 
         self.reuse = reuse
 
@@ -68,7 +82,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def live(self):
-        import livestatus  # pylint: disable=import-outside-toplevel
+        import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
@@ -94,7 +108,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            import livestatus  # pylint: disable=import-outside-toplevel
+            import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
@@ -172,14 +186,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                   expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET hosts\n" \
-            "Columns: last_check state plugin_output\n" \
-            "Filter: host_name = %s\n" \
-            "WaitObject: %s\n" \
-            "WaitTimeout: %d\n" \
-            "WaitCondition: last_check > %d\n" \
-            "WaitCondition: state = %d\n" \
-            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+            "GET hosts\n"
+            "Columns: last_check state plugin_output\n"
+            "Filter: host_name = %s\n"
+            "WaitObject: %s\n"
+            "WaitTimeout: %d\n"
+            "WaitCondition: last_check > %d\n"
+            "WaitCondition: state = %d\n"
+            "WaitTrigger: check\n" %
+            (hostname, hostname, wait_timeout * 1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)
 
@@ -187,22 +202,23 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                      command_timestamp, expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET services\n" \
-            "Columns: last_check state plugin_output\n" \
-            "Filter: host_name = %s\n" \
-            "Filter: description = %s\n" \
-            "WaitObject: %s;%s\n" \
-            "WaitTimeout: %d\n" \
-            "WaitCondition: last_check > %d\n" \
-            "WaitCondition: state = %d\n" \
-            "WaitCondition: has_been_checked = 1\n" \
-            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
+            "GET services\n"
+            "Columns: last_check state plugin_output\n"
+            "Filter: host_name = %s\n"
+            "Filter: description = %s\n"
+            "WaitObject: %s;%s\n"
+            "WaitTimeout: %d\n"
+            "WaitCondition: last_check > %d\n"
+            "WaitCondition: state = %d\n"
+            "WaitCondition: has_been_checked = 1\n"
+            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description,
+                                      wait_timeout * 1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)
 
     def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
                                   expected_state, plugin_output, wait_timeout):
-        print("processing check result took %0.2f seconds" % (time.time() - command_timestamp))
+        logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
@@ -211,17 +227,16 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
     def _last_host_check(self, hostname):
-        return self.live.query_value(
-            "GET hosts\n" \
-            "Columns: last_check\n" \
-            "Filter: host_name = %s\n" % (hostname))
+        return self.live.query_value("GET hosts\n"
+                                     "Columns: last_check\n"
+                                     "Filter: host_name = %s\n" % (hostname))
 
     def _last_service_check(self, hostname, service_description):
-        return self.live.query_value(
-                "GET services\n" \
-                "Columns: last_check\n" \
-                "Filter: host_name = %s\n" \
-                "Filter: service_description = %s\n" % (hostname, service_description))
+        return self.live.query_value("GET services\n"
+                                     "Columns: last_check\n"
+                                     "Filter: host_name = %s\n"
+                                     "Filter: service_description = %s\n" %
+                                     (hostname, service_description))
 
     def get_host_state(self, hostname):
         return self.live.query_value("GET hosts\nColumns: state\nFilter: host_name = %s" % hostname)
@@ -303,6 +318,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
+            parent_path = os.path.dirname(self.path(rel_path))
+            if not os.path.exists(parent_path):
+                os.makedirs(parent_path)
             return open(self.path(rel_path), "wb").write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):
@@ -342,90 +360,40 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
     def create(self):
-        with SiteActionLock():
-            if not self.version.is_installed():
-                self.version.install()
+        if not self.version.is_installed():
+            raise Exception("Version %s not installed. "
+                            "Use \"tests-py3/scripts/install-cmk.py\" or install it manually." %
+                            self.version.version)
 
-            if self.update_with_git:
-                self._copy_omd_version_for_test()
+        if not self.reuse and self.exists():
+            raise Exception("The site %s already exists." % self.id)
 
-            if not self.reuse and self.exists():
-                raise Exception("The site %s already exists." % self.id)
+        if not self.exists():
+            logger.info("Creating site '%s'", self.id)
+            p = subprocess.Popen([
+                "/usr/bin/sudo", "/usr/bin/omd", "-V",
+                self.version.version_directory(), "create", "--admin-password", "cmk",
+                "--apache-reload", self.id
+            ])
+            exit_code = p.wait()
+            assert exit_code == 0
+            assert os.path.exists("/omd/sites/%s" % self.id)
 
-            if not self.exists():
-                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
-                p = subprocess.Popen([
-                    "/usr/bin/sudo", "/usr/bin/omd", "-V",
-                    self.version.version_directory(), "create", "--admin-password", "cmk",
-                    "--apache-reload", self.id
-                ])
-                exit_code = p.wait()
-                print("[%0.2f] Executed create command" % time.time())
-                assert exit_code == 0
-                assert os.path.exists("/omd/sites/%s" % self.id)
+            self._set_number_of_helpers()
+            #self._enabled_liveproxyd_debug_logging()
+            self._enable_mkeventd_debug_logging()
 
-                self._set_number_of_helpers()
-                #self._enabled_liveproxyd_debug_logging()
-                self._enable_mkeventd_debug_logging()
-
+        if self.install_test_python_modules:
             self._install_test_python_modules()
 
-            if self.update_with_git:
-                self._update_with_f12_files()
-
-    # When using the Git version, the original version files will be
-    # replaced by the .f12 scripts. When tests are running in parallel
-    # with the same daily build, this may lead to problems when the .f12
-    # scripts are executed while another test is loading affected files
-    # As workaround we copy the original files to a test specific version
-    def _copy_omd_version_for_test(self):
-        if not os.environ.get("BUILD_NUMBER"):
-            return  # Don't do this in non CI environments
-
-        src_version, src_path = self.version.version, self.version.version_path()
-        new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
-        self.version = CMKVersion(new_version_name, self.version.edition(), self.version._branch)
-
-        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
-        assert not os.path.exists(self.version.version_path()), \
-            "New version path '%s' already exists" % self.version.version_path()
-
-        def execute(cmd):
-            print("Executing: %s" % cmd)
-            rc = os.system(cmd) >> 8  # nosec
-            if rc != 0:
-                raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
-
-        execute("sudo /bin/cp -a %s %s" % (src_path, self.version.version_path()))
-
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
-                (src_version, new_version_name, self.version.version_path()))
-
-        omd_init_path = "%s/lib/python3/omdlib/__init__.py" % self.version.version_path()
-        # Temporary hack. Can be removed after 2019-12-19
-        if not os.path.exists(omd_init_path):
-            omd_init_path = "%s/lib/python/omdlib/__init__.py" % self.version.version_path()
-        execute("sudo sed -i \"s|%s|%s|g\" %s" % (src_version, new_version_name, omd_init_path))
-
-        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
-                (src_version, new_version_name, self.version.version_path()))
-
-        # we should use self.version.version_path() in the RPATH, but that is limited to
-        # 32 bytes and our versions exceed this limit. We need to use some hack to make
-        # this possible
-        if not os.path.exists("/omd/v"):
-            execute("sudo /bin/ln -s /omd/versions /omd/v")
-
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
-                (self.version.version_directory(), self.version.version_path()))
-
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python3" %
-                (self.version.version_directory(), self.version.version_path()))
+        if self.update_from_git:
+            self._update_with_f12_files()
 
     def _update_with_f12_files(self):
         paths = [
             cmk_path() + "/omd/packages/omd",
             cmk_path() + "/livestatus",
+            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
@@ -443,16 +411,17 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
                 cmc_path() + "/bin",
+                cmc_path() + "/agents/bakery",
                 cmc_path() + "/modules",
                 cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
                 cmc_path() + "/misc",
-                # TODO: To be able to build the core correctly we need to build
-                # python/boost/python-modules/rrdtool first. Skip cmc for the moment here
-                #cmc_path() + "/core",
-                cmc_path() + "/agents",
+                cmc_path() + "/core",
+                # TODO: Do not invoke the chroot build mechanism here, which is very time
+                # consuming when not initialized yet
+                #cmc_path() + "/agents",
             ]
 
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
@@ -462,19 +431,18 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             ]
 
         # Prevent build problems of livestatus
-        print("Cleanup git files")
+        logger.debug("Cleanup git files")
         assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print("Executing .f12 in \"%s\"..." % path)
-                sys.stdout.flush()
+                logger.debug("Executing .f12 in \"%s\"...", path)
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash -x .f12" % (path, self.id)) >> 8 == 0
-                print("Executing .f12 in \"%s\" DONE" % path)
+                logger.debug("Executing .f12 in \"%s\" DONE", path)
                 sys.stdout.flush()
 
     def _set_number_of_helpers(self):
@@ -499,10 +467,20 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path()
+        venv = virtualenv_path(version=2)
         bin_dir = venv / "bin"
-        packages_dir = venv / "lib/python2.7/site-packages"
+        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
 
+        # Some distros have a separate platfrom dependent library directory, handle it....
+        platlib64 = venv / "lib64/python2.7/site-packages"
+        if platlib64.exists():
+            self._copy_python_modules_from(platlib64)
+
+        for file_name in ["py.test", "pytest"]:
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
+                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
+
+    def _copy_python_modules_from(self, packages_dir):
         enforce_override = ["backports"]
 
         for file_name in os.listdir(str(packages_dir)):
@@ -515,29 +493,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
-        for file_name in ["py.test", "pytest"]:
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
-                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
-
     def rm(self, site_id=None):
         if site_id is None:
             site_id = self.id
 
-        with SiteActionLock():
-            # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-            #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-            subprocess.Popen(
-                ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
-                 site_id]).wait()
-
-    def cleanup_old_sites(self, cleanup_pattern):
-        if not os.path.exists("/omd/sites"):
-            return
-
-        for site_id in os.listdir("/omd/sites"):
-            if site_id != self.id and site_id.startswith(cleanup_pattern):
-                print("Cleaning up old site: %s" % site_id)
-                self.rm(site_id)
+        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
+        #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+        subprocess.Popen(
+            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
+             site_id]).wait()
 
     def start(self):
         if not self.is_running():
@@ -548,7 +512,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
-                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
+                logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -559,17 +523,17 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if not self.is_running():
             return  # Nothing to do
 
-        print("= BEGIN PROCESSES BEFORE =======================================")
+        logger.debug("= BEGIN PROCESSES BEFORE =======================================")
         os.system("ps -fwwu %s" % self.id)  # nosec
-        print("= END PROCESSES BEFORE =======================================")
+        logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:
-            print("omd stop exit code: %d" % stop_exit_code)
+            logger.error("omd stop exit code: %d", stop_exit_code)
 
-        print("= BEGIN PROCESSES AFTER STOP =======================================")
+        logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
         os.system("ps -fwwu %s" % self.id)  # nosec
-        print("= END PROCESSES AFTER STOP =======================================")
+        logger.debug("= END PROCESSES AFTER STOP =======================================")
 
         try:
             i = 0
@@ -577,13 +541,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 i += 1
                 if i > 10:
                     raise Exception("Could not stop site %s" % self.id)
-                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
+                logger.warning("The site %s is still running, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
-        except:
-            print("= BEGIN PROCESSES AFTER WAIT =======================================")
+        except Exception:
+            logger.debug("= BEGIN PROCESSES AFTER WAIT =======================================")
             os.system("ps -fwwu %s" % self.id)  # nosec
-            print("= END PROCESSES AFTER WAIT =======================================")
+            logger.debug("= END PROCESSES AFTER WAIT =======================================")
             raise
 
     def exists(self):
@@ -595,19 +559,19 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
-            print("omd config: %s is already at %r" % (key, val))
+            logger.info("omd config: %s is already at %r", key, val)
             return
 
         if with_restart:
-            print("Stopping site")
+            logger.debug("Stopping site")
             self.stop()
 
-        print("omd config: Set %s to %r" % (key, val))
+        logger.info("omd config: Set %s to %r", key, val)
         assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
             self.start()
-            print("Started site")
+            logger.debug("Started site")
 
     def set_core(self, core):
         self.set_config("CORE", core, with_restart=True)
@@ -617,7 +581,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print(stderr)
+        logger.debug("omd config: %s is set to %r", key, stdout.strip())
+        if stderr:
+            logger.error(stderr)
         return stdout.strip()
 
     # These things are needed to make the site basically being setup. So this
@@ -643,19 +609,24 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def init_wato(self):
         if not self._missing_but_required_wato_files():
-            print("WATO is already initialized -> Skipping initializiation")
+            logger.info("WATO is already initialized -> Skipping initializiation")
             return
+
+        logger.debug("Initializing WATO...")
 
         web = CMKWebSession(self)
         web.login()
         web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
-        response = web.get("wato.py").text
-        assert "<title>WATO" in response
-        assert "<div class=\"title\">Manual Checks</div>" in response, \
+        logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
+        response = web.get("wato.py?mode=sites").text
+        #logger.debug("Debug: %r" % response)
+        assert "<title>Distributed Monitoring</title>" in response
+        assert "replication_status_%s" % web.site.id in response, \
                 "WATO does not seem to be initialized: %r" % response
 
+        logger.debug("Waiting for WATO files to be created...")
         wait_time = 20
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)
@@ -703,53 +674,23 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 missing.append(f)
         return missing
 
-    # For reliable testing we need the site environment. The only environment for executing
-    # Check_MK is now the site, so all tests that somehow rely on the environment should be
-    # executed this way.
-    def switch_to_site_user(self):
-        env_vars = {
-            "VERSION": self.version._version,
-            "REUSE": "1" if self.reuse else "0",
-            "BRANCH": self.version._branch,
-        }
-        for varname in [
-                "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-                "PYLINT_ARGS"
-        ]:
-            if varname in os.environ:
-                env_vars[varname] = os.environ[varname]
-
-        env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
-
-        cmd_parts = [
-            "python",
-            self.path("local/bin/py.test"),
-        ] + sys.argv[1:]
-
-        cmd = "cd %s && " % pipes.quote(cmk_path())
-        cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
-        print(cmd)
-        args = ["/usr/bin/sudo", "--", "/bin/su", "-l", self.id, "-c", cmd]
-        return subprocess.call(args)
-
-    # This opens a currently free TCP port and remembers it in the object for later use
-    # Not free of races, but should be sufficient.
-    def open_livestatus_tcp(self):
+    def open_livestatus_tcp(self, encrypted):
+        """This opens a currently free TCP port and remembers it in the object for later use
+        Not free of races, but should be sufficient."""
         start_again = False
 
         if self.is_running():
             start_again = True
             self.stop()
 
-        sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
-        with InterProcessLock("/tmp/cmk-test-livestatus-port"):
-            sys.stdout.write("Have livestatus port lock\n")
-            self.set_config("LIVESTATUS_TCP", "on")
-            self._gather_livestatus_port()
-            self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        sys.stdout.write("Have livestatus port lock\n")
+        self.set_config("LIVESTATUS_TCP", "on")
+        self._gather_livestatus_port()
+        self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
 
-            if start_again:
-                self.start()
+        if start_again:
+            self.start()
 
         sys.stdout.write("After livestatus port lock\n")
 
@@ -772,18 +713,26 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         while port in used_ports:
             port += 1
 
-        print("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
+        logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
 
 
 class SiteFactory(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, version, edition, branch, prefix=None):
+    def __init__(self,
+                 version,
+                 edition,
+                 branch,
+                 update_from_git=False,
+                 install_test_python_modules=True,
+                 prefix=None):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
         self._branch = branch
         self._sites = {}
         self._index = 1
+        self._update_from_git = update_from_git
+        self._install_test_python_modules = install_test_python_modules
 
     @property
     def sites(self):
@@ -797,15 +746,23 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
             return self._sites[name]
         return self._new_site(name)
 
+    def get_existing_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            return self._sites["%s%s" % (self._base_ident, name)]
+        # For convenience, allow to retreive site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+        return self._site_obj(name)
+
     def remove_site(self, name):
         if "%s%s" % (self._base_ident, name) in self._sites:
             site_id = "%s%s" % (self._base_ident, name)
         elif name in self._sites:
             site_id = name
         else:
-            print("Found no site for name %s." % name)
+            logger.debug("Found no site for name %s.", name)
             return
-        print("Removing site %s" % site_id)
+        logger.info("Removing site %s", site_id)
         self._sites[site_id].rm()
         del self._sites[site_id]
 
@@ -814,25 +771,45 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         self._index += 1
         return new_ident
 
-    def _new_site(self, name):
+    def _site_obj(self, name):
         site_id = "%s%s" % (self._base_ident, name)
-        site = Site(site_id=site_id,
+        return Site(site_id=site_id,
                     reuse=False,
                     version=self._version,
                     edition=self._edition,
-                    branch=self._branch)
+                    branch=self._branch,
+                    update_from_git=self._update_from_git,
+                    install_test_python_modules=self._install_test_python_modules)
+
+    def _new_site(self, name):
+        site = self._site_obj(name)
+
         site.create()
-        site.open_livestatus_tcp()
-        # No TLS for testing
-        site.set_config("LIVESTATUS_TCP_TLS", "off")
+        site.open_livestatus_tcp(encrypted=False)
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
-        print("Created site %s" % site_id)
-        self._sites[site_id] = site
+        logger.debug("Created site %s", site.id)
+        self._sites[site.id] = site
         return site
 
     def cleanup(self):
         for site_id in list(self._sites.keys()):
             self.remove_site(site_id)
+
+
+def get_site_factory(prefix, update_from_git, install_test_python_modules):
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+    edition = os.environ.get("EDITION", CMKVersion.CEE)
+    branch = os.environ.get("BRANCH", current_base_branch_name())
+
+    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
+    return SiteFactory(
+        version=version,
+        edition=edition,
+        branch=branch,
+        prefix=prefix,
+        update_from_git=update_from_git,
+        install_test_python_modules=install_test_python_modules,
+    )

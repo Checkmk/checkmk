@@ -10,9 +10,6 @@ description:
 
  The Check is always in an OK state.
 
-item:
- No item
-
 inventory:
  One service per host is created.
 

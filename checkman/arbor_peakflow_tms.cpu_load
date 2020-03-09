@@ -1,4 +1,4 @@
-title: Arbor Peakflow TMS CPU Load
+title: Arbor Peakflow TMS: CPU Load
 agents: snmp
 catalog: hw/network/arbor
 license: GPL

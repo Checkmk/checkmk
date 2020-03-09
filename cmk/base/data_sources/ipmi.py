@@ -1,30 +1,10 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Optional, Set, List, Tuple  # pylint: disable=unused-import
+from typing import cast, Optional, Set, List  # pylint: disable=unused-import
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -62,18 +42,18 @@ def _handle_false_positive_warnings(reading):
     The health warning is set, but only due to the lookup errors. We remove the lookup
     errors, and see whether the remaining states are meaningful.
     """
-    states = [s for s in reading.states if not s.startswith("Unknown state ")]
+    states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
 
     if not states:
-        return "no state reported"
+        return b"no state reported"
 
-    if any("non-critical" in s for s in states):
-        return "WARNING"
+    if any(b"non-critical" in s for s in states):
+        return b"WARNING"
 
     # just keep all the available info. It should be dealt with in
     # ipmi_sensors.include (freeipmi_status_txt_mapping),
     # where it will default to 2(CRIT)
-    return ', '.join(states)
+    return b', '.join(states)
 
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
@@ -112,7 +92,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         try:
             connection = self._create_ipmi_connection()
 
-            output = ""
+            output = b""
             output += self._fetch_ipmi_sensors_section(connection)
             output += self._fetch_ipmi_firmware_section(connection)
 
@@ -124,8 +104,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
             if isinstance(e, IpmiException) and "%s" % e == "None":
                 raise MKAgentError("IPMI communication failed: %r" % e)
-            else:
-                raise
+            raise
         finally:
             if connection:
                 connection.ipmi_session.logout()
@@ -152,9 +131,10 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         except NotImplementedError as e:
             self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return ""
+            return b""
 
         sensors = []
+        has_no_gpu = not self._has_gpu(connection)
         for number in sdr.get_sensor_numbers():
             rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
@@ -162,12 +142,14 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
             reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
             if reading is not None:
+                # sometimes (wrong) data for GPU sensors is reported, even if
+                # not installed
+                if "GPU" in reading.name and has_no_gpu:
+                    continue
                 sensors.append(self._parse_sensor_reading(number, reading))
 
-        output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
-               + "".join(["|".join(sensor) + "\n"  for sensor in sensors])
-
-        return output
+        return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
+            [b"|".join(sensor) + b"\n" for sensor in sensors])
 
     @staticmethod
     def _parse_sensor_reading(number, reading):
@@ -175,24 +157,24 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
-        health_txt = "N/A"
+        health_txt = b"N/A"
         if reading.health >= ipmi_const.Health.Failed:
-            health_txt = "FAILED"
+            health_txt = b"FAILED"
         elif reading.health >= ipmi_const.Health.Critical:
-            health_txt = "CRITICAL"
+            health_txt = b"CRITICAL"
         elif reading.health >= ipmi_const.Health.Warning:
-            health_txt = "WARNING"
+            health_txt = b"WARNING"
             # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
             health_txt = _handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
-            health_txt = "OK"
+            health_txt = b"OK"
 
         return [
-            "%d" % number,
+            b"%d" % number,
             reading.name,
             reading.type,
-            ("%0.2f" % reading.value) if reading.value else "N/A",
-            reading.units if reading.units != "\xc2\xb0C" else "C",
+            (b"%0.2f" % reading.value) if reading.value else b"N/A",
+            reading.units if reading.units != b"\xc2\xb0C" else b"C",
             health_txt,
         ]
 
@@ -204,14 +186,28 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return ""
+            return b""
 
-        output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
-                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
+                output += b"%s|%s|%s\n" % (entity_name, attribute_name, value)
 
         return output
+
+    # helper to sort out not installed GPU components
+    def _has_gpu(self, connection):
+        self._logger.debug("Fetching inventory information via UDP from %s:623" % (self._ipaddress))
+        try:
+            inventory_entries = connection.get_inventory_descriptions()
+        except Exception as e:
+            self._logger.verbose("Failed to fetch inventory information: %r" % e)
+            self._logger.debug("Exception", exc_info=True)
+            # in case of connection problems, we don't want to ignore possible
+            # GPU entries
+            return True
+
+        return any("GPU" in line for line in inventory_entries)
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

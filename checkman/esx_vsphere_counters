@@ -8,6 +8,9 @@ description:
  latency for each datastore on an ESX host system.
  You can configure levels for the read, write and latency values.
 
+item:
+ Name of the instance
+
 inventory:
  Depending on the configuration, creates a summary check or one
  check per datastore.

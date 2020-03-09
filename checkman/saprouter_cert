@@ -12,8 +12,5 @@ description:
  Otherwise if there's no or a broken PSE file or the credentials are false than
  the check goes UNKNOWN and diplays the related error message.
 
-item:
- No item.
-
 inventory:
  One service is created.

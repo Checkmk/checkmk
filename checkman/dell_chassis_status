@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Global State
+title: Dell PowerEdge Chassis Server: Global State
 agents: snmp
 catalog: hw/server/dell
 license: GPL

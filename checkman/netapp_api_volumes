@@ -1,4 +1,4 @@
-title: NetApp Filers: Used space and traffic of volumes
+title: NetApp Filer: Used space and traffic of volumes
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL

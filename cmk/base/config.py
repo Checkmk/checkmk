@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
 import ast
@@ -37,14 +17,18 @@ import sys
 import itertools
 import contextlib
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Pattern, Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union,
-    Optional, cast,
+    Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional, cast,
 )
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
+
+if sys.version_info[0] >= 3:
+    from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER  # pylint: disable=no-name-in-module,import-error
+else:
+    from py_compile import MAGIC as _MAGIC_NUMBER  # type: ignore[attr-defined] # pylint: disable=no-name-in-module,ungrouped-imports
 
 import six
 
@@ -66,26 +50,23 @@ import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources, TagID, TagValue, TaggroupID, Tags, TagList, TagGroups, Ruleset, CheckVariables)
+    LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
-import cmk.base
+from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
+import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
 import cmk.base.check_utils
-import cmk.base.utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
-from cmk.base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
     ScanFunction, SNMPCredentials,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     SectionName, CheckParameters, DiscoveredService,
 )
-
-if TYPE_CHECKING:
-    import cmk.base.autochecks as autochecks  # pylint: disable=unused-import
 
 # TODO: Prefix helper functions with "_".
 
@@ -94,8 +75,8 @@ if TYPE_CHECKING:
 # are loaded later with load_default_config() again.
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-service_service_levels = []  # type: ignore
-host_service_levels = []  # type: ignore
+service_service_levels = []
+host_service_levels = []
 
 AllHosts = List[str]
 ShadowHosts = Dict[str, Dict]
@@ -253,7 +234,7 @@ def _perform_post_config_loading_actions():
     # type: () -> None
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
-    cmk.base.config_cache.clear_all()
+    _config_cache.clear_all()
 
     get_config_cache().initialize()
 
@@ -264,11 +245,11 @@ def _perform_post_config_loading_actions():
         set_check_variables_for_checks()
 
 
-class SetFolderPathAbstract(object):
+class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, the_object):
         # type: (Iterable) -> None
         # TODO: Cleanup this somehow to work nicer with mypy
-        super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore
+        super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore[call-arg]
         self._current_path = None  # type: Optional[str]
 
     def set_current_path(self, current_path):
@@ -306,7 +287,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
-    def update(self, new_hosts):  # type: ignore
+    def update(self, new_hosts):
         # not-yet-a-type
         self._set_folder_paths(new_hosts)
         return super(SetFolderPathDict, self).update(new_hosts)
@@ -354,10 +335,10 @@ def _load_config(with_conf_d, exclude_parents_mk):
                 "FOLDER_PATH": folder_path,
             })
 
-            all_hosts.set_current_path(current_path)  # pylint: disable=no-member
-            clusters.set_current_path(current_path)  # pylint: disable=no-member
+            all_hosts.set_current_path(current_path)
+            clusters.set_current_path(current_path)
 
-            exec (open(_f).read(), global_dict, global_dict)
+            exec(open(_f).read(), global_dict, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(
@@ -510,7 +491,7 @@ def all_nonfunction_vars():
     }
 
 
-class PackedConfig(object):
+class PackedConfig(object):  # pylint: disable=useless-object-inheritance
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
 
@@ -658,7 +639,7 @@ class PackedConfig(object):
         store.save_file(self._path + ".orig", helper_config + "\n")
 
         code = compile(helper_config, '<string>', 'exec')
-        with open(self._path + ".compiled", "w") as compiled_file:
+        with open(self._path + ".compiled", "wb") as compiled_file:
             marshal.dump(code, compiled_file)
 
         os.rename(self._path + ".compiled", self._path)
@@ -666,7 +647,8 @@ class PackedConfig(object):
     def load(self):
         # type: () -> None
         _initialize_config()
-        exec (marshal.load(open(self._path)), globals())
+        with open(self._path, "rb") as f:
+            exec(marshal.load(f), globals())
         _perform_post_config_loading_actions()
 
 
@@ -713,7 +695,7 @@ def set_use_core_config(use_core_config):
 
 def strip_tags(tagged_hostlist):
     # type: (List[str]) -> List[str]
-    cache = cmk.base.config_cache.get_dict("strip_tags")
+    cache = _config_cache.get_dict("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     try:
@@ -727,7 +709,7 @@ def strip_tags(tagged_hostlist):
 def _get_shadow_hosts():
     # type: () -> ShadowHosts
     # Only available with CEE
-    return shadow_hosts if "shadow_hosts" in globals() else {}  # type: ignore # pylint: disable=undefined-variable
+    return shadow_hosts if "shadow_hosts" in globals() else {}  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
 
 # This function should only be used during duplicate host check! It has to work like
@@ -973,8 +955,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    if isinstance(descr_format, str):
-        descr_format = descr_format.decode("utf-8")
+    descr_format = six.ensure_text(descr_format)
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -988,9 +969,10 @@ def service_description(hostname, check_plugin_name, item):
         descr = descr_format
 
     if "%s" in descr:
-        raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
-                                 "Please try to rediscover the service to fix this issue." % \
-                                 (hostname, check_plugin_name, item))
+        raise MKGeneralException(
+            "Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+            "Please try to rediscover the service to fix this issue." %
+            (hostname, check_plugin_name, item))
 
     return get_final_service_description(hostname, descr)
 
@@ -1033,7 +1015,7 @@ def get_final_service_description(hostname, description):
 
     # Sanitize; Remove illegal characters from a service description
     description = description.strip()
-    cache = cmk.base.config_cache.get_dict("final_service_description")
+    cache = _config_cache.get_dict("final_service_description")
     try:
         new_description = cache[description]
     except KeyError:
@@ -1135,10 +1117,8 @@ def translate_piggyback_host(sourcehost, backedhost):
     # We assume the incoming name is correctly encoded in UTF-8
     decoded_backedhost = convert_to_unicode(backedhost,
                                             fallback_encoding=fallback_agent_output_encoding)
-
-    translated = cmk.utils.translations.translate_hostname(translation, decoded_backedhost)
-
-    return translated.encode('utf-8')  # change back to UTF-8 encoded string
+    return six.ensure_str(cmk.utils.translations.translate_hostname(translation,
+                                                                    decoded_backedhost))
 
 
 def _get_piggyback_translations(hostname):
@@ -1153,7 +1133,7 @@ def _get_piggyback_translations(hostname):
 
 def get_service_translations(hostname):
     # type: (HostName) -> cmk.utils.translations.TranslationOptions
-    translations_cache = cmk.base.config_cache.get_dict("service_description_translations")
+    translations_cache = _config_cache.get_dict("service_description_translations")
     if hostname in translations_cache:
         return translations_cache[hostname]
 
@@ -1684,6 +1664,7 @@ def _plugin_pathnames_in_directory(path):
     return []
 
 
+# TODO: Check if this totally non-portable Kung Fu still works with Python 3!
 def load_precompiled_plugin(path, check_context):
     # type: (str, CheckContext) -> None
     """Loads the given check or check include plugin into the given
@@ -1694,6 +1675,10 @@ def load_precompiled_plugin(path, check_context):
     case there is already a compiled file that is newer than the current one,
     then the precompiled file is loaded."""
 
+    # https://docs.python.org/3/library/py_compile.html
+    # https://www.python.org/dev/peps/pep-0552/
+    # HACK:
+    header_size = 16 if sys.version_info[0] >= 3 else 8
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1701,7 +1686,7 @@ def load_precompiled_plugin(path, check_context):
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec (marshal.loads(open(precompiled_path, "rb").read()[8:]), check_context)
+    exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
 
 
 def _is_plugin_precompiled(path, precompiled_path):
@@ -1713,8 +1698,7 @@ def _is_plugin_precompiled(path, precompiled_path):
     f = open(precompiled_path, "rb")
 
     file_magic = f.read(4)
-    # TODO: Python3 importlib.util.MAGIC_NUMBER
-    if file_magic != py_compile.MAGIC:  # type: ignore
+    if file_magic != _MAGIC_NUMBER:
         return False
 
     try:
@@ -1722,7 +1706,7 @@ def _is_plugin_precompiled(path, precompiled_path):
     except struct.error:
         return False
 
-    if long(os.stat(path).st_mtime) != origin_file_mtime:
+    if int(os.stat(path).st_mtime) != origin_file_mtime:
         return False
 
     return True
@@ -1916,10 +1900,10 @@ def checks_by_checkgroup():
 # These caches both only hold the base names of the checks
 def initialize_check_type_caches():
     # type: () -> None
-    snmp_cache = cmk.base.runtime_cache.get_set("check_type_snmp")
+    snmp_cache = _runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info)
 
-    tcp_cache = cmk.base.runtime_cache.get_set("check_type_tcp")
+    tcp_cache = _runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
@@ -2166,7 +2150,7 @@ def filter_by_management_board(hostname,
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     # type: (Set[CheckPluginName], bool) -> Tuple[Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName]]
     # Local import needed to prevent import cycle. Sorry for this hack :-/
-    import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name
+    import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
     if for_inventory:
         is_snmp_check_f = cmk.base.inventory_plugins.is_snmp_plugin
@@ -2237,7 +2221,7 @@ cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
 #   +----------------------------------------------------------------------+
 
 
-class HostConfig(object):
+class HostConfig(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, config_cache, hostname):
         # type: (ConfigCache, str) -> None
         super(HostConfig, self).__init__()
@@ -2989,14 +2973,13 @@ class HostConfig(object):
     def set_autochecks(self, new_items):
         # type: (List[DiscoveredService]) -> None
         """Merge existing autochecks with the given autochecks for a host and save it"""
-        from cmk.base.autochecks import set_autochecks_of_cluster, set_autochecks_of_real_hosts
         if self.is_cluster:
             if self.nodes:
-                set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                          self._config_cache.host_of_clustered_service,
-                                          service_description)
+                autochecks.set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
+                                                     self._config_cache.host_of_clustered_service,
+                                                     service_description)
         else:
-            set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
+            autochecks.set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
 
     def remove_autochecks(self):
         # type: () -> int
@@ -3005,11 +2988,10 @@ class HostConfig(object):
         Cluster aware means that the autocheck files of the nodes are handled. Instead
         of removing the whole file the file is loaded and only the services associated
         with the given cluster are removed."""
-        from cmk.base.autochecks import remove_autochecks_of_host
         hostnames = self.nodes if self.nodes else [self.hostname]
         return sum(
-            remove_autochecks_of_host(hostname, self._config_cache.host_of_clustered_service,
-                                      service_description)  #
+            autochecks.remove_autochecks_of_host(
+                hostname, self._config_cache.host_of_clustered_service, service_description)  #
             for hostname in hostnames)
 
 
@@ -3032,7 +3014,7 @@ class HostConfig(object):
 
 # TODO: Shouldn't we find a better place for the *_of_service() methods?
 # Wouldn't it be better to make them part of HostConfig?
-class ConfigCache(object):
+class ConfigCache(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         # type: () -> None
         super(ConfigCache, self).__init__()
@@ -3072,10 +3054,10 @@ class ConfigCache(object):
 
     def _initialize_caches(self):
         # type: () -> None
-        self.check_table_cache = cmk.base.config_cache.get_dict("check_tables")
+        self.check_table_cache = _config_cache.get_dict("check_tables")
 
-        self._cache_is_snmp_check = cmk.base.runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = cmk.base.runtime_cache.get_dict("is_tcp_check")
+        self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
+        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
 
         self._cache_match_object_service = {
@@ -3099,10 +3081,7 @@ class ConfigCache(object):
         self._hosttags = {}  # type: Dict[HostName, TagList]
 
         # Autochecks cache
-        # TODO: Cleanup this local import
-        import cmk.base.autochecks as autochecks  # pylint: disable=redefined-outer-name
-        self._autochecks_manager = autochecks.AutochecksManager(
-        )  # type: autochecks.AutochecksManager
+        self._autochecks_manager = autochecks.AutochecksManager()
 
         # Caches for nodes and clusters
         self._clusters_of_cache = {}  # type: Dict[HostName, List[HostName]]
@@ -3214,7 +3193,7 @@ class ConfigCache(object):
             'snmp_ds': 'no-snmp',
             'site': cmk.omd_site(),
             'address_family': 'ip-v4-only',
-        }  #  type: Tags
+        }  # type: Tags
 
         for tag_id in tag_list:
             # Assume it's an aux tag in case there is a tag configured without known group
@@ -3454,7 +3433,7 @@ class ConfigCache(object):
         try:
             return self._cache_is_snmp_check[check_plugin_name]
         except KeyError:
-            snmp_checks = cmk.base.runtime_cache.get_set("check_type_snmp")
+            snmp_checks = _runtime_cache.get_set("check_type_snmp")
             result = self.section_name_of(check_plugin_name) in snmp_checks
             self._cache_is_snmp_check[check_plugin_name] = result
             return result
@@ -3464,7 +3443,7 @@ class ConfigCache(object):
         try:
             return self._cache_is_tcp_check[check_plugin_name]
         except KeyError:
-            tcp_checks = cmk.base.runtime_cache.get_set("check_type_tcp")
+            tcp_checks = _runtime_cache.get_set("check_type_tcp")
             result = self.section_name_of(check_plugin_name) in tcp_checks
             self._cache_is_tcp_check[check_plugin_name] = result
             return result
@@ -3662,7 +3641,7 @@ class ConfigCache(object):
 
 def get_config_cache():
     # type: () -> ConfigCache
-    config_cache = cmk.base.config_cache.get_dict("config_cache")
+    config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()
@@ -3682,27 +3661,27 @@ class CEEConfigCache(ConfigCache):
 
     def recurring_downtimes_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> List[RecurringDowntime]
-        return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore # pylint: disable=undefined-variable
+        return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     def flap_settings_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Tuple[float, float, float]
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_flap_settings,  # type: ignore # pylint: disable=undefined-variable
-            deflt=cmc_flap_settings)  # type: ignore # pylint: disable=undefined-variable
+            cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_flap_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     def log_long_output_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> bool
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_long_output_in_monitoring_history,  # type: ignore # pylint: disable=undefined-variable
+            cmc_service_long_output_in_monitoring_history,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=False)
 
     def state_translation_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Dict
-        entries = self.service_extra_conf(hostname, description, service_state_translation)  # type: ignore # pylint: disable=undefined-variable
+        entries = self.service_extra_conf(hostname, description, service_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         spec = {}  # type: Dict
         for entry in entries[::-1]:
@@ -3715,15 +3694,15 @@ class CEEConfigCache(ConfigCache):
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_service_check_timeout,  # type: ignore # pylint: disable=undefined-variable
-            deflt=cmc_check_timeout)  # type: ignore # pylint: disable=undefined-variable
+            cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_check_timeout)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     def graphite_metrics_of_service(self, hostname, description):
         # type: (HostName, ServiceName) -> Optional[List[str]]
         return self.get_service_ruleset_value(
             hostname,
             description,
-            cmc_graphite_service_metrics,  # type: ignore # pylint: disable=undefined-variable
+            cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=None)
 
     def matched_agent_config_entries(self, hostname):
@@ -3758,14 +3737,14 @@ class CEEHostConfig(HostConfig):
     @property
     def recurring_downtimes(self):
         # type: () -> List[RecurringDowntime]
-        return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)  # type: ignore # pylint: disable=undefined-variable
+        return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     @property
     def flap_settings(self):
         # type: () -> Tuple[float, float, float]
-        values = self._config_cache.host_extra_conf(self.hostname, cmc_host_flap_settings)  # type: ignore # pylint: disable=undefined-variable
+        values = self._config_cache.host_extra_conf(self.hostname, cmc_host_flap_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
         if not values:
-            return cmc_flap_settings  # type: ignore # pylint: disable=undefined-variable
+            return cmc_flap_settings  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         return values[0]
 
@@ -3773,7 +3752,7 @@ class CEEHostConfig(HostConfig):
     def log_long_output(self):
         # type: () -> bool
         entries = self._config_cache.host_extra_conf(self.hostname,
-                                                     cmc_host_long_output_in_monitoring_history)  # type: ignore # pylint: disable=undefined-variable
+                                                     cmc_host_long_output_in_monitoring_history)  # type: ignore[name-defined] # type: ignore[name-defined] # pylint: disable=undefined-variable
         if not entries:
             return False
         return entries[0]
@@ -3781,7 +3760,7 @@ class CEEHostConfig(HostConfig):
     @property
     def state_translation(self):
         # type: () -> Dict
-        entries = self._config_cache.host_extra_conf(self.hostname, host_state_translation)  # type: ignore # pylint: disable=undefined-variable
+        entries = self._config_cache.host_extra_conf(self.hostname, host_state_translation)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         spec = {}  # type: Dict
         for entry in entries[::-1]:
@@ -3793,7 +3772,7 @@ class CEEHostConfig(HostConfig):
         # type: () -> Dict
         settings = {"timeout": 2.5}
         settings.update(
-            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings))  # type: ignore # pylint: disable=undefined-variable
+            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings))  # type: ignore[name-defined] # pylint: disable=undefined-variable
         return settings
 
     @property

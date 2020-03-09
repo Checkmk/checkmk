@@ -13,8 +13,5 @@ description:
  The information is retrieved by the special agent agent_emcvnx which uses
  EMC's command line tool naviseccli.
 
-item:
- No item.
-
 inventory:
  Finds exactly one item on every EMC VNX storage system called EMC VNX IO

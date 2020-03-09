@@ -1,30 +1,42 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Tuple, Text, Any, Optional, Callable
+from cmk.utils.type_defs import UserId
 
-VisualContext = Dict[str, Union[str, Dict[str, str]]]
-SingleInfos = List[str]
+HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
+LivestatusQuery = Union[Text, str]
+PermissionName = str
+
+# View specific
+Row = Dict[str, Any]  # TODO: Improve this type
+Rows = List[Row]
+PainterName = str
+SorterName = str
+ViewName = str
+ColumnName = str
+PainterParameters = Dict  # TODO: Improve this type
+PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
+PainterSpec = Union[  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName],
+          Text],  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName]],  #
+    Tuple[PainterNameSpec, Optional[ViewName]],  #
+]  #
+ViewSpec = Dict[str, Any]
+AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
+PermittedViewSpecs = Dict[ViewName, ViewSpec]
+SorterFunction = Callable[[ColumnName, Row, Row], int]
+
+# Visual specific
+FilterName = str
+FilterHTTPVariables = Dict[str, Union[Text, str]]
+Visual = Dict[str, Any]
+VisualTypeName = str
+VisualContext = Dict[FilterName, Union[Union[Text, str], FilterHTTPVariables]]
+InfoName = str
+SingleInfos = List[InfoName]

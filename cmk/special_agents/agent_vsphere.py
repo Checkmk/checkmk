@@ -1,30 +1,10 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-"""Check_MK vSphere Special Agent
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Check_MK vSphere Special Agent"""
+
 import argparse
 import collections
 import datetime
@@ -35,20 +15,25 @@ import re
 import socket
 import sys
 import time
-from typing import Optional, Text  # pylint: disable=unused-import
-from xml.dom import minidom  # type: ignore
+from xml.dom import minidom  # type: ignore[import]
+from pathlib import Path
 import requests
-import urllib3  # type: ignore
-# futurize requires this import:
-import six
-
+import urllib3  # type: ignore[import]
 from dateutil import tz
-from pathlib2 import Path
 
 import cmk.utils.password_store
 import cmk.utils.paths
 
 from cmk.special_agents.utils import vcrtrace
+
+#   .--defines-------------------------------------------------------------.
+#   |                      _       __ _                                    |
+#   |                   __| | ___ / _(_)_ __   ___  ___                    |
+#   |                  / _` |/ _ \ |_| | '_ \ / _ \/ __|                   |
+#   |                 | (_| |  __/  _| | | | |  __/\__ \                   |
+#   |                  \__,_|\___|_| |_|_| |_|\___||___/                   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
@@ -88,7 +73,7 @@ REQUESTED_COUNTERS_KEYS = (
 )
 
 
-class SoapTemplates(object):
+class SoapTemplates:
     # yapf: disable
     SYSTEMINFO = (
         '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'
@@ -892,6 +877,17 @@ class SoapTemplates(object):
         self.esxhostsofcluster = SoapTemplates.ESXHOSTSOFCLUSTER % system_fields
 
 
+#.
+#   .--args----------------------------------------------------------------.
+#   |                                                                      |
+#   |                          __ _ _ __ __ _ ___                          |
+#   |                         / _` | '__/ _` / __|                         |
+#   |                        | (_| | | | (_| \__ \                         |
+#   |                         \__,_|_|  \__, |___/                         |
+#   |                                   |___/                              |
+#   '----------------------------------------------------------------------'
+
+
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
 
@@ -1009,17 +1005,15 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-#   .--Connection----------------------------------------------------------+
+#.
+#   .--Connection----------------------------------------------------------.
 #   |             ____                       _   _                         |
 #   |            / ___|___  _ __  _ __   ___| |_(_) ___  _ __              |
 #   |           | |   / _ \| '_ \| '_ \ / _ \ __| |/ _ \| '_ \             |
 #   |           | |__| (_) | | | | | | |  __/ |_| | (_) | | | |            |
 #   |            \____\___/|_| |_|_| |_|\___|\__|_|\___/|_| |_|            |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
 
 
 class ESXCookieInvalid(RuntimeError):
@@ -1062,7 +1056,7 @@ class ESXSession(requests.Session):
         return super(ESXSession, self).post(self._post_url, data=soapdata, verify=self.verify)
 
 
-class ESXConnection(object):
+class ESXConnection:
     """Encapsulates the API calls to the ESX system"""
     ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
 
@@ -1194,17 +1188,15 @@ class ESXConnection(object):
                 raise
 
 
-#   .--Counters------------------------------------------------------------+
+#.
+#   .--Counters------------------------------------------------------------.
 #   |           ____                  _                                    |
 #   |          / ___|___  _   _ _ __ | |_ ___ _ __ ___                     |
 #   |         | |   / _ \| | | | '_ \| __/ _ \ '__/ __|                    |
 #   |         | |__| (_) | |_| | | | | ||  __/ |  \__ \                    |
 #   |          \____\___/ \__,_|_| |_|\__\___|_|  |___/                    |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
 
 
 def fetch_available_counters(connection, hostsystems):
@@ -1227,8 +1219,9 @@ def fetch_counters_syntax(connection, counter_ids):
 
     response_text = connection.query_server('perfcountersyntax', counters="".join(counters_list))
 
-    elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
-                           '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', response_text)
+    elements = get_pattern(
+        '<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'
+        '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', response_text)
 
     return {
         id_: {
@@ -1342,6 +1335,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     return section_lines
 
 
+#.
 #   .--Hostsystem----------------------------------------------------------.
 #   |         _   _           _                 _                          |
 #   |        | | | | ___  ___| |_ ___ _   _ ___| |_ ___ _ __ ___           |
@@ -1349,10 +1343,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 #   |        |  _  | (_) \__ \ |_\__ \ |_| \__ \ ||  __/ | | | | |         |
 #   |        |_| |_|\___/|___/\__|___/\__, |___/\__\___|_| |_| |_|         |
 #   |                                 |___/                                |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
 
 
 def _iter_dicts(keys, data):
@@ -1480,6 +1471,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
     return section_lines
 
 
+#.
 #   .--Objects-------------------------------------------------------------.
 #   |                    ___  _     _           _                          |
 #   |                   / _ \| |__ (_) ___  ___| |_ ___                    |
@@ -1487,10 +1479,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 #   |                  | |_| | |_) | |  __/ (__| |_\__ \                   |
 #   |                   \___/|_.__// |\___|\___|\__|___/                   |
 #   |                            |__/                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
 
 
 def get_vm_power_states(vms, hostsystems, opt):
@@ -1550,17 +1539,15 @@ def _format_piggybacked_objects_sections(piggy_data):
     return output + ["<<<<>>>>"]
 
 
-#   .--unsorted------------------------------------------------------------+
+#.
+#   .--unsorted------------------------------------------------------------.
 #   |                                       _           _                  |
 #   |            _   _ _ __  ___  ___  _ __| |_ ___  __| |                 |
 #   |           | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |                 |
 #   |           | |_| | | | \__ \ (_) | |  | ||  __/ (_| |                 |
 #   |            \__,_|_| |_|___/\___/|_|   \__\___|\__,_|                 |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
 
 
 def convert_hostname(hostname, opt):
@@ -1575,7 +1562,7 @@ def write_output(lines, opt):
             sys.stdout.write(chunk + "\n")
 
     for line in lines:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, six.text_type) else line) + "\n")
+        sys.stdout.write((line.encode("utf-8") if isinstance(line, str) else line) + "\n")
     sys.stdout.flush()
 
 
@@ -1910,13 +1897,14 @@ def fetch_data(connection, opt):
 
 def call_legacy_pysphere():
     # TODO: Remove this, drop agent_vsphere.pysphere
-    import subprocess
+    import subprocess  # pylint: disable=import-outside-toplevel
 
     path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
     cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere] + sys.argv[1:]
     return subprocess.call(cmd)
 
 
+#.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -1924,7 +1912,7 @@ def call_legacy_pysphere():
 #   |                       | |  | | (_| | | | | |                         |
 #   |                       |_|  |_|\__,_|_|_| |_|                         |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
 def main(argv=None):

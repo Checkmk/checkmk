@@ -1,4 +1,4 @@
-title: Check_MK Hardware/Software-Inventory
+title: Checkmk Hardware/Software-Inventory
 agents: active
 catalog: agentless
 license: GPL

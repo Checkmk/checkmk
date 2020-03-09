@@ -1,4 +1,4 @@
-title: Operations on couchbase nodes
+title: Coubase nodes: Operations
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -12,4 +12,4 @@ inventory:
  One service per node is created.
 
 item:
- The item is the name of the node.
+ The name of the node.

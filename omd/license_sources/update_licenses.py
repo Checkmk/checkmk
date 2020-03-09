@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 usage: ./update_licenses [-h] [-v] cmk_path
 
@@ -224,11 +228,10 @@ def parse_arguments():
             "given CheckMK source repository",
         usage="./update_licenses [-h] [-v] cmk_path")
     parser.add_argument("cmk_path", help="path to a CheckMK source repository")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="display found package paths that could not be matched")
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="store_true",
+                        help="display found package paths that could not be matched")
     return parser.parse_args()
 
 
@@ -278,8 +281,8 @@ def main(args):
             [name, _, _, _, path] = line.split(",")[:5]
             [name, path] = [i.strip() for i in [name, path]]
             # Needle to look for within the haystack of package paths
-            needle = name.replace("Perl module: ", "").replace("Python module: ", "").replace(
-                " ", "")
+            needle = name.replace("Perl module: ", "").replace("Python module: ",
+                                                               "").replace(" ", "")
 
             # Match the exceptional package paths first
             if name in exceptions and exceptions[name] in found_paths:

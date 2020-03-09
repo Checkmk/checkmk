@@ -12,5 +12,8 @@ description:
  As long all of the jobs are succsessful the check returns a {OK} state. In each other
  case the check will return {CRITICAL} and deliver the list of the failed replications
 
+item:
+ Target of the replication
+
 inventory:
  One Service for each replication target will be created

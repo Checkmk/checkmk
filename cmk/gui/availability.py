@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import time
@@ -919,11 +899,9 @@ def compute_availability(what, av_rawdata, avoptions):
 
             availability_table.append(availability_entry)
 
-    availability_table.sort(key=key_av_entry)
-
     # Apply filters
     filtered_table = []
-    for row in availability_table:
+    for row in sorted(availability_table, key=key_av_entry):
         if pass_availability_filter(row, avoptions):
             filtered_table.append(row)
     return filtered_table
@@ -1061,11 +1039,10 @@ def compute_availability_groups(what, av_data, avoptions):
                     title = _("Not contained in any group")
                 else:
                     title = group_titles.get(group_id, group_id)
-                titled_groups.append((title, group_id))  ## ACHTUNG
-        titled_groups.sort(key=lambda x: x[1])
+                titled_groups.append((title, group_id))  # ACHTUNG
 
         # 3. Loop over all groups and render them
-        for title, group_id in titled_groups:
+        for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
             group_table = []
             for entry in av_data:
                 group_ids = entry["groups"]
@@ -1292,7 +1269,6 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     for entry in availability_table:
         site = entry["site"]
         host = entry["host"]
-        alias = entry["alias"]
         service = entry["service"]
 
         row = {}
@@ -1300,7 +1276,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Iconbuttons with URLs
         urls = []
-        if not "omit_buttons" in labelling:
+        if "omit_buttons" not in labelling:
             if what != "bi":
                 timeline_url = html.makeuri([("av_mode", "timeline"), ("av_site", site),
                                              ("av_host", host), ("av_service", service)])
@@ -1313,32 +1289,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     ("history", _("Event History"), history_url_of((site, host, service),
                                                                    time_range)))
         row["urls"] = urls
-
-        # Column with host/service or aggregate name
-        objectcells = []  # List of pairs of (text, url)
-        if what == "bi":
-            bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
-                                                       ("aggr_group", host),
-                                                       ("aggr_name", service)])
-            objectcells.append((service, bi_url))
-        else:
-            host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
-                                                         ("site", site), ("host", host)])
-            if "omit_host" not in labelling or\
-                    (what == "host" and "show_alias" not in labelling):
-                objectcells.append((host, host_url))
-            if "show_alias" in labelling:
-                objectcells.append((alias, host_url))
-            if what == "service":
-                if "use_display_name" in labelling:
-                    service_name = entry["display_name"]
-                else:
-                    service_name = service
-                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
-                                                                ("site", site), ("host", host),
-                                                                ("service", service)])
-                objectcells.append((service_name, service_url))
-        row["object"] = objectcells
+        row["object"] = get_object_cells(what, entry, labelling)
 
         # Inline timeline
         if show_timeline:
@@ -1444,6 +1395,39 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         av_table["summary"] = summary_cells
 
     return av_table
+
+
+def get_object_cells(what, av_entry, labelling):
+    host = av_entry["host"]
+    service = av_entry["service"]
+
+    objectcells = []  # type: List[Tuple[str, str]]
+    if what == "bi":
+        bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
+                                                   ("aggr_group", host), ("aggr_name", service)])
+        objectcells.append((service, bi_url))
+        return objectcells
+
+    host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
+                                                 ("site", av_entry["site"]), ("host", host)])
+    if "omit_host" not in labelling or\
+            (what == "host" and "show_alias" not in labelling):
+        objectcells.append((host, host_url))
+
+    if "show_alias" in labelling:
+        objectcells.append((av_entry["alias"], host_url))
+
+    if what == "service":
+        if "use_display_name" in labelling:
+            service_name = av_entry["display_name"]
+        else:
+            service_name = service
+        service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
+                                                        ("site", av_entry["site"]), ("host", host),
+                                                        ("service", service)])
+        objectcells.append((service_name, service_url))
+
+    return objectcells
 
 
 # Compute layout of timeline independent of the output device (HTML, PDF, whatever)...

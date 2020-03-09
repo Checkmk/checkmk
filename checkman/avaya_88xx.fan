@@ -1,4 +1,4 @@
-title: Avaya 88xx Chassis Fans
+title: Avaya 88xx: Chassis Fans
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

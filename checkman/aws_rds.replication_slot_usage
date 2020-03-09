@@ -1,4 +1,4 @@
-title: AWS/RDS Replication Slot
+title: AWS RDS: Replication Slot
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -10,6 +10,9 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  No default levels are set. Upper levels are configurable.
+
+item:
+ Name of the instance if all required metrics (ReplicationSlotDiskUsage) are given.
 
 inventory:
  One service per databse will be created.

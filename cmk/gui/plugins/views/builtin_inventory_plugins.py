@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # YAPF is disabled in the next section to get simpler overview of the keys
 # present in the dictionary as they are packed together much more
@@ -769,6 +749,35 @@ inventory_displayhints.update({
     ".software.applications.mssql.instances:*.clustered": {
         "title": _("Clustered"), "paint": "mssql_is_clustered"
     },
+    ".software.applications.ibm_mq.": {"title": _("IBM MQ")},
+    ".software.applications.ibm_mq.managers:": {
+        "title": _("Managers"),
+        "keyorder": ["name", "instver", "instname", "standby", "status"],
+        "view": "invibmmqmanagers_of_host",
+    },
+    ".software.applications.ibm_mq.managers:*.name": {"title": _("Name")},
+    ".software.applications.ibm_mq.managers:*.instver": {"title": _("Version")},
+    ".software.applications.ibm_mq.managers:*.instname": {"title": _("Installation Name")},
+    ".software.applications.ibm_mq.managers:*.standby": {"title": _("Standby Status")},
+    ".software.applications.ibm_mq.managers:*.status": {"title": _("Manager Status")},
+    ".software.applications.ibm_mq.channels:": {
+        "title": _("Channels"),
+        "keyorder": ["qmgr", "name", "type", "status"],
+        "view": "invibmmqchannels_of_host",
+    },
+    ".software.applications.ibm_mq.channels:*.qmgr": {"title": _("Queue Manager Name")},
+    ".software.applications.ibm_mq.channels:*.name": {"title": _("Name")},
+    ".software.applications.ibm_mq.channels:*.type": {"title": _("Type")},
+    ".software.applications.ibm_mq.channels:*.status": {"title": _("Status")},
+    ".software.applications.ibm_mq.queues:": {
+        "title": _("Queues"),
+        "keyorder": ["qmgr", "name", "maxdepth", "maxmsgl"],
+        "view": "invibmmqqueues_of_host",
+    },
+    ".software.applications.ibm_mq.queues:*.qmgr": {"title": _("Queue Manager Name")},
+    ".software.applications.ibm_mq.queues:*.name": {"title": _("Name")},
+    ".software.applications.ibm_mq.queues:*.maxdepth": {"title": _("Max Number Of Messages")},
+    ".software.applications.ibm_mq.queues:*.maxmsgl": {"title": _("Max Message Size")},
     ".networking.": {"title": _("Networking"), "icon": "networking"},
     ".networking.total_interfaces": {"title": _("Interfaces"), "paint": "count"},
     ".networking.total_ethernet_ports": {"title": _("Ports"), "paint": "count"},

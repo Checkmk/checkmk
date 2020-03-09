@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.escaping as escaping
@@ -197,8 +178,7 @@ class PainterAggrIcons(Painter):
     def ident(self):
         return "aggr_icons"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Links")
 
     @property
@@ -243,8 +223,7 @@ class PainterAggrInDowntime(Painter):
     def ident(self):
         return "aggr_in_downtime"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("In Downtime")
 
     @property
@@ -261,8 +240,7 @@ class PainterAggrAcknowledged(Painter):
     def ident(self):
         return "aggr_acknowledged"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Acknowledged")
 
     @property
@@ -290,12 +268,10 @@ class PainterAggrState(Painter):
     def ident(self):
         return "aggr_state"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregated state")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("State")
 
     @property
@@ -313,12 +289,10 @@ class PainterAggrStateNum(Painter):
     def ident(self):
         return "aggr_state_num"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregated state (number)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("State")
 
     @property
@@ -335,12 +309,10 @@ class PainterAggrRealState(Painter):
     def ident(self):
         return "aggr_real_state"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregated real state (never assumed)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("R.State")
 
     @property
@@ -357,12 +329,10 @@ class PainterAggrAssumedState(Painter):
     def ident(self):
         return "aggr_assumed_state"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregated assumed state")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Assumed")
 
     @property
@@ -379,12 +349,10 @@ class PainterAggrGroup(Painter):
     def ident(self):
         return "aggr_group"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation group")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Group")
 
     @property
@@ -401,12 +369,10 @@ class PainterAggrName(Painter):
     def ident(self):
         return "aggr_name"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation name")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Aggregation")
 
     @property
@@ -423,12 +389,10 @@ class PainterAggrOutput(Painter):
     def ident(self):
         return "aggr_output"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation status output")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Output")
 
     @property
@@ -453,12 +417,10 @@ class PainterAggrHosts(Painter):
     def ident(self):
         return "aggr_hosts"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation: affected hosts")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Hosts")
 
     @property
@@ -475,12 +437,10 @@ class PainterAggrHostsServices(Painter):
     def ident(self):
         return "aggr_hosts_services"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation: affected hosts (link to host page)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Hosts")
 
     @property
@@ -607,12 +567,10 @@ class PainterAggrTreestate(Painter):
     def ident(self):
         return "aggr_treestate"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation: complete tree")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Tree")
 
     @property
@@ -633,12 +591,10 @@ class PainterAggrTreestateBoxed(Painter):
     def ident(self):
         return "aggr_treestate_boxed"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Aggregation: simplistic boxed layout")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Tree")
 
     @property

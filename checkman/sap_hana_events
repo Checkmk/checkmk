@@ -13,7 +13,7 @@ description:
  WARN and if there are high alerts then the check goes CRIT.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
  One service is created per instance.

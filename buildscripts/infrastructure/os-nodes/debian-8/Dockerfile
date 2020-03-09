@@ -43,6 +43,7 @@ RUN rm -rf /bin/systemctl \
 RUN apt-get update \
     && apt-get install -y \
     joe \
+    iputils-ping \
     vim \
     && rm -rf /var/lib/apt/lists/*
 

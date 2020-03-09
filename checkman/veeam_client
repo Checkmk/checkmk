@@ -20,6 +20,9 @@ description:
  In addition {WARN} and {CRIT} levels can be set for the time since the end
  of the last backup.
 
+item:
+ Name of the job
+
 inventory:
  A check will be created for all hosts known to check_mk and reported
  by the Veeam agent plugin.

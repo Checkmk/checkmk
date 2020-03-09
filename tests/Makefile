@@ -1,3 +1,7 @@
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 include ../defines.make
 
 SHELL    := /bin/bash -e
@@ -5,23 +9,18 @@ PIPENV2  := ../scripts/run-pipenv 2
 BANDIT   := $(PIPENV2) run bandit
 COVERAGE := $(PIPENV2) run coverage
 PYTEST   := $(PIPENV2) run py.test
-YAPF     := $(PIPENV2) run yapf
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
-.PHONY: help pipenv-check test-bandit test-format-python \
-        test-format-shell test-gui-crawl test-integration test-agent-integration \
+.PHONY: help pipenv-check test-bandit \
+        test-format-shell test-agent-integration \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
 
 help:
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
-	@echo "test-format-python        - Test the python formatting"
 	@echo "test-format-shell         - Run the shell formatting"
-	@echo "test-gui-crawl            - Run GUI crawl test"
-	@echo "test-integration          - Run integration tests"
 	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
-	@echo "test-format-python        - Test the python formatting"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
@@ -44,33 +43,11 @@ test-bandit: bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
-test-format-python: ../.style.yapf
-# Explicitly specify --style [FILE] to prevent costly searching in parent directories
-# for each file specified via command line
-#
-# There are some mixed up lines on stdout caused by the --parallel option.
-# Nevertheless, we keep that option to get a big performance boost. GitHub issue
-# opened for this problem: https://github.com/google/yapf/issues/644.
-	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 2)} ; \
-	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
-	grep '^+++ .*(reformatted)$$' | \
-	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[0]}
-
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
-test-gui-crawl: $(NODE_MODULES)
-	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
-
-test-integration: $(NODE_MODULES)
-	$(PYTEST) -T integration $(realpath integration)
-
 test-agent-integration:
 	$(PYTEST) -T agent-integration $(realpath agent-integration)
-
-test-composition: $(NODE_MODULES)
-	$(PYTEST) -T composition $(realpath composition)
 
 test-pylint:
 	$(PYTEST) -T pylint pylint
@@ -85,6 +62,9 @@ test-shellcheck:
 		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+
+test-integration: $(NODE_MODULES)
+	$(PIPENV2) run ../tests-py3/scripts/run-integration-test.py $(realpath ../tests/integration)
 
 test-unit:
 	$(PYTEST) -T unit unit
@@ -110,7 +90,7 @@ test-unit-one-by-one:
 # pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html:
 	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html
+	$(COVERAGE) html --rcfile=.coveragerc_unit
 
 test-unit-sh:
 	./sh_test_runner.sh

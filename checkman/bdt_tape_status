@@ -12,5 +12,3 @@ description:
 inventory:
  One service per host will be created.
 
-item:
- No item.

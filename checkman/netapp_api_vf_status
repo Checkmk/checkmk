@@ -9,6 +9,9 @@ description:
  {migrating} or {defunct}. If the vFiler state is not {running},
  {DR backup} or {migrating} the check goes {CRIT}.
 
+item:
+ Name of the virtual server
+
 inventory:
  One check is created per vFiler
 

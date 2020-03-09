@@ -12,5 +12,8 @@ description:
  snapshots are used, this will report the same information as the zfsget
  check.
 
+item:
+ The mountpoint of the filesystem
+
 inventory:
  The inventory will create one service per pool.

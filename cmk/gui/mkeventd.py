@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import sys
@@ -30,19 +10,21 @@ import ast
 import re
 import socket
 import time
-from typing import List, Tuple, Text  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+import six
+
 import livestatus
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -203,7 +185,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", list(map(make_utf8, rfc)), site=event["site"])
+    execute_command("CREATE", [six.ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
@@ -249,6 +231,7 @@ def query_ec_directly(query):
 
 
 def execute_command(name, args=None, site=None):
+    # type: (str, Optional[List[str]], Optional[SiteId]) -> None
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -277,7 +260,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}
+    total_stats = {}  # type: Dict[str, float]
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):
@@ -358,7 +341,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             cp = True
 
         match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
-        if match_groups != False and cp:
+        if match_groups is not False and cp:
             if match_groups is True:
                 match_groups = ()
             return True, match_groups

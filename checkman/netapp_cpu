@@ -1,4 +1,4 @@
-title: NetApp Filers: CPU Utilization
+title: NetApp Filer: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

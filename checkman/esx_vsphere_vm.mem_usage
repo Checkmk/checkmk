@@ -9,7 +9,7 @@ description:
 
  The check always returns {OK} state.
 
- See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ See "Monitoring VMWare ESX with Checkmk" in the online documentation
  as well.
 
 inventory:

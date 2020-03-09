@@ -1,4 +1,4 @@
-title: Moxa IOLogik Register Check
+title: Moxa IOLogik: Register Check
 agents: snmp
 catalog: hw/network/moxa
 license: GPL
@@ -11,6 +11,9 @@ description:
  {0-2} and takes these values as the state of the check. The name of the
  register is taken as the status detail of the check.
  If the value is not out of 0,1,2 the check state is {UNKNOWN}.
+
+item:
+ The channel dio index
 
 inventory:
  A check will be created for all registers found on the device.

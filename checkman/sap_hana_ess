@@ -15,7 +15,7 @@ description:
  If there are no startet threads the check goes CRIT.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
  One service is created per instance.

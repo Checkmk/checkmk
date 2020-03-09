@@ -1,35 +1,15 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import numbers
 import os
 import sys
 from typing import (  # pylint: disable=unused-import
-    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, AnyStr,
+    Callable, Text, Optional, Union, List, Dict, AnyStr,
 )
 import six
 
@@ -103,8 +83,8 @@ def get_configuration_warnings():
     num_warnings = len(g_configuration_warnings)
 
     if num_warnings > 10:
-        warnings = g_configuration_warnings[:10] + \
-                                  [ "%d further warnings have been omitted" % (num_warnings - 10) ]
+        warnings = (g_configuration_warnings[:10] +
+                    ["%d further warnings have been omitted" % (num_warnings - 10)])
     else:
         warnings = g_configuration_warnings
 
@@ -262,8 +242,8 @@ def do_create_config(core, with_agents):
 
     if with_agents:
         try:
-            import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name
-            cmk.base.cee.agent_bakery.bake_on_restart()  # pylint: disable=no-member
+            import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+            cmk.base.cee.agent_bakery.bake_on_restart()
         except ImportError:
             pass
 
@@ -379,15 +359,12 @@ def get_service_attributes(hostname, description, config_cache, checkname=None, 
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
     # TODO: Remove ignore once we are on Python 3
-    attrs.update(
-        _get_tag_attributes(
-            config_cache.labels_of_service(hostname, description),  # type: ignore
-            "LABEL"))  # type: ignore
+    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
+                                     "LABEL"))
     # TODO: Remove ignore once we are on Python 3
     attrs.update(
-        _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description),  # type: ignore
-            "LABELSOURCE"))  # type: ignore
+        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
+                            "LABELSOURCE"))
     return attrs
 
 
@@ -492,7 +469,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer  # type: ignore # pylint: disable=no-member
+        attrs["_CUSTOMER"] = config.current_customer  # type: ignore[attr-defined]
 
     return attrs
 
@@ -646,7 +623,7 @@ def replace_macros(s, macros):
             s = s.replace(key, value)
         except Exception:  # Might have failed due to binary UTF-8 encoding in value
             try:
-                s = s.replace(key, value.decode("utf-8"))  # type: ignore
+                s = s.replace(key, value.decode("utf-8"))
             except Exception:
                 # If this does not help, do not replace
                 if cmk.utils.debug.enabled():

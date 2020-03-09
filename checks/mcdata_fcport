@@ -1,35 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 mcdata_fcport_speedbits = {"2": '1000000000', "3": '2000000000'}
 mcdata_fcport_opstatus = {"1": "1", "2": "2", "3": "testing", "4": "faulty"}
 
 
 def mcdata_bin_to_64(bin_):
-    return str(binstring_to_int(bin_))
+    return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
 def mcdata_fcport_convert_to_if64(info):
@@ -87,11 +69,11 @@ check_info["mcdata_fcport"] = {
             1,  # EF-6000-MIB::ef6000PortIndex
             3,  # EF-6000-MIB::ef6000PortOpStatus
             11,  # EF-6000-MIB::ef6000PortSpeed
-            67,  # EF-6000-MIB::ef6000PortTxWords64
-            68,  # EF-6000-MIB::ef6000PortRxWords64
-            69,  # EF-6000-MIB::ef6000PortTxFrames64
-            70,  # EF-6000-MIB::ef6000PortRxFrames64
-            83,  # EF-6000-MIB::ef6000PortC3Discards64
+            BINARY(67),  # EF-6000-MIB::ef6000PortTxWords64
+            BINARY(68),  # EF-6000-MIB::ef6000PortRxWords64
+            BINARY(69),  # EF-6000-MIB::ef6000PortTxFrames64
+            BINARY(70),  # EF-6000-MIB::ef6000PortRxFrames64
+            BINARY(83),  # EF-6000-MIB::ef6000PortC3Discards64
             65,  # EF-6000-MIB::ef6000PortCrcs
         ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2

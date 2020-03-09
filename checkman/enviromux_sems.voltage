@@ -1,4 +1,4 @@
-title: enviromux_sems.voltage
+title: NTI Enviromux SEMS: Voltage
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

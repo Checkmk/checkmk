@@ -1,4 +1,4 @@
-title: Avaya 45xx Temperature
+title: Avaya 45xx: Temperature
 agents: snmp
 catalog: hw/network/avaya
 license: GPL

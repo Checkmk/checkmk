@@ -7,7 +7,7 @@ description:
  This check monitors the state of temperature sensors on UPS devices.
 
 item:
- The description of the sensor as provided by the device.
+ The identifier of the UPS device
 
 inventory:
  One check for each sensor is created by the inventory

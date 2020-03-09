@@ -17,7 +17,7 @@ description:
  to a pseudo host named after the replica set name, intead.
 
 item:
- The collection name
+ The name of the database followed by {{.}} followed by the name of the collection
 
 inventory:
  One service is created for each collection

@@ -58,13 +58,6 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
 
-FILES_TO_FORMAT_WINDOWS := \
-                      $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/,*.cc *.h)) \
-                      $(wildcard $(addprefix agents/windows/test/sections,*.cc *.h)) \
-
 FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
@@ -95,8 +88,8 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-windows format-linux format-python format-shell \
-        GTAGS headers help install \
+        format-linux format-python format-python2 format-python3 \
+	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel .venv .venv-2.7 .venv-3.7
 
@@ -154,7 +147,7 @@ endif
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} agents/windows/{build64,build} enterprise/agents/winbuild; do \
+	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/plugins/{build,build-32,src} enterprise/agents/winbuild; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \
@@ -243,9 +236,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent-64.exe \
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
-		windows/check_mk_agent_legacy-64.exe \
-		windows/check_mk_agent_legacy.exe \
-		windows/check_mk_agent_legacy.msi \
+		windows/python-3.8.zip \
 		windows/check_mk.example.ini \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
@@ -523,22 +514,31 @@ format: format-python format-c format-shell
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c: format-windows format-linux
-
-format-windows:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_WINDOWS)
+format-c: format-linux
 
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python:
+format-python: format-python3 format-python2
+
+format-python2:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
 	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
-	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+
+format-python3:
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
+# for the moment to get the performance boost this option brings.
+	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 3)} ; \
+	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+
 
 format-shell:
 	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)

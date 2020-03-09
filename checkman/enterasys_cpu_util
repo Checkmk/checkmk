@@ -6,6 +6,8 @@ distribution: check_mk
 description:
  This check shows the current average cpu utilization for each plugged-in CPU modules.
 
+item:
+ ID of the CPU
 
 inventory:
  One check per module will be created

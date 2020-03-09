@@ -1,32 +1,25 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
-from typing import Iterator, Any, Union, Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+from typing import Iterator, Any, Union, Optional, Text, List, Dict  # pylint: disable=unused-import
+
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore[import]
+except ImportError:
+    from collections import MutableMapping
+
 import six
 
 from cmk.utils.exceptions import MKGeneralException
@@ -36,7 +29,7 @@ HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
 DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object)):
     def __init__(self, *args):
         # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()
@@ -78,7 +71,7 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMap
         return self._labels
 
 
-class DiscoveredHostLabels(ABCDiscoveredLabels):
+class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
     @classmethod
     def from_dict(cls, dict_labels):
@@ -119,7 +112,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
 
     def __repr__(self):
         # type: () -> str
-        return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
+        return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
 
 
 class ABCLabel(object):  # pylint: disable=useless-object-inheritance
@@ -220,7 +213,7 @@ class HostLabel(ABCLabel):
         return not self.__eq__(other)
 
 
-class DiscoveredServiceLabels(ABCDiscoveredLabels):
+class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
     def __init__(self, *args):
         # type: (ServiceLabel) -> None

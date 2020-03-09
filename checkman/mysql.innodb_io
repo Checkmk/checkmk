@@ -16,6 +16,9 @@ description:
 
   The check is configured like the {diskstat} check for block devices.
 
+item:
+ The name of the instance
+
 inventory:
   The check generates one item per instance, representing the InnoDB writers for a MySQL
   Daemon.

@@ -9,7 +9,7 @@ description:
  Upper and lower levels are configurable via WATO.
 
 item:
- Sensor number, sensor name
+ The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
 inventory:
  One service per sensor is created.

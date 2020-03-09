@@ -26,6 +26,6 @@ inventory:
  The check will create one separate service per CPU.
 
 item:
- A string describing the switch and unit number, for example {"Switch 2 CPU 0"}
- or {"Switch 1 Slot 11"}.
+ {{Switch}} followed by the ID of the switch followed by the CPU type
+ (i.e. {{Slot}}, {{CPU}} or {{Unknown}}) followed by the number of the CPU
 

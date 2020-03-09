@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
 import traceback
@@ -67,3 +70,31 @@ def test_exception_handling(register_builtin_html):
         raise Exception("Test")
     except Exception as e:
         assert compare_html(html.render_div(e), "<div>%s</div>" % e)
+
+
+def test_text_input(register_builtin_html):
+    with html.plugged():
+        html.text_input('tralala')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+
+    with html.plugged():
+        html.text_input('blabla', cssclass='blubb')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
+
+    with html.plugged():
+        html.text_input('blabla', autocomplete='yep')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text,
+            '<input style="" name="blabla" autocomplete="yep" type="text" class="text" value=\'\' />'
+        )
+
+    with html.plugged():
+        html.text_input('blabla', placeholder='placido', data_world='welt', data_max_labels=42)
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')

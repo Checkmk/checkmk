@@ -1,35 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Checkbox,
     Dictionary,
     ListChoice,
     ListOf,
+    Transform,
+    CascadingDropdown,
+    DropdownChoice,
     TextAscii,
     TextUnicode,
     Tuple,
@@ -49,7 +31,26 @@ def _valuespec_inventory_df_rules():
     return Dictionary(
         title=_("Discovery parameters for filesystem checks"),
         elements=[
-            ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
+            ("include_volume_name",
+             Transform(
+                 CascadingDropdown(
+                     title=_("Service description format"),
+                     choices=
+                     [(False, _("Name of mount point")),
+                      (True, _("Name of volume and name of mount point"),
+                       DropdownChoice(
+                           label=_("Filesystem grouping"),
+                           choices=[
+                               ('mountpoint', _('Grouping pattern applies to mount point only')),
+                               ('volume_name_and_mountpoint',
+                                _('Grouping pattern applies to volume name and mount point')),
+                           ],
+                           help=_(
+                               "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a> "
+                               "feature processes this filesystem."),
+                       ))]),
+                 forth=lambda x: (True, "mountpoint") if x is True else x,
+             )),
             ("ignore_fs_types",
              ListChoice(title=_("Filesystem types to ignore"),
                         choices=[
@@ -83,18 +84,23 @@ rulespec_registry.register(
 
 def _valuespec_filesystem_groups():
     return ListOf(
-        Tuple(show_titles=True,
-              orientation="horizontal",
-              elements=[
-                  TextAscii(title=_("Name of group"),),
-                  TextAscii(
-                      title=_("Pattern for mount point (using * and ?)"),
-                      help=_("You can specify one or several patterns containing "
-                             "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
-                             "The filesystems matching the patterns will be monitored "
-                             "like one big filesystem in a single service."),
-                  ),
-              ]),
+        Tuple(
+            show_titles=True,
+            orientation="horizontal",
+            elements=[
+                TextAscii(title=_("Name of group"),),
+                TextAscii(
+                    title=_("Pattern for item (using * and ?)"),
+                    help=
+                    _("You can specify one or several globbing patterns containing "
+                      "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                      "The filesystems matching the patterns will be monitored "
+                      "like one big filesystem in a single service. Depending on the configuration in the "
+                      "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>Discovery parameters "
+                      " for filesystem checks</a>, the pattern matches the mount point or "
+                      "the combination of volume and mount point"),
+                ),
+            ]),
         add_label=_("Add pattern"),
         title=_('Filesystem grouping patterns'),
         help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '

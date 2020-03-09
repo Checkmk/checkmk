@@ -19,7 +19,7 @@ description:
  could remove all informations for the DB_INCR_1 and the check
  reports a missing backup. This is prevented with this behavior.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
@@ -27,4 +27,8 @@ parameters (dict):
 
  "backup_age": (int, int) - Maximum time in seconds for warn and crit
  for the last RMAN Backup.
+
+item:
+ The sid and the type of the backup seperated by a {{.}} and optionally
+ the backup level seperated by an underscore
 

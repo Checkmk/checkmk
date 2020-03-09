@@ -8,7 +8,7 @@ description:
  temperatures can be used to set thresholds.
 
 item:
- The board name is used a item
+ The name of the board
 
 inventory:
  One service for each board is created

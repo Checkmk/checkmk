@@ -1,6 +1,10 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.notification_plugins.mail as mail
 
@@ -269,8 +273,6 @@ Service Metrics:     \n\
 
 # TODO: validate the HTML content
 def test_mail_content_from_service_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
-
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context
@@ -394,7 +396,6 @@ Metrics:             \n\
 
 
 def test_mail_content_from_host_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
     mocker.patch("cmk.notification_plugins.mail.socket.getfqdn", lambda: 'mysite.com')
 
     context = mock_host_context()

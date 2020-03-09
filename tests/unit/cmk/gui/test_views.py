@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
 # pylint: disable=redefined-outer-name
 import copy
-import pytest # type: ignore
+import pytest  # type: ignore[import]
 import six
 import cmk.gui.config as config
 
@@ -31,13 +37,8 @@ def test_registered_painter_options():
         'show_internal_tree_paths',
         'ts_date',
         'ts_format',
-    ]
-
-    if not cmk.is_raw_edition():
-        expected += [
-
         'graph_render_options',
-        ]
+    ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
@@ -4035,20 +4036,14 @@ def test_registered_painters():
         painter = painter_class()
         spec = expected[painter.ident]
 
-        if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert hasattr(painter.title, '__call__')
-        else:
-            assert painter.title == spec["title"]
+        assert painter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
             assert hasattr(painter.columns, '__call__')
         else:
             assert painter.columns == spec["columns"]
 
-        if isinstance(spec.get("short"), tuple) and spec["short"][0] == "func":
-            assert hasattr(painter.short_title, '__call__')
-        else:
-            assert painter.short_title == spec.get("short", spec["title"])
+        assert painter.short_title == spec.get("short", spec["title"])
 
         assert painter.sorter == spec.get("sorter")
         assert painter.painter_options == spec.get("options", [])
@@ -4076,10 +4071,11 @@ def test_legacy_register_painter(monkeypatch):
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), (painter.ident, None))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
-    assert painter.title == "A B C"
-    assert painter.short_title == "ABC"
+    assert painter.title(dummy_cell) == "A B C"
+    assert painter.short_title(dummy_cell) == "ABC"
     assert painter.columns == ["x"]
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
@@ -6123,6 +6119,23 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
     '.software.applications.docker.version',
+    '.software.applications.ibm_mq.',
+    '.software.applications.ibm_mq.channels:',
+    '.software.applications.ibm_mq.channels:*.name',
+    '.software.applications.ibm_mq.channels:*.qmgr',
+    '.software.applications.ibm_mq.channels:*.status',
+    '.software.applications.ibm_mq.channels:*.type',
+    '.software.applications.ibm_mq.managers:',
+    '.software.applications.ibm_mq.managers:*.instname',
+    '.software.applications.ibm_mq.managers:*.instver',
+    '.software.applications.ibm_mq.managers:*.name',
+    '.software.applications.ibm_mq.managers:*.standby',
+    '.software.applications.ibm_mq.managers:*.status',
+    '.software.applications.ibm_mq.queues:',
+    '.software.applications.ibm_mq.queues:*.maxdepth',
+    '.software.applications.ibm_mq.queues:*.maxmsgl',
+    '.software.applications.ibm_mq.queues:*.name',
+    '.software.applications.ibm_mq.queues:*.qmgr',
     '.software.applications.kubernetes.assigned_pods:',
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',

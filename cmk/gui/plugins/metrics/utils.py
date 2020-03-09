@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 from __future__ import division
 
@@ -33,13 +13,14 @@ import shlex
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.regex
+from cmk.utils.memoize import MemoizeCache
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.valuespec import DropdownChoice
 
 
 class AutomaticDict(OrderedDict):
@@ -211,14 +192,12 @@ def split_unit(value_text):
 
 
 def parse_perf_data(perf_data_string, check_command=None):
-    """ Convert perf_data_string into perf_data, extract check_command
-
-This methods must not return None or anything else. It must strictly
-return a tuple of perf_data list and the check_command. In case of
-errors during parsing it returns an empty list for the perf_data.
-"""
+    # type: (str, Optional[str]) -> Tuple[List, Optional[str]]
+    """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
-    if hasattr(check_command, 'split'):
+    if check_command is None:
+        check_command = ""
+    elif hasattr(check_command, 'split'):
         check_command = check_command.split("!")[0]
 
     # Split the perf data string into parts. Preserve quoted strings!
@@ -281,11 +260,9 @@ def _split_perf_data(perf_data_string):
 def perfvar_translation(perfvar_name, check_command):
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
-    translation_entry = {}  # Default: no translation necessary
+    translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
 
-    if perfvar_name in cm:
-        translation_entry = cm[perfvar_name]
-    else:
+    if not translation_entry:
         for orig_varname, te in cm.items():
             if orig_varname[0] == "~" and cmk.utils.regex.regex(
                     orig_varname[1:]).match(perfvar_name):  # Regex entry
@@ -316,10 +293,10 @@ def normalize_perf_data(perf_data, check_command):
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry = {
-        "orig_name": perf_data[0],
+        "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
         "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
-        "scale": translation_entry["scale"],  # needed for graph recipes
+        "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
     }
@@ -357,15 +334,17 @@ def translate_metrics(perf_data, check_command):
     for entry in perf_data:
 
         metric_name, new_entry = normalize_perf_data(entry, check_command)
-        if metric_name in translated_metrics:
-            continue  # ignore duplicate value
 
         mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
 
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
-        translated_metrics[metric_name] = new_entry
+        if metric_name in translated_metrics:
+            translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
+            translated_metrics[metric_name]["scale"].extend(new_entry["scale"])
+        else:
+            translated_metrics[metric_name] = new_entry
     return translated_metrics
 
 
@@ -514,8 +493,7 @@ def _evaluate_literal(expression, translated_metrics):
     elif expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(
-            ".average"):
+    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
         expression = expression.rsplit(".", 1)[0]
 
     color = None
@@ -623,21 +601,19 @@ def get_graph_templates(translated_metrics):
     if not translated_metrics:
         return []
 
-    explicit_templates = _get_explicit_graph_templates(translated_metrics)
+    explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
     already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = _get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
+    implicit_templates = list(
+        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
     return explicit_templates + implicit_templates
 
 
 def _get_explicit_graph_templates(translated_metrics):
-    templates = []
     for graph_template in graph_info.values():
         if _graph_possible(graph_template, translated_metrics):
-            templates.append(graph_template)
+            yield graph_template
         elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            templates.append(
-                _graph_without_missing_optional_metrics(graph_template, translated_metrics))
-    return templates
+            yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
 def _get_graphed_metrics(graph_templates):
@@ -648,18 +624,15 @@ def _get_graphed_metrics(graph_templates):
 
 
 def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
-    templates = []
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            templates.append(generic_graph_template(metric_name))
-    return templates
+            yield generic_graph_template(metric_name)
 
 
 def _metrics_used_by_graph(graph_template):
-    used_metrics = []
     for metric_definition in graph_template["metrics"]:
-        used_metrics += list(_metrics_used_in_definition(metric_definition[0]))
-    return used_metrics
+        for metric in _metrics_used_in_definition(metric_definition[0]):
+            yield metric
 
 
 def _metrics_used_in_definition(metric_definition):
@@ -925,7 +898,23 @@ def render_color_icon(color):
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name):
     "Return all known perf data names that are translated into canonical_name"
-    return set([
-        metric for trans in check_metrics.values()
-        for metric, options in trans.items() if options.get('name', '') == canonical_name
-    ] + [canonical_name])
+    return [canonical_name] + list({
+        metric for trans in check_metrics.values() for metric, options in trans.items()
+        if options.get('name', '') == canonical_name and not options.get("deprecated")
+    })
+
+
+def MetricName():
+    """Factory of a Dropdown menu from all known metric names"""
+    def _require_metric(value, varprefix):
+        if value is None:
+            raise MKUserError(varprefix, _("You need to select a metric"))
+
+    return DropdownChoice(
+        title=_("Metric"),
+        sorted=True,
+        default_value=None,
+        validate=_require_metric,
+        choices=[(None, "")] +
+        [(metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()],
+    )

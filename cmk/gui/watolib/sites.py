@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
@@ -304,7 +284,7 @@ class SiteManagement(object):
             return config.default_single_site_configuration()
 
         config_vars = {"sites": {}}
-        exec (open(cls._sites_mk()).read(), config_vars, config_vars)
+        exec(open(cls._sites_mk()).read(), config_vars, config_vars)
 
         if not config_vars["sites"]:
             return config.default_single_site_configuration()
@@ -370,10 +350,9 @@ class SiteManagement(object):
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
-                                           _("Deleted site %s") % html.render_tt(site_id),
+                                           _("Deleted site %s") % site_id,
                                            domains=domains,
                                            sites=[default_site()])
-        return None
 
     @classmethod
     def _affected_config_domains(cls):
@@ -398,47 +377,55 @@ class CEESiteManagement(SiteManagement):
         return Alternative(
             title=_("Use Livestatus Proxy Daemon"),
             style="dropdown",
-            elements = [
-                FixedValue(None,
+            elements=[
+                FixedValue(
+                    None,
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
                 Transform(
                     Dictionary(
-                title=_("Use Livestatus Proxy Daemon"),
-                optional_keys = ["tcp"],
-                columns = 1,
-                elements = [
-                    ("params", Alternative(
-                        title = _("Parameters"),
-                        style = "dropdown",
-                        elements = [
-                            FixedValue(None,
-                                title = _("Use global connection parameters"),
-                                totext = _("Use the <a href=\"%s\">global parameters</a> for this connection") % \
-                                    "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
-                            ),
-                            Dictionary(
-                                title = _("Use custom connection parameters"),
-                                elements = cls.liveproxyd_connection_params_elements(),
-                            ),
+                        title=_("Use Livestatus Proxy Daemon"),
+                        optional_keys=["tcp"],
+                        columns=1,
+                        elements=[
+                            ("params",
+                             Alternative(
+                                 title=_("Parameters"),
+                                 style="dropdown",
+                                 elements=[
+                                     FixedValue(
+                                         None,
+                                         title=_("Use global connection parameters"),
+                                         totext=
+                                         _("Use the <a href=\"%s\">global parameters</a> for this connection"
+                                          ) %
+                                         "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
+                                     ),
+                                     Dictionary(
+                                         title=_("Use custom connection parameters"),
+                                         elements=cls.liveproxyd_connection_params_elements(),
+                                     ),
+                                 ],
+                             )),
+                            ("tcp",
+                             LivestatusViaTCP(
+                                 title=_("Allow access via TCP"),
+                                 help=
+                                 _("This option can be useful to build a cascading distributed setup. "
+                                   "The Livestatus Proxy of this site connects to the site configured "
+                                   "here via Livestatus and opens up a TCP port for clients. The "
+                                   "requests of the clients are forwarded to the destination site. "
+                                   "You need to configure a TCP port here that is not used on the "
+                                   "local system yet."),
+                                 tcp_port=6560,
+                             )),
                         ],
-                    )),
-                    ("tcp", LivestatusViaTCP(
-                        title = _("Allow access via TCP"),
-                        help = _("This option can be useful to build a cascading distributed setup. "
-                                 "The Livestatus Proxy of this site connects to the site configured "
-                                 "here via Livestatus and opens up a TCP port for clients. The "
-                                 "requests of the clients are forwarded to the destination site. "
-                                 "You need to configure a TCP port here that is not used on the "
-                                 "local system yet."),
-                        tcp_port = 6560,
-                    )),
-                ],
-            ),
-            forth = cls.transform_old_connection_params,
-        ),
-        ],)
+                    ),
+                    forth=cls.transform_old_connection_params,
+                ),
+            ],
+        )
 
     # Duplicate code with cmk.cee.liveproxy.Channel._transform_old_socket_spec
     @classmethod
@@ -702,7 +689,10 @@ def _delete_distributed_wato_file():
         store.save_file(p, "")
 
 
-PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [("site_id", str), ("tar_content", str)])
+PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
+    ("site_id", str),
+    ("tar_content", six.binary_type),
+])
 
 
 @automation_command_registry.register
@@ -715,12 +705,13 @@ class AutomationPushSnapshot(AutomationCommand):
         site_id = html.request.var("siteid")
 
         self._verify_slave_site_config(site_id)
+        assert site_id is not None
 
         snapshot = html.request.uploaded_file("snapshot")
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
+        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool

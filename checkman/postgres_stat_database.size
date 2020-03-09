@@ -10,6 +10,8 @@ description:
 
   This check relies on data reported by the agent-side plugin {mk_postgres}
 
+item:
+ Name of the category and the name of the database
 
 inventory:
   The check generates one item per Database found.

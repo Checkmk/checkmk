@@ -1,6 +1,6 @@
-title: Aruba CPU Utilization
+title: Aruba WLAN controller: CPU Utilization
 agents: snmp
-catalog: app/aruba
+catalog: hw/network/aruba
 license: GPL
 distribution: check_mk
 description:
@@ -11,5 +11,5 @@ inventory:
  One service per detected CPU will be created.
 
 item:
- The name of the CPU
+ The description of the processor.
 

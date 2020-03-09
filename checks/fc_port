@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Taken from connUnitPortState
 # user selected state of the port hardware
@@ -92,34 +72,35 @@ def fc_parse_counter(value):
     # The counters are sent via SNMP as OCTETSTR, which is converted to
     # a byte string by Check_MKs SNMP code. The counters seem to be
     # 64 bit big endian values, which are converted to integers here
-    return binstring_to_int("".join(map(chr, value)))
+    if len(value) == 23:
+        # recover from "00 00 00 00 00 C0 FE FE"
+        value = [int(chr(value[i]) + chr(value[i + 1]), 16) for i in range(0, 24, 3)]
+    return sum(b * 256**i for i, b in enumerate(value[::-1]))
 
 
 def inventory_fc_port(info):
-    if not info:
-        return
-
-    inventory = []
     for line in info:
-        if len(line) == 15:
-            try:
-                index = int(line[0])
-                porttype = int(line[1])
-                admstate = int(line[2])
-                opstate = int(line[3])
-                phystate = int(line[6])
-            except Exception:  # missing vital data. Skipping this port
-                continue
-            portname = line[5]
+        try:
+            index = int(line[0])
+            porttype = int(line[1])
+            admstate = int(line[2])
+            opstate = int(line[3])
+            phystate = int(line[6])
+        except Exception:  # missing vital data. Skipping this port
+            continue
+        portname = line[5]
 
-            if porttype not in fc_port_no_inventory_types and \
-                    admstate not in fc_port_no_inventory_admstates and \
-                    opstate not in fc_port_no_inventory_opstates and \
-                    phystate not in fc_port_no_inventory_phystates:
+        if porttype in fc_port_no_inventory_types:
+            continue
+        if admstate in fc_port_no_inventory_admstates:
+            continue
+        if opstate in fc_port_no_inventory_opstates:
+            continue
+        if phystate in fc_port_no_inventory_phystates:
+            continue
 
-                inventory.append( (fc_port_getitem(len(info), index, portname), \
-                        'fc_port_default_levels') )
-    return inventory
+        item = fc_port_getitem(len(info), index, portname)
+        yield item, 'fc_port_default_levels'
 
 
 def check_fc_port(item, params, info):

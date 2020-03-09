@@ -1,5 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 r"""
 Migrate RRDs metadata which are based on mountpoint names to static name 'fs_used'
 ==================================================================================
@@ -23,7 +26,7 @@ import subprocess
 from shlex import split
 import xml.etree.ElementTree as ET
 
-from pathlib2 import Path
+from pathlib import Path
 import six
 
 import cmk.base.autochecks
@@ -68,9 +71,9 @@ def check_df_sources_include_flag():
     logger.info("Looking for df.include files...")
     for path_dir in checks_dirs:
         df_file = path_dir / 'df.include'
-        if df_file.exists():  # pylint: disable=no-member
+        if df_file.exists():
             logger.info("Inspecting %s", df_file)
-            with df_file.open('r') as fid:  # pylint: disable=no-member
+            with df_file.open('r') as fid:
                 r = fid.read()
                 mat = re.search('^df_use_fs_used_as_metric_name *= *(True|False)', r, re.M)
                 if not mat:

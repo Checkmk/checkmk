@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for WATO internals and the WATO plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -178,6 +158,7 @@ from cmk.gui.watolib import (
     ACResultCRIT,
     ACResultWARN,
     ACResultOK,
+    ACResult,
     config_domain_registry,
     ABCConfigDomain,
     ConfigDomainCore,
@@ -1091,7 +1072,9 @@ class CheckTypeSelection(DualListChoice):
 
     def get_elements(self):
         checks = get_check_information()
-        elements = sorted([(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()])
+        elements = sorted([
+            (cn, (cn + " - " + six.ensure_text(c["title"]))[:60]) for (cn, c) in checks.items()
+        ])
         return elements
 
 
@@ -1362,8 +1345,8 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.request.get_integer_input_mandatory("_move")
+                to_pos = html.request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -1493,7 +1476,7 @@ def configure_attributes(new,
 
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
-                    host = hosts.values()[0]
+                    host = list(hosts.values())[0]
                 else:
                     host = None
 
@@ -1695,7 +1678,7 @@ def configure_attributes(new,
 # of mandatory attributes.
 def some_host_hasnt_set(folder, attrname):
     # Check subfolders
-    for subfolder in folder.all_subfolders().values():
+    for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
         if attrname not in subfolder.attributes() \
@@ -2204,7 +2187,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = html.get_unicode_input("search")
+    search = html.request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search

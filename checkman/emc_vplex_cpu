@@ -1,4 +1,4 @@
-title: EMC VPLEX Director CPU Utilization
+title: EMC VPLEX Director: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL
@@ -7,6 +7,9 @@ description:
  Checks the CPU utilization (in percent) of EMC VPLEX Directors.
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
+
+item:
+ Name of the director
 
 inventory:
  Creates one check for each director.

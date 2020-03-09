@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import errno
@@ -33,7 +13,14 @@ import time
 import shutil
 import io
 import contextlib
-from typing import IO, Iterator, Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
+from typing import Iterator, Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
+import six
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -44,9 +31,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import HostName, ServiceName, Item, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config
@@ -165,11 +151,16 @@ class AutomationDiscovery(DiscoveryAutomation):
 
 automations.register(AutomationDiscovery())
 
+if sys.version_info[0] >= 3:
+    StrIO = io.StringIO
+else:
+    StrIO = io.BytesIO
+
 
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
 def redirect_output(where):
-    # type: (IO[str]) -> Iterator[IO[str]]
+    # type: (StrIO) -> Iterator[StrIO]
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -189,17 +180,12 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        if sys.version_info[0] >= 3:
-            fileobj = io.StringIO()
-        else:
-            fileobj = io.BytesIO()
-        with redirect_output(fileobj) as buf:
+        with redirect_output(StrIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
-                # TODO: How to make mypy accept this?
-                "output": buf.getvalue(),  # type: ignore
+                "output": buf.getvalue(),
                 "check_table": check_preview_table,
                 "host_labels": host_labels.to_dict(),
             }
@@ -479,12 +465,15 @@ class AutomationRenameHosts(Automation):
                 actions.append("rrdcached")
 
             # Spoolfiles of NPCD
-            if self.rename_host_in_files("%s/var/pnp4nagios/perfdata.dump" % cmk.utils.paths.omd_root,
-                                 "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newname) or \
-               self.rename_host_in_files("%s/var/pnp4nagios/spool/perfdata.*" % cmk.utils.paths.omd_root,
-                                 "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newname):
+            if (  #
+                    self.rename_host_in_files(
+                        "%s/var/pnp4nagios/perfdata.dump" % cmk.utils.paths.omd_root,
+                        "HOSTNAME::%s    " % oldregex,  #
+                        "HOSTNAME::%s    " % newname) or  #
+                    self.rename_host_in_files(
+                        "%s/var/pnp4nagios/spool/perfdata.*" % cmk.utils.paths.omd_root,
+                        "HOSTNAME::%s    " % oldregex,  #
+                        "HOSTNAME::%s    " % newname)):
                 actions.append("pnpspool")
         finally:
             if rrdcache_running:
@@ -579,7 +568,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             stderr=subprocess.STDOUT,
             close_fds=True,
         )
-        p.communicate(input=sed_commands)
+        p.communicate(input=sed_commands.encode("utf-8"))
         # TODO: error handling?
 
         handled_files += file_paths
@@ -614,7 +603,7 @@ class AutomationAnalyseServices(Automation):
     def execute(self, args):
         # type: (List[str]) -> Dict
         hostname = args[0]
-        servicedesc = args[1].decode("utf-8")
+        servicedesc = args[1]
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -874,7 +863,7 @@ class AutomationRestart(Automation):
                 configuration_warnings = core_config.create_core_config(core)
 
                 try:
-                    from cmk.base.cee.agent_bakery import bake_on_restart
+                    from cmk.base.cee.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
                     bake_on_restart()
                 except ImportError:
                     pass
@@ -924,14 +913,14 @@ class AutomationRestart(Automation):
         return this_time > last_time
 
     def _last_modification_in_dir(self, dir_path):
-        # type: (str) -> int
+        # type: (str) -> float
         max_time = os.stat(dir_path).st_mtime
         for file_name in os.listdir(dir_path):
             max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
         return max_time
 
     def _time_of_last_core_restart(self):
-        # type: () -> int
+        # type: () -> float
         if config.monitoring_core == "cmc":
             pidfile_path = cmk.utils.paths.omd_root + "/tmp/run/cmc.pid"
         else:
@@ -940,7 +929,7 @@ class AutomationRestart(Automation):
         if os.path.exists(pidfile_path):
             return os.stat(pidfile_path).st_mtime
 
-        return 0
+        return 0.0
 
 
 automations.register(AutomationRestart())
@@ -1021,13 +1010,12 @@ class AutomationGetCheckInformation(Automation):
         for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
-                # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 if manfile:
-                    title = open(manfile).readline().strip().split(":", 1)[1].strip()
+                    title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 else:
-                    title = check_plugin_name
+                    title = six.ensure_text(check_plugin_name)
 
-                check_infos[check_plugin_name] = {"title": title.decode("utf-8")}
+                check_infos[check_plugin_name] = {"title": title}
 
                 if check["group"]:
                     check_infos[check_plugin_name]["group"] = check["group"]
@@ -1059,18 +1047,17 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                # TODO: Use cmk.utils.man_pages module standard functions to read the title
-                title = check_plugin_name
+                title = six.ensure_text(check_plugin_name)
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
-                        title = open(manfile).readline().strip().split(":", 1)[1].strip()
+                        title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 except Exception:
                     if cmk.utils.debug.enabled():
                         raise
 
                 rt_checks.append(
-                    (check_plugin_name, "%s - %s" % (check_plugin_name, title.decode("utf-8"))))
+                    (check_plugin_name, u"%s - %s" % (six.ensure_text(check_plugin_name), title)))
 
         return rt_checks
 
@@ -1203,7 +1190,7 @@ class AutomationDiagHost(Automation):
         if not ipaddress:
             try:
                 resolved_address = ip_lookup.lookup_ip_address(hostname)
-            except:
+            except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
             if resolved_address is None:
@@ -1211,155 +1198,33 @@ class AutomationDiagHost(Automation):
 
             ipaddress = resolved_address
 
-        snmp_config = host_config.snmp_config(ipaddress)
-
         try:
             if test == 'ping':
-                base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-                p = subprocess.Popen([base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT)
-                if p.stdout is None:
-                    raise RuntimeError()
-                response = p.stdout.read()
-                return (p.wait(), response)
+                return self._execute_ping(host_config, ipaddress)
 
             if test == 'agent':
-                sources = data_sources.DataSources(hostname, ipaddress)
-                sources.set_max_cachefile_age(config.check_max_cachefile_age)
-
-                state, output = 0, u""
-                for source in sources.get_data_sources():
-                    if isinstance(source, data_sources.DSProgramDataSource) and cmd:
-                        source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
-                    elif isinstance(source, data_sources.TCPDataSource):
-                        source.set_port(agent_port)
-                        if tcp_connect_timeout is not None:
-                            source.set_timeout(tcp_connect_timeout)
-                    elif isinstance(source, data_sources.snmp.SNMPDataSource):
-                        continue
-
-                    source_output = source.run_raw()
-
-                    # We really receive a byte string here. The agent sections
-                    # may have different encodings and are normally decoded one
-                    # by one (CheckMKAgentDataSource._parse_info).  For the
-                    # moment we use UTF-8 with fallback to latin-1 by default,
-                    # similar to the CheckMKAgentDataSource, but we do not
-                    # respect the ecoding options of sections.
-                    # If this is a problem, we would have to apply parse and
-                    # decode logic and unparse the decoded output again.
-                    output += convert_to_unicode(source_output)
-
-                    if source.exception():
-                        state = 1
-                        output += "%s" % source.exception()
-
-                return state, output
+                return self._execute_agent(hostname, ipaddress, agent_port, cmd,
+                                           tcp_connect_timeout)
 
             if test == 'traceroute':
-                family_flag = "-6" if host_config.is_ipv6_primary else "-4"
-                try:
-                    p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress],
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT)
-                except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        return 1, "Cannot find binary <tt>traceroute</tt>."
-                    raise
-                if p.stdout is None:
-                    raise RuntimeError()
-                return (p.wait(), p.stdout.read().decode("utf-8"))
+                return self._execute_traceroute(host_config, ipaddress)
 
             if test.startswith('snmp'):
-                # SNMPv3 tuples
-                # ('noAuthNoPriv', "username")
-                # ('authNoPriv', 'md5', '11111111', '22222222')
-                # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
-
-                credentials = snmp_config.credentials  # type: snmp_utils.SNMPCredentials
-
-                # Insert preconfigured communitiy
-                if test == "snmpv3":
-                    if snmpv3_use:
-                        snmpv3_credentials = [snmpv3_use]
-                        if snmpv3_use in ["authNoPriv", "authPriv"]:
-                            if not isinstance(snmpv3_auth_proto, str) \
-                                or not isinstance(snmpv3_security_name, str) \
-                                or not isinstance(snmpv3_security_password, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend(
-                                [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
-                        else:
-                            if not isinstance(snmpv3_security_name, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend([snmpv3_security_name])
-
-                        if snmpv3_use == "authPriv":
-                            if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
-                                    snmpv3_privacy_password, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend(
-                                [snmpv3_privacy_proto, snmpv3_privacy_password])
-
-                        credentials = tuple(snmpv3_credentials)
-                elif snmp_community:
-                    credentials = snmp_community
-
-                # Determine SNMPv2/v3 community
-                if hostname not in config.explicit_snmp_communities:
-                    cred = host_config.snmp_credentials_of_version(
-                        snmp_version=3 if test == "snmpv3" else 2)
-                    if cred is not None:
-                        credentials = cred
-
-                # SNMP versions
-                if test in ['snmpv2', 'snmpv3']:
-                    is_bulkwalk_host = True
-                    is_snmpv2or3_without_bulkwalk_host = False
-                elif test == 'snmpv2_nobulk':
-                    is_bulkwalk_host = False
-                    is_snmpv2or3_without_bulkwalk_host = True
-                elif test == 'snmpv1':
-                    is_bulkwalk_host = False
-                    is_snmpv2or3_without_bulkwalk_host = False
-
-                else:
-                    return 1, "SNMP command not implemented"
-
-                #TODO: What about SNMP management boards?
-                snmp_config = snmp_utils.SNMPHostConfig(
-                    is_ipv6_primary=snmp_config.is_ipv6_primary,
-                    hostname=hostname,
-                    ipaddress=ipaddress,
-                    credentials=credentials,
-                    port=snmp_config.port,
-                    is_bulkwalk_host=is_bulkwalk_host,
-                    is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
-                    bulk_walk_size_of=snmp_config.bulk_walk_size_of,
-                    timing={
-                        'timeout': snmp_timeout,
-                        'retries': snmp_retries,
-                    },
-                    oid_range_limits=snmp_config.oid_range_limits,
-                    snmpv3_contexts=snmp_config.snmpv3_contexts,
-                    character_encoding=snmp_config.character_encoding,
-                    is_usewalk_host=snmp_config.is_usewalk_host,
-                    is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+                return self._execute_snmp(
+                    test,
+                    host_config,
+                    hostname,
+                    ipaddress,
+                    snmp_community,
+                    snmp_timeout,
+                    snmp_retries,
+                    snmpv3_use,
+                    snmpv3_auth_proto,
+                    snmpv3_security_name,
+                    snmpv3_security_password,
+                    snmpv3_privacy_proto,
+                    snmpv3_privacy_password,
                 )
-
-                # TODO: It is unclear why mypy complains about this structure. Investigate!
-                data = snmp.get_snmp_table(
-                    snmp_config,
-                    "",
-                    ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore
-                    use_snmpwalk_cache=True)
-
-                if data:
-                    return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(
-                        data[0])
-
-                return 1, 'Got empty SNMP response'
 
             return 1, "Command not implemented"
 
@@ -1367,6 +1232,178 @@ class AutomationDiagHost(Automation):
             if cmk.utils.debug.enabled():
                 raise
             return 1, str(e)
+
+    def _execute_ping(self, host_config, ipaddress):
+        # type: (config.HostConfig, str) -> Tuple[int, str]
+        base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
+        p = subprocess.Popen(
+            [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
+        if p.stdout is None:
+            raise RuntimeError()
+        response = p.stdout.read()
+        return p.wait(), response
+
+    def _execute_agent(self, hostname, ipaddress, agent_port, cmd, tcp_connect_timeout):
+        # type: (str, str, int, str, Optional[float]) -> Tuple[int, str]
+        sources = data_sources.DataSources(hostname, ipaddress)
+        sources.set_max_cachefile_age(config.check_max_cachefile_age)
+
+        state, output = 0, u""
+        for source in sources.get_data_sources():
+            if isinstance(source, data_sources.DSProgramDataSource) and cmd:
+                source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
+            elif isinstance(source, data_sources.TCPDataSource):
+                source.set_port(agent_port)
+                if tcp_connect_timeout is not None:
+                    source.set_timeout(tcp_connect_timeout)
+            elif isinstance(source, data_sources.snmp.SNMPDataSource):
+                continue
+
+            source_output = source.run_raw()
+
+            # We really receive a byte string here. The agent sections
+            # may have different encodings and are normally decoded one
+            # by one (CheckMKAgentDataSource._parse_info).  For the
+            # moment we use UTF-8 with fallback to latin-1 by default,
+            # similar to the CheckMKAgentDataSource, but we do not
+            # respect the ecoding options of sections.
+            # If this is a problem, we would have to apply parse and
+            # decode logic and unparse the decoded output again.
+            output += convert_to_unicode(source_output)
+
+            if source.exception():
+                state = 1
+                output += "%s" % source.exception()
+
+        return state, output
+
+    def _execute_traceroute(self, host_config, ipaddress):
+        # type: (config.HostConfig, str) -> Tuple[int, str]
+        family_flag = "-6" if host_config.is_ipv6_primary else "-4"
+        try:
+            p = subprocess.Popen(
+                ['traceroute', family_flag, '-n', ipaddress],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+            )
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return 1, "Cannot find binary <tt>traceroute</tt>."
+            raise
+        if p.stdout is None:
+            raise RuntimeError()
+        return p.wait(), p.stdout.read()
+
+    def _execute_snmp(
+        self,
+        test,
+        host_config,
+        hostname,
+        ipaddress,
+        snmp_community,
+        snmp_timeout,
+        snmp_retries,
+        snmpv3_use,
+        snmpv3_auth_proto,
+        snmpv3_security_name,
+        snmpv3_security_password,
+        snmpv3_privacy_proto,
+        snmpv3_privacy_password,
+    ):
+        snmp_config = host_config.snmp_config(ipaddress)
+
+        # SNMPv3 tuples
+        # ('noAuthNoPriv', "username")
+        # ('authNoPriv', 'md5', '11111111', '22222222')
+        # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
+
+        credentials = snmp_config.credentials  # type: snmp_utils.SNMPCredentials
+
+        # Insert preconfigured communitiy
+        if test == "snmpv3":
+            if snmpv3_use:
+                snmpv3_credentials = [snmpv3_use]
+                if snmpv3_use in ["authNoPriv", "authPriv"]:
+                    if not isinstance(snmpv3_auth_proto, str) \
+                        or not isinstance(snmpv3_security_name, str) \
+                        or not isinstance(snmpv3_security_password, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend(
+                        [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
+                else:
+                    if not isinstance(snmpv3_security_name, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend([snmpv3_security_name])
+
+                if snmpv3_use == "authPriv":
+                    if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
+                            snmpv3_privacy_password, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
+
+                credentials = tuple(snmpv3_credentials)
+        elif snmp_community:
+            credentials = snmp_community
+
+        # Determine SNMPv2/v3 community
+        if hostname not in config.explicit_snmp_communities:
+            cred = host_config.snmp_credentials_of_version(
+                snmp_version=3 if test == "snmpv3" else 2)
+            if cred is not None:
+                credentials = cred
+
+        # SNMP versions
+        if test in ['snmpv2', 'snmpv3']:
+            is_bulkwalk_host = True
+            is_snmpv2or3_without_bulkwalk_host = False
+        elif test == 'snmpv2_nobulk':
+            is_bulkwalk_host = False
+            is_snmpv2or3_without_bulkwalk_host = True
+        elif test == 'snmpv1':
+            is_bulkwalk_host = False
+            is_snmpv2or3_without_bulkwalk_host = False
+
+        else:
+            return 1, "SNMP command not implemented"
+
+        #TODO: What about SNMP management boards?
+        snmp_config = snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=snmp_config.is_ipv6_primary,
+            hostname=hostname,
+            ipaddress=ipaddress,
+            credentials=credentials,
+            port=snmp_config.port,
+            is_bulkwalk_host=is_bulkwalk_host,
+            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
+            bulk_walk_size_of=snmp_config.bulk_walk_size_of,
+            timing={
+                'timeout': snmp_timeout,
+                'retries': snmp_retries,
+            },
+            oid_range_limits=snmp_config.oid_range_limits,
+            snmpv3_contexts=snmp_config.snmpv3_contexts,
+            character_encoding=snmp_config.character_encoding,
+            is_usewalk_host=snmp_config.is_usewalk_host,
+            is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+        )
+
+        # TODO: It is unclear why mypy complains about this structure. Investigate!
+        data = snmp.get_snmp_table(
+            snmp_config,
+            "",
+            ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
+            use_snmpwalk_cache=True)
+
+        if data:
+            return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(
+                data[0])
+
+        return 1, 'Got empty SNMP response'
 
 
 automations.register(AutomationDiagHost())
@@ -1380,7 +1417,7 @@ class AutomationActiveCheck(Automation):
     def execute(self, args):
         # type: (List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]
         hostname, plugin, raw_item = args
-        item = raw_item.decode("utf-8")
+        item = raw_item
 
         host_config = config.get_config_cache().get_host_config(hostname)
 
@@ -1450,7 +1487,7 @@ class AutomationActiveCheck(Automation):
     def _execute_check_plugin(self, commandline):
         # type: (Text) -> Tuple[ServiceState, ServiceDetails]
         try:
-            p = os.popen(commandline.encode("utf-8") + " 2>&1")  # nosec
+            p = os.popen(commandline + " 2>&1")  # nosec
             output = p.read().strip()
             ret = p.close()
             if not ret:
@@ -1493,12 +1530,12 @@ class AutomationGetAgentOutput(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        # type: (List[str]) -> Tuple[bool, ServiceDetails, str]
+        # type: (List[str]) -> Tuple[bool, ServiceDetails, bytes]
         hostname, ty = args
 
         success = True
         output = u""
-        info = ""
+        info = b""
 
         try:
             if ty == "agent":
@@ -1509,7 +1546,7 @@ class AutomationGetAgentOutput(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                agent_output = ""
+                agent_output = b""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
                         agent_output += source.run_raw(hostname, ipaddress)
@@ -1529,14 +1566,15 @@ class AutomationGetAgentOutput(Automation):
                 for walk_oid in snmp.oids_to_walk():
                     try:
                         for oid, value in snmp.walk_for_export(host_config, walk_oid):
-                            lines.append("%s %s\n" % (oid, value))
+                            raw_oid_value = "%s %s\n" % (oid, value)
+                            lines.append(six.ensure_binary(raw_oid_value))
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
                         success = False
                         output += "OID '%s': %s\n" % (oid, e)
 
-                info = "".join(lines)
+                info = b"".join(lines)
         except Exception as e:
             success = False
             output = "Failed to fetch data from %s: %s\n" % (hostname, e)
@@ -1655,7 +1693,7 @@ class AutomationGetLabelsOf(Automation):
             }
 
         if object_type == "service":
-            service_description = args[2].decode("utf-8")
+            service_description = args[2]
             return {
                 "labels": config_cache.labels_of_service(host_name, service_description),
                 "label_sources": config_cache.label_sources_of_service(

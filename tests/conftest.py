@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # This file initializes the py.test environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
 from __future__ import print_function
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
@@ -12,7 +18,6 @@ pytest.register_assert_rewrite(
 
 import collections
 import errno
-import os
 import shutil
 import sys
 
@@ -47,7 +52,7 @@ test_types = collections.OrderedDict([
     ("docker", EXECUTE_IN_VENV),
     ("agent-integration", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
-    ("gui_crawl", EXECUTE_IN_SITE),
+    ("gui_crawl", EXECUTE_IN_VENV),
     ("packaging", EXECUTE_IN_VENV),
     ("composition", EXECUTE_IN_VENV),
 ])
@@ -81,19 +86,11 @@ def pytest_collection_modifyitems(items):
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
-
         file_path = Path("%s" % item.reportinfo()[0])
         repo_rel_path = file_path.relative_to(testlib.repo_path())
-
-        if sys.version_info[0] >= 3 and repo_rel_path.parts[0] != "tests-py3":
-            raise Exception("Executed non py3 tests with Python 3")
-        if sys.version_info[0] < 3 and repo_rel_path.parts[0] != "tests":
-            raise Exception("Executed non py3 tests with Python 3")
-
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
-
         item.add_marker(pytest.mark.type.with_args(ty))
 
 
@@ -134,8 +131,8 @@ def pytest_cmdline_main(config):
         return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
-    if context == EXECUTE_IN_SITE:
-        setup_site_and_switch_user()
+    if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
+        raise Exception()
     else:
         verify_virtualenv()
 
@@ -146,68 +143,9 @@ def verify_virtualenv():
                          "(Use \"pipenv shell\" or configure direnv)")
 
 
-def setup_site_and_switch_user():
-    if testlib.is_running_as_site_user():
-        return  # This is executed as site user. Nothing to be done.
-
-    sys.stdout.write("===============================================\n")
-    sys.stdout.write("Setting up site '%s'\n" % testlib.site_id())
-    sys.stdout.write("===============================================\n")
-
-    site = _get_site_object()
-
-    cleanup_pattern = os.environ.get("CLEANUP_OLD")
-    if cleanup_pattern:
-        site.cleanup_old_sites(cleanup_pattern)
-
-    site.cleanup_if_wrong_version()
-    site.create()
-    #site.open_livestatus_tcp()
-    site.start()
-    site.prepare_for_tests()
-
-    sys.stdout.write("===============================================\n")
-    sys.stdout.write("Switching to site context\n")
-    sys.stdout.write("===============================================\n")
-    sys.stdout.flush()
-
-    exit_code = site.switch_to_site_user()
-    sys.exit(exit_code)
-
-
-def _get_site_object():
-    def site_version():
-        return os.environ.get("VERSION", testlib.CMKVersion.DAILY)
-
-    def site_edition():
-        return os.environ.get("EDITION", testlib.CMKVersion.CEE)
-
-    def site_branch():
-        return os.environ.get("BRANCH", testlib.current_branch_name())
-
-    def reuse_site():
-        return os.environ.get("REUSE", "1") == "1"
-
-    return testlib.Site(site_id=testlib.site_id(),
-                        version=site_version(),
-                        edition=site_edition(),
-                        reuse=reuse_site(),
-                        branch=site_branch())
-
-
 #
 # MAIN
 #
 
 testlib.add_python_paths()
 testlib.fake_version_and_paths()
-
-
-# Session fixtures must be in conftest.py to work properly
-@pytest.fixture(scope="session", autouse=True)
-def site(request):
-    site_obj = _get_site_object()
-    yield site_obj
-    print("")
-    print("Cleanup site processes after test execution...")
-    site_obj.stop()

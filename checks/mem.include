@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import NamedTuple
 
 memused_default_levels = (150.0, 200.0)
@@ -64,7 +45,7 @@ def get_levels_mode_from_value(warn):
      * negative float -> percentages on free
     """
     type_ = "perc" if isinstance(warn, float) else "abs"
-    reference = "used" if warn > 0 else "free"
+    reference = "used" if warn is not None and warn > 0 else "free"
     return "%s_%s" % (type_, reference)
 
 
@@ -214,7 +195,7 @@ def check_memory(params, meminfo, render_base=1024):
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
         swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
-        perfdata = [('swapused', swapused.mb, None, None, 0, swaptotal.mb)]
+        perfdata = [('swap_used', swapused.bytes, None, None, 0, swaptotal.bytes)]
     else:
         swaptotal = None
         swapused = None
@@ -225,7 +206,7 @@ def check_memory(params, meminfo, render_base=1024):
     # that for used
     if 'PageTables' in meminfo:
         pagetables = MemBytes(meminfo['PageTables'], render_base)
-        perfdata.append(('pagetables', pagetables.mb))
+        perfdata.append(('mem_lnx_page_tables', pagetables.bytes))
     else:
         pagetables = None
 
@@ -233,9 +214,9 @@ def check_memory(params, meminfo, render_base=1024):
     caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
 
     ramused = MemBytes(memused.kb - caches.kb, render_base)
-    if perfdata:
-        # if perfdata is empty here, ramused and totalused would be the same anyway.
-        perfdata.append(('ramused', ramused.mb, None, None, 0, memtotal.mb))
+    perfdata.append(('mem_used', ramused.bytes, None, None, 0, memtotal.bytes))
+    perfdata.append(
+        ('mem_used_percent', 100. * ramused.bytes / memtotal.bytes, None, None, 0, 100.))
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
@@ -275,7 +256,8 @@ def check_memory(params, meminfo, render_base=1024):
         render_base=render_base,
         render_unit=1024**2,
     )
-    perfdata.append(('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb))
+    perfdata.append(('mem_lnx_total_used', totalused.bytes, warn_mb * 1024**2, crit_mb * 1024**2, 0,
+                     totalvirt.bytes))
 
     # Check levels
     state = _compute_state(comp_mb, warn_mb, crit_mb)
@@ -304,9 +286,9 @@ def check_memory(params, meminfo, render_base=1024):
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):
         for key, label, metric in (
-            ('Mapped', 'Mapped', 'mapped'),
-            ('Committed_AS', 'Committed', 'committed_as'),
-            ('Shmem', 'Shared', 'shared'),
+            ('Mapped', 'Mapped', 'mem_lnx_mapped'),
+            ('Committed_AS', 'Committed', 'mem_lnx_committed_as'),
+            ('Shmem', 'Shared', 'mem_lnx_shmem'),
         ):
             value = MemBytes(meminfo.get(key, 0), render_base)
-            yield 0, "%s: %s" % (label, value.render()), [(metric, value.mb)]
+            yield 0, "%s: %s" % (label, value.render()), [(metric, value.bytes)]

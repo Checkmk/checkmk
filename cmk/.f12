@@ -18,20 +18,41 @@ PYTHON2_PATHS=(
     gui
     __init__.py
     notification_plugins
-    special_agents/agent_aws.py
+    special_agents/agent_3par.py
+    special_agents/agent_activemq.py
+    special_agents/agent_allnet_ip_sensoric.py
+    special_agents/agent_appdynamics.py
     special_agents/agent_azure.py
-    special_agents/agent_elasticsearch.py
-    special_agents/agent_graylog.py
-    special_agents/agent_jenkins.py
-    special_agents/agent_kubernetes.py
-    special_agents/agent_splunk.py
-    special_agents/agent_vsphere.py
+    special_agents/agent_bi.py
+    special_agents/agent_couchbase.py
+    special_agents/agent_ddn_s2a.py
+    special_agents/agent_emcvnx.py
+    special_agents/agent_fritzbox.py
+    special_agents/agent_hivemanager.py
+    special_agents/agent_hivemanager_ng.py
+    special_agents/agent_hp_msa.py
+    special_agents/agent_ibmsvc.py
+    special_agents/agent_innovaphone.py
+    special_agents/agent_ipmi_sensors.py
+    special_agents/agent_jolokia.py
+    special_agents/agent_netapp.py
+    special_agents/agent_prism.py
+    special_agents/agent_random.py
+    special_agents/agent_ruckus_spot.py
+    special_agents/agent_salesforce.py
+    special_agents/agent_siemens_plc.py
+    special_agents/agent_storeonce.py
+    special_agents/agent_tinkerforge.py
+    special_agents/agent_ucs_bladecenter.py
+    special_agents/agent_vnx_quotas.py
+    special_agents/agent_zerto.py
     special_agents/__init__.py
     special_agents/utils.py
     update_config.py
     utils
     ec/__init__.py
     ec/export.py
+    ec/rule_packs.py
     ec/settings.py
     ec/defaults.py
 )
@@ -41,8 +62,18 @@ PYTHON3_PATHS=(
     gui
     utils
     ec
+    special_agents/agent_aws.py
+    special_agents/agent_elasticsearch.py
+    special_agents/agent_graylog.py
+    special_agents/agent_jenkins.py
     special_agents/agent_jira.py
+    special_agents/agent_kubernetes.py
+    special_agents/agent_prometheus.py
+    special_agents/agent_proxmox.py
+    special_agents/agent_splunk.py
+    special_agents/agent_vsphere.py
     special_agents/__init__.py
+    special_agents/utils.py
 )
 
 echo "Copy CRE files..."

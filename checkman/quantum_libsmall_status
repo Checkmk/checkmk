@@ -1,4 +1,4 @@
-title: Status of small Quantum tape libraries
+title: Quantum tape libraries: Components status
 agents: snmp
 catalog: hw/storagehw/quantum
 license: GPL

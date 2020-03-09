@@ -16,6 +16,9 @@ description:
  This check has been developed with ProLiant BL460c G1 systems but should work
  on other HP Proliant Servers too.
 
+item:
+ The index of the controller and index of the drive seperated by a {{/}}
+
 inventory:
  One check is automatically created for each ohysical drive which is
  provided in the SNMP output.

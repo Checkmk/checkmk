@@ -1,4 +1,4 @@
-title: Hepta 8030
+title: Hepta 8030: Time synchronization
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -13,4 +13,4 @@ inventory:
  One service for synchronization state.
 
 item:
- "SyncModuleTimeSyncState"
+ The fixed statement {{SyncModuleTimeSyncState}}

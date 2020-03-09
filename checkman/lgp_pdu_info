@@ -16,5 +16,8 @@ description:
  The check displays information about the labels and number of connected
  receptacle branches.
 
+item:
+ The system assigned identifier representing the PDU.
+
 inventory:
  One service is created on each device. The check is always {OK}.

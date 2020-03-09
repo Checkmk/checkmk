@@ -8,5 +8,8 @@ description:
  The check displays the last sync interval from the on-premise directory to Azure.
  You can configure levels for the time since the last sync interval.
 
+item:
+ The organization name registered with Azure
+
 inventory:
  One service is created per Azure organization

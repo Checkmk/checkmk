@@ -13,7 +13,8 @@ description:
  Java Virtual Machine.
 
 item:
- The name of the application server instance as configured by the agent.
+ The name of the application server instance followed by the statement {{Memory Pool}}
+ and the name of the memory pool.
 
 inventory:
  One check is created for each Jolokia instance sent by the agent.

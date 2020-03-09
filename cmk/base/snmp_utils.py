@@ -1,36 +1,18 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import functools
 from typing import (  # pylint: disable=unused-import
-    Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict, TypeVar,
+    Any, Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict,
 )
+import string
 import six
-from cmk.base.utils import HostAddress, HostName  # pylint: disable=unused-import
+
+from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
 ContextName = str
@@ -43,13 +25,15 @@ OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
 SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
 MultiOIDInfo = List[SingleOIDInfo]
 OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
-RawValue = str
-OIDFunction = Callable[[OID, Optional[RawValue], Optional[CheckPluginName]], Optional[RawValue]]
+RawValue = bytes
+DecodedString = Text
+OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
+                       Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
 SNMPRowInfo = List[Tuple[OID, RawValue]]
+SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
-DecodedString = Text
 DecodedBinary = List[int]
 DecodedValues = Union[DecodedString, DecodedBinary]
 ResultColumnsDecoded = List[List[DecodedValues]]
@@ -69,17 +53,66 @@ OID_END_BIN = -3  # Same, but just the end part
 OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
-def BINARY(oid):
-    # type: (OID) -> Tuple[str, str]
-    """Tell Check_MK to process this OID as binary data to the check."""
-    return "binary", oid
+class OIDSpec:
+    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
+    """
+    VALID_CHARACTERS = '.' + string.digits
+
+    @classmethod
+    def validate(cls, value):
+        # type: (str) -> None
+        if not isinstance(value, str):
+            raise TypeError("expected a non-empty string: %r" % (value,))
+        if not value:
+            raise ValueError("expected a non-empty string: %r" % (value,))
+
+        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
+        if invalid:
+            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
+
+        if value.endswith('.'):
+            raise ValueError("%r should not end with '.'" % (value,))
+
+    def __init__(self, value):
+        # type: (str) -> None
+        self.validate(value)
+        self._value = value
+
+    def __add__(self, right):
+        # type: (Any) -> OIDSpec
+        """Concatenate two OID specs
+
+        We only allow adding (left to right) a "base" (starting with a '.')
+        to an "column" (not starting with '.').
+        We preserve the type of the column, which may signal caching or byte encoding.
+        """
+        if not isinstance(right, OIDSpec):
+            raise TypeError("cannot add %r" % (right,))
+        if not self._value.startswith('.') or right._value.startswith('.'):
+            raise ValueError("can only add full OIDs to partial OIDs")
+        return right.__class__("%s.%s" % (self, right))
+
+    def __eq__(self, other):
+        # type: (Any) -> bool
+        if other.__class__ != self.__class__:
+            return False
+        return self._value == other._value
+
+    def __str__(self):
+        # type: () -> str
+        return self._value
+
+    def __repr__(self):
+        # type: () -> str
+        return "%s(%r)" % (self.__class__.__name__, self._value)
 
 
-def CACHED_OID(oid):
-    # type: (OID) -> Tuple[str, str]
-    """Use this to mark OIDs as being cached for regular checks,
-    but not for discovery"""
-    return "cached", oid
+class OIDCached(OIDSpec):
+    pass
+
+
+class OIDBytes(OIDSpec):
+    pass
 
 
 def binstring_to_int(binstring):

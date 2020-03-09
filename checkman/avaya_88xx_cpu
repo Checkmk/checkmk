@@ -1,4 +1,4 @@
-title: Avaya 88xx CPU utilization
+title: Avaya 88xx: CPU utilization
 agents: snmp
 catalog: hw/network/avaya
 license: GPL
@@ -6,9 +6,6 @@ distribution: check_mk
 description:
  This check monitors the cpu utilization of Avaya 88xx devices.
  The levels can be configured (default 90, 95).
-
-item:
- The index of the CPU.
 
 inventory:
  Creates one service for each CPU.

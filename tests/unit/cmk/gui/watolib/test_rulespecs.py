@@ -1,5 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
@@ -178,6 +184,9 @@ def test_grouped_rulespecs():
             'agent_config:win_openhardwaremonitor',
             'agent_config:win_printers',
             'agent_config:mcafee_av_client',
+        ],
+        'agents/windows_modules': [
+            'agent_config:install_python',
         ],
         'datasource_programs': [
             'datasource_programs',
@@ -1007,6 +1016,7 @@ def test_grouped_rulespecs():
             'notification_parameters:mkeventd',
             'notification_parameters:spectrum',
             'notification_parameters:pushover',
+            'notification_parameters:cisco_webex_teams',
             'cmc_service_flap_settings',
             'cmc_host_flap_settings',
             'host_recurring_downtimes',
@@ -1289,6 +1299,7 @@ def _expected_rulespec_group_choices():
         ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
         ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
         ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
+        ('agents/windows_modules', u'&nbsp;&nbsp;\u2319 Windows Modules'),
 
         ]
 
@@ -1394,6 +1405,7 @@ def test_rulespec_get_all_groups():
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
+        'agents/windows_modules',
         'agents/agent_plugins',
 
         ]
@@ -1426,6 +1438,7 @@ def test_rulespec_get_host_groups():
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
+        'agents/windows_modules',
         ]
 
     group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()

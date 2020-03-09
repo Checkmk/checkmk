@@ -1,4 +1,4 @@
-title: Apache ActiveMQ Queue lengths
+title: Apache ActiveMQ: Queue lengths
 agents: special datasource
 catalog: app/activemq
 license: GPL

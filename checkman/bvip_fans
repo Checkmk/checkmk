@@ -7,5 +7,8 @@ description:
   If the Camera or the Camera Stack from BVIP has a included fan, you can set
   upper and lower leves for the rounds per minute.
 
+item:
+ Identifier of fan
+
 inventory:
  Creates one check for each Fan.

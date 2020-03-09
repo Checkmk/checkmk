@@ -1,4 +1,4 @@
-title: Items on couchbase nodes
+title: Couchbase nodes: Items
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -15,4 +15,4 @@ inventory:
  One service per node is created.
 
 item:
- The item is the name of the node.
+ The name of the node.

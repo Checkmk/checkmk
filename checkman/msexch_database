@@ -12,5 +12,8 @@ description:
 
  This check requires the msexch_database.ps1 agent plugin to work.
 
+item:
+ Name of the database instance
+
 inventory:
  One item per database instance.

@@ -7,7 +7,7 @@ description:
  This check monitors the VPN state on genuscreen VPN appliance (version 5.1).
 
 item:
- The VPN id.
+ The VPN ID.
 
 inventory:
  The inventory process checks if the device has a system description OID

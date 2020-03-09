@@ -1,4 +1,4 @@
-title: Carel Uniflair cooling devices
+title: CAREL Uniflair air conditions: Cooling
 agents: snmp
 catalog: hw/environment/carel
 license: GPL
@@ -20,10 +20,6 @@ description:
 
  The check also queries the air humidity level, but currently
  does not allow setting a level on this.
-
-
-item:
- This check generates no item.
 
 inventory:
  The check first looks for a cooling device vendor (this

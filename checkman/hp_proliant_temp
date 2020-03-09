@@ -14,6 +14,10 @@ description:
  There are no thresholds to be defined in this check. The check uses the
  thresholds reported by the system.
 
+item:
+ Index of the temperature sensor followed by the location of the
+ sensor in brackets
+
 inventory:
  One check is automatically created for each temperature sensor which is
  provided in the SNMP output.

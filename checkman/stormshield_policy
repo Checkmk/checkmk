@@ -11,8 +11,7 @@ description:
  be {OK}, {CRIT} or {UNKNOWN}.
 
 item:
- The description of the service as provided by
- the device (Policy Name).
+ The name of the policy
 
 inventory:
  One check for each service is created by the inventory.

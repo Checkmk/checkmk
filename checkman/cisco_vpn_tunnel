@@ -1,4 +1,4 @@
-title: IPSEC and Remote Access VPN-Tunnels on Cisco Devices
+title: Cisco ASA: IPSEC and Remote Access VPN-Tunnels
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

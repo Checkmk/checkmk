@@ -12,5 +12,8 @@ description:
  You can define the service state for each possible value a port can
  have.
 
+item:
+ {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP or SAS) and {{Node}}, {{Slot}} and {{Cardport}} values.
+
 inventory:
  One service is created for each port connection.

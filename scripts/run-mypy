@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # mypy_path in mypy.ini doesn't support relative paths, so use this wrapper to
 # tell mypy about the relevant paths using the MYPYPATH environment variable
 set -e
@@ -28,5 +32,6 @@ MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/om
     exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
     --python-version $("$REPO_PATH/scripts/detect-python-version" "$@") \
     --scripts-are-modules \
+    --show-error-codes \
     ${JUNIT_XML} \
     "$@"

@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import shutil
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from pathlib2 import Path
 
@@ -59,7 +65,7 @@ def test_update_package_code(conf_dir, cmk_dir):
         src = cmk_dir / u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi"
         assert src.exists()
         content = src.read_bytes()
-        pos_initial = content.find(b"BAEBF560-7308-4")
+        pos_initial = content.find(b"4E18343A-5E32-1")
         assert pos_initial != -1
         if tgt.exists():
             tgt.unlink()
@@ -69,7 +75,7 @@ def test_update_package_code(conf_dir, cmk_dir):
         assert msi_update.copy_file_safe(src, tgt)
         msi_update.update_package_code(tgt)
         tgt_content = tgt.read_bytes()
-        assert tgt_content.find(b"BAEBF560-7308-4") == -1
+        assert tgt_content.find(b"4E18343A-5E32-1") == -1
 
         if tgt.exists():
             tgt.unlink()
@@ -100,14 +106,14 @@ def test_update_package_code(conf_dir, cmk_dir):
 
 def test_msi_file_table():
     a = msi_update.msi_file_table()
-    assert len(a) == 4  # size for now(ini, yml, dat & cap)
+    assert len(a) == 5  # size for now(ini, yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted
 
 
 def test_msi_component_table():
     a = msi_update.msi_component_table()
-    assert len(a) == 4  # size now(ini, yml, dat & cap)
+    assert len(a) == 5  # size now(ini, yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted
 

@@ -1,4 +1,4 @@
-title: AWS/RDS CPU Credits
+title: AWS RDS: CPU Credits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -11,6 +11,9 @@ description:
 
  No default levels are set. Lower levels for the CPU credit usage
  and the burst balance can be set.
+
+item:
+ Name of the instance if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.
 
 inventory:
  One service per databse will be created.

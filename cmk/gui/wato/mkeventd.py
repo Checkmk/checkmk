@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import abc
@@ -39,16 +19,16 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
-from pysmi.compiler import MibCompiler  # type: ignore
-from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore
-from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore
-from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore
-from pysmi.writer.pyfile import PyFileWriter  # type: ignore
-from pysmi.reader.localfile import FileReader  # type: ignore
-from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore
-from pysmi.reader.callback import CallbackReader  # type: ignore
-from pysmi.searcher.stub import StubSearcher  # type: ignore
-from pysmi.error import PySmiError  # type: ignore
+from pysmi.compiler import MibCompiler  # type: ignore[import]
+from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
+from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
+from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import]
+from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
+from pysmi.reader.localfile import FileReader  # type: ignore[import]
+from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
+from pysmi.reader.callback import CallbackReader  # type: ignore[import]
+from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
+from pysmi.error import PySmiError  # type: ignore[import]
 import six
 
 import cmk.utils.log
@@ -62,7 +42,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 import cmk.gui.forms as forms
 import cmk.gui.config as config
@@ -1270,8 +1250,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Move rule packages
         elif html.request.has_var("_move"):
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
@@ -1281,7 +1261,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Export rule pack
         elif html.request.has_var("_export"):
-            nr = html.get_integer_input("_export")
+            nr = html.request.get_integer_input_mandatory("_export")
             try:
                 rule_pack = self._rule_packs[nr]
             except KeyError:
@@ -1295,7 +1275,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Make rule pack non-exportable
         elif html.request.has_var("_dissolve"):
-            nr = html.get_integer_input("_dissolve")
+            nr = html.request.get_integer_input_mandatory("_dissolve")
             try:
                 self._rule_packs[nr] = self._rule_packs[nr].rule_pack
             except KeyError:
@@ -1307,7 +1287,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Reset to rule pack provided via MKP
         elif html.request.has_var("_reset"):
-            nr = html.get_integer_input("_reset")
+            nr = html.request.get_integer_input_mandatory("_reset")
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
@@ -1320,7 +1300,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Synchronize modified rule pack with MKP
         elif html.request.has_var("_synchronize"):
-            nr = html.get_integer_input("_synchronize")
+            nr = html.request.get_integer_input_mandatory("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
@@ -1346,12 +1326,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
-            html.show_warning(_("WARNING: This Event Console is currently running as a replication "
-              "slave. The rules edited here will not be used. Instead a copy of the rules of the "
-              "master are being used in the case of a takeover. The same holds for the event "
-              "actions in the global settings.<br><br>If you want you can copy the ruleset of "
-              "the master into your local slave configuration: ") + \
-              '<a href="%s">' % copy_url + _("Copy Rules From Master") + '</a>')
+            html.show_warning(
+                _("WARNING: This Event Console is currently running as a replication "
+                  "slave. The rules edited here will not be used. Instead a copy of the rules of the "
+                  "master are being used in the case of a takeover. The same holds for the event "
+                  "actions in the global settings.<br><br>If you want you can copy the ruleset of "
+                  "the master into your local slave configuration: ") + '<a href="%s">' % copy_url +
+                _("Copy Rules From Master") + '</a>')
 
         elif rep_mode == "stopped":
             html.show_error(_("The Event Console is currently not running."))
@@ -1622,8 +1603,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         if html.check_transaction():
             if html.request.has_var("_move"):
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.request.get_integer_input_mandatory("_move")
+                to_pos = html.request.get_integer_input_mandatory("_index")
 
                 rules = self._rules
                 if type_ == ec.RulePackType.unmodified_mkp:
@@ -1798,7 +1779,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     table.cell(_("Move to pack..."))
                     choices = [("", "")] + [(pack["id"], pack["title"])
                                             for pack in self._rule_packs
-                                            if not pack is self._rule_pack]
+                                            if pack is not self._rule_pack]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
             if len(self._rule_packs) > 1:
@@ -1827,7 +1808,8 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     def _from_vars(self):
-        self._edit_nr = html.get_integer_input("edit", -1)  # missing -> new rule pack
+        self._edit_nr = html.request.get_integer_input_mandatory("edit",
+                                                                 -1)  # missing -> new rule pack
         self._new = self._edit_nr < 0
 
         if self._new:
@@ -2003,7 +1985,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         try:
             num_groups = re.compile(self._rule["match"]).groups
-        except:
+        except Exception:
             raise MKUserError("rule_p_match", _("Invalid regular expression"))
         if num_groups > 9:
             raise MKUserError(
@@ -2425,7 +2407,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("w") as f:
+        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
             f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
@@ -2458,7 +2440,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs()])
+        compiler.addSources(
+            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
@@ -2506,9 +2489,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     selected_custom_mibs.append(filename)
 
         if selected_custom_mibs:
-            c = wato_confirm(_("Confirm deletion of selected MIBs"),
-                             _("Do you really want to delete the selected %d MIBs?") % \
-                               len(selected_custom_mibs))
+            c = wato_confirm(
+                _("Confirm deletion of selected MIBs"),
+                _("Do you really want to delete the selected %d MIBs?") % len(selected_custom_mibs))
             if c:
                 for filename in selected_custom_mibs:
                     self._delete_mib(filename, custom_mibs[filename]["name"])
@@ -2811,46 +2794,46 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-        Tuple(
-            elements = [
-              Integer(
-                  title = _("Port number:"),
-                  help = _("If you are running the Event Console as a non-root (such as in an OMD site) "
-                           "please choose port number greater than 1024."),
-                  minvalue = 1,
-                  maxvalue = 65535,
-                  default_value = 6558,
-              ),
-              Checkbox(
-                  title = _("Security"),
-                  label = _("allow execution of commands and actions via TCP"),
-                  help = _("Without this option the access is limited to querying the current "
+            Tuple(elements=[
+                Integer(
+                    title=_("Port number:"),
+                    help=_(
+                        "If you are running the Event Console as a non-root (such as in an OMD site) "
+                        "please choose port number greater than 1024."),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=6558,
+                ),
+                Checkbox(
+                    title=_("Security"),
+                    label=_("allow execution of commands and actions via TCP"),
+                    help=_("Without this option the access is limited to querying the current "
                            "and historic event status."),
-                  default_value = False,
-                  true_label = _("allow commands"),
-                  false_label = _("no commands"),
-              ),
-              Optional(
-                  ListOfStrings(
-                      help = _("The access to the event status via TCP will only be allowed from "
+                    default_value=False,
+                    true_label=_("allow commands"),
+                    false_label=_("no commands"),
+                ),
+                Optional(
+                    ListOfStrings(
+                        help=_("The access to the event status via TCP will only be allowed from "
                                "this source IP addresses"),
-                      valuespec = IPv4Address(),
-                      orientation = "horizontal",
-                      allow_empty = False,
-                  ),
-                  label = _("Restrict access to the following source IP addresses"),
-                  none_label = _("access unrestricted"),
-              )
-            ],
-        ),
-        title = _("Access to event status via TCP"),
-        help = _("In Multisite setups if you want <a href=\"%s\">event status checks</a> for hosts that "
-                 "live on a remote site you need to activate remote access to the event status socket "
-                 "via TCP. This allows to query the current event status via TCP. If you do not restrict "
-                 "this to queries also event actions are possible from remote. This feature is not used "
-                 "by the event status checks nor by Multisite so we propose not allowing commands via TCP.") % \
-                                                   "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
-        none_label = _("no access via TCP"),
+                        valuespec=IPv4Address(),
+                        orientation="horizontal",
+                        allow_empty=False,
+                    ),
+                    label=_("Restrict access to the following source IP addresses"),
+                    none_label=_("access unrestricted"),
+                )
+            ],),
+            title=_("Access to event status via TCP"),
+            help=
+            _("In Multisite setups if you want <a href=\"%s\">event status checks</a> for hosts that "
+              "live on a remote site you need to activate remote access to the event status socket "
+              "via TCP. This allows to query the current event status via TCP. If you do not restrict "
+              "this to queries also event actions are possible from remote. This feature is not used "
+              "by the event status checks nor by Multisite so we propose not allowing commands via TCP."
+             ) % "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
+            none_label=_("no access via TCP"),
         )
 
 
@@ -3072,117 +3055,112 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
 
     def valuespec(self):
         return ActionList(
-        Foldable(
-          Dictionary(
-            title = _("Action"),
-            optional_keys = False,
-            elements = [
-              (   "id",
-                  ID(
-                      title = _("Action ID"),
-                      help = _("A unique ID of this action that is used as an internal "
-                               "reference in the configuration. Changing the ID is not "
-                               "possible if still rules refer to this ID."),
-                      allow_empty = False,
-                      size = 12,
-                  )
-              ),
-              (   "title",
-                  TextUnicode(
-                      title = _("Title"),
-                      help = _("A descriptive title of this action."),
-                      allow_empty = False,
-                      size = 64,
-                      attrencode = True,
-                  )
-              ),
-              (   "disabled",
-                  Checkbox(
-                      title = _("Disable"),
-                      label = _("Currently disable execution of this action"),
-                  )
-              ),
-              (   "hidden",
-                  Checkbox(
-                      title = _("Hide from Status GUI"),
-                      label = _("Do not offer this action as a command on open events"),
-                      help = _("If you enabled this option, then this action will not "
-                               "be available as an interactive user command. It is usable "
-                               "as an ad-hoc action when a rule fires, nevertheless."),
-                 ),
-              ),
-              (   "action",
-                  CascadingDropdown(
-                      title = _("Type of Action"),
-                      help = _("Choose the type of action to perform"),
-                      choices = [
-                          ( "email",
-                            _("Send Email"),
-                            Dictionary(
-                              optional_keys = False,
-                              elements = [
-                                 (   "to",
-                                     TextAscii(
-                                         title = _("Recipient Email address"),
-                                         allow_empty = False,
-                                         attrencode = True,
-                                     ),
-                                 ),
-                                 (   "subject",
-                                     TextUnicode(
-                                         title = _("Subject"),
-                                         allow_empty = False,
-                                         size = 64,
-                                         attrencode = True,
-                                     ),
-                                 ),
-                                 (   "body",
-                                     TextAreaUnicode(
-                                         title = _("Body"),
-                                         help = lambda: _("Text-body of the email to send. ") + substitute_help(),
-                                         cols = 64,
-                                         rows = 10,
-                                         attrencode = True,
-                                     ),
-                                 ),
-                              ]
-                            )
+            Foldable(
+                Dictionary(
+                    title=_("Action"),
+                    optional_keys=False,
+                    elements=[
+                        ("id",
+                         ID(
+                             title=_("Action ID"),
+                             help=_("A unique ID of this action that is used as an internal "
+                                    "reference in the configuration. Changing the ID is not "
+                                    "possible if still rules refer to this ID."),
+                             allow_empty=False,
+                             size=12,
+                         )),
+                        ("title",
+                         TextUnicode(
+                             title=_("Title"),
+                             help=_("A descriptive title of this action."),
+                             allow_empty=False,
+                             size=64,
+                             attrencode=True,
+                         )),
+                        ("disabled",
+                         Checkbox(
+                             title=_("Disable"),
+                             label=_("Currently disable execution of this action"),
+                         )),
+                        (
+                            "hidden",
+                            Checkbox(
+                                title=_("Hide from Status GUI"),
+                                label=_("Do not offer this action as a command on open events"),
+                                help=_("If you enabled this option, then this action will not "
+                                       "be available as an interactive user command. It is usable "
+                                       "as an ad-hoc action when a rule fires, nevertheless."),
+                            ),
                         ),
-                        ( "script",
-                          _("Execute Shell Script"),
-                          Dictionary(
-                            optional_keys = False,
-                            elements = [
-                               ( "script",
-                                 TextAreaUnicode(
-                                   title = _("Script body"),
-                                   help = lambda: \
-                                        _("This script will be executed using the BASH shell. ") \
-                                        + substitute_help() \
-                                        + "<br>" \
-                                        + _("These information are also available as environment variables with the prefix "
-                                            "<tt>CMK_</tt>. For example the text of the event is available as "
-                                            "<tt>CMK_TEXT</tt> as environment variable."),
-                                   cols = 64,
-                                   rows = 10,
-                                   attrencode = True,
-                                 )
-                               ),
-                            ]
-                          )
+                        (
+                            "action",
+                            CascadingDropdown(
+                                title=_("Type of Action"),
+                                help=_("Choose the type of action to perform"),
+                                choices=[
+                                    ("email", _("Send Email"),
+                                     Dictionary(optional_keys=False,
+                                                elements=[
+                                                    (
+                                                        "to",
+                                                        TextAscii(
+                                                            title=_("Recipient Email address"),
+                                                            allow_empty=False,
+                                                            attrencode=True,
+                                                        ),
+                                                    ),
+                                                    (
+                                                        "subject",
+                                                        TextUnicode(
+                                                            title=_("Subject"),
+                                                            allow_empty=False,
+                                                            size=64,
+                                                            attrencode=True,
+                                                        ),
+                                                    ),
+                                                    (
+                                                        "body",
+                                                        TextAreaUnicode(
+                                                            title=_("Body"),
+                                                            help=lambda: _(
+                                                                "Text-body of the email to send. ")
+                                                            + substitute_help(),
+                                                            cols=64,
+                                                            rows=10,
+                                                            attrencode=True,
+                                                        ),
+                                                    ),
+                                                ])),
+                                    ("script", _("Execute Shell Script"),
+                                     Dictionary(
+                                         optional_keys=False,
+                                         elements=[
+                                             ("script",
+                                              TextAreaUnicode(
+                                                  title=_("Script body"),
+                                                  help=lambda:
+                                                  _("This script will be executed using the BASH shell. "
+                                                   ) + substitute_help() + "<br>" +
+                                                  _("These information are also available as environment variables with the prefix "
+                                                    "<tt>CMK_</tt>. For example the text of the event is available as "
+                                                    "<tt>CMK_TEXT</tt> as environment variable."),
+                                                  cols=64,
+                                                  rows=10,
+                                                  attrencode=True,
+                                              )),
+                                         ])),
+                                ]),
                         ),
-                      ]
-                  ),
-              ),
-            ],
-          ),
-          title_function = lambda value: not value["id"] and _("New Action") or (value["id"] + " - " + value["title"]),
-        ),
-        title = _("Actions (Emails & Scripts)"),
-        help = _("Configure that possible actions that can be performed when a "
-             "rule triggers and also manually by a user."),
-        totext = _("%d actions"),
-        add_label = _("Add new action"),
+                    ],
+                ),
+                title_function=lambda value: not value["id"] and _("New Action") or
+                (value["id"] + " - " + value["title"]),
+            ),
+            title=_("Actions (Emails & Scripts)"),
+            help=_("Configure that possible actions that can be performed when a "
+                   "rule triggers and also manually by a user."),
+            totext=_("%d actions"),
+            add_label=_("Add new action"),
         )
 
     # TODO: Why? Can we drop this?
@@ -3919,17 +3897,17 @@ rulespec_registry.register(
 
 
 def _sl_help():
-    return _("A service level is a number that describes the business impact of a host or "
-            "service. This level can be used in rules for notifications, as a filter in "
-            "views or as a criteria in rules for the Event Console. A higher service level "
-            "is assumed to be more business critical. This ruleset allows to assign service "
-            "levels to hosts and/or services. Note: if you assign a service level to "
-            "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
-            "inherited to all services that do <b>not</b> have explicitely assigned a service "
-            "with the ruleset <i>Service Level of services</i>. Assigning no service level "
-            "is equal to defining a level of 0.<br><br>The list of available service "
-            "levels is configured via a <a href='%s'>global option.</a>") % \
-            "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"
+    return (_("A service level is a number that describes the business impact of a host or "
+              "service. This level can be used in rules for notifications, as a filter in "
+              "views or as a criteria in rules for the Event Console. A higher service level "
+              "is assumed to be more business critical. This ruleset allows to assign service "
+              "levels to hosts and/or services. Note: if you assign a service level to "
+              "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
+              "inherited to all services that do <b>not</b> have explicitely assigned a service "
+              "with the ruleset <i>Service Level of services</i>. Assigning no service level "
+              "is equal to defining a level of 0.<br><br>The list of available service "
+              "levels is configured via a <a href='%s'>global option.</a>") %
+            "wato.py?varname=mkeventd_service_levels&mode=edit_configvar")
 
 
 def _valuespec_extra_host_conf__ec_sl():

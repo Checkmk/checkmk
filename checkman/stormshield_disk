@@ -9,8 +9,7 @@ description:
  disk(s).
 
 item:
- The description of the service as provided by
- the index of the device.
+ Index of the disk
 
 inventory:
  Each disk will be inventorized.

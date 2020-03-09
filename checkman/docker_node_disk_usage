@@ -13,5 +13,8 @@ description:
  If you are configuring the plugin via the configuration file, make sure you
  do not skip the section "docker_node_disk_usage" (again the default setting is fine).
 
+item:
+ Type of the docker node
+
 inventory:
  One service per type (i.e. containers, images, volumen, build cache) is created.

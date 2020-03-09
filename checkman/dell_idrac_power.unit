@@ -10,4 +10,4 @@ description:
  "non-recoverable" and {OK} if no problem is detected.
 
 item:
- One service for each PSU will be created
+ Index of the power unit

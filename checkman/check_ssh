@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The executed command (if given) or the description of the service
+
 description:
  This performs an active check to connect to a ssh service.
 

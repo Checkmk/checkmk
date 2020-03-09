@@ -13,7 +13,7 @@ description:
  Otherwise the check is OK.
 
 item:
- The accesspoint name.
+ The WLAN accesspoint name.
 
 inventory:
  One service for each access point is created.

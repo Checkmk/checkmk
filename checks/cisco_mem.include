@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 factory_settings["cisco_mem_default_levels"] = {
     "levels": (80.0, 90.0),
@@ -79,7 +59,7 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
 
     warn, crit = params.get("levels", (None, None))
     mode = get_levels_mode_from_value(warn)
-    if isinstance(warn, (int, long)):
+    if isinstance(warn, six.integer_types):
         warn *= 1048576  # convert from megabyte to byte
         crit *= 1048576
     if warn is not None:
@@ -94,8 +74,7 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
         create_percent_metric=True,
     )
 
-    # revert to wrong name for compatibility
-    perfdata = [(("mem_used",) + perfdata[-1][1:])]
+    perfdata = [perfdata[-1]]  # Only the percent metric
 
     if params.get("trend_range"):
         mem_used_mb, mem_total_mb = mem_used / 1048576.0, mem_total / 1048576.0

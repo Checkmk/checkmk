@@ -16,7 +16,7 @@ description:
  reports UNKNOWN.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
  One service is created per instance if and only if the mode is PRIMARY.

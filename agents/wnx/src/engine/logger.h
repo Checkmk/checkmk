@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // simple logging
 // see logger.cpp to understand how it works
@@ -392,10 +395,25 @@ public:
     }
     // **********************************
 
+    inline std::string SafePrintToDebuggerAndEventLog(
+        const std::string& text) noexcept {
+        std::string s;
+        try {
+            s = fmt::format(
+                "[ERROR] [CRITICAL] Invalid parameters for log string \"{}\"\n",
+                text);
+            return s;
+        } catch (...) {
+            s = "[ERROR] [CRITICAL] Failed Print\n";
+        }
+        xlog::internal_PrintStringDebugger(s.c_str());
+        return s;
+    }
+
     // **********************************
     // STREAM OUTPUT
     template <typename... T>
-    auto operator()(const std::string& Format, T... args) {
+    auto operator()(const std::string& Format, T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
             if (!constructed()) {
@@ -407,18 +425,13 @@ public:
             postProcessAndPrint(s);
             return s;
         } catch (...) {
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            auto e = *this;
-            e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
 
     // #TODO make more versatile
     template <typename... T>
-    auto operator()(int Flags, const std::string& Format, T... args) {
+    auto operator()(int Flags, const std::string& Format, T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
             if (!constructed()) {
@@ -431,12 +444,7 @@ public:
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            auto e = *this;
-            e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
     // **********************************
@@ -478,14 +486,7 @@ public:
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            // we do not want any exceptions during logging
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            if (!this->constructed_) return s;
-            auto e = *this;
-            e.mods_ |= XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
 

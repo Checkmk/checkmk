@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # <<<df>>>
 # /dev/sda3     ext4     8123200   1207512   6496392      16% /
@@ -232,11 +212,24 @@ def _is_grouped_item(params):
 
 def inventory_df(parsed):
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
-    include_volume_name = inventory_options.get("include_volume_name", False)
+    include_volume_name_settings = inventory_options.get("include_volume_name", False)
+
+    if include_volume_name_settings is False:
+        include_volume_name = False
+        grouping_behaviour = "mountpoint"
+    else:
+        include_volume_name = True
+        if include_volume_name_settings is True:
+            # Legacy configuration without explicit grouping behaviour
+            grouping_behaviour = "mountpoint"
+        else:
+            #  ( {'include_volume_name': (True, 'volume_name_and_mountpoint')}, [], ALL_HOSTS, {} ),
+            grouping_behaviour = include_volume_name_settings[1]
+
     ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
-    (df_blocks, volume_info), _ = parsed
+    (df_blocks, volume_info), df_inodes = parsed
 
     filtered_blocks = _filter_by_exclude_rule(inventory_df_exclude_mountpoints, df_blocks)
     filtered_blocks = _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints,
@@ -249,27 +242,84 @@ def inventory_df(parsed):
 
     mplist = _get_item_list_from_blocks(filtered_blocks)
 
-    inventory = df_inventory(mplist)
-    if include_volume_name:
-        for idx, (mountpoint, params) in enumerate(inventory):
-            if _is_grouped_item(params):
-                continue
-            item = _format_with_description(volume_info[mountpoint]["volume_name"], mountpoint)
-            inventory[idx] = (item, params)
+    # Modify the df_blocks and df_inodes to include the volume name
+    # and hand the data over to the inventory function, this enables grouping based on volume and mountpoint
+    if include_volume_name and grouping_behaviour == "volume_name_and_mountpoint":
+        df_blocks, df_inodes = _add_volume_name(df_blocks, df_inodes, volume_info, mplist)
+        mplist = [x[0] for x in df_blocks]
 
-    return inventory
+    for mountpoint, params in df_inventory(mplist):
+        if "patterns" in params:
+            # Add the grouping_behaviour info to the discovered parameters of this service. With this information
+            # the check can easily reconstruct the discovered grouping.
+            params["grouping_behaviour"] = grouping_behaviour
+        elif include_volume_name and grouping_behaviour == "mountpoint":
+            # Somehow the user wanted to see the volume name in the service description,
+            # but the grouping itself is based on the mountpoint only
+            # => The df_inventory returns a list of mountpoints and mountpoint groups
+            # Add the volume name as prefix for single mountpoints
+            mountpoint = "%s %s" % (volume_info[mountpoint]["volume_name"], mountpoint)
+
+        params["include_volume_name"] = include_volume_name
+        yield mountpoint, params
+
+
+# Legacy params
+def _get_mountpoint_from_item(item, params, volume_info):
+    volume_and_mp_to_mp = {
+        ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
+    }
+    if "patterns" in params or item in volume_info:
+        mountpoint = item
+    elif item in volume_and_mp_to_mp:
+        mountpoint = volume_and_mp_to_mp[item]
+    else:
+        mountpoint = item
+    return mountpoint
+
+
+def _add_volume_name(df_blocks, df_inodes, volume_info, only_mp=None):
+    # Modify the df_blocks and df_inodes mount points to include the volume name
+    df_blocks_volume = []
+    df_inodes_volume = []
+    for entry in df_blocks:
+        if only_mp and entry[0] not in only_mp:
+            continue
+        # The parse function explictly creates a correspondin volume_info entry for each df_block
+        mountpoint_with_volume = "%s %s" % (volume_info[entry[0]]["volume_name"], entry[0])
+        df_blocks_volume.append((mountpoint_with_volume,) + entry[1:])
+    for entry in df_inodes:
+        if only_mp and entry[0] not in only_mp:
+            continue
+        # There is no guarantee that the inode mountpoint is in volume_info, check parse func
+        if entry[0] not in volume_info:
+            continue
+        mountpoint_with_volume = "%s %s" % (volume_info[entry[0]]["volume_name"], entry[0])
+        df_inodes_volume.append((mountpoint_with_volume,) + entry[1:])
+
+    return df_blocks_volume, df_inodes_volume
 
 
 def check_df(item, params, parsed):
     (df_blocks, volume_info), df_inodes = parsed
 
-    if item in volume_info or _is_grouped_item(params):
-        return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+    if "include_volume_name" not in params:
+        item = _get_mountpoint_from_item(item, params, volume_info)
 
-    iter_name_mp = ((volume_info[mp]["volume_name"], mp) for mp in volume_info)
-    for name, mountpoint in iter_name_mp:
-        if item == _format_with_description(name, mountpoint):
-            return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
+    # Check if the item is not the actual mountpoint and modify the data accordingly
+    elif params.get("include_volume_name"):
+        if "patterns" not in params:
+            # Single mountpoints with prefixed volume name
+            item = _get_mountpoint_from_item(item, params, volume_info)
+        elif params["grouping_behaviour"] == "volume_name_and_mountpoint":
+            # Filesystem group
+            # There is no need to modify the item name, since is a custom text  and not used in for pattern matching.
+            # The "volume_name_and_mount" grouping option however, requires the modification of the df_blocks
+            # and df_inodes variables. After the modification these variables also include the volume name
+            # which will be used during for group matching
+            df_blocks, df_inodes = _add_volume_name(df_blocks, df_inodes, volume_info)
+
+    return df_check_filesystem_list(item, params, df_blocks, df_inodes)
 
 
 check_info['df'] = {

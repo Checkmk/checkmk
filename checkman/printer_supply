@@ -18,6 +18,9 @@ description:
  the supply unit is added to the beginning of the name to get a unique
  item name.
 
+item:
+ The description of the printer
+
 inventory:
  One check is being created for each supply unit with a unique name.
 

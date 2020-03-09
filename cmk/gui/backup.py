@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This module implements generic functionality of the Check_MK backup
 # system. It is used to configure the site and system backup.
@@ -40,6 +20,8 @@ import socket
 import subprocess
 import time
 import json
+from typing import Any, List, Optional, Text, Tuple  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.render as render
@@ -49,20 +31,9 @@ from cmk.utils.schedule import next_scheduled_time
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.valuespec import (
-    Password,
-    Dictionary,
-    TextUnicode,
-    DropdownChoice,
-    Checkbox,
-    Alternative,
-    FixedValue,
-    CascadingDropdown,
-    ID,
-    AbsoluteDirname,
-    SchedulePeriod,
-    ListOf,
-    Timeofday,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Password, Dictionary, TextUnicode, DropdownChoice, Checkbox, Alternative, FixedValue,
+    CascadingDropdown, ID, AbsoluteDirname, SchedulePeriod, ListOf, Timeofday, ValueSpec,
 )
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
@@ -286,6 +257,8 @@ class MKBackupJob(object):
                              stderr=subprocess.STDOUT,
                              stdin=open(os.devnull),
                              env=env)
+        if p.stdout is None:
+            raise Exception("cannot happen")
         output = p.stdout.read()
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % output)
@@ -305,7 +278,7 @@ class MKBackupJob(object):
             else:
                 raise
 
-        wait = 5  # sec
+        wait = 5.0  # sec
         while os.path.exists("/proc/%d" % state["pid"]) and wait > 0:
             time.sleep(0.5)
             wait -= 0.5
@@ -814,13 +787,16 @@ class PageEditBackupJob(object):
 class PageAbstractBackupJobState(object):
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
-        self._job = None
-        self._ident = None
+        self._job = None  # type: Optional[MKBackupJob]
+        self._ident = None  # type: Optional[str]
 
     def jobs(self):
         raise NotImplementedError()
 
     def title(self):
+        # Our class hierarchy is totally screwed up here...
+        if not isinstance(self._job, BackupEntity):
+            raise Exception("incorrect job state: no backup entity")
         return _("Job state: %s") % self._job.title()
 
     def buttons(self):
@@ -837,12 +813,14 @@ class PageAbstractBackupJobState(object):
         return "ajax_backup_job_state.py?job=%s" % self._ident
 
     def show_job_details(self):
+        if self._job is None:
+            raise Exception("uninitialized PageAbstractBackupJobState")
         job = self._job
         state = job.state()
 
         html.open_table(class_=["data", "backup_job"])
 
-        css = "state0"
+        css = "state0"  # type: Optional[str]
         state_txt = job.state_name(state["state"])
         if state["state"] == "finished":
             if not state["success"]:
@@ -935,6 +913,7 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
     def show_backup_list(self, only_type):
+        # type: (str) -> None
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
@@ -1150,11 +1129,13 @@ class PageEditBackupTarget(object):
                     allow_empty=False,
                     size=64,
                 )),
-                ("remote",
-                 CascadingDropdown(
-                     title=_("Destination"),
-                     choices=ABCBackupTargetType.choices,
-                 )),
+                (
+                    "remote",
+                    CascadingDropdown(
+                        title=_("Destination"),
+                        # Like everyone reading this, mypy is totally confused by our ValueSpecs... :-P
+                        choices=ABCBackupTargetType.choices,  # type: ignore[arg-type]
+                    )),
             ],
             optional_keys=[],
             render="form",
@@ -1232,16 +1213,18 @@ class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def choices(cls):
+        # type: (Any) -> List[Tuple[Text, Text, ValueSpec]]
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
+        for type_class in cls.__subclasses__():
             choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
         return sorted(choices, key=lambda x: x[1])
 
     @classmethod
     def get_type(cls, type_ident):
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        for type_class in cls.__subclasses__():
             if type_class.ident == type_ident:
                 return type_class
 
@@ -1610,6 +1593,8 @@ class PageBackupRestore(object):
                 _("A restore is currently running. You can only delete "
                   "backups while no restore is running."))
 
+        if self._target is None:
+            raise Exception("no backup target")
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
@@ -1632,6 +1617,8 @@ class PageBackupRestore(object):
         return RestoreJob(self._target_ident, None).is_running()
 
     def _start_restore(self, backup_ident):
+        if self._target is None:
+            raise Exception("no backup target")
         backup_info = self._target.get_backup(backup_ident)
         if backup_info["config"]["encrypt"] is not None:
             return self._start_encrypted_restore(backup_ident, backup_info)

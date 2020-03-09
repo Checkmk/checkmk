@@ -13,7 +13,7 @@ description:
  the disk is sent at all by the agent.
 
 item:
- The id of the disk (as string).
+ The ID of the disk
 
 inventory:
  The inventory creates checks for all existing disks - regardless of

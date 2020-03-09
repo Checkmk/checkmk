@@ -10,5 +10,8 @@ description:
   {CRIT} when the device is OFFLINE and {WARN} in device status
   UNKNOWN.
 
+item:
+ {{Drive}} plus the ID of the device
+
 inventory:
   One item is generated per drive reported by the device.

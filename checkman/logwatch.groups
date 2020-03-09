@@ -9,6 +9,9 @@ description:
 
  Please refer to to manpage of {{logwatch}} for more details about logfile monitoring.
 
+item:
+ Name of the group
+
 inventory:
  One service for each group will be created
 

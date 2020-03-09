@@ -1,4 +1,4 @@
-title: Hepta 8030
+title: Hepta 8030: General information
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -15,6 +15,3 @@ description:
 
 inventory:
  One service for HPF8038 Info
-
-item:
- "HPF8030 Info"

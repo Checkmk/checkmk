@@ -15,9 +15,8 @@ description:
  each state type.
 
 inventory:
- One service per multipath device will be created. Paths
- to local disk are ignored.
+ Logical unit number
 
 item:
- The unique id of the path
+ The unique ID of the path
 

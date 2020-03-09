@@ -1,33 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import sys
 import re
 from typing import Text, Union  # pylint: disable=unused-import
 import six
 
-from future.moves.html import escape as html_escape  # type: ignore
+if sys.version_info[0] >= 3:
+    from html import escape as html_escape
+else:
+    from future.moves.html import escape as html_escape  # type: ignore[import]
 
 from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML
@@ -77,22 +62,26 @@ def escape_attribute(value):
     attr_type = type(value)
     if value is None:
         return u''
-    elif attr_type == int:
+    if attr_type == int:
         return six.text_type(value)
-    elif isinstance(value, HTML):
+    if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
-        value = u"%s" % value
-    return ensure_unicode(html_escape(value, quote=True))
+    if isinstance(attr_type, six.text_type):
+        return html_escape(value, quote=True)
+    if isinstance(attr_type, six.binary_type):  # TODO: Not in the signature!
+        return html_escape(six.ensure_str(value), quote=True)
+    # TODO: What is this case for? Exception?
+    return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
 
 def unescape_attributes(value):
-    # type: (str) -> Text
+    # type: (Union[str, Text]) -> Text
     # In python3 use html.unescape
-    return ensure_unicode(value.replace("&amp;", "&")\
-                .replace("&quot;", "\"")\
-                .replace("&lt;", "<")\
-                .replace("&gt;", ">"))
+    return ensure_unicode(value  #
+                          .replace("&amp;", "&")  #
+                          .replace("&quot;", "\"")  #
+                          .replace("&lt;", "<")  #
+                          .replace("&gt;", ">"))
 
 
 def escape_text(text):

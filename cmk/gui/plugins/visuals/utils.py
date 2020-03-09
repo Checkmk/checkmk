@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -42,6 +22,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
+from cmk.gui.type_defs import ColumnName, HTTPVariables  # pylint: disable=unused-import
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
@@ -213,6 +194,9 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
         if single_info_condition != ["host"]:
             raise NotImplementedError()
 
+        if not linking_view_rows:
+            return False  # Unknown host, no linking
+
         # In case we have rows of a single host context we only have a single row that holds the
         # host information. In case we have multiple rows, we normally have service rows which
         # all hold the same host information in their host columns.
@@ -259,6 +243,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def __init__(self, info, htmlvars, link_columns):
+        # type: (str, List[str], List[ColumnName]) -> None
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -323,7 +308,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         return rows
 
     def variable_settings(self, row):
-        # type: (dict) -> List[tuple]
+        # type: (dict) -> HTTPVariables
         """return pairs of htmlvar and name according to dataset in row"""
         return []
 
@@ -360,7 +345,7 @@ class FilterUnicodeFilter(Filter):
     def value(self):
         val = {}
         for varname in self.htmlvars:
-            val[varname] = html.get_unicode_input(varname, '')
+            val[varname] = html.request.get_unicode_input(varname, '')
         return val
 
 
@@ -380,7 +365,7 @@ class FilterTristate(Filter):
         html.end_radio_group()
 
     def tristate_value(self):
-        return html.get_integer_input(self.varname, self.deflt)
+        return html.request.get_integer_input_mandatory(self.varname, self.deflt)
 
     def filter(self, infoname):
         current = self.tristate_value()
@@ -461,10 +446,10 @@ class FilterTime(Filter):
                 return None
 
         elif rangename == "unix":
-            return html.get_integer_input(varprefix)
+            return html.request.get_integer_input_mandatory(varprefix)
 
         try:
-            count = html.get_integer_input(varprefix)
+            count = html.request.get_integer_input_mandatory(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:

@@ -8,3 +8,6 @@ description:
 
  The device allows to configure an upper and lower warning level. These are used as
  device critical levels.
+
+ item:
+  One of the two statements {{LAN}} or {{Rack}}

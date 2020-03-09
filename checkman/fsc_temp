@@ -1,4 +1,4 @@
-title: Temperature status of Fujitsu Siemens (FSC) Hardware
+title: Fujitsu Siemens FSC: Temperature status of hardware
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -11,6 +11,9 @@ description:
  Siemens Primergy Servers but should work on other hardware too.
 
  The check uses the thresholds provided by the SNMP agent to raise WARNING/CRITICAL states.
+
+item:
+ Name of the temperature sensor
 
 inventory:
  The check creates one service for each temperature sensor provided in the SNMP data.

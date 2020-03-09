@@ -4,7 +4,7 @@
 //
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
+#include "common/yaml.h"
 
 #include <filesystem>
 #include <iostream>

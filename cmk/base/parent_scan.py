@@ -1,33 +1,12 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import sys
 import socket
-import subprocess
 import time
 import pprint
 from typing import Union, Tuple, Optional, Set, Dict, List  # pylint: disable=unused-import
@@ -38,12 +17,13 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.cmk_subprocess as subprocess
 
-import cmk.base.utils
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
                       int, str]]
@@ -174,7 +154,8 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
                           subprocess.Popen(command,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
-                                           close_fds=True)))
+                                           close_fds=True,
+                                           encoding="utf-8")))
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -330,8 +311,8 @@ def gateway_reachable_via_ping(ip, probes):
 # from all_hosts
 def _ip_to_hostname(config_cache, ip):
     # type: (config.ConfigCache, Optional[HostAddress]) -> Optional[HostName]
-    if not cmk.base.config_cache.exists("ip_to_hostname"):
-        cache = cmk.base.config_cache.get_dict("ip_to_hostname")
+    if not _config_cache.exists("ip_to_hostname"):
+        cache = _config_cache.get_dict("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
             try:
@@ -339,7 +320,7 @@ def _ip_to_hostname(config_cache, ip):
             except Exception:
                 pass
     else:
-        cache = cmk.base.config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get_dict("ip_to_hostname")
 
     return cache.get(ip)
 

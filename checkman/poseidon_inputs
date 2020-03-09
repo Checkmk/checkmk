@@ -1,4 +1,4 @@
-title: Input Sensors from HWgroup Poseidon devices
+title: HWgroup Poseidon: Digital inputs
 agents: snmp
 catalog: hw/network/hwgroup
 license: GPL
@@ -7,8 +7,7 @@ description:
  This check monitors all digital inputs from Poseidon devices.
 
 item:
- The name of the sensors
-
+ The name of the sensor
 
 inventory:
  One separate service per sensor is being created.

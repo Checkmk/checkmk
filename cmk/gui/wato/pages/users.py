@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
 import base64
@@ -110,7 +90,7 @@ class ModeUsers(WatoMode):
 
     def action(self):
         if html.request.var('_delete'):
-            delid = html.get_unicode_input("_delete")
+            delid = html.request.get_unicode_input("_delete")
             c = wato_confirm(
                 _("Confirm deletion of user %s") % delid,
                 _("Do you really want to delete the user %s?") % delid)
@@ -151,7 +131,8 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
         for varname, _value in html.request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
-                user = base64.b64decode(varname.split("_c_user_")[-1]).decode("utf-8")
+                user = base64.b64decode(
+                    varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
                 if user in users:
                     selected_users.append(user)
 
@@ -440,8 +421,8 @@ class ModeEditUser(WatoMode):
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
-        self._user_id = html.get_unicode_input("edit")  # missing -> new user
-        self._cloneid = html.get_unicode_input("clone")  # Only needed in 'new' mode
+        self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         self._is_new_user = self._user_id is None
 
         self._users = userdb.load_users(lock=html.is_transaction())
@@ -478,11 +459,11 @@ class ModeEditUser(WatoMode):
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = html.get_unicode_input("edit").strip()
+            self._user_id = html.request.get_unicode_input("edit").strip()
             user_attrs = self._users[self._user_id]
 
         # Full name
-        user_attrs["alias"] = html.get_unicode_input("alias").strip()
+        user_attrs["alias"] = html.request.get_unicode_input("alias").strip()
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
@@ -780,10 +761,8 @@ class ModeEditUser(WatoMode):
 
         # Roles
         forms.section(_("Roles"))
-        entries = self._roles.items()
-        entries.sort(key=lambda x: (x[1]["alias"], x[0]))
         is_member_of_at_least_one = False
-        for role_id, role in entries:
+        for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
             if not self._is_locked("roles"):
                 html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
                 url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 import traceback
@@ -30,7 +10,6 @@ import json
 import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
-from werkzeug.local import LocalProxy  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -52,6 +31,7 @@ import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
+from cmk.gui.config import UserType  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -62,7 +42,7 @@ if cmk.is_managed_edition():
 # Helper functions to be used by snapins
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
     snapin_registry, snapin_width, snapin_site_choice, visuals_by_topic, render_link, heading, link,
     simplelink, bulletlink, iconlink, nagioscgilink, footnotelinks, begin_footnote_links,
     end_footnote_links, write_snapin_exception,
@@ -153,7 +133,7 @@ def transform_old_dict_based_snapins():
                 return self._spec.get("styles")
 
         # Help pylint a little bit, it doesn't know that the registry remembers the class above.
-        _it_is_really_used = LegacySnapin
+        _it_is_really_used = LegacySnapin  # noqa: F841
 
 
 # TODO: Deprecate this one day.
@@ -166,7 +146,7 @@ def transform_old_quicksearch_match_plugins():
 class UserSidebarConfig(object):
     """Manages the configuration of the users sidebar"""
     def __init__(self, user, default_config):
-        # type: (LocalProxy, List[Tuple[str, str]]) -> None
+        # type: (UserType, List[Tuple[str, str]]) -> None
         super(UserSidebarConfig, self).__init__()
         self._user = user
         self._default_config = copy.deepcopy(default_config)
@@ -466,7 +446,7 @@ class SidebarRenderer(object):
             # TODO: Refactor this confusing special case. Add deddicated method or something
             # to let the snapins make the sidebar know that there is a URL to fetch.
             url = snapin_instance.show()
-            if not url is None:
+            if url is not None:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
                 html.javascript(
@@ -598,7 +578,11 @@ def ajax_snapin():
 
     snapin_code = []
     for snapin_id in snapin_ids:
-        snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
+        try:
+            snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
+        except KeyError:
+            continue  # Skip not existing snapins
+
         if not config.user.may(snapin_instance.permission_name()):
             continue
 
@@ -648,6 +632,9 @@ def ajax_openclose():
         return None
 
     snapin_id = html.request.var("name")
+    if snapin_id is None:
+        return None
+
     state = html.request.var("state")
     if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
         raise MKUserError("state", "Invalid state: %s" % state)
@@ -675,6 +662,9 @@ def move_snapin():
         return None
 
     snapin_id = html.request.var("name")
+    if snapin_id is None:
+        return None
+
     before_id = html.request.var("before")
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
@@ -684,10 +674,12 @@ def move_snapin():
     except KeyError:
         return None
 
-    try:
-        before_snapin = user_config.get_snapin(before_id)  # type: Optional[UserSidebarSnapin]
-    except KeyError:
-        before_snapin = None
+    before_snapin = None
+    if before_snapin:
+        try:
+            before_snapin = user_config.get_snapin(before_id)
+        except KeyError:
+            before_snapin = None
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
@@ -809,8 +801,9 @@ class PageAddSnapin(object):
         html.end_context_buttons()
 
         addname = html.request.var("name")
-        if addname in snapin_registry and addname not in self._used_snapins(
-        ) and html.check_transaction():
+
+        if (addname is not None and addname in snapin_registry and
+                addname not in self._used_snapins() and html.check_transaction()):
             self._user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
             self._user_config.save()
             html.reload_sidebar()
@@ -858,8 +851,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = html.request.var("site")
-    site_choices = dict([ ("", _("All sites")), ] \
-                 +  config.site_choices())
+    site_choices = dict([("", _("All sites"))] + config.site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

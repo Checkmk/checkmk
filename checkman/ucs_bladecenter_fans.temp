@@ -12,7 +12,7 @@ description:
  check will point out its location.
 
 item:
- The component where the fans are located prefixed by "Ambient", e.g. "Ambient Chassis 1"
+ Location of the fans prefixed by {{Ambient}} and suffixed by {{FAN}}
 
 inventory:
  One summary check for each component is created

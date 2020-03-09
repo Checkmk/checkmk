@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # <<<sap:sep(9)>>>
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
@@ -231,9 +211,8 @@ def inventory_sap_value_groups(info):
 
 
 def check_sap_value_groups(item, params, info, deprecated=False):
-    crit_texts, all_texts = [], []
+    non_ok_results, all_results = [], []
     count_ok, count_crit = 0, 0
-    state = None
     for line in info:
         path = line[3]
         if item in sap_groups_of_value(path, params):
@@ -242,28 +221,27 @@ def check_sap_value_groups(item, params, info, deprecated=False):
             if line[4] == '-':
                 output = ' '.join(line[6:])
 
-            all_texts.append(path + output + " " + core_state_names[status])
-            state = max(state, status)
+            all_results.append((status, path + output))
             if status > 0:
                 count_crit += 1
-                crit_texts.append(path + output + " " + core_state_names[status])
+                non_ok_results.append((status, path + output))
             else:
                 count_ok += 1
 
-    if state is None:
+    if not all_results:
         raise MKCounterWrapped("no output about sap value groups in agent output")
 
-    yield state, "%s OK, %s Critical" % (count_ok, count_crit)
+    yield 0, "%s OK, %s Critical" % (count_ok, count_crit)
 
-    if crit_texts:
-        yield 0, ", ".join(crit_texts)
+    for result in non_ok_results:
+        yield result
 
     if deprecated:
         yield 1, "This service uses a deprecated check. Please rediscover the services "\
               "of this host to get this fixed automatically"
 
-    if all_texts:
-        yield 0, "\n%s" + "\n".join(all_texts)
+    for state, text in all_results:
+        yield state, "\n%s" % text
 
 
 # Deprecated with 1.4.0i1. Remove some versions after!

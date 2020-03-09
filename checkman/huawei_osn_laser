@@ -9,7 +9,7 @@ description:
  in dbm can be set.
 
 item:
- The laser location is the item name
+ The location of the laser
 
 inventory:
  One service for each laser is created

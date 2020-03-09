@@ -15,7 +15,7 @@ description:
  Moreover upper and lower levels are configurable. No default levels are set.
 
 item:
- The sensor name.
+ The name of the humidity sensor
 
 inventory:
  One service per sensor is created.

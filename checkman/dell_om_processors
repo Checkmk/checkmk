@@ -13,7 +13,7 @@ description:
 
 
 item:
- The numeric id of the processor reported by its position in the mib
+ The numeric ID of the processor reported by its position in the mib
 
 inventory:
  One check is created for each processor

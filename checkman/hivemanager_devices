@@ -1,4 +1,4 @@
-title: Aerohive Hivemanager Devices
+title: Aerohive Hivemanager: Devices
 agents: special
 catalog: hw/network/aerohive
 license: GPL
@@ -11,7 +11,7 @@ description:
  Program is used. You can find it under the name <i>Hivemanager</i> in Wato -> Datasource Programs.
 
 item:
- The name of the Devices
+ The hostname of the device
 
 inventory:
  One check for each device will be created

@@ -8,7 +8,7 @@ description:
  devices have the same carp state. If not, the check is critical.
 
  The check is known to run with genuscreen version 3.0 and 4.1, supports
- genuas regular enterprise id 3717 as well as the id 3137 which was
+ genuas regular enterprise ID 3717 as well as the ID 3137 which was
  introduced in a bug in some versions of genuscreen.
 
 inventory:

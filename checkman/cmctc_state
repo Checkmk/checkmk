@@ -9,9 +9,6 @@ description:
  as well as the status of connected units and sensors are
  handled in the corresponding subchecks.
 
-item:
- No item.
-
 inventory:
  One check per host will be created.
 

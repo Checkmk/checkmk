@@ -1,4 +1,4 @@
-title: AKCP Expansion Sensor Temperature
+title: AKCP securityProbe: Temperature
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

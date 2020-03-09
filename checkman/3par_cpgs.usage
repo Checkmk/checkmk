@@ -9,5 +9,10 @@ description:
  filesystem. You can define thresholds as known by other
  filesystem checks.
 
+item:
+ The item is {{SAUsage}} (Snapshot administration usage),
+ {{SDUsage}} (Snapshot data space usage) or {{UsrUsage}} (User data space usage)
+ and prefixed with the name of the {{CPG}} (Common Provisioning Group).
+
 inventory:
  One service is created for each usage type of a CPG member.

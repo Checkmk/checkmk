@@ -1,4 +1,4 @@
-title: Fortinet FortiSandbox Queues
+title: Fortinet FortiSandbox: Queues
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL
@@ -8,6 +8,9 @@ description:
  files queues on Fortinet Fortisanbox appliances. By default the
  check is always {OK}, but individual levels for {WARN} and {CRIT}
  can be configured.
+
+item:
+ Type of queue (i.e. {{Executable}}, {{PDF}}, ...)
 
 inventory:
  One check per queue will be created.

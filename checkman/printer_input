@@ -17,6 +17,9 @@ description:
  According the PRINTER-MIB it's possible that a printer couldn't determine
  how much is remaining in a supply, so the printer says "at least one remaining".
 
+item:
+ Name of the printer (if set) otherwise the description, type or index of the printer
+
 inventory:
  One check is being created for each unit with a unique name.
 

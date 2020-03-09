@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # There are different types of information. Can we handle them in a
 # general way? There are:
@@ -165,7 +145,12 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
 
 def check_mssql_counters_cache_hits(item, params, parsed):
     obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
+
+    if node_data is None:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
     for node_name, counters in node_data.items():
         value = counters.get(counter)
@@ -221,9 +206,9 @@ check_info['mssql_counters.cache_hits'] = {
 
 def check_mssql_counters_transactions(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -267,9 +252,9 @@ check_info['mssql_counters.transactions'] = {
 
 def check_mssql_counters_locks(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -336,9 +321,9 @@ def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
 
 def check_mssql_counters_sqlstats(item, params, parsed):
     obj, instance, counter = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -385,9 +370,9 @@ check_info["mssql_counters.sqlstats"] = {
 
 def check_mssql_counters_pageactivity(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -521,9 +506,9 @@ check_info["mssql_counters.locks_per_batch"] = {
 
 def check_mssql_file_sizes(item, params, parsed):
     obj, instance = item.split()
-    node_data = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance))
 
-    if not any(node_data.values()):
+    if node_data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")

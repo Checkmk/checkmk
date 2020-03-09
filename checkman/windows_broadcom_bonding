@@ -10,7 +10,7 @@ description:
  gets WARN.
 
 item:
- The name of the bonding interface, etc {Bond_10.4}.
+ The name of the bonding interface
 
 inventory:
  One check per {active} bonding interface will be created.

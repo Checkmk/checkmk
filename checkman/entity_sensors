@@ -1,4 +1,4 @@
-title: ENTITY-SENSORS MIB: Temperature
+title: Palo Alto Networks Series 200/3000: Temperature
 agents: snmp
 catalog: hw/environment/palo_alto
 license: GPL

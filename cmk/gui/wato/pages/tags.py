@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
@@ -151,15 +131,19 @@ class ModeTags(ABCTagMode):
     def _delete_tag_group(self):
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
-        message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
-        if message is True:  # no confirmation yet
-            c = wato_confirm(
-                _("Confirm deletion of the tag group '%s'") % del_id,
-                _("Do you really want to delete the tag group '%s'?") % del_id)
-            if c is False:
-                return ""
-            elif c is None:
-                return None
+        if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
+                del_id):
+            message = _("Transformed the user tag group \"%s\" to builtin.") % del_id
+        else:
+            message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
+            if message is True:  # no confirmation yet
+                c = wato_confirm(
+                    _("Confirm deletion of the tag group '%s'") % del_id,
+                    _("Do you really want to delete the tag group '%s'?") % del_id)
+                if c is False:
+                    return ""
+                elif c is None:
+                    return None
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -169,7 +153,32 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
+
+    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
+        """The "Agent type" tag group was user defined in previous versions
+
+        Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
+        for further information
+
+        In case a user wants to remove such a "agent" tag group do not perform the
+        usual validations since this is not a real delete operation because it just
+        replaces a custom group with a builtin one.
+        """
+        if del_id != "agent":
+            return False
+
+        builtin_tg = self._builtin_config.get_tag_group("agent")
+        if builtin_tg is None:
+            return False
+
+        user_tg = self._tag_config.get_tag_group("agent")
+        if user_tg is None:
+            return False
+
+        # When the tag choices are matching the builtin tag group choices
+        # simply allow removal without confirm
+        return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self):
         del_id = html.get_item_input("_del_aux",
@@ -205,8 +214,8 @@ class ModeTags(ABCTagMode):
             return "tags", message if message is not True else None
 
     def _move_tag_group(self):
-        move_nr = html.get_integer_input("_move")
-        move_to = html.get_integer_input("_index")
+        move_nr = html.request.get_integer_input_mandatory("_move")
+        move_to = html.request.get_integer_input_mandatory("_index")
 
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
@@ -675,7 +684,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
 
         return "tags"
 
@@ -718,13 +727,17 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(
-                            title=_("Tag ID"),
-                            size=16,
-                            regex="^[-a-z0-9A-Z_]*$",
-                            none_is_empty=True,
-                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                          "0-9, _ and - are allowed."),
+                        Transform(
+                            TextAscii(
+                                title=_("Tag ID"),
+                                size=16,
+                                regex="^[-a-z0-9A-Z_]*$",
+                                regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                              "0-9, _ and - are allowed."),
+                                allow_empty=True,
+                            ),
+                            forth=lambda x: "" if x is None else x,
+                            back=lambda x: None if not x else x,
                         ),
                         TextUnicode(
                             title=_("Title") + "*",
@@ -995,7 +1008,7 @@ def _change_host_tags_in_folders(operation, mode, folder):
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
                 operation, mode, subfolder)
             affected_folders += aff_folders

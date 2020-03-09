@@ -1,20 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import socket
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk
 
 
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setattr(cmk, "omd_site", lambda: "NO_SITE")
-
-
-# Unit tests should not be executed in site.
-# -> Disabled site fixture for them
-@pytest.fixture(scope="session")
-def site(request):
-    pass
 
 
 # TODO: This fixes our unit tests when executing the tests while the local

@@ -1,0 +1,1 @@
+../../../tests/unit/inventory/test_inv_docker_node_info.py

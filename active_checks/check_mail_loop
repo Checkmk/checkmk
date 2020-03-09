@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import email
 import email.utils
@@ -36,6 +16,7 @@ import random
 import re
 import smtplib
 import socket
+import ssl
 import sys
 import time
 
@@ -156,7 +137,6 @@ def save_expected_mails(expected_mails, status_path):
 
 
 def add_starttls_support(self, conn_timeout):
-    import ssl  # pylint: disable=import-outside-toplevel
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
     if typ != 'OK':
@@ -168,7 +148,7 @@ def add_starttls_support(self, conn_timeout):
 
     cap = 'CAPABILITY'
     self._simple_command(cap)
-    if not cap in self.untagged_responses:
+    if cap not in self.untagged_responses:
         raise self.error('no CAPABILITY response from server')
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
@@ -353,7 +333,8 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(obsolete_mails.values()):
+        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
+                obsolete_mails.values()):
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):

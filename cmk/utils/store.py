@@ -1,32 +1,11 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
-
 import sys
 import ast
 from contextlib import contextmanager
@@ -38,7 +17,7 @@ import pprint
 import tempfile
 import time
 from typing import (  # pylint: disable=unused-import
-    Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr, cast,
+    Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast,
 )
 import six
 
@@ -157,7 +136,7 @@ def load_mk_file(path, default=None, lock=False):
     try:
         try:
             with path.open(mode="rb") as f:
-                exec (f.read(), globals(), default)
+                exec(f.read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
@@ -282,18 +261,17 @@ def save_object_to_file(path, data, pretty=False):
     # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:
-            formated_data = pprint.pformat(data)
+            formatted_data = pprint.pformat(data)
         except UnicodeDecodeError:
             # When writing a dict with unicode keys and normal strings with garbled
             # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
             # example:
             #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
             # Catch the exception and use repr() instead
-            formated_data = repr(data)
+            formatted_data = repr(data)
     else:
-        formated_data = repr(data)
-
-    save_file(path, "%s\n" % formated_data)
+        formatted_data = repr(data)
+    save_file(path, "%s\n" % formatted_data)
 
 
 def save_text_to_file(path, content, mode=0o660):

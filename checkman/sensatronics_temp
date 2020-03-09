@@ -1,4 +1,4 @@
-title: Sensatronics E4 Temperature sensors
+title: Sensatronics E4: Temperature sensors
 agents: snmp
 catalog: hw/environment/sensatronics
 license: GPL
@@ -8,7 +8,7 @@ description:
  attached to a Sensatronics E4 Device
 
 item:
- Combination of IO unit number (3-6) and sensors Name
+ The name of the sensor
 
 inventory:
  All available temperature sensors are automatically inventorized.

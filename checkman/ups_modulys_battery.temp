@@ -7,6 +7,9 @@ description:
  Monitors battery temperature. The temperature sensor on this device is optional
  and needs to be installed for this check to work.
 
+item:
+ The fixed statement {{Battery}}
+
 inventory:
  Creates one item if the sensor is connected.
 

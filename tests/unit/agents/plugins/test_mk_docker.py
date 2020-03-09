@@ -1,7 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=protected-access,redefined-outer-name
 import hashlib
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module  # pylint: disable=import-error
 
 
@@ -11,7 +16,7 @@ def mk_docker():
 
 
 PLUGIN_CHECKSUMS = {
-    '0.1': '5a82452c9374dec3b6b3beca042b9765',
+    '0.1': 'b4610c4c3a9d079680af109aa47f2daa',
 }
 
 

@@ -1,4 +1,4 @@
-title: Citrix Controller Licensing
+title: Citrix XenApp Controller: Licensing
 agents: windows
 catalog: app/citrix
 license: GPL
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the licensing state of Citrix XenApp 7.x controllers.
  The citrix_farm.ps1 plugin must be installed on the controller, and
- the Check_MK agent must be executed with Citrix Admin permissions
+ the Checkmk agent must be executed with Citrix Admin permissions
  for this to work. The licensing states "ServerNotSpecified", "LicenseNotInstalled",
  "LicenseExpired", "Incompatible", and "Failed" failed are treated as CRIT,
  as are the licensing grace states "InEmergencyGracePeriod" and "GracePeriodExpired".

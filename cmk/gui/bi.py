@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import errno
@@ -468,7 +448,7 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return hashlib.md5(repr(entry)).hexdigest()
+            return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
 
         for group in {g for g in groups}:  # Flattened groups
             new_entries_hash = list(map(get_hash, new_entries))
@@ -1675,8 +1655,7 @@ def get_services_filtered_by_host_name(host_re):
             entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname[middle]]
             host_re = "(.*)"
 
-    elif not honor_site and not '*' in host_re and not '$' in host_re \
-         and not '|' in host_re and not '[' in host_re:
+    elif not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
@@ -2047,8 +2026,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
         return found
 
     honor_site = SITE_SEP in host_re
-    if not honor_site and not '*' in host_re and not '$' in host_re \
-        and not '|' in host_re and '[' not in host_re:
+    if not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
@@ -2622,9 +2600,9 @@ def page_all():
 
 @cmk.gui.pages.register("bi_set_assumption")
 def ajax_set_assumption():
-    site = html.get_unicode_input("site")
-    host = html.get_unicode_input("host")
-    service = html.get_unicode_input("service")
+    site = html.request.get_unicode_input("site")
+    host = html.request.get_unicode_input("host")
+    service = html.request.get_unicode_input("service")
     if service:
         key = (site, host, service)
     else:
@@ -2639,7 +2617,7 @@ def ajax_set_assumption():
 
 @cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
-    path_id = html.get_unicode_input("path")
+    path_id = html.request.get_unicode_input("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
@@ -2653,9 +2631,9 @@ def ajax_save_treestate():
 
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
-    aggr_group = html.get_unicode_input("group")
+    aggr_group = html.request.get_unicode_input("group")
     reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
-    aggr_title = html.get_unicode_input("title")
+    aggr_title = html.request.get_unicode_input("title")
     omit_root = bool(html.request.var("omit_root"))
     only_problems = bool(html.request.var("only_problems"))
 

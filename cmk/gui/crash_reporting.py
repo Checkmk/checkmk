@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import base64
@@ -36,6 +16,9 @@ from typing import Dict, Text, Optional  # pylint: disable=unused-import
 import six
 
 import livestatus
+
+import cmk.utils.crash_reporting
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -54,7 +37,6 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-import cmk.utils.crash_reporting
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 
@@ -134,11 +116,11 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.get_unicode_input("crash_id")
+        self._crash_id = html.request.get_unicode_input("crash_id")
         if not self._crash_id:
             raise MKUserError("crash_id", _("The parameter \"%s\" is missing.") % "crash_id")
 
-        self._site_id = html.get_unicode_input("site")
+        self._site_id = html.request.get_unicode_input("site")
         if not self._site_id:
             raise MKUserError("site", _("The parameter \"%s\" is missing.") % "site")
 
@@ -157,7 +139,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def _get_crash_report_row(self, crash_id, site_id):
         # type: (Text, Text) -> Optional[Dict[Text, Text]]
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(bytes(site_id))],
+            only_sites=[config.SiteId(six.ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -545,7 +527,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return base64.b64decode(local_vars)
+    return ensure_unicode(base64.b64decode(local_vars))
 
 
 def format_params(params):

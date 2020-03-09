@@ -1,6 +1,6 @@
 title: DDN S2A: IO
 agents: ddn_s2a
-catalog: storage/other
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

@@ -1,47 +1,31 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List  # pylint: disable=unused-import
+from typing import Union, Tuple, List, Text  # pylint: disable=unused-import
 import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 from .context_buttons import global_buttons
+
+NewMode = Union[None, bool, str]
 
 
 class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
+        # type: () -> None
         super(WatoMode, self).__init__()
         self._from_vars()
 
     @classmethod
     @abc.abstractmethod
     def permissions(cls):
-        # type: () -> List[str]
+        # type: () -> List[PermissionName]
         """permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*
@@ -56,21 +40,27 @@ class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError("%s misses name()" % cls.__name__)
 
     def _from_vars(self):
+        # type: () -> None
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
         pass
 
     def title(self):
+        # type: () -> Text
         return _("(Untitled module)")
 
     def buttons(self):
+        # type: () -> None
         global_buttons()
 
     def action(self):
+        # type: () -> Union[NewMode, Tuple[NewMode, Text]]
         pass
 
     def page(self):
+        # type: () -> None
         html.show_message(_("(This module is not yet implemented)"))
 
     def handle_page(self):
+        # type: () -> None
         return self.page()

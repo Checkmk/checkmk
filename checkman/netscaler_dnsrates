@@ -1,4 +1,4 @@
-title: Citrix Netscaler DNS Rates
+title: Citrix Netscaler: DNS Rates
 agents: snmp
 catalog: app/netscaler
 license: GPL
@@ -16,7 +16,3 @@ description:
 
 inventory:
  One service per loadbalancer device will be created.
-
-item:
- The name of counter.
-

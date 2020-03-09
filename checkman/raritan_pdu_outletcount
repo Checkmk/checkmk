@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU outlet count
+title: Raritan PX-2000 family: PDU outlet count
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL

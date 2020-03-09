@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO:
 # - The classes here mix two things:
@@ -40,8 +20,10 @@
 import os
 import json
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -165,16 +147,13 @@ class Base(object):
             el = topics.setdefault(topic, [])
             el += elements
 
-        # Sort topics and elements in the topics
+        # Sort elements of each topic
         for topic in topics.values():
             topic.sort()
 
-        sorted_topics = topics.items()
-        sorted_topics.sort(key=lambda x: x[1][0])
-
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
-        for topic, elements in sorted_topics:
+        for topic, elements in sorted(topics.items(), key=lambda x: x[1][0]):
             topic_keys = []
 
             for _unused_order, key, vs in elements:
@@ -273,9 +252,7 @@ class Base(object):
     # is sorted by the title of the instance
     @classmethod
     def instances_sorted(cls):
-        instances = cls.__instances.values()
-        instances.sort(key=lambda x: x.title())
-        return instances
+        return sorted(cls.__instances.values(), key=lambda x: x.title())
 
     # Stub function for the list of all pages. In case of Overridable
     # several instances might exist that overlay each other. This
@@ -550,12 +527,12 @@ class Overridable(Base):
         #    continue # not allowed to see this view
 
         # TODO: Permissions
-        ### visual = visuals[(owner, visual_name)]
-        ### if owner == config.user.id or \
-        ###    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
-        ###     custom.append((owner, visual_name, visual))
-        ### elif visual["public"] and owner == "":
-        ###     builtin.append((owner, visual_name, visual))
+        # ## visual = visuals[(owner, visual_name)]
+        # ## if owner == config.user.id or \
+        # ##    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
+        # ##     custom.append((owner, visual_name, visual))
+        # ## elif visual["public"] and owner == "":
+        # ##     builtin.append((owner, visual_name, visual))
 
     @classmethod
     def permitted_instances_sorted(cls):
@@ -781,9 +758,9 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user in os.listdir(config.config_dir):
-            user = user.decode("utf-8")
+            user = ensure_unicode(user)
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, user.encode("utf-8"),
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
                                               cls.type_name())
                 if not os.path.exists(path):
                     continue
@@ -877,8 +854,8 @@ class Overridable(Base):
         if has_reporting():
             html.context_button(_("Reports"), "edit_reports.py", "report")
 
-        ### if render_custom_context_buttons:
-        ###     render_custom_context_buttons()
+        # ## if render_custom_context_buttons:
+        # ##     render_custom_context_buttons()
 
         for other_type_name, other_pagetype in page_types.items():
             if cls.type_name() != other_type_name:
@@ -994,8 +971,8 @@ class Overridable(Base):
                     # Custom columns specific to that page type
                     instance.render_extra_columns(table)
 
-                    ### for title, renderer in custom_columns:
-                    ###     table.cell(title, renderer(visual))
+                    # ## for title, renderer in custom_columns:
+                    # ##     table.cell(title, renderer(visual))
 
                     # Owner
                     if instance.is_builtin():
@@ -1008,8 +985,8 @@ class Overridable(Base):
 
                     # FIXME: WTF?!?
                     # TODO: Haeeh? Another custom columns
-                    ### if render_custom_columns:
-                    ###     render_custom_columns(visual_name, visual)
+                    # ## if render_custom_columns:
+                    # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
                 html.button("_bulk_delete_%s" % what,
@@ -1107,7 +1084,8 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.get_unicode_input("load_user")  # FIXME: Change varname to "owner"
+                load_user = html.request.get_unicode_input(
+                    "load_user")  # FIXME: Change varname to "owner"
 
                 try:
                     page = cls.instance((load_user, page_name))

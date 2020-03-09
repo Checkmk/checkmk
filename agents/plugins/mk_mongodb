@@ -1,4 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Monitor MongoDB on Linux
 
 This agent plugin creates various sections out of the MongoDB server status information.
@@ -86,8 +90,7 @@ def section_flushing(server_status):
     sys.stdout.write("<<<mongodb_flushing>>>\n")
     sys.stdout.write("average_ms %s\n" % flushing_info.get("average_ms", "n/a"))
     sys.stdout.write("last_ms %s\n" % flushing_info.get("last_ms", "n/a"))
-    sys.stdout.write("flushed %s\n" %
-                     flushing_info.get("ffrom bson.json_util import dumpslushes", "n/a"))
+    sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
 
 
 def sections_replica(server_status):
@@ -105,9 +108,17 @@ def sections_replica(server_status):
 
 
 def sections_replica_set(client):
+    try:
+        rep_set_status = client.admin.command("replSetGetStatus")
+    except pymongo.errors.OperationFailure as e:
+        sys.stderr.write("%s\n" % e)
+        return
+
     sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
-    rep_set_status = client.admin.command("replSetGetStatus")
-    sys.stdout.write("%s\n" % json.dumps(json.loads(dumps(rep_set_status)), separators=(',', ':')))
+    sys.stdout.write("%s\n" % json.dumps(
+        json.loads(dumps(rep_set_status)),
+        separators=(',', ':'),
+    ),)
 
 
 def sections_replication_info(client, databases):
@@ -488,12 +499,19 @@ def section_collections(client, databases):
                 "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime", "$gleStats",
                 "$configServerState", "$clusterTime", "shards"
             ])
-            collection["indexStats"] = indexes_dict.get(database_name,
-                                                        {}).get(collection_name,
-                                                                {}).get("indexStats", {})
+            if indexes_dict is None:
+                continue
+            collection["indexStats"] = indexes_dict.get(database_name, {}).get(collection_name,
+                                                                               {}).get(
+                                                                                   "indexStats",
+                                                                                   {},
+                                                                               )
 
-    sys.stdout.write("%s\n" %
-                     json.dumps(json.loads(dumps(database_collection)), separators=(',', ':')))
+    sys.stdout.write(
+        "%s\n" % json.dumps(
+            json.loads(dumps(database_collection)),
+            separators=(',', ':'),
+        ),)
     database_collection.clear()
 
 
@@ -508,10 +526,15 @@ def _get_indexes_information(client, databases):
     for database_name in databases:
         database = databases.get(database_name)
         for collection_name in database.get("collections", []):
-            indexes_dict[database_name][collection_name]["indexStats"] = client[database_name][
-                collection_name].aggregate([{
-                    "$indexStats": {}
-                }])
+            try:
+                # $indexStat only available since mongodb v. 3.2
+                indexes_dict[database_name][collection_name]["indexStats"] = client[database_name][
+                    collection_name].aggregate([{
+                        "$indexStats": {},
+                    }])
+            except pymongo.errors.OperationFailure as e:
+                sys.stderr.write("%s\n" % e)
+                return
 
     return indexes_dict
 

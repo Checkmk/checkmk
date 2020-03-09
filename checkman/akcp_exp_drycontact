@@ -1,4 +1,4 @@
-title: AKCP Expansion Dry Contact Sensor
+title: AKCP securityProbe: Dry contact
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

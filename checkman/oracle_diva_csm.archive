@@ -9,5 +9,8 @@ description:
   It is in status {OK} when the device is in status ONLINE, {CRIT} when the
   device is OFFLINE and {WARN} in device status UNKNOWN.
 
+item:
+ {{Manager}} plus the ID of the device
+
 inventory:
   Exactly one item is generated.

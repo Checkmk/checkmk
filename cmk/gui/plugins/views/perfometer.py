@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
@@ -46,8 +26,9 @@ from cmk.gui.plugins.views import (
     Sorter,
     is_stale,
     display_options,
-    pnp_url,
 )
+
+from cmk.gui.plugins.views.graphs import cmk_graph_url
 
 
 class Perfometer(object):
@@ -63,7 +44,7 @@ class Perfometer(object):
         self._parse_perf_data()
 
     def _parse_perf_data(self):
-        perf_data_string = self._row["service_perf_data"].decode("utf-8").strip()
+        perf_data_string = self._row["service_perf_data"].strip()
         if not perf_data_string:
             return
 
@@ -218,12 +199,10 @@ class PainterPerfometer(Painter):
     def ident(self):
         return "perfometer"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service Perf-O-Meter")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Perf-O-Meter")
 
     @property
@@ -263,11 +242,7 @@ class PainterPerfometer(Painter):
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) \
            and row["service_pnpgraph_present"] != 0:
-            if metrics.cmk_graphs_possible():
-                import cmk.gui.cee.plugins.views.graphs as graphs  # pylint: disable=no-name-in-module
-                url = graphs.cmk_graph_url(row, "service")
-            else:
-                url = pnp_url(row, "service")
+            url = cmk_graph_url(row, "service")
             disabled = False
         else:
             url = "javascript:void(0)"

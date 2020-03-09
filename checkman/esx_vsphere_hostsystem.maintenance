@@ -13,7 +13,7 @@ description:
 
  The behavior can be changed by a Wato rule to force Maintenance mode or not.
 
- See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ See "Monitoring VMWare ESX with Checkmk" in the online documentation
  as well.
 
 inventory:

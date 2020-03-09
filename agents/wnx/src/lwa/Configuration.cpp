@@ -287,8 +287,8 @@ void Configuration::outputConfigurables(
         }
     }
     if (!mrpe_out.empty())
-        Sink(cma::cfg::groups::kMrpe, cma::cfg::vars::kMrpeConfig, mrpe_out,
-             "");
+        Sink(cma::cfg::groups::kMrpe.data(), cma::cfg::vars::kMrpeConfig,
+             mrpe_out, "");
 }
 
 bool readConfigFile(std::istream &is, const std::string &hostname,

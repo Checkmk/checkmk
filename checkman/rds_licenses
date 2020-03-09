@@ -1,6 +1,6 @@
 title: Remote desktop licenses
 agents: windows
-catalog: os/windows
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:
@@ -8,6 +8,9 @@ description:
  2008 servers. You need the plugin {rds_licenses.vbs} to be installed
  on your windows agent. The service will go crit if all licenses are used up.
  You can configure levels for absolute and percentual used licenses.
+
+item:
+ The version of the license
 
 inventory:
  One service per license type will be created.

@@ -39,6 +39,8 @@ description:
 
  Note: This check will only be discovered, if the agent runs on the primary mongos router node.
 
+item:
+ Name of the database followed by {{.}} followed by the name of the collection
 
 inventory:
  One service is created for each collection named 'MongoDB Cluster: <database name>.<collection_name>'

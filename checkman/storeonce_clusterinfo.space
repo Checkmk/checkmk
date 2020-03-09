@@ -9,7 +9,7 @@ description:
  filesystem services. Additionally the ratio of deduplication is displayed.
 
 item:
- The item will be "Total Capacity"
+ The fixed statement {{Total Capacity}}
 
 inventory:
  Only one service is created

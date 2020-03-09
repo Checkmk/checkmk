@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB Connections
+title: AWS ApplicationELB: Connections
 agents: aws
 catalog: cloud/aws
 license: GPL

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
 
@@ -21,7 +25,6 @@ from PyPDF2 import PdfFileMerger, PdfFileReader
 
 class MyDocTemplate(BaseDocTemplate):
     """Custom DocTemplate configured for handling of table of contents"""
-
     def __init__(self, filename, **kw):
         self.allowSplitting = 0
         BaseDocTemplate.__init__(self, filename, **kw)
@@ -70,13 +73,12 @@ def main():
         raise OSError
 
     registerFont(TTFont('Calibri', 'Calibri.ttf'))
-    doc = SimpleDocTemplate(
-        str(path_pdf),
-        pagesize=letter,
-        bottomMargin=.4 * inch,
-        topMargin=.6 * inch,
-        rightMargin=.8 * inch,
-        leftMargin=.8 * inch)
+    doc = SimpleDocTemplate(str(path_pdf),
+                            pagesize=letter,
+                            bottomMargin=.4 * inch,
+                            topMargin=.6 * inch,
+                            rightMargin=.8 * inch,
+                            leftMargin=.8 * inch)
     toc = TableOfContents()
     toc.levelStyles = [
         PS(fontName='Calibri',

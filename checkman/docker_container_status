@@ -12,8 +12,5 @@ description:
  If you are configuring the plugin via the configuration file, make sure you do not skip the
  section "docker_containers_client" (the default setting is fine).
 
-item:
- None
-
 inventory:
  One service is discovered for every container that is running or has the restart policy set to 'always'.

@@ -1,4 +1,4 @@
-title: AKCP daisyTemp Sensor
+title: AKCP daisyTemp: Temperature
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

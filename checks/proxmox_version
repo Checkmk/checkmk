@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+def discovery_proxmox_version(parsed):
+    """Return version info found on discovery for later comparison"""
+    return [(None, {"discovered_release": parsed["release"]})]
+
+
+def check_proxmox_version(item, params, parsed):
+    """Check current version against the one found on discovery"""
+    def version_to_tuple(string):
+        return tuple(int(elem) for elem in string.split("."))
+
+    discovered_version, current_version = params["discovered_release"], parsed["release"]
+    state = (
+        OK if version_to_tuple(current_version) >= version_to_tuple(discovered_version) else  #
+        WARN)
+    yield state, "Version running: %s, Version during discovery: %s" % (  #
+        current_version, discovered_version)
+
+
+check_info["proxmox_version"] = {
+    "parse_function": parse_proxmox,
+    "inventory_function": discovery_proxmox_version,
+    "check_function": check_proxmox_version,
+    "service_description": "Proxmox version",
+    "includes": ["proxmox.include"],
+}

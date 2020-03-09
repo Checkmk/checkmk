@@ -1,28 +1,9 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import functools
 import os
 import traceback
@@ -31,13 +12,11 @@ import six
 import livestatus
 
 import cmk.gui.crash_reporting as crash_reporting
-import cmk.gui.htmllib
-import cmk.gui.http
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config, login, pages, modules
+from cmk.gui import config, login, pages, modules, http, htmllib
 from cmk.gui.exceptions import (
     MKUserError,
     MKConfigError,
@@ -47,7 +26,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import AppContext, RequestContext, html, request, response
+from cmk.gui.globals import html, request, response, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
@@ -88,7 +67,6 @@ def _noauth(func):
     #
     # Currently these are:
     #  * noauth:run_cron
-    #  * noauth:pnp_template
     #  * noauth:deploy_agent
     #  * noauth:ajax_graph_images
     #  * noauth:automation
@@ -218,7 +196,7 @@ def _load_all_plugins():
 
 def _localize_request():
     previous_language = cmk.gui.i18n.get_current_language()
-    user_language = html.get_ascii_input("lang", config.user.language)
+    user_language = html.request.get_ascii_input("lang", config.user.language)
 
     html.set_language_cookie(user_language)
     cmk.gui.i18n.localize(user_language)
@@ -244,23 +222,6 @@ def _render_exception(e, title=""):
         html.footer()
 
 
-def with_context_middleware(app):
-    """Middleware which constructs the right context on each request.
-    """
-    @functools.wraps(app)
-    def with_context(environ, start_response):
-        req = cmk.gui.http.Request(environ)
-        resp = cmk.gui.http.Response(is_secure=req.is_secure)
-
-        with AppContext(app), RequestContext(cmk.gui.htmllib.html(req, resp)):
-            config.initialize()
-            html.init_modes()
-
-            return app(environ, start_response)
-
-    return with_context
-
-
 def profiling_middleware(func):
     """Wrap an WSGI app in a profiling context manager"""
     def profiler(environ, start_response):
@@ -276,11 +237,16 @@ def profiling_middleware(func):
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
-        self.wsgi_app = with_context_middleware(self.wsgi_app)
+        self.wsgi_app = self.wsgi_app
         self.wsgi_app = profiling_middleware(self.wsgi_app)
 
     def __call__(self, environ, start_response):
-        return self.wsgi_app(environ, start_response)
+        req = http.Request(environ)
+        resp = http.Response(is_secure=req.is_secure)
+        with AppContext(self), RequestContext(req=req, resp=resp, html_obj=htmllib.html(req, resp)):
+            config.initialize()
+            html.init_modes()
+            return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
         """Is called by the WSGI server to serve the current page"""

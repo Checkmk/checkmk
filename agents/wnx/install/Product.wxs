@@ -272,43 +272,55 @@ just to signal that real build script was not called -->
     </DirectoryRef>
     
     <DirectoryRef Id="install">
-      <Component Id="check_mk_ini_" Guid="{9B0003D1-BBF0-4F6D-8CFE-7F74C1EDE1B0}">
-        <File Id="check_mk_ini"
-              Source="resources\check_mk.ini"
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="2"/>
-      </Component>
-      <Component Id="check_mk_install_yml_" Guid="{31886DF5-F17B-46AD-BEBF-4B4925A18390}">
-        <File Id="check_mk_install_yml"
-              Source="resources\check_mk.install.yml"
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="2"/>
-      </Component>
-      <Component Id="plugins_cap_" Guid="{01620CDE-E8AD-4DB9-926D-430D8C140340}">
-        <File Id="plugins_cap"
-              Source="resources\plugins.cap"
-              KeyPath="yes"
-              Checksum="yes" 
-              DiskId="2"/>
-      </Component>
+        <Component Id="check_mk_ini_" Guid="{9B0003D1-BBF0-4F6D-8CFE-7F74C1EDE1B0}">
+            <File Id="check_mk_ini"
+                  Source="resources\check_mk.ini"
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="2"/>
+        </Component>
+        
+        <Component Id="check_mk_install_yml_" Guid="{31886DF5-F17B-46AD-BEBF-4B4925A18390}">
+            <File Id="check_mk_install_yml"
+                  Source="resources\check_mk.install.yml"
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="2"/>
+         </Component>
+        
+        
+        <Component Id="plugins_cap_" Guid="{01620CDE-E8AD-4DB9-926D-430D8C140340}">
+            <File Id="plugins_cap"
+                  Source="resources\plugins.cap"
+                  KeyPath="yes"
+                  Checksum="yes" 
+                  DiskId="2"/>
+        </Component>
       
-      <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
-        <File Id="checkmk.dat"
-              Source="resources\checkmk.dat" 
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="2" />
-      </Component>
+        <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
+            <File Id="checkmk.dat"
+                  Source="resources\checkmk.dat" 
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="2" />
+        </Component>
 
-      <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
-        <File Id="check_mk.user.yml" 
-              Source="resources\check_mk.user.yml" 
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="1" />
-      </Component>
+        <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
+            <File Id="check_mk.user.yml" 
+                  Source="resources\check_mk.user.yml" 
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="1" />
+        </Component>
+
+        <!-- Modules -->
+        <Component Id="python_3.8.zip" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
+            <File Id="python_3.8.zip"
+                Source="resources\modules\python-3.8.zip"
+                KeyPath="yes"
+                Checksum="yes"
+                DiskId="2"/>
+        </Component>
 
 
     </DirectoryRef>
@@ -438,6 +450,9 @@ just to signal that real build script was not called -->
       <ComponentRef Id="plugins_cap_" />
       <ComponentRef Id="checkmk.dat" />
       <ComponentRef Id="check_mk.user.yml" />
+        
+      <!-- Modules -->
+      <ComponentRef Id="python_3.8.zip" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
@@ -480,7 +495,8 @@ just to signal that real build script was not called -->
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
-    <!-- must be disabled to avoid hitting check box
+    <Property Id="WIXUI_MIGRATELEGACY" Value="1" />
+      <!-- must be disabled to avoid hitting check box
     <Property Id="WIXUI_REMOVELEGACY" Value="0" />
     -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
@@ -591,8 +607,16 @@ just to signal that real build script was not called -->
           <RegistryValue Type="string"
                          Name="Remove_Legacy"
                          Value="[WIXUI_REMOVELEGACY]"/>
-          
-          <RegistryValue Type="string"
+
+            <RegistryValue Type="string"
+                           Name="Clean_Installation"
+                           Value="[WIXUI_CLEANINSTALL]"/>
+
+            <RegistryValue Type="string"
+                           Name="Migration"
+                           Value="[WIXUI_MIGRATELEGACY]"/>
+
+            <RegistryValue Type="string"
                          Name="Install_Service"
                          Value="[INSTALLSERVICE]"/>
         </RegistryKey>

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
 import sys
@@ -30,8 +10,7 @@ import ast
 import errno
 import os
 import time
-from typing import Dict, List  # pylint: disable=unused-import
-import six
+from typing import Dict  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -40,6 +19,7 @@ else:
 
 import cmk.utils
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -75,8 +55,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    # TODO: once we know all of these are unicode, remove this line
-    write_tokens = (t if isinstance(t, six.text_type) else t.encode("utf-8") for t in write_tokens)
+    write_tokens = (ensure_unicode(t) for t in write_tokens)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:
@@ -93,7 +72,7 @@ def log_audit(linkinfo, action, message, user_id=None):
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
-    message = escaping.escape_attribute(message).strip()
+    message = escaping.escape_text(message).strip()
     log_entry(linkinfo, action, message, user_id)
 
 
@@ -156,7 +135,7 @@ class ActivateChangesWriter(object):
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)
         # escaped / allowed HTML and strings to be escaped.
-        text = escaping.escape_attribute(text)
+        text = escaping.escape_text(text)
 
         SiteChanges(site_id).save_change({
             "id": change_id,
@@ -202,7 +181,7 @@ class SiteChanges(object):
                 pass
             else:
                 raise
-        except:
+        except Exception:
             if lock:
                 store.release_lock(path)
             raise

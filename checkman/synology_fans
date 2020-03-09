@@ -6,6 +6,8 @@ distribution: check_mk
 description:
  This check returns {CRIT} if neither the CPU or the System FAN status is {OK}.
 
+item:
+ One of the two statements: {{System}}, {{CPU}}
 
 inventory:
  One check will be created

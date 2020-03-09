@@ -9,5 +9,8 @@ description:
  in the output of the filer. Otherwise the state will change to
  {UNKNOWN}.
 
+item:
+ Name of the host.
+
 inventory:
  One service is created for each connected host.

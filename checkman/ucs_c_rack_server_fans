@@ -40,7 +40,7 @@ description:
    unknown
 
 item:
- One item for every fan.
+ {{Rack unit}} followed by the index of the rack followed by {{Module}} and the module index
 
 Inventory:
  One service for every unit requested by the Special Agent agent_ucs_bladecenter.

@@ -1,32 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import time
 from typing import Dict, Any  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
@@ -59,7 +40,7 @@ from cmk.gui.valuespec import (
 def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
+    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
     messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
@@ -88,7 +69,7 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
+    path = config.config_dir + "/" + six.ensure_str(user_id) + '/messages.mk'
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, messages)
 
@@ -359,7 +340,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", subject.encode("utf-8"), user['email'].encode("utf-8")]
+    command = ["mail", "-s", six.ensure_str(subject), six.ensure_str(user['email'])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

@@ -1,41 +1,23 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import ast
 import time
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List  # pylint: disable=unused-import
+
 import six
+from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
@@ -49,8 +31,12 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
 from .host_sections import AbstractHostSections
 
-PluginNameFilterFunction = Callable[[snmp_utils.SNMPHostConfig, str, bool, bool],
-                                    Set[CheckPluginName]]
+PluginNameFilterFunction = Callable[[
+    snmp_utils.SNMPHostConfig,
+    NamedArg(str, 'on_error'),
+    NamedArg(bool, 'do_snmp_scan'),
+    NamedArg(bool, 'for_mgmt_board')
+], Set[CheckPluginName]]
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -227,8 +213,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         try:
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
-            # mypy complains: Unexpected keyword argument "for_mgmt_board"
-            check_plugin_names = self._check_plugin_name_filter_func(  # type: ignore
+            check_plugin_names = self._check_plugin_name_filter_func(
                 self._snmp_config,
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,
@@ -238,7 +223,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def _execute(self):
         # type: () -> RawSNMPData
-        import cmk.base.inventory_plugins
+        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
 
         self._verify_ipaddress()
 
@@ -254,7 +239,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             has_snmp_info = False
             section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
             if section_name in config.snmp_info:
-                oid_info = config.snmp_info[section_name]  # type: ignore
+                oid_info = config.snmp_info[section_name]  # type: ignore[assignment]
             elif section_name in cmk.base.inventory_plugins.inv_info:
                 oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
                 if oid_info:
@@ -328,7 +313,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = {}  #  type: PersistedSNMPSections
+        persisted_sections = {}  # type: PersistedSNMPSections
 
         for section_name, section_content in raw_data.items():
             check_interval = self._host_config.snmp_check_interval(section_name)

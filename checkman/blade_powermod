@@ -8,8 +8,9 @@ description:
  center. The state is critical if the power module in question
  is not present or not in state OK.
 
+item:
+ Index of power module
+
 inventory:
  All power modules are detected automatically
-
-
 

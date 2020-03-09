@@ -1,4 +1,4 @@
-title: Arbor Peakflow SP CPU load
+title: Arbor Peakflow SP: CPU load
 agents: snmp
 catalog: hw/network/arbor
 license: GPL

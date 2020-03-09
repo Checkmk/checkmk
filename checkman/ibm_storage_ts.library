@@ -16,5 +16,8 @@ description:
   No fault or "informational" faults lead to status {OK}, "minor" faults
   to {WARN}, "major" and "critical" faults to {CRIT}
 
+item:
+ ID of the library
+
 inventory:
   One item per connected library is created.

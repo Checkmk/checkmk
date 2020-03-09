@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import socket
@@ -30,9 +10,11 @@ import time
 import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Pattern, AnyStr, cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
-    NoReturn, Any,
+    Pattern, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn, Any,
 )
+import six
+
+import livestatus
 
 from cmk.utils.regex import regex
 import cmk.utils.misc
@@ -44,7 +26,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 
-import cmk.base
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
 import cmk.base.console as console
@@ -61,11 +43,12 @@ import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.exceptions import MKParseFunctionError
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+import cmk.base.utils
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, CheckParameters, DiscoveredService, Item, Service, ServiceState, Metric,
-    RulesetName, HostState, FinalSectionContent,
+    CheckPluginName, CheckParameters, DiscoveredService, Item, ServiceState, Metric, RulesetName,
+    HostState, FinalSectionContent,
 )
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
@@ -305,7 +288,7 @@ def discover_on_host(config_cache,
         return counts, ""
 
     if service_filter is None:
-        service_filter = lambda hostname, check_plugin_name, item: True
+        service_filter = _accept_all_services
 
     err = None
     discovered_host_labels = DiscoveredHostLabels()
@@ -395,6 +378,10 @@ def discover_on_host(config_cache,
     return counts, err
 
 
+def _accept_all_services(_hostname, _check_plugin_name, _item):
+    return True
+
+
 #.
 #   .--Discovery Check-----------------------------------------------------.
 #   |           ____  _                   _               _                |
@@ -479,9 +466,8 @@ def check_discovery(hostname, ipaddress):
 
             if params.get("inventory_rediscovery", False):
                 mode = params["inventory_rediscovery"]["mode"]
-                if unfiltered and\
-                        ((check_state == "new"      and mode in ( 0, 2, 3 )) or
-                         (check_state == "vanished" and mode in ( 1, 2, 3 ))):
+                if (unfiltered and ((check_state == "new" and mode in (0, 2, 3)) or
+                                    (check_state == "vanished" and mode in (1, 2, 3)))):
                     need_rediscovery = True
         else:
             infotexts.append(u"no %s services found" % title)
@@ -619,7 +605,7 @@ def discover_marked_hosts(core):
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
         with config.set_use_core_config(use_core_config=False):
             try:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
                 if config.monitoring_core == "cmc":
@@ -627,20 +613,27 @@ def discover_marked_hosts(core):
                 else:
                     cmk.base.core.do_restart(core)
             finally:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
 
 def _fetch_host_states():
     # type: () -> Dict[HostName, HostState]
-    host_states = {}  # type: Dict[HostName, HostState]
     try:
-        import livestatus
         query = "GET hosts\nColumns: name state"
-        host_states.update(dict(livestatus.LocalConnection().query(query)))  # type: ignore
+        response = livestatus.LocalConnection().query(query)
+        return {k: v for row in response for k, v in [_parse_row(row)]}
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
-    return host_states
+    return {}
+
+
+def _parse_row(row):
+    # type: (livestatus.LivestatusRow) -> Tuple[HostName, HostState]
+    hostname, hoststate = row
+    if isinstance(hostname, HostName) and isinstance(hoststate, HostState):
+        return hostname, hoststate
+    raise MKGeneralException("Invalid response from livestatus: %s" % row)
 
 
 def _discover_marked_host_exists(config_cache, hostname):
@@ -701,10 +694,12 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
                result["self_new_host_labels"] == 0:
                 console.verbose("  nothing changed.\n")
             else:
-                console.verbose("  %(self_new)s new, %(self_removed)s removed, "\
-                                "%(self_kept)s kept, %(self_total)s total services "
-                                "and %(self_new_host_labels)s new host labels. "\
-                                "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" % result)
+                console.verbose(
+                    "  %(self_new)s new, %(self_removed)s removed, "
+                    "%(self_kept)s kept, %(self_total)s total services "
+                    "and %(self_new_host_labels)s new host labels. "
+                    "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" %
+                    result)
 
                 # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
                 #       the activation decision is based on the discovery configuration of the node
@@ -780,12 +775,12 @@ def _get_item_filter_func(params_rediscovery):
     whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
     blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
 
-    return lambda hostname, check_plugin_name, item:\
-           _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
+        hostname, check_plugin_name, item, whitelist, blacklist)
 
 
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
-    # type: (HostName, CheckPluginName, Item, Pattern[AnyStr], Pattern[AnyStr]) -> bool
+    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
@@ -820,7 +815,7 @@ def schedule_discovery_check(hostname):
         if config.monitoring_core == "cmc":
             command += ";TRY"
 
-        s.send("COMMAND [%d] %s\n" % (now, command))
+        s.send(six.ensure_binary("COMMAND [%d] %s\n" % (now, command)))
     except Exception:
         if cmk.utils.debug.enabled():
             raise
@@ -884,7 +879,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
             except Exception as e:
                 if on_error == "raise":
                     raise
-                elif on_error == "warn":
+                if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
         check_table_formatted = {}  # type: check_table.CheckTable
@@ -952,10 +947,10 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 # exception which need to lead to a skipped check instead of a crash
                 # TODO CMK-3729, PEP-3109
                 new_exception = x[0](x[1])
-                new_exception.__traceback__ = x[2]  # type: ignore
+                new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                 raise new_exception
 
-            elif on_error == "warn":
+            if on_error == "warn":
                 section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
                 console.warning("Exception while parsing agent section '%s': %s\n" %
                                 (section_name, e))
@@ -1014,6 +1009,10 @@ def _no_discovery_possible(check_plugin_name):
     return []
 
 
+# FIXME: The whole typing here is fundamentally broken and actually a lie: We
+# don't have any static guarantees about the discovery function, so the type
+# below is just wishful thinking. We only know something *after* validation,
+# but that is a dynamic thing...
 def _execute_discovery_function(discovery_function, section_content):
     # type: (DiscoveryFunction, FinalSectionContent) -> DiscoveryResult
     discovered_items = discovery_function(section_content)
@@ -1029,6 +1028,7 @@ def _execute_discovery_function(discovery_function, section_content):
     return discovered_items
 
 
+# FIXME: Broken typing, see comment for _execute_discovery_function.
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
     # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     for entry in discovered_items:
@@ -1047,7 +1047,8 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             if len(entry) == 2:  # comment is now obsolete
                 item, parameters_unresolved = entry
             elif len(entry) == 3:  # allow old school
-                item, __, parameters_unresolved = entry  # type: ignore
+                # FIXME: Broken typing, see comment for _execute_discovery_function.
+                item, __, parameters_unresolved = entry  # type: ignore[misc]
             else:
                 # we really don't want longer tuples (or 1-tuples).
                 console.error(
@@ -1326,10 +1327,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         # exception which need to lead to a skipped check instead of a crash
                         # TODO CMK-3729, PEP-3109
                         new_exception = x[0](x[1])
-                        new_exception.__traceback__ = x[2]  # type: ignore
+                        new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                         raise new_exception
-                    else:
-                        raise
+                    raise
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
@@ -1372,9 +1372,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name),
                     )
                     item_state.raise_counter_wrap()
-                except item_state.MKCounterWrapped as e:
+                except item_state.MKCounterWrapped:
                     output = u"WAITING - Counter based check, cannot be done offline"
-                except Exception as e:
+                except Exception:
                     if cmk.utils.debug.enabled():
                         raise
                     exitcode = 3

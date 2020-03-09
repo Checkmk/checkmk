@@ -8,5 +8,8 @@ description:
  This check display the temperature of various sensors in a MCS cooling
  device. The thresholds are configurable through the regular temperature rules.
 
+item:
+ Name of the sensor
+
 inventory:
  One service for each sensor is created

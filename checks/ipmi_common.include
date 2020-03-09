@@ -32,31 +32,17 @@ def check_ipmi_common(item, params, parsed, what, status_txt_mapping):
         return check_ipmi_common_detailed(item, params, parsed[item], what, status_txt_mapping)
 
 
-def ipmi_common_check_levels(sensorname, val, params):
-    warn_texts, crit_texts = [], []
+def ipmi_common_check_levels(sensorname, val, params, unit=""):
     for this_sensorname, levels in params.get("numerical_sensor_levels", []):
-        if this_sensorname == sensorname and levels and val is not None:
-            if levels.get("lower"):
-                warn, crit = levels["lower"]
-                if val < crit:
-                    crit_texts.append("%s %s (warn/crit below %s/%s)" %
-                                      (sensorname, val, warn, crit))
-                elif val < warn:
-                    warn_texts.append("%s %s (warn/crit below %s/%s)" %
-                                      (sensorname, val, warn, crit))
-            if levels.get("upper"):
-                warn, crit = levels["upper"]
-                if val >= crit:
-                    crit_texts.append("%s %s (warn/crit at %s/%s)" % (sensorname, val, warn, crit))
-                elif val >= warn:
-                    warn_texts.append("%s %s (warn/crit at %s/%s)" % (sensorname, val, warn, crit))
+        if this_sensorname == sensorname and levels:
+            levels_tuple = levels.get('upper', (None, None)) + levels.get('lower', (None, None))
+            yield check_levels(val, None, levels_tuple, unit=unit, infoname=sensorname)
             break
-    return warn_texts, crit_texts
 
 
 def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
     val = data["value"]
-    unit = data["unit"]
+    unit = data["unit"] or ""
     status_txt = data["status_txt"]
     crit_low = data["crit_low"]
     warn_low = data["warn_low"]
@@ -64,20 +50,12 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
     crit_high = data["crit_high"]
 
     # stay compatible with older versions
-    infotext = status_txt
+    yield status_txt_mapping(status_txt), "Status: %s" % status_txt
+
     perfdata = []
     if val is not None:
-        infotext += ", %s" % val
-        if unit is not None:
-            if unit == "%":
-                infotext += unit
-            else:
-                infotext += " %s" % unit
-
         if what == "ipmitool":
-            old_perf_val = str(val)
-            if unit is not None:
-                old_perf_val += unit
+            old_perf_val = str(val) + unit
             perfdata = [(item, old_perf_val, warn_high, crit_high)]
 
         elif what == "freeipmi" and \
@@ -86,41 +64,19 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
             # much data and is - in my opinion - useless.
             perfdata = [("value", val, None, crit_high)]
 
-    warn_texts = []
-    crit_texts = []
-    state = status_txt_mapping(status_txt)
-    if state:
-        for ty, warn, crit in [("below", warn_low, crit_low), ("at", warn_high, crit_high)]:
-            if warn is not None and crit is None:
-                warn_texts.append("warn %s %s" % (ty, warn))
-            elif warn is not None and crit is not None:
-                crit_texts.append("warn/crit %s %s/%s" % (ty, warn, crit))
-            elif warn is None and crit is not None:
-                crit_texts.append("crit %s %s" % (ty, crit))
+        status, infotext, _ = check_levels(val, None, (warn_high, crit_high, warn_low, crit_low),
+                                           unit)
+        yield status, infotext, perfdata
+        yield from ipmi_common_check_levels(item, val, params, unit)
 
     for wato_status_txt, wato_status in params.get("sensor_states", []):
         if status_txt.startswith(wato_status_txt):
-            state = wato_status
+            yield wato_status, ""
             break
 
-    these_warn_texts, these_crit_texts = ipmi_common_check_levels(item, val, params)
-    warn_texts += these_warn_texts
-    crit_texts += these_crit_texts
-
-    levelsinfo = ""
-    if crit_texts:
-        state = 2
-        levelsinfo = " (%s)" % ", ".join(crit_texts)
-    elif warn_texts:
-        state = 1
-        levelsinfo = " (%s)" % ", ".join(warn_texts)
-
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
-    # but only if user thresholds are not exceeded to CRITICAL
-    if status_txt.startswith('nc') and not these_crit_texts:
-        state = 1
-
-    return state, "Status: %s%s" % (infotext, levelsinfo), perfdata
+    if status_txt.startswith('nc'):
+        yield 1, ""
 
 
 def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
@@ -149,11 +105,9 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
                 sensorstate = wato_status
                 break
 
-        these_warn_texts, these_crit_texts = ipmi_common_check_levels(sensorname, val, params)
-        warn_texts += these_warn_texts
-        crit_texts += these_crit_texts
+        ls, infotext, _ = ipmi_common_check_levels(sensorname, val, params)
+        sensorstate = max(sensorstate, ls)
 
-        infotext = "%s (%s)" % (sensorname, status_txt)
         if sensorstate == 1:
             warn_texts.append(infotext)
         elif sensorstate == 2:

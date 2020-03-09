@@ -1,4 +1,4 @@
-title: AWS/RDS CPU Credits
+title: AWS RDS: CPU Credits
 agents: aws
 catalog: cloud/aws
 license: GPL

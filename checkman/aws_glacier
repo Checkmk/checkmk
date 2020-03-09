@@ -1,4 +1,4 @@
-title: AWS/Glacier Vault
+title: AWS Glacier: Vault
 agents: aws
 catalog: cloud/aws
 license: GPL

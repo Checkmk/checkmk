@@ -1,4 +1,4 @@
-title: AWS/ELB Limits
+title: AWS ELB: Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -18,7 +18,7 @@ description:
  - 100 listeners per load balancer
 
  - 1000 registered instances per load balancer.
- 
+
  These levels are configurable.
 
  If limits are enabled all load balancers are fetched regardless of

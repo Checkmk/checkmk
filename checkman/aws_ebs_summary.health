@@ -1,4 +1,4 @@
-title: AWS/EBS Health
+title: AWS EBS: Health
 agents: aws
 catalog: cloud/aws
 license: GPL

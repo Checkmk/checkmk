@@ -1,4 +1,4 @@
-title: AWS/ELB HTTP Backend
+title: AWS ELB: HTTP Backend
 agents: aws
 catalog: cloud/aws
 license: GPL

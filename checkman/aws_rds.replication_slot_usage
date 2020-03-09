@@ -1,4 +1,4 @@
-title: AWS/RDS Replication Slot
+title: AWS RDS: Replication Slot
 agents: aws
 catalog: cloud/aws
 license: GPL

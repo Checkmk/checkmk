@@ -1,4 +1,4 @@
-title: AWS/EBS Disk IO
+title: AWS EBS: Disk IO
 agents: aws
 catalog: cloud/aws
 license: GPL

@@ -1,4 +1,4 @@
-title: AWS/NetworkELB LCUs
+title: AWS NetworkELB: LCUs
 agents: aws
 catalog: cloud/aws
 license: GPL

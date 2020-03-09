@@ -1,4 +1,4 @@
-title: AWS/Cloudwatch Alarms
+title: AWS Cloudwatch: Alarms
 agents: aws
 catalog: cloud/aws
 license: GPL

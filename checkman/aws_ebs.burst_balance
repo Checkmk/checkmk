@@ -1,4 +1,4 @@
-title: AWS/EBS Burst Balance
+title: AWS EBS: Burst Balance
 agents: aws
 catalog: cloud/aws
 license: GPL

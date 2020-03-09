@@ -1,4 +1,4 @@
-title: AWS/RDS CPU Utilization
+title: AWS RDS: CPU Utilization
 agents: aws
 catalog: cloud/aws
 license: GPL

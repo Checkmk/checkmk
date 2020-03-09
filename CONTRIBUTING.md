@@ -1,10 +1,22 @@
 # Contributing to Checkmk
 
-We welcome contributions to [Checkmk on Github](https://github.com/tribe29/checkmk).
+Thanks for your interest to contribute to [Checkmk on Github](https://github.com/tribe29/checkmk)!
 
-Most contributions to Checkmk are small bug-fixes, enhancements of existing
-features, or completely new plugins. The guidelines below address these types
-of contributions.
+Here are some ways you can help out:
+
+* Bug fixes
+* Feature enhancements
+* New plugins
+
+Here are the links to major sections of this document:
+
+* [Contributing Code](#contributing-code)
+* [How to prepare for contributing](#how-to-prepare-for-contributing)
+* [How to change Checkmk](#how-to-change-Checkmk?)
+* [How to execute tests](#how-to-execute-tests?)
+* [Style Guide](#style-guide)
+
+If you have questions, please create a post at the [Checkmk Forum](https://forum.checkmk.com). For bug reports, please send an e-mail to feedback@checkmk.com
 
 If you would like to make a major change to Checkmk, please create a new topic
 under the [Product Ideas category](https://forum.checkmk.com/c/product-ideas/19)
@@ -35,9 +47,7 @@ this:
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
 
-Have a careful look at the following chapters if your are working like this for
-the first time. The following document also includes a lot of details about our
-coding standards, needed tools and so on.
+If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/). You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
 
 ## How to prepare for contributing?
 
@@ -47,138 +57,118 @@ experience.
 
 To set up the development environment do the following:
 
-- Setup a Checkmk source code working copy on your computer
+1. [Fork the repository and clone to your computer](https://help.github.com/en/github/getting-started-with-github/fork-a-repo)
 
-  First you need a local fork of the Checkmk git. To create it, press the
-  *fork* button on the Checkmk GitHub page. This will create a copy of the
-  repository in your own GitHub account and you'll see a note that it’s been
-  forked as: *YourName/checkmk*.
+    Then change to the just created project directory.
 
-  You now need to clone your own copy to your computer.  This can be done using
-  the command line on your computer:
+    ```
+    $ cd checkmk
+    ```
 
-  We do this from `~/git` directory. This will result in a `~/git/checkmk`
-  directory.
+2. Install development dependencies
 
-  ```
-  $ mkdir ~/git
-  $ cd ~/git
-  $ git clone git@github.com:YourName/checkmk.git
-  ```
+    Before you can start working on Checkmk, you will have to install some
+    additional software, like tools for development and testing. Execute this in
+    the project directory:
 
-- Then change to the just created project directory.
+    ```
+    $ make setup
+    ```
 
-  ```
-  $ cd checkmk
-  ```
+    > This is optimized for Ubuntu, but you may also get all the required programs
+    > on other platforms.
 
-- Install development dependencies
+    After the dependencies have been installed, you could execute the shipped
+    tests to ensure everything is working fine before start making changes to
+    Checkmk.
+    If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests)
+    chapter.
 
-  Before you can start working on Checkmk, you will have to install some
-  additional software, like tools for development and testing. Execute this in
-  the project directory:
+3. Install pre-commit checks
 
-  ```
-  $ make setup
-  ```
+    In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/)
+    configuration and some custom made checking scripts. You can install it like this:
 
-  > This is optimized for Ubuntu, but you may also get all the required programs
-  > on other platforms.
+    > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
+    > your environment and leave you unable to use pip due to a backports module clash!
 
-  After the dependencies have been installed, you could execute the shipped
-  tests to ensure everything is working fine before start making changes to
-  Checkmk.
-  If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests)
-  chapter.
+    ```
+    pip3 install pre-commit
+    ```
 
-- Install pre-commit checks
+    After successful installation, hook it up to your git-repository by issuing
+    the following command inside your git repository:
 
-  In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/)
-  configuration and some custom made checking scripts. You can install it like this:
+    ```
+    pre-commit install --allow-missing-config
+    ```
+    The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
+    support this feature and are missing the configuration file won't throw errors.
 
-  > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
-  > your environment and leave you unable to use pip due to a backports module clash!
+    Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
+    check (like mypy for example) got something wrong and you don't want to fix it right away you can skip
+    execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
+    introduce delays and additional work.
 
-  ```
-  pip3 install pre-commit
-  ```
+    Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+    which checks your commit *after* it has been made. You can then fix errors and amend or squash
+    your commit. You can also use this script in a rebase like such:
 
-  After successful installation, hook it up to your git-repository by issuing
-  the following command inside your git repository:
+    ```
+    git rebase --exec scripts/check-current-commit
+    ```
 
-  ```
-  pre-commit install --allow-missing-config
-  ```
-  The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
-  support this feature and are missing the configuration file won't throw errors.
-
-  Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
-  check (like mypy for example) got something wrong and you don't want to fix it right away you can skip
-  execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
-  introduce delays and additional work.
-
-  Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
-  which checks your commit *after* it has been made. You can then fix errors and amend or squash
-  your commit. You can also use this script in a rebase like such:
-
-  ```
-  git rebase --exec scripts/check-current-commit
-  ```
-
-  This will rebase your current changes and check each commit for errors. After fixing them you can
-  then continue rebasing.
+    This will rebase your current changes and check each commit for errors. After fixing them you can
+    then continue rebasing.
 
 
 Once done, you are ready for the next chapter.
 
 ## How to change Checkmk?
 
-The number one rule is to *put each piece of work on its own branch*. In most of
-the cases your development will be based on the *master* branch. So lets start
-like this:
+1. Create your feature branch
 
-```
-$ git checkout master
-$ git checkout -b my-feature-branch
-```
+    The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
 
-The first command ensures you start with the master branch. The second command
-created the branch `my-feature-branch`. Pick some descriptive name you can remember
-later.
+    ```
+    $ git checkout master
+    $ git checkout -b my-feature-branch
+    ```
 
-Let's check if everything worked fine:
+    The first command ensures you start with the master branch. The second command
+    created the branch `my-feature-branch`. Pick some descriptive name you can remember later.
 
-```
-$ git status
-On branch my-feature-branch
-(...)
-```
+    Let's check if everything worked fine:
 
-Now start developing and create one or multiple commits.
+    ```
+    $ git status
+    On branch my-feature-branch
+    (...)
+    ```
 
-**Important**: Do one thing in one commit, e.g. don't mix code reorganization and
-changes of the moved lines. Separate this in two commits.
+2. Start developing and create one or multiple commits.
 
-Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
+    **Important**: Do one thing in one commit, e.g. don't mix code reorganization and
+    changes of the moved lines. Separate this in two commits.
 
-If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests)
-to ensure you did not break anything.
+    Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
 
-Once you are done with the commits and tests in your feature branch you could
-push them to your own GitHub fork like this.
+    If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests) to ensure you did not break anything.
 
-```
-$ git push -u origin my-feature-branch
-```
+    Once you are done with the commits and tests in your feature branch you could push them to your own GitHub fork like this.
 
-In the output of this command you will see a URL which you can open to create
-a pull request from your feature branch.
+    ```
+    $ git push -u origin my-feature-branch
+    ```
 
-On GitHub in your browser, submit a pull request from your `my-feature-branch`
-to the official Checkmk branch you forked from.
+    In the output of this command you will see a URL which you can open to create a pull request from your feature branch.
 
-The Travis CI bot will start testing your commits for issues. In case there are
-issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
+3. Submit a pull request (PR)
+
+    On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
+
+    The Travis CI bot will start testing your commits for issues. In case there are
+    issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
 
 ### Help: I have a conflict
 
@@ -253,11 +243,13 @@ don't need to execute the formatting test at all.
 You could also push your changed to your forked repository and wait for Travis
 to execute the tests for you, but that takes several minutes for each try.
 
-## Style guide: Guidelines for coding check plug-ins
+## Style guide
+
+## Guidelines for coding check plug-ins
 
 Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_guidelines.html).
 
-## Style guide: Commit messages
+## Commit messages
 
 - Use the present tense ("Add feature" not "Added feature")
 - Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
@@ -265,7 +257,7 @@ Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_g
 - Reference issues and pull requests liberally after the first line
 - Write [good commit messages](https://chris.beams.io/posts/git-commit/)
 
-## Style guide: Python
+## Python
 
 The guidelines listed here are binding for the development at Checkmk in
 Python.
@@ -603,8 +595,7 @@ about the error diagnosis below, if it doesn't work.
    (encoding . utf-8))
   ```
 
-
-## Style guide: Shell scripts
+## Shell scripts
 
 The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. In case you want to change something respect the

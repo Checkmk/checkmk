@@ -1,4 +1,4 @@
-title: PostgreSQL Database Bloat
+title: PostgreSQL: Bloat
 agents: linux
 catalog: app/postgresql
 license: GPL

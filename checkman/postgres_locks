@@ -1,4 +1,4 @@
-title: PostgreSQL Locks
+title: PostgreSQL: Locks
 agents: linux
 catalog: app/postgresql
 license: GPL

@@ -1,4 +1,4 @@
-title: PostgreSQL Database Last Vacuum and Analyze
+title: PostgreSQL: Last Vacuum and Analyze for tables
 agents: linux
 catalog: app/postgresql
 license: GPL

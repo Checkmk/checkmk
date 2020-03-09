@@ -1,4 +1,4 @@
-title: SAP HANA Replication Status
+title: SAP HANA: Replication Status
 agents: linux
 catalog: app/sap_hana
 license: GPL

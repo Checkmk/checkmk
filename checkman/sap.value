@@ -1,4 +1,4 @@
-title: SAP Single Value Monitoring
+title: SAP R/3: Single Value
 agents: linux
 catalog: app/sap
 license: GPL

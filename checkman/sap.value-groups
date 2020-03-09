@@ -1,4 +1,4 @@
-title: SAP Single Value Monitoring Groups
+title: SAP R/3: Single Value Groups (deprecated)
 agents: linux
 catalog: app/sap
 license: GPL

@@ -1,4 +1,4 @@
-title: SAP HANA Memory
+title: SAP HANA: Memory
 agents: linux
 catalog: app/sap_hana
 license: GPL

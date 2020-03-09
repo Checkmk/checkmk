@@ -1,4 +1,4 @@
-title: Length of the postfix mailqueues
+title: Postfix: Mailqueue Length
 agents: linux
 catalog: app/postfix
 license: GPL

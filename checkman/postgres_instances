@@ -1,4 +1,4 @@
-title: PostgreSQL Instances
+title: PostgreSQL: Instances
 agents: linux
 catalog: app/postgresql
 license: GPL

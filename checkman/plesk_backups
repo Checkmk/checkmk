@@ -1,4 +1,4 @@
-title: FTP backups of Plesk domains
+title: Plesk: FTP Backups
 agents: linux
 catalog: app/plesk
 license: GPL

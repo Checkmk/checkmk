@@ -1,4 +1,4 @@
-title: SAP HANA License
+title: SAP HANA: License
 agents: linux
 catalog: app/sap_hana
 license: GPL

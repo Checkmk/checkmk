@@ -1,4 +1,4 @@
-title: PostgreSQL Query Duration
+title: PostgreSQL: Query Duration
 agents: linux
 catalog: app/postgresql
 license: GPL

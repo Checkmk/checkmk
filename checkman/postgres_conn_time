@@ -1,4 +1,4 @@
-title: PostgreSQL Connection Time
+title: PostgreSQL: Connection Time
 agents: linux
 catalog: app/postgresql
 license: GPL

@@ -82,9 +82,9 @@ class ValueTypedDictSchema(Schema):
 
 
 def is_value_typed_dict(schema):
-    is_instance = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
-    is_class = isinstance(schema, ValueTypedDictSchema)
-    return is_instance or is_class
+    is_class = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
+    is_instance = isinstance(schema, ValueTypedDictSchema)
+    return is_class or is_instance
 
 
 class ValueTypedDictMarshmallowPlugin(marshmallow.MarshmallowPlugin):

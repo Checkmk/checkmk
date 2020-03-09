@@ -15,6 +15,7 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     EmailAddress,
@@ -165,6 +166,35 @@ def _vs_add_common_mail_elements(elements):
     return header + elements + footer
 
 
+def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
+
+    return Transform(CascadingDropdown(
+        title=_("URL prefix for links to Check_MK"),
+        help=_("If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
+               "and service links within the notification is filled "
+               "automatically. If you specify an URL prefix here, then "
+               "several parts of the notification are armed with hyperlinks "
+               "to your Check_MK GUI. In both cases, the recipient of the "
+               "notification can directly visit the host or service in "
+               "question in Check_MK. Specify an absolute URL including the "
+               "<tt>.../check_mk/</tt>."),
+        choices=[
+            ("automatic_http", _("Automatic HTTP")),
+            ("automatic_https", _("Automatic HTTPs")),
+            ("manual", _("Specify URL prefix"),
+             TextAscii(
+                 regex="^(http|https)://.*/check_mk/$",
+                 regex_error=_("The URL must begin with <tt>http</tt> or "
+                               "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                 size=64,
+                 default_value=default_choice,
+             )),
+        ],
+        default_value=default_value),
+                     forth=transform_forth_html_mail_url_prefix,
+                     back=transform_back_html_mail_url_prefix)
+
+
 @notification_parameter_registry.register
 class NotificationParameterMail(NotificationParameter):
     @property
@@ -208,34 +238,10 @@ class NotificationParameterMail(NotificationParameter):
                  rows="auto",
              )),
             ("url_prefix",
-             Transform(CascadingDropdown(
-                 title=_("URL prefix for links to Check_MK"),
-                 help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                        "host and service links within the notification mail "
-                        "is filled automatically. "
-                        "If you specify an URL prefix here, then several parts of the "
-                        "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
-                        "the recipient of the email can directly visit the host or "
-                        "service in question in Check_MK. Specify an absolute URL including "
-                        "the <tt>.../check_mk/</tt>"),
-                 choices=[
-                     ("automatic_http", _("Automatic HTTP")),
-                     ("automatic_https", _("Automatic HTTPs")),
-                     ("manual", _("Specify URL prefix"),
-                      TextAscii(
-                          regex="^(http|https)://.*/check_mk/$",
-                          regex_error=_("The URL must begin with <tt>http</tt> or "
-                                        "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                          size=64,
-                          default_value="http://" + socket.gethostname() + "/" +
-                          (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                      )),
-                 ],
-                 default_value=html.request.is_ssl_request and "automatic_https" or
-                 "automatic_http",
-             ),
-                       forth=transform_forth_html_mail_url_prefix,
-                       back=transform_back_html_mail_url_prefix)),
+             _get_url_prefix_specs(
+                 "http://" + socket.gethostname() + "/" +
+                 (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                 html.request.is_ssl_request and "automatic_https" or "automatic_http")),
             ("no_floating_graphs",
              FixedValue(
                  True,
@@ -284,33 +290,7 @@ class NotificationParameterSlack(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -343,33 +323,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification message "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "Cisco Webex Teams message are armed with hyperlinks to your Check_MK "
-                         "GUI. In both cases the recipient of the message can directly visit the "
-                         "host or service in question in Check_MK. Specify an absolute URL "
-                         "including the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -406,33 +360,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -462,33 +390,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ("webhook_url",
                  FixedValue("https://events.pagerduty.com/v2/enqueue",
                             title=_("API Endpoint from PagerDuty V2"))),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
 

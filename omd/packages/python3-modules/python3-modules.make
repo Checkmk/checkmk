@@ -104,6 +104,7 @@ PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special
 
 PYTHON3_MODULES_LIST += pymssql-2.1.4.tar.gz # needed by check_sql active check
 PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
+PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
 
 # To automatically generate checkmk.yaml OpenAPI spec file
 PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz

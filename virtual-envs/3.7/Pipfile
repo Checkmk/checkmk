@@ -109,6 +109,7 @@ mypy_extensions = "==0.4.3"  # direct dependency
 python-snap7 = "==0.10" # needed by Siemens PLC special agent
 pymssql = "==2.1.4" # needed by check_sql active check
 PyMySQL = "==0.9.3" # needed by check_sql active check
+psycopg2-binary = "==2.8.4" # needed by check_sql active check
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 marshmallow = "==2.20.5"
 marshmallow-oneofschema = "==1.0.6"

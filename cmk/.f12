@@ -100,15 +100,6 @@ sudo rsync \
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/__init__.py
 
-(
-    cd $ROOT/lib/python/cmk
-    sudo pycompile -q "${PYTHON2_PATHS[@]}"
-)
-(
-    cd $ROOT/lib/python/cmk
-    sudo py3compile -q "${PYTHON2_PATHS[@]}"
-)
-
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
@@ -119,4 +110,15 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
             )
         fi
     done
+fi
+
+if [ -z "$ONLY_COPY" ]; then
+    (
+        cd $ROOT/lib/python/cmk
+        sudo python -m compileall -qq "${PYTHON2_PATHS[@]}"
+    )
+    (
+        cd $ROOT/lib/python3/cmk
+        sudo python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
+    )
 fi

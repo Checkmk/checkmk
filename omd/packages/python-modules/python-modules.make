@@ -61,8 +61,8 @@ PYTHON_MODULES_LIST += mysqlclient-1.3.13.tar.gz  # needed by check_sql
 # (had to remove the build dependency from the container)
 ifneq ($(DISTRO_CODE),el6)
 PYTHON_MODULES_LIST += psycopg2-2.6.2.tar.gz # needed by check_sql
-PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/patches/0007-psycopg-wrong-ifdef.patch
-PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/patches/0016-make-psycopg2-build-with-ubuntu-bionic.patch
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0007-psycopg-wrong-ifdef.patch
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0016-make-psycopg2-build-with-ubuntu-bionic.patch
 endif
 PYTHON_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure

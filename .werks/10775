@@ -1,0 +1,17 @@
+Title: Fix netapp_api_fcp pending status for inactive ports
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1583847528
+
+Inactive ports have no increasing number of operations and thus latency
+can't be calculated according to NetApp's Performance Management Design
+Guide as it depends on the increase in number of operations.
+
+Now this check does not deliver information nor perfdata about latency when
+the port is inactive.

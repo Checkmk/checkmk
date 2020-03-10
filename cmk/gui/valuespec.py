@@ -4670,13 +4670,13 @@ class Dictionary(ValueSpec):
         elif self._render == "form_part":
             self._render_input_form(varprefix, value, as_part=True)
         else:
-            self._render_input_normal(varprefix, value, self._render == "oneline")
+            self._render_input_normal(varprefix, value, self._render == "oneline",
+                                      self._headers == "sup")
 
-    def _render_input_normal(self, varprefix, value, oneline=False):
-        headers_sup = oneline and self._headers == "sup"
-        if headers_sup or not oneline:
+    def _render_input_normal(self, varprefix, value, oneline, small_headers):
+        if not oneline or small_headers:
             html.open_table(class_=["dictionary"])
-        if headers_sup:
+        if oneline and small_headers:
             html.open_tr()
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -4703,12 +4703,12 @@ class Dictionary(ValueSpec):
             else:
                 visible = True
                 if vs.title():
-                    if headers_sup:
+                    if oneline and small_headers:
                         html.open_td()
                         html.open_b(class_=["header"])
                     html.write(" %s" % vs.title())
                     if oneline:
-                        if self._headers == "sup":
+                        if small_headers:
                             html.close_b()
                             html.br()
                         else:
@@ -4745,12 +4745,12 @@ class Dictionary(ValueSpec):
             if not oneline:
                 html.close_td()
                 html.close_tr()
-            elif headers_sup:
+            elif oneline and small_headers:
                 html.close_td()
 
         if not oneline:
             html.close_table()
-        elif oneline and self._headers == "sup":
+        elif oneline and small_headers:
             html.close_tr()
             html.close_table()
 

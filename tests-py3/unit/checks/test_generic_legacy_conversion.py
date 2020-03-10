@@ -13,14 +13,6 @@ pytestmark = pytest.mark.checks
 config.load_all_checks(check_api.get_check_api_context)
 
 KNOWN_FAILURES = {
-    'alcatel_cpu',
-    'alcatel_cpu_aos7',
-    'alcatel_fans',
-    'alcatel_fans_aos7',
-    'alcatel_power',
-    'alcatel_power_aos7',
-    'alcatel_temp',
-    'alcatel_temp_aos7',
     'blade_bays',
     'blade_blades',
     'blade_blowers',

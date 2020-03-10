@@ -117,11 +117,15 @@ def _get_expression_from_function(name, scan_func_ast):
     if isinstance(scan_func_ast, ast.Lambda):
         return body
 
+    if len(body) >= 2 and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Str):
+        # remove doc string!
+        body = body[1:]
+
     if isinstance(body[0], ast.Return):
         assert isinstance(body[0].value, ast.AST)
         return body[0].value
 
-    raise NotImplementedError(name)
+    raise NotImplementedError("%s\n%s" % (name, ast.dump(scan_func_ast)))
 
 
 def _is_oid_function(expr):

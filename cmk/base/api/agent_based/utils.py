@@ -54,6 +54,11 @@ def endswith(oidstr, value):
     return [[(oidstr, '.*%s$' % re.escape(value), True)]]
 
 
+def equals(oidstr, value):
+    # type: (str, str) -> SNMPDetectSpec
+    return [[(oidstr, '^%s$' % re.escape(value), True)]]
+
+
 def exists(oidstr):
     # type: (str) -> SNMPDetectSpec
     return [[(oidstr, '.*', True)]]
@@ -72,6 +77,11 @@ def not_startswith(oidstr, value):
 def not_endswith(oidstr, value):
     # type: (str, str) -> SNMPDetectSpec
     return _negate(endswith(oidstr, value))
+
+
+def not_equals(oidstr, value):
+    # type: (str, str) -> SNMPDetectSpec
+    return _negate(equals(oidstr, value))
 
 
 def not_exists(oidstr):

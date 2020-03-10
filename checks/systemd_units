@@ -137,6 +137,15 @@ factory_settings["systemd_services_default_levels"] = {
     "else": 2,  # missleading name, used if service vanishes
 }
 
+factory_settings["systemd_services_summary_default_levels"] = {
+    "states": {
+        "active": 0,
+        "inactive": 0,
+        "failed": 2,
+    },
+    "states_default": 2,
+}
+
 discovery_systemd_units_services_rules = []
 
 
@@ -285,8 +294,8 @@ check_info['systemd_units.services_summary'] = {
     'inventory_function': discovery_systemd_units_services_summary,
     'check_function': check_systemd_units_services_summary,
     'service_description': 'Systemd Service %s',
-    'group': 'systemd_services',
-    'default_levels_variable': 'systemd_services_default_levels',
+    'group': 'systemd_services_summary',
+    'default_levels_variable': 'systemd_services_summary_default_levels',
 }
 
 #.

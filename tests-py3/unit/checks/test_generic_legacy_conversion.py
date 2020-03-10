@@ -13,13 +13,6 @@ pytestmark = pytest.mark.checks
 config.load_all_checks(check_api.get_check_api_context)
 
 KNOWN_FAILURES = {
-    'blade_bays',
-    'blade_blades',
-    'blade_blowers',
-    'blade_health',
-    'blade_mediatray',
-    'blade_powerfan',
-    'blade_powermod',
     'checkpoint_connections',
     'checkpoint_fan',
     'checkpoint_firewall',

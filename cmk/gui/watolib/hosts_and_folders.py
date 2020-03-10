@@ -1158,17 +1158,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             choices.append((subfolder.path(), subfolder.title()))
         return choices
 
-    def recursive_subfolder_choices(self, current_depth=0, pretty=True):
+    def _prefixed_title(self, current_depth, pretty):
         if pretty:
-            if current_depth:
-                title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
-            else:
-                title_prefix = ""
-            title = HTML(title_prefix + escaping.escape_attribute(self.title()))
-        else:
-            title = HTML(escaping.escape_attribute("/".join(self.title_path_without_root())))
+            return HTML(escaping.escape_attribute("/".join(self.title_path_without_root())))
 
-        sel = [(self.path(), title)]
+        title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 " if current_depth else ""
+        return HTML(title_prefix + escaping.escape_attribute(self.title()))
+
+    def recursive_subfolder_choices(self, current_depth=0, pretty=True):
+        sel = [(self.path(), self._prefixed_title(current_depth, pretty))]
 
         for subfolder in sorted(self.subfolders(only_visible=True),
                                 key=operator.methodcaller('title')):

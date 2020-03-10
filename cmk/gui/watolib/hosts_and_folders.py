@@ -446,7 +446,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def folder_choices_fulltitle():
         if 'folder_choices_full_title' not in g:
             g.folder_choices_full_title = Folder.root_folder().recursive_subfolder_choices(
-                current_depth=0, pretty=False)
+                pretty=False)
         return g.folder_choices_full_title
 
     @staticmethod
@@ -1165,13 +1165,26 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 " if current_depth else ""
         return HTML(title_prefix + escaping.escape_attribute(self.title()))
 
-    def recursive_subfolder_choices(self, current_depth=0, pretty=True):
-        sel = [(self.path(), self._prefixed_title(current_depth, pretty))]
+    def _walk_tree(self, results, current_depth, pretty):
+        visible_subfolders = False
+        for subfolder in sorted(self._subfolders.values(),
+                                key=operator.methodcaller('title'),
+                                reverse=True):
+            visible_subfolders = subfolder._walk_tree(results, current_depth + 1,
+                                                      pretty) or visible_subfolders
 
-        for subfolder in sorted(self.subfolders(only_visible=True),
-                                key=operator.methodcaller('title')):
-            sel += subfolder.recursive_subfolder_choices(current_depth + 1, pretty)
-        return sel
+        if (visible_subfolders or self.may('read') or self.is_root() or
+                not config.wato_hide_folders_without_read_permissions):
+            results.append((self.path(), self._prefixed_title(current_depth, pretty)))
+            return True
+
+        return False
+
+    def recursive_subfolder_choices(self, pretty=True):
+        result = []
+        self._walk_tree(result, 0, pretty)
+        result.reverse()
+        return result
 
     def choices_for_moving_folder(self):
         # type: () -> Choices

@@ -358,10 +358,10 @@ def test_recursive_subfolder_choices(make_folder, actual_builder, expected):
 
 
 def test_recursive_subfolder_choices_function_calls(mocker, make_folder):
-    spy = mocker.spy(hosts_and_folders.Folder, 'folder_should_be_shown')
+    """Every folder should only be visited once"""
+    spy = mocker.spy(hosts_and_folders.Folder, '_walk_tree')
 
     tree = three_levels_leaf_permissions(make_folder)
     tree.recursive_subfolder_choices()
 
-    # TODO: permissions of folders should only be checked once.
-    assert spy.call_count == 11
+    assert spy.call_count == 7

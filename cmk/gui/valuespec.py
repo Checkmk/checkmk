@@ -4654,25 +4654,24 @@ class Dictionary(ValueSpec):
         return []
 
     def render_input_as_form(self, varprefix, value):
-        value = self.migrate(value)
-        if not isinstance(value, MutableMapping):
-            value = {}  # makes code simpler in complain phase
-
-        self._render_input_form(varprefix, value)
+        self._render_input(varprefix, value, "form")
 
     def render_input(self, varprefix, value):
+        self._render_input(varprefix, value, self._render)
+
+    def _render_input(self, varprefix, value, render):
         value = self.migrate(value)
         if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
 
-        if self._render == "form":
+        if render == "form":
             self._render_input_form(varprefix, value)
-        elif self._render == "form_part":
+        elif render == "form_part":
             self._render_input_form(varprefix, value, as_part=True)
         else:
             self._render_input_normal(varprefix,
                                       value,
-                                      oneline=self._render == "oneline",
+                                      oneline=render == "oneline",
                                       small_headers=self._headers == "sup",
                                       two_columns=self._columns == 2)
 

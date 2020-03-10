@@ -4,7 +4,6 @@
 
 SHELL    := /bin/bash -e
 PIPENV3  := ../scripts/run-pipenv 3
-COVERAGE := $(PIPENV3) run coverage
 PYTEST   := $(PIPENV3) run py.test -vv
 YAPF     := $(PIPENV3) run yapf
 MYPY     := ../scripts/run-mypy
@@ -16,6 +15,7 @@ MYPY     := ../scripts/run-mypy
 	test-integration-docker-debug \
 	test-composition-docker test-composition \
 	test-format-python test-format-python3 \
+	test-unit-coverage-html
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
@@ -50,11 +50,13 @@ test-pylint:
 test-unit:
 	$(PYTEST) -T unit unit
 
-# TODO: We should perhaps use the pytest --cov/--cov-report options, which the
-# pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html:
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html --rcfile=.coveragerc_unit
+	$(PYTEST) \
+	    --cov=cmk \
+	    --cov-report=html \
+	    --cov-config=.coveragerc_unit \
+	    --no-cov-on-fail \
+	    -T unit unit
 
 
 MYPY3_FILES=$(shell \

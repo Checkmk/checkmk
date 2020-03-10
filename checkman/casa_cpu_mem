@@ -10,3 +10,5 @@ description:
 item:
  The description of the cpu module as provided by the device.
 
+inventory:
+ One service is created for each CPU.

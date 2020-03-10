@@ -14,5 +14,5 @@ description:
  {UNKNOWN}.
 
 inventory:
- One service per case fan will be discovered.
+ One service is created for each case fan.
 

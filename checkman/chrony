@@ -15,5 +15,5 @@ description:
  When {chrony} is not found running, the check goes to {CRIT}.
 
 inventory:
- If chrony is running, then one service is being created.
+ One service is created if chrony is running.
 

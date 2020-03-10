@@ -11,5 +11,5 @@ item:
  The index of the power module as provided by the device.
 
 inventory:
- One check for each power module is created by the inventory.
+ One service is created for each power module.
 

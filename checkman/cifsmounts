@@ -19,14 +19,14 @@ description:
  If the CIFS mount is "stale", then {stat -f} returns immediately but with
  a size of {0}. The check detects that and results in a warning state.
 
- To configure usage levels and whether or not to output metrics use the 
+ To configure usage levels and whether or not to output metrics use the
  WATO rule "Network filesystem - overall status and usage (e.g. NFS)"
 
 item:
  The mount point.
 
 inventory:
-  All CIFS mounts are found automatically. This is done
-  by scanning {/proc/mounts} (linux) or using the mount command (aix). The file {/etc/fstab}
-  is irrelevant.
+  One service is created for each CIFS mount.
+  This is doneby scanning {/proc/mounts} (linux) or using the mount command (aix).
+  The file {/etc/fstab} is irrelevant.
 

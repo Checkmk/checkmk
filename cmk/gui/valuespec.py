@@ -4670,10 +4670,13 @@ class Dictionary(ValueSpec):
         elif self._render == "form_part":
             self._render_input_form(varprefix, value, as_part=True)
         else:
-            self._render_input_normal(varprefix, value, self._render == "oneline",
-                                      self._headers == "sup")
+            self._render_input_normal(varprefix,
+                                      value,
+                                      oneline=self._render == "oneline",
+                                      small_headers=self._headers == "sup",
+                                      two_columns=self._columns == 2)
 
-    def _render_input_normal(self, varprefix, value, oneline, small_headers):
+    def _render_input_normal(self, varprefix, value, oneline, small_headers, two_columns):
         if not oneline or small_headers:
             html.open_table(class_=["dictionary"])
         if oneline and small_headers:
@@ -4694,7 +4697,7 @@ class Dictionary(ValueSpec):
                 if visible is None:
                     visible = param in value
                 label = vs.title()
-                if self._columns == 2:
+                if two_columns:
                     label += ":"
                     colon_printed = True
                 html.checkbox(checkbox_varname,
@@ -4714,7 +4717,7 @@ class Dictionary(ValueSpec):
                     if oneline and not small_headers:
                         html.write_text(": ")
 
-            if self._columns == 2:
+            if two_columns:
                 if vs.title() and not colon_printed:
                     html.write_text(':')
                 html.help(vs.help())
@@ -4728,11 +4731,11 @@ class Dictionary(ValueSpec):
 
             html.open_div(
                 id_=div_id,
-                class_=["dictelement", "indent" if (self._indent and self._columns == 1) else None],
+                class_=["dictelement", "indent" if (self._indent and not two_columns) else None],
                 style="display:none;" if not visible else
                 ("display:inline-block;" if oneline else None))
 
-            if self._columns == 1:
+            if not two_columns:
                 html.help(vs.help())
             # Remember: in complain mode we do not render 'value' (the default value),
             # but re-display the values from the HTML variables. We must not use 'value'

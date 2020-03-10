@@ -21,6 +21,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     openssl \
     libgsf \
+    postgresql \
     perl-modules \
     Python \
     Python3 \

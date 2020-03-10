@@ -11,4 +11,4 @@ item:
  Identifier of fan
 
 inventory:
- Creates one check for each Fan.
+ One service is created for each Fan.

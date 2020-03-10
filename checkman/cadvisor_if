@@ -15,3 +15,6 @@ description:
 item:
  One summarized check of all network information
 
+inventory:
+ One service is created for each network interface.
+

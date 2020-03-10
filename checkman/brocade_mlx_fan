@@ -15,4 +15,4 @@ item:
  fan ID plus the description. Otherwise it is just the ID.
 
 inventory:
- Finds one item per fan.
+ One service is created for each fan.

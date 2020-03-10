@@ -7,4 +7,4 @@ description:
  This checks monitors the main memory usage in percent. Absolute values are not available.
 
 inventory:
- One check per device is created
+ One service is created for each device.

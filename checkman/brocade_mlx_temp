@@ -15,5 +15,5 @@ item:
  The description of the module together with its ID as provided by SNMP.
 
 inventory:
- Finds one item per module
+ One service is created for each module
 

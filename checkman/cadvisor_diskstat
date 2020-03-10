@@ -19,3 +19,5 @@ description:
 item:
  "SUMMARY" for a summarized check of all disks
 
+inventory:
+ One service is created for each disk

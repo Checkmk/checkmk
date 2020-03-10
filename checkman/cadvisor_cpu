@@ -11,3 +11,5 @@ description:
  generation of cAdvisor related CPU services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
 
+inventory:
+ One service is created for each CPU.

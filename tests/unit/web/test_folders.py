@@ -1,9 +1,12 @@
 #!/usr/bin/python
 import pytest  # type: ignore[import]
 
+import os
 from imp import load_source
 
-watolib = load_source('watolib', '../web/htdocs/watolib.py')
+if os.path.isfile('../web/htdocs/watolib.py'):
+    # don't load the watolib in integration tests
+    watolib = load_source('watolib', '../web/htdocs/watolib.py')
 
 
 @pytest.fixture

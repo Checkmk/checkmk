@@ -1016,7 +1016,6 @@ def test_grouped_rulespecs():
             'notification_parameters:mkeventd',
             'notification_parameters:spectrum',
             'notification_parameters:pushover',
-            'notification_parameters:cisco_webex_teams',
             'cmc_service_flap_settings',
             'cmc_host_flap_settings',
             'host_recurring_downtimes',

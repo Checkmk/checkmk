@@ -176,43 +176,45 @@ def discovery_systemd_units_services_summary(parsed):
 
 
 def _services_split(services, blacklist):
-    included = []
-    excluded = []
-    disabled = []
-    activating = []
-    static = []
+    services_organised = {
+        "included": [],
+        "excluded": [],
+        "disabled": [],
+        "activating": [],
+        "reloading": [],
+        "static": []
+    }
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
         if any(expr.match(service.name) for expr in compiled_patterns):
-            excluded.append(service)
+            services_organised["excluded"].append(service)
             continue
         if service.active == "activating":
-            activating.append(service)
-        elif service.state in ["disabled", "indirect"]:
-            disabled.append(service)
-        elif service.state == "static":
-            static.append(service)
+            services_organised["activating"].append(service)
+        elif service.state in ("reloading", "disabled", "static", "indirect"):
+            service_type = "disabled" if service.state == "indirect" else service.state
+            services_organised[service_type].append(service)
         else:
-            included.append(service)
-    return included, excluded, disabled, static, activating
+            services_organised["included"].append(service)
+    return services_organised
 
 
-def _check_activating_state(activating_services, params):
-    previous_state = get_item_state("activating", {})
+def _check_temporary_state(services, params, service_state):
+    previous_state = get_item_state(service_state, {})
     now = int(time.time())
     current_state = {}
-    for service in activating_services:
-        activating_since = previous_state.get(service.name, now)
-        current_state[service.name] = activating_since
-        elapsed_time = now - activating_since
-        levels = params.get("activating_levels")
+    levels = params.get("%s_levels" % service_state)
+    for service in services:
+        state_since = previous_state.get(service.name, now)
+        current_state[service.name] = state_since
+        elapsed_time = now - state_since
         yield check_levels(elapsed_time,
                            None,
                            levels,
                            human_readable_func=get_age_human_readable,
-                           infoname="Service '%s' activating for" % service.name)
+                           infoname="Service '%s' %s for" % (service.name, service_state))
 
-        set_item_state("activating", current_state)
+        set_item_state(service_state, current_state)
 
 
 def _check_non_ok_services(systemd_services, params, output_string):
@@ -237,23 +239,26 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     blacklist = params.get('ignored', [])
     yield 0, "%d services in total" % len(services)
 
-    included, excluded, disabled, static, activating = _services_split(services, blacklist)
+    services_organised = _services_split(services, blacklist)
 
     included_template = "%d service%s %s (%s)"
-    for subresult in _check_non_ok_services(included, params, included_template):
+    for subresult in _check_non_ok_services(services_organised["included"], params,
+                                            included_template):
         yield subresult
 
     static_template = "%d static service%s %s (%s)"
-    for subresult in _check_non_ok_services(static, params, static_template):
+    for subresult in _check_non_ok_services(services_organised["static"], params, static_template):
         yield subresult
 
-    for subresult in _check_activating_state(activating, params):
-        yield subresult
+    for temporary_type in ("activating", "reloading"):
+        for subresult in _check_temporary_state(services_organised[temporary_type], params,
+                                                temporary_type):
+            yield subresult
 
-    if excluded:
-        yield 0, "%d ignored services" % len(excluded)
-    if disabled:
-        yield 0, "%d disabled services" % len(disabled)
+    if services_organised["excluded"]:
+        yield 0, "%d ignored services" % len(services_organised["excluded"])
+    if services_organised["disabled"]:
+        yield 0, "%d disabled services" % len(services_organised["disabled"])
 
 
 check_info['systemd_units.services_summary'] = {

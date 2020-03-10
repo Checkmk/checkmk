@@ -46,7 +46,7 @@ node (NODE) {
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,
                     keepAll: true,
-                    reportDir: '$WORKSPACE/tests-py3/htmlcov',
+                    reportDir: 'tests-py3/htmlcov',
                     reportFiles: 'index.html',
                     reportName: 'Unit Test Coverage',
                     reportTitles: ''

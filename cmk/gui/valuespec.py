@@ -4707,12 +4707,11 @@ class Dictionary(ValueSpec):
                         html.open_td()
                         html.open_b(class_=["header"])
                     html.write(" %s" % vs.title())
-                    if oneline:
-                        if small_headers:
-                            html.close_b()
-                            html.br()
-                        else:
-                            html.write_text(": ")
+                    if oneline and small_headers:
+                        html.close_b()
+                        html.br()
+                    if oneline and not small_headers:
+                        html.write_text(": ")
 
             if self._columns == 2:
                 if vs.title() and not colon_printed:
@@ -4742,16 +4741,14 @@ class Dictionary(ValueSpec):
             else:
                 vs.render_input(vp, None)
             html.close_div()
+            if not oneline or small_headers:
+                html.close_td()
             if not oneline:
-                html.close_td()
                 html.close_tr()
-            elif oneline and small_headers:
-                html.close_td()
 
-        if not oneline:
-            html.close_table()
-        elif oneline and small_headers:
+        if oneline and small_headers:
             html.close_tr()
+        if not oneline or small_headers:
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):

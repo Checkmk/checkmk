@@ -1,4 +1,4 @@
-title: Total and used Memory on systems using UCD SNMP Daemon
+title: UCD SNMP Daemon: Total and used Memory
 agents: snmp
 catalog: os/storage
 license: GPL

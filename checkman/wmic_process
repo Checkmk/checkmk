@@ -1,4 +1,4 @@
-title: Resource consumption of windows processes
+title: Windows Processes: Resource consumption
 agents: windows
 catalog: os/ps
 license: GPL

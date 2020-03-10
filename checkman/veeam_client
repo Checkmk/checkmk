@@ -1,4 +1,4 @@
-title: veeam client backup check
+title: Veeam: Client Backup
 agents: windows
 catalog: os/storage
 license: GPL

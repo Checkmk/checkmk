@@ -1,10 +1,10 @@
-title: Gude PDU units (8301): Power and Voltage
+title: GUDE PDU units (8301): Power and Voltage
 agents: snmp
 catalog: hw/power/gude
 license: GPL
 distribution: check_mk
 description:
- Monitors Power and Voltage on Gude PDU Units.
+ Monitors Power and Voltage on GUDE PDU Units.
 
 item:
  ID of the Phase

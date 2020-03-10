@@ -1,4 +1,4 @@
-title: CPU usage on Windows systems (deprecated)
+title: Windows: CPU usage (deprecated)
 agents: windows
 catalog: os/kernel
 license: GPL

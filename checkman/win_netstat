@@ -1,4 +1,4 @@
-title: Established TCP Connections or TCP/UDP Listeners
+title: Windows: Established TCP Connections or TCP/UDP Listeners
 agents: windows
 catalog: os/networking
 license: GPL

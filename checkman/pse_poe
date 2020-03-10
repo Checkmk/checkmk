@@ -1,4 +1,4 @@
-title: Generic PSE device: Power over Ethernet
+title: Generic PSE Device: Power over Ethernet
 agents: snmp
 catalog: hw/power/generic
 license: GPL

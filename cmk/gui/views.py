@@ -13,8 +13,7 @@ import traceback
 import json
 import functools
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as TypingTuple,
-    Callable,
+    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as _Tuple, Callable,
 )
 import six
 
@@ -1703,7 +1702,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
                                 limit=None,
                                 all_active_filters=None)
 
-    JoinMasterKey = TypingTuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
+    JoinMasterKey = _Tuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
     JoinSlaveKey = Union[str, Text]  # pylint: disable=unused-variable
 
     per_master_entry = {}  # type: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]]

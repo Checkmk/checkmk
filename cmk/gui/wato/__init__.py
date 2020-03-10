@@ -79,7 +79,7 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as TypingTuple, Optional as TypingOptional  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as _Tuple, Optional as _Optional  # pylint: disable=unused-import
 import six
 
 import cmk
@@ -371,7 +371,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     register_modules,
 )
 
-NetworkScanFoundHosts = List[TypingTuple[HostName, TypingHostAddress]]
+NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
 NetworkScanResult = Dict[str, Any]
 
 if TYPE_CHECKING:
@@ -453,7 +453,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None  # type: TypingOptional[Text]
+    action_message = None  # type: _Optional[Text]
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -544,7 +544,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
 
 
 def get_mode_permission_and_class(mode_name):
-    # type: (str) -> TypingTuple[List[PermissionName], Type[WatoMode]]
+    # type: (str) -> _Tuple[List[PermissionName], Type[WatoMode]]
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 
@@ -659,7 +659,7 @@ def execute_network_scan_job():
 
 
 def find_folder_to_scan():
-    # type: () -> TypingOptional[CREFolder]
+    # type: () -> _Optional[CREFolder]
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in watolib.Folder.all_folders().values():

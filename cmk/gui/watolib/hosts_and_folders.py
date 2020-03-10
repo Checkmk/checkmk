@@ -344,7 +344,7 @@ class CREFolder(BaseFolder):
     def folder_choices_fulltitle():
         if "folder_choices_full_title" not in current_app.g:
             current_app.g["folder_choices_full_title"] = Folder.root_folder(
-            ).recursive_subfolder_choices(current_depth=0, pretty=False)
+            ).recursive_subfolder_choices(pretty=False)
         return current_app.g["folder_choices_full_title"]
 
     @staticmethod
@@ -1009,12 +1009,25 @@ class CREFolder(BaseFolder):
         title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 " if current_depth else ""
         return HTML(title_prefix + html.attrencode(self.title()))
 
-    def recursive_subfolder_choices(self, current_depth=0, pretty=True):
-        sel = [(self.path(), self._prefixed_title(current_depth, pretty))]
+    def _walk_tree(self, results, current_depth, pretty):
+        visible_subfolders = False
+        for subfolder in sorted(self._subfolders.values(),
+                                cmp=lambda a, b: cmp(b.title(), a.title())):
+            visible_subfolders = subfolder._walk_tree(results, current_depth + 1,
+                                                      pretty) or visible_subfolders
 
-        for subfolder in self.visible_subfolders_sorted_by_title():
-            sel += subfolder.recursive_subfolder_choices(current_depth + 1, pretty)
-        return sel
+        if (visible_subfolders or self.may('read') or self.is_root() or
+                not config.wato_hide_folders_without_read_permissions):
+            results.append((self.path(), self._prefixed_title(current_depth, pretty)))
+            return True
+
+        return False
+
+    def recursive_subfolder_choices(self, pretty=True):
+        result = []
+        self._walk_tree(result, 0, pretty)
+        result.reverse()
+        return result
 
     def choices_for_moving_folder(self):
         return self._choices_for_moving("folder")

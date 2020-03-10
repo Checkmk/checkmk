@@ -7,14 +7,13 @@ include ../defines.make
 SHELL    := /bin/bash -e
 PIPENV2  := ../scripts/run-pipenv 2
 BANDIT   := $(PIPENV2) run bandit
-COVERAGE := $(PIPENV2) run coverage
 PYTEST   := $(PIPENV2) run py.test
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help pipenv-check test-bandit \
         test-format-shell test-agent-integration \
         test-pylint test-python-futurize test-shellcheck test-unit \
-        list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
+        list-unit-tests test-unit-one-by-one test-unit-sh
 
 help:
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
@@ -26,7 +25,6 @@ help:
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-unit                 - Run Python unit tests"
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
-	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh              - Run shell unit tests"
 
 $(NODE_MODULES):
@@ -85,12 +83,6 @@ test-unit-one-by-one:
 	for i in $$($(MAKE) --silent --no-print-directory list-unit-tests); do \
 	  $(PYTEST) -T unit $$i ; \
 	done
-
-# TODO: We should perhaps use the pytest --cov/--cov-report options, which the
-# pytest-cov plugin package adds to pyttest.
-test-unit-coverage-html:
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html --rcfile=.coveragerc_unit
 
 test-unit-sh:
 	./sh_test_runner.sh

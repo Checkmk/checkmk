@@ -40,8 +40,6 @@ KNOWN_FAILURES = {
     'f5_bigip_cluster_v11',
     'f5_bigip_vcmpfailover',
     'f5_bigip_vcmpguests',
-    'hp_fan',
-    'hp_psu',
     'hr_mem',
     'if',
     'if64',

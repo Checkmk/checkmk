@@ -6,12 +6,6 @@
 
 
 def scan_hp(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
-    if "hp" in sys_descr:
-        for type_ in [
-                "5406rzl2",
-                "5412rzl2",
-        ]:
-            if type_ in sys_descr:
-                return True
-    return False
+    return ("hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and
+            ("5406rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+             "5412rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower()))

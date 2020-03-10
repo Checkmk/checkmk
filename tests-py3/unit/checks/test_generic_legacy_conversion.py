@@ -63,14 +63,6 @@ KNOWN_FAILURES = {
     'if_lancom',
     'printer_pages',
     'ucd_mem',
-    'ups_bat_temp',
-    'ups_capacity',
-    'ups_in_freq',
-    'ups_in_voltage',
-    'ups_out_load',
-    'ups_out_voltage',
-    'ups_power',
-    'ups_test',
 }
 
 

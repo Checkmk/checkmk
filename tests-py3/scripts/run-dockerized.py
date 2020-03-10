@@ -41,7 +41,7 @@ def main(raw_args):
         tmp_path = Path(tmpdir)
 
         distro_name = os.environ.get("DISTRO", "ubuntu-19.04")
-        docker_tag = os.environ.get("DOCKER_TAG", "latest")
+        docker_tag = os.environ.get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
         version_spec = os.environ.get("VERSION", CMKVersion.GIT)
         edition = os.environ.get("EDITION", CMKVersion.CEE)
         branch = os.environ.get("BRANCH", current_base_branch_name())

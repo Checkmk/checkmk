@@ -16,4 +16,4 @@ description:
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
 
 inventory:
- One service per CPU is created.
+ One service is created for each CPU.

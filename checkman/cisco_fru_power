@@ -16,5 +16,5 @@ item:
  starting with {1}.
 
 inventory:
- One check is created for each FRU power supply unit.  Units are only included
+ One service is created for each FRU power supply unit. Units are only included
  if they are not in the operational state {offEnvOther} and {offEnvPower}.

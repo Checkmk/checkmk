@@ -9,5 +9,5 @@ description:
  mode and that all configured VSL links are up.
 
 inventory:
- A service is created if at least one chassis is in standby or active mode.
+ One service is created if at least one chassis is in standby or active mode.
 

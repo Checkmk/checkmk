@@ -10,4 +10,4 @@ item:
  The name of the memory unit
 
 inventory:
- One service per memory unit
+ One service is created for each memory unit.

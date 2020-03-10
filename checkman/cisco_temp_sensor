@@ -16,5 +16,5 @@ item:
  The description of the temperature sensor
 
 inventory:
- One separate service per sensor is being created.
+ One service is created for each sensor.
 

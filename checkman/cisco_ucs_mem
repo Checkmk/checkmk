@@ -17,4 +17,4 @@ description:
  When the presence state is "missing", all other data will be ignored.
 
 inventory:
- One service per memory device is created.
+ One service is created for each memory device.

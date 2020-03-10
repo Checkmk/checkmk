@@ -16,5 +16,5 @@ description:
 
 
 inventory:
- One service per Cisco device is created.
+ One service is created for each Cisco device.
 

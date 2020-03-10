@@ -16,5 +16,5 @@ item:
  if no description is available.
 
 inventory:
- One check for each available sensor is created.
+ One service is created for each available sensor.
 

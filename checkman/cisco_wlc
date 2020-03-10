@@ -14,5 +14,5 @@ description:
  with the model 5508.
 
 inventory:
- One check for each online accesspoint is created
+ One service is created for each online accesspoint.
 

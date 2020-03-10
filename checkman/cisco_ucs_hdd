@@ -14,4 +14,5 @@ description:
  a {WARNING} or {CRITICAL} status, based on the severity of the issue.
 
 inventory:
- One service per HDD is created. If the HDD is in status "removed", no service is created.
+ One service is created for each HDD.
+ If the HDD is in status "removed", no service is created.

@@ -10,4 +10,4 @@ item:
  The stack switch number.
 
 inventory:
- One service per switch is created.
+ One service is created for each switch.

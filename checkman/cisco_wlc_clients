@@ -13,5 +13,5 @@ item:
  of clients
 
 inventory:
- One check for each wifi network, and one summary check will be created
+ One service is created for each wifi network and one summary service is created.
 

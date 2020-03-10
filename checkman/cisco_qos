@@ -19,6 +19,5 @@ item:
  name of the QoS class as given in CISCO-CLASS-BASED-QOS-MIB::cbQosCMName.
 
 inventory:
- For each combination of IF-MIB::ifDescr and CISCO-CLASS-BASED-QOS-MIB::cbQosCMName one
- check is created.
+ One service is created for each combination of IF-MIB::ifDescr and CISCO-CLASS-BASED-QOS-MIB::cbQosCMName.
 

@@ -15,5 +15,4 @@ description:
  data.
 
 inventory:
- One check for each sensor is created by the inventory if the
- sensor is not in state {5} (not present).
+ One service is created for each sensor if the sensor is not in state {5} (not present).

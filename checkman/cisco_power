@@ -12,7 +12,7 @@ item:
  The name of the power supply as output from the SNMP agent.
 
 inventory:
- One check is created for each switch that has a redundant
- power supply. For stacked switches this is one check for
+ One service is created for each switch that has a redundant
+ power supply. For stacked switches this is one service for
  each physical device.
 

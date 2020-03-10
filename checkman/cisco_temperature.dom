@@ -23,8 +23,8 @@ item:
  if no description is available.
 
 inventory:
- One service for each transmit and receive power level for every sensor with admin state
- 'up' is created.
+ One service is created for each transmit and receive power level
+ for every sensor withadmin state 'up'.
  Optionally it is possible to configure specific administration states ({up}, {down},
  {testing}) that should be discovered in the WATO discovery rule {Cisco DOM Discovery}.
 

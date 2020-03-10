@@ -216,7 +216,6 @@ def get_vs_flexible_notifications():
                                 "match_sl"
                             ],
                             columns=1,
-                            headers=True,
                             elements=[
                                 (
                                     "plugin",

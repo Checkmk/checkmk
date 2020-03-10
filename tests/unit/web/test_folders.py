@@ -66,7 +66,7 @@ def three_levels(folder):
 
 def three_levels_leaf_permissions(folder):
     return folder(
-        '', title='Main directory').add_subfolders([
+        '', title='Main directory', may_see=False).add_subfolders([
             folder('a', title='A', may_see=False).add_subfolders([
                 folder('c', title='C', may_see=False),
                 folder('d', title='D'),
@@ -105,10 +105,10 @@ def test_recursive_subfolder_choices(make_folder, actual_builder, expected):
 
 
 def test_recursive_subfolder_choices_function_calls(mocker, make_folder):
-    spy = mocker.spy(watolib.Folder, 'folder_should_be_shown')
+    """Every folder should only be visited once"""
+    spy = mocker.spy(watolib.Folder, '_walk_tree')
 
     tree = three_levels_leaf_permissions(make_folder)
     tree.recursive_subfolder_choices()
 
-    # TODO: permissions of folders should only be checked once.
-    assert spy.call_count == 11
+    assert spy.call_count == 7

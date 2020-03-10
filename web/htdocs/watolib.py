@@ -1832,12 +1832,23 @@ class CREFolder(BaseFolder):
         return HTML(title_prefix + html.attrencode(self.title()))
 
 
-    def recursive_subfolder_choices(self, current_depth=0):
-        sel = [(self.path(), self._prefixed_title(current_depth))]
+    def _walk_tree(self, results, depth):
+        visible_subfolders = False
+        for subfolder in sorted(self._subfolders.values(), cmp=lambda a,b: cmp(b.title(), a.title())):
+            visible_subfolders = subfolder._walk_tree(results, depth + 1) or visible_subfolders
 
-        for subfolder in self.visible_subfolders_sorted_by_title():
-            sel += subfolder.recursive_subfolder_choices(current_depth + 1)
-        return sel
+        if (visible_subfolders or self.may('read') or self.is_root() or not config.wato_hide_folders_without_read_permissions):
+            results.append((self.path(), self._prefixed_title(depth)))
+            return True
+
+        return False
+
+
+    def recursive_subfolder_choices(self):
+        result = []
+        self._walk_tree(result, 0)
+        result.reverse()
+        return result
 
 
     def choices_for_moving_folder(self):

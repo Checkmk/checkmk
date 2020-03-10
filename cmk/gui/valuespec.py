@@ -4753,31 +4753,27 @@ class Dictionary(ValueSpec):
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        if self._headers:
-            for entry in self._headers:
-                if len(entry) == 2:
-                    header = entry[0]
-                    css = None
-                    section_elements = entry[1]
-                else:
-                    header = entry[0]
-                    css = entry[1]
-                    section_elements = entry[2]
-                self.render_input_form_header(varprefix,
-                                              value,
-                                              header,
-                                              section_elements,
-                                              as_part,
-                                              css=css)
-        else:
+        headers = self._headers if self._headers else [(six.ensure_str(self.title() or
+                                                                       _("Properties")), [])]
+        for header, css, section_elements in map(self._normalize_header, headers):
             self.render_input_form_header(varprefix,
                                           value,
-                                          self.title() or _("Properties"), [],
+                                          header,
+                                          section_elements,
                                           as_part,
-                                          css=None)
-
+                                          css=css)
         if not as_part:
             forms.end()
+
+    @staticmethod
+    def _normalize_header(header):
+        if isinstance(header, tuple):
+            if len(header) == 2:
+                return header[0], None, header[1]
+            if len(header) == 3:
+                return header[0], header[1], header[2]
+            raise ValueError("invalid header tuple length")
+        raise ValueError("invalid header type")
 
     def render_input_form_header(self, varprefix, value, title, section_elements, as_part, css):
         if not as_part:

@@ -8,7 +8,7 @@ description:
  center.
 
 inventory:
- All blowers are detected automatically.
+ One service is created for each blower.
 
 item:
  The item is a string of the format {"I/N"} where {I} is the number

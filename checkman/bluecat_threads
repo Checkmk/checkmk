@@ -8,4 +8,4 @@ description:
  device. Per default the levels for warning and critical are 2000 and 4000 threads.
 
 inventory:
- One service will be created
+ One service is created.

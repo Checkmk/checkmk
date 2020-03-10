@@ -10,5 +10,5 @@ description:
  Also Checked are the Stratum and the Leap Seconds. Each aberrancy will lead to a {WARNING} state.
 
 inventory:
- One service will be created
+ One service is created.
 

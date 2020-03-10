@@ -4689,14 +4689,15 @@ class Dictionary(ValueSpec):
             vp = varprefix + "_p_" + param
             colon_printed = False
             if self._optional_keys and param not in self._required_keys:
-                visible = html.get_checkbox(vp + "_USE")
+                checkbox_varname = vp + "_USE"
+                visible = html.get_checkbox(checkbox_varname)
                 if visible is None:
                     visible = param in value
                 label = vs.title()
                 if self._columns == 2:
                     label += ":"
                     colon_printed = True
-                html.checkbox("%s_USE" % vp,
+                html.checkbox(checkbox_varname,
                               visible,
                               label=label,
                               onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id))
@@ -4736,10 +4737,8 @@ class Dictionary(ValueSpec):
             # Remember: in complain mode we do not render 'value' (the default value),
             # but re-display the values from the HTML variables. We must not use 'value'
             # in that case.
-            if isinstance(value, dict):
-                vs.render_input(vp, value.get(param, vs.default_value()))
-            else:
-                vs.render_input(vp, None)
+            the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
+            vs.render_input(vp, the_value)
             html.close_div()
             if not oneline or small_headers:
                 html.close_td()

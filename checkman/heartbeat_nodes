@@ -1,4 +1,4 @@
-title: Node status and link status of heartbeat nodes
+title: Heartbeat Cluster: Node Status and Link Status
 agents: linux
 catalog: os/services
 license: GPL

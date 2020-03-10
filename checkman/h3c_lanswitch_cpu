@@ -1,4 +1,4 @@
-title: 3COM and H3C switches: CPU utilization
+title: 3Com and H3C Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/h3c
 license: GPL

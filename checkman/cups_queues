@@ -1,4 +1,4 @@
-title: State of CUPS Printer Queues
+title: CUPS Printer Queues: State
 agents: linux, freebsd
 catalog: os/services
 license: GPL

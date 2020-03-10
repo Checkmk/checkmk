@@ -1,4 +1,4 @@
-title: Number of free addresses in DHCP pools on ISC DHCP-Daemon on Linux
+title: Linux ISC DHCP-Deamon DHCP Pools: Number of Free Addresses
 agents: linux
 catalog: os/services
 license: GPL

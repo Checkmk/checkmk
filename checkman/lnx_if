@@ -1,4 +1,4 @@
-title: State of network interfaces of Linux hosts
+title: Linux: State of Network Interfaces
 agents: linux
 catalog: os/networking
 license: GPL

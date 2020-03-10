@@ -1,4 +1,4 @@
-title: Ressource status of heartbeat nodes using crm=no
+title: Heartbeat Cluster: Resource Status (Cluster Resource Manager deactivated)
 agents: linux
 catalog: os/services
 license: GPL

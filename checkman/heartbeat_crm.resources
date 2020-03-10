@@ -1,4 +1,4 @@
-title: Status of the resources in heartbeat clusters using crm=yes
+title: Heartbeat/Pacemaker Cluster: Resource Status (Cluster Resource Manager activated)
 agents: linux
 catalog: os/services
 license: GPL

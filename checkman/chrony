@@ -1,4 +1,4 @@
-title: NTP time synchronization using chrony
+title: Chrony: NTP Time Synchronization
 agents: linux
 catalog: os/services
 license: GPL

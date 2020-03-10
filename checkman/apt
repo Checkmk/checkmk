@@ -1,4 +1,4 @@
-title: Check for normal and security updates via APT
+title: APT: Normal and Security Updates
 agents: linux
 catalog: os/misc
 license: GPL

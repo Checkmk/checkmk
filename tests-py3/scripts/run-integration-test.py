@@ -51,7 +51,15 @@ def main(args):
     sf = get_site_factory(prefix="int_",
                           update_from_git=version == "git",
                           install_test_python_modules=True)
-    site = sf.get_site(current_base_branch_name())
+
+    if os.environ.get("REUSE"):
+        logger.info("Reuse existing site")
+        site = sf.get_existing_site(current_base_branch_name())
+        site.start()
+    else:
+        logger.info("Creating new site")
+        site = sf.get_site(current_base_branch_name())
+
     logger.info("Site %s is ready!", site.id)
 
     logger.info("===============================================")

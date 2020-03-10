@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,7 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, NoReturn  # pylint: disable=unused-import
 import argparse
 import logging
 import os
@@ -33,7 +33,8 @@ MP_INF = (float('-inf'), float('+inf'))  # type: Tuple[float, float]
 #   . parse commandline argumens
 
 
-def levels(values):  # type: (str) -> Tuple[float, float]
+def levels(values):
+    # type: (str) -> Tuple[float, float]
     lower, upper = values.split(':')
     _lower = float(lower) if lower else MP_INF[0]
     _upper = float(upper) if upper else MP_INF[1]
@@ -41,15 +42,17 @@ def levels(values):  # type: (str) -> Tuple[float, float]
 
 
 def sql_cmd_piece(values):
+    # type: (str) -> str
     """Parse every piece of the SQL command (replace \\n and \\;)"""
     return values.replace(r"\n", "\n").replace(r"\;", ";")
 
 
 def parse_args(argv):
+    # type: (List[str]) -> argparse.Namespace
     """Parse commandline arguments (incl password store and logging set up)"""
     this = str(os.path.basename(argv[0]))
-    fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog=this, description=__doc__, formatter_class=fmt)
+    help_fmt = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(prog=this, description=__doc__, formatter_class=help_fmt)
     # flags
     parser.add_argument(
         "-v",
@@ -194,6 +197,7 @@ def parse_args(argv):
 
 
 def bail_out(exit_code, output):
+    # type: (int, str) -> NoReturn
     state_txt = ["OK", "WARN", "CRIT", "UNKNOWN"][exit_code]
     sys.stdout.write("%s - %s\n" % (state_txt, output))
     sys.exit(exit_code)
@@ -218,9 +222,8 @@ def _default_execute(cursor, cmd, inpt, procedure):
 
 
 def postgres_connect(host, port, db_name, user, pwd):
-    import psycopg2
-    return psycopg2.connect(host=host, port=port, \
-                            database=db_name, user=user, password=pwd)
+    import psycopg2  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    return psycopg2.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def postgres_execute(cursor, cmd, inpt, procedure):
@@ -228,12 +231,8 @@ def postgres_execute(cursor, cmd, inpt, procedure):
 
 
 def mysql_connect(host, port, db_name, user, pwd):
-    # TODO: Python3: Switch to
-    # import pymysql
-    # pymysql.connect(...)
-    import MySQLdb
-    return MySQLdb.connect(host=host, port=port, db=db_name, \
-                           user=user, passwd=pwd)
+    import pymysql  # pylint: disable=import-outside-toplevel
+    return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)
 
 
 def mysql_execute(cursor, cmd, inpt, procedure):
@@ -241,9 +240,8 @@ def mysql_execute(cursor, cmd, inpt, procedure):
 
 
 def mssql_connect(host, port, db_name, user, pwd):
-    import pymssql
-    return pymssql.connect(host=host, port=port, \
-                           database=db_name, user=user, password=pwd)
+    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(cursor, cmd, _inpt, procedure):
@@ -262,7 +260,7 @@ def oracle_connect(host, port, db_name, user, pwd):
     sys.path.append('/usr/lib/python%s.%s/site-packages' %
                     (sys.version_info.major, sys.version_info.minor))
     try:
-        import cx_Oracle  # pylint: disable=import-error
+        import cx_Oracle  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
@@ -272,7 +270,7 @@ def oracle_connect(host, port, db_name, user, pwd):
 
 def oracle_execute(cursor, cmd, inpt, procedure):
     try:
-        import cx_Oracle  # pylint: disable=import-error
+        import cx_Oracle  # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
@@ -309,8 +307,8 @@ def oracle_execute(cursor, cmd, inpt, procedure):
 def db2_connect(host, port, db_name, user, pwd):
     # IBM data server driver
     try:
-        import ibm_db  # pylint: disable=import-error
-        import ibm_db_dbi  # pylint: disable=import-error
+        import ibm_db  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+        import ibm_db_dbi  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
         bail_out(3, "%s. Please install it via pip." % exc)
 
@@ -415,7 +413,7 @@ def process_result(result, warn, crit, metrics=False, debug=False):
 
 
 def main(argv=None):
-
+    # type: (Optional[List[str]]) -> None
     args = parse_args(argv or sys.argv)
 
     try:
@@ -433,7 +431,9 @@ def main(argv=None):
             metrics=args.metrics,
             debug=args.debug,
         )
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         errmsg = str(exc).strip('()').replace(r'\n', ' ')
         bail_out(3, "Error while %s: %s" % (msg, errmsg))
 

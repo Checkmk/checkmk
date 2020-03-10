@@ -66,7 +66,8 @@ def test_03_pip_interpreter_version(site):
     "pymssql",
     "ldap",
     "MySQLdb",
-    "psycopg2",
+    # Temporarily disabled until tests have been moved to python 3
+    #"psycopg2",
     "dicttoxml",
     "enum",
     "PIL",

@@ -69,6 +69,15 @@ def _explicit_conversions(function_name):
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
         )
 
+    if function_name == '_has_table_8':
+        return exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.*")
+
+    if function_name == '_is_cisco':
+        return contains(".1.3.6.1.2.1.1.1.0", "cisco")
+
+    if function_name == '_is_cisco_nexus':
+        return contains(".1.3.6.1.2.1.1.1.0", "nx-os")
+
     raise NotImplementedError(function_name)
 
 
@@ -260,6 +269,9 @@ def _ast_convert_call(call_ast):
                 '_is_fsc_or_windows',
                 'scan_ricoh_printer',
                 'is_netapp_filer',
+                '_has_table_8',
+                '_is_cisco',
+                '_is_cisco_nexus',
         ):
             return _explicit_conversions(call_ast.func.id)
 

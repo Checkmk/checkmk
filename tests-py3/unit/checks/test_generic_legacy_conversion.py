@@ -32,13 +32,8 @@ KNOWN_FAILURES = {
     'checkpoint_temp',
     'checkpoint_tunnels',
     'checkpoint_voltage',
-    'cisco_cpu',
-    'cisco_cpu_memory',
-    'cisco_cpu_multiitem',
     'cisco_mem_asa',
     'cisco_mem_asa64',
-    'cisco_nexus_cpu',
-    'cisco_oldcpu',
     'f5_bigip_cluster',
     'f5_bigip_cluster_status',
     'f5_bigip_cluster_status_v11_2',
@@ -80,6 +75,9 @@ def test_snmp_tree_tranlation(_name, snmp_info):
     ("printer_pages", "scan_ricoh_printer"),
     ("fsc_temp", "is_fsc"),
     ("df_netapp32", "is_netapp_filer"),
+    ("cisco_cpu", "_has_table_8"),
+    ("cisco_cpu", "_is_cisco"),
+    ("cisco_cpu", "_is_cisco_nexus"),
 ])
 def test_explicit_conversion(check_manager, check_name, func_name):
     scan_func = check_manager.get_check(check_name).context[func_name]

@@ -63,6 +63,12 @@ def _explicit_conversions(function_name):
             exists('.1.3.6.1.4.1.231.2.10.2.1.1.0'),
         )
 
+    if function_name == 'is_netapp_filer':
+        return any_of(
+            contains(".1.3.6.1.2.1.1.1.0", "ontap"),
+            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
+        )
+
     raise NotImplementedError(function_name)
 
 
@@ -245,17 +251,19 @@ def _ast_convert_call(call_ast):
             return exists(_ast_convert_to_str(call_ast.args[0]))
         if call_ast.func.id in (
                 'has_ifHCInOctets',
-                'scan_f5_bigip_cluster_status',
                 'is_fsc',
                 '_is_ucd',
                 '_is_fsc_or_windows',
                 'scan_ricoh_printer',
-                'scan_cisco_mem_asa64',
                 'is_netapp_filer',
         ):
             return _explicit_conversions(call_ast.func.id)
 
-        if call_ast.func.id in ('if64_disabled',):
+        if call_ast.func.id in (
+                'if64_disabled',
+                'scan_f5_bigip_cluster_status',
+                'scan_cisco_mem_asa64',
+        ):
             raise NotImplementedError(call_ast.func.id)
 
     if isinstance(call_ast.func, ast.Attribute):

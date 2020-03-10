@@ -1,5 +1,4 @@
 import pytest  # type: ignore[import]
-import testlib  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.check_api as check_api

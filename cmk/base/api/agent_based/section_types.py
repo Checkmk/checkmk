@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for agent_based plugins
 """
-from typing import Any, Callable, Generator, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 import collections
 
 from cmk.base.api import PluginName

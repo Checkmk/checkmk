@@ -71,7 +71,6 @@ RUN yum -y makecache \
     perl-Time-HiRes \
     perl-devel \
     php \
-    postgresql-devel \
     readline-devel \
     rpcbind \
     rpm-build \

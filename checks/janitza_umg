@@ -12,6 +12,14 @@ janitza_umg_device_map = {
 }
 
 
+def janitza_umg_scan(oid):
+    return oid(".1.3.6.1.2.1.1.2.0") in (
+        ".1.3.6.1.4.1.34278.8.6",
+        ".1.3.6.1.4.1.34278.10.1",
+        ".1.3.6.1.4.1.34278.10.4",
+    )
+
+
 def parse_janitza_umg_inphase(info):
     def flatten(line):
         return [x[0] for x in line]
@@ -113,7 +121,7 @@ check_info['janitza_umg'] = {
         (".1.3.6.1.4.1.34278", ["7"]),  #       "
         (".1.3.6.1.4.1.34278", ["8"]),  #       "
     ],
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in janitza_umg_device_map,
+    'snmp_scan_function': janitza_umg_scan,
 }
 
 

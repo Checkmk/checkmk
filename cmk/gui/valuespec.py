@@ -4772,8 +4772,7 @@ class Dictionary(ValueSpec):
         else:
             self.render_input_form_header(varprefix,
                                           value,
-                                          self.title() or _("Properties"),
-                                          None,
+                                          self.title() or _("Properties"), [],
                                           as_part,
                                           css=None)
 
@@ -4788,7 +4787,7 @@ class Dictionary(ValueSpec):
             if param in self._hidden_keys:
                 continue
 
-            if section_elements and param not in section_elements:
+            if param not in section_elements:
                 continue
 
             div_id = varprefix + "_d_" + param

@@ -132,6 +132,24 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
     }
 }
 
+std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
+    using namespace cma::cfg;
+    auto sp = getHostSp();
+    auto mc = sp->getModuleCommander();
+
+    auto exts = mc.getExtensions();
+    for (auto& e : exts) {
+        if (e.empty()) continue;
+
+        if (e[0] == '.') e.erase(e.begin(), e.begin() + 1);
+    }
+    auto global_exts = GetInternalArray(groups::kGlobal, vars::kExecute);
+
+    for (auto& ge : global_exts) exts.emplace_back(ge);
+
+    return exts;
+}
+
 void PluginsProvider::loadConfig() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering '{}'", uniq_name_);
@@ -148,11 +166,13 @@ void PluginsProvider::loadConfig() {
     // linking all files, execute and extensions
     auto files = cma::GatherAllFiles(pv);
     XLOG::t("Found [{}] files to execute", files.size());
-    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-    LogExecuteExtensions("Allowed Extensions:", execute);
-    if (execute.size() == 0) XLOG::l("No allowed extensions. This is strange.");
+    auto exts = gatherAllowedExtensions();
 
-    cma::FilterPathByExtension(files, execute);
+    LogExecuteExtensions("Allowed Extensions:", exts);
+    if (exts.size() == 0) XLOG::l("No allowed extensions. This is strange.");
+
+    cma::FilterPathByExtension(files, exts);
+
     XLOG::d.t("Left [{}] files to execute", files.size());
 
     auto yaml_units =

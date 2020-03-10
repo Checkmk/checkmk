@@ -438,6 +438,17 @@ bool ModuleCommander::PrepareCleanTargetDir(
     return true;
 }
 
+std::vector<std::string> ModuleCommander::getExtensions() const {
+    std::vector<std::string> result;
+
+    for (auto &m : modules_) {
+        auto exts = m.exts();
+        result.insert(result.end(), exts.begin(), exts.end());
+    }
+
+    return result;
+}
+
 bool ModuleCommander::InstallModule(const Module &mod,
                                     const std::filesystem::path &root,
                                     const std::filesystem::path &user,

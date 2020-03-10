@@ -23,7 +23,7 @@ else:
     _str = unicode
     _long = long
     _bytes_prefix_to_add = 'b'
-    _str_prefix_to_add = ''
+    _str_prefix_to_add = 'u'
 
 
 def pprint(obj, stream=None):
@@ -81,7 +81,11 @@ def _format_byte_string(printer, obj):
 def _format_unicode_string(printer, obj):
     # type: (PythonPrinter, _str) -> None
     printer._write(_str_prefix_to_add)
-    printer._write(repr(obj))
+    # When Python 3 creates a repr which is interpreted by Python 2, we need to produce
+    # a repr-string where non ascii characters are hex escaped as Python 2 usualy does.
+    repr_txt = "'{}'".format(''.join(
+        ['\\x{:02x}'.format(ord(c)) if ord(c) > 127 else c for c in obj]))
+    printer._write(repr_txt)
 
 
 def _format_tuple(printer, obj):

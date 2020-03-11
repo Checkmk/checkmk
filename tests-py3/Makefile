@@ -6,6 +6,7 @@ SHELL    := /bin/bash -e
 PIPENV3  := ../scripts/run-pipenv 3
 PYTEST   := $(PIPENV3) run py.test -vv
 YAPF     := $(PIPENV3) run yapf
+BANDIT   := $(PIPENV3) run bandit
 MYPY     := ../scripts/run-mypy
 
 .PHONY: help test-docker test-pylint test-unit \
@@ -16,7 +17,7 @@ MYPY     := ../scripts/run-mypy
 	test-composition-docker test-composition \
 	test-format-python test-format-python3 \
 	test-unit-coverage-html \
-	test-pipenv-deps
+	test-pipenv-deps test-bandit
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
@@ -38,6 +39,7 @@ help:
 	@echo "test-composition              - Run composition tests locally"
 	@echo "test-composition-docker       - Run composition tests in container"
 	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
+	@echo "test-bandit                   - Run bandit (security) tests"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -168,6 +170,15 @@ test-composition: $(NODE_MODULES)
 
 test-pipenv-deps:
 	$(PIPENV3) check
+
+bandit.ini:
+	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 3 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
+
+test-bandit: bandit.ini
+# Currently only care about high severity reported issues. Once this is reached,
+# go and enable the medium/low checks.
+	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+
 
 clean:
 	rm -rf .mypy_cache

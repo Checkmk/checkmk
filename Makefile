@@ -165,14 +165,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
-	$(PIPENV2) run python -m compileall cmk ; \
-	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
+	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
 	    --exclude "cee" \
 	    --exclude "cee.py*" \
 	    --exclude "cme" \
 	    --exclude "cme.py*" \
-	    cmk/* ; \
-	  rm cmk/*.pyc
+	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)

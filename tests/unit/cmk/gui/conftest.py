@@ -106,9 +106,12 @@ def with_user(register_builtin_html, load_config):
 
 
 @pytest.fixture(scope='function')
-def recreate_openapi_spec():
+def recreate_openapi_spec(mocker):
     from cmk.gui.plugins.openapi import specgen
-    store.save_bytes_to_file(paths.web_dir + "/htdocs/openapi/checkmk.yaml", specgen.generate())
+    spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
+    openapi_spec_dir = mocker.patch('cmk.gui.wsgi.routing.openapi_spec_dir')
+    openapi_spec_dir.return_value = spec_path
+    store.save_bytes_to_file(spec_path + "/checkmk.yaml", specgen.generate())
     yield
 
 

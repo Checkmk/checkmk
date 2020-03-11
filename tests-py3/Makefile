@@ -15,7 +15,8 @@ MYPY     := ../scripts/run-mypy
 	test-integration-docker-debug \
 	test-composition-docker test-composition \
 	test-format-python test-format-python3 \
-	test-unit-coverage-html
+	test-unit-coverage-html \
+	test-pipenv-deps
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
@@ -36,6 +37,7 @@ help:
 	@echo "test-integration-docker-debug - Run test container for manual debugging"
 	@echo "test-composition              - Run composition tests locally"
 	@echo "test-composition-docker       - Run composition tests in container"
+	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -163,6 +165,9 @@ test-composition-docker:
 # updater code for the test execution, which should not be done.
 test-composition: $(NODE_MODULES)
 	../scripts/run-pipenv 2 run py.test -vv -T composition $(realpath ../tests/composition)
+
+test-pipenv-deps:
+	$(PIPENV3) check
 
 clean:
 	rm -rf .mypy_cache

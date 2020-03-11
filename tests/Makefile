@@ -10,13 +10,12 @@ BANDIT   := $(PIPENV2) run bandit
 PYTEST   := $(PIPENV2) run py.test
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
-.PHONY: help pipenv-check test-bandit \
+.PHONY: help test-bandit \
         test-format-shell test-agent-integration \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-sh
 
 help:
-	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
@@ -32,9 +31,6 @@ $(NODE_MODULES):
 
 bandit.ini:
 	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 2 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
-
-pipenv-check:
-	$(PIPENV2) check
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,

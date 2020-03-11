@@ -1,0 +1,134 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+#
+# Markus Gälli
+# markus.gaelli@swisscom.com
+# Swisscom (Schweiz) AG
+# March 2020
+
+# Agent output and things to know:
+# 
+# Output:
+#
+#[Volume_Groups_Active]
+#rootvg
+#usmvg
+#[Volume_Groups_Details]
+#cobackvg:
+#LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+#oraprodbacklv       jfs2       792     1584    4    closed/syncd  /oracle/prod/backup
+#loglv04             jfs2log    1       2       2    closed/syncd  N/A
+#free_alt_rootvg:
+#LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+#rootvg:
+#LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+#hd5                 boot       1       2       2    closed/syncd  N/A
+#hd6                 paging     240     480     2    open/syncd    N/A
+#livedump            jfs2       4       8       2    open/syncd    /var/adm/ras/livedump
+#lroot               jfs2       16      32      2    open/syncd    /root
+#sysdumplv00         sysdump    100     100     1    open/syncd    N/A
+#usmvg:
+#LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+#usrLocal            jfs2       64      128     2    closed/syncd    /usr/local
+#usrLclItslb         jfs2       8       16      2    closed/syncd    /usr/local/itslb
+#
+# Things to know:
+# In the check we infer all inactive volume groups by iterating over all details
+# (from both active and inactive volume groups) and setting those to inactive
+# which do not occur in the first section describing the active volume groups only.
+# Note that volume groups which only have closed volumes (e.g. the volume group "usmvg" above)
+# will also be listed as "active" if they occur in the first list of active volume groups.
+
+import re
+
+def parse_aix_lsvg_all(info):
+    # 
+    # We assume info containing a list of single element lists.
+    # Each line of above output justs gets wrapped into an array.
+    # Reason is we treat the volume group details are basically 
+    # fixed width fields, and we rather do the parsing here.
+    # (It can happen that columns are empty...)
+    #   
+    header_active, header_details  = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
+    if info[0][0] != header_active:
+        raise Exception('Expecting a (possibly empty) list of active volume groups starting with ' + header_active) 
+    info = info[1:]
+    
+    delimiter_indices = [index for index, line in enumerate(info) if line[0] == header_details]
+    if len(delimiter_indices) > 1: 
+        raise Exception('We do not expect to have more than one section starting with '+header_details) 
+
+    if len(delimiter_indices) == 1:
+        active_volume_groups = [line[0] for line in info[:delimiter_indices[0]]]
+        details = info[delimiter_indices[0]+1:]
+    else: 
+        active_volume_groups = []
+        details = info
+
+    lsvg_conf = {}
+    for line in details:
+        real_line = line[0]
+        if (real_line.endswith(":")):
+            vgname = real_line[:-1]
+            lsvg_conf.update({vgname: {}})
+            if vgname in active_volume_groups:
+                lv_state = "active"
+            else:
+                lv_state = "inactive"
+        # Some versions send a title line "LV NAME  ..."
+        elif real_line.startswith("LV") and real_line.endswith("MOUNT POINT"):
+            continue
+        else:
+            indices = [0,20,31,39,47,52,66,None]
+            
+            raw_columns = [real_line[ indices[i-1] : indices[i] ] for i in range(1,len(indices))]
+            lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = [column.strip() for column in raw_columns]
+
+            # split lv state into two relevant values
+            activation, mirror = act_state.split("/")
+            if mountpoint == "N/A":
+                mountpoint = None
+            if lvtype == "N/A":
+                lvtype = None
+            lsvg_conf[vgname].update({
+                lv: (lvtype, int(num_lp), int(num_pp), int(num_pv), activation, mirror, mountpoint, lv_state)
+            })
+    return lsvg_conf
+
+def sort_by_logical_volume_name(volumes):
+        convert = lambda text: int(text) if text.isdigit() else text.lower() 
+        alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['logical_volume_name']) ] 
+        return sorted(volumes, key = alphanum_key)
+
+def inv_aix_lsvg_all(info, inventory_tree):
+
+    unsorted_volumes = []
+    node = inv_tree_list(".hardware.storage.logical_volumes:")
+    result = parse_aix_lsvg_all(info)
+    for volume_group_name, volumes in result.iteritems():
+        for logical_volume_name in volumes:
+            keys = [
+                'logical_volume_name', 
+                'volume_group_name', 
+                'disc_type', 
+                'logical_partitions', 
+                'physical_partitions', 
+                'physical_volumes', 
+                'state1', 
+                'state2', 
+                'mount_point',
+                'volume_group_state',
+                'state']
+            values = [logical_volume_name, volume_group_name] + list(volumes[logical_volume_name]) + ['']
+            volume_info = dict(zip(keys, values))
+            #Compute combined state only just below
+            volume_info['state']=volume_info['state1'] + "/" + volume_info['state2']
+            unsorted_volumes.append(volume_info)
+    node.extend(sort_by_logical_volume_name(unsorted_volumes))
+
+inv_info['aix_lsvg_all'] = {
+    "inv_function": inv_aix_lsvg_all,
+}

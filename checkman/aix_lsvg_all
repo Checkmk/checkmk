@@ -1,0 +1,12 @@
+title: AIX_LSVG_ALL
+agents: aix
+catalog: app/aix_lsvg_all
+license: ApacheV2
+distribution: check_mk
+description:
+ Shows information about the logical volumes for all volume groups on AIX.
+
+item: Detailed infos for logical volumes per volume groups on AIX systems.
+
+inventory:
+ Shows the name, mountpoint, state, type, number of physical and logical partitions, and the number of physical volumes of the logical volume per volume group.

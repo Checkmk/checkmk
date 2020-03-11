@@ -50,5 +50,54 @@ then
         echo "<<<prtconf:sep(58):persist($UNTIL)>>>"
         prtconf
     fi
-fi
 
+    # Enhanced by Markus Gälli 
+    # markus.gaelli@swisscom.com 
+    # Swisscom (Schweiz) AG 
+    # March 2020
+    #
+    # prtconf does not provide detailed information about volume groups.
+    # The following command does though:
+    # `(lsvg | lsvg -i -l -L  2>/dev/null)`
+    # Please refer to https://www.ibm.com/support/knowledgecenter/ssw_aix_71/l_commands/lsvg.html
+    # 
+    # Note that `lsvg` itself just spits out the names of the volume groups.
+    # lsvg -i in turn reads in names of volume groups from stdin.
+    # 
+    # The `l` parameter lists the following information for each logical volume within 
+    # the group specified by the volumegroup parameter:
+    # - LV
+    # A logical volume within the volume group.
+    # - Type
+    # Logical volume type.
+    # - LPs
+    # Number of logical partitions in the logical volume.
+    # - PPs
+    # Number of physical partitions used by the logical volume.
+    # - PVs
+    # Number of physical volumes used by the logical volume.
+    # - Logical volume state
+    # State of the logical volume. Opened/stale indicates the logical volume is open but contains partitions that are not current. Opened/syncd indicates the logical volume is open and synchronized. Closed indicates the logical volume has not been opened.
+    # - Mount point
+    # File system mount point for the logical volume, if applicable.
+    #
+    # The `L` parameter specifies no waiting to obtain a lock on the Volume group.
+    # Note : If the volume group is being changed, using the -L flag gives unreliable data.
+    #
+    # In principle we just want to export the result of this combined lsvg script.
+    # 
+    # But `lsvg -l` is made for human readability, not so much for check_mk:
+    # It is yielding fixed width tables for results, where empty elements are
+    # just replaced by empty spaces.
+    # So far we only had this situation for "TYPE" which could be empty 
+    # We leave this to the parser to handle, hence the separator 
+    # is :sep(0) in order to get the raw lines.
+    
+    if type lsvg > /dev/null; then
+        echo "<<<aix_lsvg_all:sep(0):persist($UNTIL)>>>"
+        echo "[Volume_Groups_Active]"
+        lsvg -o
+        echo "[Volume_Groups_Details]"
+        lsvg | lsvg -i -l -L 2>/dev/null
+    fi
+fi

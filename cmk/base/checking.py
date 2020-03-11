@@ -63,7 +63,7 @@ _submit_to_core = True
 _show_perfdata = False
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
-UncleanPerfValue = Optional[Union[str, float]]
+UncleanPerfValue = Union[None, str, float]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -453,7 +453,7 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
-    # type: (Optional[Union[ServiceCheckResult, Tuple, Iterable]], bool) -> ServiceCheckResult
+    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 

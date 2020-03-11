@@ -93,7 +93,7 @@ CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     Union[str, List[str]]]
-HostCheckCommand = Optional[Union[str, Tuple[str, Union[int, str]]]]
+HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
 GroupDefinitions = Dict[str, Text]
@@ -2607,7 +2607,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def only_from(self):
-        # type: () -> Optional[Union[List[str], str]]
+        # type: () -> Union[None, List[str], str]
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])
         if not ruleset:

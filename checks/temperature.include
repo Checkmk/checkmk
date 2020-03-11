@@ -311,7 +311,7 @@ TempParamDict = TypedDict(
     },
     total=False,
 )
-TempParamType = Optional[Union[TwoLevelsType, FourLevelsType, TempParamDict]]
+TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
 def check_temperature(

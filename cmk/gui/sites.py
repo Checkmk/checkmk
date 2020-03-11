@@ -296,7 +296,7 @@ def _livestatus_auth_user(user, force_authuser):
 
 @contextmanager
 def only_sites(sites):
-    # type: (Optional[Union[List[SiteId], SiteId]]) -> Iterator[None]
+    # type: (Union[None, List[SiteId], SiteId]) -> Iterator[None]
     """Livestatus query over sites"""
     if not sites:
         sites = None

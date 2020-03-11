@@ -175,7 +175,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
 
     def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name,
                              for_discovery, nodes_of_clustered_service):
-        # type: (HostName, Optional[HostAddress], CheckPluginName, SectionName, bool, Optional[List[HostName]]) -> Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
+        # type: (HostName, Optional[HostAddress], CheckPluginName, SectionName, bool, Optional[List[HostName]]) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
         # First abstract cluster / non cluster hosts
         host_entries = self._get_host_entries(hostname, ipaddress)

@@ -102,7 +102,7 @@ if TYPE_CHECKING:
 CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
 HTMLTagValue = Union[None, str, Text]
-HTMLTagContent = Optional[Union[str, Text, HTML]]
+HTMLTagContent = Union[None, str, Text, HTML]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
@@ -303,7 +303,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_opening_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, Optional[Union[Text, str]], **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLTagContent, Union[None, Text, str], **HTMLTagAttributeValue) -> HTML
         if href is not None:
             attrs['href'] = href
         return self._render_content_tag('a', content, **attrs)
@@ -1137,7 +1137,7 @@ class html(ABCHTMLGenerator):
 
         # Browser options
         self.user_errors = {}  # type: Dict[Optional[str], Text]
-        self.focus_object = None  # type: Optional[Union[Tuple[Optional[str], str], str]]
+        self.focus_object = None  # type: Union[None, Tuple[Optional[str], str], str]
         self.status_icons = {}  # type: Dict[str, Union[Tuple[Text, str], Text]]
         self.final_javascript_code = ""
         self.page_context = {}  # type: VisualContext
@@ -1431,12 +1431,12 @@ class html(ABCHTMLGenerator):
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode_vars(self, vars_):
-        # type: (List[Tuple[str, Optional[Union[int, str, Text]]]]) -> str
+        # type: (List[Tuple[str, Union[None, int, str, Text]]]) -> str
         return self.encoder.urlencode_vars(vars_)
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
-        # type: (Optional[Union[str, Text]]) -> str
+        # type: (Union[None, str, Text]) -> str
         return self.encoder.urlencode(value)
 
     #
@@ -1647,7 +1647,7 @@ class html(ABCHTMLGenerator):
                 self.del_language_cookie()
 
     def help(self, text):
-        # type: (Optional[Union[HTML, Text]]) -> None
+        # type: (Union[None, HTML, Text]) -> None
         """Embed help box, whose visibility is controlled by a global button in the page.
 
         You may add macros like this to the help texts to create links to the user
@@ -1656,7 +1656,7 @@ class html(ABCHTMLGenerator):
         self.write_html(self.render_help(text))
 
     def render_help(self, text):
-        # type: (Optional[Union[HTML, Text]]) -> HTML
+        # type: (Union[None, HTML, Text]) -> HTML
         if isinstance(text, HTML):
             text = "%s" % text
 
@@ -2302,7 +2302,7 @@ class html(ABCHTMLGenerator):
         varname,  # type: str
         default_value=u"",  # type: Text
         cssclass="text",  # type: str
-        size=None,  # type: Optional[Union[str, int]]
+        size=None,  # type: Union[None, str, int]
         label=None,  # type: Optional[Text]
         id_=None,  # type: str
         submit=None,  # type: Optional[str]
@@ -2428,7 +2428,7 @@ class html(ABCHTMLGenerator):
                        try_max_width=False,
                        read_only=False,
                        autocomplete=None):
-        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], bool, bool, Optional[str]) -> None
+        # type: (str, Text, str, Union[None, str, int], Optional[Text], str, Optional[str], bool, bool, Optional[str]) -> None
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2979,7 +2979,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (Optional[Union[Text, str]], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Union[None, Text, str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]

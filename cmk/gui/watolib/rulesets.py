@@ -56,7 +56,7 @@ class RuleConditions(object):
                  host_name=None,
                  service_description=None,
                  service_labels=None):
-        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]], Dict[str, str]) -> None
+        # type: (str, Dict[str, str], Dict[str, str], Union[None, Dict[str, List[str]], List[str]], Optional[List[str]], Dict[str, str]) -> None
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
@@ -77,7 +77,7 @@ class RuleConditions(object):
     # strings.  After reading the config into the GUI ensure we really
     # process the host names as str. TODO: Can be removed with Python 3.
     def _fixup_unicode_hosts(self, host_conditions):
-        # type: (Optional[Union[Dict[str, List[str]], List[str]]]) -> Optional[Union[Dict[str, List[str]], List[str]]]
+        # type: (Union[None, Dict[str, List[str]], List[str]]) -> Union[None, Dict[str, List[str]], List[str]]
         if not host_conditions:
             return host_conditions
 

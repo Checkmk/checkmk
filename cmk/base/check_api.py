@@ -384,7 +384,7 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
-    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Optional[Union[int, float]]) -> List
+    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
     if not dsname:
         return []
 
@@ -653,7 +653,7 @@ def validate_filter(filter_function):
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[Dict[Any, Any], str]]) -> Callable
+    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to

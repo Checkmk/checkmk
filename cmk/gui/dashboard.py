@@ -82,7 +82,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletId,
 )
 
-loaded_with_language = False  # type: Optional[Union[bool, str]]
+loaded_with_language = False  # type: Union[None, bool, str]
 
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
@@ -306,7 +306,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 
     @classmethod
     def vs_parameters(cls):
-        # type: () -> Optional[Union[List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]]
+        # type: () -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]
         return cls._spec.get("parameters", None)
 
     @classmethod

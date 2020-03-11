@@ -88,7 +88,7 @@ class ValueSpec(object):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
         **kwargs):
@@ -235,7 +235,7 @@ class FixedValue(ValueSpec):
         value,  # type: Any
         totext=None,  # type: Text
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -279,10 +279,10 @@ class Age(ValueSpec):
         self,
         label=None,  # type: _Optional[Text]
         minvalue=None,  # type: _Optional[Seconds]
-        maxvalue=None,  # type: _Optional[Union[Seconds, float]]
+        maxvalue=None,  # type: Union[None, Seconds, float]
         display=None,  # type: _Optional[List[str]]
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
         cssclass=None,  # type: _Optional[str]
@@ -388,8 +388,8 @@ class Integer(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         size=None,  # type: _Optional[int]
-        minvalue=None,  # type: _Optional[Union[float, int]]
-        maxvalue=None,  # type: _Optional[Union[float, int]]
+        minvalue=None,  # type: Union[None, int, float]
+        maxvalue=None,  # type: Union[None, int, float]
         label=None,  # type: _Optional[Text]
         unit="",  # type: Text
         thousand_sep=None,  # type: _Optional[Text]
@@ -397,7 +397,7 @@ class Integer(ValueSpec):
         align="left",  # type: str
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -550,7 +550,7 @@ class TextAscii(ValueSpec):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -558,7 +558,7 @@ class TextAscii(ValueSpec):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -722,7 +722,7 @@ class RegExp(TextAscii):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -730,7 +730,7 @@ class RegExp(TextAscii):
         hidden=False,  # type: bool
         # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -859,7 +859,7 @@ class EmailAddress(TextAscii):
         hidden=False,  # type: bool
         # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -914,7 +914,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     size=34,  # type: Union[int, str]
     # From ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     default_value=_DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
@@ -943,7 +943,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
 def IPv4Network(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None  # type: Union[None, Text, Callable[[], Text]]
 ):
     # type: (...) -> TextAscii
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
@@ -955,7 +955,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     allow_empty=True,  # type: bool
     # From ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     default_value=_DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
@@ -987,14 +987,14 @@ class TextAsciiAutocomplete(TextAscii):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
         hidden=False,  # type: bool
         # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1115,7 +1115,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     allow_empty=False,
     # ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     default_value=_DEF_VALUE,  # type: Any
 ):
     """A host name with or without domain part. Also allow IP addresses"""
@@ -1148,7 +1148,7 @@ class HostAddress(TextAscii):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -1156,7 +1156,7 @@ class HostAddress(TextAscii):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1267,7 +1267,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     size=25,  # type: Union[int, str]
     # ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     default_value=_DEF_VALUE,  # type: Any
     validate=None,  # type: _Optional[Callable[[str, Any], None]]
 ):
@@ -1302,7 +1302,7 @@ class Url(TextAscii):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -1310,7 +1310,7 @@ class Url(TextAscii):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1391,14 +1391,14 @@ class Url(TextAscii):
 def HTTPUrl(  # pylint: disable=redefined-builtin
     show_as_link=True,  # type: bool
     # Url
-    regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+    regex=None,  # type: Union[None, str, Pattern[str]]
     regex_error=None,  # type: _Optional[Text]
     # TextAscii
     allow_empty=True,  # type: bool
     size=80,  # type: Union[int, str]
     # ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     default_value=_DEF_VALUE,  # type: Any
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
@@ -1447,7 +1447,7 @@ class TextAreaUnicode(TextUnicode):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -1455,7 +1455,7 @@ class TextAreaUnicode(TextUnicode):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1553,7 +1553,7 @@ class Filename(TextAscii):
         empty_text="",  # type: Text
         read_only=False,  # type: bool
         forbidden_chars="",  # type: Text
-        regex=None,  # type: _Optional[Union[str, Pattern[str]]]
+        regex=None,  # type: Union[None, str, Pattern[str]]
         regex_error=None,  # type: _Optional[Text]
         minlen=None,  # type: _Optional[int]
         onkeyup=None,  # type: _Optional[Text]
@@ -1561,7 +1561,7 @@ class Filename(TextAscii):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1639,7 +1639,7 @@ class ListOfStrings(ValueSpec):
         split_separators=";",  # type: Text
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -1806,7 +1806,7 @@ class ListOf(ValueSpec):
         empty_text=None,  # type: _Optional[Text]
         sort_by=None,  # type: _Optional[int]
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2073,7 +2073,7 @@ class ListOfMultiple(ValueSpec):
         del_label=None,  # type: _Optional[Text]
         delete_style="default",  # type: str
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2240,7 +2240,7 @@ class Float(Integer):
         align="left",  # type: str
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2304,8 +2304,8 @@ class Percentage(Float):
         allow_int=False,  # type: bool
         # Integer
         size=None,  # type: _Optional[int]
-        minvalue=0.0,  # type: _Optional[Union[int, float]]
-        maxvalue=101.0,  # type: _Optional[Union[int, float]]
+        minvalue=0.0,  # type: Union[None, int, float]
+        maxvalue=101.0,  # type: Union[None, int, float]
         label=None,  # type: _Optional[Text]
         unit="%",  # type: Text
         thousand_sep=None,  # type: _Optional[Text]
@@ -2313,7 +2313,7 @@ class Percentage(Float):
         align="left",  # type: str
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2356,7 +2356,7 @@ class Checkbox(ValueSpec):
         false_label=None,  # type: _Optional[Text]
         onclick=None,  # type: _Optional[Text]
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2432,7 +2432,7 @@ class DropdownChoice(ValueSpec):
         encode_value=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2619,7 +2619,7 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceValue = Union[_Optional[Text], _Tuple[_Optional[Text], Any]]
+CascadingDropdownChoiceValue = Union[None, Text, _Tuple[_Optional[Text], Any]]
 CascadingDropdownCleanChoice = _Tuple[_Optional[Text], Text, _Optional[ValueSpec]]
 CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[Text, Text],
                                                       CascadingDropdownCleanChoice]]]
@@ -2663,7 +2663,7 @@ class CascadingDropdown(ValueSpec):
         render_sub_vs_request_vars=None,  # type: _Optional[Dict]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2976,7 +2976,7 @@ class ListChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListChoice
-        choices=None,  # type: _Optional[Union[List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]
@@ -2987,7 +2987,7 @@ class ListChoice(ValueSpec):
         no_elements_text=None,  # type: _Optional[Text]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -3122,7 +3122,7 @@ class DualListChoice(ListChoice):
         rows=None,  # type: _Optional[int]
         size=None,  # type: _Optional[int]
         # ListChoice
-        choices=None,  # type: _Optional[Union[List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]
@@ -3133,7 +3133,7 @@ class DualListChoice(ListChoice):
         no_elements_text=None,  # type: _Optional[Text]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -3297,7 +3297,7 @@ class OptionalDropdownChoice(DropdownChoice):
         encode_value=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -3678,7 +3678,7 @@ class Timeofday(ValueSpec):
         allow_empty=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -3776,7 +3776,7 @@ class TimeofdayRange(ValueSpec):
         allow_empty=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -3936,7 +3936,7 @@ class Timerange(CascadingDropdown):
         self,
         allow_empty=False,  # type: bool
         include_time=False,  # type: bool
-        choices=None,  # type: _Optional[Union[List[Union[_Tuple[Text, Text], _Tuple[Text, Text, ValueSpec]]], Callable]]
+        choices=None,  # type: Union[None, List[Union[_Tuple[Text, Text], _Tuple[Text, Text, ValueSpec]]], Callable]
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: _Optional[Text]
@@ -3953,7 +3953,7 @@ class Timerange(CascadingDropdown):
         render_sub_vs_request_vars=None,  # type: _Optional[Dict]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -4193,7 +4193,7 @@ class Optional(ValueSpec):
         allow_empty=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -4297,7 +4297,7 @@ class Alternative(ValueSpec):
         orientation="vertical",  # type: Text
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -4467,7 +4467,7 @@ class Tuple(ValueSpec):
         separator=" ",  # type: Text
         title_br=True,  # type: bool
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -4610,12 +4610,12 @@ class Dictionary(ValueSpec):
         render="normal",  # type: str
         form_narrow=False,  # type: bool
         form_isopen=True,  # type: bool
-        headers=None,  # type: _Optional[Union[str, List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]]]
+        headers=None,  # type: Union[None, str, List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]]
         migrate=None,  # type: Callable[[_Tuple], Dict]
         indent=True,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -4945,7 +4945,7 @@ class ElementSelection(ValueSpec):
         empty_text=None,  # type: _Optional[Text]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -5109,7 +5109,7 @@ class Transform(ValueSpec):
         back=None,  # type: _Optional[Callable[[Any], Any]]
         forth=None,  # type: _Optional[Callable[[Any], Any]]
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+        help=None,  # type: Union[None, Text, Callable[[], Text]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):

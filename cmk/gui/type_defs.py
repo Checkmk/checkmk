@@ -37,6 +37,6 @@ FilterName = str
 FilterHTTPVariables = Dict[str, Union[Text, str]]
 Visual = Dict[str, Any]
 VisualTypeName = str
-VisualContext = Dict[FilterName, Union[Union[Text, str], FilterHTTPVariables]]
+VisualContext = Dict[FilterName, Union[Text, str, FilterHTTPVariables]]
 InfoName = str
 SingleInfos = List[InfoName]

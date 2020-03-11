@@ -595,7 +595,7 @@ def passwordstore_choices():
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):  # -> CascadingDropdown
@@ -623,7 +623,7 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Union[Text, Callable[[], Text]]]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):

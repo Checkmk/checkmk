@@ -132,7 +132,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def vs_parameters(cls):
-        # type: () -> Optional[Union[List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]]
+        # type: () -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
         return None

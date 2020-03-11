@@ -102,7 +102,7 @@ if TYPE_CHECKING:
 CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
 HTMLTagValue = Union[None, str, Text]
-HTMLTagContent = Union[None, str, Text, HTML]
+HTMLContent = Union[None, str, Text, HTML]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
@@ -243,7 +243,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         return HTML("</%s>" % (tag_name))
 
     def _render_element(self, tag_name, tag_content, **attrs):
-        # type: (HTMLTagName, HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLTagName, HTMLContent, **HTMLTagAttributeValue) -> HTML
         open_tag = self._render_start_tag(tag_name, close_tag=False, **attrs)
 
         if not tag_content:
@@ -303,13 +303,13 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_start_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, Union[None, Text, str], **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, Union[None, Text, str], **HTMLTagAttributeValue) -> HTML
         if href is not None:
             attrs['href'] = href
         return self._render_element('a', content, **attrs)
 
     def a(self, content, href, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_a(content, href, **attrs))
 
     def stylesheet(self, href):
@@ -361,12 +361,12 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_label(self, content, for_, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, str, **HTMLTagAttributeValue) -> HTML
         attrs['for'] = for_
         return self._render_element('label', content, **attrs)
 
     def label(self, content, for_, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name, type_, **attrs):
@@ -384,7 +384,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def li(self, content, **attrs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         """ Only for text content. You can't put HTML structure here. """
         self.write_html(self._render_element('li', content, **attrs))
 
@@ -393,11 +393,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_heading(self, content):
-        # type: (HTMLTagContent) -> HTML
+        # type: (HTMLContent) -> HTML
         return self._render_element('h2', content)
 
     def heading(self, content):
-        # type: (HTMLTagContent) -> None
+        # type: (HTMLContent) -> None
         self.write_html(self.render_heading(content))
 
     def render_br(self):
@@ -433,55 +433,55 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def pre(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("pre", content, **kwargs))
 
     def h2(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("h2", content, **kwargs))
 
     def h3(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("h3", content, **kwargs))
 
     def h1(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("h1", content, **kwargs))
 
     def h4(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("h4", content, **kwargs))
 
     def style(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("style", content, **kwargs))
 
     def span(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("span", content, **kwargs))
 
     def sub(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("sub", content, **kwargs))
 
     def title(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("title", content, **kwargs))
 
     def tt(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("tt", content, **kwargs))
 
     def tr(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("tr", content, **kwargs))
 
     def th(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("th", content, **kwargs))
 
     def td(self, content, colspan=None, **kwargs):
-        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, Optional[int], **HTMLTagAttributeValue) -> None
         self.write_html(
             self._render_element("td",
                                  content,
@@ -489,47 +489,47 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
                                  **kwargs))
 
     def option(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("option", content, **kwargs))
 
     def canvas(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("canvas", content, **kwargs))
 
     def strong(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("strong", content, **kwargs))
 
     def b(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("b", content, **kwargs))
 
     def center(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("center", content, **kwargs))
 
     def i(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("i", content, **kwargs))
 
     def p(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("p", content, **kwargs))
 
     def u(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("u", content, **kwargs))
 
     def iframe(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("iframe", content, **kwargs))
 
     def x(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("x", content, **kwargs))
 
     def div(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_element("div", content, **kwargs))
 
     def open_pre(self, **kwargs):
@@ -541,7 +541,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("pre"))
 
     def render_pre(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("pre", content, **kwargs)
 
     def open_h2(self, **kwargs):
@@ -553,7 +553,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("h2"))
 
     def render_h2(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("h2", content, **kwargs)
 
     def open_h3(self, **kwargs):
@@ -565,7 +565,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("h3"))
 
     def render_h3(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("h3", content, **kwargs)
 
     def open_h1(self, **kwargs):
@@ -577,7 +577,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("h1"))
 
     def render_h1(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("h1", content, **kwargs)
 
     def open_h4(self, **kwargs):
@@ -589,7 +589,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("h4"))
 
     def render_h4(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("h4", content, **kwargs)
 
     def open_header(self, **kwargs):
@@ -601,7 +601,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("header"))
 
     def render_header(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("header", content, **kwargs)
 
     def open_tag(self, **kwargs):
@@ -613,7 +613,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("tag"))
 
     def render_tag(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("tag", content, **kwargs)
 
     def open_table(self, **kwargs):
@@ -625,7 +625,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("table"))
 
     def render_table(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("table", content, **kwargs)
 
     def open_select(self, **kwargs):
@@ -637,7 +637,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("select"))
 
     def render_select(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("select", content, **kwargs)
 
     def open_row(self, **kwargs):
@@ -649,7 +649,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("row"))
 
     def render_row(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("row", content, **kwargs)
 
     def open_style(self, **kwargs):
@@ -661,7 +661,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("style"))
 
     def render_style(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("style", content, **kwargs)
 
     def open_span(self, **kwargs):
@@ -673,7 +673,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("span"))
 
     def render_span(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("span", content, **kwargs)
 
     def open_sub(self, **kwargs):
@@ -685,7 +685,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("sub"))
 
     def render_sub(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("sub", content, **kwargs)
 
     def open_script(self, **kwargs):
@@ -697,7 +697,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("script"))
 
     def render_script(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("script", content, **kwargs)
 
     def open_tt(self, **kwargs):
@@ -709,7 +709,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("tt"))
 
     def render_tt(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("tt", content, **kwargs)
 
     def open_tr(self, **kwargs):
@@ -721,7 +721,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("tr"))
 
     def render_tr(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("tr", content, **kwargs)
 
     def open_tbody(self, **kwargs):
@@ -733,7 +733,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("tbody"))
 
     def render_tbody(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("tbody", content, **kwargs)
 
     def open_li(self, **kwargs):
@@ -745,7 +745,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("li"))
 
     def render_li(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("li", content, **kwargs)
 
     def open_html(self, **kwargs):
@@ -757,7 +757,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("html"))
 
     def render_html(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("html", content, **kwargs)
 
     def open_th(self, **kwargs):
@@ -769,7 +769,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("th"))
 
     def render_th(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("th", content, **kwargs)
 
     def open_sup(self, **kwargs):
@@ -781,7 +781,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("sup"))
 
     def render_sup(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("sup", content, **kwargs)
 
     def open_input(self, **kwargs):
@@ -805,7 +805,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("td"))
 
     def render_td(self, content, colspan=None, **kwargs):
-        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, Optional[int], **HTMLTagAttributeValue) -> HTML
         return self._render_element("td",
                                     content,
                                     colspan=str(colspan) if colspan is not None else None,
@@ -820,7 +820,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("thead"))
 
     def render_thead(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("thead", content, **kwargs)
 
     def open_body(self, **kwargs):
@@ -832,7 +832,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("body"))
 
     def render_body(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("body", content, **kwargs)
 
     def open_head(self, **kwargs):
@@ -844,7 +844,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("head"))
 
     def render_head(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("head", content, **kwargs)
 
     def open_fieldset(self, **kwargs):
@@ -856,7 +856,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("fieldset"))
 
     def render_fieldset(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("fieldset", content, **kwargs)
 
     def open_option(self, **kwargs):
@@ -868,7 +868,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("option"))
 
     def render_option(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("option", content, **kwargs)
 
     def open_form(self, **kwargs):
@@ -880,7 +880,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("form"))
 
     def render_form(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("form", content, **kwargs)
 
     def open_tags(self, **kwargs):
@@ -892,7 +892,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("tags"))
 
     def render_tags(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("tags", content, **kwargs)
 
     def open_canvas(self, **kwargs):
@@ -904,7 +904,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("canvas"))
 
     def render_canvas(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("canvas", content, **kwargs)
 
     def open_nobr(self, **kwargs):
@@ -916,7 +916,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("nobr"))
 
     def render_nobr(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("nobr", content, **kwargs)
 
     def open_br(self, **kwargs):
@@ -936,7 +936,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("strong"))
 
     def render_strong(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("strong", content, **kwargs)
 
     def close_a(self):
@@ -952,7 +952,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("b"))
 
     def render_b(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("b", content, **kwargs)
 
     def open_center(self, **kwargs):
@@ -964,7 +964,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("center"))
 
     def render_center(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("center", content, **kwargs)
 
     def open_footer(self, **kwargs):
@@ -976,7 +976,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("footer"))
 
     def render_footer(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("footer", content, **kwargs)
 
     def open_i(self, **kwargs):
@@ -988,7 +988,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("i"))
 
     def render_i(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("i", content, **kwargs)
 
     def close_button(self):
@@ -1004,7 +1004,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("title"))
 
     def render_title(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("title", content, **kwargs)
 
     def open_p(self, **kwargs):
@@ -1016,7 +1016,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("p"))
 
     def render_p(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("p", content, **kwargs)
 
     def open_u(self, **kwargs):
@@ -1028,7 +1028,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("u"))
 
     def render_u(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("u", content, **kwargs)
 
     def open_iframe(self, **kwargs):
@@ -1040,7 +1040,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("iframe"))
 
     def render_iframe(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("iframe", content, **kwargs)
 
     def open_x(self, **kwargs):
@@ -1052,7 +1052,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("x"))
 
     def render_x(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("x", content, **kwargs)
 
     def open_div(self, **kwargs):
@@ -1064,7 +1064,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("div"))
 
     def render_div(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("div", content, **kwargs)
 
     def open_ul(self, **kwargs):
@@ -1076,7 +1076,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_end_tag("ul"))
 
     def render_ul(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, **HTMLTagAttributeValue) -> HTML
         return self._render_element("ul", content, **kwargs)
 
 
@@ -2383,12 +2383,12 @@ class html(ABCHTMLGenerator):
             self.close_x()
 
     def status_label(self, content, status, title, **attrs):
-        # type: (HTMLTagContent, str, Text, **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, str, Text, **HTMLTagAttributeValue) -> None
         """Shows a colored badge with text (used on WATO activation page for the site status)"""
         self.status_label_button(content, status, title, onclick=None, **attrs)
 
     def status_label_button(self, content, status, title, onclick, **attrs):
-        # type: (HTMLTagContent, str, Text, Optional[str], **HTMLTagAttributeValue) -> None
+        # type: (HTMLContent, str, Text, Optional[str], **HTMLTagAttributeValue) -> None
         """Shows a colored button with text (used in site and customer status snapins)"""
         button_cls = "button" if onclick else None
         self.div(content,
@@ -2650,11 +2650,11 @@ class html(ABCHTMLGenerator):
         self.end_radio_group()
 
     def checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
-        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> None
+        # type: (str, bool, HTMLContent, Optional[str], **HTMLTagAttributeValue) -> None
         self.write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
 
     def render_checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
-        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> HTML
+        # type: (str, bool, HTMLContent, Optional[str], **HTMLTagAttributeValue) -> HTML
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # whether we should add the default value, we need to detect
@@ -2696,7 +2696,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url=None,
                                  title_url=None,
                                  title_target=None):
-        # type: (str, str, bool, HTMLTagContent, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
+        # type: (str, str, bool, HTMLContent, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
         self.folding_indent = indent
 
         isopen = self.foldable_container_is_open(treename, id_, isopen)

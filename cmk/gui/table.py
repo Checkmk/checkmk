@@ -15,7 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import CSSSpec, HTML, HTMLTagContent, HTMLTagAttributes  # pylint: disable=unused-import
+from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes  # pylint: disable=unused-import
 
 TableHeader = NamedTuple("TableHeader", [
     ("title", Union[Text, str, HTML]),
@@ -50,7 +50,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id=None,  # type: Optional[str]
-    title=None,  # type: HTMLTagContent
+    title=None,  # type: HTMLContent
     searchable=True,  # type: bool
     sortable=True,  # type: bool
     foldable=False,  # type: bool
@@ -108,7 +108,7 @@ class Table(object):
     def __init__(
         self,
         table_id=None,  # type: Optional[str]
-        title=None,  # type: HTMLTagContent
+        title=None,  # type: HTMLContent
         searchable=True,  # type: bool
         sortable=True,  # type: bool
         foldable=False,  # type: bool
@@ -162,8 +162,8 @@ class Table(object):
 
     def text_cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
         css=None,  # type: Optional[str]
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]
@@ -178,8 +178,8 @@ class Table(object):
 
     def cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
         css=None,  # type: Optional[str]
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]
@@ -216,8 +216,8 @@ class Table(object):
 
     def _add_cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
         css=None,  # type: Optional[str]
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]

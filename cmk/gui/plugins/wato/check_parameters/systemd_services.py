@@ -135,6 +135,16 @@ def _parameter_valuespec_systemd_services():
                  Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
                  Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
              ])),
+        ("reloading_levels",
+         Tuple(
+             title=_("Define a tolerating time period for reloading services"),
+             help=
+             _("Choose time levels (in seconds) for which a service is allowed to be in a 'reloading' state"
+              ),
+             elements=[
+                 Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
+                 Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
+             ])),
     ],)
 
 

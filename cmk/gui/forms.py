@@ -210,7 +210,7 @@ def section(title=None,
             hide=False,
             legend=True,
             css=None):
-    # type: (Optional[Text], Union[None, Text, str, HTML], Optional[str], bool, bool, bool, Optional[str]) -> None
+    # type: (Optional[Text], Union[None, HTML, str, Text], Optional[str], bool, bool, bool, Optional[str]) -> None
     global g_section_open
     if g_section_open:
         html.close_td()

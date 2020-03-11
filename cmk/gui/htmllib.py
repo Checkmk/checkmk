@@ -102,7 +102,7 @@ if TYPE_CHECKING:
 CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
 HTMLTagValue = Union[None, str, Text]
-HTMLContent = Union[None, str, Text, HTML]
+HTMLContent = Union[None, int, HTML, str, Text]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
@@ -258,11 +258,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_text(self, text):
-        # type: (Union[None, int, str, Text, HTML]) -> HTML
+        # type: (HTMLContent) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
-        # type: (Union[None, int, str, Text, HTML]) -> None
+        # type: (HTMLContent) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
@@ -303,7 +303,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_start_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLContent, Union[None, Text, str], **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLContent, Union[None, str, Text], **HTMLTagAttributeValue) -> HTML
         if href is not None:
             attrs['href'] = href
         return self._render_element('a', content, **attrs)
@@ -2442,7 +2442,7 @@ class html(ABCHTMLGenerator):
                         autocomplete=autocomplete)
 
     def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
-        # type: (str, Union[Text, str], int, int, bool, **HTMLTagAttributeValue) -> None
+        # type: (str, Union[str, Text], int, int, bool, **HTMLTagAttributeValue) -> None
 
         value = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
@@ -2979,7 +2979,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (Union[None, Text, str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Union[None, str, Text], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]

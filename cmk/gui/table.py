@@ -17,12 +17,14 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes  # pylint: disable=unused-import
 
-TableHeader = NamedTuple("TableHeader", [
-    ("title", Union[Text, str, HTML]),
-    ("css", Optional[str]),
-    ("help_txt", Optional[Text]),
-    ("sortable", bool),
-])
+TableHeader = NamedTuple(
+    "TableHeader",
+    [
+        ("title", Union[int, HTML, str, Text]),  # basically HTMLContent without None
+        ("css", Optional[str]),
+        ("help_txt", Optional[Text]),
+        ("sortable", bool),
+    ])
 
 CellSpec = NamedTuple("CellSpec", [
     ("content", Text),
@@ -543,8 +545,7 @@ class Table(object):
                 continue
 
             if header.help_txt:
-                header_title = html.render_span(
-                    header.title, title=header.help_txt)  # type: Union[Text, str, HTML]
+                header_title = html.render_span(header.title, title=header.help_txt)
             else:
                 header_title = header.title
 

@@ -87,6 +87,16 @@ def test_unicode_strings_quote_escaping(obj, result):
     assert pformat(obj) == result
 
 
+@pytest.mark.parametrize('obj, result', [
+    (u'bl\0ah', "u'bl\\x00ah'"),
+    (u'bl\nah', "u'bl\\nah'"),
+    (u'bl\r\nah', "u'bl\\r\\nah'"),
+    (u'bl\n\rah', "u'bl\\n\\rah'"),
+])
+def test_unicode_strings_newline_escaping(obj, result):
+    assert pformat(obj) == result
+
+
 @pytest.mark.parametrize('obj', [
     (frozenset([11, 22]),),
     (NotImplemented,),

@@ -8,7 +8,7 @@ main change is that all strings get a prefix. Basically a dumbed-down version
 of Python's own pprint module plus the prefix change."""
 
 import sys
-from typing import Any, Callable, Dict, IO, Iterable, Optional, Tuple  # pylint: disable=unused-import
+from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple  # pylint: disable=unused-import
 import six
 
 if sys.version_info[0] >= 3:
@@ -91,13 +91,19 @@ def _format_unicode_string(printer, obj):
         quotes = {"'": "\\'"}
 
     # When Python 3 creates a repr which is interpreted by Python 2, we need to produce
-    # a repr-string where non ascii characters are hex escaped as Python 2 usualy does.
-    repr_txt = "".join([
-        closure,
-        ''.join(['\\x{:02x}'.format(ord(c)) if ord(c) > 127 else quotes.get(c, c) for c in obj]),
-        closure
-    ])
-    printer._write(six.ensure_str(repr_txt))
+    # a repr-string where non ascii characters are hex escaped as Python 2 usually does.
+    chars = []  # type: List[str]
+    for c in obj:
+        if ord(c) > 127:
+            chars.append('\\x{:02x}'.format(ord(c)))
+        elif c.isalpha():
+            chars.append(str(c))
+        elif c in quotes:
+            chars.append(quotes[c])
+        else:
+            chars.append(repr(str(c))[1:-1])
+
+    printer._write(six.ensure_str("".join([closure, "".join(chars), closure])))
 
 
 def _format_tuple(printer, obj):

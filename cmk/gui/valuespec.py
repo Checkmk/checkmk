@@ -3009,18 +3009,18 @@ class ListChoice(ValueSpec):
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
-        if self._choices is not None:
-            if isinstance(self._choices, list):
-                self._elements = self._choices
-            elif isinstance(self._choices, dict):
-                self._elements = ListChoice.dict_choices(self._choices)
-            else:
-                self._elements = self._choices()
-            return
-
-        if self._loaded_at != id(html):
-            self._elements = self.get_elements()
-            self._loaded_at = id(html)  # unique for each query!
+        if self._choices is None:
+            if self._loaded_at != id(html):
+                self._elements = self.get_elements()
+                self._loaded_at = id(html)  # unique for each query!
+        elif isinstance(self._choices, list):
+            self._elements = self._choices
+        elif isinstance(self._choices, dict):
+            self._elements = ListChoice.dict_choices(self._choices)
+        elif callable(self._choices):
+            self._elements = self._choices()
+        else:
+            raise ValueError("illegal type for choices")
 
     def get_elements(self):
         raise NotImplementedError()

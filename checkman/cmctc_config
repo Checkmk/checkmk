@@ -11,4 +11,4 @@ description:
  are shown.
 
 inventory:
- One check per host is created.
+ One service is created for each host.

@@ -9,7 +9,7 @@ description:
  Levels can be defined using the WATO rule "Couchbase Node: Size of couch views".
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

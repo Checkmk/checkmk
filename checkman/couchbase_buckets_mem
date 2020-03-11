@@ -9,7 +9,7 @@ description:
  WATO rule "Main memory usage of devices with modules".
 
 inventory:
- One service per bucket is created.
+ One service is created for each bucket.
 
 item:
  The name of the bucket.

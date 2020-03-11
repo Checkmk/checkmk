@@ -10,7 +10,7 @@ description:
  Levels can be configured in the WATO rule "Couchbase Operations".
 
 inventory:
- One service per bucket is created.
+ One service is created for each bucket.
 
 item:
  The name of the bucket.

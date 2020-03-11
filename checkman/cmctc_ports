@@ -12,4 +12,4 @@ item:
  The port number and description of the attached device.
 
 inventory:
- One item per detected device.
+ One service is created for each detected device.

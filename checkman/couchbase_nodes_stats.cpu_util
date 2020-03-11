@@ -9,7 +9,7 @@ description:
  "CPU utilization of Devices with Modules".
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

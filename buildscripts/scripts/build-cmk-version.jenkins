@@ -337,6 +337,7 @@ def create_source_package(DAILY_DATA) {
             unstash(name: 'WinMSI')
             unstash(name: 'WinPython')
         } else {
+            sh "mkdir -p ${DAILY_DATA}/agents"
             if(EDITION != 'raw') {
                 sh "touch ${DAILY_DATA}/agents/cmk-update-agent ${DAILY_DATA}/agents/cmk-update-agent-32 ${DAILY_DATA}/agents/cmk-update-agent.exe"
             }

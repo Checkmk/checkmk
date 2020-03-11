@@ -57,6 +57,23 @@ info = [
         " 'type': 'file', 'size': 0}"
     ],
     ["{'type': 'summary', 'count': 17}"],
+    ['[[[single_file file1.txt]]]'],
+    [
+        "{'stat_status': 'ok', 'age': 52456, 'mtime': 1583771842, 'path': u'/home/file1.txt', 'type': 'file', 'size': 3804}"
+    ],
+    ['[[[single_file file2.txt]]]'],
+    [
+        "{'stat_status': 'ok', 'age': 52456, 'mtime': 1583771842, 'path': u'/home/file2.txt', 'type': 'file', 'size': 3804}"
+    ],
+    ['[[[single_file file3.txt]]]'],
+    [
+        "{'stat_status': 'ok', 'age': 52456, 'mtime': 1583771842, 'path': u'/home/file3.txt', 'type': 'file', 'size': 3804}"
+    ],
+    ['[[[single_file multiple-stats-per-single-service]]]'],
+    [
+        "{'stat_status': 'ok', 'age': 52456, 'mtime': 1583771842, 'path': u'/home/file3.txt', 'type': 'file', 'size': 3804}"],
+    [    "{'stat_status': 'ok', 'age': 52456, 'mtime': 1583771842, 'path': u'/home/file3.txt', 'type': 'file', 'size': 3804}"
+    ]
 ]
 
 discovery = {
@@ -64,6 +81,12 @@ discovery = {
         ('aix agent files', {}),
         ('$ection with funny characters %s &! (count files in ~)', {}),
         ('log files', {}),
+    ],
+    'single': [
+    ('file1.txt', {}),
+    ('file2.txt', {}),
+    ('file3.txt', {}),
+    ('multiple-stats-per-single-service', {}),
     ]
 }
 
@@ -96,5 +119,42 @@ checks = {
             (0, 'Newest: 4 m', []),
             (0, 'Oldest: 2.8 y', []),
         ]),
+    ],
+    'single': [
+        ('file1.txt', {},
+            [
+                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (0, 'Age: 14 h', [])
+            ]
+            ),
+        ('file2.txt',
+            {
+                'min_size': (2 * 1024, 1 * 1024),
+                'max_size': (3 * 1024, 4 * 1024)
+            },
+            [
+                (1, 'Size: 3.71 kB (warn/crit at 3.00 kB/4.00 kB)', [('size', 3804, 3072.0, 4096.0)]),
+                (0, 'Age: 14 h', [])
+            ]
+        ),
+        ('file3.txt',
+            {
+                'min_age': (2 * 60, 1 * 60),
+                'max_age': (3 * 60, 4 * 60)
+            },
+            [
+                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (2, 'Age: 14 h (warn/crit at 180 s/4 m)', [])
+            ]
+        ),
+        ('multiple-stats-per-single-service',
+            {},
+            [
+                (1, 'Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats).', []),
+                (0, 'Size: 3.71 kB', [('size', 3804)]),
+                (0, 'Age: 14 h', [])
+            ]
+        )
     ]
+
 }

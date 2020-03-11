@@ -39,12 +39,16 @@ def parse_filestats(info):
         if not line:
             continue
         if line[0].startswith('[[['):
-            _output_variety, subsection_name = line[0][3:-3].split(None, 1)
-            current = sections_info.setdefault(subsection_name, [])
+            output_variety, subsection_name = line[0][3:-3].split(None, 1)
+            current = sections_info.setdefault((output_variety, subsection_name), [])
         else:
             current.append(line[0])
 
-    return {k: _parse_filestats_load_lines(v) for k, v in sections_info.items() if v}
+    return {
+        name: (variety, _parse_filestats_load_lines(v))
+        for (variety, name), v in sections_info.items()
+        if v
+    }
 
 
 def _parse_filestats_load_lines(info):
@@ -117,20 +121,61 @@ def check_filestats_extremes(files, params):
 @get_parsed_item_data
 def check_filestats(_item, params, data):
 
-    sumry = [s for s in data if s.get("type") == "summary"]
+    _output_variety, reported_lines = data
+    sumry = [s for s in reported_lines if s.get("type") == "summary"]
     count = sumry[0].get("count", None) if sumry else None
     if count is not None:
         yield check_filestats_count(count, params)
 
-    files = [i for i in data if i.get("type") == "file"]
+    files = [i for i in reported_lines if i.get("type") == "file"]
     if files:
         for subresult in check_filestats_extremes(files, params):
             yield subresult
 
 
+@get_parsed_item_data
+def check_filestats_single(_item, params, data):
+
+    _output_variety, reported_lines = data
+    if len(reported_lines) != 1:
+        yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."
+
+    single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
+    for key, hr_function in (('size', get_bytes_human_readable), ('age', get_age_human_readable)):
+
+        yield check_levels(single_stat.get(key),
+                           key if key == 'size' else None,
+                           (params.get("max_%s" % key,
+                                       (None, None))[0], params.get("max_%s" % key,
+                                                                    (None, None))[1],
+                            params.get("min_%s" % key,
+                                       (None, None))[0], params.get("min_%s" % key,
+                                                                    (None, None))[1]),
+                           human_readable_func=hr_function,
+                           infoname=key.title())
+
+
+@discover
+def discover_filestats(key, data):
+    return data[0] != "single_file"
+
+
+@discover
+def discover_filestats_single(key, data):
+    return data[0] == "single_file"
+
+
+check_info['filestats.single'] = {
+    "inventory_function": discover_filestats_single,
+    "check_function": check_filestats_single,
+    "service_description": "File %s",
+    "has_perfdata": True,
+    "group": "filestats_single",
+}
+
 check_info['filestats'] = {
     "parse_function": parse_filestats,
-    "inventory_function": discover(),
+    "inventory_function": discover_filestats,
     "check_function": check_filestats,
     "service_description": "File group %s",
     "has_perfdata": True,

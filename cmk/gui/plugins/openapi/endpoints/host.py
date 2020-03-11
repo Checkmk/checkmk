@@ -5,9 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from connexion import ProblemException  # type: ignore
-from werkzeug.datastructures import ETags
-
 from cmk.gui import watolib
 from cmk.gui.globals import response
 from cmk.gui.plugins.openapi.endpoints.folder import load_folder
@@ -54,6 +51,7 @@ def update(params):
     body = params['body']
     attributes = body['attributes']
     host = watolib.Host.host(hostname)  # type: watolib.Host
+    constructors.require_etag(constructors.etag_of_obj(host))
     host.update_attributes(attributes)
     return _serve_host(host)
 
@@ -67,8 +65,8 @@ def update(params):
 def delete(params):
     hostname = params['hostname']
     check_hostname(hostname, should_exist=True)
-
     host = watolib.Host.host(hostname)
+    constructors.require_etag(constructors.etag_of_obj(host))
     host.folder().delete_hosts([host.name()])
     return constructors.sucess(status=204)
 
@@ -86,18 +84,8 @@ def get(params):
 def _serve_host(host):
     response.set_data(json.dumps(serialize_host(host)))
     response.set_content_type('application/json')
-    response.headers.add('ETag', _get_etag(host).to_header())
+    response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
     return response._get_current_object()
-
-
-def _get_etag(folder):
-    attributes = folder.attributes()
-    if 'meta_data' in attributes:
-        etags = [str(attributes['meta_data']['updated_at'])]
-        return ETags(strong_etags=etags)
-    else:
-        raise ProblemException(500, "Folder %r has no meta_data." % (folder.name(),),
-                               "Can't create ETag.")
 
 
 def serialize_host(host):

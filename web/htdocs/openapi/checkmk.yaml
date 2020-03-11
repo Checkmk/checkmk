@@ -37,6 +37,41 @@ components:
         title:
           type: string
       type: object
+    ContactGroup:
+      properties:
+        domainType:
+          default: contact_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    DomainObject:
+      properties:
+        domainType:
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
     DomainObjectCollection:
       properties:
         links:
@@ -115,6 +150,15 @@ components:
       - key
       - value
       type: object
+    InputContactGroup:
+      properties:
+        alias:
+          type: string
+        name:
+          type: string
+      required:
+      - name
+      type: object
     InputFolder:
       properties:
         attributes:
@@ -139,6 +183,15 @@ components:
           type: string
       type: object
     InputHostGroup:
+      properties:
+        alias:
+          type: string
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    InputServiceGroup:
       properties:
         alias:
           type: string
@@ -305,6 +358,24 @@ components:
           type: string
       required:
       - id
+      - links
+      type: object
+    ServiceGroup:
+      properties:
+        domainType:
+          default: service_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
       - links
       type: object
     UpdateFolder:
@@ -741,5 +812,260 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstalledVersions'
           description: ''
+  /collections/contact_group:
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.list_group
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+    post:
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a new contact group
+  /objects/contact_group/{name}:
+    delete:
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.show
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+    put:
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /collections/service_group:
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.list_groups
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+    post:
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputServiceGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+  /objects/service_group/{name}:
+    delete:
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+    get:
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.show
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+    put:
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputServiceGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along for subsequent
+                modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
 security:
 - BearerAuth: []

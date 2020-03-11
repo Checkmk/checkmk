@@ -182,6 +182,20 @@ class HostGroup(DomainObject):
     )
 
 
+class ServiceGroup(DomainObject):
+    domainType = fields.Constant(
+        "service_group",
+        required=True,
+    )
+
+
+class ContactGroup(DomainObject):
+    domainType = fields.Constant(
+        "contact_group",
+        required=True,
+    )
+
+
 class Host(DomainObject):
     domainType = fields.Constant(
         "host",
@@ -201,6 +215,16 @@ class InputHost(Schema):
 
 
 class InputHostGroup(Schema):
+    name = fields.String(required=True)
+    alias = fields.String()
+
+
+class InputContactGroup(Schema):
+    name = fields.String(required=True)
+    alias = fields.String()
+
+
+class InputServiceGroup(Schema):
     name = fields.String(required=True)
     alias = fields.String()
 

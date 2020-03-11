@@ -7,6 +7,8 @@
 import ast
 import json
 import os
+import random
+import string
 import uuid
 from cookielib import CookieJar
 from urllib import urlencode
@@ -181,8 +183,7 @@ def test_openapi_hosts(
         content_type='application/json',
     )
 
-    # TODO: Have to fix automation call for delete.
-    resp = wsgi_app.follow_link(
+    wsgi_app.follow_link(
         resp,
         '.../delete',
         base=base,
@@ -192,27 +193,46 @@ def test_openapi_hosts(
     )
 
 
-def test_openapi_host_groups(
+@pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
+def test_openapi_groups(
+    group_type,
     wsgi_app,  # type: WebTestAppForCMK
     with_automation_user,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
+    def _random_string(size):
+        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
+
+    name = _random_string(10)
+    alias = _random_string(10)
+
+    group = {'name': name, 'alias': alias}
+
     base = "/NO_SITE/check_mk/api/v0"
     resp = wsgi_app.call_method(
         'post',
-        base + "/collections/host_group",
-        params='{"name": "new_group", "alias": "foo"}',
+        base + "/collections/%s_group" % (group_type,),
+        params=json.dumps(group),
         status=200,
         content_type='application/json',
     )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        'self',
+        base=base,
+        status=200,
+    )
+
+    group['name'] += " updated"
 
     wsgi_app.follow_link(
         resp,
         '.../update',
         base=base,
-        params='{"name": "new_group name", "alias": "foo"}',
+        params=json.dumps(group),
         headers={'If-Match': 'foo bar'},
         status=412,
         content_type='application/json',
@@ -222,7 +242,7 @@ def test_openapi_host_groups(
         resp,
         '.../update',
         base=base,
-        params='{"name": "new_group name", "alias": "foo"}',
+        params=json.dumps(group),
         headers={'If-Match': resp.headers['ETag']},
         status=200,
         content_type='application/json',

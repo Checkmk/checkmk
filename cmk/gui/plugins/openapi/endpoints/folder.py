@@ -10,7 +10,6 @@ else:
     import httplib as http_client
 
 from connexion import ProblemException  # type: ignore
-from werkzeug.datastructures import ETags
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
@@ -67,7 +66,7 @@ def update(params):
     Title and attributes can be updated, but there is no checking of the attributes done."""
     ident = params['ident']
     folder = load_folder(ident, status=404)
-    constructors.require_etag(_get_etag(folder))
+    constructors.require_etag(constructors.etag_of_obj(folder))
 
     post_body = params['body']
     title = post_body['title']
@@ -100,7 +99,7 @@ def move(params):
     ident = params['ident']
     folder = load_folder(ident, status=404)
 
-    constructors.require_etag(_get_etag(folder))
+    constructors.require_etag(constructors.etag_of_obj(folder))
 
     dest = params['body']['destination']
     if dest == 'root':
@@ -139,18 +138,8 @@ def show_folder(params):
     return _serve_folder(folder)
 
 
-def _get_etag(folder):
-    attributes = folder.attributes()
-    if 'meta_data' in attributes:
-        etags = [str(attributes['meta_data']['updated_at'])]
-        return ETags(strong_etags=etags)
-    else:
-        raise ProblemException(500, "Folder %r has no meta_data." % (folder.name(),),
-                               "Can't create ETag.")
-
-
 def _serve_folder(folder, profile=None):
-    response.headers.add("ETag", _get_etag(folder).to_header())
+    response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
     folder_json = _serialize_folder(folder)
     return constructors.serve_json(folder_json, profile=profile)
 

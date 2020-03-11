@@ -1,0 +1,16 @@
+Title: Interface Bonding
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1583920246
+
+If no master aggregation ID for interface bonding was known, the check plugins
+lnx_bonding, windows_os_bonding, windows_intel_bonding and ovs_bonding could crash.
+
+In this case we now use the first slaves aggregation ID as expected value for
+all aggregation IDs.

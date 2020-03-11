@@ -57,6 +57,8 @@ def _load_user_scripts_from(adir):
     if os.path.exists(adir):
         for entry in os.listdir(adir):
             entry = ensure_unicode(entry)
+            if entry == ".f12":
+                continue
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}

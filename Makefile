@@ -74,7 +74,7 @@ OPENAPI_SPECS      := web/htdocs/openapi/checkmk.yaml
         format-linux format-python format-python2 format-python3 \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-2.7 .venv-3.7
+        am--refresh skel .venv .venv-2.7 .venv-3.7 openapi
 
 
 help:
@@ -292,11 +292,10 @@ headers:
 	doc/helpers/headrify
 
 .ONESHELL: openapi
-.PHONY: openapi
 openapi: ${OPENAPI_SPECS}
 	@export PYTHONPATH=${REPO_PATH}
 	@for file in "$<"; do
-		pipenv run python cmk/gui/plugins/openapi/specgen.py > $$file
+		$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $$file
 	done
 
 optimize-images:

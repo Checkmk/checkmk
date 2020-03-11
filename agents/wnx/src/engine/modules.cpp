@@ -328,6 +328,9 @@ bool ModuleCommander::RemoveContentByTargetDir(
             return false;
         }
         fs::path d{*dir};
+
+        auto count = wtools::KillProcessesByDir(d);
+        XLOG::l.i("Killed [{}] processes from dir '{}'", count, d.u8string());
         for (auto line : content) {
             fs::remove_all(d / line, ec);
         }
@@ -389,7 +392,13 @@ bool ModuleCommander::UninstallModuleZip(
     name.replace_extension("");
     auto target_dir = mod_root / name;
     auto list = cma::tools::zip::List(file.wstring());
-    RemoveContentByTargetDir(list, target_dir);
+    bool relink = RemoveContentByTargetDir(list, target_dir);
+
+    if (!relink) {
+        auto count = wtools::KillProcessesByDir(target_dir);
+        XLOG::l.i("Killed [{}] processes from dir '{}'", count,
+                  target_dir.u8string());
+    }
 
     fs::remove_all(target_dir, ec);
     fs::remove(file, ec);

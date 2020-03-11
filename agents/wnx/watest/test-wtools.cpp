@@ -16,6 +16,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "tools/_tgt.h"
 
 namespace cma::details {
 extern bool G_Service;
@@ -23,6 +24,100 @@ extern bool G_Test;
 }  // namespace cma::details
 
 namespace wtools {  // to become friendly for cma::cfg classes
+
+constexpr std::string_view expected_name =
+    tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
+
+std::wstring GetCurrentProcessPath() {
+    auto current_process_id = ::GetCurrentProcessId();
+    return wtools::GetProcessPath(current_process_id);
+}
+
+void KillTmpProcesses() {
+    // kill process
+    wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+        auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+        if (fname == expected_name) {
+            wtools::KillProcess(entry.th32ProcessID);
+        }
+        return true;
+    });
+}
+
+int RunMeAgain(int requested) {
+    namespace fs = std::filesystem;
+
+    KillTmpProcesses();
+
+    // start process again
+    auto path = GetCurrentProcessPath();
+    if (path.empty()) return false;
+
+    if (fs::path(path).filename().u8string() != expected_name) return false;
+
+    auto cmd = fmt::format("{} wait", fs::path{path}.u8string());
+    int count = 0;
+    for (int i = 0; i < requested; i++) {
+        auto success = cma::tools::RunDetachedCommand(cmd);
+        if (success) count++;
+    }
+
+    return count;
+}
+
+TEST(Wtools, ProcessManagement) {
+    namespace fs = std::filesystem;
+    auto started = RunMeAgain(1);
+    ASSERT_EQ(started, 1);
+    ON_OUT_OF_SCOPE(KillTmpProcesses());
+
+    uint32_t pid = 0;
+    std::wstring path;
+    wtools::ScanProcessList(
+        [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+            auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+            if (fname == expected_name) {
+                path = GetProcessPath(entry.th32ProcessID);
+                pid = entry.th32ProcessID;
+                return false;
+            }
+            return true;
+        });
+
+    EXPECT_TRUE(!path.empty());
+    EXPECT_TRUE(pid != 0);
+    if (pid != 0) {
+        EXPECT_TRUE(wtools::KillProcess(pid, 1));
+        pid = 0;
+        path.clear();
+        wtools::ScanProcessList(
+            [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+                auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+                if (fname == expected_name) {
+                    path = GetProcessPath(entry.th32ProcessID);
+                    pid = entry.th32ProcessID;
+                    return false;
+                }
+                return true;
+            });
+
+        EXPECT_TRUE(path.empty());
+        EXPECT_TRUE(pid == 0);
+    }
+}
+
+TEST(Wtools, KillProcsByDir) {
+    namespace fs = std::filesystem;
+    auto started = RunMeAgain(3);
+    ASSERT_EQ(started, 3);
+    ON_OUT_OF_SCOPE(KillTmpProcesses());
+
+    uint32_t pid = 0;
+    auto path = fs::path{GetCurrentProcessPath()};
+
+    auto killed = wtools::KillProcessesByDir(path.parent_path().parent_path());
+    EXPECT_EQ(killed, started);
+}
 
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;

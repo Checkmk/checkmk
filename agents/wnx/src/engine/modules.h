@@ -88,8 +88,6 @@ private:
 
 enum class InstallMode { normal, force };
 
-void Install(InstallMode mode) noexcept;
-
 class ModuleCommander {
 public:
     void LoadDefault() noexcept;

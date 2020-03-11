@@ -12,5 +12,5 @@ description:
  given to the monitoring server as piggyback data.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.
 

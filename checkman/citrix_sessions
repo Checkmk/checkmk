@@ -7,5 +7,5 @@ description:
  This check monitors the number of active, inactive an total Sessions on a citrix server. In Order to work the plugin {{citrix_sessions.ps1}} is needed.
 
 inventory:
- One service will be created.
+ One service is created.
 

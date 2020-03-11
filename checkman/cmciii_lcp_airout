@@ -20,4 +20,4 @@ description:
  average temperature read from the device.
 
 inventory:
- None
+ One service is created for each sensor.

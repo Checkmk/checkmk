@@ -11,5 +11,5 @@ description:
  sessions. Defaults are not set.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.
 

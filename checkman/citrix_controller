@@ -11,5 +11,5 @@ description:
  state is Active.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.
 

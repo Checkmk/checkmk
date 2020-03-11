@@ -11,4 +11,4 @@ description:
  informative and always OK.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.

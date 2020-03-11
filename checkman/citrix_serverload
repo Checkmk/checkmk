@@ -10,5 +10,5 @@ description:
  to work the {citrix_serverload.ps1} plugin is needed.
 
 inventory:
- One service will be created.
+ One service is created.
 

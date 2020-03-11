@@ -291,11 +291,10 @@ endif
 headers:
 	doc/helpers/headrify
 
-.ONESHELL: openapi
 openapi: ${OPENAPI_SPECS}
-	@export PYTHONPATH=${REPO_PATH}
-	@for file in "$<"; do
-		$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $$file
+	@export PYTHONPATH=${REPO_PATH} ; \
+	for file in "$<"; do \
+		$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $$file ; \
 	done
 
 optimize-images:

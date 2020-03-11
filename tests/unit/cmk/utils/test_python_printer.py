@@ -79,6 +79,14 @@ def test_unicode_strings_are_prefixed(obj, result):
     assert pformat(obj) == result
 
 
+@pytest.mark.parametrize('obj, result', [
+    (u'bl\'ah', 'u\"bl\'ah"'),
+    (u'"bl\'ah', "u'\"bl\\'ah'"),
+])
+def test_unicode_strings_quote_escaping(obj, result):
+    assert pformat(obj) == result
+
+
 @pytest.mark.parametrize('obj', [
     (frozenset([11, 22]),),
     (NotImplemented,),

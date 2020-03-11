@@ -57441,6 +57441,168 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
+msgid "State of Microsoft Hyper-V Server VMs"
+msgstr "Status der Microsoft Hyper-V Server VMs"
+
+msgid "Name of the VM"
+msgstr "Name der VM"
+
+msgid "Specify the name of the VM, for example z4065012."
+msgstr "Geben sie den Namen der VM an, z.B. z4065012."
+
+msgid "Map VM state to monitoring state"
+msgstr "Zuordnung des Status der VM zu einem Monitoringstatus"
+
+msgid "Monitoring state if VM state is Other"
+msgstr "Monitoringstatus, falls VM-Status Other ist"
+
+msgid "Monitoring state if VM state is Running"
+msgstr "Monitoringstatus, falls VM-Status Running ist"
+
+msgid "Monitoring state if VM state is Off"
+msgstr "Monitoringstatus, falls VM-Status Off ist"
+
+msgid "Monitoring state if VM state is Stopping"
+msgstr "Monitoringstatus, falls VM-Status Stopping ist"
+
+msgid "Monitoring state if VM state is Saved"
+msgstr "Monitoringstatus, falls VM-Status Saved ist"
+
+msgid "Monitoring state if VM state is Paused"
+msgstr "Monitoringstatus, falls VM-Status Paused ist"
+
+msgid "Monitoring state if VM state is Starting"
+msgstr "Monitoringstatus, falls VM-Status Starting ist"
+
+msgid "Monitoring state if VM state is Reset"
+msgstr "Monitoringstatus, falls VM-Status Reset ist"
+
+msgid "Monitoring state if VM state is Saving"
+msgstr "Monitoringstatus, falls VM-Status Saving ist"
+
+msgid "Monitoring state if VM state is Pausing"
+msgstr "Monitoringstatus, falls VM-Status Pausing ist"
+
+msgid "Monitoring state if VM state is Resuming"
+msgstr "Monitoringstatus, falls VM-Status Resuming ist"
+
+msgid "Monitoring state if VM state is FastSaved"
+msgstr "Monitoringstatus, falls VM-Status FastSaved ist"
+
+msgid "Monitoring state if VM state is FastSaving"
+msgstr "Monitoringstatus, falls VM-Status FastSaving ist"
+
+msgid "Monitoring state if VM state is RunningCritical"
+msgstr "Monitoringstatus, falls VM-Status RunningCritical ist"
+
+msgid "Monitoring state if VM state is OffCritical"
+msgstr "Monitoringstatus, falls VM-Status OffCritical ist"
+
+msgid "Monitoring state if VM state is StoppingCritical"
+msgstr "Monitoringstatus, falls VM-Status StoppingCritical ist"
+
+msgid "Monitoring state if VM state is SavedCritical"
+msgstr "Monitoringstatus, falls VM-Status SavedCritical ist"
+
+msgid "Monitoring state if VM state is PausedCritical"
+msgstr "Monitoringstatus, falls VM-Status PausedCritical ist"
+
+msgid "Monitoring state if VM state is StartingCritical"
+msgstr "Monitoringstatus, falls VM-Status StartingCritical ist"
+
+msgid "Monitoring state if VM state is ResetCritical"
+msgstr "Monitoringstatus, falls VM-Status ResetCritical ist"
+
+msgid "Monitoring state if VM state is SavingCritical"
+msgstr "Monitoringstatus, falls VM-Status SavingCritical ist"
+
+msgid "Monitoring state if VM state is PausingCritical"
+msgstr "Monitoringstatus, falls VM-Status PausingCritical ist"
+
+msgid "Monitoring state if VM state is ResumingCritical"
+msgstr "Monitoringstatus, falls VM-Status ResumingCritical ist"
+
+msgid "Monitoring state if VM state is FastSavedCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavedCritical ist"
+
+msgid "Monitoring state if VM state is FastSavingCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavingCritical ist"
+
+msgid "Check result if reported VM state is Other"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Other ist"
+
+msgid "Check result if reported VM state is Running"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Running ist"
+
+msgid "Check result if reported VM state is Off"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Off ist"
+
+msgid "Check result if reported VM state is Stopping"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Stopping ist"
+
+msgid "Check result if reported VM state is Saved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saved ist"
+
+msgid "Check result if reported VM state is Paused"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Paused ist"
+
+msgid "Check result if reported VM state is Starting"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Starting ist"
+
+msgid "Check result if reported VM state is Reset"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Reset ist"
+
+msgid "Check result if reported VM state is Saving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saving ist"
+
+msgid "Check result if reported VM state is Pausing"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Pausing ist"
+
+msgid "Check result if reported VM state is Resuming"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Resuming ist"
+
+msgid "Check result if reported VM state is FastSaved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaved ist"
+
+msgid "Check result if reported VM state is FastSaving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaving ist"
+
+msgid "Check result if reported VM state is RunningCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status RunningCritical ist"
+
+msgid "Check result if reported VM state is OffCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status OffCritical ist"
+
+msgid "Check result if reported VM state is StoppingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StoppingCritical ist"
+
+msgid "Check result if reported VM state is SavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavedCritical ist"
+
+msgid "Check result if reported VM state is PausedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausedCritical ist"
+
+msgid "Check result if reported VM state is StartingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StartingCritical ist"
+
+msgid "Check result if reported VM state is ResetCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResetCritical ist"
+
+msgid "Check result if reported VM state is SavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavingCritical ist"
+
+msgid "Check result if reported VM state is PausingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausingCritical ist"
+
+msgid "Check result if reported VM state is ResumingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResumingCritical ist"
+
+msgid "Check result if reported VM state is FastSavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavedCritical ist"
+
+msgid "Check result if reported VM state is FastSavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavingCritical ist"
+
 #, fuzzy
 #~ msgid "Not enough data to process"
 #~ msgstr "Verarbeitete Datenmenge"

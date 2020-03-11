@@ -258,7 +258,7 @@ class FixedValue(ValueSpec):
         # type: (Any) -> Text
         if self._totext is not None:
             return self._totext
-        elif isinstance(value, six.text_type):
+        if isinstance(value, six.text_type):
             return value
         return ensure_unicode(value)
 
@@ -894,7 +894,7 @@ class EmailAddress(TextAscii):
         # type: (str) -> Text
         if not value:
             return super(EmailAddress, self).value_to_text(value)
-        elif self._make_clickable:
+        if self._make_clickable:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_a(HTML(value), href="mailto:%s" % value)
         return value
@@ -2014,7 +2014,7 @@ class ListOf(ValueSpec):
             if "%d" in self._totext:
                 return self._totext % len(value)
             return self._totext
-        elif not value:
+        if not value:
             return self._text_if_empty
 
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
@@ -2124,7 +2124,7 @@ class ListOfMultiple(ValueSpec):
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
         html.open_tbody()
 
-        for ident, vs in self._choices:
+        for ident, _vs in self._choices:
             if ident in value:
                 self.show_choice_row(varprefix, ident, value)
 
@@ -2550,10 +2550,9 @@ class DropdownChoice(ValueSpec):
 
         if self._invalid_choice == "replace":
             return self.default_value()  # garbled URL or len(choices) == 0
-        elif not choices:
+        if not choices:
             raise MKUserError(varprefix, self._empty_text)
-        else:
-            raise MKUserError(varprefix, self._invalid_choice_error)
+        raise MKUserError(varprefix, self._invalid_choice_error)
 
     def _is_selected_option_from_html(self, varprefix, val):
         # type: (str, DropdownChoiceValue) -> bool
@@ -2586,8 +2585,7 @@ class DropdownChoice(ValueSpec):
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             if value is not None:
                 raise MKUserError(varprefix, self._invalid_choice_error)
-            else:
-                raise MKUserError(varprefix, self._empty_text)
+            raise MKUserError(varprefix, self._empty_text)
 
     def _value_is_invalid(self, value):
         # type: (DropdownChoiceValue) -> bool
@@ -3333,7 +3331,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
     def render_input(self, varprefix, value):
         defval = "other"
-        options = []  # type: List[_Tuple[Union[None, str, unicode], unicode]]
+        options = []  # type: List[_Tuple[Union[None, str, Text], Text]]
         for n, (val, title) in enumerate(self.choices()):
             options.append((str(n), title))
             if val == value:
@@ -3610,8 +3608,7 @@ class AbsoluteDate(ValueSpec):
             except ValueError:
                 if self._allow_empty:
                     return None
-                else:
-                    raise MKUserError(varname, _("Please enter a valid number"))
+                raise MKUserError(varname, _("Please enter a valid number"))
             if part < mmin or part > mmax:
                 raise MKUserError(
                     varname,
@@ -3762,7 +3759,7 @@ class Timeofday(ValueSpec):
         if value > max_value:
             raise MKUserError(varprefix,
                               _("The time must not be greater than %02d:%02d.") % max_value)
-        elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
+        if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
 
@@ -3848,9 +3845,7 @@ class TimeofdayRange(ValueSpec):
         if value is None:
             if self._allow_empty:
                 return
-            else:
-                raise MKUserError(varprefix + "_from", _("Please enter a valid time of day range"))
-            return
+            raise MKUserError(varprefix + "_from", _("Please enter a valid time of day range"))
 
         self._bounds[0].validate_value(value[0], varprefix + "_from")
         self._bounds[1].validate_value(value[1], varprefix + "_until")
@@ -3879,7 +3874,7 @@ class TimeHelper(object):
 
         if unit == 'd':
             return time.mktime(time_s)
-        elif unit == 'w':
+        if unit == 'w':
             days = time_s.tm_wday  # 0 based
         elif unit == 'm':
             days = time_s.tm_mday - 1  # 1 based
@@ -4078,15 +4073,15 @@ class Timerange(CascadingDropdown):
             until_time = now
             title = _("The last ") + Age().value_to_text(rangespec[1])
             return (from_time, until_time), title
-        elif rangespec[0] == 'next':
+        if rangespec[0] == 'next':
             from_time = now
             until_time = now + rangespec[1]
             title = _("The next ") + Age().value_to_text(rangespec[1])
             return (from_time, until_time), title
-        elif rangespec[0] == 'until':
+        if rangespec[0] == 'until':
             return (now, rangespec[1]), AbsoluteDate().value_to_text(rangespec[1])
 
-        elif rangespec[0] in ['date', 'time']:
+        if rangespec[0] in ['date', 'time']:
             from_time, until_time = rangespec[1]
             if from_time > until_time:
                 raise MKUserError("avo_rangespec_9_0_year",
@@ -4099,51 +4094,50 @@ class Timerange(CascadingDropdown):
                     AbsoluteDate().value_to_text(until_time)
             return (from_time, until_time), title
 
-        else:
-            until_time = now
-            if rangespec[0].isdigit():  # 4h, 400d
-                count = int(rangespec[:-1])
-                from_time = TimeHelper.add(now, count * -1, rangespec[-1])
-                unit_name = {'d': "days", 'h': "hours"}[rangespec[-1]]
-                title = _("Last %d %s") % (count, unit_name)
-                return (from_time, now), title
+        until_time = now
+        if rangespec[0].isdigit():  # 4h, 400d
+            count = int(rangespec[:-1])
+            from_time = TimeHelper.add(now, count * -1, rangespec[-1])
+            unit_name = {'d': "days", 'h': "hours"}[rangespec[-1]]
+            title = _("Last %d %s") % (count, unit_name)
+            return (from_time, now), title
 
-            year, month = time.localtime(now)[:2]
+        year, month = time.localtime(now)[:2]
 
-            if rangespec in ['f0', 'f1', 'l1']:
-                return _month_edge_days(now, rangespec)
+        if rangespec in ['f0', 'f1', 'l1']:
+            return _month_edge_days(now, rangespec)
 
-            # base time is current time rounded down to the nearest unit (day, week, ...)
-            from_time = TimeHelper.round(now, rangespec[0])
-            # derive titles from unit ()
-            titles = {
-                'd': (_("Today"), _("Yesterday")),
-                'w': (_("This week"), _("Last week")),
-                'y': (str(year), None),
-                'm': ("%s %d" % (defines.month_name(month - 1), year), None),
-            }[rangespec[0]]
+        # base time is current time rounded down to the nearest unit (day, week, ...)
+        from_time = TimeHelper.round(now, rangespec[0])
+        # derive titles from unit ()
+        titles = {
+            'd': (_("Today"), _("Yesterday")),
+            'w': (_("This week"), _("Last week")),
+            'y': (str(year), None),
+            'm': ("%s %d" % (defines.month_name(month - 1), year), None),
+        }[rangespec[0]]
 
-            if rangespec[1] == '0':
-                return (from_time, now), titles[0]
+        if rangespec[1] == '0':
+            return (from_time, now), titles[0]
 
-            # last (previous)
-            prev_time = TimeHelper.add(from_time, -1 * int(rangespec[1:]), rangespec[0])
-            # add one hour to the calculated time so that if dst started in that period,
-            # we don't round down a whole day
-            prev_time = TimeHelper.round(prev_time + 3600, 'd')
+        # last (previous)
+        prev_time = TimeHelper.add(from_time, -1 * int(rangespec[1:]), rangespec[0])
+        # add one hour to the calculated time so that if dst started in that period,
+        # we don't round down a whole day
+        prev_time = TimeHelper.round(prev_time + 3600, 'd')
 
-            # This only works for Months, but those are the only defaults in Forecast Graphs
-            # Language localization to system language not CMK GUI language
-            if prev_time > from_time:
-                from_time, prev_time = prev_time, from_time
-            prev_time_str = time.strftime("%B %Y", time.localtime(prev_time))
-            end_time_str = time.strftime("%B %Y", time.localtime(from_time - 1))
-            if prev_time_str != end_time_str:
-                prev_time_str += " - " + end_time_str
-            if rangespec[0] == "y":
-                prev_time_str = time.strftime("%Y", time.localtime(prev_time))
+        # This only works for Months, but those are the only defaults in Forecast Graphs
+        # Language localization to system language not CMK GUI language
+        if prev_time > from_time:
+            from_time, prev_time = prev_time, from_time
+        prev_time_str = time.strftime("%B %Y", time.localtime(prev_time))
+        end_time_str = time.strftime("%B %Y", time.localtime(from_time - 1))
+        if prev_time_str != end_time_str:
+            prev_time_str += " - " + end_time_str
+        if rangespec[0] == "y":
+            prev_time_str = time.strftime("%Y", time.localtime(prev_time))
 
-            return (prev_time, from_time), titles[1] or prev_time_str
+        return (prev_time, from_time), titles[1] or prev_time_str
 
 
 # TODO: Cleanup kwargs
@@ -4339,7 +4333,7 @@ class Alternative(ValueSpec):
     # TODO: The None cases below look very fishy...
     def render_input_dropdown(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
-        options = []  # type: List[_Tuple[Union[None, str, unicode], unicode]]
+        options = []  # type: List[_Tuple[Union[None, str, Text], Text]]
         sel_option = html.request.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
             if not sel_option and vs == mvs:
@@ -4430,8 +4424,7 @@ class Alternative(ValueSpec):
             if self._show_alternative_title and vs.title():
                 output = "%s<br>" % vs.title()
             return output + vs.value_to_text(value)
-        else:
-            return _("invalid:") + " " + escaping.escape_attribute(str(value))
+        return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
     def from_html_vars(self, varprefix):
         nr = html.request.get_integer_input_mandatory(varprefix + "_use")
@@ -4659,7 +4652,7 @@ class Dictionary(ValueSpec):
     def _get_elements(self):
         if callable(self._elements):
             return self._elements()
-        elif isinstance(self._elements, list):
+        if isinstance(self._elements, list):
             return self._elements
         return []
 
@@ -4822,17 +4815,18 @@ class Dictionary(ValueSpec):
             elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
 
     def canonical_value(self):
-        return dict([(name, vs.canonical_value())
-                     for (name, vs) in self._get_elements()
-                     if name in self._required_keys or not self._optional_keys])
+        return {
+            name: vs.canonical_value()
+            for (name, vs) in self._get_elements()
+            if name in self._required_keys or not self._optional_keys
+        }
 
     def default_value(self):
-        def_val = {}
-        for name, vs in self._get_elements():
-            if name in self._required_keys or not self._optional_keys or name in self._default_keys:
-                def_val[name] = vs.default_value()
-
-        return def_val
+        return {
+            name: vs.default_value()
+            for name, vs in self._get_elements()
+            if name in self._required_keys or not self._optional_keys or name in self._default_keys
+        }
 
     def value_to_text(self, value):
         value = self.migrate(value)
@@ -5332,7 +5326,7 @@ class ImageUpload(FileUpload):
             html.td(_("Current image:"))
             html.td(
                 html.render_img("data:image/png;base64,%s" %
-                                base64.b64encode(six.ensure_binary(value))))
+                                six.ensure_str(base64.b64encode(six.ensure_binary(value)))))
             html.close_tr()
             html.open_tr()
             html.td(_("Upload new:"))
@@ -5653,8 +5647,7 @@ class IconSelector(ValueSpec):
                     except IOError as e:
                         if "%s" % e == "cannot identify image file":
                             continue  # Silently skip invalid files
-                        else:
-                            raise
+                        raise
 
                     category = im.info.get('Comment')
                     if category not in valid_categories:

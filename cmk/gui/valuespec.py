@@ -3333,7 +3333,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
     def render_input(self, varprefix, value):
         defval = "other"
-        options = []
+        options = []  # type: List[_Tuple[Union[None, str, unicode], unicode]]
         for n, (val, title) in enumerate(self.choices()):
             options.append((str(n), title))
             if val == value:
@@ -3452,8 +3452,9 @@ class RelativeDate(OptionalDropdownChoice):
             return _("two days ago")
         if reldays < 0:
             return _("%d days ago") % -reldays
-        if reldays < len(self._choices):
-            return self._choices[reldays][1]
+        choices = self.choices()  # TODO: Is this correct with no_preselect?
+        if reldays < len(choices):
+            return choices[reldays][1]
         return _("in %d days") % reldays
 
     def from_html_vars(self, varprefix):
@@ -3978,10 +3979,19 @@ class Timerange(CascadingDropdown):
         self._title = title if title is not None else _('Time range')
         self._allow_empty = allow_empty
         self._include_time = include_time
-        self._fixed_choices = choices or []
+        self._fixed_choices = choices
 
     def _prepare_choices(self):
-        choices = list(self._fixed_choices)
+        # TODO: We have dispatching code like this all over place...
+        if self._fixed_choices is None:
+            choices = [
+            ]  # type: List[Union[_Tuple[_Optional[Text], Text], _Tuple[Text, Text, ValueSpec]]]
+        elif isinstance(self._fixed_choices, list):
+            choices = list(self._fixed_choices)
+        elif callable(self._fixed_choices):
+            choices = self._fixed_choices()
+        else:
+            raise ValueError("invalid type for choices")
 
         if self._allow_empty:
             choices += [(None, '')]
@@ -4329,7 +4339,7 @@ class Alternative(ValueSpec):
     # TODO: The None cases below look very fishy...
     def render_input_dropdown(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
-        options = []
+        options = []  # type: List[_Tuple[Union[None, str, unicode], unicode]]
         sel_option = html.request.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
             if not sel_option and vs == mvs:

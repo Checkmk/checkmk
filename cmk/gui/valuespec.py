@@ -4786,7 +4786,7 @@ class Dictionary(ValueSpec):
             if param in self._hidden_keys:
                 continue
 
-            if param not in section_elements:
+            if section_elements and param not in section_elements:
                 continue
 
             div_id = varprefix + "_d_" + param

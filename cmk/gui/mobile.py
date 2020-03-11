@@ -38,10 +38,10 @@ def mobile_html_head(title):
     html.stylesheet(href="themes/classic/theme.css")
 
     html.write(
-        html._render_opening_tag("link",
-                                 rel="apple-touch-icon",
-                                 href="themes/classic/images/ios_logo.png",
-                                 close_tag=True))
+        html._render_start_tag("link",
+                               rel="apple-touch-icon",
+                               href="themes/classic/images/ios_logo.png",
+                               close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
     # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.

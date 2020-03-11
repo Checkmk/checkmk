@@ -2681,5 +2681,10 @@ TEST(PluginTest, AllowedExtensions) {
     auto exts = pp.gatherAllowedExtensions();
     std::vector<std::string> expected = {"a.x", "b", "x", "y"};
     EXPECT_EQ(exts, expected);
+
+    PluginsProvider pp2;
+    exts = pp2.gatherAllowedExtensions();
+    expected = {"x", "y"};
+    EXPECT_EQ(exts, expected);
 }
 }  // namespace cma::provider

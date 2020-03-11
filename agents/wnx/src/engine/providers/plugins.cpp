@@ -135,6 +135,11 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
 std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
     using namespace cma::cfg;
     auto sp = getHostSp();
+    auto global_exts = GetInternalArray(groups::kGlobal, vars::kExecute);
+
+    // check that plugin has owner(in the case of local it is not true)
+    if (nullptr == sp) return global_exts;
+
     auto mc = sp->getModuleCommander();
 
     auto exts = mc.getExtensions();
@@ -143,7 +148,6 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
 
         if (e[0] == '.') e.erase(e.begin(), e.begin() + 1);
     }
-    auto global_exts = GetInternalArray(groups::kGlobal, vars::kExecute);
 
     for (auto& ge : global_exts) exts.emplace_back(ge);
 

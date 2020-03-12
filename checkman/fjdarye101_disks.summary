@@ -1,4 +1,4 @@
-title: Fujitsu storage systems FW 2013: Summarized status of all disks
+title: Fujitsu Storage Systems FW 2013: Summarized Status of all Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

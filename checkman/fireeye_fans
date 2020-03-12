@@ -1,4 +1,4 @@
-title: FireEye Appliances: Fan states
+title: FireEye Appliances: Fan States
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

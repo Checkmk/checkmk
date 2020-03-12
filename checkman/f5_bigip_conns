@@ -1,4 +1,4 @@
-title: F5 Big-IP: number of current connections
+title: F5 Big-IP: Number of Current Connections
 agents: snmp
 catalog: hw/network/f5
 license: GPL

@@ -1,4 +1,4 @@
-title: F5 Big-IP: CPU temperature
+title: F5 Big-IP: CPU Temperature
 agents: snmp
 catalog: hw/network/f5
 license: GPL

@@ -1,4 +1,4 @@
-title: FireEye Appliances: Overall power supply status
+title: FireEye Appliances: Overall Power Supply Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

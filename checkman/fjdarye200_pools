@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX200 storage systems: Thin provisioning pool
+title: Fujitsu ETERNUS DX200 Storage Systems: Thin Provisioning Pool
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

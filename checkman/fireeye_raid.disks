@@ -1,4 +1,4 @@
-title: FireEye Appliances: Disk status
+title: FireEye Appliances: Disk Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

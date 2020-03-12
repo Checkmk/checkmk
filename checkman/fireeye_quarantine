@@ -1,4 +1,4 @@
-title: FireEye Appliances: Quarantine usage
+title: FireEye Appliances: Quarantine Usage
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

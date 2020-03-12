@@ -1,4 +1,4 @@
-title: FireEye Appliances: License expiration
+title: FireEye Appliances: License Expiration
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

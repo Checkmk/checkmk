@@ -1,4 +1,4 @@
-title: FireEye Appliances: Bypass Mail rate
+title: FireEye Appliances: Bypass Mail Rate
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

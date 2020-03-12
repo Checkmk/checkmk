@@ -1,4 +1,4 @@
-title: F5 Big-IP: show failover states of all vCMP guests running on a vCMP host
+title: F5 Big-IP: Show Failover States of all vCMP Guests Running on a vCMP Host
 agents: snmp
 catalog: hw/network/f5
 license: GPL

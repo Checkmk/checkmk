@@ -4594,6 +4594,12 @@ metric_info["filehandler_perc"] = {
     "color": "#4800ff",
 }
 
+metric_info["capacity_perc"] = {
+    "title": _("Available capacity"),
+    "unit": "%",
+    "color": "#4800ff",
+}
+
 metric_info["fan"] = {
     "title": _("Fan speed"),
     "unit": "rpm",
@@ -9770,6 +9776,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["filehandler_perc"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["capacity_perc"],
     "total": 100.0,
 })
 

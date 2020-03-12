@@ -21,6 +21,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
+import six
 from six.moves.urllib.parse import urlparse
 
 from testlib.utils import (
@@ -244,7 +245,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
+        # Needed during py2/py3 migration
+        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
+
+        kwargs.setdefault("encoding", "utf-8")
 
         if not self._is_running_as_site_user():
             sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
@@ -253,11 +258,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
             ]
             cmd_txt = " ".join(cmd)
-            return subprocess.Popen(cmd_txt, shell=True, encoding="utf-8", *args, **kwargs)  # nosec
+            return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
 
         sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-        return subprocess.Popen(  # nosec
-            subprocess.list2cmdline(cmd), shell=True, encoding="utf-8", *args, **kwargs)
+        return Popen(  # nosec
+            subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
 
     def omd(self, mode, *args):
         if not self._is_running_as_site_user():
@@ -305,12 +310,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         else:
             shutil.rmtree(self.path(rel_path))
 
+    # TODO: Rename to write_text_file?
     def write_file(self, rel_path, content):
         if not self._is_running_as_site_user():
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
-            p.communicate(content)
+            p.communicate(six.ensure_text(content))
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
@@ -318,6 +324,22 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
             with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
+
+    def write_binary_file(self, rel_path, content):
+        if not self._is_running_as_site_user():
+            p = self.execute(["tee", self.path(rel_path)],
+                             stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"),
+                             encoding=None)
+            p.communicate(content)
+            p.stdin.close()
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("wb") as f:
                 f.write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):

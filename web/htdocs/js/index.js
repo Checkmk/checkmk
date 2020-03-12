@@ -38,6 +38,9 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
+import * as cmk_figures from "cmk_figures";
+import "cmk_figure_plugins";
+
 
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
@@ -103,6 +106,7 @@ export const cmk_export = {
         node_visualization_viewport_utils: node_visualization_viewport_utils,
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
+        figures: cmk_figures,
     }
 };
 

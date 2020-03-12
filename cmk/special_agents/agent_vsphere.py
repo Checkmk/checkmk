@@ -10,7 +10,6 @@ import collections
 import datetime
 import errno
 import functools
-import os
 import re
 import socket
 import sys

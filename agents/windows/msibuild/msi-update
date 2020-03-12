@@ -216,8 +216,8 @@ def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
         "property": entry_in,
         "work_dir": out_dir
     }
-    result = os.system(command)
-    if result != 0:  # nosec
+    result = os.system(command)  # nosec
+    if result != 0:
         bail_out('Failed to unpack msi table {} from {}, code is {}'.format(
             entry_in, msi_in, result))
 

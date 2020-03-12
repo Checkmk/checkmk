@@ -8,7 +8,7 @@
 import abc
 import traceback
 import json
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -23,6 +23,10 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+
+# TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
+# of cycles and untyped dependencies. So for now this is just a reminder.
+CustomSnapins = Any
 
 # Constants to be used in snapins
 snapin_width = 230
@@ -126,6 +130,8 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
         raise NotImplementedError()
 
 
+# TODO: We should really use the InstanceRegistry here... :-/ Using the
+# ClassRegistry obfuscates the code and makes typing a nightmare.
 class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
     def plugin_base_class(self):
@@ -135,6 +141,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return plugin_class.type_name()
 
     def registration_hook(self, plugin_class):
+        # type: (Type[SidebarSnapin]) -> None
         declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
@@ -146,21 +153,25 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             cmk.gui.pages.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self):
+        # type: () -> List[Tuple[str, SidebarSnapin]]
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
                 if snapin_type.is_customizable() and not snapin_type.is_custom_snapin()]
 
     def register_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
     def _clear_custom_snapins(self):
+        # type: () -> None
         for snapin_type_id, snapin_type in self.items():
             if snapin_type.is_custom_snapin():
                 del self[snapin_type_id]
 
     def _add_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -169,11 +180,18 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             except KeyError:
                 continue
 
+            # TODO: This is just our assumption, can we enforce this via
+            # typing? Probably not in the current state of affairs where things
+            # which should be instances are classes... :-/
+            if not issubclass(base_snapin_type, SidebarSnapin):
+                raise ValueError("invalid snapin type %r" % base_snapin_type)
+
             if not base_snapin_type.is_customizable():
                 continue
 
+            # TODO: The stuff below is completely untypeable... :-P * * *
             @self.register
-            class CustomSnapin(base_snapin_type):
+            class CustomSnapin(base_snapin_type):  # type: ignore[valid-type,misc]
                 _custom_snapin = custom_snapin
 
                 @classmethod

@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 import six
 
 from cmk.gui.exceptions import MKGeneralException
@@ -23,6 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import ColumnName, HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
@@ -361,7 +362,7 @@ class FilterTristate(Filter):
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [None, ""] and int(value) == self.deflt)
-            html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
+            html.radiobutton(self.varname, value, checked, text + u" &nbsp; ")
         html.end_radio_group()
 
     def tristate_value(self):
@@ -371,7 +372,7 @@ class FilterTristate(Filter):
         current = self.tristate_value()
         if current == -1:  # ignore
             return ""
-        elif current == 1:
+        if current == 1:
             return self.filter_code(infoname, True)
         return self.filter_code(infoname, False)
 
@@ -400,9 +401,9 @@ class FilterTime(Filter):
         return True
 
     def display(self):
-        choices = [ (str(sec), title + " " + _("ago")) for sec, title in self.ranges ] + \
-                  [ ("abs", _("Date (YYYY-MM-DD)")),
-                    ("unix", _("UNIX timestamp")) ]
+        choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges
+                  ]  # type: Choices
+        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
 
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
@@ -435,18 +436,22 @@ class FilterTime(Filter):
                self._get_time_range_of("until")
 
     def _get_time_range_of(self, what):
+        # type: (str) -> Union[None, int, float]
         varprefix = self.ident + "_" + what
 
         rangename = html.request.var(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(time.strptime(html.request.var(varprefix), "%Y-%m-%d"))
+                return time.mktime(
+                    time.strptime(html.request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
             except Exception:
                 html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                 return None
 
-        elif rangename == "unix":
+        if rangename == "unix":
             return html.request.get_integer_input_mandatory(varprefix)
+        if rangename is None:
+            return None
 
         try:
             count = html.request.get_integer_input_mandatory(varprefix)

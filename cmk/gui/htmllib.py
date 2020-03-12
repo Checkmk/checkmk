@@ -2620,7 +2620,7 @@ class html(ABCHTMLGenerator):
             self.write(self._render_end_tag("fieldset"))
 
     def radiobutton(self, varname, value, checked, label):
-        # type: (str, str, bool, Optional[str]) -> None
+        # type: (str, str, bool, Optional[Text]) -> None
         self.form_vars.append(varname)
 
         if self.request.has_var(varname):

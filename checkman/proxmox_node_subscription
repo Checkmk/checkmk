@@ -1,4 +1,4 @@
-title: Proxmox: Node subscription
+title: Proxmox: Node Subscription
 agents: proxmox
 catalog: app/proxmox
 license: GPL

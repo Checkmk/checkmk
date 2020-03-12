@@ -1,4 +1,4 @@
-title: Quanta devices: Fan
+title: Quanta Devices: Fan
 agents: snmp
 catalog: hw/environment/quanta
 license: GPL

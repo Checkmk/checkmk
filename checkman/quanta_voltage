@@ -1,4 +1,4 @@
-title: Quanta devices: Voltage sensors
+title: Quanta Devices: Voltage Sensors
 agents: snmp
 catalog: hw/environment/quanta
 license: GPL

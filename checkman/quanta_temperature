@@ -1,4 +1,4 @@
-title: Quanta devices: Temperature sensors
+title: Quanta Devices: Temperature Sensors
 agents: snmp
 catalog: hw/environment/quanta
 license: GPL

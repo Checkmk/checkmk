@@ -1,4 +1,4 @@
-title: HWgroup Poseidon devices: Temperature
+title: HWgroup Poseidon Devices: Temperature
 agents: snmp
 catalog: hw/network/hwgroup
 license: GPL

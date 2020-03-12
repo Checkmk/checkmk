@@ -1,4 +1,4 @@
-title: Dell OpenManage: Processor health
+title: Dell OpenManage: Processor Health
 agents: snmp
 catalog: hw/server/dell
 license: GPL

@@ -1,4 +1,4 @@
-title: Dell OpenManage: PSU unit state
+title: Dell OpenManage: PSU Unit State
 agents: snmp
 catalog: hw/server/dell
 license: GPL

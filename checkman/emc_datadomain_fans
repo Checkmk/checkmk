@@ -1,4 +1,4 @@
-title: EMC Datadomain: fan status
+title: EMC Datadomain: Fan Status
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

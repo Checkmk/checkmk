@@ -1,4 +1,4 @@
-title: EMC VNX Storage: Info about the devices the agent controls
+title: EMC VNX Storage: Info about the Devices the Agent Controls
 agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL

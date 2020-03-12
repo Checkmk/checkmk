@@ -1,4 +1,4 @@
-title: EMC VPLEX: Traffic and status of network interfaces
+title: EMC VPLEX: Traffic and Status of Network Interfaces
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

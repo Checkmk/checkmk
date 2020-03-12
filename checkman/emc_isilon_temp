@@ -1,4 +1,4 @@
-title: EMC Isilon: Temperature sensors
+title: EMC Isilon: Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

@@ -1,4 +1,4 @@
-title: Dell OpenManage: ESM log
+title: Dell OpenManage: ESM Log
 agents: snmp
 catalog: hw/server/dell
 license: GPL

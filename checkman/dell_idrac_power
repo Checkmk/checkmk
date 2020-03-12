@@ -1,4 +1,4 @@
-title: Dell iDRAC: Status of power supply redundancy
+title: Dell iDRAC: Status of Power Supply Redundancy
 agents: snmp
 catalog: hw/server/dell
 license: GPL

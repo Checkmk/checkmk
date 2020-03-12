@@ -1,4 +1,4 @@
-title: Docker: Container CPU utilization
+title: Docker: Container CPU Utilization
 agents: linux
 catalog: containerization/docker
 license: GPL

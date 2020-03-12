@@ -1,4 +1,4 @@
-title: EMC Isilon: Cluster storage
+title: EMC Isilon: Cluster Storage
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

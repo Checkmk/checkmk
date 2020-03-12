@@ -1,4 +1,4 @@
-title: Dell PowerConnect Switches: FAN sensors
+title: Dell PowerConnect Switches: FAN Sensors
 agents: snmp
 catalog: hw/network/dell
 license: GPL

@@ -1,4 +1,4 @@
-title: DECRU NAS: CPU utilization
+title: DECRU NAS: CPU Utilization
 agents: snmp
 catalog: hw/network/decru
 license: GPL

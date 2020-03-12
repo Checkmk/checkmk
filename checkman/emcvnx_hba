@@ -1,4 +1,4 @@
-title: EMC VNX Storage: iSCSI traffic on HBAs
+title: EMC VNX Storage: iSCSI Traffic on HBAs
 agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL

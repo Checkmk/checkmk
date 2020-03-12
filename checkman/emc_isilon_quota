@@ -1,4 +1,4 @@
-title: EMC Isilon: Used and available quotas
+title: EMC Isilon: Used and Available Quotas
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

@@ -1,4 +1,4 @@
-title: EMC Datadomain: Used space of filesystems via SNMP
+title: EMC Datadomain: Used Space of Filesystems via SNMP
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

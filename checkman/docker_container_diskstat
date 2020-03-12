@@ -1,4 +1,4 @@
-title: Docker: Container Disk throughput
+title: Docker: Container Disk Throughput
 agents: linux
 catalog: containerization/docker
 license: GPL

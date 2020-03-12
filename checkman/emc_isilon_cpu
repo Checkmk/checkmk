@@ -1,4 +1,4 @@
-title: EMC Isilon: CPU utilization
+title: EMC Isilon: CPU Utilization
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

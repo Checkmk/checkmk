@@ -1,4 +1,4 @@
-title: Disk throughput
+title: Disk Throughput
 agents: linux, freebsd
 catalog: os/storage
 license: GPL

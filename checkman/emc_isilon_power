@@ -1,4 +1,4 @@
-title: EMC Isilon: Power Supply sensors
+title: EMC Isilon: Power Supply Sensors
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL

@@ -1,4 +1,4 @@
-title: EMC VNX Storage: Info about the IP, system time, serial number and errors
+title: EMC VNX Storage: Info about the IP, System Time, Serial Number and Errors
 agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL

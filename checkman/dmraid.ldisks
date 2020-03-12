@@ -17,4 +17,4 @@ item:
  Mountpoint of the logical disk
 
 inventory:
- All logical disks are automatically inventorized.
+ One service is created for each logical disk.

@@ -15,6 +15,6 @@ description:
  section "docker_container_status" (the default setting is fine).
 
 inventory:
- One service is discovered for every active container (running or restart policy 'always'),
+ One service is created for each active container (running or restart policy 'always'),
  unless the {uptime} plugin has discovered a service.
 

@@ -17,4 +17,4 @@ item:
  Name of the filesystem
 
 inventory:
- All logical disks are automatically inventorized.
+ One service is created for each logical disk.

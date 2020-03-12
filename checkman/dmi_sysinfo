@@ -13,4 +13,4 @@ description:
  installed on the system to be monitored.
 
 inventory:
- One service per host will be created when all requirements are met.
+ One service is created for each host.

@@ -20,7 +20,7 @@ description:
  more accurate.
 
  {Inodes:} if the agent provides a {df} subsection for {inodes}, this check
- measures the inodes usage. Thresholds default to (10%, 5%) remaining inodes and 
+ measures the inodes usage. Thresholds default to (10%, 5%) remaining inodes and
  can be set/changed in ruleset {filesystems}.
 
  {Trends:} This checks supports filesystem {trends}. This means that the {df} check
@@ -58,8 +58,8 @@ item:
  the item is the name of the group.
 
 inventory:
- df supports inventory. All filesystem the agent reports
- will be inventorized except mount points listed in
+ One service is created for each filesystem
+ the agent reports except mount points listed in
  {inventory_df_exclude_mountpoints} and filesystem types
  listed in {inventory_df_exclude_fs}. The Windows agent
  only reports fixed disks. The Linux agent reports filesystems
@@ -67,7 +67,6 @@ inventory:
 
  When {filesystem_groups} is defined and a found filesystem
  is matching one of the patterns of a group, then instead of a
- service of the single filesystem a check for the group is being
- created. The check item is the name of that group in that
- case.
+ service of the single filesystem one service  for the group is
+ created. The service is the name of that group in that case.
 

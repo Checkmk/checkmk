@@ -13,4 +13,5 @@ description:
  section "docker_containers_client" (the default setting is fine).
 
 inventory:
- One service is discovered for every container that is running or has the restart policy set to 'always'.
+ One service is created for each container that is running
+ or has the restart policy set to 'always'.

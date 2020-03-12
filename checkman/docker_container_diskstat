@@ -18,3 +18,10 @@ description:
 item:
  Either {"SUMMARY"} for a summarized check of all disks or the name of the
  disk device, e.g. {"sda"}.
+
+inventory:
+  One service is created for each disk if the configuration is set to {"single"}.
+  If the configuration is set to {"summary"} one service is created for each host.
+  If set to {"legacy"} then two services one for read and one for write
+  is created (deprecated).
+  The inventory is configured via {diskstat_inventory_mode}.

@@ -1,4 +1,4 @@
-title: SNMP Management board: Retrieve informational SNMP data about host
+title: SNMP Management Board: Retrieve Informational SNMP Data about Host
 agents: snmp
 catalog: os/misc
 license: GPL

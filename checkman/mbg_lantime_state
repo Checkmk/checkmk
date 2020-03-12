@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: General state
+title: Meinberg LANTIME Devices: General State
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

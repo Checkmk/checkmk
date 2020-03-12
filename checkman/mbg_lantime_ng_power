@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Power Supply (NG MIB)
+title: Meinberg LANTIME Devices: Power Supply (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

@@ -1,4 +1,4 @@
-title: Checkmk Appliance: Backup job state
+title: Checkmk Appliance: Backup Job State
 agents: linux
 catalog: app/checkmk
 license: GPL

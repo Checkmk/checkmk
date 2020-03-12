@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: General state (NG MIB)
+title: Meinberg LANTIME Devices: General State (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

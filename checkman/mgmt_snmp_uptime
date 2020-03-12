@@ -1,4 +1,4 @@
-title: SNMP Management board: Uptime
+title: SNMP Management Board: Uptime
 agents: snmp
 catalog: os/misc
 license: GPL

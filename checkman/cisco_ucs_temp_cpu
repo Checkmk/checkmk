@@ -1,4 +1,4 @@
-title: Cisco UCS: CPU temperature
+title: Cisco UCS: CPU Temperature
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

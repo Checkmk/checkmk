@@ -1,4 +1,4 @@
-title: Cisco UCS: PSU operation status
+title: Cisco UCS: PSU Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

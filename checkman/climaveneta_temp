@@ -1,4 +1,4 @@
-title: Climaveneta: Temperature sensors
+title: Climaveneta: Temperature Sensors
 agents: snmp
 catalog: hw/environment/climaveneta
 license: GPL

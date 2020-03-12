@@ -1,4 +1,4 @@
-title: DB2: Database backups
+title: DB2: Database Backups
 agents: aix, linux
 catalog: app/db2
 license: GPL

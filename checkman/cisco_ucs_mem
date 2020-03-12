@@ -1,4 +1,4 @@
-title: Cisco UCS: Memory operation status
+title: Cisco UCS: Memory Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

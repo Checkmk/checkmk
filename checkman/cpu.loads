@@ -1,4 +1,4 @@
-title: CPU load
+title: CPU Load
 agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris
 catalog: os/kernel
 license: GPL

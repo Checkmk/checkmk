@@ -1,4 +1,4 @@
-title: Cisco UCS: Temperature sensors
+title: Cisco UCS: Temperature Sensors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

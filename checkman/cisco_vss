@@ -1,4 +1,4 @@
-title: Cisco switches: State of Virtual Switches
+title: Cisco Switches: State of Virtual Switches
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

@@ -1,4 +1,4 @@
-title: IBM Datapower: Number of TCP Connections per state
+title: IBM Datapower: Number of TCP Connections per State
 agents: snmp
 catalog: hw/network/ibm
 license: GPL

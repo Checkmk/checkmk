@@ -1,4 +1,4 @@
-title: Cisco UCS: Memory temperature
+title: Cisco UCS: Memory Temperature
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

@@ -1,4 +1,4 @@
-title: Cisco UCS: Fan operation status
+title: Cisco UCS: Fan Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

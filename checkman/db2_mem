@@ -1,4 +1,4 @@
-title: DB2: Instance Memory usage
+title: DB2: Instance Memory Usage
 agents: solaris, aix, linux
 catalog: app/db2
 license: GPL

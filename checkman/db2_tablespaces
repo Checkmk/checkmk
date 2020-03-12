@@ -1,4 +1,4 @@
-title: DB2: Tablespace usage
+title: DB2: Tablespace Usage
 agents: aix, linux
 catalog: app/db2
 license: GPL

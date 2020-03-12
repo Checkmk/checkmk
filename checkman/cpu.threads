@@ -1,4 +1,4 @@
-title: Total number of current processes and threads
+title: Total Number of Current Processes and Threads
 agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris
 catalog: os/kernel
 license: GPL

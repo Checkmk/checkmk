@@ -18,3 +18,5 @@ description:
  of the server: racURL, chassisServiceTagName, chassisSystemName,
  systemBladeSlotNumber, systemModelName
 
+inventory:
+ One service is created.

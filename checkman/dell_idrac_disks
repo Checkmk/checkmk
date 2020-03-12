@@ -16,5 +16,5 @@ item:
  The combination of EnclosureID, Channel and TargetID seperated by colons
 
 inventory:
- One check is created for each Disk
+ One service is created for each Disk.
 

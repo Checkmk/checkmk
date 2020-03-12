@@ -13,3 +13,6 @@ description:
  {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
 
  No limits are set in the check.
+
+inventory:
+ One service is created.

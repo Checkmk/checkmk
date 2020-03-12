@@ -26,6 +26,5 @@ description:
  however the service check may work with other models.
 
 inventory:
- During the inventory phase of check_mk, it will identify one service {CPU},
- as long as the MIB defined above is supported on the switch.
+ One service is created for the CPU if the MIB defined above is supported on the switch.
 

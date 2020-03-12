@@ -18,5 +18,5 @@ item:
  The ID of the power supply unit
 
 inventory:
- All power units
+ One service is created for each power supply.
 

@@ -11,5 +11,5 @@ item:
  The name of the power supply as defined in the SNMP data.
 
 inventory:
- All power supplies are automatically detected.
+ One service is created for each power supply.
 

@@ -31,6 +31,6 @@ item:
  The fixed statement {{Ambient}}
 
 inventory:
- During the inventory phase of check_mk, it will identify one service {Temperature},
- as long as the MIB defined above is supported on the switch.
+ One service is created for the Temperature sensor if the MIB
+ defined above is supported on the switch.
 

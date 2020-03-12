@@ -13,4 +13,4 @@ item:
  The disk number
 
 inventory:
- One service for each disk is created
+ One service is created for each disk.

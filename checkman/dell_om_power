@@ -13,4 +13,4 @@ item:
  The index of a redundancy group
 
 inventory:
- One service for each redundancy group is created
+ One service is created for each redundancy group.

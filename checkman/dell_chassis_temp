@@ -13,5 +13,5 @@ item:
  drsCMCAmbientTemperature, drsCMCProcessorTemperature
 
 inventory:
- All three hardcoded sensors
+ Three services are created one for each sensor.
 

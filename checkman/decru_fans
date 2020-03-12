@@ -11,5 +11,5 @@ item:
  The name of the FAN as defines in the SNMP data.
 
 inventory:
- All fans are automatically detected.
+ One service is created for each fan.
 

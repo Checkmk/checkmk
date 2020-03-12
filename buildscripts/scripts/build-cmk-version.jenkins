@@ -31,7 +31,7 @@ def DISTRO_LIST = DISTROS.split(' ');
 def BUILD_IMAGE = 'ubuntu-18.04-common'
 
 println("Building for the following Distros:" + DISTRO_LIST)
-currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
+currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS
 
 def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
@@ -91,7 +91,7 @@ node(NODE) {
     }
 }
 
-if (!FAKE_WINDOWS_ARTIFACTS) {
+if (!params.FAKE_WINDOWS_ARTIFACTS) {
     AGENT_LIST.each { AGENT ->
         AGENT_BUILDS['build agent ' + AGENT] = {
             if (AGENT == 'windows') {
@@ -333,7 +333,7 @@ def prepare_archive_dir(ARCHIVE_DIR, CMK_VERS) {
 def create_source_package(DAILY_DATA) {
     stage('Create source package') {
         sh 'rm -rf *'
-        if (!FAKE_WINDOWS_ARTIFACTS) {
+        if (!params.FAKE_WINDOWS_ARTIFACTS) {
             unstash(name: 'WinMSI')
             unstash(name: 'WinPython')
         } else {

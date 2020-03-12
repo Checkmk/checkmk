@@ -14,7 +14,7 @@ MYPY     := ../scripts/run-mypy
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker \
 	test-integration-docker-debug \
-	test-composition-docker test-composition \
+	test-composition-docker test-composition-docker-debug test-composition \
 	test-format-python test-format-python3 \
 	test-unit-coverage-html \
 	test-pipenv-deps test-bandit
@@ -38,6 +38,7 @@ help:
 	@echo "test-integration-docker-debug - Run test container for manual debugging"
 	@echo "test-composition              - Run composition tests locally"
 	@echo "test-composition-docker       - Run composition tests in container"
+	@echo "test-composition-docker-debug - Run test container for manual debugging"
 	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
 	@echo "test-bandit                   - Run bandit (security) tests"
 
@@ -156,7 +157,7 @@ test-integration: $(NODE_MODULES)
 test-integration-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
 
-test-integration-docker-debug: $(NODE_MODULES)
+test-integration-docker-debug test-composition-docker-debug: $(NODE_MODULES)
 	$(PIPENV3) run scripts/run-dockerized.py debug
 
 test-composition-docker:

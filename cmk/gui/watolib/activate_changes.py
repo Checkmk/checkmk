@@ -172,13 +172,6 @@ def _load_replication_status(lock=False):
     return {site_id: _load_site_replication_status(site_id, lock=lock) for site_id in config.sites}
 
 
-def _save_replication_status(status):
-    status = {}
-
-    for site_id, repl_status in config.sites.items():
-        _save_site_replication_status(site_id, repl_status)
-
-
 class ActivateChanges(object):
     def __init__(self):
         self._repstatus = {}
@@ -202,38 +195,8 @@ class ActivateChanges(object):
 
     def _load_changes_by_site(self):
         self._changes_by_site = {}
-
-        self._migrate_old_changes()
-
         for site_id in activation_sites():
             self._changes_by_site[site_id] = SiteChanges(site_id).load()
-
-    # Between 1.4.0i* and 1.4.0b4 the changes were stored in
-    # self._repstatus[site_id]["changes"], migrate them.
-    # TODO: Drop this one day.
-    def _migrate_old_changes(self):
-        has_old_changes = False
-        for site_id, status in self._repstatus.items():
-            if status.get("changes"):
-                has_old_changes = True
-                break
-
-        if not has_old_changes:
-            return
-
-        repstatus = _load_replication_status(lock=True)
-
-        for site_id, status in self._repstatus.items():
-            site_changes = SiteChanges(site_id)
-            for change_spec in status.get("changes", []):
-                site_changes.save_change(change_spec)
-
-            try:
-                del status["changes"]
-            except KeyError:
-                pass
-
-        _save_replication_status(repstatus)
 
     def confirm_site_changes(self, site_id):
         SiteChanges(site_id).clear()

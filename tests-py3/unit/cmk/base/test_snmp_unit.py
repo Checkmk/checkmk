@@ -9,6 +9,11 @@ from cmk.base import (
 import cmk.base.config as config
 from cmk.base.check_api import OID_END, BINARY
 
+from cmk.base.api.agent_based.section_types import (
+    SNMPTree,
+    OIDEnd,
+)
+
 from testlib.base import Scenario
 
 
@@ -40,6 +45,27 @@ class _SNMPTestBackend:
 @pytest.mark.parametrize(
     "snmp_info, walk, expected_values",
     [
+        (
+            SNMPTree(
+                base='.1.3.6.1.4.1.13595.2.2.3.1',
+                oids=[
+                    OIDEnd(),
+                    snmp_utils.OIDBytes("16"),
+                ],
+            ),
+            """
+      .1.3.6.1.4.1.13595.2.2.3.1.16.1.0 "FF FF FF "
+      .1.3.6.1.4.1.13595.2.2.3.1.16.2.0 "FF FF FF "
+      .1.3.6.1.4.1.13595.2.2.3.1.16.3.0 "FF FF FF "
+      .1.3.6.1.4.1.13595.2.2.3.1.16.4.0 "FF FF FF "
+      """,
+            [
+                ['1.0', [34, 70, 70, 32, 70, 70, 32, 70, 70, 32, 34]],
+                ['2.0', [34, 70, 70, 32, 70, 70, 32, 70, 70, 32, 34]],
+                ['3.0', [34, 70, 70, 32, 70, 70, 32, 70, 70, 32, 34]],
+                ['4.0', [34, 70, 70, 32, 70, 70, 32, 70, 70, 32, 34]],
+            ],
+        ),
         (
             (
                 '.1.3.6.1.4.1.13595.2.2.3.1',

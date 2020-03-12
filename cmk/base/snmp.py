@@ -30,6 +30,8 @@ import cmk.base.agent_simulator
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
+from cmk.base.api.agent_based.section_types import SNMPTree
+
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
@@ -168,16 +170,27 @@ def create_snmp_host_config(hostname):
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
-    # type: (SNMPHostConfig, CheckPluginName, OIDInfo, bool) -> SNMPTable
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
     # and the columns and also prefixed to the index column. This
     # allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
-    if len(oid_info) == 2:
+    suboids = [None]  # type: List
+    if isinstance(oid_info, SNMPTree):
+        # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
+        #            once we have the auto-conversion of SNMPTrees in place.
+        #            In particular:
+        #              * remove all 'suboids' related code (index_column!)
+        #              * remove all casts, and extend the livetime of the
+        #                 SNMPTree Object as far as possible.
+        #             * I think the below code can be improved by making
+        #               SNMPTree an iterable.
+        tmp_base = str(oid_info.base)
+        oid, targetcolumns = cast(OIDWithColumns, (tmp_base, oid_info.oids))
+    elif len(oid_info) == 2:
         oid, targetcolumns = cast(OIDWithColumns, oid_info)
-        suboids = [None]  # type: List
     else:
         oid, suboids, targetcolumns = cast(OIDWithSubOIDsAndColumns, oid_info)
 

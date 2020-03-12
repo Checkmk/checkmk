@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS: External sensor humidity
+title: NTI Enviromux SEMS: External Sensor Humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

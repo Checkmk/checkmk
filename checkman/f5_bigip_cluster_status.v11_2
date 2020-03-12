@@ -1,4 +1,4 @@
-title: F5 Big-IP: active/active or passive/active cluster status (deprecated)
+title: F5 Big-IP: Active/Active or Passive/Active Cluster Status (deprecated)
 agents: snmp
 catalog: hw/network/f5
 license: GPL

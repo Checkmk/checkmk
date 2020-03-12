@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS: External sensor voltage
+title: NTI Enviromux SEMS: External Sensor Voltage
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

@@ -1,4 +1,4 @@
-title: Enterasys: LSNAT bindings
+title: Enterasys: LSNAT Bindings
 agents: snmp
 catalog: hw/network/enterasys
 license: GPL

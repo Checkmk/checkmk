@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Hostsystem the VM is running on
+title: Virtual Machine under ESX: Hostsystem the VM is Running on
 agents: vsphere
 catalog: os/misc
 license: GPL

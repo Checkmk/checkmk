@@ -1,4 +1,4 @@
-title: NTI Enviromux 16D: External sensor voltage
+title: NTI Enviromux 16D: External Sensor Voltage
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

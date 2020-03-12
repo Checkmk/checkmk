@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: number of virtual CPUs and demanded CPU GHz
+title: Virtual Machine under ESX: Number of Virtual CPUs and Demanded CPU GHz
 agents: vsphere
 catalog: os/kernel
 license: GPL

@@ -1,4 +1,4 @@
-title: F5 Big-IP: Chassis temperature
+title: F5 Big-IP: Chassis Temperature
 agents: snmp
 catalog: hw/network/f5
 license: GPL

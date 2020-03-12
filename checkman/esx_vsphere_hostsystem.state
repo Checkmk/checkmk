@@ -1,4 +1,4 @@
-title: VMWare ESX Host System: Overall state and power state
+title: VMWare ESX Host System: Overall State and Power State
 agents: vsphere
 catalog: os/misc
 license: GPL

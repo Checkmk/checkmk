@@ -1,4 +1,4 @@
-title: VMware ESX vCenter: Total physical RAM usage of clustered ESX hosts
+title: VMware ESX vCenter: Total Physical RAM Usage of Clustered ESX Hosts
 agents: vsphere
 catalog: os/kernel
 license: GPL

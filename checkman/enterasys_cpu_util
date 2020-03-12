@@ -1,4 +1,4 @@
-title: Enterasys Switch: CPU utilization
+title: Enterasys Switch: CPU Utilization
 agents: snmp
 catalog: hw/network/enterasys
 license: GPL

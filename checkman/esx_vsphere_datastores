@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: Used space
+title: VMWare ESX Host Systems: Used Space
 agents: vsphere
 catalog: os/storage
 license: GPL

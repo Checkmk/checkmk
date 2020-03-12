@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Name and disk free of datastores
+title: Virtual Machine under ESX: Name and Disk Free of Datastores
 agents: vsphere
 catalog: os/storage
 license: GPL

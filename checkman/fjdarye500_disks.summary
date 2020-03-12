@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX500 S3 storage systems: Summarized status of all disks
+title: Fujitsu ETERNUS DX500 S3 Storage Systems: Summarized Status of all Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

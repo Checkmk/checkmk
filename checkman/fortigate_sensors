@@ -1,4 +1,4 @@
-title: FortiGate firewalls: Sensor Summary
+title: FortiGate Firewalls: Sensor Summary
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

@@ -1,4 +1,4 @@
-title: Fujitsu Siemens FSC: Temperature status of hardware
+title: Fujitsu Siemens FSC: Temperature Status of Hardware
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL

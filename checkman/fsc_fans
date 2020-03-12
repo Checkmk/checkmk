@@ -1,4 +1,4 @@
-title:  Fujitsu Siemens FSC: Fan status
+title:  Fujitsu Siemens FSC: Fan Status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL

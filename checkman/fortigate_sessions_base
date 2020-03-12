@@ -1,4 +1,4 @@
-title: FortiGate firewalls with FORTINERT-FORTIGATE_MIB: Current Number of Sessions
+title: FortiGate Firewalls with FORTINERT-FORTIGATE_MIB: Current Number of Sessions
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

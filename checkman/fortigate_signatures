@@ -1,4 +1,4 @@
-title: FortiGate firewalls: Age and version of AV and IPS signatures
+title: FortiGate Firewalls: Age and Version of AV and IPS Signatures
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

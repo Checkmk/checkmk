@@ -1,4 +1,4 @@
-title: FortiGate firewall cluster monitoring: Sync Status
+title: FortiGate Firewall Cluster Monitoring: Sync Status
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

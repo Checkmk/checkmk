@@ -1,4 +1,4 @@
-title: FortiGate firewall cluster monitoring: Info
+title: FortiGate Firewall Cluster Monitoring: Info
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

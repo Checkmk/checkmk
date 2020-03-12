@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX storage systems: Status of Channel Modules
+title: Fujitsu ETERNUS DX Storage Systems: Status of Channel Modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPL

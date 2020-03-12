@@ -1,4 +1,4 @@
-title: Fujitsu storage systems: CA ports
+title: Fujitsu Storage Systems: CA Ports
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPL

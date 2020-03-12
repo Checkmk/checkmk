@@ -1,4 +1,4 @@
-title: FortiGate firewalls: Status of IPSec VPN Tunnels
+title: FortiGate Firewalls: Status of IPSec VPN Tunnels
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

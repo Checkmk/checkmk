@@ -7,4 +7,4 @@ description:
  This check monitors the temperature warning and critical failure states.
 
 inventory:
- One service per device is created.
+ One service is created for each device.

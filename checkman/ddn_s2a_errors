@@ -11,25 +11,25 @@ description:
  errors as CRIT. The monitored error types are:
 
  - Link failure error
- 
+
  - Lost sync error
- 
+
  - Loss of signal error
- 
+
  - PrimSeq error
- 
+
  - CRC error
- 
+
  - Receive error
- 
+
  - CTIO timeout
- 
+
  - CTIO transmission error
- 
+
  - CTIO other error
 
 item:
  The port number
 
 inventory:
- One service per FC port is created.
+ One service is created for each FC port.

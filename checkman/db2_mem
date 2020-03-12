@@ -13,5 +13,5 @@ item:
  The DB2 instance name
 
 inventory:
- One service will be created for each instance
+ One service is created for each instance.
 

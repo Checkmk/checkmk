@@ -13,7 +13,7 @@ description:
  for the used memory in percent are reached.
 
 inventory:
- On each gateway one service is created.
+ One service is created for each gateway.
 
 item:
  Empty string

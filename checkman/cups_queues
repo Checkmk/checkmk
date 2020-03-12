@@ -22,5 +22,5 @@ item:
  The name of the printer in CUPS as printed by {lpstat -p}.
 
 inventory:
- Checks are created for all available printers in {lpstat -p} output.
+ One service is created for each available printer in {lpstat -p} output.
 

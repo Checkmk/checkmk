@@ -13,4 +13,4 @@ description:
  can set upper warn and crit levels. No default levels are set.
 
 inventory:
- If there is at least one TCP connection then the check will be created.
+ One service is created if there is at least one TCP connection.

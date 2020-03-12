@@ -14,5 +14,5 @@ item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1
 
 inventory:
- One separate check for each database will be created.
+ One service is created for each database.
 

@@ -8,4 +8,4 @@ description:
  ping fault is being treated as WARN.
 
 inventory:
- One service per device is created.
+ One service is created for each device.

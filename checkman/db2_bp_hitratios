@@ -15,6 +15,6 @@ item:
  joined by ":". For example db2aml:SIRONT4:BP16_GWG
 
 inventory:
- One separate check is created for each bufferpool in a database. Bufferpools named IBMSYSTEMBP*
- are ignored.
+ One service is created for each bufferpool in a database.
+ Bufferpools named IBMSYSTEMBP* are ignored.
 

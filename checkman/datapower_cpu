@@ -13,4 +13,4 @@ description:
  for the CPU utilization are reached.
 
 inventory:
- On each gateway one service is created.
+ One service is created for each gateway.

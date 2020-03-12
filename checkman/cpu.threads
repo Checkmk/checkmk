@@ -9,8 +9,8 @@ description:
  state. The default levels are set to {2000} and {4000}.
 
 inventory:
- A check of this type is created automatically on each Linux host.
- The check parameter is set to {threads_default_levels}. If you
- need individual levels for your hosts, please define this check
- explicitely in {checks}.
+ One service is created for each Linux host.
+ The check parameter is set to {threads_default_levels}.
+ If you need individual levels for your hosts,
+ please define this explicitely in {checks}.
 

@@ -1,4 +1,4 @@
-title: Cisco Aironet access points: Client status
+title: Cisco Aironet Access Points: Client Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

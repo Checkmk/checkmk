@@ -1,4 +1,4 @@
-title: APC Symmetra UPS: external temperature sensors
+title: APC Symmetra UPS: External Temperature Sensors
 agents: snmp
 catalog: hw/environment/apc
 license: GPL

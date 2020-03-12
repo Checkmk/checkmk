@@ -1,4 +1,4 @@
-title: Alcatel switches (>=AOS7): CPU utilization
+title: Alcatel Switches (>=AOS7): CPU Utilization
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL

@@ -1,4 +1,4 @@
-title: APC Symmetra UPS: Battery current
+title: APC Symmetra UPS: Battery Current
 agents: snmp
 catalog: hw/power/apc
 license: GPL

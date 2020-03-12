@@ -1,4 +1,4 @@
-title: Arbor Peakflow TMS: disk usage
+title: Arbor Peakflow TMS: Disk Usage
 agents: snmp
 catalog: hw/network/arbor
 license: GPL

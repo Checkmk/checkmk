@@ -1,4 +1,4 @@
-title: APC PDU: electrical current
+title: APC PDU: Electrical Current
 agents: snmp
 catalog: hw/power/apc
 license: GPL

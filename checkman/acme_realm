@@ -1,4 +1,4 @@
-title: ACME devices: Realm
+title: ACME Devices: Realm
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

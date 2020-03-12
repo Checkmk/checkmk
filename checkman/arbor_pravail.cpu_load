@@ -1,4 +1,4 @@
-title: Arbor Pravail: CPU load
+title: Arbor Pravail: CPU Load
 agents: snmp
 catalog: hw/network/arbor
 license: GPL

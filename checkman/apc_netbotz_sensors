@@ -1,4 +1,4 @@
-title: APC Netbotz Devices: Temperature sensor
+title: APC Netbotz Devices: Temperature Sensor
 agents: snmp
 catalog: hw/power/apc
 license: GPL

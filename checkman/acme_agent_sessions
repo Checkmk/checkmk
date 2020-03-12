@@ -1,4 +1,4 @@
-title: ACME devices: Agent sessions
+title: ACME Devices: Agent Sessions
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

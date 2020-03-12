@@ -1,4 +1,4 @@
-title: ACME devices: Fans
+title: ACME Devices: Fans
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

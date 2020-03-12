@@ -1,4 +1,4 @@
-title: Alcatel switches: Fan Status
+title: Alcatel Switches: Fan Status
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL

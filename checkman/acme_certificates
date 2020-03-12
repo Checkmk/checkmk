@@ -1,4 +1,4 @@
-title: ACME devices: Certificates
+title: ACME Devices: Certificates
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

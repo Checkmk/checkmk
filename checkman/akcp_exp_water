@@ -1,4 +1,4 @@
-title: AKCP securityProbe: Water sensor
+title: AKCP securityProbe: Water Sensor
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

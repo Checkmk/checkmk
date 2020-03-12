@@ -1,4 +1,4 @@
-title: ACME devices: Temperature
+title: ACME Devices: Temperature
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

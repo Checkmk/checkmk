@@ -1,4 +1,4 @@
-title: APC Netbotz Devices: Dewpoint sensor
+title: APC Netbotz Devices: Dewpoint Sensor
 agents: snmp
 catalog: hw/power/apc
 license: GPL

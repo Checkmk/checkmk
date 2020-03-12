@@ -1,4 +1,4 @@
-title: ACME devices: Voltage
+title: ACME Devices: Voltage
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

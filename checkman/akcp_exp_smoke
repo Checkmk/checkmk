@@ -1,4 +1,4 @@
-title: AKCP securityProbe: Smoke sensor
+title: AKCP securityProbe: Smoke Sensor
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL

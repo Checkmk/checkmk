@@ -1,4 +1,4 @@
-title: Arista switches DCS-7280: Temperature
+title: Arista Switches DCS-7280: Temperature
 agents: snmp
 catalog: hw/network/arista
 license: GPL

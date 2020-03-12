@@ -1,4 +1,4 @@
-title: ACME devices: Power supplies
+title: ACME Devices: Power Supplies
 agents: snmp
 catalog: hw/environment/acme
 license: GPL

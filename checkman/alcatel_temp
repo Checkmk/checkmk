@@ -1,4 +1,4 @@
-title: Alcatel switches: Board and CPU Temperature
+title: Alcatel Switches: Board and CPU Temperature
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL

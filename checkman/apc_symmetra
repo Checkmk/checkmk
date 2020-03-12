@@ -1,4 +1,4 @@
-title: APC Symmetra UPS: Device and battery states
+title: APC Symmetra UPS: Device and Battery States
 agents: snmp
 catalog: hw/power/apc
 license: GPL

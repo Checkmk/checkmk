@@ -34,14 +34,15 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
     MKUserError,
-    RequestTimeout,
 )
+import cmk.gui.gui_background_job as gui_background_job
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.utils
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 from cmk.gui.watolib.changes import (
     SiteChanges,
@@ -392,7 +393,6 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         self._start_activation()
-        self._do_housekeeping()
 
         return self._activation_id
 
@@ -714,43 +714,95 @@ class ActivateChangesManager(ActivateChanges):
     def site_filename(cls, site_id):
         return "site_%s.mk" % site_id
 
+
+@gui_background_job.job_registry.register
+class ActivationCleanupBackgroundJob(WatoBackgroundJob):
+    job_prefix = "activation_cleanup"
+
+    @classmethod
+    def gui_title(cls):
+        return _("Activation cleanup")
+
+    def __init__(self):
+        super(ActivationCleanupBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
+
+    def do_execute(self, job_interface):
+        self._do_housekeeping()
+        job_interface.send_result_message(_("Activation cleanup finished"))
+
     def _do_housekeeping(self):
         """Cleanup stale activations in case it is needed"""
         with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
-                # skip the current activation_id
-                if self._activation_id == activation_id:
-                    continue
-
+                self._logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
                 manager.load()
 
+                # Try to detect whether or not the activation is still in progress. In case the
+                # activation information can not be read, it is likely that the activation has
+                # just finished while we were iterating the activations.
+                # In case loading fails continue with the next activations
                 try:
+                    delete = True
+
                     try:
                         manager.load_activation(activation_id)
-                    except RequestTimeout:
-                        raise
-                    except Exception:
-                        # Not existant anymore!
-                        delete = True
-                        raise
+                        delete = not manager.is_running()
+                    except MKUserError:
+                        # "Unknown activation process", is normal after activation -> Delete, but no
+                        # error message logging
+                        self._logger.debug("Is not running")
+                except Exception as e:
+                    self._logger.warning("  Failed to load activation (%s), trying to delete...",
+                                         e,
+                                         exc_info=True)
 
-                    delete = not manager.is_running()
-                finally:
-                    if delete:
-                        shutil.rmtree(
-                            "%s/%s" %
-                            (ActivateChangesManager.activation_tmp_base_dir, activation_id))
+                self._logger.info("  -> %s", "Delete" if delete else "Keep")
+                if not delete:
+                    continue
+
+                activation_dir = os.path.join(ActivateChangesManager.activation_tmp_base_dir,
+                                              activation_id)
+                try:
+                    shutil.rmtree(activation_dir)
+                except Exception as e:
+                    self._logger.error("  Failed to delete the activation directory '%s'" %
+                                       activation_dir,
+                                       exc_info=True)
 
     def _existing_activation_ids(self):
-        ids = []
+        try:
+            files = os.listdir(ActivateChangesManager.activation_tmp_base_dir)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+            files = []
 
-        for activation_id in os.listdir(ActivateChangesManager.activation_tmp_base_dir):
+        ids = []
+        for activation_id in files:
             if len(activation_id) == 36 and activation_id[8] == "-" and activation_id[13] == "-":
                 ids.append(activation_id)
-
         return ids
+
+
+def execute_activation_cleanup_background_job():
+    # type: () -> None
+    """This function is called by the GUI cron job once a minute.
+
+    Errors are logged to var/log/web.log. """
+    job = ActivationCleanupBackgroundJob()
+    if job.is_active():
+        logger.debug("Another activation cleanup job is already running: Skipping this time")
+        return
+
+    job.set_function(job.do_execute)
+    job.start()
 
 
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):

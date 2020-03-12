@@ -15,6 +15,7 @@ def test_registered_jobs():
         'cmk.gui.plugins.cron.gui_background_job.housekeeping',
         'cmk.gui.userdb.execute_userdb_job',
         'cmk.gui.wato.execute_network_scan_job',
+        'cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job',
     ]
 
     if not cmk_version.is_raw_edition():

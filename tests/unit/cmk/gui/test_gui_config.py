@@ -395,6 +395,7 @@ def test_registered_permissions():
         'view.invunknown_of_host',
         'view.invunknown_search',
         'view.logfile',
+        'view.logicalvolumes_of_host',
         'view.mobile_contactnotifications',
         'view.mobile_events',
         'view.mobile_host',

@@ -1,12 +1,13 @@
-title: AIX_LSVG_ALL
+title: Mirror state of all LVM logical volumes on AIX
 agents: aix
-catalog: app/aix_lsvg_all
-license: ApacheV2
+catalog: os/storage
+license: GPL
 distribution: check_mk
 description:
- Shows information about the logical volumes for all volume groups on AIX.
+ This check monitors the mirror state of LVM logical volumes of all volumegroups on AIX.
 
-item: Detailed infos for logical volumes per volume groups on AIX systems.
+item: 
+ Detailed infos for logical volumes per volume groups on AIX systems.
 
 inventory:
  Shows the name, mountpoint, state, type, number of physical and logical partitions, and the number of physical volumes of the logical volume per volume group.

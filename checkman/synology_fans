@@ -1,4 +1,4 @@
-title: Synology NAS: System and CPU FAN status
+title: Synology NAS: System and CPU FAN Status
 agents: snmp
 catalog: hw/storagehw/synology
 license: GPL

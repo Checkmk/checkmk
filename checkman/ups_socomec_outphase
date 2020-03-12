@@ -1,4 +1,4 @@
-title: Socomec UPS Device: Output phases
+title: Socomec UPS Device: Output Phases
 agents: snmp
 catalog: hw/power/socomec
 license: GPL

@@ -1,4 +1,4 @@
-title: UCS C-Series Rack Server: Overall utilization
+title: UCS C-Series Rack Server: Overall Utilization
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPL

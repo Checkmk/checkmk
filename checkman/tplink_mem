@@ -1,4 +1,4 @@
-title: TP-LINK switches: Memory utilization
+title: TP-LINK Switches: Memory Utilization
 agents: snmp
 catalog: hw/network/tplink
 license: GPL

@@ -6,9 +6,13 @@
 
 import time
 from datetime import datetime, timedelta
+
 import pytest  # type: ignore[import]
+
 from cmk.base.check_api import MKCounterWrapped
 from test_ibm_mq_include import parse_info
+
+from testlib import on_time
 
 pytestmark = pytest.mark.checks
 
@@ -322,15 +326,6 @@ def assert_age(check_manager, msgage, params, expected):
 #
 
 
-def test_lget_ok_real_reference_time(check_manager):
-    old = (datetime.today() - timedelta(seconds=1800)).timetuple()
-    lget = (time.strftime("%Y-%m-%d", old), time.strftime("%H.%M.%S", old))
-    now = None
-    params = {}
-    expected = (0, 'Last get: 30 m', [])
-    assert_last_get_age(check_manager, lget, now, params, expected)
-
-
 def test_lget_ok_no_params(check_manager):
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
@@ -380,16 +375,8 @@ def test_lget_crit(check_manager):
 
 
 def assert_last_get_age(check_manager, lget, now, params, expected):
-    def to_timestamp(mq_date, mq_time):
-        reference = "%s %s" % (mq_date, mq_time)
-        reference_struct = time.strptime(reference, "%Y-%m-%d %H.%M.%S")
-        return time.mktime(reference_struct)
-
     check = check_manager.get_check(CHECK_NAME)
     lgetdate, lgettime = lget
-    if now is not None:
-        now_date, now_time = now
-        params['_reference_time'] = to_timestamp(now_date, now_time)
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -401,7 +388,10 @@ def assert_last_get_age(check_manager, lget, now, params, expected):
             'LGETTIME': lgettime,
         }
     }
-    actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
+
+    reference_time = "%s %s" % (now[0], now[1].replace('.', ':')) if now else time.time()
+    with on_time(reference_time, 'UTC'):
+        actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     assert expected == actual[1]
 
 

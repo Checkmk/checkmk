@@ -137,9 +137,11 @@ def ibm_mq_last_age(mq_date, mq_time, label, key, params):
         return (0, label + ": n/a", [])
     mq_datetime = "%s %s" % (mq_date, mq_time)
     struct = time.strptime(mq_datetime, "%Y-%m-%d %H.%M.%S")
+
+    # FIXME: The use of the local time will fail if the IBM MQ server
+    # and the Checkmk server are in different time zones.
     input_time = time.mktime(struct)
-    current_time = time.mktime(time.localtime())
-    reference_time = params.get('_reference_time', current_time)
+    reference_time = time.time()
     age = int(reference_time - input_time)
     return check_levels(age,
                         None,

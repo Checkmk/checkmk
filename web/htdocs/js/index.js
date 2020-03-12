@@ -6,7 +6,6 @@ import "core-js/stable";
 
 import $ from "jquery";
 import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
 import * as d3_sankey from "d3-sankey";
 import * as crossfilter from "crossfilter2";
 import * as dc from "dc";
@@ -98,13 +97,12 @@ export const cmk_export = {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
+        // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
         node_visualization_viewport_utils: node_visualization_viewport_utils,
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
-        d3: d3,
-        d3_flextree: d3_flextree,
     }
 };
 

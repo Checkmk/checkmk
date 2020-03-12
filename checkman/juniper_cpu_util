@@ -1,4 +1,4 @@
-title: Juniper devices: CPU utilization
+title: Juniper Devices: CPU Utilization
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

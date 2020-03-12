@@ -1,4 +1,4 @@
-title: Liebert UPS Device: Temperature sensor
+title: Liebert UPS Device: Temperature Sensor
 agents: snmp
 catalog: hw/power/emerson
 license: GPL

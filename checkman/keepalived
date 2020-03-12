@@ -1,4 +1,4 @@
-title: General state of Keepalived instances
+title: General State of Keepalived Instances
 agents: snmp
 catalog: os/networking
 license: GPL

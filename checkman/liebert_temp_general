@@ -1,4 +1,4 @@
-title: Liebert: Temperature of several sensors
+title: Liebert: Temperature of Several Sensors
 agents: snmp
 catalog: hw/environment/emerson
 license: GPL

@@ -1,4 +1,4 @@
-title: Kubernetes: Node and cluster level filesystem usage
+title: Kubernetes: Node and Cluster Level Filesystem Usage
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

@@ -1,4 +1,4 @@
-title: Juniper devices: Load readings
+title: Juniper Devices: Load Readings
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

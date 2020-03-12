@@ -29,4 +29,4 @@ item:
  E. g. "1/1 Disk 9"
 
 inventory:
- Automatically configures one check for every disk listed in the agent output.
+ One service is created for each disk listed in the agent output.

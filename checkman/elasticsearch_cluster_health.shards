@@ -9,5 +9,5 @@ description:
  Relocating, Delayed unassigned shards and Ongoing shard info requests
 
 inventory:
- The check creates one service
+ One service is created.
 

@@ -22,6 +22,6 @@ item:
  MIB.
 
 inventory:
- For each fixed disk one service is generated - if the description
+ One service is created for each fixed disk if the description
  of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
 

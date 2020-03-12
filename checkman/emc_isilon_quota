@@ -13,4 +13,4 @@ item:
  The path of the quota
 
 inventory:
- Creates one service per quota
+ One service is created for each quota.

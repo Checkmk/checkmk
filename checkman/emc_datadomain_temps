@@ -16,5 +16,4 @@ item:
  "ID of the enclosure" - "ID of the sensor"
 
 inventory:
- Automatically configures one check for every sensor found on the
- device
+ One service is created for each sensor found on the device.

@@ -8,5 +8,5 @@ description:
  Available Informations: Pending tasks, Timed out, Task max waiting
 
 inventory:
- The check creates one service
+ One service is created.
 

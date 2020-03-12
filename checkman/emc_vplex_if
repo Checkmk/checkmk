@@ -16,5 +16,5 @@ item:
  the alias, which is a combination of the director name an the description, e.g {director-1-1-A A1-FC03}
 
 inventory:
- The inventory creates one service for each port
+ One service is created for each port.
 

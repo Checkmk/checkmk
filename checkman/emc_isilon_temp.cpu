@@ -10,4 +10,4 @@ item:
  {{CPU}} followed by the index of the CPU
 
 inventory:
- Creates one service per CPU
+ One service is created for each CPU.

@@ -15,5 +15,4 @@ item:
  "ID of the enclosure" - "ID of the module"
 
 inventory:
- Automatically configures one check for every power module found on the
- device
+ One service is created for each power module found on the device.

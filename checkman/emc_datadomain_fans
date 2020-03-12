@@ -14,5 +14,4 @@ item:
  "ID of the enclosure" - "ID of the fan"
 
 inventory:
- Automatically configures one check for every fan found on the
- device
+ One service is created for each fan found on the device.

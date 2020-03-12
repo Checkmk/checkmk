@@ -18,4 +18,4 @@ description:
  every check interval.
 
 inventory:
- Finds exactly one item on every EMC VNX storage system called EMC VNX Agent
+ One service is created for each EMC VNX storage system called EMC VNX Agent.

@@ -17,4 +17,4 @@ item:
  E. g. "SP A Port 0"
 
 inventory:
- Automatically configures one check for every HBA listed in the agent output.
+ One service is created for each HBA listed in the agent output.

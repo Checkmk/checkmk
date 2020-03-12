@@ -15,4 +15,4 @@ item:
  Pool name
 
 inventory:
- Creates one service per pool.
+ One service is created for each pool.

@@ -12,4 +12,4 @@ item:
  {{Power Supply}} followed by the index of the power supply and {{Input}}
 
 inventory:
- Creates one service per power supply
+ One service is created for each power supply.

@@ -10,5 +10,5 @@ item:
  The fixed statement {{Cluster}}
 
 inventory:
- One check will be created
+ One service is created.
 

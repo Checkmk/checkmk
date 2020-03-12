@@ -7,4 +7,4 @@ description:
  Checks cpu utilization as reported by EMC Isilon storage devices.
 
 inventory:
- Creates exactly one service.
+ One service is created.

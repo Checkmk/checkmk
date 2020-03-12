@@ -10,5 +10,5 @@ description:
  and {CRIT} otherwise.
 
 inventory:
- Finds exactly one service on each EMC Isilon System, named Nodes.
+ One service is created for each EMC Isilon System, named Nodes.
 

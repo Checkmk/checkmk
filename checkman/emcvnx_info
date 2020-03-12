@@ -14,4 +14,4 @@ description:
  EMC's command line tool naviseccli.
 
 inventory:
- Finds exactly one item on every EMC VNX storage system called EMC VNX Info
+ One service is created for each EMC VNX storage system called EMC VNX Info.

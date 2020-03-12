@@ -27,6 +27,6 @@ item:
     0/0 SP B I/O Module 0
 
 inventory:
- Automatically configures one check for every hardware status entry listed
+ One service is created for each hardware status entry listed
  in the agent output and not having status "Empty" (Entries having "Empty"
  status when running inventory are considered to be intentionally empty.)

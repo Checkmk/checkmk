@@ -11,5 +11,5 @@ description:
  and data nodes (count).
 
 inventory:
- One check will be created
+ One service is created.
 

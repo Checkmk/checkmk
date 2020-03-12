@@ -16,5 +16,4 @@ item:
  Name of the Mtree
 
 inventory:
- Automatically configures one check for every cwMTreesensor found on the
- device
+ One service is created for each cwMTreesensor found on the device.

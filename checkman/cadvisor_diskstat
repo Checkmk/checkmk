@@ -1,4 +1,4 @@
-title: cAdvisor Pods/Containers: Disk throughput
+title: cAdvisor Pods/Containers: Disk Throughput
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL

@@ -1,4 +1,4 @@
-title: Retrieve informational SNMP data about bintec routers
+title: Retrieve Informational SNMP Data about Bintec Routers
 agents: snmp
 catalog: os/misc
 license: GPL

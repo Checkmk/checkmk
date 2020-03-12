@@ -1,4 +1,4 @@
-title: Retrieve informational SNMP data about Brocade switches
+title: Retrieve Informational SNMP Data about Brocade Switches
 agents: snmp
 catalog: os/misc
 license: GPL

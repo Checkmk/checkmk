@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX / ADX / FGS / ICX devices: Power Supplies
+title: Brocade NetIron MLX / ADX / FGS / ICX Devices: Power Supplies
 agents: snmp
 catalog: hw/power/brocade
 license: GPL

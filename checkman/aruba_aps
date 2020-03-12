@@ -1,4 +1,4 @@
-title: Aruba WLAN controller: Access Points
+title: Aruba WLAN Controller: Access Points
 agents: snmp
 catalog: hw/network/aruba
 license: GPL

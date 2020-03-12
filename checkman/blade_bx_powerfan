@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Server: Power fan
+title: Primergy BX600 Blade Server: Power Fan
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL

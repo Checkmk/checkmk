@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Server: Blade status
+title: Primergy BX600 Blade Server: Blade Status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL

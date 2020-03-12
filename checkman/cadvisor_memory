@@ -1,4 +1,4 @@
-title: cAdvisor Pods/Containers: Memory stats
+title: cAdvisor Pods/Containers: Memory Stats
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL

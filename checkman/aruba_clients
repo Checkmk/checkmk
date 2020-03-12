@@ -1,4 +1,4 @@
-title: Aruba WLAN controller: Clients
+title: Aruba WLAN Controller: Clients
 agents: snmp
 catalog: hw/network/aruba
 license: GPL

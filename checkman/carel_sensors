@@ -1,4 +1,4 @@
-title: CAREL air conditions: Temperature
+title: CAREL Air Conditions: Temperature
 agents: snmp
 catalog: hw/environment/carel
 license: GPL

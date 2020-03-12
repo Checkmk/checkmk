@@ -1,4 +1,4 @@
-title: cAdvisor Pods/Containers: Filesystem stats
+title: cAdvisor Pods/Containers: Filesystem Stats
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL

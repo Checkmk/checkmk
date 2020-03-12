@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX / FGS / ICX devices: Temperature Sensors
+title: Brocade NetIron MLX / FGS / ICX Devices: Temperature Sensors
 agents: snmp
 catalog: hw/environment/brocade
 license: GPL

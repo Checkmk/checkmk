@@ -1,4 +1,4 @@
-title: Aruba Networks Wireless LAN Controller (WLC): Number of Wifi connections
+title: Aruba Networks Wireless LAN Controller (WLC): Number of Wifi Connections
 agents: snmp
 catalog: hw/network/aruba
 license: GPL

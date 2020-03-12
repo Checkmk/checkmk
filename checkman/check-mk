@@ -1,4 +1,4 @@
-title: Check retrieval of information for Checkmk
+title: Check Retrieval of Information for Checkmk
 agents: linux, openvms, aix, netbsd, macosx, freebsd, openwrt, openbsd, hpux, solaris
 catalog: generic
 license: GPL

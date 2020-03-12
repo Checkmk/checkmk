@@ -1,4 +1,4 @@
-title: Checkpoint Firewalls: Fan status
+title: Checkpoint Firewalls: Fan Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPL

@@ -1,4 +1,4 @@
-title: Cisco devices: CPU Memory
+title: Cisco Devices: CPU Memory
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

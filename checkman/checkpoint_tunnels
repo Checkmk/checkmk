@@ -1,4 +1,4 @@
-title: Checkpoint Firewalls: VPN IPsec tunnel status
+title: Checkpoint Firewalls: VPN IPsec Tunnel Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPL

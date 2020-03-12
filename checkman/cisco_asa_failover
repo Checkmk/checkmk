@@ -1,4 +1,4 @@
-title: Cisco ASA: Cluster failover
+title: Cisco ASA: Cluster Failover
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv3

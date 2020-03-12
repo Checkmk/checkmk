@@ -1,4 +1,4 @@
-title: Cisco UCS: CPU operation status
+title: Cisco UCS: CPU Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

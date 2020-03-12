@@ -1,4 +1,4 @@
-title: Casa CMTS: CPU utilization
+title: Casa CMTS: CPU Utilization
 agents: snmp
 catalog: hw/network/casa
 license: GPL

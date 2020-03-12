@@ -1,4 +1,4 @@
-title: Casa CMTS: CPU temperature
+title: Casa CMTS: CPU Temperature
 agents: snmp
 catalog: hw/network/casa
 license: GPL

@@ -1,4 +1,4 @@
-title: Cisco devices: Redundancy Framework Status
+title: Cisco Devices: Redundancy Framework Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

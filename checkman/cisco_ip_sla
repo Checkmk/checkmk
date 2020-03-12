@@ -1,4 +1,4 @@
-title: Cisco devices: IP SLA
+title: Cisco Devices: IP SLA
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

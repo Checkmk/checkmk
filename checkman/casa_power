@@ -1,4 +1,4 @@
-title: Casa CMTS: Power module status
+title: Casa CMTS: Power Module Status
 agents: snmp
 catalog: hw/network/casa
 license: GPL

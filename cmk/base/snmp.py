@@ -7,7 +7,7 @@
 import os
 import sys
 import subprocess
-from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -194,7 +194,9 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         max_len_col = -1
 
         for colno, column in enumerate(targetcolumns):
-            fetchoid, value_encoding = _compute_fetch_oid(oid, suboid, column)
+            fetchoid = _compute_fetch_oid(oid, suboid, column)
+            value_encoding = "binary" if isinstance(
+                column, snmp_utils.OIDBytes) else "string"  # type: SNMPValueEncoding
 
             # column may be integer or string like "1.5.4.2.3"
             # if column is 0, we do not fetch any data from snmp, but use
@@ -611,19 +613,16 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
 
 
 def _compute_fetch_oid(oid, suboid, column):
-    # type: (OID, Optional[OID], Column) -> Tuple[OID, SNMPValueEncoding]
-    fetchoid = oid
-    value_encoding = "string"
-
+    # type: (Union[OID,snmp_utils.OIDSpec], Optional[OID], Column) -> OID
     if suboid:
-        fetchoid += "." + str(suboid)
+        fetchoid = "%s.%s" % (oid, suboid)
+    else:
+        fetchoid = str(oid)
 
     if str(column) != "":
         fetchoid += "." + str(column)
-        if isinstance(column, snmp_utils.OIDBytes):
-            value_encoding = "binary"
 
-    return fetchoid, value_encoding
+    return fetchoid
 
 
 def _sanitize_snmp_encoding(snmp_config, columns):

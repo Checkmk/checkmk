@@ -75,7 +75,7 @@ def check_df_sources_include_flag():
             logger.info("Inspecting %s", df_file)
             with df_file.open('r') as fid:
                 r = fid.read()
-                mat = re.search('^df_use_fs_used_as_metric_name *= *(True|False)', r, re.M)
+                mat = re.search('fs_used', r, re.M)
                 if not mat:
                     raise RuntimeError('df.include sources not yet ready to for new setup')
             logger.info("  Include file implements new fs_used as perfvalue")

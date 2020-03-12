@@ -34,18 +34,18 @@ checks = {
     '': [
         (
             'DATA', {
-                'req_mir_free': False,
-                'trend_range': 24,
-                'magic_normsize': 20,
                 'levels': (80.0, 90.0),
+                'magic_normsize': 20,
                 'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'req_mir_free': False
             }, [
                 (
                     0,
                     '22.48% used (134.86 of 599.98 GB), normal redundancy, 3 disks in 1 failgroups',
                     [
-                        ('DATA', 138096, 491500.8, 552938.4, 0, 614376),
+                        ('fs_used', 138096, 491500.8, 552938.4, 0, 614376),
                         ('fs_size', 614376, None, None, None, None)
                     ]
                 )
@@ -53,18 +53,18 @@ checks = {
         ),
         (
             'FRA', {
-                'req_mir_free': False,
-                'trend_range': 24,
-                'magic_normsize': 20,
                 'levels': (80.0, 90.0),
+                'magic_normsize': 20,
                 'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'req_mir_free': False
             }, [
                 (
                     0,
                     '56.35% used (5.63 of 10.00 GB), extern redundancy, 1 disks',
                     [
-                        ('FRA', 5768, 8188.8, 9212.4, 0, 10236),
+                        ('fs_used', 5768, 8188.8, 9212.4, 0, 10236),
                         ('fs_size', 10236, None, None, None, None)
                     ]
                 )
@@ -72,28 +72,28 @@ checks = {
         ),
         (
             'GRID', {
-                'req_mir_free': False,
-                'trend_range': 24,
-                'magic_normsize': 20,
                 'levels': (80.0, 90.0),
+                'magic_normsize': 20,
                 'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'req_mir_free': False
             }, [(2, 'Diskgroup dismounted', [])]
         ),
         (
             'OCR_VOTE', {
-                'req_mir_free': False,
-                'trend_range': 24,
-                'magic_normsize': 20,
                 'levels': (80.0, 90.0),
+                'magic_normsize': 20,
                 'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'req_mir_free': False
             }, [
                 (
                     0,
                     '30.18% used (309.00 MB of 1.00 GB), normal redundancy, old plugin data, possible wrong used and free space',
                     [
-                        ('OCR_VOTE', 309, 819.2, 921.6, 0, 1024),
+                        ('fs_used', 309, 819.2, 921.6, 0, 1024),
                         ('fs_size', 1024, None, None, None, None)
                     ]
                 )

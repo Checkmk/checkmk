@@ -354,7 +354,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         save_global_settings(self._initial_global_settings())
 
         content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
-        content += 'df_use_fs_used_as_metric_name = True\n'
         store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
                         content)
 

@@ -1,4 +1,4 @@
-title: Siemens PLC: Temperature values
+title: Siemens PLC: Temperature Values
 agents: siemens_plc
 catalog: hw/server/siemens
 license: GPL

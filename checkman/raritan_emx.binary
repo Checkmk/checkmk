@@ -1,4 +1,4 @@
-title: Raritan EMX devices: Door States
+title: Raritan EMX Devices: Door States
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL

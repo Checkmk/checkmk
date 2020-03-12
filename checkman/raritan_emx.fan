@@ -1,4 +1,4 @@
-title: Raritan EMX devices: Fan State and Speed
+title: Raritan EMX Devices: Fan State and Speed
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL

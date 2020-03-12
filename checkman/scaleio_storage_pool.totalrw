@@ -1,4 +1,4 @@
-title: EMC ScaleIO: Storage Pool Total read/write
+title: EMC ScaleIO: Storage Pool Total Read/Write
 agents: linux
 catalog: os/storage
 license: GPL

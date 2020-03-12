@@ -6,6 +6,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from pathlib import Path
+
 import pytest  # type: ignore[import]
 import docker  # type: ignore[import]
 
@@ -37,8 +39,10 @@ def python_container(request, docker_client):
 
 def _get_python_plugins():
     return [
-        "agents/plugins/%s" % f
-        for f in testlib.pylint_cmk.get_pylint_files("%s/agents/plugins" % testlib.cmk_path(), "*")
+        "agents/plugins/%s" % p.name
+        for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
+        if testlib.pylint_cmk.is_python_file(str(p), "python") or
+        testlib.pylint_cmk.is_python_file(str(p), "python3")
     ]
 
 
@@ -46,9 +50,8 @@ def _get_python_plugins():
 @pytest.mark.parametrize("python_version", ["2.5", "2.6", "2.7"])
 def test_agent_plugin_syntax_compatibility(python_container, plugin_path, python_version):
     _exit_code, output = python_container.exec_run(
-        ["python%s" % python_version,
-         "%s/%s" % (testlib.cmk_path(), plugin_path)],
+        ["python%s" % python_version, ("%s/%s" % (testlib.cmk_path(), plugin_path))],
         workdir="/cmk",
     )
 
-    assert "SyntaxError: " not in output
+    assert "SyntaxError: " not in output.decode("utf-8")

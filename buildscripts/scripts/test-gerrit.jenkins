@@ -165,7 +165,7 @@ node (NODE) {
          gerrit_stages.run(
             NAME: 'Agent Integration Tests',
             CONDITION: CHANGED_AGENT_PLUGINS != "",
-            DIR: 'tests',
+            DIR: 'tests-py3',
             ENV_VARS: ["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/agent-integration-junit.xml\""],
             COMMAND: "make test-agent-integration",
             TEXT_ON_SKIP: 'No agent files changed. Skipping.'

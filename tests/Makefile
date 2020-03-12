@@ -11,14 +11,13 @@ PYTEST   := $(PIPENV2) run py.test
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help test-bandit \
-        test-format-shell test-agent-integration \
+        test-format-shell \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-sh
 
 help:
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-shell         - Run the shell formatting"
-	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
@@ -39,9 +38,6 @@ test-bandit: bandit.ini
 
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
-
-test-agent-integration:
-	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
 test-pylint:
 	$(PYTEST) -T pylint pylint

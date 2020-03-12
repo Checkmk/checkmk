@@ -1,4 +1,4 @@
-title: Infoblox devices: DNS statistics
+title: Infoblox Devices: DNS Statistics
 agents: snmp
 catalog: hw/network/infoblox
 license: GPL

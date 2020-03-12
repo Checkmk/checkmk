@@ -1,4 +1,4 @@
-title: JVM ehcache statistics: cache usage
+title: JVM Ehcache Statistics: Cache Usage
 agents: linux
 catalog: app/java
 license: GPL

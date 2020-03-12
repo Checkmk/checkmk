@@ -1,4 +1,4 @@
-title: LANCOM devices: Network interfaces via standard MIB using 64 Bit counters
+title: LANCOM Devices: Network Interfaces via Standard MIB Using 64 Bit Counters
 agents: snmp
 catalog: hw/network/lancom
 license: GPL

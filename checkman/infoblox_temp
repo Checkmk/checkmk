@@ -1,4 +1,4 @@
-title: Infoblox devices: System and CPU temperature
+title: Infoblox Devices: System and CPU Temperature
 agents: snmp
 catalog: hw/network/infoblox
 license: GPL

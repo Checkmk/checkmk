@@ -1,4 +1,4 @@
-title: HP MSA 2040: Temperature of all disks
+title: HP MSA 2040: Temperature of all Disks
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPL

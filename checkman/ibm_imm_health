@@ -1,4 +1,4 @@
-title: IBM Integrated Management Module (IMM): System health
+title: IBM Integrated Management Module (IMM): System Health
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

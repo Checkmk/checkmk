@@ -1,4 +1,4 @@
-title: HP devices: Module Temperature
+title: HP Devices: Module Temperature
 agents: snmp
 catalog: hw/network/hp
 license: GPL

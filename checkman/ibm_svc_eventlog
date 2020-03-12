@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: Messages in Event log
+title: IBM SVC / Storwize V3700 / V7000: Messages in Event Log
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL

@@ -1,4 +1,4 @@
-title: HP devices: Module CPU
+title: HP Devices: Module CPU
 agents: snmp
 catalog: hw/network/hp
 license: GPL

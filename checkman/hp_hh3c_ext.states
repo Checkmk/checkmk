@@ -1,4 +1,4 @@
-title: HP devices: Module States
+title: HP Devices: Module States
 agents: snmp
 catalog: hw/network/hp
 license: GPL

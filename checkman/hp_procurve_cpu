@@ -1,4 +1,4 @@
-title: HP Procurve Switches: CPU load
+title: HP Procurve Switches: CPU Load
 agents: snmp
 catalog: hw/network/hp
 license: GPL

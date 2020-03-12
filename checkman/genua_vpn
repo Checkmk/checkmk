@@ -1,4 +1,4 @@
-title: Genua: VPN state
+title: Genua: VPN State
 agents: snmp
 catalog: hw/network/genua
 license: GPL

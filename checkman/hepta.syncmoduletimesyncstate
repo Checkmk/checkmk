@@ -1,4 +1,4 @@
-title: Hepta 8030: Time synchronization
+title: Hepta 8030: Time Synchronization
 agents: snmp
 catalog: hw/time/hopf
 license: GPL

@@ -1,4 +1,4 @@
-title: HP Proliant Servers: Raid status`
+title: HP Proliant Servers: Raid Status
 agents: snmp
 catalog: hw/server/hp
 license: GPL

@@ -1,4 +1,4 @@
-title: GUDE Power Control: Powerbank status and electricity
+title: GUDE Power Control: Powerbank Status and Electricity
 agents: snmp
 catalog: hw/power/gude
 license: GPL

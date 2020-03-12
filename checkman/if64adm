@@ -1,4 +1,4 @@
-title: Monitor network interfaces including the ifAdminStatus
+title: Monitor Network Interfaces Including the ifAdminStatus
 agents: snmp
 catalog: hw/network/generic
 license: GPL

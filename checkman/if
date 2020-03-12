@@ -1,4 +1,4 @@
-title: Traffic and status of network interfaces using 32 bit counters
+title: Traffic and Status of Network Interfaces Using 32 Bit Counters
 agents: snmp
 catalog: hw/network/generic
 license: GPL

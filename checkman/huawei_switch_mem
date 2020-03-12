@@ -1,4 +1,4 @@
-title: Huawei Switches: CPU utilization
+title: Huawei Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/huawei
 license: GPL

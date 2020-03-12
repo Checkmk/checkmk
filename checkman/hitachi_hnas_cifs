@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Number of Users using CIFS shares
+title: Hitachi HNAS: Number of Users Using CIFS Shares
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPL

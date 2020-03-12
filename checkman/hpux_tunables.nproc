@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of Processes
+title: Kernel Tunables: Number of Processes
 agents: hpux
 catalog: os/kernel
 license: GPL

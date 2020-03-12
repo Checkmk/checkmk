@@ -1,5 +1,4 @@
 import pytest  # type: ignore[import]
-from cmk_base.check_api import MKCounterWrapped
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
@@ -20,7 +19,7 @@ def test_local_check(check_manager, monkeypatch, item, info):
 
     result = CheckResult(check.run_check(item, {}, parsed))
     expected = CheckResult([
-        (0, "Cache generated 7 m ago, cache interval: 5 m, elapsed cache lifespan: 140%"),
         (0, "On node node_1: This Check is outdated", [("V", 1.0)]),
+        (0, "Cache generated 7 m ago, cache interval: 5 m, elapsed cache lifespan: 140%"),
     ])
     assertCheckResultsEqual(result, expected)

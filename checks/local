@@ -219,6 +219,19 @@ def check_local(_no_item, params, data):
     # We try to mimic the behaviour of cached agent sections.
     # Problem here: We need this info on a per-service basis, so we cannot use the section header.
     # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
+
+    collected_stats = {}
+
+    for result in data:
+        node_dict = collected_stats.setdefault(result.node, {})
+        node_dict.setdefault(result.item, _parse_local_line(result))
+
+    if params is not None and params.get("outcome_on_cluster", "worst") == "best":
+        yield _calculate_local_best_state(collected_stats)
+    else:
+        for res in _iterate_all_check_results(collected_stats):
+            yield res
+
     if cache_infos:
         cache_info = max(cache_infos)
         infotext = "Cache generated %s ago, cache interval: %s, elapsed cache lifespan: %s" % (
@@ -227,18 +240,6 @@ def check_local(_no_item, params, data):
             get_percent_human_readable(cache_info[1]),
         )
         yield 0, infotext
-
-    collected_stats = {}
-    for result in data:
-        node_dict = collected_stats.setdefault(result.node, {})
-        node_dict.setdefault(result.item, _parse_local_line(result))
-
-    if params is not None and params.get("outcome_on_cluster", "worst") == "best":
-        yield _calculate_local_best_state(collected_stats)
-        return
-    else:
-        for res in _iterate_all_check_results(collected_stats):
-            yield res
 
 
 check_info["local"] = {

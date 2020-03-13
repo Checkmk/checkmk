@@ -7,9 +7,23 @@
 
 These are meant to be exposed in the API
 """
+from typing import List, TypeVar
 import re
 import itertools
-from cmk.base.api.agent_based.section_types import SNMPDetectSpec
+from cmk.base.snmp_utils import SNMPTable
+from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
+
+RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
+
+
+def parse_string_table(string_table):
+    # type: (RawSection) -> RawSection
+    """Identity function
+
+    Provided for developers who don't want to implement a parse function (which they should).
+    """
+    return string_table
+
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___

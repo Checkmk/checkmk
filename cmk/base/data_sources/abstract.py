@@ -909,9 +909,9 @@ class CheckMKAgentDataSource(
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        status = self._host_config.exit_code_spec().get("unexpected_ip_ranges", 1)
-        return status, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts),
-                                                                state_markers[status]), []
+        status = cast(int, self._host_config.exit_code_spec().get("unexpected_ip_ranges", 1))
+        return (status, "Unexpected allowed IP ranges (%s)%s" %
+                (", ".join(infotexts), state_markers[status]), [])
 
 
     def _is_expected_agent_version(self, agent_version, expected_version):

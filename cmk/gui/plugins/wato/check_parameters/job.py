@@ -11,6 +11,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
     Tuple,
+    ListOf,
+    Integer,
+    MonitoringState,
 )
 
 from cmk.gui.plugins.wato import (
@@ -29,6 +32,23 @@ def _parameter_valuespec_job():
                  Age(title=_("Warning at"), default_value=0),
                  Age(title=_("Critical at"), default_value=0)
              ],
+         )),
+        ("exit_code_to_state_map",
+         ListOf(
+             Tuple(orientation="horizontal",
+                   elements=[
+                       Integer(title=_("Exit code")),
+                       MonitoringState(title=_("Resulting state"),),
+                   ],
+                   default_value=(0, 0)),
+             title=_("Explicit mapping of job exit codes to states"),
+             help=
+             _("Here you can define a mapping between possible exit codes and service states. "
+               "If no mapping is defined, the check becomes CRITICAL when the exit code is not 0. "
+               "If an exit code occurs that is not defined in this mapping, the check becomes CRITICAL. "
+               "If you happen to define the same exit code multiple times the first entry will be used."
+              ),
+             allow_empty=False,
          )),
         ("outcome_on_cluster",
          DropdownChoice(

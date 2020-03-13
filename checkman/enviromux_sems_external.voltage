@@ -14,5 +14,5 @@ perfdata:
  One graph for the input voltage.
 
 inventory:
- All available external voltage sensors are automatically discovered.
+ One service is created for each available external voltage sensor.
 

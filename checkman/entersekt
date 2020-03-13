@@ -6,4 +6,4 @@ distribution: check_mk
 description:
  This checks verifies if the Entersekt is running
 inventory:
- One service for Entersekt status
+ One service is created for the Entersekt Status.

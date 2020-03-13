@@ -14,5 +14,5 @@ perfdata:
  One graph for the Temperature.
 
 inventory:
- All available external temperature sensors are automatically discovered.
+ One service is created for each available external temperature sensor.
 

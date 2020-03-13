@@ -13,4 +13,4 @@ item:
  The relay name.
 
 inventory:
- One service per relay is created.
+ One service is created for each activated relay.

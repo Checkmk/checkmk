@@ -6,4 +6,4 @@ distribution: check_mk
 description:
  This checks verifies the number of HTTP errors for Entersekt EMR
 inventory:
- One service for Entersekt EMR Errors
+ One service is created for all Entersekt EMR Errors.

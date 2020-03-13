@@ -14,4 +14,4 @@ item:
  The handle name.
 
 inventory:
- One service per handle is created.
+ One service is created for each handle.

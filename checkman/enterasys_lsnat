@@ -8,5 +8,5 @@ description:
  on this device (oid .1.3.6.1.4.1.5624.1.2.74.1.1.5.0 must contain a value)
 
 inventory:
- One check is created for each Enterasys device
+ One service is created for each Enterasys device.
 

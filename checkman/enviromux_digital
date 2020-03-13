@@ -14,5 +14,5 @@ perfdata:
  None
 
 inventory:
- All available digital sensors are automatically discovered.
+ One service is created for each available digital sensor.
 

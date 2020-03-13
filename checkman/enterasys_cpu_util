@@ -10,5 +10,5 @@ item:
  ID of the CPU
 
 inventory:
- One check per module will be created
+ One service is created for each module.
 

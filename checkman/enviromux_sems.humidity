@@ -14,5 +14,5 @@ perfdata:
  One graph for the relivative humidity.
 
 inventory:
- All available humidity sensors are automatically discovered.
+ One service is created for each available humidity sensor.
 

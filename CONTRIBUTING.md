@@ -523,7 +523,7 @@ repository.
 Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
 ```
-let g:ale_fixers = {'python': ['isort']}
+let g:ale_fixers = {'python': ['isort, 'yapf']}
 let g:ale_fix_on_save = 1
 ```
 

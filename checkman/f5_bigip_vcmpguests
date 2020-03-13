@@ -9,5 +9,5 @@ description:
  The service is informational, no parameters are used or configurable.
 
 inventory:
- Creates one service
+ One service is created.
 

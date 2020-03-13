@@ -22,7 +22,5 @@ item:
  Name of virtual server
 
 inventory:
- Any virtual server that is found online will be added during inventory
- and checked for it's status. Virtual servers in the various "Warning"
- states will not be inventorized. Vserver of state green and blue will be
- inventorized.
+ One service is created for each server found online
+ if the server is not in state "Warning".

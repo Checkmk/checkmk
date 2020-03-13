@@ -16,5 +16,6 @@ description:
  devices.
 
 inventory:
-  One service is defined for the cluster status unless the load balancer config sync is in a status of "unconfigured"
+  One service is created for the cluster status
+  unless the load balancer config sync is in a status of "unconfigured".
 

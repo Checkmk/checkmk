@@ -15,5 +15,6 @@ description:
  It supports devices running the 11 and above releases of the F5 OS.
 
 inventory:
-  One service is defined for the cluster status unless the load balancer config sync is in a status of "unconfigured"
+  One service is created for the cluster status
+  unless the load balancer config sync is in a status of "unconfigured".
 

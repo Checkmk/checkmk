@@ -17,5 +17,5 @@ description:
  standby as OK and active as OK.
 
 inventory:
- Creates on service
+ One service is created.
 

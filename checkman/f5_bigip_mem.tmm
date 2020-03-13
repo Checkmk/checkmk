@@ -14,4 +14,4 @@ item:
  One of the two statements: {{total}} or {{TMM}}
 
 inventory:
- One service for the target host will be created.
+ One service is created for the target host.

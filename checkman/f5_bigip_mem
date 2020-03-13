@@ -13,4 +13,4 @@ item:
  The fixed statement {{total}}
 
 inventory:
- One service for the target host will be created.
+ One service is created for the target host.

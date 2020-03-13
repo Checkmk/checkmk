@@ -39,8 +39,8 @@ item:
  of the check item (and thus the service description).
 
 inventory:
-  The inventory creates checks for all operational ports. It can be configured
-  (see CONFIGURATION VARIABLES) how operational ports are defined.
-  Ports with the admininstrative state of 1 (unkown) or 3 (offline) are not
-  inventorized.
+  One service is created for all operational ports
+  if the administrativ state is not 1 (unknown) or 3 (offline).
+  It can be configured (see CONFIGURATION VARIABLES)
+  how operational ports are defined.
 

@@ -11,4 +11,4 @@ item:
  Name of the interface
 
 inventory:
- Eeach interface which is up will be added as a new check.
+ One service is created for each active interface.

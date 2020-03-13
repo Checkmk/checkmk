@@ -4,48 +4,47 @@ catalog: os/files
 license: GPL
 distribution: check_mk
 description:
-  This check monitors the size and age of specific files
-  in the target host's filesystem.
-  You can set lower and upper
-  limits on both the modification time and the size of
-  a file. When the file is missing then the check will
-  go {UNKNOWN}.
+ This check monitors the size and age of specific files
+ in the target host's filesystem.
+ You can set lower and upper
+ limits on both the modification time and the size of
+ a file. When the file is missing then the check will
+ go {UNKNOWN}.
 
-  This check needs some configuration in the agent,
-  as the agent needs to know the information about
-  which files need to be sent.
+ This check needs some configuration in the agent,
+ as the agent needs to know the information about
+ which files need to be sent.
 
-  Currently Windows, Linux, FREEBSD, MACOSX and Solaris
-  agents supports this type of check.
+ Currently Windows, Linux, FREEBSD, MACOSX and Solaris
+ agents supports this type of check.
 
-  For windows, the configuration is done in {check_mk.ini} in
-  the section {[fileinfo]}. Put one or more entries of the
-  format {path = C:\Some Dir\*.log} into this
-  section. The agent will send all files that match
-  the pattern. Wildcards are only allowed in the
-  filename part, not in the directory path.
+ For windows, the configuration is done in {check_mk.ini} in
+ the section {[fileinfo]}. Put one or more entries of the
+ format {path = C:\Some Dir\*.log} into this
+ section. The agent will send all files that match
+ the pattern. Wildcards are only allowed in the
+ filename part, not in the directory path.
 
-  For Linux, FREEBSD, MACOSX and Solaris the configuration
-  is done via {fileinfo.cfg} located in the {$MK_CONFDIR}
-  (usually {/etc/check_mk/fileinfo.cfg}). To add files to
-  the check, simply add one path pattern {/tmp/*.log} per line.
-  Wildcards or patterns can be used as usual on the console.
+ For Linux, FREEBSD, MACOSX and Solaris the configuration
+ is done via {fileinfo.cfg} located in the {$MK_CONFDIR}
+ (usually {/etc/check_mk/fileinfo.cfg}). To add files to
+ the check, simply add one path pattern {/tmp/*.log} per line.
+ Wildcards or patterns can be used as usual on the console.
 
 item:
-  The complete path name of the file is sent by
-  the agent (this is case sensitive even when monitoring
-  Windows).
+ The complete path name of the file is sent by
+ the agent (this is case sensitive even when monitoring
+ Windows).
 
-  Please note: when referring to the item in {check_parameters},
-  make sure that backslashes (contained in Windows paths) are
-  properly quoted. You need one escape level for the Python
-  string and one for the regular expression. If you prefix the
-  Python string with a {r}, then just the regular expression
-  needs its double backslash (see examples). Without the {r} you
-  would need four backslashes in a row in order to denote one
-  backslash in the file's path.
+ Please note: when referring to the item in {check_parameters},
+ make sure that backslashes (contained in Windows paths) are
+ properly quoted. You need one escape level for the Python
+ string and one for the regular expression. If you prefix the
+ Python string with a {r}, then just the regular expression
+ needs its double backslash (see examples). Without the {r} you
+ would need four backslashes in a row in order to denote one
+ backslash in the file's path.
 
 inventory:
-  For each file that the agent sends one service will
-  be created.
+ One service is created for each file that the agent sends.
 

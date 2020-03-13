@@ -12,8 +12,7 @@ description:
  devices.
 
 inventory:
- The check gather a list of the existing fans in a system.
- It labels them as either chassis or CPU fans.
+ One service is created for each available fan.
 
 item:
  The type of the fan followed by the ID of the fan

@@ -11,4 +11,4 @@ description:
  It does not trigger a status change of the check.
 
 inventory:
- Finds exactly one check on every system (head unit).
+ One service is created on every system (head unit).

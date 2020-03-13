@@ -10,5 +10,5 @@ description:
  It will issue a warning if the cluster setup differs from the expected setup.
 
 inventory:
- Creates one service
+ One service is created.
 

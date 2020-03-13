@@ -9,4 +9,4 @@ description:
  On the slave node status {appReadOnly} is {OK} too.
 
 inventory:
- Finds exactly one check on every system (head unit).
+ One service is created on every system (head unit).

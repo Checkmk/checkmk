@@ -38,27 +38,26 @@
 
 import re
 
+
 def parse_aix_lsvg_all(info):
-    # 
     # We assume info containing a list of single element lists.
     # Each line of above output justs gets wrapped into an array.
-    # Reason is we treat the volume group details are basically 
+    # Reason is we treat the volume group details are basically
     # fixed width fields, and we rather do the parsing here.
     # (It can happen that columns are empty...)
-    #   
+
     header_active, header_details  = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
     if info[0][0] != header_active:
-        raise Exception('Expecting a (possibly empty) list of active volume groups starting with ' + header_active) 
+        raise Exception('Expecting a (possibly empty) list of active volume groups starting with ' + header_active)
     info = info[1:]
-    
     delimiter_indices = [index for index, line in enumerate(info) if line[0] == header_details]
-    if len(delimiter_indices) > 1: 
-        raise Exception('We do not expect to have more than one section starting with '+header_details) 
+    if len(delimiter_indices) > 1:
+        raise Exception('We do not expect to have more than one section starting with '+header_details)
 
     if len(delimiter_indices) == 1:
         active_volume_groups = [line[0] for line in info[:delimiter_indices[0]]]
         details = info[delimiter_indices[0]+1:]
-    else: 
+    else:
         active_volume_groups = []
         details = info
 
@@ -77,7 +76,6 @@ def parse_aix_lsvg_all(info):
             continue
         else:
             indices = [0,20,31,39,47,52,66,None]
-            
             raw_columns = [real_line[ indices[i-1] : indices[i] ] for i in range(1,len(indices))]
             lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = [column.strip() for column in raw_columns]
 
@@ -92,27 +90,28 @@ def parse_aix_lsvg_all(info):
             })
     return lsvg_conf
 
+
 def sort_by_logical_volume_name(volumes):
-        convert = lambda text: int(text) if text.isdigit() else text.lower() 
-        alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['logical_volume_name']) ] 
-        return sorted(volumes, key = alphanum_key)
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['logical_volume_name'])]
+    return sorted(volumes, key = alphanum_key)
+
 
 def inv_aix_lsvg_all(info, inventory_tree):
-
     unsorted_volumes = []
     node = inv_tree_list(".hardware.storage.logical_volumes:")
     result = parse_aix_lsvg_all(info)
     for volume_group_name, volumes in result.iteritems():
         for logical_volume_name in volumes:
             keys = [
-                'logical_volume_name', 
-                'volume_group_name', 
-                'disc_type', 
-                'logical_partitions', 
-                'physical_partitions', 
-                'physical_volumes', 
-                'state1', 
-                'state2', 
+                'logical_volume_name',
+                'volume_group_name',
+                'disc_type',
+                'logical_partitions',
+                'physical_partitions',
+                'physical_volumes',
+                'state1',
+                'state2',
                 'mount_point',
                 'volume_group_state',
                 'state']

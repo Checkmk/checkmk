@@ -117,7 +117,7 @@ def _get_scan_function_ast(name, snmp_scan_function):
             except ValueError:
                 pass
 
-    raise ValueError(name)
+    raise ValueError(ast.dump(tree))
 
 
 def _get_expression_from_function(name, scan_func_ast):
@@ -325,14 +325,10 @@ def _ast_convert_dispatcher(arg):
 
 def create_detect_spec(name, snmp_scan_function):
     # type: (str, Callable) -> SNMPDetectSpec
+    if name in ("if", "if64"):
+        raise NotImplementedError(name)
 
-    try:
-        scan_func_ast = _get_scan_function_ast(name, snmp_scan_function)
-    except ValueError:
-        if name in ("if", "if64"):
-            raise NotImplementedError(name)
-        raise
-    # untill here: all but if and if64
+    scan_func_ast = _get_scan_function_ast(name, snmp_scan_function)
 
     expression_ast = _get_expression_from_function(name, scan_func_ast)
     # unitl here: all but 74

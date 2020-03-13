@@ -1060,10 +1060,10 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     if current in operation.remove_tag_ids or current in operation.replace_tag_ids:
         affected.append(host_or_folder)
         if mode != TagCleanupMode.CHECK:
-            new_tag = operation[current]
             if current in operation.remove_tag_ids:
                 del attributes[attrname]
             elif current in operation.replace_tag_ids:
+                new_tag = operation.replace_tag_ids[current]
                 attributes[attrname] = new_tag
             else:
                 raise NotImplementedError()

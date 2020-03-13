@@ -75,7 +75,7 @@ import livestatus
 seconds_per_day = 86400
 
 # Some arbitrary object for checking whether or not default_value was set
-_DEF_VALUE = object()
+DEF_VALUE = object()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 
@@ -89,13 +89,13 @@ class ValueSpec(object):
         self,
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
         **kwargs):
         super(ValueSpec, self).__init__()
         self._title = title
         self._help = help
-        if default_value is not _DEF_VALUE:
+        if default_value is not DEF_VALUE:
             self._default_value = default_value
         self._validate = validate
 
@@ -236,7 +236,7 @@ class FixedValue(ValueSpec):
         totext=None,  # type: Text
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(FixedValue, self).__init__(title=title,
@@ -283,7 +283,7 @@ class Age(ValueSpec):
         display=None,  # type: _Optional[List[str]]
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
         cssclass=None,  # type: _Optional[str]
     ):
@@ -398,7 +398,7 @@ class Integer(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Integer, self).__init__(title=title,
@@ -559,7 +559,7 @@ class TextAscii(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(TextAscii, self).__init__(title=title,
@@ -731,7 +731,7 @@ class RegExp(TextAscii):
         # From ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(RegExp, self).__init__(
@@ -860,7 +860,7 @@ class EmailAddress(TextAscii):
         # From ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(EmailAddress, self).__init__(
@@ -915,7 +915,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title=None,  # type: _Optional[Text]
     help=None,  # type: Union[None, Text, Callable[[], Text]]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
@@ -956,7 +956,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title=None,  # type: _Optional[Text]
     help=None,  # type: Union[None, Text, Callable[[], Text]]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
     return IPNetwork(
@@ -995,7 +995,7 @@ class TextAsciiAutocomplete(TextAscii):
         # From ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
@@ -1116,7 +1116,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title=None,  # type: _Optional[Text]
     help=None,  # type: Union[None, Text, Callable[[], Text]]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextAscii(
@@ -1157,7 +1157,7 @@ class HostAddress(TextAscii):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(HostAddress, self).__init__(
@@ -1268,7 +1268,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title=None,  # type: _Optional[Text]
     help=None,  # type: Union[None, Text, Callable[[], Text]]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
     validate=None,  # type: _Optional[Callable[[str, Any], None]]
 ):
     # type: (...) -> TextAscii
@@ -1311,7 +1311,7 @@ class Url(TextAscii):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Url, self).__init__(
@@ -1399,7 +1399,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     # ValueSpec
     title=None,  # type: _Optional[Text]
     help=None,  # type: Union[None, Text, Callable[[], Text]]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1419,7 +1419,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
 def CheckMKVersion(
     # ValueSpec
     title=None,  # type: _Optional[Text]
-    default_value=_DEF_VALUE,  # type: Any
+    default_value=DEF_VALUE,  # type: Any
 ):
     return TextAscii(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
@@ -1456,7 +1456,7 @@ class TextAreaUnicode(TextUnicode):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(TextAreaUnicode, self).__init__(
@@ -1562,7 +1562,7 @@ class Filename(TextAscii):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Filename, self).__init__(
@@ -1640,7 +1640,7 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(ListOfStrings, self).__init__(title=title,
@@ -1766,7 +1766,7 @@ class ListOfStrings(ValueSpec):
 
 
 # TODO: Spread use of this valuespec
-def NetworkPort(title, default_value=_DEF_VALUE):
+def NetworkPort(title, default_value=DEF_VALUE):
     # type: (_Optional[Text], Union[object, int]) -> Integer
     return Integer(
         title=title,
@@ -1807,7 +1807,7 @@ class ListOf(ValueSpec):
         sort_by=None,  # type: _Optional[int]
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(ListOf, self).__init__(title=title,
@@ -2074,7 +2074,7 @@ class ListOfMultiple(ValueSpec):
         delete_style="default",  # type: str
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(ListOfMultiple, self).__init__(title=title,
@@ -2241,7 +2241,7 @@ class Float(Integer):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Float, self).__init__(size=size,
@@ -2314,7 +2314,7 @@ class Percentage(Float):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Percentage, self).__init__(decimal_separator=decimal_separator,
@@ -2357,7 +2357,7 @@ class Checkbox(ValueSpec):
         onclick=None,  # type: _Optional[Text]
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Checkbox, self).__init__(title=title,
@@ -2433,7 +2433,7 @@ class DropdownChoice(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(DropdownChoice, self).__init__(title=title,
@@ -2662,7 +2662,7 @@ class CascadingDropdown(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(CascadingDropdown, self).__init__(title=title,
@@ -2986,7 +2986,7 @@ class ListChoice(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(ListChoice, self).__init__(title=title,
@@ -3132,7 +3132,7 @@ class DualListChoice(ListChoice):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(DualListChoice, self).__init__(choices=choices,
@@ -3296,7 +3296,7 @@ class OptionalDropdownChoice(DropdownChoice):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(OptionalDropdownChoice, self).__init__(choices=choices,
@@ -3676,7 +3676,7 @@ class Timeofday(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Timeofday, self).__init__(title=title,
@@ -3774,7 +3774,7 @@ class TimeofdayRange(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(TimeofdayRange, self).__init__(title=title,
@@ -3949,7 +3949,7 @@ class Timerange(CascadingDropdown):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Timerange, self).__init__(
@@ -4188,7 +4188,7 @@ class Optional(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Optional, self).__init__(title=title,
@@ -4292,7 +4292,7 @@ class Alternative(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Alternative, self).__init__(title=title,
@@ -4461,7 +4461,7 @@ class Tuple(ValueSpec):
         title_br=True,  # type: bool
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Tuple, self).__init__(title=title,
@@ -4609,7 +4609,7 @@ class Dictionary(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Dictionary, self).__init__(title=title,
@@ -4940,7 +4940,7 @@ class ElementSelection(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(ElementSelection, self).__init__(title=title,
@@ -5104,7 +5104,7 @@ class Transform(ValueSpec):
         forth=None,  # type: _Optional[Callable[[Any], Any]]
         title=None,  # type: _Optional[Text]
         help=None,  # type: Union[None, Text, Callable[[], Text]]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         super(Transform, self).__init__(title=title,
@@ -5476,7 +5476,7 @@ class Labels(ValueSpec):
         # ValueSpec
         title=None,  # type: _Optional[Text]
         help=None,  # type: _Optional[Text]
-        default_value=_DEF_VALUE,  # type: Any
+        default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
         help_ = help if help is not None else ""

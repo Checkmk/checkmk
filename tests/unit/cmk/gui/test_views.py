@@ -5989,7 +5989,7 @@ def test_registered_display_hints(load_plugins):
     '.hardware.storage.disks:*.size',
     '.hardware.storage.disks:*.type',
     '.hardware.storage.disks:*.vendor',
-    '.hardware.storage.logical_volumes',
+    '.hardware.storage.logical_volumes:',
     ".hardware.storage.logical_volumes:*.volume_group_name",
     ".hardware.storage.logical_volumes:*.logical_volume_name",
     ".hardware.storage.logical_volumes:*.volume_group_state",

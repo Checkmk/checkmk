@@ -7,13 +7,17 @@
 from __future__ import print_function
 
 import copy
+import json
+import sys
 
 from openapi_spec_validator import validate_spec  # type: ignore
 
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 
 
-def generate():
+def generate(args=None):
+    if args is None:
+        args = [None]
     # We need to import the endpoints before importing the spec, lest we don't have a guarantee that
     # all endpoints will be registered in the spec as this is done at import-time.
     import cmk.gui.plugins.openapi.endpoints  # pylint: disable=unused-import,unused-variable
@@ -22,8 +26,13 @@ def generate():
     # internal properties lying around, which leads to an invalid spec-file.
     check_dict = copy.deepcopy(SPEC.to_dict())
     validate_spec(check_dict)
-    return SPEC.to_yaml().rstrip()
+    if args[-1] == '--json':
+        output = json.dumps(SPEC.to_dict(), indent=2).rstrip()
+    else:
+        output = SPEC.to_yaml().rstrip()
+
+    return output
 
 
 if __name__ == '__main__':
-    print(generate())
+    print(generate(sys.argv))

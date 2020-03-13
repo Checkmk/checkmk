@@ -68,14 +68,15 @@ THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(T
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
 THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
-OPENAPI_SPECS      := web/htdocs/openapi/checkmk.yaml
+OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
+OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
         format-linux format-python format-python2 format-python3 \
 	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel .venv .venv-2.7 .venv-3.7 openapi
+        am--refresh skel .venv .venv-2.7 .venv-3.7 openapi openapi-doc
 
 
 help:
@@ -292,11 +293,18 @@ endif
 headers:
 	doc/helpers/headrify
 
-openapi: ${OPENAPI_SPECS}
+
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
-	for file in "$<"; do \
-		$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $$file ; \
-	done
+	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $@
+
+$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules
+	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
+		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
+		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
+
+openapi-doc: $(OPENAPI_DOC)
+
 
 optimize-images:
 	@if type pngcrush >/dev/null 2>&1; then \

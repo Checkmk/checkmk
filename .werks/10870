@@ -1,0 +1,12 @@
+Title: Tags: Fix exception when renaming an existing tag choice
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584107972
+Class: fix
+
+When editing the ID of a tag choice that is referenced by some other
+object, an exception like this could occur in previous versions:
+"TypeError: 'OperationReplaceGroupedTags' object has no attribute '__getitem__'".

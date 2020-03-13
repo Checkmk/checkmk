@@ -5,10 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 import json
-import typing
-
-if typing.TYPE_CHECKING:
-    from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
+from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
@@ -166,8 +163,10 @@ def serve_json(data, profile=None):
         content_type += ';profile="%s"' % (profile,)
     response.set_content_type(content_type)
     response.set_data(json.dumps(data))
-    response.original_data = data
-    return response._get_current_object()
+    # HACK: See wrap_with_validation.
+    response.original_data = data  # type: ignore[attr-defined]
+    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def action_parameter(action, parameter, friendly_name, optional, pattern):
@@ -182,7 +181,8 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
 
 def sucess(status=200):
     response.status_code = status
-    return response._get_current_object()
+    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def etag_of_dict(dict_):

@@ -1051,9 +1051,9 @@ declare_invtable_view("invibmmqqueues", ".software.applications.ibm_mq.queues:",
                       _("IBM MQ Queues"))
 
 declare_invtable_view(
-     "logicalvolumes", 
-     ".hardware.storage.logical_volumes:", 
-     _("LogicalVolumes"), 
+     "logicalvolumes",
+     ".hardware.storage.logical_volumes:",
+     _("LogicalVolumes"),
      _("Logical Volumes per Volume Group"),
  )
 

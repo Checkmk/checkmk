@@ -344,7 +344,7 @@ class ModeEditGlobals(GlobalSettingsMode):
                                 "read_only")
 
         if cmk_version.is_managed_edition():
-            import cmk.gui.cme.plugins.wato.managed
+            import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
     def action(self):

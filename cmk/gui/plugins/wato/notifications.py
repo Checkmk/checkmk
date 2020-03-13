@@ -246,7 +246,7 @@ class NotificationParameterMail(NotificationParameter):
         ])
 
         if not cmk_version.is_raw_edition():
-            import cmk.gui.cee.plugins.wato.syncsmtp
+            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         return elements

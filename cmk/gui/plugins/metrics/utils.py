@@ -10,7 +10,9 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
+
+import six
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
@@ -138,24 +140,21 @@ def indexed_color(idx, total):
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
         tone = ((idx // 4) % 6) + 1
-        if idx % 8 < 4:
-            shade = "a"
-        else:
-            shade = "b"
+        shade = "a" if idx % 8 < 4 else "b"
         return "%d%d/%s" % (base_col, tone, shade)
-    else:
-        # generate distinct rgb values. these may be ugly ; also, they
-        # may overlap with the colors from the wheel
-        idx = idx - _COLOR_WHEEL_SIZE
-        base_color = idx % 7  # red, green, blue, red+green, red+blue,
-        # green+blue, red+green+blue
-        delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
-        offset = int(255 - (delta * ((idx / 7.0) + 1)))
 
-        red = int(base_color in [0, 3, 4, 6])
-        green = int(base_color in [1, 3, 5, 6])
-        blue = int(base_color in [2, 4, 5, 6])
-        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+    # generate distinct rgb values. these may be ugly ; also, they
+    # may overlap with the colors from the wheel
+    idx = idx - _COLOR_WHEEL_SIZE
+    base_color = idx % 7  # red, green, blue, red+green, red+blue,
+    # green+blue, red+green+blue
+    delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
+    offset = int(255 - (delta * ((idx / 7.0) + 1)))
+
+    red = int(base_color in [0, 3, 4, 6])
+    green = int(base_color in [1, 3, 5, 6])
+    blue = int(base_color in [2, 4, 5, 6])
+    return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -247,14 +246,14 @@ def _float_or_int(val):
             return None
 
 
+# TODO: Slightly funny typing, fix this when we use Python 3.
 def _split_perf_data(perf_data_string):
+    # type: (AnyStr) -> List[AnyStr]
     "Split the perf data string into parts. Preserve quoted strings!"
-    try:  # python3
-        return shlex.split(perf_data_string)
-    except UnicodeEncodeError:
-        # In python 2 shlex.split can not deal with unicode strings. But we always
-        # have unicode strings. So encode and decode again.
-        return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
+    parts = shlex.split(six.ensure_str(perf_data_string))
+    if isinstance(perf_data_string, six.binary_type):
+        return [six.ensure_binary(s) for s in parts]
+    return [six.ensure_text(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):
@@ -322,6 +321,7 @@ def get_metric_info(metric_name, color_index):
 
 
 def translate_metrics(perf_data, check_command):
+    # type: (List[Tuple], str) -> Dict[str, Dict[str, Any]]
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -329,7 +329,7 @@ def translate_metrics(perf_data, check_command):
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics = {}
+    translated_metrics = {}  # type: Dict[str, Dict[str, Any]]
     color_index = 0
     for entry in perf_data:
 
@@ -403,8 +403,10 @@ def evaluate(expression, translated_metrics):
 
 
 def _evaluate_rpn(expression, translated_metrics):
+    # type: (str, Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
     parts = expression.split(",")
-    stack = []  # stack tuples of (value, unit, color)
+    # stack of (value, unit, color)
+    stack = []  # type: List[Tuple[float, Dict[str, Any], Optional[str]]]
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
@@ -444,9 +446,7 @@ rpn_operators = {
 # TODO: real unit computation!
 def _unit_mult(u1, u2):
     # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
-    if u1 == unit_info[""] or u1 == unit_info["count"]:
-        return u2
-    return u1
+    return u2 if u1 in (unit_info[''], unit_info['count']) else u1
 
 
 _unit_div = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
@@ -457,7 +457,7 @@ _unit_sub = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[
 def _choose_operator_color(a, b):
     if a is None:
         return b
-    elif b is None:
+    if b is None:
         return a
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
@@ -487,10 +487,10 @@ def _evaluate_literal(expression, translated_metrics):
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
-    elif isinstance(expression, float):
+    if isinstance(expression, float):
         return expression, unit_info[""], None
 
-    elif expression[0].isdigit() or expression[0] == '-':
+    if expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
     if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
@@ -580,10 +580,9 @@ def get_graph_template_choices():
 def get_graph_template(template_id):
     if template_id.startswith("METRIC_"):
         return generic_graph_template(template_id[7:])
-    elif template_id in graph_info:
+    if template_id in graph_info:
         return graph_info[template_id]
-    else:
-        raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
+    raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
 
 
 def generic_graph_template(metric_name):
@@ -617,7 +616,8 @@ def _get_explicit_graph_templates(translated_metrics):
 
 
 def _get_graphed_metrics(graph_templates):
-    graphed_metrics = set([])
+    # type: (List) -> Set
+    graphed_metrics = set()  # type: Set
     for graph_template in graph_templates:
         graphed_metrics.update(_metrics_used_by_graph(graph_template))
     return graphed_metrics
@@ -630,6 +630,7 @@ def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
 
 
 def _metrics_used_by_graph(graph_template):
+    # type: (Any) -> Iterator
     for metric_definition in graph_template["metrics"]:
         for metric in _metrics_used_in_definition(metric_definition[0]):
             yield metric
@@ -776,7 +777,7 @@ def get_palette_color_by_index(i, shading='a'):
 
 
 def get_next_random_palette_color():
-    keys = _cmk_color_palette.keys()
+    keys = list(_cmk_color_palette.keys())
     if 'random_color_index' in g:
         last_index = g.random_color_index
     else:
@@ -787,11 +788,12 @@ def get_next_random_palette_color():
 
 
 def get_n_different_colors(n):
+    # type: (int) -> List[str]
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
     total_weight = sum([x[1] for x in _hsv_color_distribution])
 
-    colors = []
+    colors = []  # type: List[str]
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
@@ -800,6 +802,7 @@ def get_n_different_colors(n):
 
 
 def _get_hue_by_weight_index(weight_index):
+    # type: (float) -> float
     section_begin = 0.0
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
@@ -808,6 +811,7 @@ def _get_hue_by_weight_index(weight_index):
             return hue
         weight_index -= section_weight
         section_begin = section_end
+    return 0.0  # Hmmm...
 
 
 # 23/c -> #ff8040
@@ -818,20 +822,14 @@ def parse_color_into_hexrgb(color_string):
 
     if "/" in color_string:
         cmk_color_index, color_shading = color_string.split("/")
-        hsv = list(_cmk_color_palette[cmk_color_index])
+        hsv = _cmk_color_palette[cmk_color_index]
 
         # Colors of the yellow ("2") and green ("3") area need to be darkened (in third place of the hsv tuple),
         # colors of the red and blue area need to be brightened (in second place of the hsv tuple).
         # For both shadings we need different factors.
-        cmk_color_nuance_index = 1
-        cmk_color_nuance_factor = 0.6
-
-        if cmk_color_index[0] in ["2", "3"]:
-            cmk_color_nuance_index = 2
-            cmk_color_nuance_factor = 0.8
-
         if color_shading == 'b':
-            hsv[cmk_color_nuance_index] *= cmk_color_nuance_factor
+            factors = (1.0, 1.0, 0.8) if cmk_color_index[0] in ["2", "3"] else (1.0, 0.6, 1.0)
+            hsv = _pointwise_multiplication(hsv, factors)
 
         color_hexrgb = hsv_to_hexrgb(hsv)
         return color_hexrgb
@@ -839,11 +837,19 @@ def parse_color_into_hexrgb(color_string):
     return "#808080"
 
 
+def _pointwise_multiplication(c1, c2):
+    # type: (Tuple[float, float, float], Tuple[float, float, float]) -> Tuple[float, float, float]
+    components = list(x * y for x, y in zip(c1, c2))
+    return components[0], components[1], components[2]
+
+
 def hsv_to_hexrgb(hsv):
+    # type: (Tuple[float, float, float]) -> str
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
 def render_color(color_rgb):
+    # type: (Tuple[float, float, float]) -> str
     return "#%02x%02x%02x" % (
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
@@ -853,8 +859,12 @@ def render_color(color_rgb):
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
+    # type: (str) -> Tuple[float, float, float]
+    def _hex_to_float(a):
+        return int(color[a:a + 2], 16) / 255.0
+
     try:
-        return tuple([int(color[a:a + 2], 16) / 255.0 for a in (1, 3, 5)])
+        return _hex_to_float(1), _hex_to_float(3), _hex_to_float(5)
     except Exception:
         raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
@@ -910,11 +920,14 @@ def MetricName():
         if value is None:
             raise MKUserError(varprefix, _("You need to select a metric"))
 
+    choices = [(None, "")]  # type: List[Tuple[Any, Text]]
+    choices += [
+        (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
+    ]
     return DropdownChoice(
         title=_("Metric"),
         sorted=True,
         default_value=None,
         validate=_require_metric,
-        choices=[(None, "")] +
-        [(metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()],
+        choices=choices,
     )

@@ -7,8 +7,11 @@
 # pylint: disable=redefined-outer-name
 import contextlib
 import os
-
-import pathlib2
+import sys
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
@@ -122,9 +125,9 @@ def with_automation_user(register_builtin_html, load_config):
 
 
 def _makepath(path):
-    pathlib2.Path(path).mkdir(parents=True, exist_ok=True)
+    Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def _touch(path):
-    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)
-    pathlib2.Path(path).touch()
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).touch()

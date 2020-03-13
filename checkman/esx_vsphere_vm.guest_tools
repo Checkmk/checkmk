@@ -18,5 +18,5 @@ description:
  The actual state of this check can be modified by parameters
 
 inventory:
- On each VM one check is generated.
+ One service is created for each Virtual Machine.
 

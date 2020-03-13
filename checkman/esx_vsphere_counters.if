@@ -20,5 +20,5 @@ item:
  The index or name of the network interface. See {if} for details.
 
 inventory:
- One service per interface is being created. See {if64} for details.
+ One service is created for each interface. See {if64} for details.
 

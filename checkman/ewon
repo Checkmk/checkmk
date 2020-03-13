@@ -21,6 +21,6 @@ description:
  rooms and count of various warning or incident messages.
 
 item:
- One item is discovered for the state of the router. Depending on the
- connected device, further items are discovered.
+ One service is created for the state of the router.
+ One service is created for each connected device called {{"oxyreduct"}}.
 

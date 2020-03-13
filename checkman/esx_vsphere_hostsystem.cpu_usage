@@ -8,5 +8,5 @@ description:
  It also shows you the number of sockets, cores and threads.
 
 inventory:
-  One check per ESX Host System will be created.
+ One service is created for each ESX Host System.
 

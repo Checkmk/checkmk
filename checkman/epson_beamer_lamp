@@ -7,4 +7,4 @@ description:
  This check monitors the lamp runtime of Epson beamers.
 
 inventory:
- One service per beamer is created.
+ One service is created for each beamer.

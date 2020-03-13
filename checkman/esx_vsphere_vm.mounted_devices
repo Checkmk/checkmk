@@ -11,4 +11,4 @@ description:
  If such device is connected, the check goes WARN, otherwise OK.
 
 inventory:
- On each VM one check is generated.
+ One service is created for each Virtual Machine.

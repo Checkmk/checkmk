@@ -9,4 +9,4 @@ description:
  The default levels, as recommended from the VMware, are 5% for warning and 10% for critical.
 
 inventory:
- One check for an ESX host system is created.
+ One service is created for the CPU on the ESX host system.

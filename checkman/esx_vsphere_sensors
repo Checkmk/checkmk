@@ -16,5 +16,5 @@ description:
  http://kb.vmware.com/selfservice/microsites/search.do?cmd=displayKC&externalId=1037330
 
 inventory:
-  One check per ESX Host System will be created.
+  One service is created for each ESX Host System.
 

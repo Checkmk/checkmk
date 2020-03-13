@@ -13,7 +13,8 @@ description:
  this can be configured via a check parameter.
 
 inventory:
- One service per hostsystem and per VM will be created, regardless of its state.
+ One service is created for each ESX Host System and
+ one service is created for each Virtual Machine.
 
 item:
  The text {HostSystem} or {VM} followed by a space followed by the name of the host system

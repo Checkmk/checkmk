@@ -12,6 +12,8 @@ item:
  Name of the instance
 
 inventory:
- Depending on the configuration, creates a summary check or one
- check per datastore.
+ Either one summary service is created for all datastores
+ if the configuration is set to {"Summary"} or
+ one service is created for each datastore if the configuration
+ is set to {"Single"}.
 

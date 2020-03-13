@@ -18,5 +18,5 @@ item:
  Mountpoint or grouped mountpoints
 
 inventory:
- One check per ramdisk is created from the counters reported by
+ One service is created for each ramdisk from the counters reported by
  the vsphere special agent.

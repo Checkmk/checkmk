@@ -10,5 +10,5 @@ description:
  given set of VMs is running on a given number of different Hosts.
 
 inventory:
- One service will be created
+ One service is created.
 

@@ -8,5 +8,4 @@ description:
  system.
 
 inventory:
- One check per system is created if the agent has a section {<<<uptime>>>}.
-
+ One service is created for each system.

@@ -8,5 +8,5 @@ description:
  an ESX host system.
 
 inventory:
- One check per ESX host system is being created.
+ One service is created for each ESX Host System.
 

@@ -9,5 +9,6 @@ description:
  as well as the oldest snapshot.
 
 inventory:
- On each VM one check is generated if there is snapshot information available
+ One service is created for each Virtual Machine
+ if there is snapshot information available.
 

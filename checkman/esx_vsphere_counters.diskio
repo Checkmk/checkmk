@@ -13,5 +13,5 @@ item:
  The fixed statement {{SUMMARY}}
 
 inventory:
- One service per ESX host is being created.
+ One service is created for each ESX host.
 

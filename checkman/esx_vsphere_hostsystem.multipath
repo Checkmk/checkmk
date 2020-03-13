@@ -15,7 +15,7 @@ description:
  each state type.
 
 inventory:
- Logical unit number
+ One service is created for each ESX Host System.
 
 item:
  The unique ID of the path

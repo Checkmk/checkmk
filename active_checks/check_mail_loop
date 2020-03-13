@@ -24,6 +24,11 @@ import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
 
+# The documentations of imaplib and poplib do not give any information about the encodings of their
+# outputs (e.g. of imaplib.IMAP4.search). From the source codes, it seems to be either ASCII or
+# UTF-8, so this should work.
+ENCODING = 'utf-8'
+
 
 def parse_exception(exc):
     exc = str(exc)
@@ -175,7 +180,7 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
             for i in range(num_messages):
                 index = i + 1
                 lines = g_M.retr(index)[1]
-                mails[i] = email.message_from_string("\n".join(lines))
+                mails[i] = email.message_from_bytes(b"\n".join(lines))
 
         else:
             # Get mails from IMAP mailbox
@@ -193,12 +198,12 @@ def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, ima
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False)  # select INBOX
             retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')
-            messages = raw_messages[0].strip()
+            messages = raw_messages[0].decode(ENCODING).strip()
             if retcode == 'OK' and messages:
                 for num in messages.split():
                     try:
                         _type, data = g_M.fetch(num, '(RFC822)')
-                        mails[num] = email.message_from_string(data[0][1])
+                        mails[num] = email.message_from_bytes(data[0][1])
                     except Exception as e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
@@ -336,7 +341,7 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
         for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
                 obsolete_mails.values()):
             if fetch_proto == 'POP3':
-                response = g_M.dele(mail_index + 1)
+                response = g_M.dele(mail_index + 1).decode(ENCODING)
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:

@@ -325,7 +325,14 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.type": {"title": _("Type")},
     ".hardware.storage.logical_volumes:": {
         "title": _("Logical Volumes"),
-        "keyorder": ["logical_volume_name", "volume_group_name", "volume_group_state", "mount_point", "state", "disc_type", "logical_partitions", "physical_partitions", "physical_volumes"],
+        "keyorder": [
+            "logical_volume_name",
+            "volume_group_name",
+            "volume_group_state",
+            "mount_point", "state",
+            "disc_type", "logical_partitions",
+            "physical_partitions",
+            "physical_volumes"],
         "view": "invlogicalvolumes_of_host",
     },
     ".hardware.storage.logical_volumes:*.volume_group_name": { "title" : _("Volume Group Name")},

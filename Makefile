@@ -14,7 +14,8 @@ LIBDIR             := $(PREFIX)/lib/$(NAME)
 DISTNAME           := $(NAME)-$(VERSION)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
-                      --exclude=.gitignore --exclude=*.swp --exclude=.f12
+                      --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_VERSION      := 8

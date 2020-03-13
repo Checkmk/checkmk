@@ -17,6 +17,7 @@ $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
 # The build step just extracts the archive
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
+	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(MAKE) -C $(REPO_PATH)/locale all
 	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz -C $(PACKAGE_BUILD_DIR)
 	cd $(CHECK_MK_BUILD_DIR) ; \
@@ -32,7 +33,7 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(TOUCH) $@
 
 # TODO: Replace the ancient setup.py with explicit installation directly in makefile
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CACHE_PKG_PROCESS)
 	export bindir='$(OMD_ROOT)/bin' ; \
 	export sharedir='$(OMD_ROOT)/share/check_mk' ; \
 	export checksdir='$(OMD_ROOT)/share/check_mk/checks' ; \
@@ -82,22 +83,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	install -m 755 $(CHECK_MK_BUILD_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/utils
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/ec
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
 	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz
-	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz \
-	    cmk/utils \
-	    cmk/ec \
-	    cmk/special_agents/__init__.py \
-	    cmk/special_agents/agent_aws.py \
-	    cmk/special_agents/agent_jira.py \
-	    cmk/special_agents/agent_kubernetes.py \
-	    cmk/special_agents/agent_elasticsearch.py \
-	    cmk/special_agents/agent_graylog.py \
-	    cmk/special_agents/agent_jenkins.py \
-	    cmk/special_agents/agent_splunk.py \
-	    cmk/special_agents/agent_vsphere.py
+	# cmk needs to be a namespace package (CMK-3979)
+	rm \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 

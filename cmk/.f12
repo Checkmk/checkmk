@@ -95,6 +95,11 @@ sudo rsync \
     "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
 
+# Ensure cmk is a namespace package
+sudo rm -f \
+    "$ROOT/lib/python/cmk3/__init__.py" \
+    "$ROOT/lib/python/cmk3/__init__.pyc"
+
 # Temporary fix until integration tests have been migrated to python3: remove
 # python3 only files that are installed to python 2 paths (by our packaging mechanism).
 for PY3_SA in special_agents/agent_aws.py special_agents/agent_elasticsearch.py special_agents/agent_graylog.py special_agents/agent_jenkins.py special_agents/agent_jira.py special_agents/agent_kubernetes.py special_agents/agent_prometheus.py special_agents/agent_proxmox.py special_agents/agent_splunk.py special_agents/agent_vsphere.py; do

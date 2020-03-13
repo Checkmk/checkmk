@@ -50,6 +50,18 @@ def _parameter_valuespec_job():
                  Age(title=_("Critical at"), default_value=0)
              ],
          )),
+        ("exit_codes",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     Integer(title=_("Exit code")),
+                     MonitoringState(title=_("Resulting state"),),
+                 ],
+                 default_value=(0, 0)),
+             ),
+             title = _("Map exit codes"),
+         )),
         ("outcome_on_cluster",
          DropdownChoice(
              title=_("Clusters: Prefered check result of local checks"),

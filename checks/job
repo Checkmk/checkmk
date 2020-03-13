@@ -121,10 +121,16 @@ def _process_start_time(value, warn, crit):
     return 0, display_value
 
 
-def _process_job_stats(job, age_levels):
+def _process_job_stats(job, age_levels, exit_codes):
     txt = 'Exit-Code: %d' % job['exit_code']
     state = 0
-    if job['exit_code'] != 0:
+    state_set = False
+    for exit_code, mon_state in exit_codes:
+        if job['exit_code'] == exit_code:
+            state = mon_state
+            txt += state_markers[state]
+            state_set = True
+    if not state_set and job['exit_code'] != 0:
         state = 2
         txt += ' (!!)'
     output = [txt]
@@ -173,7 +179,7 @@ def check_job(_no_item, params, nodes):
             results.append((3, '%sGot incomplete information for this job' % prefix))
             continue
 
-        state, text, perfdata = _process_job_stats(job, (warn, crit))
+        state, text, perfdata = _process_job_stats(job, (warn, crit), params.get('exit_codes', []))
         if 'running_start_time' in job:
             running_start_time = min(job['running_start_time'])
             state, display_value = _process_start_time(running_start_time, warn, crit)

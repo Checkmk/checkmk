@@ -10,7 +10,7 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, Text, List, Optional, Union  # pylint: disable=unused-import
+from typing import Dict, Generator, List, Optional, Text, Union  # pylint: disable=unused-import
 
 import six
 
@@ -1915,7 +1915,7 @@ class RuleConditionRenderer(object):
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list = []
+        text_list = []  # type: List[Union[HTML, Text]]
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")

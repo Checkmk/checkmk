@@ -9,7 +9,7 @@ import time
 import traceback
 import sys
 from hashlib import md5
-from typing import Union, Tuple, Optional, Text  # pylint: disable=unused-import
+from typing import List, Union, Optional, Text, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -560,7 +560,7 @@ class LoginPage(Page):
             html.show_message(config.login_screen["login_message"])
             html.close_div()
 
-        footer = []
+        footer = []  # type: List[Union[HTML, str]]
         for title, url, target in config.login_screen.get("footer_links", []):
             footer.append(html.render_a(title, href=url, target=target))
 

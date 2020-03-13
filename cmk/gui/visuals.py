@@ -10,9 +10,7 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import (  # pylint: disable=unused-import
-    Text, Tuple, Optional, cast, Dict, List, Callable, Union, Iterator,
-)
+from typing import Callable, Dict, Iterator, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 import cmk.gui.pages
@@ -22,7 +20,8 @@ from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (  # pylint: disable=unused-import
-    SingleInfos, VisualContext, FilterName, InfoName, Visual, VisualTypeName, HTTPVariables,
+    FilterHTTPVariables, FilterName, HTTPVariables, InfoName, SingleInfos, Visual, VisualContext,
+    VisualTypeName,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -1206,7 +1205,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
     for filter_name, filter_class in filter_registry.items():
         filter_object = filter_class()
         if only_infos is None or filter_object.info in only_infos:
-            this_filter_vars = {}
+            this_filter_vars = {}  # type: FilterHTTPVariables
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
@@ -1528,12 +1527,12 @@ def get_single_info_keys(single_infos):
 
 def get_singlecontext_vars(context, single_infos):
     # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
-    vars_ = {}  # type: Dict[str, Union[str, Text]]
-    for key in get_single_info_keys(single_infos):
-        val = cast(Optional[str], context.get(key))
-        if val is not None:
-            vars_[key] = val
-    return vars_
+    return {
+        key: val  #
+        for key in get_single_info_keys(single_infos)
+        for val in [context.get(key)]
+        if isinstance(val, (str, Text))
+    }
 
 
 def get_singlecontext_html_vars(context, single_infos):

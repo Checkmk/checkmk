@@ -545,7 +545,8 @@ class Table(object):
                 continue
 
             if header.help_txt:
-                header_title = html.render_span(header.title, title=header.help_txt)
+                header_title = html.render_span(
+                    header.title, title=header.help_txt)  # type: Union[int, HTML, Text]
             else:
                 header_title = header.title
 

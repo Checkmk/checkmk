@@ -883,7 +883,7 @@ def _rename_tags_after_confirmation(operation):
               "Removed tag groups will be removed from hosts and folders, removed tags will be "
               "replaced with the default value for the tag group (for hosts and folders). What "
               "rules concern, you have to decide how to proceed."))
-        html.begin_form("confirm")
+        html.begin_form("confirm", method="POST")
 
         if affected_rulesets and _is_removing_tags(operation):
             html.br()

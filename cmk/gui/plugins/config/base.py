@@ -37,6 +37,7 @@ log_levels = {
     "cmk.web.auth": 30,
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
+    "cmk.web.background-job": 30,
 }
 
 multisite_users = {}  # type: _Dict

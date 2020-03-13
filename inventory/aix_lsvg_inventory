@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 # Example iutput:
 #
 #[Volume_Groups_Active]
@@ -46,17 +45,19 @@ def parse_aix_lsvg_all(info):
     # fixed width fields, and we rather do the parsing here.
     # (It can happen that columns are empty...)
 
-    header_active, header_details  = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
+    header_active, header_details = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
     if info[0][0] != header_active:
-        raise Exception('Expecting a (possibly empty) list of active volume groups starting with ' + header_active)
+        raise Exception('Expecting a (possibly empty) list of active volume groups starting with ' +
+                        header_active)
     info = info[1:]
     delimiter_indices = [index for index, line in enumerate(info) if line[0] == header_details]
     if len(delimiter_indices) > 1:
-        raise Exception('We do not expect to have more than one section starting with '+header_details)
+        raise Exception('We do not expect to have more than one section starting with ' +
+                        header_details)
 
     if len(delimiter_indices) == 1:
         active_volume_groups = [line[0] for line in info[:delimiter_indices[0]]]
-        details = info[delimiter_indices[0]+1:]
+        details = info[delimiter_indices[0] + 1:]
     else:
         active_volume_groups = []
         details = info
@@ -75,9 +76,11 @@ def parse_aix_lsvg_all(info):
         elif real_line.startswith("LV") and real_line.endswith("MOUNT POINT"):
             continue
         else:
-            indices = [0,20,31,39,47,52,66,None]
-            raw_columns = [real_line[ indices[i-1] : indices[i] ] for i in range(1,len(indices))]
-            lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = [column.strip() for column in raw_columns]
+            indices = [0, 20, 31, 39, 47, 52, 66, None]
+            raw_columns = [real_line[indices[i - 1]:indices[i]] for i in range(1, len(indices))]
+            lv, lvtype, num_lp, num_pp, num_pv, act_state, mountpoint = [
+                column.strip() for column in raw_columns
+            ]
 
             # split lv state into two relevant values
             activation, mirror = act_state.split("/")
@@ -86,15 +89,18 @@ def parse_aix_lsvg_all(info):
             if lvtype == "N/A":
                 lvtype = None
             lsvg_conf[vgname].update({
-                lv: (lvtype, int(num_lp), int(num_pp), int(num_pv), activation, mirror, mountpoint, lv_state)
+                lv: (lvtype, int(num_lp), int(num_pp), int(num_pv), activation, mirror, mountpoint,
+                     lv_state)
             })
     return lsvg_conf
 
 
 def sort_by_logical_volume_name(volumes):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['logical_volume_name'])]
-    return sorted(volumes, key = alphanum_key)
+    alphanum_key = lambda volume: [
+        convert(c) for c in re.split('([0-9]+)', volume['logical_volume_name'])
+    ]
+    return sorted(volumes, key=alphanum_key)
 
 
 def inv_aix_lsvg_all(info, inventory_tree):
@@ -104,23 +110,18 @@ def inv_aix_lsvg_all(info, inventory_tree):
     for volume_group_name, volumes in result.iteritems():
         for logical_volume_name in volumes:
             keys = [
-                'logical_volume_name',
-                'volume_group_name',
-                'disc_type',
-                'logical_partitions',
-                'physical_partitions',
-                'physical_volumes',
-                'state1',
-                'state2',
-                'mount_point',
-                'volume_group_state',
-                'state']
-            values = [logical_volume_name, volume_group_name] + list(volumes[logical_volume_name]) + ['']
+                'logical_volume_name', 'volume_group_name', 'disc_type', 'logical_partitions',
+                'physical_partitions', 'physical_volumes', 'state1', 'state2', 'mount_point',
+                'volume_group_state', 'state'
+            ]
+            values = [logical_volume_name, volume_group_name] + list(
+                volumes[logical_volume_name]) + ['']
             volume_info = dict(zip(keys, values))
             #Compute combined state only just below
-            volume_info['state']=volume_info['state1'] + "/" + volume_info['state2']
+            volume_info['state'] = volume_info['state1'] + "/" + volume_info['state2']
             unsorted_volumes.append(volume_info)
     node.extend(sort_by_logical_volume_name(unsorted_volumes))
+
 
 inv_info['aix_lsvg_all'] = {
     "inv_function": inv_aix_lsvg_all,

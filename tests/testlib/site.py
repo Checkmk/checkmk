@@ -443,7 +443,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 #cmc_path() + "/agents",
             ]
 
-        if os.path.exists(cme_path()) and self.is_managed_edition():
+        if os.path.exists(cme_path()) and self.version.is_managed_edition():
             paths += [
                 cme_path(),
                 cme_path() + "/cmk/base",

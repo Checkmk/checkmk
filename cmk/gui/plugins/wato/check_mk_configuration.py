@@ -4555,7 +4555,8 @@ def _valuespec_check_mk_exit_status():
                              "unexpected_ip_ranges",
                              MonitoringState(
                                  default_value=1,
-                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges are detected")),
+                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges "
+                                         "are detected")),
                          ),
                      ])),
                 ("individual",
@@ -4575,7 +4576,8 @@ def _valuespec_check_mk_exit_status():
                                              "unexpected_ip_ranges",
                                              MonitoringState(
                                                  default_value=1,
-                                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges are detected")),
+                                                 title=_("State if unexpexted (exceeding or missing) "
+                                                         "allowed IP ranges are detected")),
                                          ),
                                      ])),
                                 ("programs",

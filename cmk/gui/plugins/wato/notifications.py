@@ -98,8 +98,10 @@ class NotificationParameterMail(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             # must be called at run time!!
-            elements=self._parameter_elements,)
+            elements=self._parameter_elements,
+        )
 
     def _parameter_elements(self):
         elements = [
@@ -233,6 +235,7 @@ class NotificationParameterSlack(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -293,6 +296,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -357,6 +361,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             hidden_keys=["webhook_url"],
             elements=[
@@ -412,92 +417,95 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
-            ("common_body",
-             TextAreaUnicode(
-                 title=_("Body head for both host and service notifications"),
-                 rows=7,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Host:     $HOSTNAME$
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                ("from", EmailAddress(
+                    title=_("From: Address"),
+                    size=40,
+                    allow_empty=False,
+                )),
+                ("reply_to", EmailAddress(
+                    title=_("Reply-To: Address"),
+                    size=40,
+                    allow_empty=False,
+                )),
+                ("host_subject",
+                 TextUnicode(
+                     title=_("Subject for host notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                     size=64,
+                 )),
+                ("service_subject",
+                 TextUnicode(
+                     title=_("Subject for service notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                     size=64,
+                 )),
+                ("common_body",
+                 TextAreaUnicode(
+                     title=_("Body head for both host and service notifications"),
+                     rows=7,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """,
-             )),
-            ("host_body",
-             TextAreaUnicode(
-                 title=_("Body tail for host notifications"),
-                 rows=9,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Event:    $EVENT_TXT$
+                 )),
+                ("host_body",
+                 TextAreaUnicode(
+                     title=_("Body tail for host notifications"),
+                     rows=9,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """,
-             )),
-            ("service_body",
-             TextAreaUnicode(
-                 title=_("Body tail for service notifications"),
-                 rows=11,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Service:  $SERVICEDESC$
+                 )),
+                ("service_body",
+                 TextAreaUnicode(
+                     title=_("Body tail for service notifications"),
+                     rows=11,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
-             )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default="oldest_first")),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ],)
+                 )),
+                ('bulk_sort_order',
+                 DropdownChoice(
+                     choices=[
+                         ('oldest_first', _('Oldest first')),
+                         ('newest_first', _('Newest first')),
+                     ],
+                     help=_(
+                         "With this option you can specify, whether the oldest (default) or "
+                         "the newest notification should get shown at the top of the notification mail."
+                     ),
+                     title=_("Notification sort order for bulk notifications"),
+                     default="oldest_first")),
+                ("disable_multiplexing",
+                 FixedValue(
+                     True,
+                     title=_("Send seperate notifications to every recipient"),
+                     totext=_("A seperate notification is send to every recipient. Recipients "
+                              "cannot see which other recipients were notified."),
+                     help=_("Per default only one notification is generated for all recipients. "
+                            "Therefore, all recipients can see who was notified and reply to "
+                            "all other recipients."),
+                 )),
+            ],
+        )
 
 
 @notification_parameter_registry.register
@@ -509,6 +517,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=[
                 'priority', 'resolution', 'host_summary', 'service_summary', 'ignore_ssl',
                 'timeout', 'label'
@@ -635,6 +644,7 @@ class NotificationParameterServiceNow(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=['url', 'username', 'password', 'caller'],
             elements=[
                 ("url",
@@ -812,6 +822,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=[
                 'password',
             ],
@@ -954,22 +965,25 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("facility",
-             DropdownChoice(
-                 title=_("Syslog Facility to use"),
-                 help=_("The notifications will be converted into syslog messages with "
-                        "the facility that you choose here. In the Event Console you can "
-                        "later create a rule matching this facility."),
-                 choices=mkeventd.syslog_facilities,
-             )),
-            ("remote",
-             IPv4Address(
-                 title=_("IP Address of remote Event Console"),
-                 help=_("If you set this parameter then the notifications will be sent via "
-                        "syslog/UDP (port 514) to a remote Event Console or syslog server."),
-             )),
-        ],)
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                ("facility",
+                 DropdownChoice(
+                     title=_("Syslog Facility to use"),
+                     help=_("The notifications will be converted into syslog messages with "
+                            "the facility that you choose here. In the Event Console you can "
+                            "later create a rule matching this facility."),
+                     choices=mkeventd.syslog_facilities,
+                 )),
+                ("remote",
+                 IPv4Address(
+                     title=_("IP Address of remote Event Console"),
+                     help=_("If you set this parameter then the notifications will be sent via "
+                            "syslog/UDP (port 514) to a remote Event Console or syslog server."),
+                 )),
+            ],
+        )
 
 
 @notification_parameter_registry.register
@@ -981,6 +995,7 @@ class NotificationParameterSpectrum(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=None,
             elements=[
                 ("destination",
@@ -1008,6 +1023,7 @@ class NotificationParameterPushover(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
             elements=[
                 ("api_key",

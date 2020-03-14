@@ -14,5 +14,5 @@ description:
  in percent).
 
 inventory:
-  Automatically.
+ One service is created for each Linux host.
 

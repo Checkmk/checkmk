@@ -1,4 +1,4 @@
-title: Caches on couchbase nodes
+title: Couchbase nodes: Caches
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -10,7 +10,7 @@ description:
  cache hits.
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

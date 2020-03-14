@@ -4,9 +4,9 @@
 
 SHELL    := /bin/bash -e
 PIPENV3  := ../scripts/run-pipenv 3
-COVERAGE := $(PIPENV3) run coverage
 PYTEST   := $(PIPENV3) run py.test -vv
 YAPF     := $(PIPENV3) run yapf
+BANDIT   := $(PIPENV3) run bandit
 MYPY     := ../scripts/run-mypy
 
 .PHONY: help test-docker test-pylint test-unit \
@@ -14,7 +14,10 @@ MYPY     := ../scripts/run-mypy
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker \
 	test-integration-docker-debug \
+	test-composition-docker test-composition-docker-debug test-composition \
 	test-format-python test-format-python3 \
+	test-unit-coverage-html \
+	test-pipenv-deps test-bandit test-agent-integration
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
@@ -33,6 +36,12 @@ help:
 	@echo "test-integration              - Run integration tests locally"
 	@echo "test-integration-docker       - Run integration tests in container"
 	@echo "test-integration-docker-debug - Run test container for manual debugging"
+	@echo "test-composition              - Run composition tests locally"
+	@echo "test-composition-docker       - Run composition tests in container"
+	@echo "test-composition-docker-debug - Run test container for manual debugging"
+	@echo "test-pipenv-deps              - Run pipenv dependency issue test"
+	@echo "test-bandit                   - Run bandit (security) tests"
+	@echo "test-agent-integration        - Run agent (plugin) related integration tests"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -47,11 +56,13 @@ test-pylint:
 test-unit:
 	$(PYTEST) -T unit unit
 
-# TODO: We should perhaps use the pytest --cov/--cov-report options, which the
-# pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html:
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html --rcfile=.coveragerc_unit
+	$(PYTEST) \
+	    --cov=cmk \
+	    --cov-report=html \
+	    --cov-config=.coveragerc_unit \
+	    --no-cov-on-fail \
+	    -T unit unit
 
 
 MYPY3_FILES=$(shell \
@@ -142,13 +153,36 @@ test-gui-crawl-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-integration: $(NODE_MODULES)
-	$(PIPENV3) run scripts/run-integration-test.py $(realpath ../tests/integration)
+	$(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
 
-test-integration-docker-debug: $(NODE_MODULES)
+test-integration-docker-debug test-composition-docker-debug: $(NODE_MODULES)
 	$(PIPENV3) run scripts/run-dockerized.py debug
+
+test-composition-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-composition"
+
+# TODO: Need to either untie composition tests with agent updater code or migrate
+# the agent updater to Python 3. The composition tests currently import the agent
+# updater code for the test execution, which should not be done.
+test-composition: $(NODE_MODULES)
+	../scripts/run-pipenv 2 run py.test -vv -T composition $(realpath ../tests/composition)
+
+test-pipenv-deps:
+	$(PIPENV3) check
+
+bandit.ini:
+	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 3 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
+
+test-bandit: bandit.ini
+# Currently only care about high severity reported issues. Once this is reached,
+# go and enable the medium/low checks.
+	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+
+test-agent-integration:
+	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
 clean:
 	rm -rf .mypy_cache

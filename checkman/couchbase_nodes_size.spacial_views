@@ -1,4 +1,4 @@
-title: Size of spacial views on couchbase nodes
+title: Couchbase nodes: Size of spacial views
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -9,7 +9,7 @@ description:
  Levels can be defined using the WATO rule "Couchbase Node: Size of spacial views".
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

@@ -1,4 +1,4 @@
-title: AWS/RDS Disk IO
+title: AWS RDS: Disk IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -11,7 +11,9 @@ description:
  No default levels are set. These are configurable.
 
 item:
- Name of the instance if all required metrics (DiskQueueDepth, ReadIOPS, ReadLatency, ReadThroughput, WriteIOPS, WriteLatency and WriteThroughput) are given.
+ Name of the instance
 
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (DiskQueueDepth, ReadIOPS, ReadLatency, ReadThroughput, WriteIOPS, WriteLatency and WriteThroughput) are given.
+

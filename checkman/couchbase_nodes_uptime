@@ -1,4 +1,4 @@
-title: Uptime of couchbase nodes
+title: Couchbase nodes: Uptime
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -8,7 +8,7 @@ description:
  values for WARN and CRIT in the WATO-rules.
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node as provided by the agent.

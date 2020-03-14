@@ -16,4 +16,4 @@ item:
  Name of the power supply module.
 
 inventory:
- All connected power supply units are detected
+ One service is created for each connected power supply unit

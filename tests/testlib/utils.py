@@ -102,6 +102,8 @@ def current_base_branch_name():
             lines = lines.decode("utf-8")
 
         for line in lines.strip().split("\n"):
+            if not line:
+                continue
             head = line.split()[0]
 
             if head == "origin/master":
@@ -124,6 +126,12 @@ def get_cmk_download_credentials():
         return tuple(open(credentials_file).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
+
+
+def get_standard_linux_agent_output():
+    with Path(repo_path(), "tests-py3/integration/cmk/base/test-files/linux-agent-output").open(
+            encoding="utf-8") as f:
+        return f.read()
 
 
 def site_id():

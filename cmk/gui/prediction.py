@@ -8,6 +8,7 @@ from __future__ import division
 import os
 import time
 import json
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import livestatus
 import cmk.utils.paths
@@ -25,9 +26,9 @@ graph_size = 2000, 700
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = html.request.var("host")
-    service = html.request.var("service")
-    dsname = html.request.var("dsname")
+    host = html.request.get_str_input_mandatory("host")
+    service = html.request.get_str_input_mandatory("service")
+    dsname = html.request.get_str_input_mandatory("dsname")
 
     html.header(_("Prediction for %s - %s - %s") % (host, service, dsname))
 
@@ -43,20 +44,21 @@ def page_graph():
     # Load all prediction information, sort by time of generation
     tg_name = html.request.var("timegroup")
     timegroup = None
-    timegroups = []
+    timegroups = []  # type: List[prediction.PredictionInfo]
     now = time.time()
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
-
+        if timegroup is None:
+            continue  # TODO: Is this behavior correct?
         tg_info = prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
         if tg_info is None:
             continue
 
         tg_info["name"] = f[:-5]
         timegroups.append(tg_info)
-        if tg_info["name"] == tg_name or \
-            (tg_name is None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
+        if tg_info["name"] == tg_name or (tg_name is None and
+                                          (tg_info["range"][0] <= now <= tg_info["range"][1])):
             timegroup = tg_info
             tg_name = tg_info["name"]
 
@@ -125,7 +127,7 @@ def page_graph():
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
     now = time.time()
-    if now >= from_time and now <= until_time:
+    if from_time <= now <= until_time:
         timeseries = prediction.get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
         rrd_data = timeseries.values
 
@@ -158,8 +160,8 @@ def compute_vertical_scala(low, high):
         letter = 'P'
         factor = 1024.0**5
 
-    v = 0
-    vert_scala = []
+    v = 0.0
+    vert_scala = []  # type: List[List[Any]]
     steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
@@ -205,7 +207,7 @@ def get_current_perfdata(host, service, dsname):
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
-    swapped = dict([(c, []) for c in columns])
+    swapped = {c: [] for c in columns}  # type: Dict[Any, List[Any]]
     for step in tg_data["points"]:
         row = dict(zip(columns, step))
         for k, v in row.items():

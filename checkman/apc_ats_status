@@ -12,3 +12,5 @@ description:
  the current ouput power exceeded the maximum limit for swiching to the alternate power source
  or the 5V or 24V supply fails
 
+inventory:
+ One service is created if the info is just one argument

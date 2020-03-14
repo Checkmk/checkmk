@@ -205,16 +205,21 @@ def generate_product_version(version, revision_text):
 
 
 # tested
-def export_msi_file(msi_path_prefix, entry_in, msi_in, out_dir):
+def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
     verbose("Export table %s from file %s" % (entry_in, msi_in))
-    command = (msi_path_prefix +
-               "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
-                   "msi_file": msi_in,
-                   "property": entry_in,
-                   "work_dir": out_dir
-               }
-    if os.system(command) != 0:  # nosec
-        bail_out('Failed to unpack msi table %s from %s' % (entry_in, msi_in))
+    exe = exe_path_prefix + "msiinfo"
+    if not Path(exe).exists():
+        bail_out('{} is absent'.format(exe))
+
+    command = (exe + " export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
+        "msi_file": msi_in,
+        "property": entry_in,
+        "work_dir": out_dir
+    }
+    result = os.system(command)  # nosec
+    if result != 0:
+        bail_out('Failed to unpack msi table {} from {}, code is {}'.format(
+            entry_in, msi_in, result))
 
 
 # tested
@@ -263,7 +268,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         new_version_build = generate_product_version(version, revision_text)
 
         if "OMD_ROOT" in os.environ:
-            path_prefix = ""
+            path_prefix = os.environ["OMD_ROOT"] + "/bin/"
             tmp_dir = os.environ["OMD_ROOT"] + "/tmp"
         else:
             path_prefix = "./"

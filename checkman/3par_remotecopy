@@ -11,4 +11,4 @@ description:
  except for the remote copy mode.
 
 inventory:
- Only one service is created
+ One service is created if mode is not NORMAL

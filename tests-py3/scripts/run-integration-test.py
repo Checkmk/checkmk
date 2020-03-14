@@ -31,6 +31,7 @@ sys.path.insert(0, str(script_path.parent.parent.parent))
 
 from testlib.utils import is_running_as_site_user, cmk_path, current_base_branch_name
 from testlib.site import get_site_factory
+from testlib.version import CMKVersion
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()
@@ -40,12 +41,25 @@ def main(args):
     if is_running_as_site_user():
         raise Exception()
 
+    _centos6_mtab_fix()
+
     logger.info("===============================================")
     logger.info("Setting up site")
     logger.info("===============================================")
 
-    sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
-    site = sf.get_site(current_base_branch_name())
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+    sf = get_site_factory(prefix="int_",
+                          update_from_git=version == "git",
+                          install_test_python_modules=True)
+
+    if os.environ.get("REUSE"):
+        logger.info("Reuse existing site")
+        site = sf.get_existing_site(current_base_branch_name())
+        site.start()
+    else:
+        logger.info("Creating new site")
+        site = sf.get_site(current_base_branch_name())
+
     logger.info("Site %s is ready!", site.id)
 
     logger.info("===============================================")
@@ -55,13 +69,29 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
+        if os.path.exists("/results"):
+            shutil.rmtree("/results")
+            os.mkdir("/results")
         shutil.copy(site.path("junit.xml"), "/results")
         shutil.copytree(site.path("var/log"), "/results/logs")
 
 
+def _centos6_mtab_fix():
+    # Workaround to fix site tmpfs unmount issue during mkbackup restore tests.
+    # unmount of /opt/omd/sites/[site]/tmp does not work as site user in case
+    # /etc/mtab is the symlink to /proc/mounts.
+    # Don't try to move this to the Dockerfile. It does not work.
+    if os.environ.get("DISTRO") == "centos-6" and Path("/.dockerenv").exists():
+        mtab = Path("/etc/mtab")
+        if mtab.exists():
+            mtab.unlink()
+        with mtab.open("w") as f, Path("/proc/mounts").open() as s:
+            f.write(s.read())
+
+
 def _execute_as_site_user(site, args):
     env_vars = {
-        "VERSION": site.version._version,
+        "VERSION": site.version.version_spec,
         "REUSE": "1" if site.reuse else "0",
         "BRANCH": site.version._branch,
     }
@@ -75,8 +105,8 @@ def _execute_as_site_user(site, args):
     env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
     cmd_parts = [
-        "python",
-        site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov", "--junitxml",
+        "python3",
+        site.path("local/bin/pytest"), "-T", "integration", "-p", "no:cov", "--junitxml",
         site.path("junit.xml")
     ] + args
 

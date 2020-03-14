@@ -11,4 +11,4 @@ description:
  This check verifies the Tunnel status and raises a Warning if tunnel is in
  "Init" or "Destroy" state and Critical if it is in "Phase1" or "Down" state.
 inventory:
- One service per vpn tunnel will be created
+ One service is created for each VPN tunnel.

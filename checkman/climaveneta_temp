@@ -11,5 +11,5 @@ item:
  The item is the sensor description of the sensor.
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor.
 

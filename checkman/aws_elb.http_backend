@@ -1,4 +1,4 @@
-title: AWS/ELB HTTP Backend
+title: AWS ELB: HTTP Backend
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -13,4 +13,5 @@ description:
  are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (HTTPCode_Backend_2XX, HTTPCode_Backend_3XX,
+ HTTPCode_Backend_4XX, HTTPCode_Backend_5XX) are given.

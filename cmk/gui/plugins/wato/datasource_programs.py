@@ -494,16 +494,6 @@ def _valuespec_special_agents_vsphere():
                  minvalue=1,
                  unit=_("seconds"),
              )),
-            ("use_pysphere",
-             Checkbox(
-                 title=_("Compatibility mode"),
-                 label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                 true_label=_("Support 4.1"),
-                 false_label=_("fast"),
-                 help=_("The current very performant implementation of the ESX special agent "
-                        "does not support older ESX versions than 5.0. Please use the slow "
-                        "compatibility mode for those old hosts."),
-             )),
             ("infos",
              Transform(
                  ListChoice(
@@ -600,6 +590,7 @@ def _valuespec_special_agents_vsphere():
             "snapshot_display",
             "vm_piggyname",
         ],
+        ignored_keys=["use_pysphere"],
     ),
                      title=_("Check state of VMWare ESX via vSphere"),
                      help=_(

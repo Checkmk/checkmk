@@ -9,7 +9,7 @@ description:
  The check has been developed with MSSQL Server 2008 R2 but should
  work with other versions too.
 
- This check needs the Check_MK mssql.vbs -plugin installed in
+ This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

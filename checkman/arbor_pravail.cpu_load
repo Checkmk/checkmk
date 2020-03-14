@@ -10,5 +10,5 @@ description:
  exceeded (default at 5/10)
 
 inventory:
- Exactly one service is discovered.
+ One service is created.
 

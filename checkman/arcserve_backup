@@ -23,7 +23,7 @@ item:
  The name of the backup.
 
 inventory:
- Finds one service for every backup configured.
+ One service is created for each backup configured.
 
  Please note: This is independent of the number of hosts backuped in one
  backup job. Only the total state of a backup (over all contained hosts)

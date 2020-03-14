@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 //
 //
@@ -87,8 +88,6 @@ private:
 
 enum class InstallMode { normal, force };
 
-void Install(InstallMode mode) noexcept;
-
 class ModuleCommander {
 public:
     void LoadDefault() noexcept;
@@ -103,6 +102,8 @@ public:
     void installModules(const std::filesystem::path& root,
                         const std::filesystem::path& user,
                         InstallMode mode) const;
+
+    std::vector<std::string> getExtensions() const;
 
     static std::filesystem::path GetModBackup(
         const std::filesystem::path& user) {

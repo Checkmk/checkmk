@@ -150,7 +150,7 @@ class SimpleListMode(SimpleWatoModeBase):
         raise NotImplementedError()
 
     def _handle_custom_action(self, action):
-        # type: (str) -> Optional[Union[bool, Tuple[Optional[str], Text]]]
+        # type: (str) -> Union[None, bool, Tuple[Optional[str], Text]]
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given

@@ -15,6 +15,7 @@ from typing import Any, Dict  # pylint: disable=unused-import
 
 import six
 
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
 import cmk.utils.werks
@@ -44,7 +45,7 @@ g_werks = {}  # type: Dict[int, Dict[str, Any]]
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Checkmk %s Release Notes") % cmk.__version__)
+    html.header(_("Checkmk %s Release Notes") % cmk_version.__version__)
     load_werks()
     handle_acknowledgement()
     render_werks_table()

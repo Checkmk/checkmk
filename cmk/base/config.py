@@ -32,7 +32,7 @@ else:
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex
@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
     LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
-from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
+from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
 import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
@@ -61,6 +61,7 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
     ScanFunction, SNMPCredentials,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
@@ -92,7 +93,7 @@ CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     Union[str, List[str]]]
-HostCheckCommand = Optional[Union[str, Tuple[str, Union[int, str]]]]
+HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
 GroupDefinitions = Dict[str, Text]
@@ -2566,7 +2567,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         if spec == "ignore":
             return None
         if spec == "site":
-            return cmk.__version__
+            return cmk_version.__version__
         if isinstance(spec, str):
             # Compatibility to old value specification format (a single version string)
             return spec
@@ -2606,7 +2607,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def only_from(self):
-        # type: () -> Optional[Union[List[str], str]]
+        # type: () -> Union[None, List[str], str]
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])
         if not ruleset:
@@ -3110,7 +3111,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         if host_config:
             return host_config
 
-        config_class = HostConfig if cmk.is_raw_edition() else CEEHostConfig
+        config_class = HostConfig if cmk_version.is_raw_edition() else CEEHostConfig
         host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
@@ -3190,7 +3191,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }  # type: Tags
 
@@ -3234,7 +3235,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }
 
@@ -3642,7 +3643,7 @@ def get_config_cache():
     # type: () -> ConfigCache
     config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
-        cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
+        cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()
     return config_cache["cache"]
 

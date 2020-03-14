@@ -41,7 +41,7 @@ class URLEncoder(object):  # pylint: disable=useless-object-inheritance
         return six.moves.urllib.parse.urlencode(pairs)
 
     def urlencode(self, value):
-        # type: (Optional[Union[str, Text]]) -> str
+        # type: (Union[None, str, Text]) -> str
         """Replace special characters in string using the %xx escape.
         This function returns a str object in py2 and py3
         """

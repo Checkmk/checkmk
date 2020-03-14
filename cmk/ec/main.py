@@ -30,7 +30,7 @@ import traceback
 from types import FrameType  # pylint: disable=unused-import
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon
 import cmk.utils.defines
 import cmk.utils.log as log
@@ -2330,7 +2330,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_site(self, rule, event):
-        return "match_site" not in rule or cmk.omd_site() in rule["match_site"]
+        return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
 
     def event_rule_matches_host(self, rule, event):
         if match(rule.get("match_host"), event["host"], complete=True) is False:
@@ -3914,7 +3914,7 @@ def main():
     # type: () -> None
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = create_settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+    settings = create_settings(cmk_version.__version__, Path(cmk.utils.paths.omd_root),
                                Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
@@ -3927,7 +3927,7 @@ def main():
             log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting", cmk.__version__)
+        logger.info("mkeventd version %s starting", cmk_version.__version__)
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)

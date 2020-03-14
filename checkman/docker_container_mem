@@ -1,4 +1,4 @@
-title: Docker container memory usage
+title: Docker: Container Memory usage
 agents: linux
 catalog: containerization/docker
 license: GPL
@@ -12,5 +12,5 @@ description:
  thresholds on the memory usage.
 
 inventory:
- One check per container is created if the Check_MK agent is executed
+ One check per container is created if the Checkmk agent is executed
  in the context of a docker container.

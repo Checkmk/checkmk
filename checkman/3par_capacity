@@ -16,4 +16,4 @@ item:
  The drive type (ie. {{SSD}}, {{FC}} (Fast Class) or {{NL}} (Near Line)) or {{all}}.
 
 inventory:
- One service is created for each device type and one summary service.
+ One service is created for each device type if the capacity of the device is not zero.

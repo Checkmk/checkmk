@@ -45,7 +45,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.paths
 import cmk.utils.defines
@@ -262,7 +262,7 @@ from cmk.gui.watolib.utils import (
     site_neutral_path,
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.watolib.utils import (
@@ -276,7 +276,7 @@ from cmk.gui.plugins.watolib.utils import (
 
 import cmk.gui.plugins.watolib
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.watolib  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -615,7 +615,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         }
 
-        if cmk.is_demo():
+        if cmk_version.is_demo():
             settings["cmc_cmk_helpers"] = 3
 
         return settings

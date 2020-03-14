@@ -15,4 +15,4 @@ item:
  the power supply ID plus the description. Otherwise it is just the ID.
 
 inventory:
- Finds one item per power supply.
+ One service is created for each power supply.

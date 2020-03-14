@@ -8,7 +8,7 @@
 import abc
 import re
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Dict, List, Type, Optional, Any, Callable, Tuple as TypingTuple,
+    Union, Text, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple,
 )
 import six
 
@@ -155,9 +155,9 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
             self._sub_groups_by_main_group.setdefault(group.main_group, []).append(plugin_class)
 
     def get_group_choices(self, mode):
-        # type: (str) -> List[TypingTuple[str, Text]]
+        # type: (str) -> List[_Tuple[str, Text]]
         """Returns all available ruleset groups to be used in dropdown choices"""
-        choices = []  # type: List[TypingTuple[str, Text]]
+        choices = []  # type: List[_Tuple[str, Text]]
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
@@ -374,7 +374,7 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
 
 
 def _validate_function_args(arg_infos, hint):
-    # type: (List[TypingTuple[Any, bool, bool]], str) -> None
+    # type: (List[_Tuple[Any, bool, bool]], str) -> None
     for idx, (arg, is_callable, none_allowed) in enumerate(arg_infos):
         if not none_allowed and arg is None:
             raise MKGeneralException(_("Invalid None argument at for %s idx %d") % (hint, idx))
@@ -426,7 +426,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
             (is_binary_ruleset, False, False),
             (factory_default, False, True),
             (help_func, True, True),
-        ]  # type: List[TypingTuple[Any, bool, bool]]
+        ]  # type: List[_Tuple[Any, bool, bool]]
         _validate_function_args(arg_infos, name)
 
         self._name = name
@@ -526,7 +526,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def item_enum(self):
-        # type: () -> Optional[List[TypingTuple[str, Text]]]
+        # type: () -> Optional[List[_Tuple[str, Text]]]
         item_spec = self.item_spec
         if item_spec is None:
             return None

@@ -7,26 +7,22 @@ include ../defines.make
 SHELL    := /bin/bash -e
 PIPENV2  := ../scripts/run-pipenv 2
 BANDIT   := $(PIPENV2) run bandit
-COVERAGE := $(PIPENV2) run coverage
 PYTEST   := $(PIPENV2) run py.test
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
-.PHONY: help pipenv-check test-bandit \
-        test-format-shell test-agent-integration \
+.PHONY: help test-bandit \
+        test-format-shell \
         test-pylint test-python-futurize test-shellcheck test-unit \
-        list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
+        list-unit-tests test-unit-one-by-one test-unit-sh
 
 help:
-	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-shell         - Run the shell formatting"
-	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-unit                 - Run Python unit tests"
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
-	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh              - Run shell unit tests"
 
 $(NODE_MODULES):
@@ -35,9 +31,6 @@ $(NODE_MODULES):
 bandit.ini:
 	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 2 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
 
-pipenv-check:
-	$(PIPENV2) check
-
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
@@ -45,12 +38,6 @@ test-bandit: bandit.ini
 
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
-
-test-agent-integration:
-	$(PYTEST) -T agent-integration $(realpath agent-integration)
-
-test-composition: $(NODE_MODULES)
-	$(PYTEST) -T composition $(realpath composition)
 
 test-pylint:
 	$(PYTEST) -T pylint pylint
@@ -65,9 +52,6 @@ test-shellcheck:
 		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
-
-test-integration: $(NODE_MODULES)
-	$(PIPENV2) run ../tests-py3/scripts/run-integration-test.py $(realpath ../tests/integration)
 
 test-unit:
 	$(PYTEST) -T unit unit
@@ -88,12 +72,6 @@ test-unit-one-by-one:
 	for i in $$($(MAKE) --silent --no-print-directory list-unit-tests); do \
 	  $(PYTEST) -T unit $$i ; \
 	done
-
-# TODO: We should perhaps use the pytest --cov/--cov-report options, which the
-# pytest-cov plugin package adds to pyttest.
-test-unit-coverage-html:
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html --rcfile=.coveragerc_unit
 
 test-unit-sh:
 	./sh_test_runner.sh

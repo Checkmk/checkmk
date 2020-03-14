@@ -8,7 +8,7 @@ import os
 import time
 from typing import Optional  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -25,7 +25,7 @@ from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
     multisite_cronjobs, register_job,
 )
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
 loaded_with_language = None  # type: Optional[str]

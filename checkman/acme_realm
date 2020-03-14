@@ -12,4 +12,4 @@ item:
  Name of the realm.
 
 inventory:
- One service per realm is created.
+ One service is created for each realm.

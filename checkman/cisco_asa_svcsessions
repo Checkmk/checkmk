@@ -1,4 +1,4 @@
-title: Cisco ASA SVC Sessions (SSL VPN Client)
+title: Cisco ASA: SSL VPN Client Session
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk
@@ -7,5 +7,5 @@ description:
  This check monitors the number of active VPN Sessions (e.g. Anyconnect) on a cisco server.
 
 inventory:
- One service will be created.
+ One service is created.
 

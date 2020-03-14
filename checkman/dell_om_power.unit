@@ -13,4 +13,4 @@ item:
  The index of the PSU
 
 inventory:
- One service for each PSU is created
+ One service is created for each PSU.

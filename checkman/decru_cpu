@@ -8,5 +8,5 @@ description:
  without applying any levels.
 
 inventory:
- One check is created for each DECRU NAS.
+ One service is created for each DECRU NAS.
 

@@ -1,4 +1,4 @@
-title: Microsoft Azure Virtual Machines
+title: Microsoft Azure: Virtual Machines
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -16,6 +16,6 @@ item:
  The name of the resource.
 
 inventory:
- One service per VM is created, on every Check_MK host that receives information
+ One service is created for each VM, on every Checkmk host that receives information
  about the VMs via the piggyback mechanism.
  To configure which those are, see the configuration of the Azure agent.

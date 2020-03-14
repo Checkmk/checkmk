@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -51,7 +51,7 @@ def test_dashlet_registry_plugins():
         'snapin',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
         ]
@@ -77,7 +77,7 @@ def _expected_intervals():
         ('linked_view', False),
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected += [
             ('custom_graph', 60),
         ]

@@ -14,6 +14,6 @@ item:
  Portnumber of the interface. Depending on the length of the portnumber it will be filled with {{0}}s.
 
 inventory:
- The inventory creates one service for each port that fulfills the conditions configured
+ One service is created for each port that fulfills the conditions configured
  for network and switch port discovery and reports optical signal quality readings.
 

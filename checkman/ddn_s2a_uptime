@@ -8,4 +8,4 @@ description:
  from the uptime value supplied via SNMP, hence the different service description.
 
 inventory:
- One service per device is created.
+ One service is created for each device.

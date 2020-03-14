@@ -10,5 +10,6 @@ item:
  The name of the resource.
 
 inventory:
- One service per database.
+ One service is created for each database if all required metrics
+ (average_deadlock) are given.
 

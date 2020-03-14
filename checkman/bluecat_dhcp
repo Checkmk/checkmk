@@ -9,5 +9,5 @@ description:
  The number of successful DHCP leases issued per second is return as information.
 
 inventory:
- One service will be created
+ One service is created if DHCP is not stopped
 

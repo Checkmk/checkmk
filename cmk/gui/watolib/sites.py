@@ -12,7 +12,7 @@ import traceback
 from typing import NamedTuple
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
@@ -64,7 +64,7 @@ from cmk.gui.plugins.watolib.utils import wato_fileheader
 class SiteManagementFactory(object):
     @staticmethod
     def factory():
-        if cmk.is_raw_edition():
+        if cmk_version.is_raw_edition():
             cls = CRESiteManagement
         else:
             cls = CEESiteManagement

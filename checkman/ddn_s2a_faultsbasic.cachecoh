@@ -8,4 +8,4 @@ description:
  "not enabled" as WARN and "not established" as CRIT.
 
 inventory:
- One service per device is created.
+ One service is created for each device.

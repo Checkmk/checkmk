@@ -14,7 +14,7 @@ else:
 
 from testlib import cmk_path
 
-import cmk
+import cmk.utils.debug
 import cmk.utils.man_pages as man_pages
 import cmk.base.config as config
 

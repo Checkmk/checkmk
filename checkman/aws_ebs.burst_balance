@@ -1,4 +1,4 @@
-title: AWS/EBS Burst Balance
+title: AWS EBS: Burst Balance
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -11,7 +11,7 @@ description:
  No default levels are set. Lower levels can be configured.
 
 item:
- Name of the instance if all required metrics (Burst Balance) are given.
+ Name of the instance
 
 inventory:
- One service per volume is created.
+ One service is created for each volume if all required metrics (Burst Balance) are given.

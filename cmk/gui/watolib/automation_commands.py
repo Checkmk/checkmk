@@ -9,7 +9,7 @@ import abc
 from typing import Optional  # pylint: disable=unused-import
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
@@ -87,6 +87,6 @@ class AutomationPing(AutomationCommand):
 
     def execute(self, _unused_request):
         return {
-            "version": cmk.__version__,
-            "edition": cmk.edition_short(),
+            "version": cmk_version.__version__,
+            "edition": cmk_version.edition_short(),
         }

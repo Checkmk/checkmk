@@ -1,4 +1,4 @@
-title: Kubernetes service ports
+title: Kubernetes: Service ports
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

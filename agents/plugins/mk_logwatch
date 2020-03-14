@@ -259,7 +259,7 @@ def get_config_files(directory, config_file_arg=None):
 def iter_config_lines(files, debug=False):
     for file_ in files:
         try:
-            with open(file_) as fid:
+            with open(file_, 'rb') as fid:
                 try:
                     decoded = (line.decode('utf-8') for line in fid)
                     for line in decoded:
@@ -808,6 +808,18 @@ class ClusterConfigBlock(object):
         self.ips_or_subnets = ips_or_subnets
 
 
+def _decode_to_unicode(match):
+    # (Union[bytes, unicode, str]) -> unicode
+    # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
+    # we can't use 'six': this code may be executed using Python 2.5/2.6
+    if sys.version[0] == "2":
+        # Python 2: str @Windows && @Linux
+        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+
+    # Python 3: bytes @Linux and unicode @Windows
+    return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
+
+
 def find_matching_logfiles(glob_pattern):
     """
     Evaluate globbing pattern to a list of logfile IDs
@@ -842,8 +854,10 @@ def find_matching_logfiles(glob_pattern):
             continue
         if os.path.islink(match):
             match = os.readlink(match)
-        # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
-        match_readable = match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+
+        # match is bytes in Linux and unicode/str in Windows
+        match_readable = _decode_to_unicode(match)
+
         file_refs.append((match, match_readable))
 
     return file_refs

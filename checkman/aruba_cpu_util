@@ -8,7 +8,7 @@ description:
  Warning and critical levels can be configured for the check.
 
 inventory:
- One service per detected CPU will be created.
+ One service is created for each detected CPU.
 
 item:
  The description of the processor.

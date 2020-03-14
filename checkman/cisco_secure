@@ -9,4 +9,4 @@ description:
  no WARN is issued.
 
 inventory:
- One summary check will be created if for at least one port the port security is enabled.
+ One service is created if port security is enabled for at least one port.

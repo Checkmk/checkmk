@@ -14,5 +14,5 @@ description:
  {UNKNOWN}.
 
 inventory:
- One service per voltage reading will be discovered.
+ One service is created for each voltage reading.
 

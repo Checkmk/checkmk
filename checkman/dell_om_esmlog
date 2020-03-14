@@ -14,5 +14,5 @@ description:
  (OMSA) on your target server. This is available for Linux and Windows.
 
 inventory:
- One check will be created
+ One service is created.
 

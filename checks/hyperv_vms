@@ -85,17 +85,26 @@ def inventory_hyperv_vms(parsed):
 
 
 def check_hyperv_vms(item, params, parsed):
+
     if item in parsed:
+
         vm = parsed[item]
-        if vm["state"] == params['state']:
-            state = 0
+
+        # check if there is a rule
+        if vm["state"] in params:
+            state = params[vm["state"]]
             message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+
+        # if there is no rule, we check against the state found during discovery
+        elif vm["state"] == params['state']:
+            state = 0
+            message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
+
         else:
-            message = "State has changed from %s to %s (%s)" % (
-                params['state'],\
-                vm["state"],
-                vm["state_msg"])
+            message = "State %s (%s) does not match discovery (%s)" % (vm["state"], vm["state_msg"],
+                                                                       params['state'])
             state = 2
+
         return state, message
 
 
@@ -104,4 +113,5 @@ check_info["hyperv_vms"] = {
     "check_function": check_hyperv_vms,
     "inventory_function": inventory_hyperv_vms,
     "service_description": "VM %s",
+    "group": "hyperv_vms"
 }

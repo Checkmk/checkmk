@@ -1,4 +1,4 @@
-title: cAdvisor Disk throughput
+title: cAdvisor Pods/Containers: Disk throughput
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL
@@ -19,3 +19,5 @@ description:
 item:
  "SUMMARY" for a summarized check of all disks
 
+inventory:
+ One service is created for each disk

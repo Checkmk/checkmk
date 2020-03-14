@@ -1,4 +1,4 @@
-title: Memory
+title: Cisco devices: Memory
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -13,4 +13,4 @@ description:
  between CPU and I/O pool memory.
 
 inventory:
- A check for i/o pool and one for cpu pool will be created.
+ One service is created for the I/O pool and one for the CPU pool.

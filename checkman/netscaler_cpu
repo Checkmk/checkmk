@@ -1,4 +1,4 @@
-title: Citrix Netscaler CPU Utilization
+title: Citrix Netscaler: CPU Utilization
 agents: snmp
 catalog: app/netscaler
 license: GPL

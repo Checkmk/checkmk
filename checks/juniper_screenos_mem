@@ -23,8 +23,8 @@ check_info["juniper_screenos_mem"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.3224.16.2",
         [
-            1.0,  # Memory bytes used
-            2.0,  # Memory bytes free
+            "1.0",  # Memory bytes used
+            "2.0",  # Memory bytes free
         ]),
     "includes": ["juniper_mem.include"],
 }

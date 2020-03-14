@@ -17,5 +17,5 @@ item:
   The name of the fan as returned by SNMP.
 
 inventory:
-  Returns one Check for each fan.
+  One service is created for each fan.
 

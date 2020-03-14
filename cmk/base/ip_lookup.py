@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTimeout, MKTerminate
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
 from cmk.utils.type_defs import (  # pylint: disable=unused-import

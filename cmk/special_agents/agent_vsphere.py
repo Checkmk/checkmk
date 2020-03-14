@@ -10,7 +10,6 @@ import collections
 import datetime
 import errno
 import functools
-import os
 import re
 import socket
 import sys
@@ -898,11 +897,6 @@ def parse_arguments(argv):
     parser.add_argument("--no-cert-check",
                         action="store_true",
                         help="""Disables the checking of the servers ssl certificate""")
-    parser.add_argument(
-        "--pysphere",
-        action="store_true",
-        help="""Fallback to old pysphere based special agent. It supports ESX 4.1 but is
-        very slow.""")
     parser.add_argument(
         "-D",
         "--direct",
@@ -1895,15 +1889,6 @@ def fetch_data(connection, opt):
     return output
 
 
-def call_legacy_pysphere():
-    # TODO: Remove this, drop agent_vsphere.pysphere
-    import subprocess  # pylint: disable=import-outside-toplevel
-
-    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
-    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere] + sys.argv[1:]
-    return subprocess.call(cmd)
-
-
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -1921,10 +1906,6 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     opt = parse_arguments(argv)
-
-    # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-    if opt.pysphere:
-        sys.exit(call_legacy_pysphere())
 
     socket.setdefaulttimeout(opt.timeout)
 

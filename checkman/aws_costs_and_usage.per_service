@@ -1,4 +1,4 @@
-title: AWS/Costs and Usage Per Service
+title: AWS: Costs and Usage Per Service
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -14,4 +14,4 @@ item:
  Service name
 
 inventory:
- One service per AWS service will be created.
+ One service is created for each AWS service.

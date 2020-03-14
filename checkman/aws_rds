@@ -1,4 +1,4 @@
-title: AWS/RDS CPU Utilization
+title: AWS RDS: CPU Utilization
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -15,4 +15,5 @@ item:
  Name of the instance if all required metrics (CPUUtilization) are given.
 
 inventory:
- One service per database will be created.
+ One service is created for each database if all required metrics
+ (CPUUtilization) are given.

@@ -9,5 +9,5 @@ description:
  agent version. The check always returns the status {OK}.
 
 inventory:
- One service per host will be created.
+ One service is created for each host.
 

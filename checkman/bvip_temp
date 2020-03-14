@@ -7,4 +7,4 @@ description:
  This Check monitors the temperature for the included Temperature Sensor on the Camera.
 
 inventory:
- Creates one check per sensor.
+ One service is created for each sensor.

@@ -9,4 +9,4 @@ description:
  The status is {CRIT} if the module is missing, {OK} otherwise.
 
 inventory:
- One service will be discovered.
+ One service is created.

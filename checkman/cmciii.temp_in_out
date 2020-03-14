@@ -1,4 +1,4 @@
-title: Rittal CMC-III Units: Temperatures
+title: Rittal CMC-III Units: Temperatures In/Out
 agents: snmp
 catalog: hw/environment/rittal
 license: GPL
@@ -21,4 +21,4 @@ item:
  The unit name and the name of the temperature sensor
 
 inventory:
- Each temperature sensor on all cmciii lcp fanpack units is detected
+ One service is created for each temperature sensor on all cmciii lcp fanpack units.

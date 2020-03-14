@@ -17,7 +17,7 @@ import re
 from hashlib import sha256
 from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -1373,11 +1373,10 @@ class DiscoveryPageRenderer(object):
             html.write_text(paramtext)
 
     def _show_discovered_labels(self, service_labels):
-        label_code = cmk.gui.view_utils.render_labels(
-            service_labels,
-            "service",
-            with_links=False,
-            label_sources={k: "discovered" for k in service_labels.keys()})
+        label_code = render_labels(service_labels,
+                                   "service",
+                                   with_links=False,
+                                   label_sources={k: "discovered" for k in service_labels.keys()})
         html.write(label_code)
 
     def _show_bulk_checkbox(self, table, discovery_result, request, check_type, item,

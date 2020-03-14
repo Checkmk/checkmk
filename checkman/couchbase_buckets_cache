@@ -1,4 +1,4 @@
-title: Caches of couchbase buckets
+title: Couchbase buckets: Caches performance
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -9,7 +9,7 @@ description:
  It evaluates the rate of cache misses.
 
 inventory:
- One service per bucket is created.
+ One service is created for each bucket.
 
 item:
  The name of the bucket.

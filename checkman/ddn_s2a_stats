@@ -10,4 +10,5 @@ item:
  The port number or "Total"
 
 inventory:
- One service per FC port is created, plus one for the total throughput.
+ One service is created for each FC port and
+ one service is created for the total throughput.

@@ -1,4 +1,4 @@
-title: AWS/EC2 Instances Summary
+title: AWS EC2: Instances Summary
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -13,4 +13,4 @@ description:
  otherwise it is OK.
 
 inventory:
- One summary service is created.
+ One service is created.

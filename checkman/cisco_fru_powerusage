@@ -18,4 +18,4 @@ item:
  Can be system total or drawn or inline total or drawn.
 
 inventory:
- One service per phase is created.
+ One service is created for each phase.

@@ -16,4 +16,4 @@ item:
  The unit name and the name of the humidity sensor
 
 inventory:
- All humidity sensors on all cmciii units are detected
+ One service is created for each humidity sensor.

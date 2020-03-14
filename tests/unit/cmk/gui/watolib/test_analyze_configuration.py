@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 
@@ -35,7 +35,7 @@ def test_registered_ac_tests():
         'ACTestTmpfs',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_ac_tests += [
             'ACTestSecureAgentUpdaterTransport',
             'ACTestSecureNotificationSpoolerMessages',

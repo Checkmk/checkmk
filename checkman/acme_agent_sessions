@@ -13,4 +13,4 @@ item:
  Name of the host.
 
 inventory:
- One service per hostname is created.
+ One service is created for each hostname.

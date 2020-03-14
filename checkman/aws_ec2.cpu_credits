@@ -1,4 +1,4 @@
-title: AWS/EC2 Instance Credit Usage
+title: AWS EC2: Instance Credit Usage
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -14,4 +14,4 @@ description:
  These are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.

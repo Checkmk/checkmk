@@ -8,5 +8,5 @@ description:
  This check is always OK and supports no configuration..
 
 inventory:
- Exactly one service is discovered.
+ One service is created.
 

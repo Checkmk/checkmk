@@ -9,3 +9,6 @@ description:
 item:
  The ID of the module
 
+inventory:
+ One service is created for each module
+

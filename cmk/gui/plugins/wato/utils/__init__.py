@@ -15,7 +15,7 @@ import subprocess
 import time  # pylint: disable=unused-import
 # NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
-from typing import Optional as TypingOptional, List, Callable, Text, Union  # pylint: disable=unused-import
+from typing import Optional as _Optional, List, Callable, Text, Union  # pylint: disable=unused-import
 
 import six
 
@@ -260,8 +260,8 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Text]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[Text]
     only_v3=False,  # type: bool
     default_value="public",  # type: Text
     allow_none=False  # type: bool
@@ -594,8 +594,8 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):  # -> CascadingDropdown
@@ -622,8 +622,8 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: Union[None, Text, Callable[[], Text]]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):

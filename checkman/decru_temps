@@ -16,7 +16,4 @@ item:
  The name of the temperature sensor as defined in the SNMP data.
 
 inventory:
- All senors are automatically detected. The current temperature
- during the inventory plus 4 or 8 degrees is used as warning
- or critical level resp.
-
+ One service is created for each sensor.

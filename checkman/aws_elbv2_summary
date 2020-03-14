@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB Summary
+title: AWS ApplicationELB: Summary
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,4 +9,4 @@ description:
  {Amazon Web Services (AWS)}.
 
 inventory:
- One summary service is created.
+ One service is created.

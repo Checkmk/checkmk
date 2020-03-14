@@ -12,5 +12,5 @@ item:
  The sensor number: "1" or "2".
 
 inventory:
- There are always two temperature sensors detected. Creates one service for each sensor.
+ Two services are created one for each of the two temperature sensor.
 

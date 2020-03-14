@@ -6,8 +6,8 @@ distribution: check_mk
 description:
 
  This check monitors the number of deferred mails in the outgoing mail
- queue, as sent by the linux agent of Check_MK. Depending on the version
- of the Check_MK agent the number of mails in the active queue is monitored
+ queue, as sent by the linux agent of Checkmk. Depending on the version
+ of the Checkmk agent the number of mails in the active queue is monitored
  as well.
 
  This check creates one service per host which represents the state

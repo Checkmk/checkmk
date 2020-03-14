@@ -1,4 +1,4 @@
-title: AKCP Sensor Humidity
+title: AKCP sensorProbe: Humidity
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL
@@ -11,5 +11,5 @@ item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available humidity sensors are automatically inventorized.
+ One service is created for each available humidity sensor if the sensor is online.
 

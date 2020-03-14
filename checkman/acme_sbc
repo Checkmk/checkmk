@@ -9,4 +9,4 @@ description:
  and harware. If the status not is at 100 %, a {CRIT} is raised.
 
 inventory:
- One check will be created.
+ One serivce is created.

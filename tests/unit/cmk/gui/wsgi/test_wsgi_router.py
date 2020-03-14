@@ -7,6 +7,8 @@
 import ast
 import json
 import os
+import random
+import string
 import uuid
 from cookielib import CookieJar
 from urllib import urlencode
@@ -14,7 +16,8 @@ from urllib import urlencode
 import pytest
 import webtest
 
-import cmk
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.gui.wsgi import make_app
 
@@ -22,7 +25,7 @@ from cmk.gui.wsgi import make_app
 
 
 def get_link(resp, rel):
-    for link in resp['links']:
+    for link in resp.get('links', []):
         if link['rel'].startswith(rel):
             return link
     for member in resp.get('members', {}).values():
@@ -44,11 +47,13 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
+    def call_method(self, method, url, *args, **kw):
+        return getattr(self, method.lower())(url, *args, **kw)
+
     def follow_link(self, resp, rel, base='', **kw):
         """Follow a link description as defined in a restful-objects entity"""
         link = get_link(resp.json, rel)
-        method = getattr(self, link.get('method', 'GET').lower())
-        return method(base + link['href'], **kw)
+        return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
 
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
@@ -66,13 +71,14 @@ class WebTestAppForCMK(webtest.TestApp):
         else:
             raise NotImplementedError("Format %s not implemented" % output_format)
 
-        _resp = self.post('/NO_SITE/check_mk/webapi.py?' + qs,
-                          params={
-                              'request': request,
-                              '_username': self.username,
-                              '_secret': self.password
-                          },
-                          **kw)
+        _resp = self.call_method('post',
+                                 '/NO_SITE/check_mk/webapi.py?' + qs,
+                                 params={
+                                     'request': request,
+                                     '_username': self.username,
+                                     '_secret': self.password
+                                 },
+                                 **kw)
         assert "Invalid automation secret for user" not in _resp.body
         assert "API is only available for automation users" not in _resp.body
 
@@ -85,7 +91,7 @@ class WebTestAppForCMK(webtest.TestApp):
 
 
 @pytest.fixture(scope='function')
-def wsgi_app(monkeypatch):
+def wsgi_app(monkeypatch, recreate_openapi_spec):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
     store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/web')
     store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/php-api')
@@ -109,7 +115,7 @@ def test_normal_auth(
     assert "Invalid credentials." not in resp.body
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), reason="No agent deployment in raw edition")
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app):
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
     assert response.body.startswith("ERROR: Missing or invalid")
@@ -124,7 +130,8 @@ def test_openapi_version(
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    assert resp.json['site'] == cmk_version.omd_site()
 
 
 def test_openapi_app_exception(
@@ -148,6 +155,109 @@ def test_openapi_missing_folder(
     wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder/asdf" + uuid.uuid4().hex, status=404)
 
 
+def test_openapi_hosts(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/collections/host",
+        params='{"hostname": "foobar", "folder": "root"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        status=200,
+        params='{"attributes": {}}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../delete',
+        base=base,
+        status=204,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+
+@pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
+def test_openapi_groups(
+    group_type,
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    def _random_string(size):
+        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
+
+    name = _random_string(10)
+    alias = _random_string(10)
+
+    group = {'name': name, 'alias': alias}
+
+    base = "/NO_SITE/check_mk/api/v0"
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/collections/%s_group" % (group_type,),
+        params=json.dumps(group),
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        'self',
+        base=base,
+        status=200,
+    )
+
+    group['name'] += " updated"
+
+    wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        params=json.dumps(group),
+        headers={'If-Match': 'foo bar'},
+        status=412,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        params=json.dumps(group),
+        headers={'If-Match': resp.headers['ETag']},
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../delete',
+        base=base,
+        headers={'If-Match': resp.headers['ETag']},
+        status=204,
+        content_type='application/json',
+    )
+
+
 def test_openapi_folders(
     wsgi_app,  # type: WebTestAppForCMK
     with_automation_user,
@@ -155,10 +265,14 @@ def test_openapi_folders(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    resp = wsgi_app.post("/NO_SITE/check_mk/api/v0/collections/folder",
-                         params='{"name": "new_folder", "title": "foo", "parent": null}',
-                         status=200,
-                         content_type='application/json')
+    resp = wsgi_app.call_method('get', "/NO_SITE/check_mk/api/v0/collections/folder", status=200)
+    assert resp.json['value'] == []
+
+    resp = wsgi_app.call_method('post',
+                                "/NO_SITE/check_mk/api/v0/collections/folder",
+                                params='{"name": "new_folder", "title": "foo", "parent": null}',
+                                status=200,
+                                content_type='application/json')
 
     base = '/NO_SITE/check_mk/api/v0'
 
@@ -166,7 +280,14 @@ def test_openapi_folders(
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,
+                         status=400,
+                         params='{"title": "foobar"}',
+                         content_type='application/json')
+    wsgi_app.follow_link(resp,
+                         '.../update',
+                         base=base,
                          status=412,
+                         headers={'If-Match': 'Witty Sensationalist Header!'},
                          params='{"title": "foobar"}',
                          content_type='application/json')
     # With the right ETag, the operation shall succeed
@@ -215,7 +336,7 @@ def test_openapi_folders(
         wsgi_app.follow_link(resp,
                              '.../delete',
                              base=base,
-                             status=200,
+                             status=204,
                              headers={'If-Match': resp.headers['ETag']})
 
 
@@ -295,7 +416,7 @@ def test_cmk_automation(wsgi_app):
     assert response.body == "Missing secret for automation command."
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), reason="No AJAX graphs in raw edition")
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.body.startswith("You are not allowed")

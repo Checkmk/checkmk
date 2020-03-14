@@ -18,7 +18,7 @@ description:
 
  The current version of the {mrpe} check is now cluster-aware
  and works well as a {clustered_service} (see article about
- Check_MK cluster monitoring). If an MRPE check is found on
+ Checkmk cluster monitoring). If an MRPE check is found on
  more than one node, then the best status of the checks is
  being used. So if the check is critical on one of the nodes
  and OK on another then the status, output and performance

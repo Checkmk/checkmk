@@ -12,7 +12,7 @@ description:
  Upper and lower levels are configurable.
 
 inventory:
- One service per temperature sensor is created.
+ One service is created for each temperature sensor.
 
 item:
  The temperature sensor identifier.

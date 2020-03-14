@@ -21,7 +21,7 @@ description:
  name you want
 
 inventory:
- One service per Apache server will be created.
+ One service is created for each Apache server.
 
 item:
  A string-combination of servername and port, e.g. {127.0.0.1:5000}.

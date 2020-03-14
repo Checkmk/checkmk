@@ -6,6 +6,8 @@
 
 import time
 import datetime
+from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+
 import livestatus
 
 import cmk.gui.pages
@@ -15,6 +17,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -250,7 +253,7 @@ def ack_button(site=None, host_name=None, int_filename=None):
     else:
         label = _("Clear Logs")
 
-    urivars = [('_ack', '1')]
+    urivars = [('_ack', '1')]  # type: HTTPVariables
     if int_filename:
         urivars.append(("file", int_filename))
     html.context_button(label, html.makeactionuri(urivars), 'delete')
@@ -269,21 +272,21 @@ def do_log_ack(site, host_name, file_name):
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
             logs_to_ack.append((site, host_name, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % html.render_text(host_name)
+        ack_msg = _('all logfiles of host %s') % host_name
 
     elif host_name and file_name:  # one log on one host
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [(site, host_name, int_filename, form_file_to_ext(int_filename))]
-        ack_msg = html.render_text(_('the log file %s on host %s') % (file_name, host_name))
+        ack_msg = _('the log file %s on host %s') % (file_name, host_name)
 
     else:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
-        ack_msg = html.render_text(_('log file %s on all hosts') % file_name)
+        ack_msg = _('log file %s on all hosts') % file_name
 
-    html.header(_("Acknowledge %s") % ack_msg)
+    html.header(_("Acknowledge %s") % html.render_text(ack_msg))
 
     html.begin_context_buttons()
     button_all_logfiles()
@@ -347,9 +350,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):
-    log_chunks = []
+    log_chunks = []  # type: List[Dict[str, Any]]
     try:
-        chunk = None
+        chunk = None  # type: Optional[Dict[str, Any]]
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -363,7 +366,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                 continue
 
             if line[:3] == '<<<':  # new chunk begins
-                log_lines = []
+                log_lines = []  # type: List[Dict[str, Any]]
                 chunk = {'lines': log_lines}
                 log_chunks.append(chunk)
 
@@ -541,7 +544,8 @@ def logfiles_of_host(site, host_name):
         raise MKGeneralException(
             _("The monitoring core of the target site '%s' has the version '%s'. That "
               "does not support fetching logfile information. Please upgrade "
-              "to a newer version.") % (site, sites.states().get(site)["program_version"]))
+              "to a newer version.") %
+            (site, sites.states().get(site, sites.SiteStatus({})).get("program_version", "???")))
     return file_names
 
 

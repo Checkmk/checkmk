@@ -1,26 +1,7 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 msgid ""
 msgstr ""
 "Project-Id-Version: Check_MK Multisite translation 0.1\n"
@@ -21608,6 +21589,21 @@ msgstr ""
 "und Service-Links in der Benachrichtigungsmail automatisch gefüllt. Wenn Sie "
 "hier ein URL-Präfix angeben, dann sind mehrere Teile der Slack-Nachricht mit "
 "Hyperlinks zu Ihrer Check_MK-GUI ausgestattet. In beiden Fällen kann der "
+"Empfänger der Nachricht direkt den betreffenden Host oder Dienst in Check_MK "
+"besuchen. Geben Sie eine absolute URL an, die <tt>.../check_mk/</tt> enthält."
+
+msgid ""
+"If you use <b>Automatic HTTP/s</b> the URL prefix for host and service links "
+"within the notification message is filled automatically. If you specify an URL "
+"prefix here, then several parts of the Cisco Webex Teams message are armed with "
+"hyperlinks to your Check_MK GUI. In both cases the recipient of the message can "
+"directly visit the host or service in question in Check_MK. Specify an absolute "
+"URL including the <tt>.../check_mk/</tt>"
+msgstr ""
+"Wenn Sie <b>Automatisches HTTP/s</b> verwenden, wird das URL-Präfix für Host- "
+"und Service-Links in der Benachrichtigung automatisch gefüllt. Wenn Sie hier "
+"ein URL-Präfix angeben, dann sind mehrere Teile der Cisco Webex teams-Nachricht "
+"mit Hyperlinks zu Ihrer Check_MK-GUI ausgestattet. In beiden Fällen kann der "
 "Empfänger der Nachricht direkt den betreffenden Host oder Dienst in Check_MK "
 "besuchen. Geben Sie eine absolute URL an, die <tt>.../check_mk/</tt> enthält."
 
@@ -52433,6 +52429,16 @@ msgstr ""
 "a><br />Diese URL kann auch aus dem Passwortspeicher von Check_MK übernommen "
 "werden."
 
+msgid ""
+"Webhook URL. Setup Cisco Webex Teams Webhook <a href=\"https://apphub.webex.com/"
+"teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+"<br />This URL can also be collected from the Password Store from Check_MK."
+msgstr ""
+"URL eines Cisco Webex Teams Webhooks. Richten Sie <a href=\"https://apphub.webex."
+"com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">hier"
+"</a> einen ein.<br/>Diese URL kann auch aus dem Passwortspeicher von Check_MK "
+"übernommen werden."
+
 msgid "Webhook-URL"
 msgstr "Webhook-URL"
 
@@ -57434,6 +57440,168 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+msgid "State of Microsoft Hyper-V Server VMs"
+msgstr "Status der Microsoft Hyper-V Server VMs"
+
+msgid "Name of the VM"
+msgstr "Name der VM"
+
+msgid "Specify the name of the VM, for example z4065012."
+msgstr "Geben sie den Namen der VM an, z.B. z4065012."
+
+msgid "Map VM state to monitoring state"
+msgstr "Zuordnung des Status der VM zu einem Monitoringstatus"
+
+msgid "Monitoring state if VM state is Other"
+msgstr "Monitoringstatus, falls VM-Status Other ist"
+
+msgid "Monitoring state if VM state is Running"
+msgstr "Monitoringstatus, falls VM-Status Running ist"
+
+msgid "Monitoring state if VM state is Off"
+msgstr "Monitoringstatus, falls VM-Status Off ist"
+
+msgid "Monitoring state if VM state is Stopping"
+msgstr "Monitoringstatus, falls VM-Status Stopping ist"
+
+msgid "Monitoring state if VM state is Saved"
+msgstr "Monitoringstatus, falls VM-Status Saved ist"
+
+msgid "Monitoring state if VM state is Paused"
+msgstr "Monitoringstatus, falls VM-Status Paused ist"
+
+msgid "Monitoring state if VM state is Starting"
+msgstr "Monitoringstatus, falls VM-Status Starting ist"
+
+msgid "Monitoring state if VM state is Reset"
+msgstr "Monitoringstatus, falls VM-Status Reset ist"
+
+msgid "Monitoring state if VM state is Saving"
+msgstr "Monitoringstatus, falls VM-Status Saving ist"
+
+msgid "Monitoring state if VM state is Pausing"
+msgstr "Monitoringstatus, falls VM-Status Pausing ist"
+
+msgid "Monitoring state if VM state is Resuming"
+msgstr "Monitoringstatus, falls VM-Status Resuming ist"
+
+msgid "Monitoring state if VM state is FastSaved"
+msgstr "Monitoringstatus, falls VM-Status FastSaved ist"
+
+msgid "Monitoring state if VM state is FastSaving"
+msgstr "Monitoringstatus, falls VM-Status FastSaving ist"
+
+msgid "Monitoring state if VM state is RunningCritical"
+msgstr "Monitoringstatus, falls VM-Status RunningCritical ist"
+
+msgid "Monitoring state if VM state is OffCritical"
+msgstr "Monitoringstatus, falls VM-Status OffCritical ist"
+
+msgid "Monitoring state if VM state is StoppingCritical"
+msgstr "Monitoringstatus, falls VM-Status StoppingCritical ist"
+
+msgid "Monitoring state if VM state is SavedCritical"
+msgstr "Monitoringstatus, falls VM-Status SavedCritical ist"
+
+msgid "Monitoring state if VM state is PausedCritical"
+msgstr "Monitoringstatus, falls VM-Status PausedCritical ist"
+
+msgid "Monitoring state if VM state is StartingCritical"
+msgstr "Monitoringstatus, falls VM-Status StartingCritical ist"
+
+msgid "Monitoring state if VM state is ResetCritical"
+msgstr "Monitoringstatus, falls VM-Status ResetCritical ist"
+
+msgid "Monitoring state if VM state is SavingCritical"
+msgstr "Monitoringstatus, falls VM-Status SavingCritical ist"
+
+msgid "Monitoring state if VM state is PausingCritical"
+msgstr "Monitoringstatus, falls VM-Status PausingCritical ist"
+
+msgid "Monitoring state if VM state is ResumingCritical"
+msgstr "Monitoringstatus, falls VM-Status ResumingCritical ist"
+
+msgid "Monitoring state if VM state is FastSavedCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavedCritical ist"
+
+msgid "Monitoring state if VM state is FastSavingCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavingCritical ist"
+
+msgid "Check result if reported VM state is Other"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Other ist"
+
+msgid "Check result if reported VM state is Running"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Running ist"
+
+msgid "Check result if reported VM state is Off"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Off ist"
+
+msgid "Check result if reported VM state is Stopping"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Stopping ist"
+
+msgid "Check result if reported VM state is Saved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saved ist"
+
+msgid "Check result if reported VM state is Paused"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Paused ist"
+
+msgid "Check result if reported VM state is Starting"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Starting ist"
+
+msgid "Check result if reported VM state is Reset"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Reset ist"
+
+msgid "Check result if reported VM state is Saving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saving ist"
+
+msgid "Check result if reported VM state is Pausing"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Pausing ist"
+
+msgid "Check result if reported VM state is Resuming"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Resuming ist"
+
+msgid "Check result if reported VM state is FastSaved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaved ist"
+
+msgid "Check result if reported VM state is FastSaving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaving ist"
+
+msgid "Check result if reported VM state is RunningCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status RunningCritical ist"
+
+msgid "Check result if reported VM state is OffCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status OffCritical ist"
+
+msgid "Check result if reported VM state is StoppingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StoppingCritical ist"
+
+msgid "Check result if reported VM state is SavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavedCritical ist"
+
+msgid "Check result if reported VM state is PausedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausedCritical ist"
+
+msgid "Check result if reported VM state is StartingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StartingCritical ist"
+
+msgid "Check result if reported VM state is ResetCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResetCritical ist"
+
+msgid "Check result if reported VM state is SavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavingCritical ist"
+
+msgid "Check result if reported VM state is PausingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausingCritical ist"
+
+msgid "Check result if reported VM state is ResumingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResumingCritical ist"
+
+msgid "Check result if reported VM state is FastSavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavedCritical ist"
+
+msgid "Check result if reported VM state is FastSavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavingCritical ist"
 
 #, fuzzy
 #~ msgid "Not enough data to process"

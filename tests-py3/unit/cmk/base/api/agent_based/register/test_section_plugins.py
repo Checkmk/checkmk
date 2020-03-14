@@ -9,11 +9,16 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.api import PluginName
+import cmk.base.api.agent_based.section_types as section_types
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 
 
 def _generator_function():
     yield None
+
+
+def _parse_dummy(string_table):  # pylint: disable=unused-argument
+    return None
 
 
 @pytest.mark.parametrize("parse_function", [
@@ -65,20 +70,52 @@ def test_validate_supercedings():
 
 
 def test_create_agent_section_plugin():
-    def parse_func(string_table):  # pylint: disable=unused-argument
-        return None
-
     plugin = section_plugins.create_agent_section_plugin(
         name="norris",
         parsed_section_name="chuck",
-        parse_function=parse_func,
+        parse_function=_parse_dummy,
         supercedes=["Foo", "Bar"],
         forbidden_names=[],
     )
 
+    assert isinstance(plugin, section_types.AgentSectionPlugin)
     assert len(plugin) == 5
     assert plugin.name == PluginName("norris")
     assert plugin.parsed_section_name == PluginName("chuck")
-    assert plugin.parse_function is parse_func
+    assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.supercedes == [PluginName("Bar"), PluginName("Foo")]
+
+
+def test_create_snmp_section_plugin():
+
+    trees = [
+        section_types.SNMPTree(
+            base='.1.2.3',
+            oids=[section_types.OIDEnd(), '2.3'],
+        ),
+    ]
+
+    detect = [
+        [('.1.2.3.4.5', 'Foo.*', True)],
+    ]
+
+    plugin = section_plugins.create_snmp_section_plugin(
+        name="norris",
+        parsed_section_name="chuck",
+        parse_function=_parse_dummy,
+        trees=trees,
+        detect_spec=detect,
+        supercedes=["Foo", "Bar"],
+        forbidden_names=[],
+    )
+
+    assert isinstance(plugin, section_types.SNMPSectionPlugin)
+    assert len(plugin) == 7
+    assert plugin.name == PluginName("norris")
+    assert plugin.parsed_section_name == PluginName("chuck")
+    assert plugin.parse_function is _parse_dummy
+    assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.detect_spec == detect
+    assert plugin.trees == trees
     assert plugin.supercedes == [PluginName("Bar"), PluginName("Foo")]

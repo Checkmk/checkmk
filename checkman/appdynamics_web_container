@@ -15,4 +15,4 @@ item:
  Name of the disk and either {{Heap}} or {{Non-Heap}}.
 
 inventory:
- One item per application is generated.
+ One service for each application.

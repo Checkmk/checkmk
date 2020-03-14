@@ -1,4 +1,4 @@
-title: Docker container CPU utilization
+title: Docker: Container CPU utilization
 agents: linux
 catalog: containerization/docker
 license: GPL
@@ -10,5 +10,5 @@ description:
  This check can currently report user and system time.
 
 inventory:
- One check per container is created if the Check_MK agent is executed
+ One check per container is created if the Checkmk agent is executed
  in the context of a docker container.

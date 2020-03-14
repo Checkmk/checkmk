@@ -1,4 +1,4 @@
-title: cAdvisor Filesystem
+title: cAdvisor Pods/Containers: Filesystem stats
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL
@@ -12,3 +12,6 @@ description:
  generation of cAdvisor related df services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
  This check uses the same mechanisms as the df check.
+
+inventory:
+ One service is created for each filesystem.

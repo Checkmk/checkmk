@@ -1,6 +1,6 @@
 title: Retrieve informational SNMP data about Brocade switches
 agents: snmp
-catalog: os/misc 
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:
@@ -11,4 +11,4 @@ description:
  available.
 
 inventory:
- One check per host will be created.
+ One service is created for each host.

@@ -1,10 +1,10 @@
-title: Check IP restriction of Check_MK agent
+title: Check IP restriction of Checkmk agent
 agents: linux, windows
 catalog: generic
 license: GPL
 distribution: check_mk
 description:
- This checks makes sure that the Check_MK agent on the target system
+ This checks makes sure that the Checkmk agent on the target system
  has configured certain IP address based access restrictions. The check
  needs the agent to be configured with those restrictions. The windows
  agent is configured via an {.ini}-file. The Linux agent is configured

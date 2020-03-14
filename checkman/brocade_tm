@@ -11,5 +11,5 @@ item:
  The name of the network interface
 
 inventory:
- Finds one item per network interface
+ One service is created for each network interface
 

@@ -35,8 +35,8 @@ description:
  however the service check may work with other models.
 
 inventory:
- During the inventory phase of check_mk, it will create one or more service {Sensor psX_unitX}
- entries, as long as the MIB defined above is supported on the switch.
+ One service is created for each power supply if the MIB
+ defined above is supported on the switch.
 
 item:
  The Name of the power supply

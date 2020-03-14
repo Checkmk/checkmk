@@ -12,4 +12,4 @@ item:
  The index of the power supply.
 
 inventory:
- Creates one service for each installed power supply.
+ One service is created for each installed power supply.

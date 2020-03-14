@@ -399,12 +399,12 @@ TEST_F(ModuleCommanderTest, FindModules) {
         "modules:\n"
         "  enabled: yes\n"
         "  table:\n"
-        "    - name: real_module_module\n"   // valid
-        "      exts: ['.test']\n"            //
-        "      exec: 'nothing {}'\n"         //
-        "    - name: real_module_module2\n"  // valid
-        "      exts: ['.test2']\n"           //
-        "      exec: 'nothing2 {}'\n"        //
+        "    - name: real_module_module\n"      // valid
+        "      exts: ['.test']\n"               //
+        "      exec: 'nothing {}'\n"            //
+        "    - name: real_module_module2\n"     // valid
+        "      exts: ['.test2', 'test3.tt']\n"  //
+        "      exec: 'nothing2 {}'\n"           //
         "      dir:  'plugins'\n";
 
     ModuleCommander mc;
@@ -418,6 +418,9 @@ TEST_F(ModuleCommanderTest, FindModules) {
     tst::ConstructFile(install / ("null_module_module"s + kExtension.data()),
                        "");
     ASSERT_EQ(mc.findModuleFiles(root), 0);
+
+    EXPECT_EQ(mc.getExtensions(),
+              std::vector<std::string>({".test"s, ".test2"s, "test3.tt"s}));
 
     tst::ConstructFile(install / ("real_module_module"s + kExtension.data()),
                        "zip");

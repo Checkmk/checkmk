@@ -1,4 +1,4 @@
-title: Microsoft Azure SQL Databases
+title: Microsoft Azure SQL Databases: General information
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -10,5 +10,5 @@ item:
  The name of the resource.
 
 inventory:
- One service per database is created.
+ One service is created for each database.
 

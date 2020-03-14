@@ -26,7 +26,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
 import cmk.base.console as console

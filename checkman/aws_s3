@@ -1,4 +1,4 @@
-title: AWS/S3 Objects
+title: AWS S3: Objects
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -14,7 +14,9 @@ description:
  levels are configurable.
 
 item:
- Name of the instance if all required metrics (BucketSizeBytes, NumberOfObjects) are given.
+ Name of the instance
 
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (BucketSizeBytes, NumberOfObjects) are given.
+

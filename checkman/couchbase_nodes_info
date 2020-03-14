@@ -1,4 +1,4 @@
-title: Information on couchbase nodes
+title: Couchbase nodes: Information
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -17,7 +17,7 @@ description:
  By default inactive added notes go to WARN and inactive failed notes to CRIT.
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

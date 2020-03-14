@@ -15,4 +15,4 @@ item:
  The resource group name.
 
 inventory:
- One service per resource group.
+ One service is created for each resource group.

@@ -16,5 +16,5 @@ item:
  Example: {"3.2"} for first IO unit and second sensor.
 
 inventory:
- All available blowers sensors are automatically inventorized.
+ One service is created for each available blower sensor.
 

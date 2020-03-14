@@ -11,4 +11,4 @@ item:
  The index of the temperature sensor.
 
 inventory:
- Creates one service for each temperature sensor.
+ One service is created for each temperature sensor.

@@ -63,7 +63,7 @@ class Icon(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def render(self, what, row, tags, custom_vars):
-        # type: (str, dict, list, dict) -> Optional[Union[HTML, Tuple, str, Text]]
+        # type: (str, dict, list, dict) -> Union[None, HTML, Tuple, str, Text]
         raise NotImplementedError()
 
     def columns(self):

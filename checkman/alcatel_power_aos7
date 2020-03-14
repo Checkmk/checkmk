@@ -33,5 +33,5 @@ item:
  The ID of the power supply as output from the SNMP agent.
 
 inventory:
- One check is created for each present power supply.
+ One service is created for each present power supply.
 

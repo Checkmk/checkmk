@@ -79,10 +79,10 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as TypingTuple, Optional as TypingOptional  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as _Tuple, Optional as _Optional  # pylint: disable=unused-import
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
@@ -251,10 +251,10 @@ from cmk.gui.wato.pages.users import ModeUsers, ModeEditUser
 import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.bi
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
@@ -371,7 +371,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     register_modules,
 )
 
-NetworkScanFoundHosts = List[TypingTuple[HostName, TypingHostAddress]]
+NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
 NetworkScanResult = Dict[str, Any]
 
 if TYPE_CHECKING:
@@ -413,7 +413,7 @@ def page_handler():
               " in your <tt>multisite.mk</tt> if you want to use WATO."))
 
     # config.current_customer can not be checked with CRE repos
-    if cmk.is_managed_edition() and not managed.is_provider(
+    if cmk_version.is_managed_edition() and not managed.is_provider(
             config.current_customer):  # type: ignore[attr-defined]
         raise MKGeneralException(
             _("Check_MK can only be configured on "
@@ -453,7 +453,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None  # type: TypingOptional[Text]
+    action_message = None  # type: _Optional[Text]
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -544,7 +544,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
 
 
 def get_mode_permission_and_class(mode_name):
-    # type: (str) -> TypingTuple[List[PermissionName], Type[WatoMode]]
+    # type: (str) -> _Tuple[List[PermissionName], Type[WatoMode]]
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 
@@ -659,7 +659,7 @@ def execute_network_scan_job():
 
 
 def find_folder_to_scan():
-    # type: () -> TypingOptional[CREFolder]
+    # type: () -> _Optional[CREFolder]
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in watolib.Folder.all_folders().values():
@@ -683,10 +683,7 @@ def add_scanned_hosts_to_folder(folder, found):
         host_name = six.ensure_str(
             cmk.utils.translations.translate_hostname(translation, ensure_unicode(host_name)))
 
-        attrs = {
-            "meta_data":
-                cmk.gui.watolib.hosts_and_folders.get_meta_data(created_by=_("Network scan"))
-        }
+        attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")

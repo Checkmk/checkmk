@@ -14,6 +14,5 @@ item:
  One of the three strings {"clients"}, {"strength"} or {"quality"}.
 
 inventory:
- If at least one client is logged in, all three checks will
- be generated.
+ All three services are created if at least one client is logged in.
 

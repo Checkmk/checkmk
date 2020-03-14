@@ -16,5 +16,5 @@ description:
  {OK} otherwise.
 
 inventory:
- Exactly one item will be discovered.
+ One service is created.
 

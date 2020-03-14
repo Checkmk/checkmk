@@ -12,4 +12,4 @@ item:
  Name of the certificate.
 
 inventory:
- One service per certificate is created.
+ One service is created for each certificate.

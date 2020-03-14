@@ -11,4 +11,4 @@ item:
  The current phase containing the device state, voltage and current.
 
 inventory:
- One service is created.
+ One service is created for each battery.

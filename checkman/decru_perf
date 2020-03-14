@@ -19,5 +19,5 @@ item:
  description of the counter.
 
 inventory:
- All counters automatically detected.
+ One service is created for each counter.
 

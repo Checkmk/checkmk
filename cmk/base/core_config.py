@@ -13,6 +13,7 @@ from typing import (  # pylint: disable=unused-import
 )
 import six
 
+import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -468,7 +469,7 @@ def get_host_attributes(hostname, config_cache):
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         attrs["_CUSTOMER"] = config.current_customer  # type: ignore[attr-defined]
 
     return attrs

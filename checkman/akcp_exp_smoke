@@ -1,4 +1,4 @@
-title: AKCP Expansion Smoke Sensor
+title: AKCP securityProbe: Smoke sensor
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL
@@ -13,4 +13,4 @@ item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All online smoke sensors are automatically detected and inventorized.
+ One service is create for each smoke sensor if the sensor is online.

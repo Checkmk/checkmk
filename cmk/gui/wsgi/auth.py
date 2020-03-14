@@ -82,7 +82,7 @@ def with_user(func):
             return problem(
                 status=MK_STATUS.get(type(exc), 500),
                 title=str(exc),
-                detail="",
+                detail="An exception occurred.",
             )
 
     return wrapper

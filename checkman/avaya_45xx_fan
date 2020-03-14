@@ -20,4 +20,4 @@ item:
  The index of the fan.
 
 inventory:
- Creates one service for each fan.
+ One service is created for each fan.

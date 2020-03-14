@@ -10,4 +10,4 @@ item:
  The name of the sensor
 
 inventory:
- One service per sensor
+ One service is created for each sensor.

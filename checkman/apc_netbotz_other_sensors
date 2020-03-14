@@ -20,4 +20,4 @@ description:
  - a-link bus power
 
 inventory:
- One service is created.
+ One service is created if there is a valid state.

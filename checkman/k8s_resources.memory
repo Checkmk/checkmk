@@ -1,4 +1,4 @@
-title: Kubernetes memory resources
+title: Kubernetes: Memory resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

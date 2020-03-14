@@ -16,5 +16,4 @@ description:
  are extracted and used as limimts for the temperature read from the device.
 
 inventory:
- The check will create the two items {IN} and {OUT} if it detects a
- proper device.
+ Two services are created: {IN} and {OUT} if it detects a proper device.

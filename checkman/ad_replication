@@ -17,7 +17,7 @@ description:
  in {agents/windows/plugins}.
 
 inventory:
- Each replication partner results in one service.
+ One service is created for each replication partner.
 
 item:
  Site and the Domain Controller of the replication partner.

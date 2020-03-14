@@ -8,7 +8,7 @@ description:
  information reported by S.M.A.R.T. This check works only for HDDs which
  report the value {Temperature_Celsius} via {smartctl -A <device>}.
 
- The check uses information provided by the Check_MK linux agent which are
+ The check uses information provided by the Checkmk linux agent which are
  available when the agent has been extended with the {smart} agent plugin.
 
  During inventory the current value of all counters is being

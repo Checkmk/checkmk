@@ -1,4 +1,4 @@
-title: AWS/ELB HTTP ELB
+title: AWS ELB: HTTP ELB
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -13,4 +13,5 @@ description:
  are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (HTTPCode_ELB_4XX, HTTP_ELB_5XX,
+ RequestCount) are given.

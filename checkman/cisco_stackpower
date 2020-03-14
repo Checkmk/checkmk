@@ -15,4 +15,4 @@ item:
  The stackpower interface number.
 
 inventory:
- One service per stackpower interface is created.
+ One service is created for each stackpower interface.

@@ -1,4 +1,4 @@
-title: DB2 Tablespace Usage
+title: DB2: Tablespace usage
 agents: aix, linux
 catalog: app/db2
 license: GPL
@@ -13,5 +13,5 @@ item:
  like this db2wps8:WPSCOMT8.USERSPACE1
 
 inventory:
- One separate check for each tablespace will be created.
+ One service is created for each tablespace.
 

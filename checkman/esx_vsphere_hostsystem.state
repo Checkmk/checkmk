@@ -15,7 +15,7 @@ description:
  {CRIT} if vsphere reports overall state of red or grey or if the ESX host is
      in power state poweredOff
 
- See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ See "Monitoring VMWare ESX with Checkmk" in the online documentation
  as well.
 
 inventory:

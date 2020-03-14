@@ -1,4 +1,4 @@
-title: Perm Space usage of a JVM
+title: Java Virtual Machine: Perm Space usage
 agents: linux
 catalog: app/java
 license: GPL

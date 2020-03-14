@@ -1,4 +1,4 @@
-title: Memory usage of a JVM
+title: Java Virtual Machine: Memory usage (deprecated)
 agents: linux
 catalog: app/java
 license: GPL

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
+
 # Following import is used to trigger plugin loading
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
@@ -34,12 +36,12 @@ def test_registered_modules():
         'icons',
     ]
 
-    if cmk.is_raw_edition():
+    if cmk_version.is_raw_edition():
         expected_modules += [
             'download_agents',
         ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_modules += [
             'agents',
             'alert_handlers',

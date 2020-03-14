@@ -6,7 +6,7 @@
 
 from typing import Any as _Any, Dict as _Dict, List as _List  # pylint: disable=unused-import
 
-import cmk as _cmk
+import cmk.utils.version as cmk_version
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -33,7 +33,7 @@ notification_plugin_timeout = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if _cmk.is_raw_edition():
+if cmk_version.is_raw_edition():
     notification_spooling = "off"
 else:
     notification_spooling = "local"

@@ -57,7 +57,13 @@ endif
 # Check_MK Edition specific
 PYTHON_MODULES_LIST += simplejson-3.16.0.tar.gz
 PYTHON_MODULES_LIST += mysqlclient-1.3.13.tar.gz  # needed by check_sql
+# Is built for python3 and only available there from now for el6
+# (had to remove the build dependency from the container)
+ifneq ($(DISTRO_CODE),el6)
 PYTHON_MODULES_LIST += psycopg2-2.6.2.tar.gz # needed by check_sql
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0007-psycopg-wrong-ifdef.patch
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0016-make-psycopg2-build-with-ubuntu-bionic.patch
+endif
 PYTHON_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi

@@ -11,5 +11,5 @@ item:
  The item is the sensor description of the sensor as string.
 
 inventory:
- All available humidity sensors are automatically inventorized.
+ One service is created for each available humidity sensor.
 

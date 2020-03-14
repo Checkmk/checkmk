@@ -1,4 +1,4 @@
-title: cAdvisor Filesystem
+title: cAdvisor Pods/Containers: Memory stats
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL
@@ -13,3 +13,6 @@ description:
  This check obtains its metrics values through Prometheus. In order to allow
  generation of cAdvisor related memory services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
+
+inventory:
+ One service is created for each memory unit.

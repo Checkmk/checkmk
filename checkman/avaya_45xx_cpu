@@ -11,4 +11,4 @@ item:
  The index of the CPU.
 
 inventory:
- Creates one service for each CPU.
+ One service is created for each CPU.

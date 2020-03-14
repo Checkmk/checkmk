@@ -36,7 +36,7 @@ import subprocess
 CORRECT_RE = re.compile(r'^\((.*?) has correct #includes/fwd-decls\)$')
 SHOULD_ADD_RE = re.compile(r'^(.*?) should add these lines:$')
 ADD_RE = re.compile('^(.*?) +// (.*)$')
-ADD_FWD_DECL_RE = re.compile('^(.*;)$')
+ADD_FWD_DECL_RE = re.compile('^(.*)$')
 SHOULD_REMOVE_RE = re.compile(r'^(.*?) should remove these lines:$')
 FULL_LIST_RE = re.compile(r'The full include-list for (.*?):$')
 END_RE = re.compile(r'^---$')

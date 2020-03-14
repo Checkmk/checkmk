@@ -15,7 +15,7 @@ import requests
 import urllib3  # type: ignore[import]
 import six
 
-import cmk.utils
+import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
@@ -299,7 +299,7 @@ def do_site_login(site_id, name, password):
         '_username': name,
         '_password': password,
         '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' %
-                       (cmk.__version__, cmk.edition_short()),
+                       (cmk_version.__version__, cmk_version.edition_short()),
         '_plain_error': '1',
     }
     response = get_url(url, site.get('insecure', False), auth=(name, password),
@@ -318,7 +318,7 @@ def do_site_login(site_id, name, password):
         except SyntaxError:
             raise MKAutomationException(response)
         if isinstance(eval_response, dict):
-            if cmk.is_managed_edition() and eval_response["edition_short"] != "cme":
+            if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
                 raise MKUserError(
                     None,
                     _("The Check_MK Managed Services Edition can only "

@@ -20,7 +20,7 @@ description:
  The check is not tested against un-clustered ASA devices.
 
 inventory:
-  The check detects ASA devices and saves the current cluster role on inventory.
+  One service is created for each ASA device and saves the current cluster role.
 
 
 parameters:

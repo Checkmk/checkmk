@@ -1,4 +1,4 @@
-title: AWS/RDS Limits
+title: AWS RDS: Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -51,4 +51,4 @@ description:
  additionally fetched.
 
 inventory:
- One service will be created.
+ One service is created.

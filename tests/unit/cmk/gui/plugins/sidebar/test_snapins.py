@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk
+import cmk.utils.version as cmk_version
 # Needed to trigger plugin loading
 import cmk.gui.sidebar  # pylint: disable=unused-import
 
@@ -43,7 +43,7 @@ def test_registered_snapins():
         'wiki',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_snapins += [
             'cmc_stats',
             'reports',
@@ -67,7 +67,7 @@ def test_refresh_snapins():
         'time',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_refresh_snapins += [
             'cmc_stats',
         ]

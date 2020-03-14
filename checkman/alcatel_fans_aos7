@@ -22,4 +22,4 @@ item:
  Number of the fan based on the order in info entries
 
 inventory:
- One check is created
+ One service is created for each fan

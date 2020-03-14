@@ -13,7 +13,7 @@ description:
  check cycle. A combination with a larger value of {max_check_attempts}
  or {notification_delay} might be useful here.
 
- Note: this check is deprecated and not used by modern Check_MK agents.
+ Note: this check is deprecated and not used by modern Checkmk agents.
  It is replaced by {winperf_processor.util}.
 
 inventory:

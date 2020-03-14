@@ -66,19 +66,34 @@ def test_byte_strings_are_prefixed(obj, result):
 
 @pytest.mark.parametrize('obj, result', [
     (u'', "u''"),
-    (u'bläh', "u'bläh'"),
-    (((11,), (22, (u'bläh', -44))), "((11,), (22, (u'bläh', -44)))"),
-    ([[], [11, (u'blöh', []), 3.5]], "[[], [11, (u'blöh', []), 3.5]]"),
+    (u'bläh', "u'bl\\xe4h'"),
+    (((11,), (22, (u'bläh', -44))), "((11,), (22, (u'bl\\xe4h', -44)))"),
+    ([[], [11, (u'blöh', []), 3.5]], "[[], [11, (u'bl\\xf6h', []), 3.5]]"),
     ({
         u'Kontiomäki': {u'Wassersee'},
         u'Vesijärvi': [(u'Bärenhügel', True), 42],
-    }, "{u'Kontiomäki': {u'Wassersee'}, u'Vesijärvi': [(u'Bärenhügel', True), 42]}"),
+    },
+     "{u'Kontiom\\xe4ki': {u'Wassersee'}, u'Vesij\\xe4rvi': [(u'B\\xe4renh\\xfcgel', True), 42]}"),
 ])
 def test_unicode_strings_are_prefixed(obj, result):
-    # Python 2 uses hex escapes for non-ASCII characters in Unicode strings.
-    if sys.version_info[0] < 3:
-        for c in u'äöüÄÖÜß':
-            result = result.replace(c.encode('utf-8'), '\\' + hex(ord(c))[1:])
+    assert pformat(obj) == result
+
+
+@pytest.mark.parametrize('obj, result', [
+    (u'bl\'ah', 'u\"bl\'ah"'),
+    (u'"bl\'ah', "u'\"bl\\'ah'"),
+])
+def test_unicode_strings_quote_escaping(obj, result):
+    assert pformat(obj) == result
+
+
+@pytest.mark.parametrize('obj, result', [
+    (u'bl\0ah', "u'bl\\x00ah'"),
+    (u'bl\nah', "u'bl\\nah'"),
+    (u'bl\r\nah', "u'bl\\r\\nah'"),
+    (u'bl\n\rah', "u'bl\\n\\rah'"),
+])
+def test_unicode_strings_newline_escaping(obj, result):
     assert pformat(obj) == result
 
 

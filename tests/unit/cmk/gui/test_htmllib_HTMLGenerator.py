@@ -76,23 +76,25 @@ def test_text_input(register_builtin_html):
     with html.plugged():
         html.text_input('tralala')
         written_text = "".join(html.drain())
-    assert compare_html(written_text,
-                        '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
 
     with html.plugged():
         html.text_input('blabla', cssclass='blubb')
         written_text = "".join(html.drain())
-    assert compare_html(written_text,
-                        '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
 
-    # FIXME: Huh??? attrs seems to be ignored, but we use it at various places...
     with html.plugged():
-        html.text_input('blabla',
-                        attrs={
-                            "placeholder": u'placido',
-                            "data-world": 'welt',
-                            "data-max-labels": 'maximus',
-                        })
+        html.text_input('blabla', autocomplete='yep')
         written_text = "".join(html.drain())
-    assert compare_html(written_text,
-                        '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+        assert compare_html(
+            written_text,
+            '<input style="" name="blabla" autocomplete="yep" type="text" class="text" value=\'\' />'
+        )
+
+    with html.plugged():
+        html.text_input('blabla', placeholder='placido', data_world='welt', data_max_labels=42)
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')

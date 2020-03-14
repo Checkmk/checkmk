@@ -12,4 +12,4 @@ item:
  Name of the system.
 
 inventory:
- Only one service is created
+ One service is created for each system

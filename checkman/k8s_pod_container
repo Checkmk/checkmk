@@ -1,4 +1,4 @@
-title: Kubernetes pod container statistics
+title: Kubernetes: Pod container statistics
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

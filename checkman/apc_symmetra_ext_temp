@@ -12,5 +12,5 @@ item:
  The index of the sensor, e.g. {"1"}.
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor (status = 2).
 

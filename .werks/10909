@@ -1,0 +1,22 @@
+Title: New notification plugin for Cisco Webex Teams
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1583502298
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+This werk enables Check_MK to send notifications about changes
+in the states of hosts and services to Cisco Webex Teams (both
+spaces and teams).
+
+First, you need to setup a webhook to your team or space, see
+<a href="https://apphub.webex.com/teams/applications/incoming-webhooks-cisco-systems" target="_blank">here</a>,
+which will allow Check_MK to post messages. Next, in Check_MK,
+under "WATO - Notifications", create a new notification rule.
+Select "Cisco Webex Teams" as the notification method. Copy the 
+URL of your webhook into the Webhook-URL field. Optionally, if 
+you want sent messages to include hyperlinks to Check_MK, enable 
+the field "URL prefix for links to Check_MK".

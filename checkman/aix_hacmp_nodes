@@ -13,4 +13,4 @@ item:
  The active node name.
 
 inventory:
- One service for one active node.
+ One service is created for each active node.

@@ -20,6 +20,8 @@ import pytest  # type: ignore[import]
 import six
 
 import testlib
+
+import cmk.utils.version as cmk_version
 import cmk.utils.werks
 import cmk.utils.memoize
 
@@ -60,7 +62,7 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
 
 
 def test_werk_versions(precompiled_werks):
-    parsed_version = cmk.utils.werks.parse_check_mk_version(cmk.__version__)
+    parsed_version = cmk.utils.werks.parse_check_mk_version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
         parsed_werk_version = cmk.utils.werks.parse_check_mk_version(werk["version"])

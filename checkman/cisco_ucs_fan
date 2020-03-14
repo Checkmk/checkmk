@@ -14,4 +14,4 @@ description:
  a {WARNING} or {CRITICAL} status, based on the severity of the issue.
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.

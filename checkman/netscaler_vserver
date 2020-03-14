@@ -1,4 +1,4 @@
-title: Citrix Netscaler VServer Status
+title: Citrix Netscaler: VServer Status
 agents: snmp
 catalog: app/netscaler
 license: GPL
@@ -14,7 +14,7 @@ description:
 
  For loadbalancing entities is also shows the health state. The check goes WARN if
  the health is below 100 percent and CRIT when the health drops to zero.
- 
+
  This check is also cluster aware, behaviour can be set in WATO.
 
 inventory:

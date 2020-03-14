@@ -23,7 +23,7 @@ branch_name = os.environ.get("BRANCH", "master")
 
 def build_version():
     return testlib.CMKVersion(
-        version=testlib.CMKVersion.DAILY,
+        version_spec=testlib.CMKVersion.DAILY,
         edition=testlib.CMKVersion.CEE,
         branch=branch_name,
     )
@@ -278,7 +278,8 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    pkg_path = os.path.join(build_path, version.package_name_of_distro("stretch"))
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
+    pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:
             f.write("")
@@ -357,7 +358,7 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version="1.5.0p5",
+        version_spec="1.5.0p5",
         branch="1.5.0",
         edition=testlib.CMKVersion.CRE,
     )

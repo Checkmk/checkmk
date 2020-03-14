@@ -8,7 +8,9 @@ import time
 import itertools
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
+import cmk.utils.render
+
 import cmk.gui.config as config
 
 import cmk.gui.availability as availability
@@ -845,7 +847,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell(_("Annotation"), html.render_text(annotation["text"]))
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
-            if not cmk.is_raw_edition():
+            if not cmk_version.is_raw_edition():
                 table.cell(_("Hide in report"),
                            _("Yes") if annotation.get("hide_from_report") else _("No"))
 
@@ -918,7 +920,7 @@ def edit_annotation():
 
 def _vs_annotation():
     extra_elements = []
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         extra_elements.append(("hide_from_report", Checkbox(title=_("Hide annotation in report"))))
 
     return Dictionary(

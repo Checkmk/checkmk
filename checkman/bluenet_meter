@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored PLC Powermeter
+title: Bachmann Bluenet Monitored Power Line Connectors: Voltage, current and power
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPL
@@ -12,7 +12,7 @@ description:
  A non-OK state is triggered according to these levels.
 
 inventory:
- One service for each power meter on the device with a non-zero voltage is created.
+ One service is created for each power meter on the device with a non-zero voltage.
 
 item:
  The ID of the power meter.

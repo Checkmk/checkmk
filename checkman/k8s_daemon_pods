@@ -1,4 +1,4 @@
-title: Kubernetes daemon pods
+title: Kubernetes: Daemon pods
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

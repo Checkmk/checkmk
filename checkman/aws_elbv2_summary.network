@@ -1,4 +1,4 @@
-title: AWS/NetworkELB Summary
+title: AWS NetworkELB: Summary
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,4 +9,4 @@ description:
  {Amazon Web Services (AWS)}.
 
 inventory:
- One summary service is created.
+ One service is created.

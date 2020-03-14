@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored PDU Temperature Sensors
+title: Bachmann Bluenet Monitored Power Distribution Unit: Temperature
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPL
@@ -12,9 +12,8 @@ description:
  configured.  A non-OK state is triggered according to these levels.
 
 inventory:
- One service for each sensor of a PDU is created. There is at least one
- internal sensor on the device. Other external sensors connected via a cable
- are included.
+ One service is created for each sensor of a PDU.
+ At least one service is created for an internal sensor on the device.
 
 item:
  The name of the sensor, which is either "internal" or "external {<ID>}",

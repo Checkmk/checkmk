@@ -11,4 +11,4 @@ item:
  If available the identifier of the CPU, otherwise the index of the module.
 
 inventory:
- One service will be created for each Slot
+ One service is created for each slot

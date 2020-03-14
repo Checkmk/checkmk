@@ -15,6 +15,12 @@ import pipes
 import time
 import shutil
 import logging
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import six
 from six.moves.urllib.parse import urlparse
 
@@ -160,7 +166,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         command_timestamp = self._command_timestamp(last_check_before)
 
         command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % \
-            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp)
+            (command_timestamp, hostname, service_description, command_timestamp)
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
         self.live.command(command)
@@ -212,7 +218,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
                                   expected_state, plugin_output, wait_timeout):
-        print("processing check result took %0.2f seconds" % (time.time() - command_timestamp))
+        logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
@@ -239,7 +245,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
+        # Needed during py2/py3 migration
+        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
+
+        kwargs.setdefault("encoding", "utf-8")
 
         if not self._is_running_as_site_user():
             sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
@@ -248,10 +258,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
             ]
             cmd_txt = " ".join(cmd)
-            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
+            return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
 
         sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-        return subprocess.Popen(  # nosec
+        return Popen(  # nosec
             subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
 
     def omd(self, mode, *args):
@@ -300,19 +310,37 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         else:
             shutil.rmtree(self.path(rel_path))
 
+    # TODO: Rename to write_text_file?
     def write_file(self, rel_path, content):
-        if isinstance(content, six.text_type):
-            content = content.encode("utf-8")
         if not self._is_running_as_site_user():
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
+            p.communicate(six.ensure_text(content))
+            p.stdin.close()
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
+
+    def write_binary_file(self, rel_path, content):
+        if not self._is_running_as_site_user():
+            p = self.execute(["tee", self.path(rel_path)],
+                             stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"),
+                             encoding=None)
             p.communicate(content)
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            return open(self.path(rel_path), "wb").write(content)
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("wb") as f:
+                f.write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):
         if not self._is_running_as_site_user():
@@ -352,20 +380,21 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def create(self):
         if not self.version.is_installed():
-            self.version.install()
+            raise Exception("Version %s not installed. "
+                            "Use \"tests-py3/scripts/install-cmk.py\" or install it manually." %
+                            self.version.version)
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
+            logger.info("Creating site '%s'", self.id)
             p = subprocess.Popen([
                 "/usr/bin/sudo", "/usr/bin/omd", "-V",
                 self.version.version_directory(), "create", "--admin-password", "cmk",
                 "--apache-reload", self.id
             ])
             exit_code = p.wait()
-            print("[%0.2f] Executed create command" % time.time())
             assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
@@ -382,8 +411,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     def _update_with_f12_files(self):
         paths = [
             cmk_path() + "/omd/packages/omd",
-            # TODO: To be able to build livestatus we need cmake. Disable for the moment.
-            #cmk_path() + "/livestatus",
+            cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
@@ -409,9 +437,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
                 cmc_path() + "/misc",
-                # TODO: To be able to build the core correctly we need to build
-                # python/boost/python-modules/rrdtool first. Skip cmc for the moment here
-                #cmc_path() + "/core",
+                cmc_path() + "/core",
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
                 #cmc_path() + "/agents",
@@ -424,19 +450,19 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             ]
 
         # Prevent build problems of livestatus
-        print("Cleanup git files")
-        assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
+        logger.debug("Cleanup git files")
+        assert subprocess.call(["sudo", "git", "clean", "-xfd",
+                                cmk_path() + "/livestatus"]) >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print("Executing .f12 in \"%s\"..." % path)
-                sys.stdout.flush()
+                logger.debug("Executing .f12 in \"%s\"...", path)
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
-                    "bash -x .f12" % (path, self.id)) >> 8 == 0
-                print("Executing .f12 in \"%s\" DONE" % path)
+                    "bash .f12" % (path, self.id)) >> 8 == 0
+                logger.debug("Executing .f12 in \"%s\" DONE", path)
                 sys.stdout.flush()
 
     def _set_number_of_helpers(self):
@@ -461,12 +487,12 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path(version=2)
+        venv = virtualenv_path(version=3)
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python2.7/site-packages"
+        platlib64 = venv / "lib64/python3.7/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -481,10 +507,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):
@@ -497,15 +523,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
              site_id]).wait()
 
-    def cleanup_old_sites(self, cleanup_pattern):
-        if not os.path.exists("/omd/sites"):
-            return
-
-        for site_id in os.listdir("/omd/sites"):
-            if site_id != self.id and site_id.startswith(cleanup_pattern):
-                print("Cleaning up old site: %s" % site_id)
-                self.rm(site_id)
-
     def start(self):
         if not self.is_running():
             assert self.omd("start") == 0
@@ -515,7 +532,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
-                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
+                logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -526,32 +543,26 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if not self.is_running():
             return  # Nothing to do
 
-        print("= BEGIN PROCESSES BEFORE =======================================")
-        os.system("ps -fwwu %s" % self.id)  # nosec
-        print("= END PROCESSES BEFORE =======================================")
+        #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
+        #os.system("ps -fwwu %s" % self.id)  # nosec
+        #logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:
-            print("omd stop exit code: %d" % stop_exit_code)
+            logger.error("omd stop exit code: %d", stop_exit_code)
 
-        print("= BEGIN PROCESSES AFTER STOP =======================================")
-        os.system("ps -fwwu %s" % self.id)  # nosec
-        print("= END PROCESSES AFTER STOP =======================================")
+        #logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
+        #os.system("ps -fwwu %s" % self.id)  # nosec
+        #logger.debug("= END PROCESSES AFTER STOP =======================================")
 
-        try:
-            i = 0
-            while self.is_running():
-                i += 1
-                if i > 10:
-                    raise Exception("Could not stop site %s" % self.id)
-                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
-                sys.stdout.flush()
-                time.sleep(0.2)
-        except:
-            print("= BEGIN PROCESSES AFTER WAIT =======================================")
-            os.system("ps -fwwu %s" % self.id)  # nosec
-            print("= END PROCESSES AFTER WAIT =======================================")
-            raise
+        i = 0
+        while self.is_running():
+            i += 1
+            if i > 10:
+                raise Exception("Could not stop site %s" % self.id)
+            logger.warning("The site %s is still running, sleeping... (round %d)", self.id, i)
+            sys.stdout.flush()
+            time.sleep(0.2)
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
@@ -562,19 +573,19 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
-            print("omd config: %s is already at %r" % (key, val))
+            logger.info("omd config: %s is already at %r", key, val)
             return
 
         if with_restart:
-            print("Stopping site")
+            logger.debug("Stopping site")
             self.stop()
 
-        print("omd config: Set %s to %r" % (key, val))
+        logger.info("omd config: Set %s to %r", key, val)
         assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
             self.start()
-            print("Started site")
+            logger.debug("Started site")
 
     def set_core(self, core):
         self.set_config("CORE", core, with_restart=True)
@@ -584,9 +595,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print("omd config: %s is set to %r" % (key, stdout.strip()))
+        logger.debug("omd config: %s is set to %r", key, stdout.strip())
         if stderr:
-            print(stderr)
+            logger.error(stderr)
         return stdout.strip()
 
     # These things are needed to make the site basically being setup. So this
@@ -612,24 +623,24 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def init_wato(self):
         if not self._missing_but_required_wato_files():
-            print("WATO is already initialized -> Skipping initializiation")
+            logger.info("WATO is already initialized -> Skipping initializiation")
             return
 
-        print("Initializing WATO...")
+        logger.debug("Initializing WATO...")
 
         web = CMKWebSession(self)
         web.login()
         web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
-        print("Requesting wato.py (which creates the WATO factory settings)...")
+        logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
-        print("Debug: %r" % response)
+        #logger.debug("Debug: %r" % response)
         assert "<title>Distributed Monitoring</title>" in response
         assert "replication_status_%s" % web.site.id in response, \
                 "WATO does not seem to be initialized: %r" % response
 
-        print("Waiting for WATO files to be created...")
+        logger.debug("Waiting for WATO files to be created...")
         wait_time = 20
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)
@@ -658,7 +669,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                         {
                             'condition': {},
                             'options': {},
-                            'value': [('TESTGROUP', ('*gwia*', ''))]
+                            # TODO: This should obviously be 'str' in Python 3, but the GUI is
+                            # currently in Python 2 and expects byte strings. Change this once
+                            # the GUI is based on Python 3.
+                            'value': [(b'TESTGROUP', (b'*gwia*', b''))]
                         },
                     ],
                 }
@@ -666,9 +680,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def _missing_but_required_wato_files(self):
         required_files = [
-            "etc/check_mk/conf.d/wato/rules.mk", "etc/check_mk/multisite.d/wato/tags.mk",
-            "etc/check_mk/conf.d/wato/global.mk", "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret"
+            "etc/check_mk/conf.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/wato/tags.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "var/check_mk/web/automation",
+            "var/check_mk/web/automation/automation.secret",
         ]
 
         missing = []
@@ -716,7 +732,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         while port in used_ports:
             port += 1
 
-        print("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
+        logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
 
 
@@ -763,9 +779,9 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         elif name in self._sites:
             site_id = name
         else:
-            print("Found no site for name %s." % name)
+            logger.debug("Found no site for name %s.", name)
             return
-        print("Removing site %s" % site_id)
+        logger.info("Removing site %s", site_id)
         self._sites[site_id].rm()
         del self._sites[site_id]
 
@@ -793,7 +809,7 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
-        print("Created site %s" % site.id)
+        logger.debug("Created site %s", site.id)
         self._sites[site.id] = site
         return site
 

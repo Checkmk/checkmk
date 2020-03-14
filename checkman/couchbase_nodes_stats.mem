@@ -1,4 +1,4 @@
-title: Memory usage of couchbase nodes
+title: Couchbase nodes: Memory usage
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -9,7 +9,7 @@ description:
  "Main memory usage of devices with modules".
 
 inventory:
- One check per host in the output is created automatically.
+ One service is created for each host in the output.
 
 item:
  The name of the current node as provided by the agent.

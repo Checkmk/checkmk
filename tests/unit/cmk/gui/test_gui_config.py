@@ -10,7 +10,7 @@ import json
 import six
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKAuthException
@@ -70,7 +70,7 @@ def test_registered_permission_sections():
         ('icons_and_actions', (50, u'Icons', True)),
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_sections += [
             ('custom_graph', (50, u'Custom Graphs', True)),
             ('forecast_graph', (50, u'Forecast Graphs', True)),
@@ -220,6 +220,7 @@ def test_registered_permissions():
         'nagvis.Map_view_*',
         'nagvis.Rotation_view_*',
         'notification_plugin.asciimail',
+        'notification_plugin.cisco_webex_teams',
         'notification_plugin.jira_issues',
         'notification_plugin.mail',
         'notification_plugin.mkeventd',
@@ -359,6 +360,12 @@ def test_registered_permissions():
         'view.invdockerimages_search',
         'view.invfan_of_host',
         'view.invfan_search',
+        'view.invibmmqchannels_of_host',
+        'view.invibmmqchannels_search',
+        'view.invibmmqmanagers_of_host',
+        'view.invibmmqmanagers_search',
+        'view.invibmmqqueues_of_host',
+        'view.invibmmqqueues_search',
         'view.invinterface_of_host',
         'view.invinterface_search',
         'view.invmodule_of_host',
@@ -504,7 +511,7 @@ def test_registered_permissions():
         'view.service_graphs',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_permissions += [
             'general.edit_reports',
             'icons_and_actions.agent_deployment',

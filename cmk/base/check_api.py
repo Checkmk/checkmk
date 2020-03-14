@@ -148,8 +148,9 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY = _snmp_utils.BINARY
-CACHED_OID = _snmp_utils.CACHED_OID
+# backwards compatibility: allow to pass integer.
+BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
+CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
 
 OID_END = _snmp_utils.OID_END
 OID_STRING = _snmp_utils.OID_STRING
@@ -383,7 +384,7 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
-    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Optional[Union[int, float]]) -> List
+    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
     if not dsname:
         return []
 
@@ -652,7 +653,7 @@ def validate_filter(filter_function):
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[Dict[Any, Any], str]]) -> Callable
+    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to

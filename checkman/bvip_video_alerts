@@ -11,5 +11,5 @@ item:
  Identifier for the camera.
 
 inventory:
- Creates one check per camera.
+ One service is created for each camera.
 

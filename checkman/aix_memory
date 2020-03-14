@@ -13,6 +13,5 @@ description:
  for Linux. Please see details there.
 
 inventory:
-  One check is created if a non-empty {<<<aix_memory>>>} section is
-  present in the agent output.
+  One service is created for each RAM device.
 

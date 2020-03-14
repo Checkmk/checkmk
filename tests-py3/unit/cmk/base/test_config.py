@@ -20,11 +20,11 @@ from testlib import CheckManager
 from testlib.base import Scenario
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
@@ -653,7 +653,7 @@ def test_host_config_agent_encryption(monkeypatch, hostname, result):
 
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", None),
-    ("testhost2", cmk.__version__),
+    ("testhost2", cmk_version.__version__),
 ])
 def test_host_config_agent_target_version(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
@@ -1583,7 +1583,7 @@ def test_config_cache_check_period_of_service(monkeypatch, hostname, result):
 ])
 def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache_class_name,
                                       expected_host_class_name):
-    monkeypatch.setattr(cmk, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
     _config_cache.reset()
 
@@ -1891,3 +1891,13 @@ cmc_host_rrd_config = [
 {'condition': %s, 'value': '%s'},
 ] + cmc_host_rrd_config
 """ % (condition, value))
+
+
+@pytest.mark.parametrize("pack_string", [
+    "_test_var = OIDBytes('6')\n\n",
+    "_test_var = OIDCached('6')\n\n",
+])
+def test_packed_config(pack_string):
+    packed_config = config.PackedConfig()
+    packed_config._write(pack_string)
+    packed_config.load()

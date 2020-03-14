@@ -1,4 +1,4 @@
-title: cAdvisor Traffic and status of network interface
+title: cAdvisor Pods/Containers: Traffic and status of network interface
 agents: prometheus
 catalog: containerization/cadvisor
 license: GPL
@@ -14,4 +14,7 @@ description:
 
 item:
  One summarized check of all network information
+
+inventory:
+ One service is created for each network interface.
 

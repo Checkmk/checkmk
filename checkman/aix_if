@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
  counts, and errors of network interfaces of AIX hosts using
- data sent by the Check_MK agent. It is fully compatible with {if} and
+ data sent by the Checkmk agent. It is fully compatible with {if} and
  {if64} and shares all of its features, including Perf-O-Meter, averaging,
  flexible configuration and NagVis weathermaps.
 
@@ -29,7 +29,7 @@ item:
  There are three allowed ways to specify a port: {1}: the last component of
  the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
  the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Check_MK does not check for uniqueness.
+ by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
  The inventory creates one service for each port that fulfills configurable conditions.

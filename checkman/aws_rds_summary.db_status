@@ -1,4 +1,4 @@
-title: AWS/RDS Database Info
+title: AWS RDS: Database Info
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,7 +9,9 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the instance if all required metrics (DBInstanceStatus) are given.
+ Name of the instance
 
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (DBInstanceStatus) are given.
+

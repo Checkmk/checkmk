@@ -10,3 +10,6 @@ description:
 
 item:
  Index of the power unit
+
+inventory:
+ One service is created for each power supply.

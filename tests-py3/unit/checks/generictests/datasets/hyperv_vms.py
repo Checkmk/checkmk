@@ -8,7 +8,6 @@
 # type: ignore
 
 
-
 checkname = 'hyperv_vms'
 
 
@@ -33,13 +32,13 @@ discovery = {'': [('Q-WSUS', {'state': 'Running'}),
 
 checks = {'': [('Q-WSUS',
                 {'state': 'Running'},
-                [(0, 'State is Running (Operating normally)', [])]),
+                [(0, 'State Running (Operating normally) matches discovery', [])]),
                ('weg-ca-webserver',
                 {'state': 'Off'},
-                [(0, 'State is Off (Operating normally)', [])]),
+                [(0, 'State Off (Operating normally) matches discovery', [])]),
                ('z4058044_snap (23.05.2014 - 09:29:29)',
-                {'state': 'Running'},
-                [(0, 'State is Running (Operating normally)', [])]),
+                {'state': 'Paused', 'Off': 1},
+                [(2, 'State Running (Operating normally) does not match discovery (Paused)', [])]),
                (u'AUN-CAA',
-                {'state': u'Off'},
-                [(0, u'State is Off (Operating normally)', [])])]}
+                {'state': u'Off', 'Off': 2},
+                [(2, u'State is Off (Operating normally)', [])])]}

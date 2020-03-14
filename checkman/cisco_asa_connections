@@ -1,4 +1,4 @@
-title: Cisco ASA Connections
+title: Cisco ASA: Connections
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk
@@ -11,5 +11,5 @@ description:
  Upper levels for currently connections can be set. There are no default levels.
 
 inventory:
- One service will be created.
+ One service is created.
 

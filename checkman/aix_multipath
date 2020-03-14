@@ -18,6 +18,5 @@ item:
 
 inventory:
  One service is created for each LUN that is reported by
- the lspath utility. Devices that do not start with {"hdisk"}
- are not included in inventory.
+ the lspath utility if the device starts with {"hdisk"}
 

@@ -23,29 +23,23 @@ from testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
-_DOCKER_IMAGE = "%s/ubuntu-19.04-os-image" % _DOCKER_REGISTRY
 
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(version, result_path, command, interactive):
-    # type: (CMKVersion, Path, List[str], bool) -> int
+def execute_tests_in_container(distro_name, docker_tag, version, result_path, command, interactive):
+    # type: (str, str, CMKVersion, Path, List[str], bool) -> int
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    # When invoking the test based on the current git, use the container based on
-    # the current daily build. The git is patched into that version later in the
-    # test container
-
-    # TODO: Why don't we use our official containers here? We should have all the code
-    # ready for using it in either "docker" or "tests-py3/docker" directory.
-    image_name = _create_cmk_image(client, _DOCKER_IMAGE, version)
+    base_image_name = "%s/%s" % (_DOCKER_REGISTRY, distro_name)
+    image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
 
     # Start the container
     with _start(
             client,
-            image=image_name,
+            image=image_name_with_tag,
             command="/bin/bash",
             volumes=list(_runtime_volumes().keys()),
             host_config=client.api.create_host_config(
@@ -60,6 +54,12 @@ def execute_tests_in_container(version, result_path, command, interactive):
                     docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
                 ],
                 binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
+                # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
+                # docker daemon wide, but set some fixed local network which is not being routed.
+                # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
+                sysctls={
+                    "net.ipv6.conf.eth0.disable_ipv6": 1,
+                },
             ),
             stdin_open=True,
             tty=True,
@@ -113,65 +113,86 @@ def execute_tests_in_container(version, result_path, command, interactive):
 
 
 def _docker_client():
-    return docker.from_env()
+    return docker.from_env(timeout=600)
 
 
-def _get_or_load_image(client, image_name):
+def _get_or_load_image(client, image_name_with_tag):
     # type: (docker.DockerClient, str) -> Optional[docker.Image]
     try:
-        image = client.images.get(image_name)
-        logger.info("Image %s is already available locally (%s)", image_name, image.short_id)
-        return image
+        image = client.images.get(image_name_with_tag)
+        logger.info("  Available locally (%s)", image.short_id)
+
+        # Verify that this is in sync with remote version
+        try:
+            registry_data = client.images.get_registry_data(image_name_with_tag)
+            reg_image = registry_data.pull()
+            if reg_image.short_id == image.short_id:
+                logger.info("  Is in sync with registry")
+                return image
+
+            logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
+        except docker.errors.NotFound:
+            logger.info("  Not available from registry")
+            return image
+        except docker.errors.APIError as e:
+            _handle_api_error(e)
+            return image
+
     except docker.errors.ImageNotFound:
-        logger.info("Image %s is not available locally, trying to download from registry",
-                    image_name)
+        logger.info("  Not available locally, try to pull")
 
     try:
-        image = client.images.pull("%s:latest" % image_name)
-        logger.info("Image %s has been loaded from registry (%s)", image_name, image.short_id)
+        image = client.images.pull(image_name_with_tag)
+        logger.info("  Downloaded (%s)", image.short_id)
         return image
     except docker.errors.NotFound:
-        logger.info("Image %s is not available from registry", image_name)
+        logger.info("  Not available from registry")
     except docker.errors.APIError as e:
-        if "no basic auth" in "%s" % e:
-            raise Exception(
-                "No authentication information stored for %s. You will have to login to the "
-                "registry using \"docker login %s\" to be able to execute the tests." %
-                (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
-        if "request canceled while waiting for connection" in "%s" % e:
-            return None
-        if "dial tcp: lookup " in "%s" % e:
-            # May happen when offline on ubuntu
-            return None
-        raise
+        _handle_api_error(e)
 
     return None
 
 
-def _create_cmk_image(client, base_image_name, version):
-    # type: (docker.DockerClient, str, CMKVersion) -> str
-    image_name = "%s-%s-%s-%s" % (base_image_name, version.edition_short, version.version,
-                                  version.branch())
+def _handle_api_error(e):
+    if "no basic auth" in "%s" % e:
+        raise Exception(
+            "No authentication information stored for %s. You will have to login to the "
+            "registry using \"docker login %s\" to be able to execute the tests." %
+            (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
+    if "request canceled while waiting for connection" in "%s" % e:
+        return None
+    if "dial tcp: lookup " in "%s" % e:
+        # May happen when offline on ubuntu
+        return None
+    raise e
 
-    logger.info("Preparing %s image from %s", image_name, base_image_name)
+
+def _create_cmk_image(client, base_image_name, docker_tag, version):
+    # type: (docker.DockerClient, str, str, CMKVersion) -> str
+    base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+
+    # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
+    # these parts to the target image name. The tag is equal to the origin image.
+    image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
+    image_name_with_tag = "%s:%s" % (image_name, docker_tag)
+
+    logger.info("Preparing [%s]", image_name_with_tag)
     # First try to get the image from the local or remote registry
-    # TODO: How to handle image updates?
-    image = _get_or_load_image(client, image_name)
+    image = _get_or_load_image(client, image_name_with_tag)
     if image:
-        return image_name  # already found, nothing to do.
+        return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("Create new image %s from %s", image_name, base_image_name)
-    # TODO: How to handle image updates?
-    base_image = _get_or_load_image(client, base_image_name)
+    logger.info("  Create from [%s]", base_image_name_with_tag)
+    base_image = _get_or_load_image(client, base_image_name_with_tag)
     if base_image is None:
         raise Exception(
-            "Image %s is not available locally and the registry \"%s\" is not reachable. It is "
+            "Image [%s] is not available locally and the registry \"%s\" is not reachable. It is "
             "not implemented yet to build the image locally. Terminating." %
-            (base_image_name, _DOCKER_REGISTRY_URL))
+            (base_image_name_with_tag, _DOCKER_REGISTRY_URL))
 
     with _start(
             client,
-            image=base_image_name,
+            image=base_image_name_with_tag,
             command=["tail", "-f", "/dev/null"],  # keep running
             volumes=list(_image_build_volumes().keys()),
             host_config=client.api.create_host_config(
@@ -184,8 +205,8 @@ def _create_cmk_image(client, base_image_name, version):
             ),
     ) as container:
 
-        logger.info("Building in container %s (created from %s)", container.short_id,
-                    base_image_name)
+        logger.info("Building in container %s (from [%s])", container.short_id,
+                    base_image_name_with_tag)
 
         assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
 
@@ -210,12 +231,17 @@ def _create_cmk_image(client, base_image_name, version):
 
         container.stop()
 
-        image = container.commit(image_name)
-        logger.info("Commited image %s (%s)", image_name, image.short_id)
+        image = container.commit(image_name_with_tag)
+        logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
-        # TODO: Push image to the registry?
+        try:
+            logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+            client.images.push(image_name_with_tag)
+            logger.info("  Upload complete")
+        except docker.errors.APIError as e:
+            _handle_api_error(e)
 
-    return image_name
+    return image_name_with_tag
 
 
 def _image_build_volumes():
@@ -267,21 +293,23 @@ def _container_env(version):
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
         "PIPENV_VENV_IN_PROJECT": "true",
-        "VERSION": version.version,
+        "VERSION": version.version_spec,
         "EDITION": version.edition_short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
+        # Write to this result path by default (may be overridden e.g. by integration tests)
+        "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }
 
 
 @contextmanager
 def _start(client, **kwargs):
-    logger.info("Start new container from %s (Args: %s)", kwargs["image"], kwargs)
+    logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
 
     try:
         client.images.get(kwargs["image"])
     except docker.errors.ImageNotFound:
-        raise Exception("Image %s could not be found locally" % kwargs["image"])
+        raise Exception("Image [%s] could not be found locally" % kwargs["image"])
 
     # Start the container with lowlevel API to be able to attach with a debug shell
     # after initialization

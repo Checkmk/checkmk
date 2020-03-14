@@ -9,7 +9,6 @@ import abc
 import time
 from typing import NamedTuple  # pylint: disable=unused-import
 
-import cmk
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode
 

@@ -1,4 +1,4 @@
-title: Temperature sensors (HWgroup Poseidon devices)
+title: HWgroup Poseidon devices: Temperature
 agents: snmp
 catalog: hw/network/hwgroup
 license: GPL

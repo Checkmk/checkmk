@@ -1,4 +1,4 @@
-title: AWS/EBS Disk IO
+title: AWS EBS: Disk IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,7 +9,8 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the instance if all required metrics (ReadOps, WriteOps, ReadBytes, WriteBytes and QueueLength) are given.
+ Name of the instance
 
 inventory:
- One service per volume is created.
+ One service is created for each volume if all required metrics
+ (ReadOps, WriteOps, ReadBytes, WriteBytes and QueueLength) are given.

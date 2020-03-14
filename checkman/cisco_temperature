@@ -1,4 +1,4 @@
-title: Temperature sensors (by CISCO-ENVMON-MIB or CISCO-ENTITY-SENSOR-MIB)
+title: Cisco devices: Temperature sensors {CISCO-ENVMON-MIB & CISCO-ENTITY-SENSOR-MIB}
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -16,5 +16,5 @@ item:
  if no description is available.
 
 inventory:
- One check for each available sensor is created.
+ One service is created for each available sensor.
 

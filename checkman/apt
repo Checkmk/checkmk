@@ -27,5 +27,5 @@ description:
  {/etc/apt/apt.conf.d/98mk-apt}.
 
 inventory:
- One service will be created for each system where the {mk_apt}
+ One service is created for each system where the {mk_apt}
  plugin is being installed and the command {apt-get} is present.

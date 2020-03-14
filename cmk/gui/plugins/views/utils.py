@@ -912,7 +912,7 @@ class Painter(six.with_metaclass(abc.ABCMeta, object)):
         return self.title(cell)
 
     def group_by(self, row):
-        # type: (Row) -> Optional[Union[str, Tuple]]
+        # type: (Row) -> Union[None, str, Tuple]
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 

@@ -8,6 +8,7 @@ from __future__ import division
 import time
 import os
 
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -131,7 +132,7 @@ def get_av_display_options(what):
             ("service_groups", _("By Service group")),
         ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         ruleset_search_url = html.makeuri_contextless(
             [
                 ("filled_in", "search"),

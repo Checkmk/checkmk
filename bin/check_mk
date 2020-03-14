@@ -29,7 +29,7 @@ import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
 
-import cmk.base  # pylint: disable=cmk-module-layer-violation
+import cmk.base.caching  # pylint: disable=cmk-module-layer-violation
 import cmk.base.console as console  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation

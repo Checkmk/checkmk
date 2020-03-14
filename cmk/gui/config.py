@@ -27,7 +27,7 @@ from livestatus import (  # type: ignore[import]  # pylint: disable=unused-impor
     SiteId, SiteConfiguration, SiteConfigurations,
 )
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -49,10 +49,10 @@ import cmk.gui.plugins.config
 # later handled with the default_config dict and _load_default_config()
 from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
 UserType = Union["LoggedInUser", LocalProxy]
@@ -1041,12 +1041,12 @@ def _migrate_string_encoded_socket(value):
 
 def omd_site():
     # type: () -> SiteId
-    return SiteId(cmk.omd_site())
+    return SiteId(cmk_version.omd_site())
 
 
 def url_prefix():
     # type: () -> str
-    return "/%s/" % cmk.omd_site()
+    return "/%s/" % cmk_version.omd_site()
 
 
 def default_single_site_configuration():

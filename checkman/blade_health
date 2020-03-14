@@ -9,4 +9,4 @@ description:
  show any details.
 
 inventory:
- One check per blade center is created automatically.
+ One service is created for each blade center.

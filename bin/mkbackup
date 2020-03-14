@@ -29,6 +29,13 @@ from tarfile import TarFile, ReadError
 from hashlib import md5
 from typing import Any, Dict  # pylint: disable=unused-import
 
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
+import six
+
 from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
@@ -94,7 +101,7 @@ def stop_logging():
 
 def log(s):
     msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
-    sys.stdout.write(msg.encode("utf-8"))
+    sys.stdout.write(six.ensure_str(msg))
     if is_cma():
         syslog.syslog(s)
 
@@ -243,7 +250,8 @@ def makedir(path, user=None, group=None, mode=None):
 # - Site-Konfiguration laden
 def load_config():
     def load_file(path):
-        return ast.literal_eval(open(path).read())
+        with Path(path).open("r", encoding="utf-8") as f:
+            return ast.literal_eval(f.read())
 
     if is_root():
         config = load_file(system_config_path())
@@ -293,14 +301,13 @@ def create_backup_info():
     files = get_files_for_backup_info()
 
     info = {
-        "type"       : "Check_MK" if not is_root() \
-                       else "Appliance",
-        "job_id"     : g_local_job_id,
-        "config"     : g_job_config,
-        "hostname"   : hostname(),
-        "files"      : get_files_for_backup_info(),
-        "finished"   : time.time(),
-        "size"       : sum([ f[1] for f in files ]),
+        "type": "Check_MK" if not is_root() else "Appliance",
+        "job_id": g_local_job_id,
+        "config": g_job_config,
+        "hostname": hostname(),
+        "files": get_files_for_backup_info(),
+        "finished": time.time(),
+        "size": sum([f[1] for f in files]),
     }
 
     if not is_root():
@@ -1813,7 +1820,7 @@ def mode_jobs(opts):
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda x_y: x_y[0]):
-        sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
+        sys.stdout.write(six.ensure_str(fmt % (job_id, job_cfg["title"])))
 
 
 def mode_targets(opts):
@@ -1821,7 +1828,7 @@ def mode_targets(opts):
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda x_y1: x_y1[0]):
-        sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
+        sys.stdout.write(six.ensure_str(fmt % (job_id, job_cfg["title"])))
 
 
 def usage(error=None):

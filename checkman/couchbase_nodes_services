@@ -1,4 +1,4 @@
-title: Services on couchbase nodes
+title: Couchbase nodes: Services
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -9,7 +9,7 @@ description:
  the services at discovery and is OK otherwise.
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

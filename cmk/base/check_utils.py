@@ -11,7 +11,7 @@ from typing import (  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName, Item, CheckPluginName  # pylint: disable=unused-import
 
-from cmk.base import runtime_cache as _runtime_cache
+from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
-FinalSectionContent = Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
+FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
 AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
 AbstractRawData = Union[RawAgentData, "RawSNMPData"]

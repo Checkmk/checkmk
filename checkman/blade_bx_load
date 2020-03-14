@@ -9,5 +9,5 @@ description:
   reported.
 
 inventory:
-  Returns one check on each blade enclosure.
+  One service is created for each blade enclosure.
 

@@ -12,4 +12,4 @@ item:
  The unit index.
 
 inventory:
- One service per peer is created.
+ One service is created for each peer.

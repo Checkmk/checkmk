@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as TypingTuple, Text  # pylint: disable=unused-import
+from typing import Tuple as _Tuple, Text  # pylint: disable=unused-import
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -26,7 +26,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _vs_cisco_dom(which_levels):
-    # type: (str) -> TypingTuple[str, Alternative]
+    # type: (str) -> _Tuple[str, Alternative]
     def _button_text_warn(which_levels):
         # type: (str) -> Text
         if which_levels == "upper":

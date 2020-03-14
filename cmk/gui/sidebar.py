@@ -11,7 +11,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.i18n
@@ -33,10 +33,10 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.config import UserType  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
 
 # Helper functions to be used by snapins
@@ -480,7 +480,7 @@ class SidebarRenderer(object):
             html.open_a(href="version.py", target="main", title=_("Open release notes"))
             html.write(self._get_check_mk_edition_title())
             html.br()
-            html.write(cmk.__version__)
+            html.write(cmk_version.__version__)
 
             if werks.may_acknowledge():
                 num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
@@ -496,12 +496,12 @@ class SidebarRenderer(object):
         html.close_div()
 
     def _get_check_mk_edition_title(self):
-        if cmk.is_enterprise_edition():
-            if cmk.is_demo():
+        if cmk_version.is_enterprise_edition():
+            if cmk_version.is_demo():
                 return "Enterprise (Demo)"
             return "Enterprise"
 
-        elif cmk.is_managed_edition():
+        elif cmk_version.is_managed_edition():
             return "Managed"
 
         return "Raw"

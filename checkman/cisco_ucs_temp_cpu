@@ -10,4 +10,4 @@ item:
  The name of the CPU
 
 inventory:
- One service per CPU
+ One service is created for each CPU.

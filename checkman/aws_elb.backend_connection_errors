@@ -1,4 +1,4 @@
-title: AWS/ELB Backend Errors
+title: AWS ELB: Backend Errors
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -12,4 +12,4 @@ description:
  No default levels are set; these are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (BackendConnectionErrors) are given.

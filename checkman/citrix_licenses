@@ -1,4 +1,4 @@
-title: Citrix licenses
+title: Citrix: Licenses
 agents: windows
 catalog: app/citrix
 license: GPL
@@ -13,5 +13,5 @@ description:
  on your windows agent.
 
 inventory:
- One service per license type will be created.
+ One service is created for each license type.
 

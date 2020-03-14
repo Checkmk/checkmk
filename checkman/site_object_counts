@@ -1,11 +1,11 @@
-title: Check_MK site objects
+title: Checkmk site objects
 agents: linux
 catalog: app/omd
 license: GPL
 distribution: check_mk
 description:
  This check collects information about the amount of different
- host types or used check commands of Check_MK sites.
+ host types or used check commands of Checkmk sites.
 
  To make this check work please install the {{mk_site_object_counts}}
  agent plugin and specify host tags or check commands within the

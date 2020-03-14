@@ -15,7 +15,7 @@ from typing import Dict, Generator, Text, List, Optional, Union  # pylint: disab
 import six
 
 import cmk.gui.escaping as escaping
-from cmk import ensure_unicode
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 

@@ -15,4 +15,4 @@ item:
  The index of the FRU module.
 
 inventory:
- One check is created for each FRU module.
+ One service is created for each FRU module.

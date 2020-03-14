@@ -11,6 +11,8 @@ import pytest  # type: ignore[import]
 import six
 import cmk.gui.config as config
 
+import cmk.utils.version as cmk_version
+
 # Make it load all plugins (CEE + CME)
 import cmk.gui.views  # pylint: disable=unused-import
 import cmk.gui.default_permissions
@@ -308,7 +310,7 @@ def test_registered_commands():
         },
     }
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected.update({'edit_downtimes': {
             'permission': 'action.downtimes',
             'tables': ['downtime'],
@@ -6119,6 +6121,23 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
     '.software.applications.docker.version',
+    '.software.applications.ibm_mq.',
+    '.software.applications.ibm_mq.channels:',
+    '.software.applications.ibm_mq.channels:*.name',
+    '.software.applications.ibm_mq.channels:*.qmgr',
+    '.software.applications.ibm_mq.channels:*.status',
+    '.software.applications.ibm_mq.channels:*.type',
+    '.software.applications.ibm_mq.managers:',
+    '.software.applications.ibm_mq.managers:*.instname',
+    '.software.applications.ibm_mq.managers:*.instver',
+    '.software.applications.ibm_mq.managers:*.name',
+    '.software.applications.ibm_mq.managers:*.standby',
+    '.software.applications.ibm_mq.managers:*.status',
+    '.software.applications.ibm_mq.queues:',
+    '.software.applications.ibm_mq.queues:*.maxdepth',
+    '.software.applications.ibm_mq.queues:*.maxmsgl',
+    '.software.applications.ibm_mq.queues:*.name',
+    '.software.applications.ibm_mq.queues:*.qmgr',
     '.software.applications.kubernetes.assigned_pods:',
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',

@@ -22,9 +22,5 @@ description:
  does not allow setting a level on this.
 
 inventory:
- The check first looks for a cooling device vendor (this
- is where it needs to be extended to cover other Carel devices),
- then for the SNMP management device, and then for the MIB region
- for cooling devices.
- If all of these are found, the inventory creates a single service.
+ One service is created.
 

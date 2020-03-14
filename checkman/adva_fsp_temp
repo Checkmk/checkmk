@@ -23,4 +23,4 @@ item:
  Name of the module or port.
 
 inventory:
- All temperature sensors on all modules/ports are detected
+ One service is created for each connected temperature sensor on all modules/ports

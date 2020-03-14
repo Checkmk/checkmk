@@ -1,4 +1,4 @@
-title: AWS/S3 HTTP Errors
+title: AWS S3: HTTP Errors
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -15,7 +15,9 @@ description:
  is a paid feature
 
 item:
- Name of the instance if all required metrics (AllRequests, 4xxErrors, 5xxErrors) are given.
+ Name of the instance
 
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (AllRequests, 4xxErrors, 5xxErrors) are given.
+

@@ -11,4 +11,4 @@ item:
  "Disk" or "Host"
 
 inventory:
- Two services per device are created, one each for disk and host r/w-delay respectively.
+ Two services are created for each device, one each for disk and host r/w-delay respectively.

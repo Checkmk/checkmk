@@ -12,4 +12,4 @@ item:
  The controller number
 
 inventory:
- One service for each controller is created
+ One service is created for each controller.

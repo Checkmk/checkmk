@@ -59,7 +59,6 @@ def _parameter_valuespec_job():
                      MonitoringState(title=_("Resulting state"),),
                  ],
                  default_value=(0, 0)),
-             ),
              title = _("Map exit codes"),
          )),
         ("outcome_on_cluster",

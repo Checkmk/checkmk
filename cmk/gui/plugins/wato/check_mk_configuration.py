@@ -4555,50 +4555,52 @@ def _valuespec_check_mk_exit_status():
                              "unexpected_ip_ranges",
                              MonitoringState(
                                  default_value=1,
-                                 title=_("State if unexpexted (exceeding or missing) allowed IP ranges "
-                                         "are detected")),
+                                 title=_(
+                                     "State if unexpexted (exceeding or missing) allowed IP ranges "
+                                     "are detected")),
                          ),
                      ])),
                 ("individual",
-                 Dictionary(title=_("Individual states per data source"),
-                            elements=[
-                                ("agent",
-                                 Dictionary(
-                                     title=_("Agent"),
-                                     elements=_common_check_mk_exit_status_elements() + [
-                                         (
-                                             "wrong_version",
-                                             MonitoringState(
-                                                 default_value=1,
-                                                 title=_("State in case of wrong agent version")),
-                                         ),
-                                         (
-                                             "unexpected_ip_ranges",
-                                             MonitoringState(
-                                                 default_value=1,
-                                                 title=_("State if unexpexted (exceeding or missing) "
-                                                         "allowed IP ranges are detected")),
-                                         ),
-                                     ])),
-                                ("programs",
-                                 Dictionary(title=_("Programs"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                                ("special",
-                                 Dictionary(title=_("Special Agent"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                                ("snmp",
-                                 Dictionary(title=_("SNMP"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                                ("mgmt_snmp",
-                                 Dictionary(title=_("SNMP Management Board"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                                ("mgmt_ipmi",
-                                 Dictionary(title=_("IPMI Management Board"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                                ("piggyback",
-                                 Dictionary(title=_("Piggyback"),
-                                            elements=_common_check_mk_exit_status_elements())),
-                            ])),
+                 Dictionary(
+                     title=_("Individual states per data source"),
+                     elements=[
+                         ("agent",
+                          Dictionary(
+                              title=_("Agent"),
+                              elements=_common_check_mk_exit_status_elements() + [
+                                  (
+                                      "wrong_version",
+                                      MonitoringState(
+                                          default_value=1,
+                                          title=_("State in case of wrong agent version")),
+                                  ),
+                                  (
+                                      "unexpected_ip_ranges",
+                                      MonitoringState(
+                                          default_value=1,
+                                          title=_("State if unexpexted (exceeding or missing) "
+                                                  "allowed IP ranges are detected")),
+                                  ),
+                              ])),
+                         ("programs",
+                          Dictionary(title=_("Programs"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                         ("special",
+                          Dictionary(title=_("Special Agent"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                         ("snmp",
+                          Dictionary(title=_("SNMP"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                         ("mgmt_snmp",
+                          Dictionary(title=_("SNMP Management Board"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                         ("mgmt_ipmi",
+                          Dictionary(title=_("IPMI Management Board"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                         ("piggyback",
+                          Dictionary(title=_("Piggyback"),
+                                     elements=_common_check_mk_exit_status_elements())),
+                     ])),
             ],
             optional_keys=["individual"],
         ),

@@ -913,7 +913,6 @@ class CheckMKAgentDataSource(
         return (status, "Unexpected allowed IP ranges (%s)%s" %
                 (", ".join(infotexts), state_markers[status]), [])
 
-
     def _is_expected_agent_version(self, agent_version, expected_version):
         # type: (Optional[str], config.AgentTargetVersion) -> bool
         try:

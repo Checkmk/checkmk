@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -187,11 +187,7 @@ def load_werk(werkid):
         header, value = line.split(":", 1)
         werk[header.strip().lower()] = value.strip()
 
-    description = ""
-    for line in f:
-        description += line
-
-    werk["description"] = description
+    werk["description"] = f.read()
     versions.add(werk["version"])
     return werk
 
@@ -360,7 +356,6 @@ def main_list(args, fmt):
     # in one class are orred. Multiple types are anded.
     filters = {}
 
-    sort = lambda a, b: (a['date'] > b['date']) - (a['date'] < b['date'])
     reverse = False
     for a in args:
 
@@ -401,11 +396,8 @@ def main_list(args, fmt):
                 break
         if not skip:
             newwerks.append(werk)
-    werks = newwerks
 
-    newwerks.sort(sort)
-    if reverse:
-        newwerks.reverse()
+    werks = sorted(newwerks, key=lambda w: w["date"], reverse=reverse)
 
     # Output
     if fmt == "console":
@@ -449,7 +441,8 @@ def werk_class(werk):
     for entry in classes:
         if entry == cl:
             return cl
-        elif isinstance(entry, tuple) and entry[0] == cl:
+
+        if isinstance(entry, tuple) and entry[0] == cl:
             return entry[1]
     return cl
 
@@ -542,8 +535,8 @@ def input_choice(what, choices):
         if c in ctc:
             sys.stdout.write(" %s%s%s\n" % (tty_bold, ctc[c], tty_normal))
             return ctc[c]
-        else:
-            sys.stdout.write("\n")
+
+        sys.stdout.write("\n")
 
 
 def get_edition_components(edition):
@@ -941,15 +934,16 @@ for cmd_name, func in commands.items():
     if cmd_name == cmd_arg:
         hits = [(cmd_name, func)]
         break
-    elif cmd_name.startswith(cmd_arg):
+
+    if cmd_name.startswith(cmd_arg):
         hits.append((cmd_name, func))
 
 if len(hits) < 1:
     usage()
 
 elif len(hits) > 1:
-    sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" % \
-            (cmd_arg, ", ".join([ candidate for (candidate,_f) in hits])))
+    sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" %
+                     (cmd_arg, ", ".join([candidate for (candidate, _f) in hits])))
 
 else:
     hits[0][1](sys.argv[2:])

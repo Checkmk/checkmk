@@ -113,7 +113,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
 
 
 def _docker_client():
-    return docker.from_env(timeout=600)
+    return docker.from_env(timeout=1200)
 
 
 def _get_or_load_image(client, image_name_with_tag):
@@ -239,6 +239,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
             client.images.push(image_name_with_tag)
             logger.info("  Upload complete")
         except docker.errors.APIError as e:
+            logger.warning("  An error occurred")
             _handle_api_error(e)
 
     return image_name_with_tag

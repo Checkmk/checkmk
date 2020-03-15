@@ -18,6 +18,8 @@ import fnmatch
 import traceback
 import itertools
 import multiprocessing
+from types import TracebackType  # pylint: disable=unused-import
+from typing import Optional, Type, Union, Tuple, Dict, Text, List  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.cmk_subprocess as subprocess
@@ -26,40 +28,56 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
+Command = List[str]
+ComponentSpec = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
+DomainSpec = Dict
+
 
 class SnapshotComponentsParser(object):
     def __init__(self, component_list):
+        # type: (List[ComponentSpec]) -> None
         super(SnapshotComponentsParser, self).__init__()
-        self.components = []
+        self.components = []  # type: List[SnapshotComponent]
         self._from_component_list(component_list)
 
     def _from_component_list(self, component_list):
+        # type: (List[ComponentSpec]) -> None
         for component in component_list:
             self.components.append(SnapshotComponent(component))
 
     def get_component_names(self):
+        # type: () -> List[str]
         return [x.name for x in self.components]
 
 
 class SnapshotComponent(object):
     def __init__(self, component):
-        self.component_type = None  # file or dir
-        self.excludes = None  # exclude files from dir
-        self.name = None  # the name of the subtar
+        # file or dir
+        self.component_type = ""
+        # exclude files from dir
+        self.excludes = []  # type: List[str]
+        # the name of the subtar
+        self.name = ""
 
-        self.configured_path = None  # complete path, dir or file
-        self.base_dir = None  # real path
-        self.filename = None  # real filename, . for directories
+        # complete path, dir or file
+        self.configured_path = ""
+        # real path
+        self.base_dir = ""
+        # real filename, . for directories
+        self.filename = None  # type: Optional[str]
 
         self._from_tuple(component)
 
     def _from_tuple(self, component):
+        # type: (ComponentSpec) -> None
         # Self explanatory, tuples are ugly to parse..
         if len(component) == 4:
-            self.component_type, self.name, self.configured_path, excludes = component
+            # Mypy does not understand the different lengths
+            self.component_type, self.name, self.configured_path, excludes = component  # type: ignore[misc]
             self.excludes = excludes[:]
         else:
-            self.component_type, self.name, self.configured_path = component
+            # Mypy does not understand the different lengths
+            self.component_type, self.name, self.configured_path = component  # type: ignore[misc]
             self.excludes = []
 
         self.configured_path = os.path.abspath(self.configured_path).rstrip("/")
@@ -73,12 +91,14 @@ class SnapshotComponent(object):
         self.excludes.append(".*new*")  # exclude all temporary files
 
     def __str__(self):
+        # type: () -> str
         return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % \
                 (self.component_type, self.name, self.configured_path, self.base_dir, self.filename, self.excludes)
 
 
 class SnapshotCreationBase(object):
     def __init__(self, work_dir):
+        # type: (str) -> None
         super(SnapshotCreationBase, self).__init__()
         self._logger = logger.getChild("SnapshotCreationBase")
         self._work_dir = work_dir
@@ -86,17 +106,19 @@ class SnapshotCreationBase(object):
         self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
         self._tarfile_dir = os.path.join(self._multitar_workdir, "subtars")
 
-        self._available_snapshots = {}
+        self._available_snapshots = {}  # type: Dict[Tuple[str, ...], str]
 
         # Debugging stuff
-        self._statistics = {"rsync": [], "tar": {}}
+        self._statistics_rsync = []  # type: List[Text]
+        self._statistics_tar = {}  # type: Dict[str, List[str]]
 
     def output_statistics(self):
+        # type: () -> None
         self._logger.debug("============= Snapshot creation statistics =============")
-        for line in self._statistics["rsync"]:
+        for line in self._statistics_rsync:
             self._logger.debug("RSYNC: %s" % line)
 
-        for filepath, lines in self._statistics["tar"].items():
+        for filepath, lines in self._statistics_tar.items():
             self._logger.debug("TAR: %s" % filepath)
             for line in lines:
                 self._logger.debug("TAR:     - %s" % line)
@@ -106,6 +128,7 @@ class SnapshotCreationBase(object):
                            generic_components,
                            custom_components,
                            reuse_identical_snapshots=False):
+        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
         generate_start_time = time.time()
         if not custom_components:
             custom_components = []
@@ -127,8 +150,9 @@ class SnapshotCreationBase(object):
             identical_snapshot = self._available_snapshots.get(snapshot_fingerprint)
             if identical_snapshot:
                 os.symlink(identical_snapshot, target_filepath)
-                self._statistics["tar"][os.path.basename(identical_snapshot)].append("Reused by %-40s (took %.4fsec)" %\
-                                                                        (target_basename, time.time() - generate_start_time))
+                self._statistics_tar[os.path.basename(identical_snapshot)].append(
+                    "Reused by %-40s (took %.4fsec)" %
+                    (target_basename, time.time() - generate_start_time))
                 return
 
         # Generate the final tar command
@@ -155,12 +179,13 @@ class SnapshotCreationBase(object):
         if reuse_identical_snapshots:
             self._available_snapshots[snapshot_fingerprint] = target_filepath
 
-        self._statistics["tar"].setdefault(target_basename, []).append(
+        self._statistics_tar.setdefault(target_basename, []).append(
             "Snapshot creation took %.4fsec" % (time.time() - generate_start_time))
         self._logger.debug("Snapshot %-30s took %.4fsec" % (target_basename,
                                                             (time.time() - generate_start_time)))
 
     def _get_rsync_and_tar_commands(self, component, rsync_target_dir, tarfile_target_dir):
+        # type: (SnapshotComponent, str, str) -> List[Command]
         bash_commands = []
 
         # Rsync from source
@@ -172,6 +197,7 @@ class SnapshotCreationBase(object):
         return bash_commands
 
     def _get_rsync_command(self, component, rsync_target_dir):
+        # type: (SnapshotComponent, str) -> Command
         exclude_args = list(
             itertools.chain.from_iterable([("--exclude", f) for f in component.excludes]))
         if component.component_type == "dir":
@@ -184,9 +210,11 @@ class SnapshotCreationBase(object):
         return ["rsync", "-av", "--delete", archive_path, rsync_target_dir] + exclude_args
 
     def _get_subtar_command(self, component, source_dir, tarfile_target_dir):
+        # type: (SnapshotComponent, str, str) -> Command
         if component.component_type == "dir":
             files_location = [source_dir, "."]
         else:
+            assert component.filename is not None
             files_location = [source_dir, component.filename]
 
         return [
@@ -195,6 +223,7 @@ class SnapshotCreationBase(object):
         ] + files_location
 
     def _execute_bash_commands(self, commands, debug=False):
+        # type: (List[Command], bool) -> None
         if not commands:
             return
 
@@ -212,14 +241,16 @@ class SnapshotCreationBase(object):
                 )
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
-                    raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
-                                                        (command, stdout, stderr))
+                    raise MKGeneralException(
+                        _("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s"
+                         ) % (command, stdout, stderr))
             except OSError as e:
                 raise MKGeneralException(
                     _("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s"
                      ) % (command, e))
 
     def _create_custom_components_tarfiles(self, parsed_custom_components, tarfile_dir):
+        # type: (SnapshotComponentsParser, str) -> None
         # Add any custom_components
         custom_components_commands = []
         for component in parsed_custom_components.components:
@@ -233,11 +264,13 @@ class SnapshotCreationBase(object):
         self._execute_bash_commands(custom_components_commands)
 
     def _get_snapshot_fingerprint(self, parsed_generic_components, parsed_custom_components):
+        # type: (SnapshotComponentsParser, SnapshotComponentsParser) -> Tuple[str, ...]
         custom_components_md5sum = self._get_custom_components_md5sum(parsed_custom_components)
         return tuple(
             sorted(parsed_generic_components.get_component_names()) + [custom_components_md5sum])
 
     def _get_custom_components_md5sum(self, parsed_custom_components):
+        # type: (SnapshotComponentsParser) -> str
         if not parsed_custom_components:
             return ""
 
@@ -245,6 +278,7 @@ class SnapshotCreationBase(object):
         #       If there additional custom components in the future this call will fail
         #       This function raises an exception in case of an unknown component
         def is_supported(component):
+            # type: (SnapshotComponent) -> bool
             if component.name != "sitespecific":
                 return False
             elif component.component_type != "file":
@@ -265,13 +299,21 @@ class SnapshotCreationBase(object):
 
 
 class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
-    def __init__(self, work_dir):
-        super(SnapshotWorkerSubprocess, self).__init__(work_dir)
+    def __init__(self, work_dir, args, kwargs):
+        # type: (str, Tuple, Dict) -> None
+        multiprocessing.Process.__init__(self,
+                                         target=self._generate_snapshot,
+                                         args=args,
+                                         kwargs=kwargs)
+        SnapshotCreationBase.__init__(self, work_dir)
+
+        self.daemon = True
         self._logger = logger.getChild("SnapshotWorker(%d)" % os.getpid())
 
     def run(self):
+        # type: () -> None
         try:
-            self._generate_snapshot(*self._args, **self._kwargs)
+            super(SnapshotWorkerSubprocess, self).run()
         except Exception:
             self._logger.error("Error in subprocess")
             self._logger.error(traceback.format_exc())
@@ -279,43 +321,56 @@ class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
 
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, work_dir, all_generic_components):
+        # type: (str, List[ComponentSpec]) -> None
         super(SnapshotCreator, self).__init__(work_dir)
         self._setup_directories()
         self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
-        self._worker_subprocesses = []
+        self._worker_subprocesses = []  # type: List[SnapshotWorkerSubprocess]
 
-    def generate_snapshot(self, *args, **kwargs):
-        self._generate_snapshot(*args, **kwargs)
+    def generate_snapshot(self,
+                          target_filepath,
+                          generic_components,
+                          custom_components,
+                          reuse_identical_snapshots=False):
+        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
+        self._generate_snapshot(target_filepath,
+                                generic_components,
+                                custom_components,
+                                reuse_identical_snapshots=False)
 
+    # TODO: Dead code?
     def generate_snapshot_in_subprocess(self, *args, **kwargs):
-        new_worker = SnapshotWorkerSubprocess(self._work_dir)
-        new_worker._args = args
-        new_worker._kwargs = kwargs
-        new_worker.daemon = True
+        new_worker = SnapshotWorkerSubprocess(self._work_dir, args, kwargs)
         new_worker.start()
         self._worker_subprocesses.append(new_worker)
 
     def _setup_directories(self):
+        # type: () -> None
         for path in [self._rsync_target_dir, self._tarfile_dir]:
             if not os.path.exists(path):
                 os.makedirs(path)
 
     def __enter__(self):
+        # type: () -> SnapshotCreator
         self._prepare_generic_tar_files()
         return self
 
     def __exit__(self, exception_type, exception_value, tb):
+        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
         for worker in self._worker_subprocesses:
             worker.join()
         self.output_statistics()
 
     def _prepare_generic_tar_files(self):
-        bash_commands = []
+        # type: () -> None
+        bash_commands = []  # type: List[Command]
         prepare_start_time = time.time()
         for component in self._parsed_generic_components.components:
+            assert component.name is not None
             rsync_target_dir = os.path.join(self._rsync_target_dir, component.name)
             os.makedirs(rsync_target_dir)
 
+            assert component.configured_path is not None
             if os.path.exists(component.configured_path):
                 bash_commands.extend(
                     self._get_rsync_and_tar_commands(component, rsync_target_dir,
@@ -326,19 +381,22 @@ class SnapshotCreator(SnapshotCreationBase):
                 tar.close()
 
         self._execute_bash_commands(bash_commands)
-        self._statistics["rsync"].append(
+        self._statistics_rsync.append(
             _("RSync of generic files took %.4fsec") % (time.time() - prepare_start_time))
 
 
 # Can be removed soon, since it is deprecated by the SnapshotCreator
 def create(tar_filename, components):
+    # type: (str, List[ComponentSpec]) -> None
     tar = tarfile.open(tar_filename, "w:gz")
     start = time.time()
     for component in components:
         if len(component) == 4:
-            what, name, path, excludes = component
+            # Mypy does not understand the different lengths
+            what, name, path, excludes = component  # type: ignore[misc]
         else:
-            what, name, path = component
+            # Mypy does not understand the different lengths
+            what, name, path = component  # type: ignore[misc]
             excludes = []
 
         excludes = excludes[:]
@@ -368,7 +426,7 @@ def create(tar_filename, components):
             subtar_buffer.seek(0)
 
             info = tarfile.TarInfo("%s.tar" % name)
-            info.mtime = time.time()
+            info.mtime = int(time.time())
             info.uid = 0
             info.gid = 0
             info.size = subtar_size
@@ -381,6 +439,7 @@ def create(tar_filename, components):
 
 
 def filter_subtar_files(tarinfo, excludes):
+    # type: (tarfile.TarInfo, List[str]) -> Optional[tarfile.TarInfo]
     filename = os.path.basename(tarinfo.name)
 
     for exclude in excludes:
@@ -393,6 +452,7 @@ def filter_subtar_files(tarinfo, excludes):
 
 
 def extract_from_buffer(buffer_, elements):
+    # type: (bytes, Union[List[ComponentSpec], Dict[str, DomainSpec]]) -> None
     stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
@@ -403,6 +463,7 @@ def extract_from_buffer(buffer_, elements):
 
 
 def list_tar_content(the_tarfile):
+    # type: (Union[str, io.BytesIO]) -> Dict[str, Dict[str, int]]
     files = {}
     try:
         if not isinstance(the_tarfile, str):
@@ -418,15 +479,22 @@ def list_tar_content(the_tarfile):
 
 
 def get_file_content(the_tarfile, filename):
+    # type: (Union[str, io.BytesIO], str) -> bytes
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
         tar = tarfile.open("r", fileobj=the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")
-    return tar.extractfile(filename).read()
+
+    obj = tar.extractfile(filename)
+    if obj is None:
+        raise MKGeneralException(_('Failed to extract %s') % filename)
+
+    return obj.read()
 
 
 def extract_domains(tar, domains):
+    # type: (tarfile.TarFile, Dict[str, DomainSpec]) -> None
     tar_domains = {}
     for member in tar.getmembers():
         try:
@@ -441,11 +509,13 @@ def extract_domains(tar, domains):
         os.makedirs(restore_dir)
 
     def check_domain(domain, tar_member):
+        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
         errors = []
 
         prefix = domain["prefix"]
 
         def check_exists_or_writable(path_tokens):
+            # type: (List[str]) -> bool
             if not path_tokens:
                 return False
             if os.path.exists("/".join(path_tokens)):
@@ -484,11 +554,13 @@ def extract_domains(tar, domains):
         return errors
 
     def cleanup_domain(domain):
+        # type: (DomainSpec) -> List[Text]
         # Some domains, e.g. authorization, do not get a cleanup
         if domain.get("cleanup") is False:
             return []
 
         def path_valid(prefix, path):
+            # type: (str, str) -> bool
             if path.startswith("/") or path.startswith(".."):
                 return False
             return True
@@ -512,6 +584,7 @@ def extract_domains(tar, domains):
         return []
 
     def extract_domain(domain, tar_member):
+        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
         try:
             target_dir = domain.get("prefix")
             if not target_dir:
@@ -536,6 +609,7 @@ def extract_domains(tar, domains):
         return []
 
     def execute_restore(domain, is_pre_restore=True):
+        # type: (DomainSpec, bool) -> List[Text]
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
@@ -556,7 +630,7 @@ def extract_domains(tar, domains):
         ("Post-Restore", False,
          lambda domain, tar_member: execute_restore(domain, is_pre_restore=False))
     ]:
-        errors = []
+        errors = []  # type: List[Text]
         for name, tar_member in tar_domains.items():
             if name in domains:
                 try:
@@ -597,11 +671,12 @@ def extract_domains(tar, domains):
 
 # Extract a tarball
 def extract(tar, components):
+    # type: (tarfile.TarFile, List[ComponentSpec]) -> None
     for component in components:
         if len(component) == 4:
-            what, name, path, _excludes = component
+            what, name, path, _excludes = component  # type: ignore[misc]
         else:
-            what, name, path = component
+            what, name, path = component  # type: ignore[misc]
 
         try:
             try:
@@ -635,6 +710,7 @@ def extract(tar, components):
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
 def cleanup_dir(root_path, exclude_files=None):
+    # type: (str, Optional[List[str]]) -> None
     if exclude_files is None:
         exclude_files = []
 
@@ -666,6 +742,7 @@ def cleanup_dir(root_path, exclude_files=None):
 
 
 def wipe_directory(path):
+    # type: (str) -> None
     for entry in os.listdir(path):
         if entry not in ['.', '..']:
             p = path + "/" + entry

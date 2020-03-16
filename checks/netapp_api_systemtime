@@ -42,12 +42,13 @@ def check_netapp_api_systemtime(item, params, info):
                 infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
                                                        get_age_human_readable(crit))
 
-            return state, infotext
+            return state, infotext, [('time_difference', timediff, warn, crit)]
 
 
 check_info['netapp_api_systemtime'] = {
     'inventory_function': inventory_netapp_api_systemtime,
     'check_function': check_netapp_api_systemtime,
     'service_description': 'Systemtime %s',
-    'group': 'netapp_systemtime'
+    'group': 'netapp_systemtime',
+    'has_perfdata': True,
 }

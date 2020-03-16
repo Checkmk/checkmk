@@ -445,6 +445,12 @@ metric_info["uptime"] = {
     "color": "#80f000",
 }
 
+metric_info["time_difference"] = {
+    "title": _("Time difference"),
+    "unit": "s",
+    "color": "#80f000",
+}
+
 metric_info["age"] = {
     "title": _("Age"),
     "unit": "s",

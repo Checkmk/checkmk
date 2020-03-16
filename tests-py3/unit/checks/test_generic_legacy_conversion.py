@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.check_api as check_api
+import cmk.base.check_utils as check_utils
 
 from cmk.base.api.agent_based.section_types import (
     AgentSectionPlugin,
@@ -121,3 +122,8 @@ def test_snmp_tree_tranlation(_name, snmp_info):
 def test_explicit_conversion(check_manager, check_name, func_name):
     scan_func = check_manager.get_check(check_name).context[func_name]
     assert create_detect_spec("unit-test", scan_func) == _explicit_conversions(scan_func.__name__)
+
+
+@pytest.mark.parametrize("name", list(config.snmp_scan_functions))
+def test_no_subcheck_with_scan_function(name):
+    assert name == check_utils.section_name_of(name)

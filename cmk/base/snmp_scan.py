@@ -97,14 +97,8 @@ def _snmp_scan(host_config,
             continue
 
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-        # The scan function should be assigned to the section_name, because
-        # subchecks sharing the same SNMP info of course should have
-        # an identical scan function. But some checks do not do this
-        # correctly
         scan_function = None  # type: Optional[ScanFunction]
-        if check_plugin_name in config.snmp_scan_functions:
-            scan_function = config.snmp_scan_functions[check_plugin_name]
-        elif section_name in config.snmp_scan_functions:
+        if section_name in config.snmp_scan_functions:
             scan_function = config.snmp_scan_functions[section_name]
         elif section_name in inventory_plugins.inv_info:
             scan_function = inventory_plugins.inv_info[section_name].get("snmp_scan_function")

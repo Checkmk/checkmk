@@ -70,21 +70,39 @@ def test_validate_supercedings():
 
 
 def test_create_agent_section_plugin():
+    with pytest.raises(NotImplementedError):
+        plugin = section_plugins.create_agent_section_plugin(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=_parse_dummy,
+            supercedes=None,
+            forbidden_names=[],
+        )
+
+    with pytest.raises(NotImplementedError):
+        plugin = section_plugins.create_agent_section_plugin(
+            name="norris",
+            parsed_section_name=None,
+            parse_function=_parse_dummy,
+            supercedes=["Foo", "Bar"],
+            forbidden_names=[],
+        )
+
     plugin = section_plugins.create_agent_section_plugin(
         name="norris",
-        parsed_section_name="chuck",
+        parsed_section_name=None,  # "chuck"
         parse_function=_parse_dummy,
-        supercedes=["Foo", "Bar"],
+        supercedes=None,  # ["Foo", "Bar"],
         forbidden_names=[],
     )
 
     assert isinstance(plugin, section_types.AgentSectionPlugin)
     assert len(plugin) == 5
     assert plugin.name == PluginName("norris")
-    assert plugin.parsed_section_name == PluginName("chuck")
+    assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
-    assert plugin.supercedes == [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supercedes == []  # [PluginName("Bar"), PluginName("Foo")]
 
 
 def test_create_snmp_section_plugin():
@@ -100,22 +118,44 @@ def test_create_snmp_section_plugin():
         [('.1.2.3.4.5', 'Foo.*', True)],
     ]
 
+    with pytest.raises(NotImplementedError):
+        plugin = section_plugins.create_snmp_section_plugin(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=_parse_dummy,
+            trees=trees,
+            detect_spec=detect,
+            supercedes=None,
+            forbidden_names=[],
+        )
+
+    with pytest.raises(NotImplementedError):
+        plugin = section_plugins.create_snmp_section_plugin(
+            name="norris",
+            parsed_section_name=None,
+            parse_function=_parse_dummy,
+            trees=trees,
+            detect_spec=detect,
+            supercedes=["Foo", "Bar"],
+            forbidden_names=[],
+        )
+
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
-        parsed_section_name="chuck",
+        parsed_section_name=None,  # "chuck",
         parse_function=_parse_dummy,
         trees=trees,
         detect_spec=detect,
-        supercedes=["Foo", "Bar"],
+        supercedes=None,  # ["Foo", "Bar"],
         forbidden_names=[],
     )
 
     assert isinstance(plugin, section_types.SNMPSectionPlugin)
     assert len(plugin) == 7
     assert plugin.name == PluginName("norris")
-    assert plugin.parsed_section_name == PluginName("chuck")
+    assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
-    assert plugin.supercedes == [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supercedes == []  # [PluginName("Bar"), PluginName("Foo")]

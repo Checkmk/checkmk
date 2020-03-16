@@ -118,15 +118,24 @@ def _create_supercedes(supercedes):
 
 def create_agent_section_plugin(
     *,
-    name,
-    parsed_section_name=None,
-    parse_function,
-    host_label_function=None,
-    supercedes=None,
-    forbidden_names,
+    name,  # type: str
+    parsed_section_name=None,  # type: Optional[str]
+    parse_function,  # type: AgentParseFunction
+    host_label_function=None,  # type: Optional[HostLabelFunction]
+    supercedes=None,  # type:  Optional[List[str]]
+    forbidden_names,  # type: List[PluginName]
 ):
-    # type: (str, Optional[str], AgentParseFunction, Optional[HostLabelFunction], Optional[List[str]], List[PluginName]) -> AgentSectionPlugin
-    """Return an AgentSectionPlugin object after validating and converting the arguments one by one"""
+    # type: (...) -> AgentSectionPlugin
+    """Return an AgentSectionPlugin object after validating and converting the arguments one by one
+
+    For a detailed description of the parameters please refer to the exposed function in the
+    'register' namespace of the API.
+    """
+    # TODO (mo): Well, implement it, and remove pragma below!
+    if supercedes is not None:
+        raise NotImplementedError("supercedes is not yet available")
+    if parsed_section_name is not None:
+        raise NotImplementedError("parsed_section_name is not yet available")
 
     plugin_name = PluginName(name, forbidden_names=forbidden_names)
 
@@ -134,7 +143,7 @@ def create_agent_section_plugin(
 
     return AgentSectionPlugin(
         plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,
+        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supercedes(supercedes),
@@ -143,17 +152,26 @@ def create_agent_section_plugin(
 
 def create_snmp_section_plugin(
     *,
-    name,
-    parsed_section_name=None,
-    parse_function,
-    host_label_function=None,
-    supercedes=None,
-    detect_spec,
-    trees,
-    forbidden_names,
+    name,  # type: str
+    parsed_section_name=None,  # type: Optional[str]
+    parse_function,  # type: SNMPParseFunction
+    host_label_function=None,  # type: Optional[HostLabelFunction]
+    supercedes=None,  # type:  Optional[List[str]]
+    detect_spec,  # type: SNMPDetectSpec
+    trees,  # type: List[SNMPTree]
+    forbidden_names,  # type: List[PluginName]
 ):
-    # type: (str, Optional[str], SNMPParseFunction, Optional[HostLabelFunction], Optional[List[str]], SNMPDetectSpec, List[SNMPTree], List[PluginName]) -> SNMPSectionPlugin
-    """Return an SNMPSectionPlugin object after validating and converting the arguments one by one"""
+    # type: (...) -> SNMPSectionPlugin
+    """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
+
+    For a detailed description of the parameters please refer to the exposed function in the
+    'register' namespace of the API.
+    """
+    # TODO (mo): Well, implement it, and remove pragma below!
+    if supercedes is not None:
+        raise NotImplementedError("supercedes is not yet available")
+    if parsed_section_name is not None:
+        raise NotImplementedError("parsed_section_name is not yet available")
 
     plugin_name = PluginName(name, forbidden_names)
 
@@ -162,7 +180,7 @@ def create_snmp_section_plugin(
 
     return SNMPSectionPlugin(
         plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,
+        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
         parse_function,
         _create_host_label_function(host_label_function),
         _create_supercedes(supercedes),

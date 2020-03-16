@@ -14,4 +14,4 @@ item:
  The name of the relay port.
 
 inventory:
- One service per relay port is created.
+ One service is created for each relay port.

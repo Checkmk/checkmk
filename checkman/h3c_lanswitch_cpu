@@ -23,7 +23,7 @@ description:
  or even have to disable the check.
 
 inventory:
- The check will create one separate service per CPU.
+ One service is created for each CPU.
 
 item:
  {{Switch}} followed by the ID of the switch followed by the CPU type

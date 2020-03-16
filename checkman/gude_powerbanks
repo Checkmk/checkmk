@@ -14,4 +14,4 @@ item:
  The index of the powerbank
 
 inventory:
- One service per powerbank is created.
+ One service is created for each powerbank.

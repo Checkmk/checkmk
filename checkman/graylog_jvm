@@ -9,4 +9,4 @@ description:
  configured.
 
 inventory:
- One service {"Graylog JVM"} will be created
+ One service is created.

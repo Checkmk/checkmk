@@ -18,7 +18,6 @@ description:
  to the old default by changing your configuration.
 
 inventory:
- One service will be created on each node of the cluster. If {naildown_dc} is
- set to {True} in {inventory_heartbeat_crm_rules}, then the node which is currently
- DC will be required to stay DC in future.
+ One service is created for each node of the cluster
+ if {naildown_dc} is set to {True} in {inventory_heartbeat_crm_rules}.
 

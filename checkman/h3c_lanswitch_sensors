@@ -24,7 +24,7 @@ description:
  the frequency of SNMP based checks with them.
 
 inventory:
- The check will add one service per sensor.
+ One service is created for each sensor.
 
 item:
  {{Unit}} followed by the ID of the unit followed by the detected sensor (i.e. {{Fan}}

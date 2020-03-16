@@ -39,38 +39,6 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        def render_topic(topic, entries):
-            first = True
-            for t, title, name, is_view in entries:
-                if is_view and config.visible_views and name not in config.visible_views:
-                    continue
-                if is_view and config.hidden_views and name in config.hidden_views:
-                    continue
-                if t == topic:
-                    if first:
-                        html.begin_foldable_container("views", topic, False, topic, indent=True)
-                        first = False
-                    if is_view:
-                        bulletlink(title,
-                                   "view.py?view_name=%s" % name,
-                                   onclick="return cmk.sidebar.wato_views_clicked(this)")
-                    elif "?name=" in name:
-                        bulletlink(title, name)
-                    else:
-                        bulletlink(title,
-                                   'dashboard.py?name=%s' % name,
-                                   onclick="return cmk.sidebar.wato_views_clicked(this)")
-
-            # TODO: One day pagestypes should handle the complete snapin.
-            # for page_type in pagetypes.all_page_types().values():
-            #     if issubclass(page_type, pagetypes.PageRenderer):
-            #         for t, title, url in page_type.sidebar_links():
-            #             if t == topic:
-            #                 bulletlink(title, url)
-
-            if not first:  # at least one item rendered
-                html.end_foldable_container()
-
         # TODO: One bright day drop this whole visuals stuff and only use page_types
         page_type_topics = {}
         for page_type in pagetypes.all_page_types().values():
@@ -91,7 +59,7 @@ class Views(SidebarSnapin):
         all_topics_with_entries += sorted(page_type_topics.items())
 
         for topic, entries in all_topics_with_entries:
-            render_topic(topic, entries)
+            self._render_topic(topic, entries)
 
         links = []
         if config.user.may("general.edit_views"):
@@ -99,3 +67,35 @@ class Views(SidebarSnapin):
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
+
+    def _render_topic(self, topic, entries):
+        first = True
+        for t, title, name, is_view in entries:
+            if is_view and config.visible_views and name not in config.visible_views:
+                continue
+            if is_view and config.hidden_views and name in config.hidden_views:
+                continue
+            if t == topic:
+                if first:
+                    html.begin_foldable_container("views", topic, False, topic, indent=True)
+                    first = False
+                if is_view:
+                    bulletlink(title,
+                               "view.py?view_name=%s" % name,
+                               onclick="return cmk.sidebar.wato_views_clicked(this)")
+                elif "?name=" in name:
+                    bulletlink(title, name)
+                else:
+                    bulletlink(title,
+                               'dashboard.py?name=%s' % name,
+                               onclick="return cmk.sidebar.wato_views_clicked(this)")
+
+        # TODO: One day pagestypes should handle the complete snapin.
+        # for page_type in pagetypes.all_page_types().values():
+        #     if issubclass(page_type, pagetypes.PageRenderer):
+        #         for t, title, url in page_type.sidebar_links():
+        #             if t == topic:
+        #                 bulletlink(title, url)
+
+        if not first:  # at least one item rendered
+            html.end_foldable_container()

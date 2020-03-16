@@ -99,7 +99,7 @@ def test_create_section_plugin_from_legacy(name, check_info):
                 config.snmp_info[name],
                 [],
             )
-        assert isinstance(sec, SNMPSectionPlugin)
+            assert isinstance(sec, SNMPSectionPlugin)
 
 
 @pytest.mark.parametrize("_name, snmp_info", list(config.snmp_info.items()))

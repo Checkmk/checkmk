@@ -16,7 +16,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
-from typing import Any, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
 
 import six
 
@@ -32,7 +32,7 @@ import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, HTMLContent  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
 from cmk.gui.permissions import (
@@ -2667,7 +2667,10 @@ def ajax_save_treestate():
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
     aggr_group = html.request.get_unicode_input("group")
-    reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
+    reqhosts = [
+        tuple(sitehost.split('#'))
+        for sitehost in html.request.get_str_input_mandatory("reqhosts").split(',')
+    ]
     aggr_title = html.request.get_unicode_input("title")
     omit_root = bool(html.request.var("omit_root"))
     only_problems = bool(html.request.var("only_problems"))
@@ -2675,7 +2678,7 @@ def ajax_render_tree():
     # TODO: Cleanup the renderer to use a class registry for lookup
     renderer_class_name = html.request.var("renderer")
     if renderer_class_name == "FoldableTreeRendererTree":
-        renderer_cls = FoldableTreeRendererTree
+        renderer_cls = FoldableTreeRendererTree  # type: Type[ABCFoldableTreeRenderer]
     elif renderer_class_name == "FoldableTreeRendererBoxes":
         renderer_cls = FoldableTreeRendererBoxes
     elif renderer_class_name == "FoldableTreeRendererBottomUp":
@@ -2729,7 +2732,7 @@ def compute_output_message(effective_state, rule):
 
 
 def render_tree_json(row):
-    expansion_level = int(html.request.var("expansion_level", 999))
+    expansion_level = html.request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = config.user.get_tree_states('bi')
     if expansion_level != config.user.bi_expansion_level:
@@ -3009,17 +3012,19 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = "assumed"
+            addclass = "assumed"  # type: Optional[str]
             effective_state = tree[1]
         else:
             addclass = None
             effective_state = tree[0]
 
-        html.open_span(class_=[
-            "content", "state",
-            "state%d" %
-            effective_state["state"] if effective_state["state"] is not None else -1, addclass
-        ])
+        class_ = [
+            "content",  #
+            "state",
+            "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
+            addclass
+        ]  # type: List[Optional[str]]
+        html.open_span(class_=class_)
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
 
@@ -3061,8 +3066,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.view_utils.format_plugin_output(effective_state["output"],
-                                                         shall_escape=config.escape_plugin_output)
+        output = cmk.gui.view_utils.format_plugin_output(
+            effective_state["output"],
+            shall_escape=config.escape_plugin_output)  # type: HTMLContent
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3081,7 +3087,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = "assumed"
+            addclass = "assumed"  # type: Optional[str]
             effective_state = tree[1]
         else:
             addclass = None
@@ -3434,7 +3440,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
         # displayed in the same view and the information thus being present
         # in some of the other hostrows.
         if joinbyname:
-            status_info = {}  # type: Dict[Any, Any]
+            status_info = {}  # type: Optional[Dict[Any, Any]]
             aggrs = g_tree_cache["aggregations_by_hostname"].get(host, [])
             # collect all the required host of all matching aggregations
             for a in aggrs:
@@ -3446,6 +3452,8 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
                         break
                     else:
                         row = rows_by_host[sitehost]
+                        if status_info is None:
+                            raise Exception("impossible")
                         status_info[sitehost] = [
                             row["state"],
                             row["hard_state"],
@@ -3538,15 +3546,6 @@ def is_part_of_aggregation(what, site, host, service):
     if what == "host":
         return (site, host) in g_tree_cache["affected_hosts"]
     return (site, host, service) in g_tree_cache["affected_services"]
-
-
-def get_state_name(node):
-    if node[1]['type'] == NT_LEAF:
-        if 'service' in node[1]:
-            return _service_state_names()[node[0]['state']]
-        return host_state_name[node[0]['state']]
-
-    return _service_state_names()[node[0]['state']]
 
 
 _rule_to_pack_lookup = {}  # type: Dict[str, str]

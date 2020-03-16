@@ -1,11 +1,13 @@
-title: IBM Websphere MQ Queue Status and Message count
+title: IBM Websphere MQ Queue Status and Message count (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL
 distribution: check_mk
 description:
+ The <tt>websphere_mq</tt> plugin is deprecated. Please use the <tt>ibm_mq</tt> plugin.
+
  This check monitors the State and the count of Messages of Websphere Message Queues.
- In order to work it is necesarry to install the websphere_mq.sh plugin to the server.
+ In order to work it is necesarry to install the websphere_mq plugin to the server.
  It's maybe needed to change this plugin to fit your need's.
 
  Once installed, the inventory will create one service for each Queue and each Channel (see websphere_message_channels). This service will trigger a critical state if eigther the channel state is not running or the configured thresholds for messages are reached.

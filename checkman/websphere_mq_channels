@@ -1,9 +1,11 @@
-title: IBM Websphere MQ Channel Message count
+title: IBM Websphere MQ Channel Message count (deprecated)
 agents: aix, linux
 catalog: app/websphere_mq
 license: GPL
 distribution: check_mk
 description:
+ The <tt>websphere_mq</tt> plugin is deprecated. Please use the <tt>ibm_mq</tt> plugin.
+
  This check monitors the number of messages in a Websphere MQ Channel.
  In order to work it is necesarry to install the <tt>websphere_mq</tt> plugin
  to the server.  You might need to edit this plugin to fit your needs.

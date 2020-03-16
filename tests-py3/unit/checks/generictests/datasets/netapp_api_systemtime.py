@@ -14,9 +14,14 @@ checks = {
             'FAS8020-2', {}, [
                 (
                     0,
-                    'System time: 2017-06-22 07:17:40, Time difference: 0.00 s',
+                    'System time: 2017-06-22 07:17:40',
+                    []
+                ),
+                (
+                    0,
+                    'Time difference: 0.00 s',
                     [('time_difference', 0, None, None, None, None)]
-                )
+                ),
             ]
         )
     ]

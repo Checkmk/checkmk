@@ -13,40 +13,40 @@
 # node1 76123   123123
 # node2 7612311 123123
 
+NetappApiTimeEntry = collections.namedtuple("NetappApiTimeEntry", [
+    'agent_time',
+    'system_time',
+])
 
-def inventory_netapp_api_systemtime(info):
+
+def parse_netapp_api_systemtime(info):
+    parsed = {}
     for line in info:
-        yield line[0], {}
+        try:
+            item, agent_time, system_time = line
+            parsed[item] = NetappApiTimeEntry(int(agent_time), int(system_time))
+        except ValueError:
+            pass
+    return parsed
 
 
-def check_netapp_api_systemtime(item, params, info):
-    for line in info:
-        if line[0] == item:
-            agent_time = int(line[1])
-            system_time = int(line[2])
-            timediff = agent_time - system_time
-            warn, crit = params.get("levels", (None, None))
-
-            if crit is not None and timediff >= crit:
-                state = 2
-            elif warn is not None and timediff >= warn:
-                state = 1
-            else:
-                state = 0
-
-            infotext = "System time: %s, Time difference: %s" % \
-                       (get_timestamp_human_readable(system_time),
-                        get_age_human_readable(timediff))
-
-            if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
-
-            return state, infotext, [('time_difference', timediff, warn, crit)]
+@get_parsed_item_data
+def check_netapp_api_systemtime(item, params, entry):
+    yield check_levels(entry.system_time,
+                       None,
+                       None,
+                       infoname='System time',
+                       human_readable_func=get_timestamp_human_readable)
+    yield check_levels(entry.agent_time - entry.system_time,
+                       'time_difference',
+                       params.get('levels', (None, None)),
+                       infoname='Time difference',
+                       human_readable_func=get_age_human_readable)
 
 
 check_info['netapp_api_systemtime'] = {
-    'inventory_function': inventory_netapp_api_systemtime,
+    'parse_function': parse_netapp_api_systemtime,
+    'inventory_function': discover(),
     'check_function': check_netapp_api_systemtime,
     'service_description': 'Systemtime %s',
     'group': 'netapp_systemtime',

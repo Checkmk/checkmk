@@ -14,6 +14,7 @@ from cmk.base.api.agent_based.section_types import (
     OIDEnd,
 )
 
+from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from testlib.base import Scenario
 
 
@@ -71,21 +72,36 @@ DATA_3TUPLE = [
     ),
     (TREE_2TUPLE, DATA_2TUPLE),
     (TREE_3TUPLE, DATA_3TUPLE),
+    ([TREE_2TUPLE, TREE_3TUPLE], [DATA_2TUPLE, DATA_3TUPLE]),
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
     monkeypatch.setattr(snmp_utils, "is_snmpv3_host", lambda _x: False)
     snmp_cfg = _SNMPTestConfig()
 
-    def get_snmp_table(i):
-        return snmp.get_snmp_table(snmp_cfg, "unit-test", i, False)
+    def get_all_snmp_tables(info):
+        if not isinstance(info, list):
+            return snmp.get_snmp_table(snmp_cfg, "unit-test", info, False)
+        return [snmp.get_snmp_table(snmp_cfg, "unit-test", i, False) for i in info]
 
-    if isinstance(snmp_info, list):
-        actual_values = [get_snmp_table(i) for i in snmp_info]
-    else:
-        actual_values = get_snmp_table(snmp_info)
+    assert get_all_snmp_tables(snmp_info) == expected_values
 
-    assert actual_values == expected_values
+    # only conduct furhter tests for legacy spec
+    if (isinstance(snmp_info, SNMPTree) or
+            isinstance(snmp_info, list) and all(isinstance(t, SNMPTree) for t in snmp_info)):
+        return
+
+    # when converting it to the new SNMPTree object, ...
+    snmp_info_as_tree_list, layout_recovery = _create_snmp_trees(snmp_info)
+
+    # ... using those to get the snmp data, ...
+    reformatted_values = get_all_snmp_tables(snmp_info_as_tree_list)
+
+    # ... and then applying the layout recover function
+    recovered = layout_recovery(reformatted_values)
+
+    # ... we should get the originally expected data
+    assert recovered == expected_values
 
 
 @pytest.mark.parametrize(

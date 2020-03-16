@@ -29,6 +29,8 @@ from cmk.base.api.agent_based.register.section_plugins import (
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
 
+LayoutRecoverSuboids = List[Tuple[str]]
+
 
 def get_section_name(check_plugin_name):
     # type: (str) -> str
@@ -51,18 +53,29 @@ def _create_agent_parse_function(original_parse_function):
     return parse_function
 
 
-def _create_layout_recover_function(elements_lengths):
+def _create_layout_recover_function(suboids_list):
+    # type: (List[Optional[LayoutRecoverSuboids]]) -> Callable
     """Get a function that recovers the legacy data layout
 
     By adding the created elements to one long list,
     we change the data structure of created OID values.
     We have to define a function to undo this, and restore the old data layout.
     """
+    elements_lengths = [len(i) if i is not None else 1 for i in suboids_list]
     cumulative_lengths = [sum(elements_lengths[:i]) for i in range(len(elements_lengths) + 1)]
     index_pairs = list(zip(cumulative_lengths, cumulative_lengths[1:]))
 
     def layout_recover_function(table):
-        return [sum(table[begin:end], []) for begin, end in index_pairs]
+        reformatted = []
+        for suboids, (begin, end) in zip(suboids_list, index_pairs):
+            if suboids is None:
+                new_table = table[begin]
+            else:
+                new_table = []
+                for suboid, subtable in zip(suboids, table[begin:end]):
+                    new_table += [["%s.%s" % (suboid, row[0])] + row[1:] for row in subtable]
+            reformatted.append(new_table)
+        return reformatted
 
     return layout_recover_function
 
@@ -92,7 +105,7 @@ def _extract_conmmon_part(oids):
 
 
 def _create_snmp_trees_from_tuple(snmp_info_element):
-    # type: (tuple) -> List[SNMPTree]
+    # type: (tuple) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -107,9 +120,10 @@ def _create_snmp_trees_from_tuple(snmp_info_element):
 
     # "Triple"-case: recursively return a list
     if len(snmp_info_element) == 3:
-        base_list = [("%s.%s" % (base, str(i).strip('.'))) for i in snmp_info_element[1]]
-        return sum(
-            (_create_snmp_trees_from_tuple((base, snmp_info_element[2])) for base in base_list), [])
+        tmp_base, suboids, oids = snmp_info_element
+        base_list = [("%s.%s" % (tmp_base, str(i).strip('.'))) for i in suboids]
+        return sum((_create_snmp_trees_from_tuple((base, oids))[0] for base in base_list),
+                   []), suboids
 
     # this fixes 7 weird cases:
     oids = ["%d" % oid if isinstance(oid, int) and oid > 0 else oid for oid in snmp_info_element[1]]
@@ -124,7 +138,7 @@ def _create_snmp_trees_from_tuple(snmp_info_element):
         if common:
             base = "%s.%s" % (base, common)
 
-    return [SNMPTree(base=base, oids=oids)]
+    return [SNMPTree(base=base, oids=oids)], None
 
 
 def _create_snmp_trees(snmp_info):
@@ -138,18 +152,19 @@ def _create_snmp_trees(snmp_info):
     to the one the legacy prase or function expects.
     """
     if isinstance(snmp_info, tuple):
-        tree_spec = _create_snmp_trees_from_tuple(snmp_info)
-        if len(tree_spec) == 1:
+        tree_spec, reco_oids = _create_snmp_trees_from_tuple(snmp_info)
+        if reco_oids is None:
             return tree_spec, lambda table: table[0]
-        return tree_spec, lambda table: sum(table, [])
+        recovery = _create_layout_recover_function([reco_oids])
+        return tree_spec, lambda table: recovery(table)[0]
 
     assert isinstance(snmp_info, list)
 
-    created_elements = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-    trees = sum(created_elements, [])  # type: List[SNMPTree]
+    trees_and_suboids = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
+    trees = sum((tree for tree, _suboids in trees_and_suboids), [])  # type: List[SNMPTree]
+    suboids_list = [suboids for _tree, suboids in trees_and_suboids]
 
-    element_lengths = [len(e) for e in created_elements]
-    layout_recover_function = _create_layout_recover_function(element_lengths)
+    layout_recover_function = _create_layout_recover_function(suboids_list)
 
     return trees, layout_recover_function
 

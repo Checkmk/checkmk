@@ -422,8 +422,17 @@ class _SNMPTestBackend:
 def test_get_snmp_table(monkeypatch, snmp_info, walk, expected_values):
     monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
     monkeypatch.setattr(snmp_utils, "is_snmpv3_host", lambda _x: False)
-    assert snmp.get_snmp_table(_SNMPTestConfig(walk), "unit-test", snmp_info,
-                               False) == expected_values
+    snmp_cfg = _SNMPTestConfig(walk)
+
+    def get_snmp_table(i):
+        return snmp.get_snmp_table(snmp_cfg, "unit-test", i, False)
+
+    if isinstance(snmp_info, list):
+        actual_values = [get_snmp_table(i) for i in snmp_info]
+    else:
+        actual_values = get_snmp_table(snmp_info)
+
+    assert actual_values == expected_values
 
 
 @pytest.mark.parametrize(

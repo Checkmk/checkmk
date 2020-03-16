@@ -174,8 +174,10 @@ class NotificationParameterMail(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             # must be called at run time!!
-            elements=self._parameter_elements,)
+            elements=self._parameter_elements,
+        )
 
     def _parameter_elements(self):
         elements = _vs_add_common_mail_elements([
@@ -261,6 +263,7 @@ class NotificationParameterSlack(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -321,6 +324,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -379,6 +383,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             elements=[
                 ("webhook_url",
@@ -441,6 +446,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix"],
             hidden_keys=["webhook_url"],
             elements=[
@@ -533,7 +539,8 @@ $LONGSERVICEOUTPUT$
 """,
              )),
         ])
-        return Dictionary(elements=elements)
+        return Dictionary(title=_("Create notification with the following parameters"),
+                          elements=elements)
 
 
 @notification_parameter_registry.register
@@ -545,6 +552,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=[
                 'priority', 'resolution', 'host_summary', 'service_summary', 'ignore_ssl',
                 'timeout', 'label'
@@ -671,6 +679,7 @@ class NotificationParameterServiceNow(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=['url', 'username', 'password', 'caller'],
             elements=[
                 ("url",
@@ -848,6 +857,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             required_keys=[
                 'password',
             ],
@@ -992,22 +1002,25 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("facility",
-             DropdownChoice(
-                 title=_("Syslog Facility to use"),
-                 help=_("The notifications will be converted into syslog messages with "
-                        "the facility that you choose here. In the Event Console you can "
-                        "later create a rule matching this facility."),
-                 choices=mkeventd.syslog_facilities,
-             )),
-            ("remote",
-             IPv4Address(
-                 title=_("IP Address of remote Event Console"),
-                 help=_("If you set this parameter then the notifications will be sent via "
-                        "syslog/UDP (port 514) to a remote Event Console or syslog server."),
-             )),
-        ],)
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                ("facility",
+                 DropdownChoice(
+                     title=_("Syslog Facility to use"),
+                     help=_("The notifications will be converted into syslog messages with "
+                            "the facility that you choose here. In the Event Console you can "
+                            "later create a rule matching this facility."),
+                     choices=mkeventd.syslog_facilities,
+                 )),
+                ("remote",
+                 IPv4Address(
+                     title=_("IP Address of remote Event Console"),
+                     help=_("If you set this parameter then the notifications will be sent via "
+                            "syslog/UDP (port 514) to a remote Event Console or syslog server."),
+                 )),
+            ],
+        )
 
 
 @notification_parameter_registry.register
@@ -1019,6 +1032,7 @@ class NotificationParameterSpectrum(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=None,
             elements=[
                 ("destination",
@@ -1046,6 +1060,7 @@ class NotificationParameterPushover(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
+            title=_("Create notification with the following parameters"),
             optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
             elements=[
                 ("api_key",

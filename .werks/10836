@@ -31,7 +31,7 @@ C+:
 declare_joined_inventory_table_view(
     tablename = "invMYMULTITABLE",
     title_singular = _("TITLE SINGULAR"),
-    titl_plural = _("TITLE PLURAL"),
+    title_plural = _("TITLE PLURAL"),
     tables = [
         "invTABLE1",
         "invTABLE2",

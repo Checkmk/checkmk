@@ -19,5 +19,4 @@ description:
  OK otherise.
 
 inventory:
- If at least one disk is found, exactly one check will be created for
- the host.
+ One service is created if at least one disk is found.

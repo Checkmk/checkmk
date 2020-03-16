@@ -14,4 +14,4 @@ item:
  Name of the disk
 
 inventory:
- One service per disk is created.
+ One service is created for each disk.

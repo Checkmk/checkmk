@@ -12,4 +12,4 @@ item:
  The item is {0} (integer) in all cases because on system can only have one summary status.
 
 inventory:
- The check supports automatic inventory. Each system gets one summary checks.
+ One summary service is created.

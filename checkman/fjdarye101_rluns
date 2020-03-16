@@ -23,5 +23,4 @@ item:
  has index {1}.
 
 inventory:
- All RLUNs with byte 4 being {A0} (assumed to mean "present") are inventorized.
-
+ One service is created for each present RLUN.

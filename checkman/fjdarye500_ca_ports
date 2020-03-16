@@ -15,4 +15,4 @@ item:
  The CA port index.
 
 inventory:
- One service per port is created.
+ One service is created for each port.

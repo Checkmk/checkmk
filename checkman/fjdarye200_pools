@@ -13,4 +13,4 @@ item:
  The index of the thin provisioning pool.
 
 inventory:
- One item per pool will be discovered.
+ One service is created for each pool.

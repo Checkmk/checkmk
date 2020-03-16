@@ -14,7 +14,5 @@ item:
  It is of type integer. The first module has an index of {0}.
 
 inventory:
- The check supports automatic inventory. All available items which have
- a state other than {invalid} (4) during the inventory run are added to the
- configuration. The {invalid} state is excluded because it means that some
- power supply unit is not installed.
+ One service is created for each power supply unit
+ if the state is not {invalid} (4).

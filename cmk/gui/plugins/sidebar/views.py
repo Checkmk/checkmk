@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: Split this file into single snapin or topic files
-
-# TODO: Refactor all snapins to the new snapin API and move page handlers
-#       from sidebar.py to the snapin objects that need these pages.
+import re
+from collections import OrderedDict
+from typing import List, Tuple, Text  # pylint: disable=unused-import
+import six
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -56,10 +56,24 @@ class Views(SidebarSnapin):
                 del page_type_topics[topic]
             all_topics_with_entries.append((topic, entries))
 
-        all_topics_with_entries += sorted(page_type_topics.items())
+        all_topics_with_entries += page_type_topics.items()
 
+        # Filter hidden / not permitted entries
+        by_topic = OrderedDict()  # type: Dict[Text, List[Tuple[Text, str, bool]]]
         for topic, entries in all_topics_with_entries:
-            self._render_topic(topic, entries)
+            for t, title, name, is_view in entries:
+                if is_view and config.visible_views and name not in config.visible_views:
+                    continue
+                if is_view and config.hidden_views and name in config.hidden_views:
+                    continue
+                if t != topic:
+                    continue
+
+                by_topic.setdefault(topic, []).append((title, name, is_view))
+
+        for topic, entries in by_topic.items():
+            if entries:
+                self._render_topic(topic, entries)
 
         links = []
         if config.user.may("general.edit_views"):
@@ -69,26 +83,25 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
     def _render_topic(self, topic, entries):
-        first = True
-        for t, title, name, is_view in entries:
-            if is_view and config.visible_views and name not in config.visible_views:
-                continue
-            if is_view and config.hidden_views and name in config.hidden_views:
-                continue
-            if t == topic:
-                if first:
-                    html.begin_foldable_container("views", topic, False, topic, indent=True)
-                    first = False
-                if is_view:
-                    bulletlink(title,
-                               "view.py?view_name=%s" % name,
-                               onclick="return cmk.sidebar.wato_views_clicked(this)")
-                elif "?name=" in name:
-                    bulletlink(title, name)
-                else:
-                    bulletlink(title,
-                               'dashboard.py?name=%s' % name,
-                               onclick="return cmk.sidebar.wato_views_clicked(this)")
+        # type: (Text, List[Tuple[Text, str, bool]]) -> None
+        container_id = six.ensure_str(re.sub('[^a-zA-Z]', '', topic))
+        html.begin_foldable_container(treename="views",
+                                      id_=container_id,
+                                      isopen=False,
+                                      title=topic,
+                                      indent=True)
+
+        for title, name, is_view in entries:
+            if is_view:
+                bulletlink(title,
+                           "view.py?view_name=%s" % name,
+                           onclick="return cmk.sidebar.wato_views_clicked(this)")
+            elif "?name=" in name:
+                bulletlink(title, name)
+            else:
+                bulletlink(title,
+                           'dashboard.py?name=%s' % name,
+                           onclick="return cmk.sidebar.wato_views_clicked(this)")
 
         # TODO: One day pagestypes should handle the complete snapin.
         # for page_type in pagetypes.all_page_types().values():
@@ -97,5 +110,4 @@ class Views(SidebarSnapin):
         #             if t == topic:
         #                 bulletlink(title, url)
 
-        if not first:  # at least one item rendered
-            html.end_foldable_container()
+        html.end_foldable_container()

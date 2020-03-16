@@ -26,7 +26,7 @@ goto end
 :install
 if "%first%" == "1" (
 echo try to unpack
-call ..\..\..\windows\dependencies\unpack_all.cmd ..\..\..\..\omd\packages ..\..\..\windows\dependencies ..\..\extlibs 
+call ..\..\scripts\unpack_all.cmd ..\..\..\..\omd\packages _nothing_ ..\..\extlibs 
 set first=0
 goto recheck
 ) else (

@@ -62,10 +62,7 @@ if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foregro
 
 call %cur_dir%\clean_artefacts.cmd 
 
-pushd %cur_dir%\src\engine
-call unpack_packs.cmd watest
-popd
-
+call scripts\unpack_packs.cmd
 
 powershell Write-Host "Looking for MSVC 2019..." -Foreground White
 set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"

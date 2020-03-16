@@ -54,6 +54,55 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
+class NodeExporter:
+    def __init__(self, api_client):
+        self.api_client = api_client
+
+    def df_summary(self):
+        # type: () -> List[str]
+
+        # value division by 1000 because of Prometheus format
+        df_list = [
+            ("available", "node_filesystem_avail_bytes/1000"),
+            ("size", "node_filesystem_size_bytes/1000"),
+            ("used", "(node_filesystem_size_bytes - node_filesystem_free_bytes)/1000"),
+        ]
+        return self._process_filesystem_queries(df_list)
+
+    def df_inodes_summary(self):
+        # type: () -> List[str]
+
+        # no value division for inodes as format already correct
+        inodes_list = [("available", "node_filesystem_files_free"),
+                       ("used", "node_filesystem_files - node_filesystem_files_free"),
+                       ("size", "node_filesystem_files")]
+        return self._process_filesystem_queries(inodes_list)
+
+    def _process_filesystem_queries(self, promql_list):
+        # type: (List[Tuple[str, str]]) -> List[str]
+
+        temp_result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
+        for entity_name, promql_query in promql_list:
+            for mountpoint_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                mountpoint_dict = temp_result.setdefault(mountpoint_info["labels"]["device"], {})
+                if "name" not in mountpoint_dict:
+                    mountpoint_dict["name"] = mountpoint_info["labels"]["device"]
+                if "type" not in mountpoint_dict:
+                    mountpoint_dict["type"] = mountpoint_info["labels"]["fstype"]
+                if "mountpoint" not in mountpoint_dict:
+                    mountpoint_dict["mountpoint"] = mountpoint_info["labels"]["mountpoint"]
+                mountpoint_dict[entity_name] = int(float(mountpoint_info["value"]))
+
+        result = []  # type: List[str]
+        for device, device_info in temp_result.items():
+            if all(k in device_info for k in ("type", "size", "used", "available", "mountpoint")):
+                device_parsed = "{name} {type} {size} {used} {available} None {mountpoint}".format(
+                    **device_info)
+                result.append(device_parsed)
+        return result
+
+
 class CAdvisorExporter:
     def __init__(self, api_client, options):
         self.api_client = api_client
@@ -1094,6 +1143,9 @@ class ApiData:
             self.kube_state_exporter = KubeStateExporter(
                 api_client, exporter_options["kube_state"]["cluster_name"])
 
+        if "node_exporter" in exporter_options:
+            self.node_exporter = NodeExporter(api_client)
+
     def promql_section(self, custom_services):
         # type: (List[Dict[str, Any]]) -> str
 
@@ -1267,6 +1319,17 @@ class ApiData:
                 e.join(kube_state_service_info["service_name"], element)
         yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
 
+    def node_exporter_section(self, node_options):
+        # type: (Dict[str, List[str]]) -> Iterator[str]
+
+        if "df" in node_options:
+            df_section = [
+                "<<<df>>>", '\n'.join(self.node_exporter.df_summary()), "<<<df>>>",
+                "[df_inodes_start]", '\n'.join(self.node_exporter.df_inodes_summary()),
+                "[df_inodes_end]"
+            ]
+            yield "\n".join(df_section)
+
 
 def _extract_config_args(config):
     server_address = config["host_address"]
@@ -1307,6 +1370,9 @@ def main(argv=None):
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))
         if "kube_state" in exporter_options:
             print(*list(api_data.kube_state_section(exporter_options["kube_state"]["entities"])))
+        if "node_exporter" in exporter_options:
+            print(*list(
+                api_data.node_exporter_section(exporter_options["node_exporter"]["entities"])))
     except Exception as e:
         if args.debug:
             raise

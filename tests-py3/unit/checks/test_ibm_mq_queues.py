@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from datetime import datetime, timedelta
 
 import pytest  # type: ignore[import]
 

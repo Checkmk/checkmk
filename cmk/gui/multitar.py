@@ -279,13 +279,9 @@ class SnapshotCreationBase(object):
         #       This function raises an exception in case of an unknown component
         def is_supported(component):
             # type: (SnapshotComponent) -> bool
-            if component.name != "sitespecific":
-                return False
-            elif component.component_type != "file":
-                return False
-            elif not component.configured_path.endswith("sitespecific.mk"):
-                return False
-            return True
+            return (component.name == "sitespecific" and  #
+                    component.component_type == "file" and  #
+                    component.configured_path.endswith("sitespecific.mk"))
 
         for component in parsed_custom_components.components:
             if not is_supported(component):
@@ -441,13 +437,9 @@ def create(tar_filename, components):
 def filter_subtar_files(tarinfo, excludes):
     # type: (tarfile.TarInfo, List[str]) -> Optional[tarfile.TarInfo]
     filename = os.path.basename(tarinfo.name)
-
     for exclude in excludes:
-        if filename == exclude:
+        if filename == exclude or fnmatch.fnmatchcase(filename, exclude):
             return None
-        elif fnmatch.fnmatchcase(filename, exclude):
-            return None
-
     return tarinfo
 
 
@@ -752,7 +744,5 @@ def wipe_directory(path):
                 try:
                     os.remove(p)
                 except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        continue
-                    else:
+                    if e.errno != errno.ENOENT:
                         raise

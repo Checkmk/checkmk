@@ -294,7 +294,13 @@ $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $@
 
-$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules
+node_modules/.bin/redoc-cli:
+	@if test ! -f node_modules/.bin/redoc-cli; then \
+		make node_modules \
+	fi
+
+
+$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
 	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
 		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
 		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline

@@ -31,5 +31,5 @@ item:
  This is the sensor name as reported by {ipmi-sensors} command e.g. {DIMM-1A}
 
 inventory:
- Each memory module which has an attached module results in one
- service which will be named {IPMI DIMM-*}.
+ One service is created for each memory module
+ which has an attached module.

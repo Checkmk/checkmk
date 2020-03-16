@@ -18,5 +18,5 @@ item:
  Name of the fan
 
 inventory:
- The check creates one service for each FAN provided in the SNMP data.
+ One service is created for each fan.
 

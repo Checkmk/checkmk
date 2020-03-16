@@ -13,5 +13,5 @@ item:
  Name of the SSL VPN tunnel
 
 inventory:
- One service per virtual domain will be created
+ One service is created for each virtual domain.
 

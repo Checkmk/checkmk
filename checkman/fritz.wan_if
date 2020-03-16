@@ -34,5 +34,6 @@ item:
  by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
- The inventory creates one service per WAN interface, usually one per system.
+ One service is created for each WAN interface,
+ which is usually one for each system.
 

@@ -15,5 +15,5 @@ item:
  The memory designation
 
 inventory:
- One service per memory module is created.
+ One service is created for each memory module.
 

@@ -7,5 +7,5 @@ description:
  This check monitors the used memory on fortigate firewalls
  which support the FORTINET-FORTIGATE-MIB.
 inventory:
- One service will be created
+ One service is created.
 

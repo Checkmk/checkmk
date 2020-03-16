@@ -7,5 +7,5 @@ description:
  This check displays general information (name and mode) of a FortiGate High-Availability cluster
 
 inventory:
- One service will be created
+ One service is created.
 

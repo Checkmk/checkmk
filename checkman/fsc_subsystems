@@ -17,4 +17,4 @@ item:
  Name of the hardware part
 
 inventory:
- The check creates one service for each device provided in the SNMP data.
+ One service is created for each device.

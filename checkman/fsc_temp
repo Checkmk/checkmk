@@ -16,4 +16,4 @@ item:
  Name of the temperature sensor
 
 inventory:
- The check creates one service for each temperature sensor provided in the SNMP data.
+ One service is created for each temperature sensor.

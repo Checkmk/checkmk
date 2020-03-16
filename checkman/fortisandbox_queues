@@ -13,5 +13,5 @@ item:
  Type of queue (i.e. {{Executable}}, {{PDF}}, ...)
 
 inventory:
- One check per queue will be created.
+ One service is created for each queue.
 

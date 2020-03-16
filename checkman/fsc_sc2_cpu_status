@@ -15,5 +15,5 @@ item:
  The CPU designation
 
 inventory:
- One service per CPU is created.
+ One service is created for each CPU.
 

@@ -17,5 +17,5 @@ item:
  Hostname of the node
 
 inventory:
- One service per node will be created
+ One service is created for each node.
 

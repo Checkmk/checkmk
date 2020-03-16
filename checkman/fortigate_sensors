@@ -7,4 +7,4 @@ description:
  This check monitors the overall alarm status of sensors of a FortiGate Firewall device. The status of the check is OK if all of the sensors have the alarm status 'false' (0) and CRIT if at least one sensor has the alarm status 'true' (1).
 
 inventory:
-  One service will be created.
+ One service is created.

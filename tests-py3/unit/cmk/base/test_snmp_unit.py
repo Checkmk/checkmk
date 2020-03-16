@@ -34,53 +34,44 @@ class _SNMPTestBackend:
         return [("%s.%s" % (fetchoid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
-@pytest.mark.parametrize(
-    "snmp_info, expected_values",
-    [
-        (
-            SNMPTree(
-                base='.1.3.6.1.4.1.13595.2.2.3.1',
-                oids=[
-                    OIDEnd(),
-                    snmp_utils.OIDBytes("16"),
-                ],
-            ),
-            [
-                ['1', [67, 48, 70, 69, 70, 69]],
-                ['2', [67, 48, 70, 69, 70, 69]],
-                ['3', [67, 48, 70, 69, 70, 69]],
+TREE_2TUPLE = ('.1.3.6.1.4.1.13595.2.2.3.1', [OID_END, BINARY("16")])
+
+TREE_3TUPLE = (
+    '.1.3.6.1.4.1.3854.1.2.2.1.19.33',
+    ["1", "2"],  # TODO: Allow integers here! Some plugins use them!
+    ["2.1.2", "2.1.14"],
+)
+
+DATA_2TUPLE = [
+    ['1', [67, 48, 70, 69, 70, 69]],
+    ['2', [67, 48, 70, 69, 70, 69]],
+    ['3', [67, 48, 70, 69, 70, 69]],
+]
+
+DATA_3TUPLE = [
+    ['1.C0FEFE', 'C0FEFE'],
+    ['1.C0FEFE', 'C0FEFE'],
+    ['1.C0FEFE', 'C0FEFE'],
+    ['2.C0FEFE', 'C0FEFE'],
+    ['2.C0FEFE', 'C0FEFE'],
+    ['2.C0FEFE', 'C0FEFE'],
+]
+
+
+@pytest.mark.parametrize("snmp_info, expected_values", [
+    (
+        SNMPTree(
+            base='.1.3.6.1.4.1.13595.2.2.3.1',
+            oids=[
+                OIDEnd(),
+                snmp_utils.OIDBytes("16"),
             ],
         ),
-        (
-            (
-                '.1.3.6.1.4.1.13595.2.2.3.1',
-                [
-                    OID_END,
-                    BINARY("16"),
-                ],
-            ),
-            [
-                ['1', [67, 48, 70, 69, 70, 69]],
-                ['2', [67, 48, 70, 69, 70, 69]],
-                ['3', [67, 48, 70, 69, 70, 69]],
-            ],
-        ),
-        (
-            (
-                '.1.3.6.1.4.1.3854.1.2.2.1.19.33',
-                ["1", "2"],  # TODO: Allow integers here! Some plugins use them!
-                ["2.1.2", "2.1.14"],
-            ),
-            [
-                ['1.C0FEFE', 'C0FEFE'],
-                ['1.C0FEFE', 'C0FEFE'],
-                ['1.C0FEFE', 'C0FEFE'],
-                ['2.C0FEFE', 'C0FEFE'],
-                ['2.C0FEFE', 'C0FEFE'],
-                ['2.C0FEFE', 'C0FEFE'],
-            ],
-        ),
-    ])
+        DATA_2TUPLE,
+    ),
+    (TREE_2TUPLE, DATA_2TUPLE),
+    (TREE_3TUPLE, DATA_3TUPLE),
+])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
     monkeypatch.setattr(snmp_utils, "is_snmpv3_host", lambda _x: False)

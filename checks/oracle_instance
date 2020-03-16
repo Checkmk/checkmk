@@ -232,8 +232,11 @@ check_info['oracle_instance'] = {
 }
 
 
-@get_parsed_item_data
-def check_oracle_instance_uptime(item, params, item_data):
+def check_oracle_instance_uptime(item, params, parsed):
+    item_data = parsed.get(item)
+    if item_data is None:
+        raise MKCounterWrapped("Login into database failed")
+
     if item_data['general_error']:
         return 2, item_data['general_error']
 

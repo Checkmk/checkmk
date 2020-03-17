@@ -292,7 +292,11 @@ def post_request(message_constructor, success_code=200):
     proxy_url = context.get("PARAMETER_PROXY_URL")
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
-    r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+    try:
+        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+    except requests.exceptions.ProxyError:
+        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
+        sys.exit(2)
 
     if r.status_code == success_code:
         sys.exit(0)

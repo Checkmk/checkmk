@@ -7,6 +7,7 @@
 import operator
 import functools
 
+from cmk.utils.prediction import TimeSeries
 import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
@@ -57,7 +58,8 @@ def multiline_curves(metric_definition, rrd_data):
 
 def evaluate_time_series_expression(expression, rrd_data):
     if rrd_data:
-        num_points = len(list(rrd_data.values())[0])
+        # NOTE: We stash a triple under the key '__range'. This is horrible...
+        num_points = len(next(v for v in rrd_data.values() if isinstance(v, TimeSeries)))
     else:
         num_points = 1
 

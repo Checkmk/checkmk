@@ -685,11 +685,13 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                 ("outdisc", ifOutDiscards),
                 ("outerr", ifOutErrors),
             ]:
+                if node is None:
+                    counter_name = "if.%s.%s.%s" % (name, item, if_member_item)
+                else:
+                    counter_name = "if.%s.%s.%s.%s" % (node, name, item, if_member_item)
+
                 try:
-                    get_rate("if.%s.%s.%s" % (name, item, if_member_item),
-                             this_time,
-                             saveint(counter),
-                             onwrap=RAISE)
+                    get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well

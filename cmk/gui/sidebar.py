@@ -31,7 +31,7 @@ import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
-from cmk.gui.config import UserType  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -146,7 +146,7 @@ def transform_old_quicksearch_match_plugins():
 class UserSidebarConfig(object):
     """Manages the configuration of the users sidebar"""
     def __init__(self, user, default_config):
-        # type: (UserType, List[Tuple[str, str]]) -> None
+        # type: (LoggedInUser, List[Tuple[str, str]]) -> None
         super(UserSidebarConfig, self).__init__()
         self._user = user
         self._default_config = copy.deepcopy(default_config)

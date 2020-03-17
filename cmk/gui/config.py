@@ -864,12 +864,9 @@ def _set_user(_user):
     local.user = _user
 
 
-# TODO: Nuke UserType and simply replace it with LoggedInUser.
-UserType = LoggedInUser
-
 # TODO: Nuke this and simply use cmk.gui.globals.user.
 # This holds the currently logged in user object
-user = cast(UserType, LocalProxy(lambda: local.user))
+user = cast(LoggedInUser, LocalProxy(lambda: local.user))
 
 #.
 #   .--User Handling-------------------------------------------------------.

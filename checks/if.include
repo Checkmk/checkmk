@@ -958,21 +958,15 @@ def check_if_common_single(item,
             ("outerr", interface.ifOutErrors, err_out_warn, err_out_crit, None, None),
         ]:
 
+            if node is None:
+                counter_name = "if.%s.%s" % (name, item)
+            else:  # clustered check needs one counter per variable, item AND NODE
+                counter_name = "if.%s.%s.%s" % (node, name, item)
+
             try:
-                if node is None:
-                    rate = get_rate("if.%s.%s" % (name, item),
-                                    this_time,
-                                    saveint(counter),
-                                    onwrap=RAISE)
-                    if force_counter_wrap:
-                        raise MKCounterWrapped("Forced counter wrap")
-                else:  # clustered check needs one counter per variable, item AND NODE
-                    rate = get_rate("if.%s.%s.%s" % (node, name, item),
-                                    this_time,
-                                    saveint(counter),
-                                    onwrap=RAISE)
-                    if force_counter_wrap:
-                        raise MKCounterWrapped("Forced counter wrap")
+                rate = get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)
+                if force_counter_wrap:
+                    raise MKCounterWrapped("Forced counter wrap")
                 rates.append(rate)
                 perfdata.append((name, rate, warn, crit, mmin, mmax))
             except MKCounterWrapped:

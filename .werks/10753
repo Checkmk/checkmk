@@ -1,0 +1,11 @@
+Title: Allow more printable ASCII characters in email addresses
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584458945
+Class: fix
+
+Printable ASCII characters like '#', '$', and "~" as defined by
+RFC5322 are now allowed in email addresses.

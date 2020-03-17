@@ -1,4 +1,7 @@
+# -*- encoding: utf-8 -*-
+
 import pytest
+from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
 
@@ -62,3 +65,91 @@ def test_timerange2(entry, refutcdate, result):
 def test_timehelper_add(args, result):
     with on_time("2019-09-05", "UTC"):
         assert vs.TimeHelper.add(*args) == result
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "user@localhost",
+        "harri.hirsch@example.com",
+        "!#$%&'*+-=?^_`{|}~@c.de",  # other printable ASCII characters
+        u"user@localhost",
+        u"harri.hirsch@example.com",
+        u"!#$%&'*+-=?^_`{|}~@c.de",  # other printable ASCII characters
+    ])
+def test_email_validation(address):
+    vs.EmailAddress().validate_value(address, "")
+
+
+@pytest.mark.parametrize("address", [
+    "a..b@c.de",
+    "ab@c..de",
+    u"a..b@c.de",
+    u"ab@c..de",
+])
+def test_email_validation_non_compliance(address):
+    # TODO: validate_value should raise an exception in these
+    #       cases since subsequent dots without any ASCII
+    #       character in between are not allowed in RFC5322.
+    vs.EmailAddress().validate_value(address, "")
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "text",
+        "user@foo",
+        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        "אሗ@test.com",  # UTF-8 encoded bytestring with non-ASCII characters
+        u"text",
+        u"user@foo",
+        u"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        u"אሗ@test.de",  # non-ASCII characters
+    ])
+def test_email_validation_raises(address):
+    with pytest.raises(MKUserError):
+        vs.EmailAddress().validate_value(address, "")
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "user@localhost",
+        "harri.hirsch@example.com",
+        "!#$%&'*+-=?^_`{|}~@c.de",  # other printable ASCII characters
+        u"user@localhost",
+        u"harri.hirsch@example.com",
+        u"!#$%&'*+-=?^_`{|}~@c.de",
+        u"אሗ@test.de",  # non-ASCII characters
+    ])
+def test_unicode_email_validation(address):
+    vs.EmailAddressUnicode().validate_value(address, "")
+
+
+@pytest.mark.parametrize("address", [
+    "a..b@c.de",
+    "ab@c..de",
+    u"a..b@c.de",
+    u"ab@c..de",
+])
+def test_unicode_email_validation_non_compliance(address):
+    # TODO: validate_value should raise an exception in these
+    #       cases since subsequent dots without any ASCII
+    #       character in between are not allowed in RFC5322.
+    vs.EmailAddressUnicode().validate_value(address, "")
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "text",
+        "user@foo",
+        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        "אሗ@test.com",  # UTF-8 encoded bytestrings are not allowed
+        u"text",
+        u"user@foo",
+        u"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+    ])
+def test_unicode_email_validation_raises(address):
+    with pytest.raises(MKUserError):
+        vs.EmailAddressUnicode().validate_value(address, "")

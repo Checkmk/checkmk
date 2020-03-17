@@ -11,7 +11,7 @@ import copy
 import json
 from types import ModuleType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
+    Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union, cast,
 )
 import time
 import six
@@ -54,8 +54,6 @@ if not cmk_version.is_raw_edition():
 
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
-
-UserType = Union["LoggedInUser", LocalProxy]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -866,8 +864,12 @@ def _set_user(_user):
     local.user = _user
 
 
+# TODO: Nuke UserType and simply replace it with LoggedInUser.
+UserType = LoggedInUser
+
+# TODO: Nuke this and simply use cmk.gui.globals.user.
 # This holds the currently logged in user object
-user = LocalProxy(lambda: local.user)  # type: UserType
+user = cast(UserType, LocalProxy(lambda: local.user))
 
 #.
 #   .--User Handling-------------------------------------------------------.

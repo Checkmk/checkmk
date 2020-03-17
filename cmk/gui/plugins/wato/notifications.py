@@ -305,7 +305,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix"],
+            optional_keys=["url_prefix", "proxy_url"],
             elements=[
                 ("webhook_url",
                  CascadingDropdown(
@@ -324,6 +324,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                                ))],
                  )),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("proxy_url", HTTPProxyReference()),
             ],
         )
 

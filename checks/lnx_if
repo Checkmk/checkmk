@@ -102,7 +102,7 @@ def _parse_lnx_if_sections(info):
     ethtool_stats = {}
     iface = None
     lines = iter(info)
-    ethtool_index = 0
+    indices_by_node = {}
     while True:
         try:
             node, line = _parse_lnx_if_node_info(lines)
@@ -127,8 +127,8 @@ def _parse_lnx_if_sections(info):
             #       KEY: VAL
             #       ...
             iface = ethtool_stats.setdefault((node, line[0][1:-1]), {})
-            ethtool_index += 1
-            iface["ethtool_index"] = ethtool_index
+            indices_by_node[node] = indices_by_node.setdefault(node, 0) + 1
+            iface["ethtool_index"] = indices_by_node[node]
             continue
 
         if iface is not None:
@@ -150,11 +150,11 @@ def parse_lnx_if(info):
         nic_info.append((node_info, iface_name, iface))
 
     if_table = []
-    index = 0
+    indices_by_node = {}
     for node_info, nic, attr in nic_info:
         counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        index += 1
-        ifIndex = attr.get("ethtool_index", index)
+        indices_by_node[node_info] = indices_by_node.setdefault(node_info, 0) + 1
+        ifIndex = attr.get("ethtool_index", indices_by_node[node_info])
         ifDescr = nic
         ifAlias = nic
 

@@ -1,0 +1,17 @@
+Title: systemd_units: WATO rules modification to allow compability
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584453928
+Class: fix
+
+In the previous version, the splitting of WATO rules for the systemd
+individual services and the systemd summary service was performed
+without compability for previously configured systemd rules.
+This incompability led to the warning display "Unable to read current options
+of this rule. Falling back to default values." within the WATO rule page.
+This change resolves the warning display by ignoring the incompatible keys.
+It allows the user to continue using the previous WATO rules concerning the individual
+systemd services only. A new WATO ruleset must be configured for the systemd summary check.

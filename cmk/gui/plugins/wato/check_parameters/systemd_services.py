@@ -111,7 +111,9 @@ def _parameter_valuespec_systemd_services():
         ],
         help=_(
             "This ruleset only applies when individual Systemd services are discovered. The user "
-            "needs to configure this option in the discovery section."))
+            "needs to configure this option in the discovery section."),
+        ignored_keys=["ignored", "activating_levels", "reloading_levels"],
+    )
 
 
 rulespec_registry.register(

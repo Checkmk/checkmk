@@ -28,7 +28,7 @@ info = [
 
 discovery = {
     '': [('+ASM', {}), ('TUX2', {}), ('TUX5', {})],
-    'uptime': [('+ASM', {}), ('TUX2', {}), ('TUX5', {})]
+    'uptime': [('TUX2', {}), ('TUX5', {})]
 }
 
 checks = {
@@ -77,15 +77,6 @@ checks = {
         )
     ],
     'uptime': [
-        (
-            '+ASM', {}, [
-                (
-                    2,
-                    'ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days',
-                    []
-                )
-            ]
-        ),
         (
             'TUX2', {"max": (6000, 10000) }, [
                 (

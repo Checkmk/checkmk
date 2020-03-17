@@ -232,16 +232,21 @@ check_info['oracle_instance'] = {
 }
 
 
+def discover_oracle_instance_uptime(parsed):
+    for item, item_data in parsed.items():
+        if item_data['general_error'] or item_data['invalid_data']:
+            continue
+        yield item, {}
+
+
 def check_oracle_instance_uptime(item, params, parsed):
     item_data = parsed.get(item)
     if item_data is None:
         raise MKCounterWrapped("Login into database failed")
 
-    if item_data['general_error']:
-        return 2, item_data['general_error']
-
-    if item_data['invalid_data']:
-        return 2, "Database not running, login failed or unvalid data from agent"
+    if item_data['general_error'] or item_data['invalid_data']:
+        # Error is already shown in main check
+        raise MKCounterWrapped("Login into database failed")
 
     up_seconds = max(0, int(item_data['up_seconds']))
 
@@ -256,7 +261,7 @@ def check_oracle_instance_uptime(item, params, parsed):
 
 check_info['oracle_instance.uptime'] = {
     "check_function": check_oracle_instance_uptime,
-    "inventory_function": discover(),
+    "inventory_function": discover_oracle_instance_uptime,
     "service_description": "ORA %s Uptime",
     "group": "uptime_multiitem",
     "has_perfdata": True,

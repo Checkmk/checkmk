@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Set, List, Optional, Iterable  # pylint: disable=unused-import
+from typing import Callable, Set, List, Optional, Iterable  # pylint: disable=unused-import
+import re
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.tty as tty
+from cmk.utils.regex import regex
 
 import cmk.base.check_utils
 import cmk.base.config as config
@@ -19,6 +21,34 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 )
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
+
+from cmk.base.api.agent_based.section_types import (
+    SNMPDetectAtom,
+    SNMPDetectSpec,
+)
+
+
+def _evaluate_snmp_detection(oid_function, detect_spec):
+    # type: (Callable, SNMPDetectSpec) -> bool
+    """This is a compatibility wrapper for the new SNMP detection.
+    """
+    # TODO: Once this is the only used method, we can consolidate
+    #       this into the code below and simplify.
+    return any(
+        all(_evaluate_snmp_detection_atom(oid_function, atom)
+            for atom in alternative)
+        for alternative in detect_spec)
+
+
+def _evaluate_snmp_detection_atom(oid_function, atom):
+    # type: (Callable, SNMPDetectAtom) -> bool
+    oid, pattern, flag = atom
+    value = oid_function(oid)
+    if value is None:
+        # check for "not_exists"
+        return pattern == '.*' and not flag
+    # ignore case!
+    return bool(regex(pattern, re.IGNORECASE).match(value)) is flag
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -114,7 +144,11 @@ def _snmp_scan(host_config,
                                                 do_snmp_scan=do_snmp_scan)
                     return default_value if value is None else value
 
-                result = detection_spec(oid_function)
+                if callable(detection_spec):
+                    result = detection_spec(oid_function)
+                else:
+                    result = _evaluate_snmp_detection(oid_function, detection_spec)
+
                 if result is not None and not isinstance(result, (str, bool)):
                     if on_error == "warn":
                         console.warning("   SNMP scan function of %s returns invalid type %s." %

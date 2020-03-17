@@ -179,7 +179,7 @@ def test_list_checks(execute):
         assert p.returncode == 0
         assert p.stderr == ""
         assert "zypper" in p.stdout
-        assert "Check for (security) updates via Zypper" in p.stdout
+        assert "Zypper: (Security) Updates" in p.stdout
         assert p.stdout.count(" snmp ") > 300
         assert p.stdout.count(" tcp ") > 200
 

@@ -21,8 +21,6 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from werkzeug.local import LocalProxy
-
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
     SiteId, SiteConfiguration, SiteConfigurations,
 )
@@ -34,7 +32,11 @@ import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import local
+# TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
+# this is a bit difficult due to our beloved circular imports. :-/ Or should we
+# do this the other way round? Anyway, we will know when the cycle has been
+# broken...
+from cmk.gui.globals import local, user
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -863,10 +865,6 @@ def _set_user(_user):
     cmk.gui.globals.user directly. This is imported here."""
     local.user = _user
 
-
-# TODO: Nuke this and simply use cmk.gui.globals.user.
-# This holds the currently logged in user object
-user = cast(LoggedInUser, LocalProxy(lambda: local.user))
 
 #.
 #   .--User Handling-------------------------------------------------------.

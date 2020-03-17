@@ -13,6 +13,7 @@ import cmk.base.check_utils as check_utils
 from cmk.base.api.agent_based.section_types import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
+    SNMPTree,
 )
 
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
@@ -27,8 +28,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 
 pytestmark = pytest.mark.checks
-
-config.load_all_checks(check_api.get_check_api_context)
 
 KNOWN_FAILURES = {
     'checkpoint_connections',
@@ -72,40 +71,76 @@ def known_exceptions(name):
         yield
 
 
-@pytest.mark.parametrize("name, scan_func", list(config.snmp_scan_functions.items()))
-def test_snmp_scan_tranlation(name, scan_func):
-    with known_exceptions(name):
-        _ = create_detect_spec(name, scan_func)
+@pytest.fixture(scope="module", name="_load_all_checks")
+def load_all_checks():
+    config.load_all_checks(check_api.get_check_api_context)
 
 
-@pytest.mark.parametrize(
-    "name, check_info",
-    [(name, check_info) for (name, check_info) in config.check_info.items() if '.' not in name])
-def test_create_section_plugin_from_legacy(name, check_info):
+@pytest.fixture(scope="module", name="snmp_scan_functions")
+def _get_snmp_scan_functions(_load_all_checks):
+    assert len(config.snmp_scan_functions) > 400  # sanity check
+    return config.snmp_scan_functions
 
-    scan_function = config.snmp_scan_functions.get(name)
-    if scan_function is None:
-        section = create_agent_section_plugin_from_legacy(
-            name,
-            check_info,
-            [],
-        )
-        assert isinstance(section, AgentSectionPlugin)
-    else:
-        with known_exceptions(name):
-            sec = create_snmp_section_plugin_from_legacy(
+
+@pytest.fixture(scope="module", name="snmp_info")
+def _get_snmp_info(_load_all_checks):
+    assert len(config.snmp_info) > 400  # sanity check
+    return config.snmp_info
+
+
+@pytest.fixture(scope="module", name="check_info")
+def _get_check_info(_load_all_checks):
+    assert len(config.check_info) > 400  # sanity check
+    return config.check_info
+
+
+def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp_info):
+    for name, check_info_dict in check_info.items():
+        # only test main checks
+        if name != check_utils.section_name_of(name):
+            continue
+
+        scan_function = snmp_scan_functions.get(name)
+        if scan_function is None:
+            section = create_agent_section_plugin_from_legacy(
                 name,
-                check_info,
-                scan_function,
-                config.snmp_info[name],
+                check_info_dict,
                 [],
             )
-            assert isinstance(sec, SNMPSectionPlugin)
+            assert isinstance(section, AgentSectionPlugin)
+        else:
+            with known_exceptions(name):
+                sec = create_snmp_section_plugin_from_legacy(
+                    name,
+                    check_info_dict,
+                    scan_function,
+                    snmp_info[name],
+                    [],
+                )
+                assert isinstance(sec, SNMPSectionPlugin)
 
 
-@pytest.mark.parametrize("_name, snmp_info", list(config.snmp_info.items()))
-def test_snmp_tree_tranlation(_name, snmp_info):
-    _ = _create_snmp_trees(snmp_info)
+def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):
+    # TODO: these don't have scan functions. Fix that! (CMK-4046)
+    known_offenders = {'emc_ecs_cpu_util', 'emc_ecs_diskio', 'emc_ecs_mem'}
+    assert set(snmp_scan_functions) | known_offenders == set(snmp_info)
+
+
+def test_snmp_tree_tranlation(snmp_info):
+    for info_spec in snmp_info.values():
+        new_trees, recover_function = _create_snmp_trees(info_spec)
+        assert callable(recover_function)  # is tested separately
+        assert isinstance(new_trees, list)
+        assert all(isinstance(tree, SNMPTree) for tree in new_trees)
+
+
+def test_scan_function_trranslation(snmp_scan_functions):
+    for name, scan_func in snmp_scan_functions.items():
+        assert scan_func is not None
+
+        # make sure we can convert the scan function
+        with known_exceptions(name):
+            _ = create_detect_spec(name, scan_func)
 
 
 @pytest.mark.parametrize("check_name, func_name", [
@@ -124,6 +159,6 @@ def test_explicit_conversion(check_manager, check_name, func_name):
     assert create_detect_spec("unit-test", scan_func) == _explicit_conversions(scan_func.__name__)
 
 
-@pytest.mark.parametrize("name", list(config.snmp_scan_functions))
-def test_no_subcheck_with_scan_function(name):
-    assert name == check_utils.section_name_of(name)
+def test_no_subcheck_with_snmp_keywords(snmp_info):
+    for name in snmp_info:
+        assert name == check_utils.section_name_of(name)

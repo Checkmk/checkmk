@@ -208,6 +208,9 @@ class TestCrashReport:
         site.live.command("[%i] DEL_CRASH_REPORT;%s" %
                           (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab"))
         after = site.live.query("GET crashreports")
-        assert before == after
+
+        # A new crash may occur during testing, don't compare equality of the result sets
+        assert set(map(tuple, after)).issuperset(set(map(tuple, before)))
+
         assert [component, uuid] in before
         assert [component, uuid] in after

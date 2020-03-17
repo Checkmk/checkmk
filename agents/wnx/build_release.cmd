@@ -37,6 +37,13 @@ set /p wnx_version_raw=<src\common\wnx_version.h
 rem parse version
 set wnx_version=%wnx_version_raw:~30,40%
 
+rem check that version is minimally ok
+set wnx_version_mark=%wnx_version_raw:~0,29%
+if not "%wnx_version_mark%" == "#define CMK_WIN_AGENT_VERSION" powershell Write-Host "wnx_version.h is invalid" -Foreground Red && exit /b 67
+powershell Write-Host "wnx_version.h is ok" -Foreground Green
+
+rem #define CMK_WIN_AGENT_VERSION "
+
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
 mkdir %arte% 2> nul

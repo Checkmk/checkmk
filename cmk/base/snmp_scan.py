@@ -97,15 +97,13 @@ def _snmp_scan(host_config,
             continue
 
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-        scan_function = None  # type: Optional[ScanFunction]
+        detection_spec = None  # type: Optional[ScanFunction]
         if section_name in config.snmp_scan_functions:
-            scan_function = config.snmp_scan_functions[section_name]
+            detection_spec = config.snmp_scan_functions[section_name]
         elif section_name in inventory_plugins.inv_info:
-            scan_function = inventory_plugins.inv_info[section_name].get("snmp_scan_function")
-        else:
-            scan_function = None
+            detection_spec = inventory_plugins.inv_info[section_name].get("snmp_scan_function")
 
-        if scan_function:
+        if detection_spec:
             try:
 
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
@@ -116,7 +114,7 @@ def _snmp_scan(host_config,
                                                 do_snmp_scan=do_snmp_scan)
                     return default_value if value is None else value
 
-                result = scan_function(oid_function)
+                result = detection_spec(oid_function)
                 if result is not None and not isinstance(result, (str, bool)):
                     if on_error == "warn":
                         console.warning("   SNMP scan function of %s returns invalid type %s." %

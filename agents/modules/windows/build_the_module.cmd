@@ -20,7 +20,8 @@ exit /b 11
 
 :python_build
 powershell Write-Host 'Building python...' -foreground Cyan
-make 
+rem make 
+copy backup\python-3.8.zip ..\..\..\artefacts
 goto exit
 
 :usage:

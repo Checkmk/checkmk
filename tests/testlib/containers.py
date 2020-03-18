@@ -9,6 +9,7 @@ import sys
 import tarfile
 import logging
 import subprocess
+import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,8 @@ from testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
+# Increase this to enforce invalidation of all existing images
+_DOCKER_BUILD_ID = 1
 
 logger = logging.getLogger()
 
@@ -193,6 +196,15 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
     with _start(
             client,
             image=base_image_name_with_tag,
+            labels={
+                "org.tribe29.build_time": "%d" % time.time(),
+                "org.tribe29.build_id": base_image.short_id,
+                "org.tribe29.base_image": base_image_name_with_tag,
+                "org.tribe29.base_image_hash": base_image.short_id,
+                "org.tribe29.cmk_edition_short": version.edition_short,
+                "org.tribe29.cmk_version": version.version,
+                "org.tribe29.cmk_branch": version.branch(),
+            },
             command=["tail", "-f", "/dev/null"],  # keep running
             volumes=list(_image_build_volumes().keys()),
             host_config=client.api.create_host_config(

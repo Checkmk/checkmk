@@ -13,11 +13,13 @@ import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.sites import SiteId  # pylint: disable=unused-import
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 from cmk.gui.type_defs import RoleName, PermissionName  # pylint: disable=unused-import
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -321,6 +323,7 @@ def nagioscgilink(text, target):
 
 
 def snapin_site_choice(ident, choices):
+    # type: (SiteId, List[Tuple[SiteId, Text]]) -> Optional[List[SiteId]]
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":
@@ -331,11 +334,13 @@ def snapin_site_choice(ident, choices):
     if len(choices) <= 1:
         return None
 
-    choices = [
+    dropdown_choices = [
         ("", _("All sites")),
-    ] + choices
+    ]  # type: Choices
+    dropdown_choices += choices
+
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", choices, deflt=site, onchange=onchange)
+    html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
 
     return only_sites
 

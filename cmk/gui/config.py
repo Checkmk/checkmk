@@ -1201,13 +1201,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, Text]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1223,7 +1223,7 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 

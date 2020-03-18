@@ -40,6 +40,50 @@ bool Compare(const T& t, const T& v) {
     return std::equal(t.begin(), t.end(), v.begin());
 }
 
+TEST(ModuleCommander, CheckSystemAuto) {
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+
+    cma::OnStartTest();
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
+
+    auto sys_exts = ModuleCommander::GetSystemExtensions();
+    ASSERT_TRUE(sys_exts.size() == 1);
+    ASSERT_TRUE(sys_exts[0].first == "python");
+    ASSERT_TRUE(sys_exts[0].second == ".py");
+
+    std::string base_1 =
+        "globals:\n"
+        "  enabled: yes\n"
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: 'aaa'\n"
+        "      exts: ['.checkmk.py','.py']\n"
+        "      exec: 'thos.exe {}'\n";
+    {
+        ModuleCommander mc;
+        auto node = YAML::Load(base_1);
+        mc.readConfig(node);
+        ASSERT_TRUE(mc.getExtensions().size() == 2);
+        EXPECT_TRUE(mc.isModuleScript("z.py"));
+
+        node["modules"]["python"] = "auto";
+        mc.readConfig(node);
+        ASSERT_TRUE(mc.getExtensions().size() == 2);
+        EXPECT_TRUE(mc.isModuleScript("z.py"));
+    }
+
+    {
+        ModuleCommander mc;
+        auto node = YAML::Load(base_1);
+        node["modules"]["python"] = "system";
+        mc.readConfig(node);
+        ASSERT_TRUE(mc.getExtensions().size() == 1);
+        EXPECT_FALSE(mc.isModuleScript("z.py"));
+    }
+}
+
 TEST(ModulesTest, Internal) {
     Module m;
     EXPECT_FALSE(m.valid());
@@ -100,9 +144,9 @@ TEST(ModulesTest, Loader) {
     };
     TestSet good_sets[] = {
         //
-        {"the-1.0", "[.e1, .e2]", "x", "dir: modules\\{}"},  // full
-        {"the-1.0", "[.e1]", "x", "dir: "},                  // empty dir
-        {"the-1.0", "[.e1]", "x", ""},                       // empty dir
+        {"the-1.0", "[.e1, .e2, .e3]", "x", "dir: modules\\{}"},  // full
+        {"the-1.0", "[.e1]", "x", "dir: "},                       // empty dir
+        {"the-1.0", "[.e1]", "x", ""},                            // empty dir
         //
     };
 
@@ -126,6 +170,23 @@ TEST(ModulesTest, Loader) {
             EXPECT_EQ(m.dir(), fmt::format(defaults::kModulesDir, m.name()));
         else
             EXPECT_EQ(m.dir(), fmt::format(s.dir.c_str() + 5, m.name()));
+    }
+
+    {
+        Module m;
+        auto s = good_sets[0];
+        auto text = fmt::format(base, s.name, s.exts, s.exec, s.dir);
+        auto node = YAML::Load(text);
+        EXPECT_TRUE(m.loadFrom(node));
+        auto arr = cma::cfg::GetArray<std::string>(YAML::Load(s.exts));
+        EXPECT_TRUE(Compare(m.exts(), arr));
+        m.removeExtension(".e2");
+        EXPECT_EQ(m.exts().size(), 2);
+        EXPECT_EQ(m.exts()[0], ".e1");
+        EXPECT_EQ(m.exts()[1], ".e3");
+        m.removeExtension(".e3");
+        EXPECT_EQ(m.exts().size(), 1);
+        EXPECT_EQ(m.exts()[0], ".e1");
     }
 
     for (auto s : bad_sets) {

@@ -250,6 +250,8 @@ mrpe:
 modules:
     enabled: yes
 
+    python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
+
     table:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically

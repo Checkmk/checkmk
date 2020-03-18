@@ -15,6 +15,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "cma_core.h"
 
@@ -55,6 +56,8 @@ public:
     std::wstring buildCommandLineForced(
         const std::filesystem::path& script) const noexcept;
 
+    void removeExtension(std::string_view ext);
+
 private:
     void reset() noexcept;
     std::string name_;
@@ -88,6 +91,8 @@ private:
 
 enum class InstallMode { normal, force };
 
+using StringViewPair = std::pair<std::string_view, std::string_view>;
+
 class ModuleCommander {
 public:
     void LoadDefault() noexcept;
@@ -115,7 +120,11 @@ public:
         return user / dirs::kUserModules;
     }
 
+    [[nodiscard]] static const std::vector<StringViewPair>
+    GetSystemExtensions();
+
 private:
+    void removeSystemExtensions(YAML::Node& node);
     // internals static API
     static bool InstallModule(const Module& module,
                               const std::filesystem::path& root,

@@ -12,33 +12,66 @@
 
 # .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
 # .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
+# .1.3.6.1.4.1.2021.4.14.0 100    --> UCD-SNMP-MIB::memBuffer.0
+# .1.3.6.1.4.1.2021.4.15.0 200    --> UCD-SNMP-MIB::memCached.0
 
 # suggested by cutomer
 factory_settings["ucd_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
-
-def inventory_ucd_mem(info):
-    if info and len(info[0]) > 1:
-        for line in info[0]:
-            if line == "":
-                return []
-        return [("", {})]
+BUFFER_CACHE_KEYS = ['memBuffer', 'memCached']
 
 
-def check_ucd_mem(item, params, info):
-    mem_total_bytes, mem_avail_bytes = \
-        [int(x.replace("kB", "").strip()) * 1024 for x in info[0]]
-    mem_used_bytes = mem_total_bytes - mem_avail_bytes
+def _info_str_to_bytes(info_str):
+    return int(info_str.replace("kB", "").strip()) * 1024
+
+
+def parse_ucd_mem(info):
+
+    if not info:
+        return {}
+
+    # memTotal and memAvailable are mandatory
+    try:
+        parsed_mem = {
+            "memTotal": _info_str_to_bytes(info[0][0]),
+            "memAvail": _info_str_to_bytes(info[0][1])
+        }
+    except ValueError:
+        return {}
+
+    # memTotal and memAvailable are optional
+    for key, val in zip(BUFFER_CACHE_KEYS, info[0][2:]):
+        try:
+            parsed_mem[key] = _info_str_to_bytes(val)
+        except ValueError:
+            pass
+
+    return parsed_mem
+
+
+def inventory_ucd_mem(parsed):
+    return [("", {})] if parsed else []
+
+
+def check_ucd_mem(item, params, parsed):
+
+    mem_used_bytes = parsed["memTotal"] - parsed["memAvail"]
+
+    # buffer and cache count as free memory
+    for key in BUFFER_CACHE_KEYS:
+        mem_used_bytes -= parsed.get(key, 0)
+
     return check_memory_element(
         "Usage",
         mem_used_bytes,
-        mem_total_bytes,
+        parsed["memTotal"],
         params.get("levels"),
         metric_name="memory_used",
     )
 
 
 check_info['ucd_mem'] = {
+    'parse_function': parse_ucd_mem,
     'inventory_function': inventory_ucd_mem,
     'check_function': check_ucd_mem,
     'service_description': 'Memory',
@@ -48,6 +81,8 @@ check_info['ucd_mem'] = {
         [
             "5",  # memTotal     -> kB
             "6",  # memAvailable -> kB
+            "14",  # memBuffer    -> kB
+            "15",  # memCached    -> kB
         ]),
     # Some devices are reporting wrong data on
     # HOST-RESOURCES-MIB. Use UCD-MIB in these

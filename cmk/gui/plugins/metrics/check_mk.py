@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, Any  # pylint: disable=unused-import
 import cmk.utils.render
 
 from cmk.gui.i18n import _
@@ -4022,15 +4023,15 @@ metric_info["sslproxy_active_sessions"] = {
 
 def register_varnish_metrics():
     for what, descr, color in [
-        ("busy", "too many", "11/a"),
-        ("unhealthy", "not attempted", "13/a"),
-        ("req", "requests", "15/a"),
-        ("recycle", "recycles", "21/a"),
-        ("retry", "retry", "23/a"),
-        ("fail", "failures", "25/a"),
-        ("toolate", "was closed", "31/a"),
-        ("conn", "success", "33/a"),
-        ("reuse", "reuses", "35/a"),
+        ("busy", _("too many"), "11/a"),
+        ("unhealthy", _("not attempted"), "13/a"),
+        ("req", _("requests"), "15/a"),
+        ("recycle", _("recycles"), "21/a"),
+        ("retry", _("retry"), "23/a"),
+        ("fail", _("failures"), "25/a"),
+        ("toolate", _("was closed"), "31/a"),
+        ("conn", _("success"), "33/a"),
+        ("reuse", _("reuses"), "35/a"),
     ]:
         metric_info_key = "varnish_backend_%s_rate" % what
         metric_info[metric_info_key] = {
@@ -4040,9 +4041,9 @@ def register_varnish_metrics():
         }
 
     for what, descr, color in [
-        ("hit", "hits", "11/a"),
-        ("miss", "misses", "13/a"),
-        ("hitpass", "hits for pass", "21/a"),
+        ("hit", _("hits"), "11/a"),
+        ("miss", _("misses"), "13/a"),
+        ("hitpass", _("hits for pass"), "21/a"),
     ]:
         metric_info_key = "varnish_cache_%s_rate" % what
         metric_info[metric_info_key] = {
@@ -11626,7 +11627,7 @@ def register_hop_response_graph():
         "title": _("Hop response times"),
         "metrics": [],
         "optional_metrics": [],
-    }
+    }  # type: Dict[str, Any]
     for idx in range(1, MAX_NUMBER_HOPS):
         color = indexed_color(idx, MAX_NUMBER_HOPS)
         new_graph["metrics"].append(

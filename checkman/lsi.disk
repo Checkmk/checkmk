@@ -1,4 +1,4 @@
-title: Status of a disk in an LSI RAID array
+title: LSI RAID Controller: Status of a Disk
 agents: linux
 catalog: os/storage
 license: GPL

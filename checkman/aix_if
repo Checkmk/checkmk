@@ -1,4 +1,4 @@
-title: State of network interfaces on AIX hosts
+title: AIX: State of Network Interfaces
 agents: aix
 catalog: os/networking
 license: GPL

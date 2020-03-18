@@ -1,4 +1,4 @@
-title: CPU load on HP-UX
+title: HP-UX: CPU Load
 agents: hpux
 catalog: os/kernel
 license: GPL

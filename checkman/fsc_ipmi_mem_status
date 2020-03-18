@@ -1,11 +1,11 @@
-title: Memory module status using IPMI via freeipmi
+title: Fujitsu Workstations: Memory
 agents: linux
-catalog: os/hardware
+catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
  This check reads the memory module status information from IPMI on
- FSC TX 120 systems (and maybe others).
+ FSC TX-120 systems (and maybe others).
 
  This check uses the information of the utility {ipmi-sensors}
  from the utility package {freeipmi}. You need your host kernel

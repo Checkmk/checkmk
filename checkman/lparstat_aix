@@ -1,4 +1,4 @@
-title: lparstat on AIX - CPU utilization and assignment for LPARs
+title: AIX lparstat: CPU Utilization and Assignment for LPARs
 agents: aix
 catalog: os/kernel
 license: GPL

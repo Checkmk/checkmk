@@ -1,4 +1,4 @@
-title: Mirror state of LVM logical volumes on AIX
+title: AIX: Mirror State of LVM Logical Volumes
 agents: aix
 catalog: os/storage
 license: GPL

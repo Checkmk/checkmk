@@ -1,0 +1,15 @@
+Title: systemd_units: WATO split  
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p10
+Date: 1584525673 
+Class: fix
+
+In the previous version, there was one WATO rule which handled both
+the summary systemd service and the individual systemd services. This union
+led to a confusion as some configuration options had no effect on one of the two
+service types. This change now introduces a split between these two services. The
+systemd summary service has now its own WATO rule configuration. The user is required
+to configure a new WATO rule for the systemd summary service.

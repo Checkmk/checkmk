@@ -29,7 +29,6 @@
 #usrLclItslb         jfs2       8       16      2    closed/syncd    /usr/local/itslb
 #
 
-
 import re
 
 

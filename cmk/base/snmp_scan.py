@@ -81,7 +81,7 @@ def _snmp_scan(host_config,
                for_inv=False,
                do_snmp_scan=True,
                for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool, bool) -> List[CheckPluginName]
+    # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
 
     # Make hostname globally available for scan functions.
@@ -109,16 +109,15 @@ def _snmp_scan(host_config,
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
-    found_check_plugin_names = set()  # type: Set[CheckPluginName]
     if for_inv:
         these_plugin_names = inventory_plugins.inv_info
     else:
         these_plugin_names = config.check_info
 
-    positive_found = []  # type: List[CheckPluginName]
-    default_found = []  # type: List[CheckPluginName]
+    found_by_positive_result = set()  # type: Set[CheckPluginName]
+    found_by_default = set()  # type: Set[CheckPluginName]
 
-    for check_plugin_name, _unused_check in these_plugin_names.items():
+    for check_plugin_name in these_plugin_names:
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
             continue
         if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
@@ -156,8 +155,7 @@ def _snmp_scan(host_config,
                     elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
-                    found_check_plugin_names.add(check_plugin_name)
-                    positive_found.append(check_plugin_name)
+                    found_by_positive_result.add(check_plugin_name)
             except MKGeneralException:
                 # some error messages which we explicitly want to show to the user
                 # should be raised through this
@@ -168,22 +166,23 @@ def _snmp_scan(host_config,
                 elif on_error == "raise":
                     raise
         else:
-            found_check_plugin_names.add(check_plugin_name)
-            default_found.append(check_plugin_name)
+            found_by_default.add(check_plugin_name)
 
-    _output_snmp_check_plugins("SNMP scan found", positive_found)
-    if default_found:
-        _output_snmp_check_plugins("SNMP without scan function", default_found)
+    _output_snmp_check_plugins("SNMP scan found", found_by_positive_result)
+    if found_by_default:
+        _output_snmp_check_plugins("SNMP without scan function", found_by_default)
 
-    filtered = config.filter_by_management_board(host_config.hostname,
-                                                 found_check_plugin_names,
-                                                 for_mgmt_board,
-                                                 for_discovery=True,
-                                                 for_inventory=for_inv)
+    filtered = config.filter_by_management_board(
+        host_config.hostname,
+        found_by_positive_result | found_by_default,
+        for_mgmt_board,
+        for_discovery=True,
+        for_inventory=for_inv,
+    )
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(host_config)
-    return sorted(filtered)
+    return filtered
 
 
 def _output_snmp_check_plugins(title, collection):

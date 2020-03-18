@@ -244,6 +244,20 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     IFS=$OLD_IFS
 fi
 
+
+# Get statistics about monitored jobs. Below the job directory there
+# is a sub directory per user that ran a job. That directory must be
+# owned by the user so that a symlink or hardlink attack for reading
+# arbitrary files can be avoided.
+JOB_DIR="$MK_VARDIR/job"
+if [[ -d "$JOB_DIR" && -x "$JOB_DIR" ]]; then
+    echo '<<<job>>>'
+    for cron_output in $JOB_DIR/**/*; do
+        echo "==> $(basename "$cron_output") <=="
+        cat "$cron_output"
+    done
+fi
+
 # temperatures and sensors, requires HardwareMonitor.app or osx-cpu-temp
 if [ -x /Applications/HardwareMonitor.app/Contents/MacOS/hwmonitor ]; then
     echo '<<<lnx_thermal:sep(124)>>>'

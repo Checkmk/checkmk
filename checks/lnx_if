@@ -172,11 +172,11 @@ def parse_lnx_if(info):
             if speed_text == '65535Mb/s':  # unknown
                 ifSpeed = ''
             elif speed_text.endswith("Kb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000
+                ifSpeed = int(float(speed_text[:-4])) * 1000
             elif speed_text.endswith("Mb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000000
+                ifSpeed = int(float(speed_text[:-4])) * 1000000
             elif speed_text.endswith("Gb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000000000
+                ifSpeed = int(float(speed_text[:-4])) * 1000000000
             else:
                 ifSpeed = ''
 

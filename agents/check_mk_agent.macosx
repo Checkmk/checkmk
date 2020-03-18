@@ -1,44 +1,172 @@
-#!/bin/sh
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/bin/bash
+# Check_MK Agent for Mac OS/X
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # NOTE: This agent has beed adapted from the Check_MK linux agent.
+# NOTE2: lnx_if requires iproute2mac to be installed (i.e. `brew install iproute2mac`)
 
 # Remove locale settings to eliminate localized outputs where possible
 # Author: Christian Zigotzky <info@xenosoft.de>
+# Modified by Thomas Kaiser <t.kaiser@arts-others.de>
+
+# Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/to/be/changed"
-export MK_CONFDIR="/to/be/changed"
+export MK_LIBDIR='/usr/local/lib/check_mk_agent'
+export MK_CONFDIR='/etc/check_mk'
+export MK_VARDIR='/var/lib/check_mk_agent'
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
 
-# close standard input (for security reasons) and stderr
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. Please
+# refer to online documentation for details about local checks.
+LOCALDIR=$MK_LIBDIR/local
+
+# All files in SPOOLDIR will simply appended to the agent
+# output if they are not outdated (see below)
+SPOOLDIR=$MK_VARDIR/spool
+
+# close standard input (for security reasons) and stderr when not
+# explicitly in debug mode.
 if [ "$1" = -d ]
 then
     set -xv
 else
-    exec </dev/null 2>/dev/null
+    :
+    # exec <&- 2>/dev/null
 fi
 
+function run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline=$*
 
-echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
-echo "AgentOS: macosx"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
+    echo '<<<mrpe>>>'
 
-osver="$(uname -r)"
+    PLUGIN=${cmdline%% *}
+    OUTPUT=$(eval "$cmdline")
+
+    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
+
+# Runs a command asynchronous by use of a cache file. Usage:
+# run_cached [-s] NAME MAXAGE
+#   -s creates the section header <<<$NAME>>>
+#   -m mrpe-mode: stores exit code with the cache
+#   -ma mrpe-mode with age: stores exit code with the cache and adds the cache age
+#   NAME is the name of the section (also used as cache file name)
+#   MAXAGE is the maximum cache livetime in seconds
+function run_cached () {
+    local NOW
+    NOW=$(date +%s)
+    local section=
+    local mrpe=0
+    local append_age=0
+    # TODO: this function is unable to handle mulitple args at once
+    #       for example: -s -m won't work, it is read as single token "-s -m"
+    if [ "$1" = -s ] ; then local section="echo '<<<$2:cached($NOW,$3)>>>' ; " ; shift ; fi
+    if [ "$1" = -m ] ; then local mrpe=1 ; shift ; fi
+    if [ "$1" = "-ma" ] ; then local mrpe=1 ; local append_age=1 ; shift ; fi
+    local NAME=$1
+    local MAXAGE=$2
+    shift 2
+    local CMDLINE=$section$*
+
+    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache" ; fi
+    if [ "$mrpe" = 1 ] ; then
+        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
+    else
+        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    fi
+
+    # Check if the creation of the cache takes suspiciously long and kill the
+    # process if the age (access time) of $CACHEFILE.new is twice the MAXAGE.
+    # Output the eventually already cached section anyways and start the cache
+    # update again.
+    if [ -e "$CACHEFILE.new" ] ; then
+        local CF_ATIME
+        CF_ATIME=$(stat -f %Sa -t %s "$CACHEFILE.new")
+        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+            # Kill the process still accessing that file in case
+            # it is still running. This avoids overlapping processes!
+            fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
+            rm -f "$CACHEFILE.new"
+        fi
+    fi
+
+    # Check if cache file exists and is recent enough
+    if [ -s "$CACHEFILE" ] ; then
+        local MTIME
+        MTIME=$(stat -f %Sm -t %s "$CACHEFILE")
+        local AGE
+        AGE=$((NOW - MTIME))
+        if [ "$AGE" -le "$MAXAGE" ] ; then local USE_CACHEFILE=1 ; fi
+        # Output the file in any case, even if it is
+        # outdated. The new file will not yet be available
+        if [ $append_age -eq 1 ] ; then
+            # insert the cached-string before the pipe (first -e)
+            # or, if no pipe found (-e t) append it (third -e),
+            # but only once and on the second line (2!b) (first line is section header,
+            # all further lines are long output)
+            sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" < "$CACHEFILE"
+        else
+            cat "$CACHEFILE"
+        fi
+    fi
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ] ; then
+        # When the command fails, the output is throws away ignored
+        if [ $mrpe -eq 1 ] ; then
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; run_mrpe $NAME \"$CMDLINE\" && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+        else
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+        fi
+    fi
+}
+
+# Make run_cached available for subshells (plugins, local checks, etc.)
+export -f run_cached
+
+osver="$(sw_vers | sed 1d | tr "\n" " " | awk -F" " '{print $2" ("$4")"}')"
+
+echo '<<<check_mk>>>'
+echo Version: 1.5.0p20
+echo AgentOS: macosx $osver
 
 echo '<<<df>>>'
-df -kPT hfs,apfs | sed 1d | \
+df -kPT hfs,apfs | egrep -v "Time Machine|com.apple.TimeMachine.localsnapshots|/Volumes/|/private/var/vm" | sed 1d | \
 while read DEV REST; do
     TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
     echo "$DEV $TYPE $REST"
@@ -49,12 +177,14 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: |
 awk '{print $4"/"$2;}'` `echo 'echo $$' | bash` `sysctl -n hw.ncpu`
 
 echo '<<<mem>>>'
+pagesize=$(vm_stat | grep Mach | awk '{print $8}')
+compressedpages=$(vm_stat | grep "stored in compressor:" | awk '{print $5}')
 echo "MemTotal: $(echo $(sysctl -n hw.memsize)/1024 | bc) kB"
-echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
-echo "SwapTotal: 0 kB"
-echo "SwapFree: 0 kB"
+echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $pagesize / 1024" | bc) kB"
+echo "SwapTotal: $(echo "$compressedpages * $pagesize / 1024" | bc) kB"
+echo "SwapFree: $(echo "( $compressedpages - $(vm_stat | grep "occupied by compressor:" | awk '{print $5}') ) * $pagesize / 1024" | bc) kB"
 # FIXME: Just call vm_stat here, write a check plugin that uses that
-# navite output of vm_stat
+# native output of vm_stat
 
 echo '<<<uptime>>>';
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' |
@@ -63,17 +193,52 @@ tr -d ' '` | bc
 # checks plugins with subchecks for parsing that output. Maybe reduce
 # the output size by grepping away totally useless parts
 
-echo '<<<netctr>>>';
-date +'%s'; netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{
-print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
-# FIXME: send netstat -inb plain, write proper check plugins for
-# clean parsing of the output
+# Mac version of lnx_if. Needs `iproute2mac` to have been installed.
+if hash ip 2>/dev/null; then
+    echo '<<<lnx_if>>>'
+
+    interfaces=$(ip a | grep '^\S' | grep -E -v '^(awdl0|utun)' | awk -F ':' '{ print $1 }')
+    counter=0
+    echo "[start_iplink]"
+    while read -r eth; do
+        counter=$((counter+1))
+        echo -n "${counter}: "
+        ip a show "$eth"
+    done <<< "$interfaces"
+    echo "[end_iplink]"
+
+    echo '<<<lnx_if:sep(58)>>>'
+    netstat=$(netstat -inbd | grep -E "$interfaces" | grep Link)
+    # Format: Name, IBytes, IPckts, IErr, Drop, 0 (fifo), 0 (frame), 0 (compressed), 0 (multicast), Coll, Obyts, OPckts, OErrs, 0 (drop), 0 (fifo), 0 (coll), 0 (drop)
+    #      (Collisions & drops are not broken out into in/out, so I'm assuming receive for now)
+    echo "$netstat" | awk '{print "\t"$1":\t"$7"\t"$5"\t"$6"\t"$12"\t0\t0\t0\t0\t"$11"\t"$10"\t"$8"\t"$9"\t0\t0\t0\t0"}'
+    # Convert osx ifconfig to lnx_if format:
+    #   Note: Wifi interfaces may have variable speeds each call
+    for eth in $interfaces; do
+        cur_ifconfig=$(ifconfig -v "$eth")
+        speed=$(echo "$cur_ifconfig" | grep -E "^\s*(down)?link rate:\s*" | cut -d " " -f3,4 | sed -E 's, (.)bps$,\1b/s,')
+        addr=$(echo "$cur_ifconfig" | grep -E '^\s*ether' | cut -d " " -f2)
+        link_detected=no
+        if echo "$cur_ifconfig" | grep -E 'status:\s*active' > /dev/null || [ "$eth" = "lo0" ]; then
+          link_detected=yes
+        fi
+
+        echo "[$eth]"
+        echo -e "\tSpeed: ${speed:-Unknown}"
+        echo -e "\tLink detected: $link_detected"
+        echo -e "\tAddress: ${addr:-00:00:00:00:00:00}"
+    done
+fi
 
 echo '<<<ps>>>'
 ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# NTP seems to be enabled as a default
-if which ntpq >/dev/null; then
+# macOS 10.13 and above use timed, older variants ntpd
+if [ -f /var/db/timed/com.apple.timed.plist ]; then
+    :
+    # TODO: parse /var/db/timed/com.apple.timed.plist and provide compatible output
+    # defaults read /var/db/timed/com.apple.timed TMSystemSource | grep TMTimeError | head -n1 | awk -F'"' '{print $2}'
+elif which ntpq >/dev/null; then
     echo '<<<ntp>>>'
     ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
@@ -84,43 +249,98 @@ netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x];
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
-use File::Glob "bsd_glob";
-my @patterns = ();
-foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-    open my $handle, "<", $_ or next;
-    while (<$handle>) {
-        chomp;
-        next if /^\s*(#|$)/;
-        my $pattern = $_;
-        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-        push @patterns, $pattern;
-    }
-    warn "error while reading $_: $!\n" if $!;
-    close $handle;
-}
-exit if ! @patterns;
+if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
+    echo '<<<fileinfo:sep(124)>>>'
+    date +%s
 
-print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+    OLD_IFS=$IFS
+    IFS='
+'
+    while read -r pattern; do
+        case $pattern in
+            /*) for file in $pattern; do
+                    stat -f "%N|%z|%m" "$file" 2>/dev/null || echo "$file|missing|`date +%s`"
+                done ;;
+        esac
+    done < "$MK_CONFDIR/fileinfo.cfg"
+    IFS=$OLD_IFS
+fi
 
-foreach (@patterns) {
-    foreach (bsd_glob("$_")) {
-        if (! -f) {
-            print "$_|missing\n" if ! -d;
-        } elsif (my @infos = stat) {
-            print "$_|ok|$infos[7]|$infos[9]\n";
-        } else {
-            print "$_|stat failed: $!\n";
-        }
-    }
-}
-' -- "$MK_CONFDIR"
-
-
-if type tmutil >/dev/null
+# temperatures and sensors, requires HardwareMonitor.app or osx-cpu-temp
+if [ -x /Applications/HardwareMonitor.app/Contents/MacOS/hwmonitor ]; then
+    echo '<<<lnx_thermal:sep(124)>>>'
+    /Applications/HardwareMonitor.app/Contents/MacOS/hwmonitor -c | grep " C$" | while read ; do
+        Temp=$(awk -F": " '{print $2}' <<<$REPLY | tr -d -c '[:digit:]')
+        case $REPLY in
+            SMART*)
+                Sensor="$(sed 's/^SMART Disk //' <<<"$REPLY" | cut -d'(' -f1)"
+                echo "${Sensor}|enabled|disk-thermal|${Temp}000|50000|passive|60000|critical"
+                ;;
+            "SMC DRIVE BAY"*)
+                Sensor="$(sed 's/^SM. //' <<<"$REPLY" | awk -F": " '{print $1}')"
+                echo "${Sensor}|enabled|disk-thermal|${Temp}000|50000|passive|60000|critical"
+                ;;
+            SMC*|SMB*)
+                Sensor="$(sed 's/^SM. //' <<<"$REPLY" | awk -F": " '{print $1}')"
+                echo "${Sensor}|enabled|thermal|${Temp}000|70000|passive|90000|critical"
+                ;;
+        esac
+    done
+elif type osx-cpu-temp >/dev/null
 then
-    echo '<<<timemachine>>>'
-    tmutil latestbackup 2>&1
+    echo '<<<lnx_thermal:sep(124)>>>'
+    echo "CPU A PROXIMITY|enabled|thermal|$(osx-cpu-temp | tr -d -c '[:digit:]')00|70000|passive|90000|critical"
+fi
+
+# Check SMART if smartmontools are installed, for NVME Check_MK 1.6 or above is needed
+if type smartctl >/dev/null
+then
+    echo '<<<smart>>>'
+    diskutil list | grep -v 'virtual)' | awk -F" " '/(internal)/ {print $1}' | while read ; do
+        DNAME="$(smartctl -d ata -i -f brief $REPLY | grep -v 'Family' | grep -E 'Model|^Serial Number' | sed 's/^.*\(  .*\).*$/\1/' | tr '\n' '_' | sed -e 's/  //g' -e 's/ /_/g' -e 's/_$//' -e 's/^APPLE_//')"
+        if [ -n "${DNAME}" ]; then
+            # SATA
+            MODEL="$(sed 's/\_[^.]\{0,15\}$//g' <<<${DNAME})"
+            smartctl -v 9,raw48 -A $REPLY | grep -E "Offline|Always" | sed "s|^|$DNAME ATA $MODEL |"
+        else
+            DNAME="$(smartctl -d nvme -i -f brief $REPLY | grep -v 'Family' | grep -E 'Model|^Serial Number' | sed 's/^.*\(  .*\).*$/\1/' | tr '\n' '_' | sed -e 's/  //g' -e 's/ /_/g' -e 's/_$//' -e 's/^APPLE_//')"
+            if [ -n "${DNAME}" ]; then
+                # NVME
+                echo "$REPLY NVME $(sed 's/\_[^.]\{0,15\}$//g' <<<${DNAME})"
+                smartctl -d nvme -A $REPLY | sed -e '1,5d; /^$/d'
+            fi
+        fi
+    done
+fi
+
+# query security updates in Apt compatible way, check every 24 hours
+RestartNeeded=0
+echo '<<<apt:sep(0)>>>'
+IsOld=$(find /var/run/de.arts-others.softwareupdatecheck -mtime 1 2>/dev/null)
+if [ $? -ne 0 -o "X${IsOld}" = "X/var/run/de.arts-others.softwareupdatecheck" ]; then
+	# file doesn't exist or is older than 24 hours: let's (re)create it
+	(softwareupdate -l 2>/dev/null | grep recommended >/var/run/de.arts-others.softwareupdatecheck) &
+fi
+if [ -s /var/run/de.arts-others.softwareupdatecheck ]; then
+	awk -F',' '{print $1}' </var/run/de.arts-others.softwareupdatecheck | \
+		sed -e 's/^	//' -e 's/\ .\ .$//' -e 's/\ /_/g' | while read ; do
+		# fake Ubuntu packet report style
+		echo "Inst ${REPLY} [10.1ubuntu2.5] (10.1ubuntu2.6 Ubuntu:18.04/bionic-security [amd64])"
+	done
+	# check for needed restarts
+	RestartNeeded=$(grep -c '\[restart\]' /var/run/de.arts-others.softwareupdatecheck)
+else
+	echo "No updates pending for installation"
+fi
+
+# Report reboot status since security updates might require a restart
+echo '<<<mrpe>>>'
+if [ ${RestartNeeded} -gt 1 ]; then
+	echo "(check_mk_agent.macosx) Reboot%20needed 1 WARN - ${RestartNeeded} pending security updates require a restart"
+elif [ ${RestartNeeded} -gt 0 ]; then
+	echo "(check_mk_agent.macosx) Reboot%20needed 1 WARN - 1 pending security update requires a restart"
+else
+	echo "(check_mk_agent.macosx) Reboot%20needed 0 OK - no reboot required"
 fi
 
 ###############################
@@ -128,22 +348,197 @@ fi
 ###############################
 # *OSX SW Raid status
 # *launchctl daemon status
-# *hw sensors, how to query them?
 # *OSX Server specific stuff, LDAP, etc...
 # *Rewrite cpu / ps check to be faster - takes >1s on my laptop
 # ioreg -l zeigt etliche interessante Inventurdaten
 
 
 # MK's Remote Plugin Executor
-if [ -e "/etc/mrpe.cfg" ]
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then
-    echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" | \
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
     while read descr cmdline
     do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "$cmdline")
-        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-        echo
+        interval=
+        args="-m"
+        # NOTE: Due to an escaping-related bug in some old bash versions
+        # (3.2.x), we have to use an intermediate variable for the pattern.
+        pattern='\(([^\)]*)\)[[:space:]](.*)'
+        if [[ $cmdline =~ $pattern ]]
+        then
+            parameters=${BASH_REMATCH[1]}
+            cmdline=${BASH_REMATCH[2]}
+
+            # split multiple parameter assignments
+            for par in $(echo "$parameters" | tr ":" "\n")
+            do
+                # split each assignment
+                key=$(echo "$par" | cut -d= -f1)
+                value=$(echo "$par" | cut -d= -f2)
+
+                if [ "$key" = "interval" ] ; then
+                    interval=$value
+                elif [ "$key" = "appendage" ] ; then
+                    args="-ma"
+                fi
+            done
+        fi
+
+        if [ -z "$interval" ]
+        then
+            run_mrpe "$descr" "$cmdline"
+        else
+            run_cached "$args" "$descr" "$interval" "$cmdline"
+        fi
     done
+fi
+
+# MK's runas Executor
+if [ -e "$MK_CONFDIR/runas.cfg" ]
+then
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
+    while read type user include
+    do
+        if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ] ; then
+            PREFIX=""
+            if [ "$user" != "-" ] ; then
+                PREFIX="su $user -c "
+            fi
+
+            # mrpe includes
+            if [ "$type" == "mrpe" ] ; then
+                grep -Ev '^[[:space:]]*($|#)' "$include" | \
+                while read descr cmdline
+                do
+                    interval=
+                    # NOTE: Due to an escaping-related bug in some old bash
+                    # versions (3.2.x), we have to use an intermediate variable
+                    # for the pattern.
+                    pattern='\(([^\)]*)\)[[:space:]](.*)'
+                    if [[ $cmdline =~ $pattern ]]
+                    then
+                        parameters=${BASH_REMATCH[1]}
+                        cmdline=${BASH_REMATCH[2]}
+
+                        # split multiple parameter assignments
+                        for par in $(echo "$parameters" | tr ":" "\n")
+                        do
+                            # split each assignment
+                            IFS='=' read key value <<< $par
+                            if [ "$key" = "interval" ]
+                            then
+                                interval=$value
+                            # no other parameters supported currently
+                            fi
+                        done
+                    fi
+
+                    if [ -n "$PREFIX" ] ; then
+                        cmdline="$PREFIX\'$cmdline\'"
+                    fi
+                    if [ -z "$interval" ]
+                    then
+                        run_mrpe "$descr" "$cmdline"
+                    else
+                        run_cached -m "$descr" "$interval" "$cmdline"
+                    fi
+                done
+
+            # local and plugin includes
+            elif [ "$type" == "local" -o "$type" == "plugin" ] ; then
+                if [ "$type" == "local" ] ; then
+                    echo "<<<local>>>"
+                fi
+
+                find "$include" -executable -type f | \
+                while read filename
+                do
+                    if [ -n "$PREFIX" ] ; then
+                        cmdline="$PREFIX\"$filename\""
+                    else
+                        cmdline=$filename
+                    fi
+
+                    $cmdline
+                done
+            fi
+        fi
+    done
+fi
+
+function is_valid_plugin () {
+    # NOTE: Due to an escaping-related bug in some old bash versions
+    # (3.2.x), we have to use an intermediate variable for the pattern.
+    pattern='\.dpkg-(new|old|temp)$'
+    #TODO Maybe we should change this mechanism
+    # shellcheck disable=SC2015
+    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
+}
+
+# Local checks
+if cd "${LOCALDIR}" ; then
+    echo '<<<local>>>'
+    for skript in ./*; do
+        if is_valid_plugin "$skript"; then
+            ./"$skript"
+        fi
+    done
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/* ; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
+        fi
+    done
+fi
+
+# Plugins
+if cd "${PLUGINSDIR}"; then
+    for skript in ./*; do
+        if is_valid_plugin "$skript"; then
+            ./"$skript"
+        fi
+    done
+    # Call some plugins only every Xth second
+    for skript in [1-9]*/* ; do
+        if is_valid_plugin "$skript"; then
+            run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
+        fi
+    done
+fi
+
+# Agent output snippets created by cronjobs, etc.
+if [ -d "${SPOOLDIR}" ]
+then
+    pushd "${SPOOLDIR}" || exit > /dev/null
+    now=$(date +%s)
+
+    for file in *
+    do
+        test "$file" = "*" && break
+        # output every file in this directory. If the file is prefixed
+        # with a number, then that number is the maximum age of the
+        # file in seconds. If the file is older than that, it is ignored.
+        maxage=""
+        part="$file"
+
+        # Each away all digits from the front of the filename and
+        # collect them in the variable maxage.
+        while [ "${part/#[0-9]/}" != "$part" ]
+        do
+            maxage=$maxage${part:0:1}
+            part=${part:1}
+        done
+
+        # If there is at least one digit, than we honor that.
+        if [ "$maxage" ] ; then
+            mtime=$(stat -f %Sm -t %s "$file")
+            if [ $((now - mtime)) -gt "$maxage" ] ; then
+                continue
+            fi
+        fi
+
+        # Output the file
+        cat "$file"
+    done
+    popd || exit > /dev/null
 fi

@@ -51,8 +51,13 @@ if [ ! -w "$RUNNING_FILE" ] ; then
   exec "$@"
 fi
 
-
-/usr/bin/time -o "$RUNNING_FILE" --append \
+if [ "$(uname)" == "Darwin" ]; then
+  # For OSX: requires GNU-time inzstalled (`brew install gnu-time`)
+  time=/usr/local/bin/gtime
+else
+  time=/usr/bin/time
+fi
+"$time" -o "$RUNNING_FILE" --append \
               -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
 RC=$?
 mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"

@@ -1,6 +1,6 @@
 title: DDN S2A: Fan Failures
 agents: ddn_s2a
-catalog: os/storage
+catalog: hw/storagehw/ddn_s2a
 license: GPL
 distribution: check_mk
 description:

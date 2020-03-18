@@ -489,10 +489,11 @@ def _valuespec_active_checks_dns():
                         "expected_address",
                         Transform(
                             ListOfStrings(
-                                title=_("Expected answer (IP address or hostname)"),
+                                title=_("Expected DNS answers"),
                                 help=_("List all allowed expected answers here. If query for an "
                                        "IP address then the answer will be host names, that end "
-                                       "with a dot."),
+                                       "with a dot. Multiple IP addresses within one answer must "
+                                       "be separated by comma."),
                             ),
                             forth=lambda old: isinstance(old, six.string_types) and [old] or old,
                         ),

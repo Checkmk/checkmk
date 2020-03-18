@@ -556,6 +556,18 @@ def _convert_old_if_group_params(params):
     return params
 
 
+def _get_counter_name(node, name, item, group=None):
+    if node is None:
+        counter_name = "if.%s.%s" % (name, item)
+    else:
+        counter_name = "if.%s.%s.%s" % (node, name, item)
+
+    if group is not None:
+        counter_name += ".%s" % group
+
+    return counter_name
+
+
 def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", timestamp=None):
     if timestamp is None:
         this_time = time.time()
@@ -676,10 +688,8 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
             ("outdisc", interface.ifOutDiscards),
             ("outerr", interface.ifOutErrors),
         ]:
-            if node is None:
-                counter_name = "if.%s.%s.%s" % (name, item, if_member_item)
-            else:
-                counter_name = "if.%s.%s.%s.%s" % (node, name, item, if_member_item)
+
+            counter_name = _get_counter_name(node, name, item, group=if_member_item)
 
             try:
                 get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)
@@ -960,10 +970,7 @@ def check_if_common_single(item,
             ("outerr", interface.ifOutErrors, err_out_warn, err_out_crit, None, None),
         ]:
 
-            if node is None:
-                counter_name = "if.%s.%s" % (name, item)
-            else:  # clustered check needs one counter per variable, item AND NODE
-                counter_name = "if.%s.%s.%s" % (node, name, item)
+            counter_name = _get_counter_name(node, name, item)
 
             try:
                 rate = get_rate(counter_name, this_time, saveint(counter), onwrap=RAISE)

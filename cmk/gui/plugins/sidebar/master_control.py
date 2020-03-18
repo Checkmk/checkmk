@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Text, List  # pylint: disable=unused-import
+
 import time
 
 import cmk.gui.escaping as escaping
@@ -12,25 +14,31 @@ import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from . import SidebarSnapin, snapin_registry, write_snapin_exception
+from cmk.gui.plugins.sidebar import (  # pylint: disable=unused-import
+    PageHandlers, SidebarSnapin, snapin_registry, write_snapin_exception,
+)
 
 
 @snapin_registry.register
 class MasterControlSnapin(SidebarSnapin):
     @staticmethod
     def type_name():
+        # type: () -> str
         return "master_control"
 
     @classmethod
     def title(cls):
+        # type: () -> Text
         return _("Master Control")
 
     @classmethod
     def description(cls):
+        # type: () -> Text
         return _("Buttons for switching globally states such as enabling "
                  "checks and notifications")
 
     def show(self):
+        # type: () -> None
         items = [
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
@@ -55,6 +63,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         def _render_master_control_site(site_id):
             site_state = sites.states().get(site_id)
+
             if site_state["state"] == "dead":
                 html.show_error(site_state["exception"])
 
@@ -121,9 +130,11 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[str]
         return ["admin"]
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {
             "switch_master_state": self._ajax_switch_masterstate,
         }

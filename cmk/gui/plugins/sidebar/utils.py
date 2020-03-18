@@ -8,7 +8,7 @@
 import abc
 import traceback
 import json
-from typing import Any, Dict, List, Tuple, Type  # pylint: disable=unused-import
+from typing import Optional, Text, Any, Dict, List, Tuple, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -18,6 +18,7 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.type_defs import RoleName, PermissionName  # pylint: disable=unused-import
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -40,14 +41,17 @@ PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 class PermissionSectionSidebarSnapins(PermissionSection):
     @property
     def name(self):
+        # type: () -> str
         return "sidesnap"
 
     @property
     def title(self):
+        # type: () -> Text
         return _("Sidebar snapins")
 
     @property
     def do_sort(self):
+        # type: () -> bool
         return True
 
 
@@ -57,49 +61,60 @@ class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def type_name(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def title(cls):
+        # type: () -> Text
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def description(cls):
+        # type: () -> Text
         raise NotImplementedError()
 
     @abc.abstractmethod
     def show(self):
+        # type: () -> None
         raise NotImplementedError()
 
     @classmethod
     def refresh_regularly(cls):
+        # type: () -> bool
         return False
 
     @classmethod
     def refresh_on_restart(cls):
+        # type: () -> bool
         return False
 
     @classmethod
     def is_customizable(cls):
+        # type: () -> bool
         """Whether or not a snapin type can be used for custom snapins"""
         return False
 
     @classmethod
     def is_custom_snapin(cls):
+        # type: () -> bool
         """Whether or not a snapin type is a customized snapin"""
         return False
 
     @classmethod
     def permission_name(cls):
+        # type: () -> PermissionName
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[RoleName]
         return ["admin", "user", "guest"]
 
     def styles(self):
+        # type: () -> Optional[str]
         return None
 
     def page_handlers(self):
@@ -114,6 +129,7 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
     be customized by the user"""
     @classmethod
     def is_customizable(cls):
+        # type: () -> bool
         """Whether or not a snapin type can be used for custom snapins"""
         return True
 

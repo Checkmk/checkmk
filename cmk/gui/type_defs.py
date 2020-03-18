@@ -10,6 +10,7 @@ from cmk.utils.type_defs import UserId
 HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
 LivestatusQuery = Union[Text, str]
 PermissionName = str
+RoleName = str
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type

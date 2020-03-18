@@ -1,0 +1,13 @@
+Title: lnx_if: Fix unity parsing bug
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p11
+Date: 1584549455
+
+The lnx_if check did crash when the value for the network speed could not be parsed correctly.
+The conversion of the network speed got fixed with this werk.

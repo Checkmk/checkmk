@@ -24,11 +24,45 @@ import cmk_base.checking
                                             {"tp_default_value": {2:2}, "tp_values": [("tp1", {3:3})]}, {1:1}]), ["tp1", "tp2"], {1:1, 2:4, 3:6}),
     (cmk_base.checks.TimespecificParamList([{"tp_default_value": {2:4}, "tp_values": [("tp3", {1:5}), ("tp2", {3:6})]},
                                             {"tp_default_value": {2:2}, "tp_values": [("tp1", {3:3})]}, {1:1}]), ["tp1"], {1:1, 2:4, 3:3}),
+    # (Old) tuple based default params
+    (cmk_base.checks.TimespecificParamList([
+        {
+            "tp_default_value": {
+                "key": (1, 1)
+            },
+            "tp_values": [("tp", {
+                "key": (2, 2),
+            })]
+        },
+        (3, 3),
+    ]), ["tp"], {
+        "key": (2, 2)
+    }),
+    (cmk_base.checks.TimespecificParamList([
+        {
+            "tp_default_value": {
+                "key": (1, 1)
+            },
+            "tp_values": [("tp", {
+                "key": (2, 2),
+            })]
+        },
+        (3, 3),
+    ]), [], {
+        "key": (1, 1)
+    }),
+    (cmk_base.checks.TimespecificParamList([
+        {
+            "tp_default_value": {},
+            "tp_values": [("tp", {
+                "key": (2, 2),
+            })]
+        },
+        (3, 3),
+    ]), [], {}),
 ])
-
 def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
     monkeypatch.setattr(cmk_base.core, "timeperiod_active", lambda tp: _check_timeperiod(tp, active_timeperiods))
-
     assert(cmk_base.checking.determine_check_params(rules) == expected_result)
 
 

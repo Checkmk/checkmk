@@ -61,9 +61,9 @@ def test_werk_versions_after_tagged(precompiled_werks):
         if werk_id < 8800:
             continue  # Do not care about older versions for the moment
 
-        # Some werks were added after the version was released. Mostly they were forgotten by
-        # the developer. Consider it a hall of shame ;)
-        if werk_id in set([10062, 10063, 10064]):
+        # Some werks were added after the version was released. Mostly (but not the
+        # 10947 :) they were forgotten by the developer. Consider it a hall of shame ;)
+        if werk_id in set([10062, 10063, 10064, 10947]):
             continue
 
         tag_name = "v%s" % werk["version"]

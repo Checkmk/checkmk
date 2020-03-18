@@ -224,8 +224,8 @@ def _create_host_label_function(discover_function, extra_sections):
     return host_label_function
 
 
-def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
-    # type: (str, Dict[str, Any], List[PluginName]) -> AgentSectionPlugin
+def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict):
+    # type: (str, Dict[str, Any]) -> AgentSectionPlugin
 
     parse_function = _create_agent_parse_function(check_info_dict.get('parse_function'),)
 
@@ -238,13 +238,13 @@ def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict, 
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=forbidden_names,
+        forbidden_names=[],
     )
 
 
 def create_snmp_section_plugin_from_legacy(check_plugin_name, check_info_dict, snmp_scan_function,
-                                           snmp_info, forbidden_names):
-    # type: (str, Dict[str, Any], Callable, Any, List[PluginName]) -> SNMPSectionPlugin
+                                           snmp_info):
+    # type: (str, Dict[str, Any], Callable, Any) -> SNMPSectionPlugin
     trees, recover_layout_function = _create_snmp_trees(snmp_info)
 
     parse_function = _create_snmp_parse_function(
@@ -266,7 +266,7 @@ def create_snmp_section_plugin_from_legacy(check_plugin_name, check_info_dict, s
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         host_label_function=host_label_function,
-        forbidden_names=forbidden_names,
+        forbidden_names=[],
         trees=trees,
         detect_spec=detect_spec,
     )

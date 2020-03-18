@@ -105,7 +105,6 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
             section = create_agent_section_plugin_from_legacy(
                 name,
                 check_info_dict,
-                [],
             )
             assert isinstance(section, AgentSectionPlugin)
         else:
@@ -115,7 +114,6 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
                     check_info_dict,
                     scan_function,
                     snmp_info[name],
-                    [],
                 )
                 assert isinstance(sec, SNMPSectionPlugin)
 

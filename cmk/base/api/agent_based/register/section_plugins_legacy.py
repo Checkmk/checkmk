@@ -200,7 +200,11 @@ def _create_host_label_function(discover_function, recover_layout_function, extr
         else:
             discover_arg = [recover_layout_function(section)] + [[]] * extra_sections_count
 
-        for service_or_host_label in discover_function(discover_arg):  # type: ignore
+        discovery_iter = discover_function(discover_arg)  # type: ignore
+        if discovery_iter is None:
+            return
+
+        for service_or_host_label in discovery_iter:
             if isinstance(service_or_host_label, Service):
                 for host_label in service_or_host_label.host_labels.to_list():
                     yield host_label

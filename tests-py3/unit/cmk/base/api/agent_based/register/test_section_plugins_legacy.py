@@ -56,13 +56,18 @@ def test_create_parse_function(creator_func):
     assert old_school_parse_function([]) == compliant_parse_function([])
 
 
-def test_create_host_label_function():
+@pytest.mark.parametrize("disco_func, labels_expected", [
+    (old_school_discover_function, HOST_LABELS),
+    (lambda x: None, []),
+    (lambda x: [], []),
+])
+def test_create_host_label_function(disco_func, labels_expected):
     host_label_function = section_plugins_legacy._create_host_label_function(
-        old_school_discover_function, lambda x: x, ["some_extra_section"])
+        disco_func, lambda x: x, ["some_extra_section"])
 
     section_plugins._validate_host_label_function(host_label_function)
 
     # check that we can pass an un-unpackable argument now!
     actual_labels = list(host_label_function({"parse": "result"}))
 
-    assert actual_labels == HOST_LABELS
+    assert actual_labels == labels_expected

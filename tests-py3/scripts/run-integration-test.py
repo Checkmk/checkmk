@@ -29,7 +29,7 @@ sys.path.insert(0, str(script_path.parent.parent))
 # Make the repo directory available (cmk/livestatus lib)
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from testlib.utils import is_running_as_site_user, cmk_path, current_base_branch_name
+from testlib.utils import is_running_as_site_user, cmk_path
 from testlib.site import get_site_factory
 from testlib.version import CMKVersion
 
@@ -54,11 +54,11 @@ def main(args):
 
     if os.environ.get("REUSE"):
         logger.info("Reuse existing site")
-        site = sf.get_existing_site(current_base_branch_name())
+        site = sf.get_existing_site("test")
         site.start()
     else:
         logger.info("Creating new site")
-        site = sf.get_site(current_base_branch_name())
+        site = sf.get_site("test")
 
     logger.info("Site %s is ready!", site.id)
 

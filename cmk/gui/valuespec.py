@@ -36,6 +36,7 @@ from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple, Type,
     Union,
 )
+import uuid
 from PIL import Image  # type: ignore[import]
 
 try:
@@ -657,6 +658,22 @@ class TextAscii(ValueSpec):
         if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
+
+
+class UUID(TextAscii):
+    """Documentation for UUID
+
+    """
+    def from_html_vars(self, varprefix):
+        # type: (str) -> str
+        value = html.request.get_str_input_mandatory(varprefix, "")
+        if not value:
+            value = str(uuid.uuid4())
+        return value
+
+    def render_input(self, varprefix, value):
+        # type: (str, _Optional[str]) -> None
+        html.hidden_field(varprefix, value, add_var=True)
 
 
 class TextUnicode(TextAscii):

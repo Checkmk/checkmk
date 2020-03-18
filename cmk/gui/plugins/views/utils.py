@@ -1939,9 +1939,9 @@ class Cell(object):
             return _encode_sorter_url(sorters)
 
         if painter_name in ['svc_metrics_hist', 'svc_metrics_forecast']:
-            hash_id = ':%s' % hash(str(self.painter_parameters()))
+            uuid = ':%s' % self.painter_parameters()['uuid']
             assert sorter_name is not None
-            sorter_name += hash_id
+            sorter_name += uuid
 
         this_asc_sorter = SorterSpec(sorter_name, False, self.join_service())
         this_desc_sorter = SorterSpec(sorter_name, True, self.join_service())

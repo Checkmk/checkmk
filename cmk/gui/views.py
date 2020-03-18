@@ -354,9 +354,9 @@ class View(object):
                 entry = SorterEntry(*entry)
 
             sorter_name = entry.sorter
-            hash_id = None
+            uuid = None
             if ":" in entry.sorter:
-                sorter_name, hash_id = entry.sorter.split(':', 1)
+                sorter_name, uuid = entry.sorter.split(':', 1)
 
             sorter = sorter_registry.get(sorter_name, None)
 
@@ -365,7 +365,7 @@ class View(object):
 
             sorter = sorter()
             if hasattr(sorter, 'derived_columns'):
-                sorter.derived_columns(self, hash_id)
+                sorter.derived_columns(self, uuid)
 
             sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
         return sorters
@@ -1087,13 +1087,16 @@ def view_editor_sorter_specs(view):
             yield name, get_sorter_title_for_choices(p)
 
         for painter_spec in view.get('painters', []):
-            if isinstance(painter_spec[0], tuple) and painter_spec[0][0] == "svc_metrics_hist":
-                hash_id = hash(str(painter_spec[0][1]))
+            if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
+                    "svc_metrics_hist", "svc_metrics_forecast"
+            ]:
                 hist_sort = sorters_of_datasource(ds_name).get(painter_spec[0][0])
-                if hist_sort:
-                    yield ('svc_metrics_hist:%d' % hash_id,
-                           "Services: Historic Metrics - Column: %s" %
-                           painter_spec[0][1]['column_title'])
+                uuid = painter_spec[0][1].get('uuid', "")
+                if hist_sort and uuid:
+                    title = "History" if "hist" in painter_spec[0][0] else "Forecast"
+                    yield ('%s:%s' % (painter_spec[0][0], uuid),
+                           "Services: Metric %s - Column: %s" %
+                           (title, painter_spec[0][1]['column_title']))
 
     return ('sorting',
             Dictionary(

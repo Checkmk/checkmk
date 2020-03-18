@@ -79,19 +79,19 @@ def load_all_checks():
 @pytest.fixture(scope="module", name="snmp_scan_functions")
 def _get_snmp_scan_functions(_load_all_checks):
     assert len(config.snmp_scan_functions) > 400  # sanity check
-    return config.snmp_scan_functions
+    return config.snmp_scan_functions.copy()
 
 
 @pytest.fixture(scope="module", name="snmp_info")
 def _get_snmp_info(_load_all_checks):
     assert len(config.snmp_info) > 400  # sanity check
-    return config.snmp_info
+    return config.snmp_info.copy()
 
 
 @pytest.fixture(scope="module", name="check_info")
 def _get_check_info(_load_all_checks):
     assert len(config.check_info) > 400  # sanity check
-    return config.check_info
+    return config.check_info.copy()
 
 
 def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp_info):

@@ -40,7 +40,9 @@ def main():
 
     version_spec = os.environ.get("VERSION", CMKVersion.DAILY)
     edition = os.environ.get("EDITION", CMKVersion.CEE)
-    branch = os.environ.get("BRANCH", current_base_branch_name())
+    branch = os.environ.get("BRANCH")
+    if branch is None:
+        branch = current_base_branch_name()
 
     logger.info("Version: %s, Edition: %s, Branch: %s", version_spec, edition, branch)
     version = CMKVersion(version_spec, edition, branch)

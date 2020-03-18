@@ -139,7 +139,10 @@ def site_id():
     if site_id is not None:
         return site_id
 
-    branch_name = os.environ.get("BRANCH", current_branch_name())
+    branch_name = os.environ.get("BRANCH")
+    if branch_name is None:
+        branch_name = current_branch_name()
+
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
     site_id = "int_%s" % branch_part

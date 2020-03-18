@@ -4,11 +4,23 @@ catalog: hw/network/acme
 license: GPL
 distribution: check_mk
 description:
- This is a simple check which checks the health status in percent and the redundancy state.
- The percent value is reported by the devices and reflects the status of cluster
- and hardware. If the status not is at 100 %, a {WARN} is raised. If a device is in outOfService
- or unassigned state, a {CRIT} will be raised. If the device is in an initial or pending state, a
- {WARN} will be raised.
+ This check monitors the
+
+ - health status in percent
+
+ - redundancy state
+
+ The percent value is reported by the devices and reflects the status of cluster and hardware.
+
+ The service goes {WARN} if
+
+ - the status not is at 100%
+
+ - a device is in outOfService or unassigned state
+
+ - the device is in an initial or pending state
+
+ This check uses the APSYSMGMT-MIB.
 
 inventory:
  One service is created.

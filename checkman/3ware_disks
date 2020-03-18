@@ -4,13 +4,16 @@ catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
- This check monitors the state of disks of an 3ware ATA RAID Controller. The
- Linux agent sends the neccessary data, if the command line utility {tw_cli}
- is found in the shells search path. The usual way is to install it into
+ This check monitors the state of disks of an 3ware ATA RAID Controller.
+
+ The Linux agent sends the neccessary data, if the command line utility {tw_cli} is found in the shells search path. The usual way is to install it into
  {/usr/local/bin} or {/usr/bin}.
 
- States like {OK} and {VERIFYING} are status OK. States like {SMART_FAILURE} are status warning.
- All other states are considered critical.
+ - {OK} and {VERIFYING} are considered {OK}.
+
+ - {SMART_FAILURE} is considered {WARN}.
+
+ - All other states are considered {CRIT}.
 
  The utility {tw_cli} can be downloaded from {http://3ware.com/support/downloadpage.asp}.
 

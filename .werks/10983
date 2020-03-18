@@ -1,0 +1,11 @@
+Title: check_dns: Fix "DNS CRITICAL - expected 'A,B,...' but got 'B,A,...'"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584535141
+Class: fix
+
+Sort expected answers alphabetically which may include multiple IP addresses or
+host names separated by comma.

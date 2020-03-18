@@ -22,8 +22,8 @@ from cmk.base.api.agent_based.section_types import (
     SNMPDetectSpec,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    SNMPTree,
 )
+from cmk.base.api.agent_based.section_types import SNMPTree  # pylint: disable=unused-import
 
 
 def _validate_parse_function(parse_function):

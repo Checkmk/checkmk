@@ -407,6 +407,12 @@ def determine_check_params(entries):
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries = {}  # type: Dict[str, Any]
     for entry in entries[::-1]:
+        if not isinstance(entry, dict):
+            # Ignore (old) default parameters like
+            #   'NAME_default_levels' = (80.0, 85.0)
+            # A rule with a timespecifc parameter settings always has an
+            # implicit default parameter set, even if no timeperiod matches.
+            continue
         timespecific_entries.update(_evaluate_timespecific_entry(entry))
 
     return timespecific_entries

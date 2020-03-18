@@ -196,21 +196,21 @@ class TestCrashReport:
 
     def test_del_crash_report(self, site, component, uuid):
         before = site.live.query("GET crashreports")
+        assert [component, uuid] in before
+
         site.live.command("[%i] DEL_CRASH_REPORT;%s" % (_time.mktime(_time.gmtime()), uuid))
         _time.sleep(0.1)  # Kindly let it complete.
+
         after = site.live.query("GET crashreports")
         assert after != before
-        assert [component, uuid] in before
         assert [component, uuid] not in after
 
     def test_other_crash_report(self, site, component, uuid):
         before = site.live.query("GET crashreports")
+        assert [component, uuid] in before
+
         site.live.command("[%i] DEL_CRASH_REPORT;%s" %
                           (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab"))
+
         after = site.live.query("GET crashreports")
-
-        # A new crash may occur during testing, don't compare equality of the result sets
-        assert set(map(tuple, after)).issuperset(set(map(tuple, before)))
-
-        assert [component, uuid] in before
         assert [component, uuid] in after

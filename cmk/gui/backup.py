@@ -147,9 +147,10 @@ class BackupEntityCollection(object):
         self._config = Config(config_file_path).load()
         self._cls = cls
         self._config_attr = config_attr
-        self.objects = dict([
-            (ident, cls(ident, config)) for ident, config in self._config[config_attr].items()
-        ])
+        self.objects = {
+            ident: cls(ident, config)  #
+            for ident, config in self._config[config_attr].items()
+        }
 
     def get(self, ident):
         return self.objects[ident]
@@ -168,9 +169,10 @@ class BackupEntityCollection(object):
         self.objects[obj.ident()] = obj
 
     def save(self):
-        self._config[self._config_attr] = dict([
-            (ident, obj.to_config()) for ident, obj in self.objects.items()
-        ])
+        self._config[self._config_attr] = {
+            ident: obj.to_config()  #
+            for ident, obj in self.objects.items()
+        }
         Config(self._config_path).save(self._config)
 
 
@@ -557,14 +559,13 @@ class PageBackup(object):
         if action == "delete" and self._may_edit_config():
             return self._delete_job(job)
 
-        elif action == "start":
+        if action == "start":
             return self._start_job(job)
 
-        elif action == "stop":
+        if action == "stop":
             return self._stop_job(job)
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _delete_job(self, job):
         if job.is_running():
@@ -606,7 +607,7 @@ class PageEditBackupJob(object):
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident = job_ident
+            self._ident = job_ident  # type: Optional[str]
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -1047,7 +1048,7 @@ class PageBackupTargets(object):
             if confirm is False:
                 return False
 
-            elif confirm:
+            if confirm:
                 targets.remove(target)
                 targets.save()
                 return None, _("The target has been deleted.")
@@ -1080,7 +1081,7 @@ class PageEditBackupTarget(object):
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident = target_ident
+            self._ident = target_ident  # type: Optional[str]
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:
@@ -1307,12 +1308,11 @@ class BackupTargetLocal(ABCBackupTargetType):
                     varprefix,
                     _("Failed to write to the configured directory. The target directory needs "
                       "to be writable."))
-            else:
-                raise MKUserError(
-                    varprefix,
-                    _("Failed to write to the configured directory. The site user needs to be able to "
-                      "write the target directory. The recommended way is to make it writable by the "
-                      "group \"omd\"."))
+            raise MKUserError(
+                varprefix,
+                _("Failed to write to the configured directory. The site user needs to be able to "
+                  "write the target directory. The recommended way is to make it writable by the "
+                  "group \"omd\"."))
 
     # TODO: Duplicate code with mkbackup
     def backups(self):
@@ -1574,17 +1574,16 @@ class PageBackupRestore(object):
         if action == "delete":
             return self._delete_backup(backup_ident)
 
-        elif action == "complete":
+        if action == "complete":
             return self._complete_restore(backup_ident)
 
-        elif action == "start":
+        if action == "start":
             return self._start_restore(backup_ident)
 
-        elif action == "stop":
+        if action == "stop":
             return self._stop_restore(backup_ident)
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _delete_backup(self, backup_ident):
         if self._restore_is_running():
@@ -1605,7 +1604,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             self._target.remove_backup(backup_ident)
             return None, _("The backup has been deleted.")
@@ -1699,7 +1698,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).start()
             return None, _("The restore has been started.")
@@ -1713,7 +1712,7 @@ class PageBackupRestore(object):
         if confirm is False:
             return False
 
-        elif confirm:
+        if confirm:
             html.check_transaction()  # invalidate transid
             RestoreJob(self._target_ident, backup_ident).stop()
             return None, _("The restore has been stopped.")

@@ -52,7 +52,7 @@ then
     fi
     
     if type lsvg > /dev/null; then
-        echo "<<<aix_lsvg_all:sep(0):persist($UNTIL)>>>"
+        echo "<<<aix_lvgs:sep(0):persist($UNTIL)>>>"
         echo "[Volume_Groups_Active]"
         lsvg -o
         echo "[Volume_Groups_Details]"

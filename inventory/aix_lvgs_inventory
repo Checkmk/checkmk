@@ -33,7 +33,7 @@
 import re
 
 
-def parse_aix_lsvg_all(info):
+def parse_aix_lvgs(info):
 
     header_active, header_details = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
     if info[0][0] != header_active:
@@ -93,10 +93,10 @@ def sort_by_logical_volume_name(volumes):
     return sorted(volumes, key=alphanum_key)
 
 
-def inv_aix_lsvg_all(info, inventory_tree):
+def inv_aix_lvgs(info, inventory_tree):
     unsorted_volumes = []
     node = inv_tree_list(".hardware.storage.logical_volumes:")
-    result = parse_aix_lsvg_all(info)
+    result = parse_aix_lvgs(info)
     for volume_group_name, volumes in result.iteritems():
         for logical_volume_name in volumes:
             keys = [
@@ -113,6 +113,6 @@ def inv_aix_lsvg_all(info, inventory_tree):
     node.extend(sort_by_logical_volume_name(unsorted_volumes))
 
 
-inv_info['aix_lsvg_all'] = {
-    "inv_function": inv_aix_lsvg_all,
+inv_info['aix_lvgs'] = {
+    "inv_function": inv_aix_lvgs,
 }

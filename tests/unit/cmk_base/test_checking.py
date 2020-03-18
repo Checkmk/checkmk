@@ -139,14 +139,50 @@ import cmk_base.checking
             2: 4,
             3: 3
         }),
+        # (Old) tuple based default params
+        (cmk_base.config.TimespecificParamList([
+            {
+                "tp_default_value": {
+                    "key": (1, 1)
+                },
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), ["tp"], {
+            "key": (2, 2)
+        }),
+        (cmk_base.config.TimespecificParamList([
+            {
+                "tp_default_value": {
+                    "key": (1, 1)
+                },
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), [], {
+            "key": (1, 1)
+        }),
+        (cmk_base.config.TimespecificParamList([
+            {
+                "tp_default_value": {},
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), [], {}),
     ])
 def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
     monkeypatch.setattr(cmk_base.core, "timeperiod_active",
                         lambda tp: _check_timeperiod(tp, active_timeperiods))
 
     determined_check_params = cmk_base.checking.determine_check_params(rules)
-    assert expected_result == determined_check_params,\
-           "Determine params: Expected '%s' but got '%s'" % (expected_result, determined_check_params)
+    assert expected_result == determined_check_params, "Determine params: Expected '%s' but got '%s'" % (
+        expected_result, determined_check_params)
 
 
 def _check_timeperiod(timeperiod, active_timeperiods):

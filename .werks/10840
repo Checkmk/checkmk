@@ -1,0 +1,24 @@
+Title: Fix evaluation of time specific parameters if default parameters are tuple based
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584525489
+Class: fix
+
+Old tuple based parameters may look like
+C+:
+NAME_default_levels = (90.0, 95.0)
+C-:
+
+In this case if time specific parameters are additionally configured and the
+check is executed outside of this time period then the evaluation of these
+parameters crashed
+C+:
+TypeError: cannot convert dictionary update sequence element #0 to a sequence
+C-:
+
+Now we simply ignore the (old) tuple-based parameters. A rule with a
+timespecifc parameter settings always has an implicit default parameter set,
+even if no timeperiod matches.

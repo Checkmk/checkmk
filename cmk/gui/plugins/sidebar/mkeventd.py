@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
+from typing import Any, List, Optional, Tuple  # pylint: disable=unused-import
+
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
+from cmk.gui.htmllib import HTMLContent  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -56,8 +59,9 @@ class SidebarSnapinCustomers(SidebarSnapin):
         html.close_table()
 
     def _mkeventd_performance_entries(self, only_sites):
+        # type: (Optional[List[str]]) -> List[Tuple[float, HTMLContent, HTMLContent]]
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
-        entries = []
+        entries = []  # type: List[Tuple[float, HTMLContent, HTMLContent]]
 
         # TODO: Reorder these values and create a useful order.
         # e.g. Client connects and Time per client request after

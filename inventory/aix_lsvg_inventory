@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example iutput:
+# Example input:
 #
 #[Volume_Groups_Active]
 #rootvg
@@ -28,22 +28,12 @@
 #usrLocal            jfs2       64      128     2    closed/syncd    /usr/local
 #usrLclItslb         jfs2       8       16      2    closed/syncd    /usr/local/itslb
 #
-# Things to know:
-# In the check we infer all inactive volume groups by iterating over all details
-# (from both active and inactive volume groups) and setting those to inactive
-# which do not occur in the first section describing the active volume groups only.
-# Note that volume groups which only have closed volumes (e.g. the volume group "usmvg" above)
-# will also be listed as "active" if they occur in the first list of active volume groups.
+
 
 import re
 
 
 def parse_aix_lsvg_all(info):
-    # We assume info containing a list of single element lists.
-    # Each line of above output justs gets wrapped into an array.
-    # Reason is we treat the volume group details are basically
-    # fixed width fields, and we rather do the parsing here.
-    # (It can happen that columns are empty...)
 
     header_active, header_details = u"[Volume_Groups_Active]", u"[Volume_Groups_Details]"
     if info[0][0] != header_active:

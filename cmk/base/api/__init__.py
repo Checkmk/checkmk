@@ -21,6 +21,8 @@ class PluginName:
 
     def __init__(self, plugin_name, forbidden_names=None):
         # type: (str, Optional[Iterable[PluginName]]) -> None
+        self._value = plugin_name
+
         if not isinstance(plugin_name, str):
             raise TypeError("PluginName must initialized from str")
         if not plugin_name:
@@ -32,8 +34,6 @@ class PluginName:
 
         if forbidden_names and any(plugin_name == str(fn) for fn in forbidden_names):
             raise ValueError("duplicate plugin name: %r" % (plugin_name,))
-
-        self._value = plugin_name
 
     def __repr__(self):
         # type: () -> str

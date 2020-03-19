@@ -23,7 +23,6 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 import cmk.gui.sites
-import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
@@ -36,6 +35,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.plugins.userdb.utils import user_sync_default_config
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.automations
@@ -649,8 +649,7 @@ class ActivateChangesManager(ActivateChanges):
 
         site_globals.update({
             "wato_enabled": not site.get("disable_wato", True),
-            "userdb_automatic_sync": site.get("user_sync",
-                                              userdb.user_sync_default_config(site_id)),
+            "userdb_automatic_sync": site.get("user_sync", user_sync_default_config(site_id)),
         })
 
         store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)

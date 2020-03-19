@@ -81,6 +81,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
     user_connector_registry,
     get_user_attributes,
+    user_sync_config,
 )
 
 import cmk.gui.sites as sites
@@ -1319,8 +1320,7 @@ class LDAPUserConnector(UserConnector):
         open(self._sync_time_file, 'w').write('%s\n' % time.time())
 
     def is_enabled(self):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        sync_config = userdb.user_sync_config()
+        sync_config = user_sync_config()
         if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False

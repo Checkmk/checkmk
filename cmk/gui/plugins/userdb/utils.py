@@ -8,7 +8,68 @@ import abc
 from typing import List, Optional  # pylint: disable=unused-import
 import six
 
+from livestatus import SiteId  # pylint: disable=unused-import
+
+import cmk.gui.config as config
 import cmk.utils.plugin_registry
+
+UserSyncConfig = Optional[str]
+
+
+def user_sync_config():
+    # type: () -> UserSyncConfig
+    # use global option as default for reading legacy options and on remote site
+    # for reading the value set by the WATO master site
+    default_cfg = user_sync_default_config(config.omd_site())
+    return config.site(config.omd_site()).get("user_sync", default_cfg)
+
+
+# Legacy option config.userdb_automatic_sync defaulted to "master".
+# Can be: None: (no sync), "all": all sites sync, "master": only master site sync
+# Take that option into account for compatibility reasons.
+# For remote sites in distributed setups, the default is to do no sync.
+def user_sync_default_config(site_name):
+    # type: (SiteId) -> UserSyncConfig
+    global_user_sync = _transform_userdb_automatic_sync(config.userdb_automatic_sync)
+    if global_user_sync == "master":
+        if config.site_is_local(site_name) and not config.is_wato_slave_site():
+            user_sync_default = "all"  # type: UserSyncConfig
+        else:
+            user_sync_default = None
+    else:
+        user_sync_default = global_user_sync
+
+    return user_sync_default
+
+
+# Old vs:
+#ListChoice(
+#    title = _('Automatic User Synchronization'),
+#    help  = _('By default the users are synchronized automatically in several situations. '
+#              'The sync is started when opening the "Users" page in configuration and '
+#              'during each page rendering. Each connector can then specify if it wants to perform '
+#              'any actions. For example the LDAP connector will start the sync once the cached user '
+#              'information are too old.'),
+#    default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
+#    choices       = [
+#        ('page',                      _('During regular page processing')),
+#        ('wato_users',                _('When opening the users\' configuration page')),
+#        ('wato_pre_activate_changes', _('Before activating the changed configuration')),
+#        ('wato_snapshot_pushed',      _('On a remote site, when it receives a new configuration')),
+#    ],
+#    allow_empty   = True,
+#),
+def _transform_userdb_automatic_sync(val):
+    if val == []:
+        # legacy compat - disabled
+        return None
+
+    elif isinstance(val, list) and val:
+        # legacy compat - all connections
+        return "all"
+
+    return val
+
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.
@@ -26,9 +87,9 @@ import cmk.utils.plugin_registry
 
 
 class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
-    def __init__(self, config):
+    def __init__(self, cfg):
         super(UserConnector, self).__init__()
-        self._config = config
+        self._config = cfg
 
     @classmethod
     @abc.abstractmethod

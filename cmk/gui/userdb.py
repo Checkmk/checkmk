@@ -19,8 +19,6 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from livestatus import SiteId  # pylint: disable=unused-import
-
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -51,7 +49,7 @@ from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
     user_attribute_registry,  #
     get_user_attributes,  #
     UserConnector,  #
-    user_connector_registry,
+    user_connector_registry, user_sync_config,
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -64,7 +62,6 @@ Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
-UserSyncConfig = Optional[str]
 
 
 # Load all userdb plugins
@@ -379,35 +376,6 @@ def _root_dir():
 def _multisite_dir():
     # type: () -> str
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
-
-
-# Old vs:
-#ListChoice(
-#    title = _('Automatic User Synchronization'),
-#    help  = _('By default the users are synchronized automatically in several situations. '
-#              'The sync is started when opening the "Users" page in configuration and '
-#              'during each page rendering. Each connector can then specify if it wants to perform '
-#              'any actions. For example the LDAP connector will start the sync once the cached user '
-#              'information are too old.'),
-#    default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
-#    choices       = [
-#        ('page',                      _('During regular page processing')),
-#        ('wato_users',                _('When opening the users\' configuration page')),
-#        ('wato_pre_activate_changes', _('Before activating the changed configuration')),
-#        ('wato_snapshot_pushed',      _('On a remote site, when it receives a new configuration')),
-#    ],
-#    allow_empty   = True,
-#),
-def transform_userdb_automatic_sync(val):
-    if val == []:
-        # legacy compat - disabled
-        return None
-
-    elif isinstance(val, list) and val:
-        # legacy compat - all connections
-        return "all"
-
-    return val
 
 
 # TODO: Change to factory
@@ -1379,32 +1347,6 @@ def execute_userdb_job():
 
     job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=False)
     job.start()
-
-
-# Legacy option config.userdb_automatic_sync defaulted to "master".
-# Can be: None: (no sync), "all": all sites sync, "master": only master site sync
-# Take that option into account for compatibility reasons.
-# For remote sites in distributed setups, the default is to do no sync.
-def user_sync_default_config(site_name):
-    # type: (SiteId) -> UserSyncConfig
-    global_user_sync = transform_userdb_automatic_sync(config.userdb_automatic_sync)
-    if global_user_sync == "master":
-        if config.site_is_local(site_name) and not config.is_wato_slave_site():
-            user_sync_default = "all"  # type: UserSyncConfig
-        else:
-            user_sync_default = None
-    else:
-        user_sync_default = global_user_sync
-
-    return user_sync_default
-
-
-def user_sync_config():
-    # type: () -> UserSyncConfig
-    # use global option as default for reading legacy options and on remote site
-    # for reading the value set by the WATO master site
-    default_cfg = user_sync_default_config(config.omd_site())
-    return config.site(config.omd_site()).get("user_sync", default_cfg)
 
 
 def userdb_sync_job_enabled():

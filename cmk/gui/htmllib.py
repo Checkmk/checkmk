@@ -49,7 +49,7 @@ import pprint
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING,
-)
+    TypeVar)
 
 import six
 
@@ -57,6 +57,8 @@ if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
+
+Value = TypeVar('Value')
 
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
@@ -1332,7 +1334,7 @@ class html(ABCHTMLGenerator):
         self.request.__dict__.pop('values', None)
 
     def get_item_input(self, varname, collection):
-        # type: (str, Mapping[str, str]) -> Tuple[str, str]
+        # type: (str, Mapping[str, Value]) -> Tuple[Value, str]
         """Helper to get an item from the given collection
         Raises a MKUserError() in case the requested item is not available."""
         item = self.request.get_ascii_input(varname)

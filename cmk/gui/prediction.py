@@ -49,9 +49,8 @@ def page_graph():
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
-        if timegroup is None:
-            continue  # TODO: Is this behavior correct?
-        tg_info = prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
+        tg_info = prediction.retrieve_data_for_prediction(
+            pred_dir + "/" + f, "<unknown>" if timegroup is None else timegroup)
         if tg_info is None:
             continue
 
@@ -67,11 +66,12 @@ def page_graph():
     choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
 
     if not timegroup:
-        if timegroups:
-            timegroup = timegroups[0]
-            tg_name = choices[0][0]
-        else:
+        if not timegroups:
             raise MKGeneralException(_("Missing prediction information."))
+        timegroup = timegroups[0]
+        tg_name = choices[0][0]
+    if tg_name is None:
+        raise Exception("should not happen")
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))

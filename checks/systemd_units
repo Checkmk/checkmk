@@ -61,12 +61,26 @@ _SYSTEMD_UNITS = [
     '.scope ',  # Scope units are created automatically by systemd from information received from its bus interfaces. These are used to manage sets of system processes that are created externally.
 ]
 
+_SYSTEMD_UNIT_FILE_STATES = [
+    "enabled",
+    "enabled-runtime",
+    "linked",
+    "linked-runtime",
+    "masked",
+    "masked-runtime",
+    "static",
+    "indirect",
+    "disabled",
+    "generated",
+    "transient",
+    "bad",
+]
+
 
 def parse_systemd_units(info):
-    parsed = {}
-
     if not info:
         return {}
+
     iter_info = iter(info)
     target_states = {}
 
@@ -76,9 +90,10 @@ def parse_systemd_units(info):
         for line in iter_info:
             if line[0].startswith('['):
                 break
-            if len(line) >= 2:
+            if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
                 target_states[line[0]] = line[1]
 
+    parsed = {}
     if line[0] == '[all]':
         try:
             line = next(iter_info)

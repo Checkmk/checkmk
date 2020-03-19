@@ -92,6 +92,10 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CAC
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
+	# Provide the externally documented paths for Checkmk plugins
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
+	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/lib/check_mk
+
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk

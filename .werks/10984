@@ -1,0 +1,10 @@
+Title: Show levels in bandwith graph
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584609968
+Class: fix
+
+

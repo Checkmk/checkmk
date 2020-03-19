@@ -19,6 +19,7 @@ else:
 import pytest  # type: ignore[import]
 import six
 
+from cmk.utils.i18n import _
 import cmk.utils.paths
 import cmk.utils.packaging as packaging
 
@@ -43,26 +44,26 @@ def clean_dirs():
 
 def test_package_parts():
     assert sorted(packaging.get_package_parts()) == sorted([
-        packaging.PackagePart("agent_based", "Agent based plugins (Checks, Inventory)",
+        packaging.PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
                               str(cmk.utils.paths.local_agent_based_plugins_dir)),
-        packaging.PackagePart('checks', 'Legacy check plugins',
+        packaging.PackagePart('checks', _('Legacy check plugins'),
                               str(cmk.utils.paths.local_checks_dir)),
-        packaging.PackagePart('notifications', 'Notification scripts',
+        packaging.PackagePart('notifications', _('Notification scripts'),
                               str(cmk.utils.paths.local_notifications_dir)),
-        packaging.PackagePart('inventory', 'Legacy inventory plugins',
+        packaging.PackagePart('inventory', _('Legacy inventory plugins'),
                               str(cmk.utils.paths.local_inventory_dir)),
-        packaging.PackagePart('checkman', "Checks' man pages",
+        packaging.PackagePart('checkman', _("Checks' man pages"),
                               str(cmk.utils.paths.local_check_manpages_dir)),
-        packaging.PackagePart('agents', 'Agents', str(cmk.utils.paths.local_agents_dir)),
-        packaging.PackagePart('web', 'Multisite extensions', str(cmk.utils.paths.local_web_dir)),
-        packaging.PackagePart('pnp-templates', 'PNP4Nagios templates',
+        packaging.PackagePart('agents', _('Agents'), str(cmk.utils.paths.local_agents_dir)),
+        packaging.PackagePart('web', _('GUI extensions'), str(cmk.utils.paths.local_web_dir)),
+        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates'),
                               str(cmk.utils.paths.local_pnp_templates_dir)),
-        packaging.PackagePart('doc', 'Documentation files', str(cmk.utils.paths.local_doc_dir)),
-        packaging.PackagePart('locales', 'Localizations', str(cmk.utils.paths.local_locale_dir)),
-        packaging.PackagePart('bin', 'Binaries', str(cmk.utils.paths.local_bin_dir)),
-        packaging.PackagePart('lib', 'Libraries', str(cmk.utils.paths.local_lib_dir)),
-        packaging.PackagePart('mibs', 'SNMP MIBs', str(cmk.utils.paths.local_mib_dir)),
-        packaging.PackagePart('alert_handlers', 'Alert handlers',
+        packaging.PackagePart('doc', _('Documentation files'), str(cmk.utils.paths.local_doc_dir)),
+        packaging.PackagePart('locales', _('Localizations'), str(cmk.utils.paths.local_locale_dir)),
+        packaging.PackagePart('bin', _('Binaries'), str(cmk.utils.paths.local_bin_dir)),
+        packaging.PackagePart('lib', _('Libraries'), str(cmk.utils.paths.local_lib_dir)),
+        packaging.PackagePart('mibs', _('SNMP MIBs'), str(cmk.utils.paths.local_mib_dir)),
+        packaging.PackagePart('alert_handlers', _('Alert handlers'),
                               str(cmk.utils.paths.local_share_dir.joinpath('alert_handlers'))),
     ])
 

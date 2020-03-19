@@ -23,8 +23,7 @@ else:
 
 import six  # pylint: disable=unused-import
 
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -34,6 +33,9 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
 from cmk.utils.encoding import ensure_unicode, ensure_bytestr
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Subclass MKGeneralException()?
@@ -88,7 +90,7 @@ PartPath = str
 
 PackagePart = NamedTuple("PackagePart", [
     ("ident", PartName),
-    ("title", str),
+    ("title", Text),
     ("path", PartPath),
 ])
 
@@ -111,31 +113,32 @@ def package_dir():
 def get_config_parts():
     # type: () -> List[PackagePart]
     return [
-        PackagePart("ec_rule_packs", "Event Console rule packs", str(ec.mkp_rule_pack_dir())),
+        PackagePart("ec_rule_packs", _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())),
     ]
 
 
 def get_package_parts():
     # type: () -> List[PackagePart]
     return [
-        PackagePart("agent_based", "Agent based plugins (Checks, Inventory)",
+        PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
                     str(cmk.utils.paths.local_agent_based_plugins_dir)),
-        PackagePart("checks", "Legacy check plugins", str(cmk.utils.paths.local_checks_dir)),
-        PackagePart("inventory", "Legacy inventory plugins",
+        PackagePart("checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)),
+        PackagePart("inventory", _("Legacy inventory plugins"),
                     str(cmk.utils.paths.local_inventory_dir)),
-        PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
-        PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
-        PackagePart("notifications", "Notification scripts",
+        PackagePart("checkman", _("Checks' man pages"),
+                    str(cmk.utils.paths.local_check_manpages_dir)),
+        PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
+        PackagePart("notifications", _("Notification scripts"),
                     str(cmk.utils.paths.local_notifications_dir)),
-        PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
-        PackagePart("pnp-templates", "PNP4Nagios templates",
+        PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+        PackagePart("pnp-templates", _("PNP4Nagios templates"),
                     str(cmk.utils.paths.local_pnp_templates_dir)),
-        PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
-        PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
-        PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
-        PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
-        PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
-        PackagePart("alert_handlers", "Alert handlers",
+        PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
+        PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
+        PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
+        PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
+        PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
+        PackagePart("alert_handlers", _("Alert handlers"),
                     str(cmk.utils.paths.local_share_dir / "alert_handlers")),
     ]
 

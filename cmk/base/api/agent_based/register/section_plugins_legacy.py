@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 from cmk.base.check_api_utils import Service
 from cmk.base.snmp_utils import SNMPTable
 from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
-from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     AgentSectionContent,

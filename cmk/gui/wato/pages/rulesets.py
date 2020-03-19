@@ -40,6 +40,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     RegExpUnicode,
     DropdownChoice,
+    rule_option_elements,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions  # pylint: disable=unused-import
@@ -59,7 +60,6 @@ from cmk.gui.plugins.wato import (
     global_buttons,
     make_action_link,
     add_change,
-    rule_option_elements,
     may_edit_ruleset,
     search_form,
     ConfigHostname,

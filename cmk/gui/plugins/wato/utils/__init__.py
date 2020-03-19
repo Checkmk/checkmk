@@ -63,6 +63,9 @@ from cmk.gui.valuespec import (
     Url,
     MonitoredHostname,
     ABCPageListOfMultipleGetChoice,
+    rule_option_elements,
+    DocumentationURL,
+    RuleComment,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
     WatoMode,)
@@ -88,10 +91,6 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MainModule,
     WatoModule,
     register_modules,
-)
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
@@ -2232,29 +2231,6 @@ class FolderChoice(DropdownChoice):
         kwargs["choices"] = watolib.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
-
-
-def rule_option_elements(disabling=True):
-    elements = [
-        ("description",
-         TextUnicode(
-             title=_("Description"),
-             help=_("A description or title of this rule"),
-             size=80,
-         )),
-        ("comment", RuleComment()),
-        ("docu_url", DocumentationURL()),
-    ]
-    if disabling:
-        elements += [
-            ("disabled",
-             Checkbox(
-                 title=_("Rule activation"),
-                 help=_("Disabled rules are kept in the configuration but are not applied."),
-                 label=_("do not apply this rule"),
-             )),
-        ]
-    return elements
 
 
 def get_check_information():

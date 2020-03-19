@@ -14,6 +14,11 @@ import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+# TODO: Cleanup call sites
+from cmk.gui.groups import (  # noqa: F401  # pylint: disable=unused-import
+    load_group_information, load_host_group_information, load_service_group_information,
+    load_contact_group_information,
+)
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
@@ -45,70 +50,13 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-def load_host_group_information():
-    return _load_group_information()["host"]
-
-
-def load_service_group_information():
-    return _load_group_information()["service"]
-
-
-def load_contact_group_information():
-    return _load_group_information()["contact"]
-
-
 def _clear_group_information_request_cache():
     g.pop("group_information", None)
 
 
-def _load_group_information():
-    if "group_information" in g:
-        return g.group_information
-
-    cmk_base_groups = _load_cmk_base_groups()
-    gui_groups = _load_gui_groups()
-
-    # Merge information from Check_MK and Multisite worlds together
-    groups = {}
-    for what in ["host", "service", "contact"]:
-        groups[what] = {}
-        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
-            groups[what][gid] = {'alias': alias}
-
-            if gid in gui_groups['multisite_%sgroups' % what]:
-                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
-
-    g.group_information = groups
-    return groups
-
-
-def _load_cmk_base_groups():
-    """Load group information from Check_MK world"""
-    group_specs = {
-        "define_hostgroups": {},
-        "define_servicegroups": {},
-        "define_contactgroups": {},
-    }
-
-    return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
-                              default=group_specs)
-
-
-def _load_gui_groups():
-    # Now load information from the Web world
-    group_specs = {
-        "multisite_hostgroups": {},
-        "multisite_servicegroups": {},
-        "multisite_contactgroups": {},
-    }
-
-    return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
-                              default=group_specs)
-
-
 def add_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     # Check group name
@@ -130,7 +78,7 @@ def add_group(name, group_type, extra_info):
 
 def edit_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     if name not in groups:
@@ -163,7 +111,7 @@ def delete_group(name, group_type):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
         raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
@@ -403,7 +351,7 @@ def _find_usages_of_group_in_rules(name, varnames):
 
 def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     for what, groups in all_groups.items():
         for gid, group in groups.items():
             if group['alias'] == my_alias and (my_what != what or my_name != gid):

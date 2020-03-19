@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import pytest  # type: ignore[import]
+from werkzeug.test import create_environ
 
 import cmk.utils.paths
 import cmk.gui.watolib.groups as groups
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
 from cmk.gui.globals import AppContext, RequestContext
-from werkzeug.test import create_environ
 from testlib.utils import DummyApplication
 
 
@@ -77,7 +77,7 @@ multisite_contactgroups = {
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
          RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
-        assert groups._load_group_information() == {
+        assert groups.load_group_information() == {
             'contact': {
                 'all': {
                     'alias': u'Everything',

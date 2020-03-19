@@ -78,6 +78,7 @@ from cmk.gui.valuespec import (
     Foldable,
     DualListChoice,
     LogLevelChoice,
+    rule_option_elements,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -104,7 +105,6 @@ from cmk.gui.plugins.wato.utils import (
     HostnameTranslation,
     ContactGroupSelection,
     ConfigDomainEventConsole,
-    rule_option_elements,
     get_search_expression,
     add_change,
     changelog_button,

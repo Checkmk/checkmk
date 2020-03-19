@@ -6077,6 +6077,71 @@ def LogLevelChoice(**kwargs):
                           **kwargs)
 
 
+def rule_option_elements(disabling=True):
+    elements = [
+        ("description",
+         TextUnicode(
+             title=_("Description"),
+             help=_("A description or title of this rule"),
+             size=80,
+         )),
+        ("comment", RuleComment()),
+        ("docu_url", DocumentationURL()),
+    ]
+    if disabling:
+        elements += [
+            ("disabled",
+             Checkbox(
+                 title=_("Rule activation"),
+                 help=_("Disabled rules are kept in the configuration but are not applied."),
+                 label=_("do not apply this rule"),
+             )),
+        ]
+    return elements
+
+
+class RuleComment(TextAreaUnicode):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("title", _("Comment"))
+        kwargs.setdefault(
+            "help",
+            _("An optional comment that may be used to explain the purpose of this object. "
+              "The comment is only visible in this dialog and may help other users "
+              "understanding the intentions of the configured attributes."))
+        kwargs.setdefault("rows", 4)
+        kwargs.setdefault("cols", 80)
+        super(RuleComment, self).__init__(**kwargs)
+
+    def render_input(self, varprefix, value):
+        html.open_div(style="white-space: nowrap;")
+
+        super(RuleComment, self).render_input(varprefix, value)
+
+        import cmk.gui.config as config  # FIXME
+        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
+
+        html.nbsp()
+        html.icon_button(None,
+                         title=_("Prefix date and your name to the comment"),
+                         icon="insertdate",
+                         onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" %
+                         date_and_user)
+        html.close_div()
+
+
+def DocumentationURL():
+    return TextAscii(
+        title=_("Documentation URL"),
+        help=HTML(
+            _("An optional URL pointing to documentation or any other page. This will be displayed "
+              "as an icon %s and open a new page when clicked. "
+              "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+              "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
+             ) % html.render_icon("url")),
+        size=80,
+    )
+
+
 def _type_name(v):
     try:
         return type(v).__name__

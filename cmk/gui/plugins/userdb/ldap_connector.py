@@ -31,8 +31,6 @@ import abc
 import copy
 import errno
 import logging
-from multiprocessing.pool import ThreadPool
-from multiprocessing import TimeoutError
 import os
 import re
 import shutil
@@ -53,6 +51,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
 
+import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.escaping as escaping
@@ -73,10 +72,11 @@ from cmk.gui.valuespec import (
     ListChoice,
     Age,
     Password,
+    rule_option_elements,
 )
 from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
     UserConnector,
     user_connector_registry,
@@ -92,7 +92,6 @@ from cmk.gui.plugins.userdb.utils import (
     release_users_lock,
 )
 
-import cmk.gui.sites as sites
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
 if cmk_version.is_managed_edition():
@@ -1288,15 +1287,11 @@ class LDAPUserConnector(UserConnector):
                         _("LDAP [%s]: Modified user %s (%s)") %
                         (connection_id, user_id, ', '.join(details)))
 
-        synchronize_profiles_to_sites(self._logger, profiles_to_synchronize)
+        hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
 
         duration = time.time() - start_time
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec, Queries: %d' %
                           (duration, self._num_queries))
-
-        from cmk.gui.watolib.changes import add_change
-        if changes and config.wato_enabled and not config.is_wato_slave_site():
-            add_change("edit-users", "<br>".join(changes), add_user=False)
 
         if changes or has_changed_passwords:
             save_users_func(users)
@@ -1470,7 +1465,6 @@ class LDAPConnectionValuespec(Transform):
         if cmk_version.is_managed_edition():
             general_elements += managed.customer_choice_element()
 
-        from cmk.gui.plugins.wato.utils import rule_option_elements  # TODO: Clean this up!
         general_elements += rule_option_elements()
 
         return general_elements
@@ -2435,7 +2429,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 
     def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
         # Gather all group names to search for in LDAP
-        from cmk.gui.watolib.groups import load_contact_group_information
+        from cmk.gui.groups import load_contact_group_information
         cg_names = load_contact_group_information().keys()
 
         return {
@@ -2729,127 +2723,3 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                  totext=_('Nested group memberships are resolved'),
              )))
         return elements
-
-
-#.
-#   .--WATO-Sync-----------------------------------------------------------.
-#   |       __        ___  _____ ___       ____                            |
-#   |       \ \      / / \|_   _/ _ \     / ___| _   _ _ __   ___          |
-#   |        \ \ /\ / / _ \ | || | | |____\___ \| | | | '_ \ / __|         |
-#   |         \ V  V / ___ \| || |_| |_____|__) | |_| | | | | (__          |
-#   |          \_/\_/_/   \_\_| \___/     |____/ \__, |_| |_|\___|         |
-#   |                                            |___/                     |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# In case the sync is done on the master of a distributed setup the auth serial
-# is increased on the master, but not on the slaves. The user can not access the
-# slave sites anymore with the master sites cookie since the serials differ. In
-# case the slave sites sync with LDAP on their own this issue will be repaired after
-# the next LDAP sync on the slave, but in case the slaves do not sync, this problem
-# will be repaired automagically once an admin performs the next WATO sync for
-# another reason.
-# Now, to solve this issue, we issue a user profile sync in case the password has
-# been changed. We do this only when only the password has changed.
-# Hopefully we have no large bulks of users changing their passwords at the same
-# time. In this case the implementation does not scale well. We would need to
-# change this to some kind of profile bulk sync per site.
-# TODO: Should we move this to watolib?
-
-
-class SynchronizationResult(object):
-    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
-        self.site_id = site_id
-        self.error_text = error_text
-        self.failed = failed
-        self.disabled = disabled
-        self.succeeded = succeeded
-
-
-def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
-    if not profiles_to_synchronize:
-        return
-
-    remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_slave_sites()]
-
-    logger.info('Credentials changed for %s. Trying to sync to %d sites' %
-                (", ".join(profiles_to_synchronize.keys()), len(remote_sites)))
-
-    states = sites.states()
-
-    pool = ThreadPool()
-    jobs = []
-    for site_id, site in remote_sites:
-        jobs.append(
-            pool.apply_async(_sychronize_profile_worker,
-                             (states, site_id, site, profiles_to_synchronize)))
-
-    results = []
-    start_time = time.time()
-    while time.time() - start_time < 30:
-        for job in jobs[:]:
-            try:
-                results.append(job.get(timeout=0.5))
-                jobs.remove(job)
-            except TimeoutError:
-                pass
-        if not jobs:
-            break
-
-    contacted_sites = {x[0] for x in remote_sites}
-    working_sites = {result.site_id for result in results}
-    for site_id in contacted_sites - working_sites:
-        results.append(
-            SynchronizationResult(site_id,
-                                  error_text=_("No response from update thread"),
-                                  failed=True))
-
-    for result in results:
-        if result.error_text:
-            logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
-            if config.wato_enabled:
-                from cmk.gui.watolib.changes import add_change
-                add_change("edit-users",
-                           _('Password changed (sync failed: %s)') % result.error_text,
-                           add_user=False,
-                           sites=[result.site_id],
-                           need_restart=False)
-
-    pool.terminate()
-    pool.join()
-
-    num_failed = sum([1 for result in results if result.failed])
-    num_disabled = sum([1 for result in results if result.disabled])
-    num_succeeded = sum([1 for result in results if result.succeeded])
-    logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
-                (num_disabled, num_succeeded, num_failed))
-
-
-def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
-    import cmk.gui.watolib.user_profile as user_profile
-
-    if not site.get("replication"):
-        return SynchronizationResult(site_id, disabled=True)
-
-    if site.get("disabled"):
-        return SynchronizationResult(site_id, disabled=True)
-
-    status = states.get(site_id, {}).get("state", "unknown")
-    if status == "dead":
-        return SynchronizationResult(site_id,
-                                     error_text=_("Site %s is dead") % site_id,
-                                     failed=True)
-
-    try:
-        result = user_profile.push_user_profiles_to_site_transitional_wrapper(
-            site, profiles_to_synchronize)
-        if result is not True:
-            return SynchronizationResult(site_id, error_text=result, failed=True)
-        return SynchronizationResult(site_id, succeeded=True)
-    except RequestTimeout:
-        # This function is currently only used by the background job
-        # which does not have any request timeout set, just in case...
-        raise
-    except Exception as e:
-        return SynchronizationResult(site_id, error_text="%s" % e, failed=True)

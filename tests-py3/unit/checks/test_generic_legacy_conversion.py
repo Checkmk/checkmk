@@ -44,6 +44,9 @@ KNOWN_FAILURES = {
     'checkpoint_voltage',
     'cisco_mem_asa',
     'cisco_mem_asa64',
+    'emc_ecs_cpu_util',
+    'emc_ecs_diskio',
+    'emc_ecs_mem',
     'f5_bigip_cluster',
     'f5_bigip_cluster_status',
     'f5_bigip_cluster_status_v11_2',
@@ -100,10 +103,9 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
         if name != check_utils.section_name_of(name):
             continue
 
-        scan_function = snmp_scan_functions.get(name)
         section = None
 
-        if scan_function is None:
+        if name not in snmp_info:
             section = create_agent_section_plugin_from_legacy(
                 name,
                 check_info_dict,
@@ -111,10 +113,12 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
             assert isinstance(section, AgentSectionPlugin)
         else:
             with known_exceptions(name):
+                if name not in snmp_scan_functions:
+                    raise NotImplementedError("missing scan function")
                 section = create_snmp_section_plugin_from_legacy(
                     name,
                     check_info_dict,
-                    scan_function,
+                    snmp_scan_functions[name],
                     snmp_info[name],
                 )
                 assert isinstance(section, SNMPSectionPlugin)

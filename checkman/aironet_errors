@@ -7,6 +7,13 @@ description:
  This check monitors the rate of CRC errors on MAC level
  on each of the radios of an Cisco Aironet access point.
 
+ The error levels can be configured (default: 1.0, 10.0)
+
+ If the rate of errors goes over the configured level the service
+ goes {WARN}/{CRIT}.
+
+ This check uses the CISCO-DOT11-IF-MIB.
+
 item:
  The number of the radio - usually {1} or {2} (integer).
 

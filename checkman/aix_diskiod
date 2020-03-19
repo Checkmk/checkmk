@@ -4,11 +4,15 @@ catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
+ This check measures the disk IO of hard disks on AIX.
+ The agent provides this information via the command {diskio -d}.
 
- This check measures the disk IO of hard disks on AIX. The agent provides this
- information via the command {diskio -d}. This check is compatible with {diskstat},
- but only supports throughput, no latency and queue lengths. Please read further
- details in the man page of {diskstat}.
+ This check is compatible with {diskstat},
+ but only supports {{throughput}}, no latency and queue lengths.
+
+ The {WARN}/{CRIT} levels can be configured manually for each read and write.
+
+ Please read further details in the man page of {diskstat}.
 
 item:
  Either {"SUMMARY"} for a summarized check of alls LUNs or the

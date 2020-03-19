@@ -6,8 +6,18 @@ distribution: check_mk
 description:
  This check monitors the resource group states on different nodes
  of AIX HACMP cluster manager.
- The status will be OK, if the first, or any node reports 'online',
- depending on the configuration. Otherwise the status changes to CRIT.
+
+ It shows:
+
+ - the state of the resource group
+
+ - the name of the node
+
+ The status will be
+
+ - {OK}, if the first, or any node reports 'online'(depending on the configuration).
+
+ - {CRIT} in all other cases
 
  This check needs the check_mk_agent.aix agent.
 

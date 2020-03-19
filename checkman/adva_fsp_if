@@ -4,21 +4,29 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- This checks monitors the state and laser parameters of interfaces of the
- ADVA FSP 3000 scalable optical transport solution.
+ This checks monitors
 
- State information is collected from the SNMP IF-MIB parameters {ifAdminStatus} and
- {ifOperStatus}. Laser information is collected from the FspR7-MIB parameters
- {currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}.
+ - the state
+
+ - laser parameters
+
+ of interfaces of the ADVA FSP 3000 scalable optical transport solution.
 
  Lower and upper critical limits can be configured for the input (received)
  and output (transmit) power of the laser. Per default, not limits are imposed,
  since meaningful values depend on the type of interface.
 
- A {WARN} state is triggered if no laser power information can be found.
+ The service goes {WARN} if no laser power information can be found.
+ The service goes {WARN}/{CRIT} of the value is within the limits.
+
  Service interfaces (item name beginning with "S") do not have laser power
  information, so that non-existent laser power information is ignored for these
  interfaces.
+
+ The check uses the IF-MIB for state ({ifAdminStatus} and {ifOperStatus}).
+ The check uses the FspR7-MIB for laser parameters
+ ({currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}).
+
 
 item:
  There are three allowed ways to specify an interface: {1}: the last component

@@ -101,6 +101,8 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
             continue
 
         scan_function = snmp_scan_functions.get(name)
+        section = None
+
         if scan_function is None:
             section = create_agent_section_plugin_from_legacy(
                 name,
@@ -109,13 +111,20 @@ def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp
             assert isinstance(section, AgentSectionPlugin)
         else:
             with known_exceptions(name):
-                sec = create_snmp_section_plugin_from_legacy(
+                section = create_snmp_section_plugin_from_legacy(
                     name,
                     check_info_dict,
                     scan_function,
                     snmp_info[name],
                 )
-                assert isinstance(sec, SNMPSectionPlugin)
+                assert isinstance(section, SNMPSectionPlugin)
+
+        if section is None:
+            continue
+
+        original_parse_function = check_info_dict["parse_function"]
+        if original_parse_function is not None:
+            assert original_parse_function.__name__ == section.parse_function.__name__
 
 
 def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):

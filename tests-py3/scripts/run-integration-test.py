@@ -69,13 +69,12 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
-        if not _is_dockerized():
-            return
-        if os.path.exists("/results"):
-            shutil.rmtree("/results")
-            os.mkdir("/results")
-        shutil.copy(site.path("junit.xml"), "/results")
-        shutil.copytree(site.path("var/log"), "/results/logs")
+        if _is_dockerized():
+            if os.path.exists("/results"):
+                shutil.rmtree("/results")
+                os.mkdir("/results")
+            shutil.copy(site.path("junit.xml"), "/results")
+            shutil.copytree(site.path("var/log"), "/results/logs")
 
 
 def _is_dockerized():

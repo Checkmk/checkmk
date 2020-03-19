@@ -97,6 +97,9 @@ lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
 optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 
+_base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
+agent_based_plugins_dir = _base_plugins_dir / "agent_based"
+
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
 local_notifications_dir = _local_path(notifications_dir)
@@ -110,3 +113,6 @@ local_locale_dir = _local_path(locale_dir)
 local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
+
+_local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
+local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"

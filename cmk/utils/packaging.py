@@ -118,12 +118,15 @@ def get_config_parts():
 def get_package_parts():
     # type: () -> List[PackagePart]
     return [
-        PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
-        PackagePart("notifications", "Notification scripts",
-                    str(cmk.utils.paths.local_notifications_dir)),
-        PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
+        PackagePart("agent_based", "Agent based plugins (Checks, Inventory)",
+                    str(cmk.utils.paths.local_agent_based_plugins_dir)),
+        PackagePart("checks", "Legacy check plugins", str(cmk.utils.paths.local_checks_dir)),
+        PackagePart("inventory", "Legacy inventory plugins",
+                    str(cmk.utils.paths.local_inventory_dir)),
         PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
         PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
+        PackagePart("notifications", "Notification scripts",
+                    str(cmk.utils.paths.local_notifications_dir)),
         PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
         PackagePart("pnp-templates", "PNP4Nagios templates",
                     str(cmk.utils.paths.local_pnp_templates_dir)),

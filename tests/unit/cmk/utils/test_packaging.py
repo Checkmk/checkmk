@@ -42,11 +42,14 @@ def clean_dirs():
 
 
 def test_package_parts():
-    assert packaging.get_package_parts() == [
-        packaging.PackagePart('checks', 'Checks', str(cmk.utils.paths.local_checks_dir)),
+    assert sorted(packaging.get_package_parts()) == sorted([
+        packaging.PackagePart("agent_based", "Agent based plugins (Checks, Inventory)",
+                              str(cmk.utils.paths.local_agent_based_plugins_dir)),
+        packaging.PackagePart('checks', 'Legacy check plugins',
+                              str(cmk.utils.paths.local_checks_dir)),
         packaging.PackagePart('notifications', 'Notification scripts',
                               str(cmk.utils.paths.local_notifications_dir)),
-        packaging.PackagePart('inventory', 'Inventory plugins',
+        packaging.PackagePart('inventory', 'Legacy inventory plugins',
                               str(cmk.utils.paths.local_inventory_dir)),
         packaging.PackagePart('checkman', "Checks' man pages",
                               str(cmk.utils.paths.local_check_manpages_dir)),
@@ -61,7 +64,7 @@ def test_package_parts():
         packaging.PackagePart('mibs', 'SNMP MIBs', str(cmk.utils.paths.local_mib_dir)),
         packaging.PackagePart('alert_handlers', 'Alert handlers',
                               str(cmk.utils.paths.local_share_dir.joinpath('alert_handlers'))),
-    ]
+    ])
 
 
 def test_config_parts():
@@ -94,6 +97,7 @@ def test_get_config_parts():
 
 def test_get_package_parts():
     assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted([
+        'agent_based',
         'agents',
         'alert_handlers',
         'bin',
@@ -281,6 +285,7 @@ def test_remove_package():
 
 def test_unpackaged_files_none():
     assert packaging.unpackaged_files() == {
+        'agent_based': [],
         'agents': [],
         'alert_handlers': [],
         'bin': [],
@@ -305,7 +310,12 @@ def test_unpackaged_files():
     with p.open("w", encoding="utf-8") as f:
         f.write(u"lala\n")
 
+    p = cmk.utils.paths.local_agent_based_plugins_dir.joinpath("dada")
+    with p.open("w", encoding="utf-8") as f:
+        f.write(u"huhu\n")
+
     assert packaging.unpackaged_files() == {
+        'agent_based': ['dada'],
         'agents': [],
         'alert_handlers': [],
         'bin': [],

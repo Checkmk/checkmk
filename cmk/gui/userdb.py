@@ -46,7 +46,6 @@ from cmk.gui.globals import g, html
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
-from cmk.gui.plugins.userdb.hook_auth import create_auth_file
 
 from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
     user_attribute_registry,  #
@@ -1355,14 +1354,8 @@ def general_userdb_job():
     # type: () -> None
     """This function registers general stuff, which is independet of the single
     connectors to each page load. It is exectued AFTER all other connections jobs."""
-    # Working around the problem that the auth.php file needed for multisite based
-    # authorization of external addons might not exist when setting up a new installation
-    # We assume: Each user must visit this login page before using the multisite based
-    #            authorization. So we can easily create the file here if it is missing.
-    # This is a good place to replace old api based files in the future.
-    auth_php = cmk.utils.paths.var_dir + '/wato/auth/auth.php'
-    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
-        create_auth_file("page_hook", load_users())
+
+    hooks.call("userdb-job")
 
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)

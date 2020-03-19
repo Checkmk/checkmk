@@ -110,6 +110,7 @@ from cmk.gui.config import (
 import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.git
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.auth_php
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import
 from cmk.gui.watolib.notifications import save_notification_rules

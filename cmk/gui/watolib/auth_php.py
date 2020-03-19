@@ -44,21 +44,24 @@ import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
+import cmk.gui.userdb as userdb
+from cmk.gui.watolib.groups import load_contact_group_information
 
-g_auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
+_auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
 
 
-def format_php(data, lvl=1):
+def _format_php(data, lvl=1):
     s = ''
     if isinstance(data, (list, tuple)):
         s += 'array(\n'
         for item in data:
-            s += '    ' * lvl + format_php(item, lvl + 1) + ',\n'
+            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, dict):
         s += 'array(\n'
         for key, val in data.items():
-            s += '    ' * lvl + format_php(key, lvl + 1) + ' => ' + format_php(val, lvl + 1) + ',\n'
+            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
+                                                                                 lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
         s += '\'%s\'' % data.replace('\'', '\\\'')
@@ -74,7 +77,7 @@ def format_php(data, lvl=1):
     return s
 
 
-def create_php_file(callee, users, role_permissions, groups):
+def _create_php_file(callee, users, role_permissions, groups):
     # Do not change WATO internal objects
     nagvis_users = copy.deepcopy(users)
 
@@ -85,8 +88,8 @@ def create_php_file(callee, users, role_permissions, groups):
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete
     # files into php.
-    tempfile = g_auth_base_dir + '/auth.php.tmp'
-    lockfile = g_auth_base_dir + '/auth.php.state'
+    tempfile = _auth_base_dir + '/auth.php.tmp'
+    lockfile = _auth_base_dir + '/auth.php.state'
     open(lockfile, "a")
     store.aquire_lock(lockfile)
 
@@ -196,21 +199,19 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, format_php(nagvis_users), format_php(role_permissions), format_php(groups)))
+''' % (callee, _format_php(nagvis_users), _format_php(role_permissions), _format_php(groups)))
 
     # Now really replace the file
-    os.rename(tempfile, g_auth_base_dir + '/auth.php')
+    os.rename(tempfile, _auth_base_dir + '/auth.php')
 
     store.release_lock(lockfile)
 
 
-def create_auth_file(callee, users=None):
-    from cmk.gui.watolib.groups import load_contact_group_information
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
+def _create_auth_file(callee, users=None):
     if users is None:
         users = userdb.load_users()
 
-    store.mkdir(g_auth_base_dir)
+    store.mkdir(_auth_base_dir)
 
     contactgroups = load_contact_group_information()
     groups = {}
@@ -218,11 +219,21 @@ def create_auth_file(callee, users=None):
         if 'nagvis_maps' in group and group['nagvis_maps']:
             groups[gid] = group['nagvis_maps']
 
-    create_php_file(callee, users, config.get_role_permissions(), groups)
+    _create_php_file(callee, users, config.get_role_permissions(), groups)
+
+
+def _on_userdb_job():
+    # Working around the problem that the auth.php file needed for multisite based
+    # authorization of external addons might not exist when setting up a new installation
+    # This is a good place to replace old api based files in the future.
+    auth_php = cmk.utils.paths.var_dir + '/wato/auth/auth.php'
+    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
+        _create_auth_file("page_hook")
 
 
 # TODO: Should we not execute this hook also when folders are modified?
-hooks.register_builtin('users-saved', lambda users: create_auth_file("users-saved", users))
-hooks.register_builtin('roles-saved', lambda x: create_auth_file("roles-saved"))
-hooks.register_builtin('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved"))
-hooks.register_builtin('activate-changes', lambda x: create_auth_file("activate-changes"))
+hooks.register_builtin('userdb-job', _on_userdb_job)
+hooks.register_builtin('users-saved', lambda users: _create_auth_file("users-saved", users))
+hooks.register_builtin('roles-saved', lambda x: _create_auth_file("roles-saved"))
+hooks.register_builtin('contactgroups-saved', lambda x: _create_auth_file("contactgroups-saved"))
+hooks.register_builtin('activate-changes', lambda x: _create_auth_file("activate-changes"))

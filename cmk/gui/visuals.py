@@ -13,6 +13,8 @@ from contextlib import contextmanager
 from typing import Callable, Dict, Iterator, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
+import cmk.utils.store as store
+
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
@@ -41,7 +43,6 @@ import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
-import cmk.utils.store as store
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html

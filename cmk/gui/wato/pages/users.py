@@ -22,6 +22,10 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import (
+    cleanup_connection_id,
+    get_connection,
+)
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
@@ -225,8 +229,8 @@ class ModeUsers(WatoMode):
                 if uid != config.user.id:
                     html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
 
-                user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-                connection = userdb.get_connection(user_connection_id)
+                user_connection_id = cleanup_connection_id(user.get('connector'))
+                connection = get_connection(user_connection_id)
 
                 # Buttons
                 table.cell(_("Actions"), css="buttons")

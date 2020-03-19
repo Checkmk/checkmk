@@ -874,10 +874,32 @@ class EmailAddress(TextAscii):
             empty_text=empty_text,
             read_only=read_only,
             forbidden_chars=forbidden_chars,
-            # The "new" top level domains are very unlimited in length. Theoretically they can be
-            # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
-            # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
-            regex=re.compile(r'^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I),
+            # According to RFC5322 an email address is defined as:
+            #     address = name-addr / addr-spec / group
+            # We only allow the dot-atom of addr-spec here:
+            #     addr-spec = (dot-atom / quoted-string / obs-local-part) "@" domain
+            #     dot-atom = [CFWS] 1*atext *("." 1*atext) [CFWS]
+            #     atext = ALPHA / DIGIT / "!" / "#" /  ; Printable US-ASCII
+            #             "$" / "%" / "&" / "'"        ;  characters not including
+            #             "&" / "'" / "*" / "+"        ;  specials. Used for atoms.
+            #             "-" / "/" / "=" / "?"
+            #             "^" / "_" / "`" / "{"
+            #             "|" / "}" / "~"
+            # Furthermore we do not allow comments inside CFWS and any leading or
+            # trailing whitespace in the address is removed.
+            #
+            # The domain part of addr-spec is defined as:
+            #     domain = dot-atom / domain-literal / obs-domain
+            # We only allow dot-atom with a restricted character of [A-Z0-9.-] and a
+            # length of 2-24 for the top level domain here. Although top level domains
+            # may be longer the longest top level domain currently in use is 24
+            # characters wide. Check this out with:
+            #     wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
+            #
+            # Note that the current regex allows multiple subsequent "." which are
+            # not allowed by RFC5322.
+            regex=re.compile(r"^[A-Z0-9._!#$%&'*+-=?^`{|}~]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$",
+                             re.I),
             regex_error=regex_error,
             minlen=minlen,
             onkeyup=onkeyup,
@@ -904,7 +926,14 @@ class EmailAddress(TextAscii):
 class EmailAddressUnicode(TextUnicode, EmailAddress):
     def __init__(self, **kwargs):
         super(EmailAddressUnicode, self).__init__(**kwargs)
-        self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
+        # This valuespec extends the capabilities of EmailAddress to use non-ASCII characters
+        # in the dot-atom of the addr-spec as specified by RFC6531:
+        #     atext   =/  UTF8-non-ascii
+        # Otherwise the same restrictions as specified in EmailAddress apply.
+        # TODO: Ideally we should use only this valuespec so that unicode characters are
+        #       allowed in email addresses everywhere in the GUI.
+        self._regex = re.compile(r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$",
+                                 re.I | re.UNICODE)
 
 
 def IPNetwork(  # pylint: disable=redefined-builtin

@@ -1257,9 +1257,9 @@ class LDAPUserConnector(UserConnector):
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec, Queries: %d' %
                           (duration, self._num_queries))
 
-        import cmk.gui.watolib as watolib
+        from cmk.gui.watolib.changes import add_change
         if changes and config.wato_enabled and not config.is_wato_slave_site():
-            watolib.add_change("edit-users", "<br>".join(changes), add_user=False)
+            add_change("edit-users", "<br>".join(changes), add_user=False)
 
         if changes or has_changed_passwords:
             userdb.save_users(users)
@@ -2753,7 +2753,6 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     if not profiles_to_synchronize:
         return
 
-    import cmk.gui.watolib as watolib
     remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_slave_sites()]
 
     logger.info('Credentials changed for %s. Trying to sync to %d sites' %
@@ -2792,11 +2791,12 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
         if result.error_text:
             logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
             if config.wato_enabled:
-                watolib.add_change("edit-users",
-                                   _('Password changed (sync failed: %s)') % result.error_text,
-                                   add_user=False,
-                                   sites=[result.site_id],
-                                   need_restart=False)
+                from cmk.gui.watolib.changes import add_change
+                add_change("edit-users",
+                           _('Password changed (sync failed: %s)') % result.error_text,
+                           add_user=False,
+                           sites=[result.site_id],
+                           need_restart=False)
 
     pool.terminate()
     pool.join()

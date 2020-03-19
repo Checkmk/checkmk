@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
     Age,
     FixedValue,
     Alternative,
-    EmailAddressUnicode,
+    EmailAddress,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_scripts import (
@@ -113,7 +113,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
 
     # Email
     email = user_attrs.get("email")
-    vs_email = EmailAddressUnicode()
+    vs_email = EmailAddress()
     vs_email.validate_value(email, "email")
 
     # Idle timeout

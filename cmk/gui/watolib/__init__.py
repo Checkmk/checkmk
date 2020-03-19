@@ -82,7 +82,7 @@ from cmk.gui.valuespec import (
     Transform,
     DropdownChoice,
     ListOf,
-    EmailAddressUnicode,
+    EmailAddress,
     DualListChoice,
     UserID,
     FixedValue,

@@ -837,7 +837,7 @@ class RegExpUnicode(TextUnicode, RegExp):
     pass
 
 
-class EmailAddress(TextAscii):
+class EmailAddress(TextUnicode):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         make_clickable=False,  # type: bool
@@ -885,6 +885,9 @@ class EmailAddress(TextAscii):
             #             "-" / "/" / "=" / "?"
             #             "^" / "_" / "`" / "{"
             #             "|" / "}" / "~"
+            # with the additional extension of atext to the addr-spec as specified
+            # by RFC6531:
+            #     atext   =/  UTF8-non-ascii
             # Furthermore we do not allow comments inside CFWS and any leading or
             # trailing whitespace in the address is removed.
             #
@@ -898,8 +901,8 @@ class EmailAddress(TextAscii):
             #
             # Note that the current regex allows multiple subsequent "." which are
             # not allowed by RFC5322.
-            regex=re.compile(r"^[A-Z0-9._!#$%&'*+-=?^`{|}~]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$",
-                             re.I),
+            regex=re.compile(r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$",
+                             re.I | re.UNICODE),
             regex_error=regex_error,
             minlen=minlen,
             onkeyup=onkeyup,
@@ -920,20 +923,6 @@ class EmailAddress(TextAscii):
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_a(HTML(value), href="mailto:%s" % value)
         return value
-
-
-# TODO: Cleanup kwargs
-class EmailAddressUnicode(TextUnicode, EmailAddress):
-    def __init__(self, **kwargs):
-        super(EmailAddressUnicode, self).__init__(**kwargs)
-        # This valuespec extends the capabilities of EmailAddress to use non-ASCII characters
-        # in the dot-atom of the addr-spec as specified by RFC6531:
-        #     atext   =/  UTF8-non-ascii
-        # Otherwise the same restrictions as specified in EmailAddress apply.
-        # TODO: Ideally we should use only this valuespec so that unicode characters are
-        #       allowed in email addresses everywhere in the GUI.
-        self._regex = re.compile(r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$",
-                                 re.I | re.UNICODE)
 
 
 def IPNetwork(  # pylint: disable=redefined-builtin

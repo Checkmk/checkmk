@@ -28,7 +28,7 @@ from cmk.gui.i18n import _, _u, get_languages, get_language_alias
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     UserID,
-    EmailAddressUnicode,
+    EmailAddress,
     Alternative,
     DualListChoice,
     FixedValue,
@@ -513,7 +513,7 @@ class ModeEditUser(WatoMode):
             user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
         # Email address
-        user_attrs["email"] = EmailAddressUnicode().from_html_vars("email")
+        user_attrs["email"] = EmailAddress().from_html_vars("email")
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
@@ -630,7 +630,7 @@ class ModeEditUser(WatoMode):
         forms.section(_("Email address"))
         email = self._user.get("email", "")
         if not self._is_locked("email"):
-            EmailAddressUnicode().render_input("email", email)
+            EmailAddress().render_input("email", email)
         else:
             html.write_text(email)
             html.hidden_field("email", email)

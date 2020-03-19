@@ -63,7 +63,7 @@ def test_create_parse_function(creator_func):
 ])
 def test_create_host_label_function(disco_func, labels_expected):
     host_label_function = section_plugins_legacy._create_host_label_function(
-        disco_func, lambda x: x, ["some_extra_section"])
+        disco_func, ["some_extra_section"])
 
     section_plugins._validate_host_label_function(host_label_function)
 

@@ -171,7 +171,14 @@ def _create_snmp_trees(snmp_info):
 
 def _create_snmp_parse_function(original_parse_function, recover_layout_function):
     # type: (Optional[Callable], Callable) -> SNMPParseFunction
-    """Wrap parse function to comply to signature requirement"""
+    """Wrap parse function to comply to new API
+
+    The created parse function will comply to the new signature requirement of
+    accepting exactly one argument by the name "string_table".
+
+    Additionally we undo the change of the data layout induced by the new
+    spec for SNMPTrees.
+    """
     if original_parse_function is None:
         original_parse_function = parse_string_table
 
@@ -185,8 +192,8 @@ def _create_snmp_parse_function(original_parse_function, recover_layout_function
     return parse_function
 
 
-def _create_host_label_function(discover_function, recover_layout_function, extra_sections):
-    # type: (Optional[Callable], Callable, List[str]) -> Optional[HostLabelFunction]
+def _create_host_label_function(discover_function, extra_sections):
+    # type: (Optional[Callable], List[str]) -> Optional[HostLabelFunction]
     """Wrap discover_function to filter for HostLabels"""
     if discover_function is None:
         return None
@@ -196,9 +203,9 @@ def _create_host_label_function(discover_function, recover_layout_function, extr
     def host_label_function(section):
         # type: (Any) -> Generator[HostLabel, None, None]
         if not extra_sections_count:
-            discover_arg = recover_layout_function(section)
+            discover_arg = section
         else:
-            discover_arg = [recover_layout_function(section)] + [[]] * extra_sections_count
+            discover_arg = [section] + [[]] * extra_sections_count
 
         discovery_iter = discover_function(discover_arg)  # type: ignore
         if discovery_iter is None:
@@ -224,7 +231,6 @@ def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict, 
 
     host_label_function = _create_host_label_function(
         check_info_dict.get('inventory_function'),
-        lambda x: x,
         check_info_dict.get('extra_sections', []),
     )
 
@@ -248,7 +254,6 @@ def create_snmp_section_plugin_from_legacy(check_plugin_name, check_info_dict, s
 
     host_label_function = _create_host_label_function(
         check_info_dict.get('inventory_function'),
-        recover_layout_function,
         check_info_dict.get('extra_sections', []),
     )
 

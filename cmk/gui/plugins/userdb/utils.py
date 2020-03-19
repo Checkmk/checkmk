@@ -83,11 +83,6 @@ class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
     def sync_is_needed(self):
         return False
 
-    # Optional: Tells whether or not the given user is currently
-    # locked which would mean that he is not allowed to login.
-    def is_locked(self, user_id):
-        return False
-
     # Optional: Hook function can be registered here to be xecuted
     # to save all users.
     def save_users(self, users):

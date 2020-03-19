@@ -274,12 +274,6 @@ def _user_exists_according_to_profile(username):
             or os.path.exists(base_path + "serial.mk")
 
 
-def user_locked(username):
-    # type: (UserId) -> bool
-    users = load_users()
-    return users[username].get('locked', False)
-
-
 def login_timed_out(username, last_activity):
     # type: (UserId, float) -> bool
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
@@ -348,6 +342,17 @@ def _is_local_user(user_id):
         assert user is not None  # help mypy
 
     return user.get('connector', 'htpasswd') == 'htpasswd'
+
+
+def _user_locked(user_id):
+    # type: (UserId) -> bool
+    user = _load_cached_profile(user_id)
+    if user is None:
+        # No cached profile present. Load all users to get the users data
+        user = load_users(lock=False).get(user_id, {})
+        assert user is not None  # help mypy
+
+    return user.get('locked', False)
 
 
 def on_failed_login(username):
@@ -1312,13 +1317,9 @@ def hook_login(username, password):
                 auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % username)
                 return False
 
-            # Now, after successfull login (and optional user account
-            # creation), check whether or not the user is locked.
-            # In e.g. htpasswd connector this is checked by validating the
-            # password against the hash in the htpasswd file prefixed with
-            # a "!". But when using other conectors it might be neccessary
-            # to validate the user "locked" attribute.
-            if connection.is_locked(username):
+            # Now, after successfull login (and optional user account creation), check whether or
+            # not the user is locked.
+            if _user_locked(username):
                 auth_logger.debug("User '%s' is not allowed to login: Account locked" % username)
                 return False  # The account is locked
 

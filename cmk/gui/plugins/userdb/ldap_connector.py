@@ -1318,14 +1318,6 @@ class LDAPUserConnector(UserConnector):
     def _set_last_sync_time(self):
         open(self._sync_time_file, 'w').write('%s\n' % time.time())
 
-    # no ldap check, just check the WATO attribute. This handles setups where
-    # the locked attribute is not synchronized and the user is enabled in LDAP
-    # and disabled in Check_MK. When the user is locked in LDAP a login is
-    # not possible.
-    def is_locked(self, user_id):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        return userdb.user_locked(user_id)
-
     def is_enabled(self):
         import cmk.gui.userdb as userdb  # TODO: Cleanup
         sync_config = userdb.user_sync_config()

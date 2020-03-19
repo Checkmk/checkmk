@@ -78,6 +78,7 @@ seconds_per_day = 86400
 DEF_VALUE = object()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
+ValueSpecHelp = Union[None, Text, HTML, Callable[[], Text]]
 
 
 class ValueSpec(object):
@@ -88,7 +89,7 @@ class ValueSpec(object):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         title=None,  # type: _Optional[Text]
-        help=None,  # type: Union[None, Text, Callable[[], Text]]
+        help=None,  # type: ValueSpecHelp
         default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
         **kwargs):
@@ -558,7 +559,7 @@ class TextAscii(ValueSpec):
         hidden=False,  # type: bool
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: Union[None, Text, Callable[[], Text]]
+        help=None,  # type: ValueSpecHelp
         default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
@@ -2635,12 +2636,12 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceValue = Union[None, Text, _Tuple[_Optional[Text], Any]]
-CascadingDropdownCleanChoice = _Tuple[_Optional[Text], Text, _Optional[ValueSpec]]
-CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[Text, Text],
+CascadingDropdownChoiceValue = Union[None, Text, _Tuple[_Optional[str], Any]]
+CascadingDropdownCleanChoice = _Tuple[_Optional[str], Text, _Optional[ValueSpec]]
+CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[str, Text],
                                                       CascadingDropdownCleanChoice]]]
-CascadingDropdownChoices = Union[List[Union[_Tuple[Text, Text], CascadingDropdownCleanChoice]],
-                                 CascadingDropdownChoiceFunc]
+CascadingDropdownChoiceList = List[Union[_Tuple[str, Text], CascadingDropdownCleanChoice]]
+CascadingDropdownChoices = Union[CascadingDropdownChoiceList, CascadingDropdownChoiceFunc]
 CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
 
 
@@ -2716,7 +2717,7 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def normalize_choices(self, choices):
-        # type: (List[Union[_Tuple[Text, Text], CascadingDropdownCleanChoice]]) -> CascadingDropdownCleanChoices
+        # type: (List[Union[_Tuple[str, Text], CascadingDropdownCleanChoice]]) -> CascadingDropdownCleanChoices
         new_choices = []  # type: CascadingDropdownCleanChoices
         for entry in choices:
             if len(entry) == 2:  # plain entry with no sub-valuespec
@@ -2917,7 +2918,7 @@ class CascadingDropdown(ValueSpec):
             try:
                 vs.validate_datatype(value[1], "")
                 return [ident, vs.value_to_json(value[1])]
-            except Exception as _e:  # TODO: fix exc
+            except Exception:  # TODO: fix exc
                 continue
 
     def value_from_json(self, json_value):
@@ -2934,7 +2935,7 @@ class CascadingDropdown(ValueSpec):
                 value = vs.value_from_json(json_value[1])
                 vs.validate_datatype(value, "")
                 return (ident, value)
-            except Exception as _e:  # TODO: fix exc
+            except Exception:  # TODO: fix exc
                 continue
 
     def from_html_vars(self, varprefix):
@@ -4621,7 +4622,7 @@ class Dictionary(ValueSpec):
         render="normal",  # type: str
         form_narrow=False,  # type: bool
         form_isopen=True,  # type: bool
-        headers=None,  # type: Union[None, str, List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]]
+        headers=None,  # type: Union[None, str, List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]]
         migrate=None,  # type: Callable[[_Tuple], Dict]
         indent=True,  # type: bool
         # ValueSpec
@@ -4774,8 +4775,8 @@ class Dictionary(ValueSpec):
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        headers = self._headers if self._headers else [(six.ensure_str(self.title() or
-                                                                       _("Properties")), [])]
+        headers = self._headers if self._headers else [(six.ensure_text(self.title() or
+                                                                        _("Properties")), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
             self.render_input_form_header(varprefix,
                                           value,
@@ -5944,7 +5945,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         from_end_choice = [
             ("month_end", _("At the end of every month at day"),
              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-        ]  # type: List[Union[_Tuple[Text, Text], CascadingDropdownCleanChoice]]
+        ]  # type: CascadingDropdownChoiceList
     else:
         from_end_choice = []
 
@@ -5953,7 +5954,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         ("month_begin", _("At the beginning of every month at day"), Integer(minvalue=1,
                                                                              maxvalue=28)),
-    ]  # type:  List[Union[_Tuple[Text, Text], CascadingDropdownCleanChoice]]
+    ]  # type:  CascadingDropdownChoiceList
     return CascadingDropdown(title=_("Period"),
                              orientation="horizontal",
                              choices=dwm + from_end_choice,
@@ -6078,6 +6079,7 @@ def LogLevelChoice(**kwargs):
 
 
 def rule_option_elements(disabling=True):
+    # type: (bool) -> List[DictionaryEntry]
     elements = [
         ("description",
          TextUnicode(
@@ -6087,7 +6089,7 @@ def rule_option_elements(disabling=True):
          )),
         ("comment", RuleComment()),
         ("docu_url", DocumentationURL()),
-    ]
+    ]  # type: List[DictionaryEntry]
     if disabling:
         elements += [
             ("disabled",
@@ -6101,18 +6103,20 @@ def rule_option_elements(disabling=True):
 
 
 class RuleComment(TextAreaUnicode):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("title", _("Comment"))
-        kwargs.setdefault(
-            "help",
-            _("An optional comment that may be used to explain the purpose of this object. "
-              "The comment is only visible in this dialog and may help other users "
-              "understanding the intentions of the configured attributes."))
-        kwargs.setdefault("rows", 4)
-        kwargs.setdefault("cols", 80)
-        super(RuleComment, self).__init__(**kwargs)
+    def __init__(self):
+        # type: () -> None
+        super(RuleComment, self).__init__(
+            title=_("Comment"),
+            help=_("An optional comment that may be used to explain the purpose of this object. "
+                   "The comment is only visible in this dialog and may help other users "
+                   "understanding the intentions of the configured attributes."),
+            rows=4,
+            cols=80,
+        )
 
-    def render_input(self, varprefix, value):
+    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
+    def render_input(self, varprefix, value):  # type: ignore[override]
+        # type: (str, Text) -> None
         html.open_div(style="white-space: nowrap;")
 
         super(RuleComment, self).render_input(varprefix, value)
@@ -6130,6 +6134,7 @@ class RuleComment(TextAreaUnicode):
 
 
 def DocumentationURL():
+    # type: () -> TextAscii
     return TextAscii(
         title=_("Documentation URL"),
         help=HTML(

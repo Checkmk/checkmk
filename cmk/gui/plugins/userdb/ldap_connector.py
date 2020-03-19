@@ -74,7 +74,7 @@ from cmk.gui.valuespec import (
     Password,
     rule_option_elements,
 )
-from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
@@ -1591,6 +1591,7 @@ class LDAPConnectionValuespec(Transform):
         return connection_elements
 
     def _vs_directory_options(self, ty):
+        # type: (str) -> Dictionary
         connect_to_choices = [
             ("fixed_list", _("Manually specify list of LDAP servers"),
              Dictionary(
@@ -1617,7 +1618,7 @@ class LDAPConnectionValuespec(Transform):
                  ],
                  optional_keys=["failover_servers"],
              )),
-        ]
+        ]  # type: CascadingDropdownChoiceList
 
         if ty == "ad":
             connect_to_choices.append((
@@ -1850,6 +1851,7 @@ class LDAPConnectionValuespec(Transform):
                     connection = get_connection(connection_id)
                     if not connection:
                         continue
+                    assert isinstance(connection, LDAPUserConnector)
                     group_dn = connection.get_group_dn()
 
                 if not group_dn:
@@ -2042,6 +2044,7 @@ def ldap_attr_of_connection(connection_id, attr):
         # The default type is "Active directory", so we use it here.
         return ldap_attr_map["ad"].get(attr, attr).lower()
 
+    assert isinstance(connection, LDAPUserConnector)
     return connection.ldap_attr(attr)
 
 
@@ -2053,6 +2056,7 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
         # The default type is "Active directory", so we use it here.
         return ldap_filter_map["ad"].get(args[0], '(objectclass=*)')
 
+    assert isinstance(connection, LDAPUserConnector)
     return connection.ldap_filter(*args, **kwargs)
 
 
@@ -2603,7 +2607,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # username needs to be used for filtering here.
         user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
-        roles = set([])
+        roles = set()
 
         # Loop all roles mentioned in params (configured to be synchronized)
         for role_id, group_specs in params.items():
@@ -2635,6 +2639,10 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         ldap_groups = {}
         for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
             conn = get_connection(connection_id)
+            if conn is None:
+                continue
+            assert isinstance(conn, LDAPUserConnector)
+
             ldap_groups.update(
                 dict(
                     conn.get_group_memberships(group_dns,
@@ -2676,7 +2684,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         )
 
     def _list_roles_with_group_dn(self):
-        elements = []
+        elements = []  # type: List[DictionaryEntry]
         for role_id, role in load_roles().items():
             elements.append((
                 role_id,

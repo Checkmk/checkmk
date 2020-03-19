@@ -2981,7 +2981,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (Union[None, str, Text], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Union[None, str, Text], Text, str, Optional[str], Optional[HTMLTagAttributeValue], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
@@ -3015,7 +3015,7 @@ class html(ABCHTMLGenerator):
                     target=None,
                     cssclass=None,
                     class_=None):
-        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> None
+        # type: (Optional[str], Text, str, Optional[str], Optional[HTMLTagAttributeValue], Optional[str], Optional[str], Optional[str], CSSSpec) -> None
         self.write_html(
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))

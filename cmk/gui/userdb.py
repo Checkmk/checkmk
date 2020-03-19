@@ -54,6 +54,9 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
     load_roles,  #
     Roles,  #
     RoleSpec,  #
+    UserSpec,  #
+    new_user_template,  #
+    load_cached_profile,  #
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -61,7 +64,6 @@ loaded_with_language = None  # type: Optional[str]
 
 auth_logger = logger.getChild("auth")
 
-UserSpec = Dict[str, Any]  # TODO: Improve this type
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
@@ -203,18 +205,6 @@ def _get_attributes(connection_id, selector):
     return selector(connection) if connection else []
 
 
-def new_user_template(connection_id):
-    # type: (str) -> UserSpec
-    new_user = {
-        'serial': 0,
-        'connector': connection_id,
-    }
-
-    # Apply the default user profile
-    new_user.update(config.default_user_profile)
-    return new_user
-
-
 def create_non_existing_user(connection_id, username):
     # type: (str, UserId) -> None
     if user_exists(username):
@@ -333,7 +323,7 @@ def need_to_change_pw(username):
 
 def _is_local_user(user_id):
     # type: (UserId) -> bool
-    user = _load_cached_profile(user_id)
+    user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
@@ -344,7 +334,7 @@ def _is_local_user(user_id):
 
 def _user_locked(user_id):
     # type: (UserId) -> bool
-    user = _load_cached_profile(user_id)
+    user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
@@ -905,7 +895,7 @@ def _save_user_profiles(updated_profiles):
         if 'last_seen' in user:
             save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
 
-        save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
+        _save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
 
 # During deletion of users we don't delete files which might contain user settings
@@ -1065,7 +1055,7 @@ def create_cmk_automation_user():
     save_users(users)
 
 
-def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
+def _save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     # type: (UserId, UserSpec, List[str], List[str]) -> None
     # Only save contact AND multisite attributes to the profile. Not the
     # infos that are stored in the custom attribute files.
@@ -1077,32 +1067,15 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     config.save_user_file("cached_profile", cache, user_id=user_id)
 
 
-def _load_cached_profile(user_id):
-    # type: (UserId) -> Optional[UserSpec]
-    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
-    return user.load_file("cached_profile", None)
-
-
 def contactgroups_of_user(user_id):
     # type: (UserId) -> List[ContactgroupName]
-    user = _load_cached_profile(user_id)
+    user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
         assert user is not None  # help mypy
 
     return user.get("contactgroups", [])
-
-
-def connection_id_of_user(user_id):
-    # type: (UserId) -> Optional[str]
-    user = _load_cached_profile(user_id)
-    if user is None:
-        # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False).get(user_id, {})
-        assert user is not None  # help mypy
-
-    return user.get("connector")
 
 
 def _convert_idle_timeout(value):

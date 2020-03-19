@@ -85,9 +85,12 @@ from cmk.gui.plugins.userdb.utils import (
     load_roles,
     load_connection_config,
     save_connection_config,
+    new_user_template,
+    load_cached_profile,
 )
 
 import cmk.gui.sites as sites
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -1113,8 +1116,7 @@ class LDAPUserConnector(UserConnector):
                 # use it in case it exists. If not, use the user with the suffix. A connection may
                 # have created users while the connection had no suffix and a suffix has been added
                 # to the connection later.
-                import cmk.gui.userdb as userdb  # TODO: Cleanup
-                if userdb.connection_id_of_user(user_id) == self.id():
+                if self._connection_id_of_user(user_id) == self.id():
                     result = user_id
                 else:
                     result = self._add_suffix(user_id)
@@ -1124,6 +1126,17 @@ class LDAPUserConnector(UserConnector):
 
         self._default_bind(self._ldap_obj)
         return result
+
+    def _connection_id_of_user(self, user_id):
+        # type: (UserId) -> Optional[str]
+        user = load_cached_profile(user_id)
+        if user is None:
+            # No cached profile present. Load all users to get the users data
+            import cmk.gui.userdb as userdb  # TODO: Cleanup
+            user = userdb.load_users(lock=False).get(user_id, {})
+            assert user is not None  # help mypy
+
+        return user.get("connector")
 
     def _user_enforces_this_connection(self, username):
         matched_connection_ids = []
@@ -1178,7 +1191,7 @@ class LDAPUserConnector(UserConnector):
                 user = copy.deepcopy(users[user_id])
                 mode_create = False
             else:
-                user = userdb.new_user_template(self.id())
+                user = new_user_template(self.id())
                 mode_create = True
             return mode_create, user
 

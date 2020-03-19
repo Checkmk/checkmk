@@ -18,11 +18,19 @@ import cmk.utils.plugin_registry
 
 from cmk.gui.i18n import _
 import cmk.gui.config as config
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
+UserSpec = Dict[str, Any]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
+
+
+def load_cached_profile(user_id):
+    # type: (UserId) -> Optional[UserSpec]
+    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
+    return user.load_file("cached_profile", None)
 
 
 def _multisite_dir():
@@ -83,6 +91,18 @@ def _transform_userdb_automatic_sync(val):
         return "all"
 
     return val
+
+
+def new_user_template(connection_id):
+    # type: (str) -> UserSpec
+    new_user = {
+        'serial': 0,
+        'connector': connection_id,
+    }
+
+    # Apply the default user profile
+    new_user.update(config.default_user_profile)
+    return new_user
 
 
 #.

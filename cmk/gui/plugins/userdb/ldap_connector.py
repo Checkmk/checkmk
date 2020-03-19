@@ -38,7 +38,9 @@ import re
 import shutil
 import sys
 import time
-from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, IO, Union, Dict, List, Set, Text,
+)
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -72,6 +74,7 @@ from cmk.gui.valuespec import (
     Age,
     Password,
 )
+from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.plugins.userdb.utils import (
@@ -132,6 +135,9 @@ class MKLDAPException(MKGeneralException):
     pass
 
 
+DistinguishedName = Text
+GroupMemberships = Dict[DistinguishedName, Dict[str, Union[Text, List[Text]]]]
+
 #.
 #   .--UserConnector-------------------------------------------------------.
 #   | _   _                ____                            _               |
@@ -189,7 +195,7 @@ class LDAPUserConnector(UserConnector):
     def __init__(self, cfg):
         super(LDAPUserConnector, self).__init__(self.transform_config(cfg))
 
-        self._ldap_obj = None
+        self._ldap_obj = None  # type: Optional[ldap.ldapobject.ReconnectLDAPObject]
         self._ldap_obj_config = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
@@ -224,15 +230,19 @@ class LDAPUserConnector(UserConnector):
 
     def connect_server(self, server):
         try:
-            trace_args = {}
             if self._logger.isEnabledFor(logging.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
-                trace_args["trace_level"] = 2
-                trace_args["trace_file"] = sys.stderr
+                trace_level = 2
+                trace_file = sys.stderr  # type: Optional[IO[str]]
+            else:
+                trace_level = 0
+                trace_file = None
 
             uri = self._format_ldap_uri(server)
-            conn = ldap.ldapobject.ReconnectLDAPObject(uri, **trace_args)
+            conn = ldap.ldapobject.ReconnectLDAPObject(uri,
+                                                       trace_level=trace_level,
+                                                       trace_file=trace_file)
             conn.protocol_version = self._config.get('version', 3)
             conn.network_timeout = self._config.get('connect_timeout', 2.0)
             conn.retry_delay = 0.5
@@ -474,9 +484,11 @@ class LDAPUserConnector(UserConnector):
         return self._config['group_dn'] != ''
 
     def get_group_dn(self):
+        # type: () -> DistinguishedName
         return self._replace_macros(self._config['group_dn'])
 
     def _get_user_dn(self):
+        # type: () -> DistinguishedName
         return self._replace_macros(self._config['user_dn'])
 
     def _get_suffix(self):
@@ -500,23 +512,27 @@ class LDAPUserConnector(UserConnector):
                 LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
     def needed_attributes(self):
+        # type: () -> List[Text]
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
-        attrs = set([])
+        attrs = set()  # type: Set[Text]
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
 
     def object_exists(self, dn):
+        # type: (DistinguishedName) -> bool
         try:
             return bool(self._ldap_search(dn, columns=['dn'], scope='base'))
         except Exception:
             return False
 
     def user_base_dn_exists(self):
+        # type: () -> bool
         return self.object_exists(self._get_user_dn())
 
     def group_base_dn_exists(self):
+        # type: () -> bool
         return self.object_exists(self.get_group_dn())
 
     def _ldap_paged_async_search(self, base, scope, filt, columns):
@@ -531,6 +547,7 @@ class LDAPUserConnector(UserConnector):
         results = []
         while True:
             # issue the ldap search command (async)
+            assert self._ldap_obj is not None
             msgid = self._ldap_obj.search_ext(base, scope, filt, columns, serverctrls=[lc])
 
             unused_code, response, unused_msgid, serverctrls = self._ldap_obj.result3(
@@ -822,6 +839,7 @@ class LDAPUserConnector(UserConnector):
         return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(self, filters, filt_attr='cn', nested=False):
+        # type: (List[Text], str, bool) -> GroupMemberships
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_search_cache:
             return self._group_search_cache[cache_key]
@@ -843,7 +861,8 @@ class LDAPUserConnector(UserConnector):
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
     def _get_direct_group_memberships(self, filters, filt_attr):
-        groups = {}
+        # type: (List[Text], str) -> GroupMemberships
+        groups = {}  # type: GroupMemberships
         filt = self.ldap_filter('groups')
         member_attr = self._member_attr().lower()
 
@@ -883,7 +902,8 @@ class LDAPUserConnector(UserConnector):
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
     def _get_nested_group_memberships(self, filters, filt_attr):
-        groups = {}
+        # type: (List[Text], str) -> GroupMemberships
+        groups = {}  # type: GroupMemberships
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
         # query instead of one for groups and one for users below when searching for the members.
@@ -937,6 +957,9 @@ class LDAPUserConnector(UserConnector):
                     'cn': cn,
                 }
 
+                members = groups[dn]['members']
+                assert isinstance(members, list)
+
                 # Register the group construct, collect the members later. This way we can also
                 # catch the case where a group refers to itself, which is prevented by some LDAP
                 # editing tools, like "Active Directory Users & Computers", but can somehow be
@@ -947,7 +970,7 @@ class LDAPUserConnector(UserConnector):
                 sub_group_filters = []
                 for obj_dn, obj in self._ldap_search(base_dn, filt, ['dn', 'objectclass'], 'sub'):
                     if "user" in obj['objectclass']:
-                        groups[dn]['members'].append(obj_dn)
+                        members.append(obj_dn)
 
                     elif "group" in obj['objectclass']:
                         sub_group_filters.append(obj_dn)
@@ -957,9 +980,9 @@ class LDAPUserConnector(UserConnector):
                 for _sub_group_dn, sub_group in self.get_group_memberships(sub_group_filters,
                                                                            filt_attr='dn',
                                                                            nested=True).items():
-                    groups[dn]['members'] += sub_group["members"]
+                    members += sub_group["members"]
 
-                groups[dn]['members'].sort()
+                members.sort()
 
         return groups
 
@@ -1417,7 +1440,8 @@ class LDAPConnectionValuespec(Transform):
                                                       forth=LDAPUserConnector.transform_config)
 
     def _general_elements(self):
-        general_elements = []
+        # type: () -> List[DictionaryEntry]
+        general_elements = []  # type: List[DictionaryEntry]
 
         if self._new:
             id_element = (
@@ -1430,7 +1454,7 @@ class LDAPConnectionValuespec(Transform):
                     allow_empty=False,
                     size=12,
                     validate=self._validate_ldap_connection_id,
-                ))
+                ))  # type: DictionaryEntry
         else:
             id_element = ("id", FixedValue(
                 self._connection_id,
@@ -2081,7 +2105,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
 
     # Load all LDAP groups which have a CN matching one contact
     # group which exists in WATO
-    ldap_groups = {}
+    ldap_groups = {}  # type: GroupMemberships
     for conn in connections:
         ldap_groups.update(conn.get_group_memberships(cg_names, nested=nested))
 
@@ -2631,7 +2655,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return ldap_groups
 
     def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch = {}
+        groups_to_fetch = {}  # type: Dict[str, List[Text]]
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:

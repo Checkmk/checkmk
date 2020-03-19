@@ -82,6 +82,7 @@ from cmk.gui.plugins.userdb.utils import (
     user_connector_registry,
     get_user_attributes,
     user_sync_config,
+    load_roles,
 )
 
 import cmk.gui.sites as sites
@@ -2679,9 +2680,8 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         )
 
     def _list_roles_with_group_dn(self):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
         elements = []
-        for role_id, role in userdb.load_roles().items():
+        for role_id, role in load_roles().items():
             elements.append((
                 role_id,
                 Transform(

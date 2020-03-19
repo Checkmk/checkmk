@@ -45,11 +45,15 @@ import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
 
-from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unused-import
     user_attribute_registry,  #
     get_user_attributes,  #
     UserConnector,  #
-    user_connector_registry, user_sync_config,
+    user_connector_registry,  #
+    user_sync_config,  #
+    load_roles,  #
+    Roles,  #
+    RoleSpec,
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -59,8 +63,6 @@ auth_logger = logger.getChild("auth")
 
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
-RoleSpec = Dict[str, Any]  # TODO: Improve this type
-Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 
 
@@ -1113,61 +1115,6 @@ def _convert_idle_timeout(value):
         return int(value)
     except ValueError:
         return None  # Invalid value -> use global setting
-
-
-#.
-#   .-Roles----------------------------------------------------------------.
-#   |                       ____       _                                   |
-#   |                      |  _ \ ___ | | ___  ___                         |
-#   |                      | |_) / _ \| |/ _ \/ __|                        |
-#   |                      |  _ < (_) | |  __/\__ \                        |
-#   |                      |_| \_\___/|_|\___||___/                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
-def load_roles():
-    # type: () -> Roles
-    roles = store.load_from_mk_file(
-        _multisite_dir() + "roles.mk",
-        "roles",
-        default=_get_builtin_roles(),
-    )
-
-    # Make sure that "general." is prefixed to the general permissions
-    # (due to a code change that converted "use" into "general.use", etc.
-    # TODO: Can't we drop this? This seems to be from very early days of the GUI
-    for role in roles.values():
-        for pname, pvalue in role["permissions"].items():
-            if "." not in pname:
-                del role["permissions"][pname]
-                role["permissions"]["general." + pname] = pvalue
-
-    # Reflect the data in the roles dict kept in the config module needed
-    # for instant changes in current page while saving modified roles.
-    # Otherwise the hooks would work with old data when using helper
-    # functions from the config module
-    # TODO: load_roles() should not update global structures
-    config.roles.update(roles)
-
-    return roles
-
-
-def _get_builtin_roles():
-    # type: () -> Roles
-    """Returns a role dictionary containing the bultin default roles"""
-    builtin_role_names = {
-        "admin": _("Administrator"),
-        "user": _("Normal monitoring user"),
-        "guest": _("Guest user"),
-    }
-    return {
-        rid: {
-            "alias": builtin_role_names.get(rid, rid),
-            "permissions": {},  # use default everywhere
-            "builtin": True,
-        } for rid in config.builtin_role_ids
-    }
 
 
 #.

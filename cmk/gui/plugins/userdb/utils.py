@@ -5,14 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    List, Optional, Dict, Any,
+)
 import six
 
 from livestatus import SiteId  # pylint: disable=unused-import
 
-import cmk.gui.config as config
+import cmk.utils.store as store
 import cmk.utils.plugin_registry
 
+from cmk.gui.i18n import _
+import cmk.gui.config as config
+
+RoleSpec = Dict[str, Any]  # TODO: Improve this type
+Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
 
 
@@ -69,6 +76,61 @@ def _transform_userdb_automatic_sync(val):
         return "all"
 
     return val
+
+
+#.
+#   .-Roles----------------------------------------------------------------.
+#   |                       ____       _                                   |
+#   |                      |  _ \ ___ | | ___  ___                         |
+#   |                      | |_) / _ \| |/ _ \/ __|                        |
+#   |                      |  _ < (_) | |  __/\__ \                        |
+#   |                      |_| \_\___/|_|\___||___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def load_roles():
+    # type: () -> Roles
+    roles = store.load_from_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/roles.mk",
+        "roles",
+        default=_get_builtin_roles(),
+    )
+
+    # Make sure that "general." is prefixed to the general permissions
+    # (due to a code change that converted "use" into "general.use", etc.
+    # TODO: Can't we drop this? This seems to be from very early days of the GUI
+    for role in roles.values():
+        for pname, pvalue in role["permissions"].items():
+            if "." not in pname:
+                del role["permissions"][pname]
+                role["permissions"]["general." + pname] = pvalue
+
+    # Reflect the data in the roles dict kept in the config module needed
+    # for instant changes in current page while saving modified roles.
+    # Otherwise the hooks would work with old data when using helper
+    # functions from the config module
+    # TODO: load_roles() should not update global structures
+    config.roles.update(roles)
+
+    return roles
+
+
+def _get_builtin_roles():
+    # type: () -> Roles
+    """Returns a role dictionary containing the bultin default roles"""
+    builtin_role_names = {
+        "admin": _("Administrator"),
+        "user": _("Normal monitoring user"),
+        "guest": _("Guest user"),
+    }
+    return {
+        rid: {
+            "alias": builtin_role_names.get(rid, rid),
+            "permissions": {},  # use default everywhere
+            "builtin": True,
+        } for rid in config.builtin_role_ids
+    }
 
 
 #.

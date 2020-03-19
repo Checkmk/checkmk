@@ -7876,6 +7876,12 @@ graph_info["bandwidth_translated"] = {
         ( "if_in_octets,8,*@bits/s",   "area", _("Input bandwidth") ),
         ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
+    "scalars": [
+        ("if_in_octets:warn", _("Warning (In)")),
+        ("if_in_octets:crit", _("Critical (In)")),
+        ("if_out_octets:warn,-1,*", _("Warning (Out)")),
+        ("if_out_octets:crit,-1,*", _("Critical (Out)")),
+    ],
 }
 
 # Same but for checks that have been translated in to bits/s
@@ -7884,6 +7890,12 @@ graph_info["bandwidth"] = {
     "metrics" : [
         ( "if_in_bps",   "area", ),
         ( "if_out_bps",  "-area", ),
+    ],
+    "scalars": [
+        ("if_in_bps:warn", _("Warning (In)")),
+        ("if_in_bps:crit", _("Critical (In)")),
+        ("if_out_bps:warn,-1,*", _("Warning (Out)")),
+        ("if_out_bps:crit,-1,*", _("Critical (Out)")),
     ],
 }
 

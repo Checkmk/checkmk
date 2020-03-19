@@ -11,8 +11,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import (  # pylint: disable=unused-import
-    Optional,)
+from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
 
 import dicttoxml  # type: ignore[import]
 
@@ -41,7 +40,6 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
-    RequestTimeout,
 )
 
 
@@ -71,7 +69,7 @@ def parse_tree_path(tree_path):
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
     if tree_path.endswith(":"):
         path = tree_path[:-1].strip(".").split(".")
-        attribute_keys = []
+        attribute_keys = []  # type: Optional[List[str]]
     elif tree_path.endswith("."):
         path = tree_path[:-1].strip(".").split(".")
         attribute_keys = None
@@ -181,7 +179,7 @@ def get_history_deltas(hostname, search_timestamp=None):
             previous_timestamp = all_timestamps[new_timestamp_idx - 1]
             required_timestamps = [search_timestamp]
 
-    tree_lookup = {}
+    tree_lookup = {}  # type: Dict[str, Any]
 
     def get_tree(timestamp):
         if timestamp is None:
@@ -232,8 +230,6 @@ def get_history_deltas(hostname, search_timestamp=None):
                     repr((new, changed, removed, delta_tree.get_raw_tree())),
                 )
                 delta_history.append((timestamp, delta_data))
-        except RequestTimeout:
-            raise
         except LoadStructuredDataError:
             corrupted_history_files.append(
                 str(get_short_inventory_history_filepath(hostname, timestamp)))
@@ -337,7 +333,7 @@ def _get_permitted_inventory_paths():
     if 'permitted_inventory_paths' in g:
         return g.permitted_inventory_paths
 
-    user_groups = userdb.contactgroups_of_user(config.user.id)
+    user_groups = [] if config.user.id is None else userdb.contactgroups_of_user(config.user.id)
 
     if not user_groups:
         g.permitted_inventory_paths = None
@@ -356,7 +352,7 @@ def _get_permitted_inventory_paths():
             g.permitted_inventory_paths = None
             return None
 
-        elif inventory_paths == "forbid_all":
+        if inventory_paths == "forbid_all":
             forbid_whole_tree = True
             continue
 
@@ -401,8 +397,8 @@ def page_host_inv_api():
         hosts = request.get("hosts")
         if hosts:
             result = {}
-            for host_name in hosts:
-                result[host_name] = inventory_of_host(host_name, request)
+            for a_host_name in hosts:
+                result[a_host_name] = inventory_of_host(a_host_name, request)
 
         else:
             host_name = request.get("host")

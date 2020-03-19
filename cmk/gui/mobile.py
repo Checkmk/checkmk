@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Set  # pylint: disable=unused-import
+
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
@@ -222,8 +224,9 @@ def page_index():
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
                 view_renderer = MobileViewRenderer(view)
-                count = views.show_view(view, view_renderer, only_count=True)
-                count = '<span class="ui-li-count">%d</span>' % count
+                # TODO: Horrible API ahead!
+                count_num = views.show_view(view, view_renderer, only_count=True)
+                count = '<span class="ui-li-count">%d</span>' % count_num
             items.append((view_spec.get("topic"), url,
                           '%s %s' % (view_spec.get("linktitle", view_spec["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
@@ -283,7 +286,7 @@ def page_view():
         logger.exception("error showing mobile view")
         if config.debug:
             raise
-        html.write("ERROR showing view: %s" % escaping.escape_attribute(e))
+        html.write("ERROR showing view: %s" % escaping.escape_attribute(str(e)))
 
     mobile_html_foot()
 
@@ -440,7 +443,7 @@ def do_commands(view, what, rows):
         return r is None  # Show commands on negative answer
 
     count = 0
-    already_executed = set([])
+    already_executed = set()  # type: Set[str]
     for nr, row in enumerate(rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:

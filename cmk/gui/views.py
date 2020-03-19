@@ -827,7 +827,7 @@ def show_create_view_dialog(next_url=None):
                 next_url = next_url + '&datasource=%s' % ds
             raise HTTPRedirect(next_url)
         except MKUserError as e:
-            html.div(e, class_=["error"])
+            html.div(str(e), class_=["error"])
             html.add_user_error(e.varname, e)
 
     html.begin_form('create_view')
@@ -937,7 +937,7 @@ def view_editor_specs(ds_name, general_properties=True):
                       Dictionary(
                           title=_('View Properties'),
                           render='form',
-                          optional_keys=None,
+                          optional_keys=False,
                           elements=[
                               ('datasource',
                                FixedValue(
@@ -1067,7 +1067,7 @@ def view_editor_specs(ds_name, general_properties=True):
                 Dictionary(
                     title=title,
                     render='form',
-                    optional_keys=None,
+                    optional_keys=False,
                     elements=[
                         (ident,
                          ListOf(
@@ -1087,7 +1087,7 @@ def view_editor_specs(ds_name, general_properties=True):
          Dictionary(
              title=_('Sorting'),
              render='form',
-             optional_keys=None,
+             optional_keys=False,
              elements=[
                  ('sorters',
                   ListOf(
@@ -2444,7 +2444,7 @@ def do_actions(view, what, action_rows, backurl):
         return False
 
     count = 0
-    already_executed = set([])
+    already_executed = set()
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command_entry in core_commands:

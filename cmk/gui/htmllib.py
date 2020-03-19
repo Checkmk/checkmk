@@ -1136,7 +1136,6 @@ class html(ABCHTMLGenerator):
         self.browser_reload = 0.0
         self.browser_redirect = ''
         self.link_target = None  # type: Optional[str]
-        self.myfile = None  # type: Optional[str]
 
         # Browser options
         self.user_errors = {}  # type: Dict[Optional[str], Text]
@@ -1249,7 +1248,7 @@ class html(ABCHTMLGenerator):
             self.screenshotmode = True
 
     def _requested_file_name(self):
-        # type: () -> Optional[str]
+        # type: () -> str
         parts = self.request.requested_file.rstrip("/").split("/")
 
         if len(parts) == 3 and parts[-1] == "check_mk":

@@ -61,6 +61,8 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
     get_connection,  #
     active_connections,  #
     connection_choices,  #
+    cleanup_connection_id,  #
+    release_users_lock,  #
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -147,7 +149,10 @@ def create_non_existing_user(connection_id, username):
         if connection is None:
             raise MKUserError(None, _("Invalid user connection: %s") % connection_id)
 
-        connection.do_sync(add_to_changelog=False, only_username=username)
+        connection.do_sync(add_to_changelog=False,
+                           only_username=username,
+                           load_users_func=load_users,
+                           save_users_func=save_users)
     except MKLDAPException as e:
         show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
     except Exception as e:
@@ -763,11 +768,6 @@ def save_users(profiles):
     hooks.call("users-saved", updated_profiles)
 
 
-def release_users_lock():
-    # type: () -> None
-    store.release_lock(_root_dir() + "contacts.mk")
-
-
 # TODO: Isn't this needed only while generating the contacts.mk?
 #       Check this and move it to the right place
 def _add_custom_macro_attributes(profiles):
@@ -1158,7 +1158,11 @@ def execute_userdb_job():
         logger.debug("Another synchronization job is already running: Skipping this sync")
         return
 
-    job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=False)
+    job.set_function(job.do_sync,
+                     add_to_changelog=False,
+                     enforce_sync=False,
+                     load_users_func=load_users,
+                     save_users_func=save_users)
     job.start()
 
 
@@ -1180,7 +1184,11 @@ def ajax_sync():
     # type: () -> None
     try:
         job = UserSyncBackgroundJob()
-        job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=True)
+        job.set_function(job.do_sync,
+                         add_to_changelog=False,
+                         enforce_sync=True,
+                         load_users_func=load_users,
+                         save_users_func=save_users)
         try:
             job.start()
         except background_job.BackgroundJobAlreadyRunning as e:
@@ -1215,16 +1223,19 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         # type: () -> str
         return html.makeuri_contextless([("mode", "users")], filename="wato.py")
 
-    def do_sync(self, job_interface, add_to_changelog, enforce_sync):
-        # type: (background_job.BackgroundProcessInterface, bool, bool) -> None
+    def do_sync(self, job_interface, add_to_changelog, enforce_sync, load_users_func,
+                save_users_func):
+        # type: (background_job.BackgroundProcessInterface, bool, bool, Callable, Callable) -> None
         job_interface.send_progress_update(_("Synchronization started..."))
-        if self._execute_sync_action(job_interface, add_to_changelog, enforce_sync):
+        if self._execute_sync_action(job_interface, add_to_changelog, enforce_sync, load_users_func,
+                                     save_users_func):
             job_interface.send_result_message(_("The user synchronization completed successfully."))
         else:
             job_interface.send_exception(_("The user synchronization failed."))
 
-    def _execute_sync_action(self, job_interface, add_to_changelog, enforce_sync):
-        # type: (background_job.BackgroundProcessInterface, bool, bool) -> bool
+    def _execute_sync_action(self, job_interface, add_to_changelog, enforce_sync, load_users_func,
+                             save_users_func):
+        # type: (background_job.BackgroundProcessInterface, bool, bool, Callable, Callable) -> bool
         for connection_id, connection in active_connections():
             try:
                 if not enforce_sync and not connection.sync_is_needed():
@@ -1232,7 +1243,10 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
                 job_interface.send_progress_update(
                     _("[%s] Starting sync for connection") % connection_id)
-                connection.do_sync(add_to_changelog=add_to_changelog, only_username=False)
+                connection.do_sync(add_to_changelog=add_to_changelog,
+                                   only_username=False,
+                                   load_users_func=load_users,
+                                   save_users_func=save_users)
                 job_interface.send_progress_update(
                     _("[%s] Finished sync for connection") % connection_id)
             except Exception as e:

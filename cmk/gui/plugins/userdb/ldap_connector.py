@@ -89,6 +89,7 @@ from cmk.gui.plugins.userdb.utils import (
     load_cached_profile,
     get_connection,
     cleanup_connection_id,
+    release_users_lock,
 )
 
 import cmk.gui.sites as sites
@@ -1133,11 +1134,7 @@ class LDAPUserConnector(UserConnector):
         # type: (UserId) -> Optional[str]
         user = load_cached_profile(user_id)
         if user is None:
-            # No cached profile present. Load all users to get the users data
-            import cmk.gui.userdb as userdb  # TODO: Cleanup
-            user = userdb.load_users(lock=False).get(user_id, {})
-            assert user is not None  # help mypy
-
+            return None
         return user.get("connector")
 
     def _user_enforces_this_connection(self, username):
@@ -1166,7 +1163,7 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return '%s@%s' % (username, suffix)
 
-    def do_sync(self, add_to_changelog, only_username):
+    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
         if not self.has_user_base_dn_configured():
             self._logger.info("Not trying sync (no \"user base DN\" configured)")
             return  # silently skip sync without configuration
@@ -1183,8 +1180,7 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        users = userdb.load_users(lock=True)
+        users = load_users_func(lock=True)
 
         changes = []
 
@@ -1303,9 +1299,9 @@ class LDAPUserConnector(UserConnector):
             add_change("edit-users", "<br>".join(changes), add_user=False)
 
         if changes or has_changed_passwords:
-            userdb.save_users(users)
+            save_users_func(users)
         else:
-            userdb.release_users_lock()
+            release_users_lock()
 
         self._set_last_sync_time()
 

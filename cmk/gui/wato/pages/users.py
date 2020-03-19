@@ -107,7 +107,11 @@ class ModeUsers(WatoMode):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
-                job.set_function(job.do_sync, add_to_changelog=True, enforce_sync=True)
+                job.set_function(job.do_sync,
+                                 add_to_changelog=True,
+                                 enforce_sync=True,
+                                 load_users_func=userdb.load_users,
+                                 save_users_func=userdb.save_users)
 
                 try:
                     job.start()

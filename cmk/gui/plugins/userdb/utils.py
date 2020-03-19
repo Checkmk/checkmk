@@ -39,6 +39,16 @@ def _multisite_dir():
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
+def _root_dir():
+    # type: () -> str
+    return cmk.utils.paths.check_mk_config_dir + "/wato/"
+
+
+def release_users_lock():
+    # type: () -> None
+    store.release_lock(_root_dir() + "contacts.mk")
+
+
 def user_sync_config():
     # type: () -> UserSyncConfig
     # use global option as default for reading legacy options and on remote site
@@ -347,7 +357,7 @@ class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(self, add_to_changelog, only_username):
+    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
         pass
 
     # Optional: Tells whether or not the synchronization (using do_sync()

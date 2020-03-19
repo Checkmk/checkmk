@@ -23,7 +23,7 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.section_types import SNMPTree  # pylint: disable=unused-import
+from cmk.base.api.agent_based.section_types import SNMPTree
 
 
 def _validate_parse_function(parse_function):
@@ -88,6 +88,17 @@ def _validate_detect_spec(detect_spec):
         if not isinstance(expected_match, bool):
             TypeError("value of 'detect' keywords third element must be a boolean: %r" %
                       (expected_match,))
+
+
+def _validate_snmp_trees(trees):
+    # type: (List[SNMPTree]) -> None
+    type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
+    if not isinstance(trees, list):
+        raise type_error
+    if not trees:
+        raise type_error
+    if any(not isinstance(element, SNMPTree) for element in trees):
+        raise type_error
 
 
 def _noop_host_label_function(section):  # pylint: disable=unused-argument
@@ -177,6 +188,7 @@ def create_snmp_section_plugin(
 
     _validate_parse_function(parse_function)
     _validate_detect_spec(detect_spec)
+    _validate_snmp_trees(trees)
 
     return SNMPSectionPlugin(
         plugin_name,

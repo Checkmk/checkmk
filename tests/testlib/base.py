@@ -15,7 +15,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # be empty. If that is the case, please remove it entirely.
     ('section', 'bluecat_dhcp'),
     ('section', 'bluecat_dns'),
-    ('section', 'checkpoint_connections'),
     ('section', 'checkpoint_fan'),
     ('section', 'checkpoint_firewall'),
     ('section', 'checkpoint_ha_problems'),

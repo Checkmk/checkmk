@@ -53,7 +53,7 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
     user_sync_config,  #
     load_roles,  #
     Roles,  #
-    RoleSpec,
+    RoleSpec,  #
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -63,7 +63,6 @@ auth_logger = logger.getChild("auth")
 
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
-UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 
 
 # Load all userdb plugins
@@ -1164,39 +1163,6 @@ def _clear_config_based_user_attributes():
 
 # Make the config module initialize the user attributes after loading the config
 config.register_post_config_load_hook(update_config_based_user_attributes)
-
-#.
-#   .--ConnectorCfg--------------------------------------------------------.
-#   |    ____                            _              ____  __           |
-#   |   / ___|___  _ __  _ __   ___  ___| |_ ___  _ __ / ___|/ _| __ _     |
-#   |  | |   / _ \| '_ \| '_ \ / _ \/ __| __/ _ \| '__| |   | |_ / _` |    |
-#   |  | |__| (_) | | | | | | |  __/ (__| || (_) | |  | |___|  _| (_| |    |
-#   |   \____\___/|_| |_|_| |_|\___|\___|\__\___/|_|   \____|_|  \__, |    |
-#   |                                                            |___/     |
-#   +----------------------------------------------------------------------+
-#   | The user can enable and configure a list of user connectors which    |
-#   | are then used by the userdb to fetch user / group information from   |
-#   | external sources like LDAP servers.                                  |
-#   '----------------------------------------------------------------------'
-
-
-def load_connection_config(lock=False):
-    # type: (bool) -> List[UserConnectionSpec]
-    filename = os.path.join(_multisite_dir(), "user_connections.mk")
-    return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
-
-
-def save_connection_config(connections, base_dir=None):
-    # type: (List[UserConnectionSpec], str) -> None
-    if not base_dir:
-        base_dir = _multisite_dir()
-    store.mkdir(base_dir)
-    store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"), "user_connections",
-                          connections)
-
-    for connector_class in user_connector_registry.values():
-        connector_class.config_changed()
-
 
 #.
 #   .-Hooks----------------------------------------------------------------.

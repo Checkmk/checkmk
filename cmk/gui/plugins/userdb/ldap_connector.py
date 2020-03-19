@@ -83,6 +83,8 @@ from cmk.gui.plugins.userdb.utils import (
     get_user_attributes,
     user_sync_config,
     load_roles,
+    load_connection_config,
+    save_connection_config,
 )
 
 import cmk.gui.sites as sites
@@ -1068,8 +1070,7 @@ class LDAPUserConnector(UserConnector):
                     key = what + "_" + key
                 connection[key] = val
 
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        userdb.save_connection_config([connection])
+        save_connection_config([connection])
         config.user_connections.append(connection)
 
     # This function only validates credentials, no locked checking or similar
@@ -2067,8 +2068,7 @@ def get_connection_choices(add_this=True):
     if add_this:
         choices.append((None, _("This connection")))
 
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    for connection in userdb.load_connection_config():
+    for connection in load_connection_config():
         descr = connection['description']
         if not descr:
             descr = connection['id']

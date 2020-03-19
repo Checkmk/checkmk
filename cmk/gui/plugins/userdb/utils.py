@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import os
 from typing import (  # pylint: disable=unused-import
     List, Optional, Dict, Any,
 )
@@ -20,7 +21,13 @@ import cmk.gui.config as config
 
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
+UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
+
+
+def _multisite_dir():
+    # type: () -> str
+    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
 def user_sync_config():
@@ -79,6 +86,39 @@ def _transform_userdb_automatic_sync(val):
 
 
 #.
+#   .--ConnectorCfg--------------------------------------------------------.
+#   |    ____                            _              ____  __           |
+#   |   / ___|___  _ __  _ __   ___  ___| |_ ___  _ __ / ___|/ _| __ _     |
+#   |  | |   / _ \| '_ \| '_ \ / _ \/ __| __/ _ \| '__| |   | |_ / _` |    |
+#   |  | |__| (_) | | | | | | |  __/ (__| || (_) | |  | |___|  _| (_| |    |
+#   |   \____\___/|_| |_|_| |_|\___|\___|\__\___/|_|   \____|_|  \__, |    |
+#   |                                                            |___/     |
+#   +----------------------------------------------------------------------+
+#   | The user can enable and configure a list of user connectors which    |
+#   | are then used by the userdb to fetch user / group information from   |
+#   | external sources like LDAP servers.                                  |
+#   '----------------------------------------------------------------------'
+
+
+def load_connection_config(lock=False):
+    # type: (bool) -> List[UserConnectionSpec]
+    filename = os.path.join(_multisite_dir(), "user_connections.mk")
+    return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+
+
+def save_connection_config(connections, base_dir=None):
+    # type: (List[UserConnectionSpec], str) -> None
+    if not base_dir:
+        base_dir = _multisite_dir()
+    store.mkdir(base_dir)
+    store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"), "user_connections",
+                          connections)
+
+    for connector_class in user_connector_registry.values():
+        connector_class.config_changed()
+
+
+#.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |
 #   |                      |  _ \ ___ | | ___  ___                         |
@@ -92,7 +132,7 @@ def _transform_userdb_automatic_sync(val):
 def load_roles():
     # type: () -> Roles
     roles = store.load_from_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/roles.mk",
+        os.path.join(_multisite_dir(), "roles.mk"),
         "roles",
         default=_get_builtin_roles(),
     )

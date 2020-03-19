@@ -7,7 +7,7 @@
 # yapf: disable
 # type: ignore
 
-checkname = 'emc_ecs_diskio'
+checkname = 'ucd_diskio'
 
 freeze_time = '1970-01-01 00:00:01'
 

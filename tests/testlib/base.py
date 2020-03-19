@@ -28,7 +28,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'cisco_mem_asa'),
     ('section', 'cisco_mem_asa64'),
     ('section', 'emc_ecs_cpu_util'),
-    ('section', 'emc_ecs_diskio'),
     ('section', 'emc_ecs_mem'),
     ('section', 'f5_bigip_cluster'),
     ('section', 'f5_bigip_cluster_status'),

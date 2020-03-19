@@ -2166,15 +2166,28 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     host_only_tcp = set()
 
     for check_plugin_name in check_plugin_names:
+        lookup_plugin_name = check_plugin_name
         if check_plugin_name not in plugins_info:
+            # Some plugins do not properly specify a main check.
+            # This is accounted for at various places, and in order to migrate to the new check API
+            # we need to add this one: If we don't find the section, we just look at the first
+            # matching subcheck.
+            # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
+            # '_get_management_board_precedence'.
+            for name in plugins_info:
+                if cmk.base.check_utils.section_name_of(name) == check_plugin_name:
+                    lookup_plugin_name = name
+                    break
+
+        if lookup_plugin_name not in plugins_info:
             msg = "Unknown plugin file %s" % check_plugin_name
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             console.verbose("%s\n" % msg)
             continue
 
-        is_snmp_check_ = is_snmp_check_f(check_plugin_name)
-        mgmt_board = _get_management_board_precedence(check_plugin_name, plugins_info)
+        is_snmp_check_ = is_snmp_check_f(lookup_plugin_name)
+        mgmt_board = _get_management_board_precedence(lookup_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:
             if is_snmp_check_:
                 host_precedence_snmp.add(check_plugin_name)

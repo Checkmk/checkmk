@@ -27,19 +27,108 @@
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
+import re
+
+
+class PrtconfParser():
+    def __init__(self, info):
+        self.dictionary = {}
+        self.inactiveVolumeGroups = []
+        self.activeVolumeGroups = []
+        self.info = info
+        self.index = 0
+        self.parse()
+
+    def get(self,key):
+        return(self.dictionary.get(key))
+
+    def __setitem__(self,key,element):
+        self.dictionary[key]=element
+
+    def __getitem__(self,key):
+        return(self.dictionary[key])
+
+    def parse(self):
+        self.parseTuples()
+        self.parseVolumeGroups()
+
+    def skip(self):
+        self.index = self.index + 1
+
+    def line(self):
+        return self.info[self.index]
+
+    def nextLine(self):
+        return self.info[self.index + 1]
+
+    def startswith(self, suffix):
+        return (self.line()[0].startswith(suffix))
+
+    def parseTuples(self):
+        while (not (self.startswith("Volume Groups Information"))):
+            self.skip()
+            if not self.line():
+                continue
+            if len(self.line()) == 2:
+                k, v = self.line()
+                self[k] = v.strip()
+
+    def parseVolumeGroups(self):
+        '''
+Volume Groups Information
+Inactive VGs
+==============================================================================
+appvg
+==============================================================================
+Active VGs
+==============================================================================
+free_alt_rootvg:
+PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+hdisk46           active            643         643         129..129..128..128..129
+==============================================================================
+
+p2zgkbos4vg:
+PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+hdisk5            active            643         0           00..00..00..00..00
+hdisk18           active            643         0           00..00..00..00..00
+==============================================================================
+
+INSTALLED RESOURCE LIST'''
+        self.parseInactiveVolumeGroups()
+        self.parseActiveVolumeGroups()
+
+    def parseActiveVolumeGroups(self):
+        while (not (self.startswith("INSTALLED RESOURCE LIST"))):
+            if self.nextLine()[0].startswith("PV_NAME"):
+                volumeGroupName = self.line()[0]
+                self.skip()
+                self.skip()
+                self.parseActiveVolumeGroup(volumeGroupName)
+            self.skip()
+
+    def parseActiveVolumeGroup(self, name):
+        while (not (self.startswith("===="))):
+            self.activeVolumeGroups.append([name]+self.line()[0].split())
+            self.skip()
+
+    def parseInactiveVolumeGroups(self):
+        # Skip to Active VGs
+        while (not (self.startswith("Active VGs"))):
+            self.skip()
+            if self.startswith("Inactive VGs"):
+                self.parseExistingInactiveVolumeGroups()
+
+    def parseExistingInactiveVolumeGroups(self):
+        #We are on the line "Inactive VGs" hence skip two lines to get to the VG names.
+        self.skip()
+        self.skip()
+        while (not (self.startswith("====="))):
+            self.inactiveVolumeGroups.append(self.line()[0])
+            self.skip()
+
 
 def parse_prtconf(info):
-    parsed = {}
-
-    for line in info:
-        if not line:
-            continue
-        if line[0].startswith("========="):
-            break  # ignore the rest of the output currently
-        if len(line) == 2:
-            k, v = line
-            parsed[k] = v.strip()
-
+    parsed = PrtconfParser(info)
     return parsed
 
 
@@ -51,20 +140,24 @@ def _split_vendor(string):
 
 def inv_prtconf(info, inventory_tree):
     parsed = parse_prtconf(info)
+    fillKeyValuePairs(inventory_tree, parsed)
+    fillVolumeGroups(inventory_tree, parsed)
 
+
+def fillKeyValuePairs(inventory_tree, parsed):
     cpu_dict = inventory_tree.get_dict("hardware.cpu.")
     sys_dict = inventory_tree.get_dict("hardware.system.")
     mem_dict = inventory_tree.get_dict("hardware.memory.")
     fmw_dict = inventory_tree.get_dict("software.firmware.")
-
+    net_dict = inventory_tree.get_dict("networking.")
     cpu_type = parsed.get("CPU Type")
     if cpu_type is not None:
-        cpu_dict["arch"] = "ppc64" if cpu_type == "64-bit" else "ppc"
+        cpu_dict["arch"] = "ppc64-123" if cpu_type == "64-bit" else "ppc-123"
 
     kernel_type = parsed.get("Kernel Type")
     if kernel_type is not None:
         os_dict = inventory_tree.get_dict("software.os.")
-        os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
+        os_dict["arch"] = "ppc64-345" if kernel_type == "64-bit" else "ppc-345"
 
     proc_type = parsed.get("Processor Type")
     if proc_type is not None:
@@ -110,6 +203,56 @@ def inv_prtconf(info, inventory_tree):
     if swap is not None:
         mem_dict["total_swap"] = int(swap.replace("MB", "")) * 1024 * 1024
 
+    domainName = parsed.get("Domain Name")
+    if domainName is not None:
+        net_dict["domain_name"] = domainName
+
+    gateway = parsed.get("Gateway")
+    if gateway is not None:
+        net_dict["gateway"] = gateway
+
+    ipAddress = parsed.get("IP Address")
+    if ipAddress is not None:
+        net_dict["ip_address"] = ipAddress
+
+    nameServer = parsed.get("Name Server")
+    if nameServer is not None:
+        net_dict["name_server"] = nameServer
+
+    subNetmask = parsed.get("Sub Netmask")
+    if subNetmask is not None:
+        net_dict["sub_netmask"] = subNetmask
+
+
+def fillVolumeGroups(inventory_tree, parsed):
+
+    def natural_sort(volumes):
+        convert = lambda text: int(text) if text.isdigit() else text.lower()
+        alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['physical_volume_name'])]
+        return sorted(volumes, key = alphanum_key)
+
+    node = inv_tree_list(".hardware.volumes.physical_volumes:")
+    infos = []
+    for item in parsed.activeVolumeGroups:
+        vgName, pvName, pvStatus, pvTotalPartitions, pvFreePartitions, pvDistribution = item
+        dic = {}
+        dic["volume_group_name"] = vgName
+        dic["physical_volume_name"] = pvName
+        dic["physical_volume_status"] = pvStatus
+        dic["physical_volume_total_partitions"] = pvTotalPartitions
+        dic["physical_volume_free_partitions"] = pvFreePartitions
+        infos.append(dic)
+    node.extend(natural_sort(infos))
+    infos = []
+    for item in parsed.inactiveVolumeGroups:
+        dic = {}
+        dic["volume_group_name"] = item
+        dic["physical_volume_name"] = ""
+        dic["physical_volume_status"] = "Inactive"
+        dic["physical_volume_total_partitions"] = ""
+        dic["physical_volume_free_partitions"] = ""
+        infos.append(dic)
+    node.extend(natural_sort(infos))
 
 inv_info['prtconf'] = {
     "inv_function": inv_prtconf,

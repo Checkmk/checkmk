@@ -323,6 +323,21 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.serial": {"title": _("Serial Number")},
     ".hardware.storage.disks:*.size": {"title": _("Size"), "paint": "size"},
     ".hardware.storage.disks:*.type": {"title": _("Type")},
+    ".hardware.storage.physical_volumes:": {
+        "title": ("Physical Volumes"),
+        "keyorder": [
+            "physical_volume_name",
+            "volume_group_name",
+            "physical_volume_status",
+            "physical_volume_total_partitions",
+            "physical_volume_free_partitions"],
+        "view":"physicalvolumes_of_host"
+    },
+    ".hardware.storage.physical_volumes:*.volume_group_name": {"title": _("Volume Group Name")},
+    ".hardware.storage.physical_volumes:*.physical_volume_name": {"title": _("Physical Volume Name")},
+    ".hardware.storage.physical_volumes:*.physical_volume_status": {"title": _("Physical Volume Status")},
+    ".hardware.storage.physical_volumes:*.physical_volume_total_partitions": {"title" : _("Physical Volume Total Partitions")},
+    ".hardware.storage.physical_volumes:*.physical_volume_free_partitions": {"title" : _("Physical Volume Free Partitions")},
     ".hardware.video:": {"title": _("Graphic Cards")},
     ".hardware.video:*.": {"title": _("Graphic Card %d")},
     ".hardware.video:*.name": {"title": _("Graphic Card Name"), "short": _("Card Name")},
@@ -869,6 +884,11 @@ inventory_displayhints.update({
     ".networking.tunnels:*.sourceip": { "title" : _("Source IP Address") },
     ".networking.tunnels:*.tunnel_interface": { "title" : _("Tunnel Interface") },
 
+    ".networking.domain_name": {"title": _("Domain Name")},
+    ".networking.ip_address": {"title": _("IP Address")},
+    ".networking.gateway": {"title": _("Gateway")},
+    ".networking.sub_netmask": {"title": _("Sub Netmask")},
+    ".networking.name_server": {"title": _("Name Server")},
 }
 )
 

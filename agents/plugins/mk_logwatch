@@ -240,6 +240,14 @@ def is_indented(line):
 
 
 def parse_filenames(line):
+    if platform.system() == "Windows":
+        # we can't use pathlib: Python 2.5 has no pathlib
+        # to garantie that backslash is escaped
+        _processed_line = line.replace('\\', '/')
+        _processed_line = os.path.normpath(_processed_line)
+        _processed_line = _processed_line.replace('\\', '\\\\')
+        return shlex.split(_processed_line)
+
     return shlex.split(line)
 
 

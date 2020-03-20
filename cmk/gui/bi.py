@@ -16,12 +16,14 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
 
 import six
+from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
 
 from cmk.utils.defines import host_state_name
 from cmk.utils.regex import regex
+from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -45,6 +47,16 @@ from cmk.gui.permissions import (
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False  # type: Union[bool, None, str]
 compile_logger = logger.getChild("bi.compilation")
+
+BIAggregationTree = Dict[str, Any]  # TODO: Improve this type
+BIAggregationRow = Dict[str, Any]  # TODO: Improve this type
+BIHostSpec = Tuple[SiteId, HostName]
+BIStatusInfoRow = LivestatusRow  # TODO: Improve this type
+BIStatusInfo = Dict[BIHostSpec, BIStatusInfoRow]
+BINeededHosts = Set[BIHostSpec]
+BIAggregationGroupTitle = Text
+BIAggregationTitle = Text
+BITreeState = Any  # TODO: Improve this type
 
 
 @permission_section_registry.register
@@ -158,11 +170,12 @@ g_bi_cache_manager = None  # type: Optional[BICacheManager]
 g_bi_sitedata_manager = None  # type: Optional[BISitedataManager]
 g_bi_job_manager = None  # type: Optional[BIJobManager]
 g_services_items = None
-g_services = {}  # type: Dict[Tuple[Any, Any], Tuple[Any, Any, Any, Any, Any]]
-g_services_by_hostname = {}  # type: Dict[str, List[Tuple[Any, Tuple[Any, Any, Any, Any, Any]]]]
-g_remaining_refs = []  # type: List[Tuple[Any, Any, Any]]
+g_services = {}  # type: Dict[BIHostSpec, Tuple[Any, Any, Any, Any, Any]]
+g_services_by_hostname = {
+}  # type: Dict[HostName, List[Tuple[SiteId, Tuple[Any, Any, Any, Any, Any]]]]
+g_remaining_refs = []  # type: List[Tuple[BIHostSpec, Any, Any]]
 # dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}  # type: Dict[Any, Set[Any]]
+g_compiled_services_leafes = {}  # type: Dict[BIHostSpec, Set[ServiceName]]
 
 g_tree_cache = {}  # type: Dict[str, Any]
 g_config_information = None  # for invalidating cache after config change
@@ -1385,7 +1398,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
         if filter_names and aggr_name not in filter_names:
             return False
 
-        aggr_sites = set(x[0] for x in tree.get("reqhosts"))
+        aggr_sites = set(x[0] for x in tree.get("reqhosts"))  # type: Set[SiteId]
 
         missing_sites.update(aggr_sites - online_sites)
         if not aggr_sites.intersection(online_sites):
@@ -1393,9 +1406,9 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
             return False
         return True
 
-    required_hosts = set()  # type: Set[Any]
-    required_trees = set()  # type: Set[Any]
-    tree_lookup = {}  # type: Dict[Any, Any]
+    required_hosts = set()  # type: BINeededHosts
+    required_trees = set()  # type: Set[BIAggregationTitle]
+    tree_lookup = {}  # type: Dict[BIAggregationTitle, Any]
 
     for group, trees in g_tree_cache["forest"].items():
         if filter_groups and group not in filter_groups:
@@ -1471,7 +1484,7 @@ def compile_forest(only_hosts=None, only_groups=None):
             # Keep this compiled_all block here. If it is done later on, site data will be read..
             if g_bi_cache_manager.get_compiled_all():
                 # Bonus! We do no longer need the host/service data if everthing is compiled. These frees lots of memory
-                log("Is fully compiled with %s" % \
+                log("Is fully compiled with %s" %
                     ", ".join("%s/%s" % x for x in g_bi_cache_manager.get_online_sites()))
                 g_bi_sitedata_manager.discard_cached_data()
                 g_bi_cache_manager.discard_cachefile_data()
@@ -1918,7 +1931,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
 
         elements += new_elements
 
-    needed_hosts = set()  # type: Set[Any]
+    needed_hosts = set()  # type: BINeededHosts
     for element in elements:
         needed_hosts.update(element.get("reqhosts", []))
 
@@ -1963,8 +1976,8 @@ def find_remaining_services(hostspec, aggregation):
     _tags, all_services, _childs, _parents, _alias = g_services[hostspec]
     all_services = set(all_services)
 
-    remaining = all_services - g_compiled_services_leafes.get(hostspec, set([]))
-    g_compiled_services_leafes.get(hostspec, set([])).update(remaining)
+    remaining = all_services - g_compiled_services_leafes.get(hostspec, set())
+    g_compiled_services_leafes.get(hostspec, set()).update(remaining)
     return [{
         "type": NT_LEAF,
         "host": hostspec,
@@ -2166,6 +2179,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
 def execute_tree(tree, status_info=None):
+    # type: (BIAggregationTree, Optional[BIStatusInfo]) -> BITreeState
     aggregation_options = {
         #        "use_aggregation_id": tree["aggregation_id"],
         "node_visualization": tree["node_visualization"],
@@ -2385,9 +2399,10 @@ def execute_rule_node(node, status_info, aggregation_options):
 # Get all status information we need for the aggregation from
 # a known lists of lists (list of site/host pairs)
 def get_status_info(required_hosts):
+    # type: (BINeededHosts) -> BIStatusInfo
     # Query each site only for hosts that that site provides
-    req_hosts = set()
-    req_sites = set()
+    req_hosts = set()  # type: Set[HostName]
+    req_sites = set()  # type: Set[SiteId]
 
     for site, host in required_hosts:
         req_hosts.add(host)
@@ -2408,7 +2423,7 @@ def get_status_info(required_hosts):
     sites.live().set_auth_domain('read')
     sites.live().set_only_sites(None)
     sites.live().set_prepend_site(False)
-    return dict([((e[0], e[1]), e[2:]) for e in data])
+    return {(e[0], e[1]): LivestatusRow(e[2:]) for e in data}
 
 
 # This variant of the function is configured not with a list of
@@ -3221,6 +3236,7 @@ class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
 
 
 def create_aggregation_row(tree, status_info=None):
+    # type: (BIAggregationTree, Optional[BIStatusInfo]) -> BIAggregationRow
     tree_state = execute_tree(tree, status_info)
 
     # TODO: the tree state may include hosts the current user has
@@ -3305,12 +3321,12 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         if only_aggr_name and only_aggr_name != tree.get("title"):
             return False
 
-        aggr_sites = set(x[0] for x in tree.get("reqhosts"))
+        aggr_sites = set(x[0] for x in tree.get("reqhosts"))  # type: Set[SiteId]
         if not aggr_sites.intersection(online_sites):
             return False
         return True
 
-    required_hosts = set()  # type: Set[Any]
+    required_hosts = set()  # type: BINeededHosts
     for group, trees in items.items():
         for tree in trees:
             if not is_tree_required(tree):
@@ -3642,8 +3658,8 @@ def _convert_legacy_aggregation_rule(rule):
             zip(["title", "params", "aggregation", "nodes", "state_messages", "docu_url", "icon"],
                 rule))
 
-    raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
-                          "Aggregation rules must contain at least four elements: "
-                          "description, argument list, aggregation function and "
-                          "list of nodes. This rule is <pre>%s</pre>") % \
-                          pprint.pformat(rule))
+    raise MKConfigError(
+        _("<b>Invalid BI aggregation rule</b>: "
+          "Aggregation rules must contain at least four elements: "
+          "description, argument list, aggregation function and "
+          "list of nodes. This rule is <pre>%s</pre>") % pprint.pformat(rule))

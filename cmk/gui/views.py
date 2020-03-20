@@ -118,7 +118,7 @@ if cmk_version.is_managed_edition():
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-    from cmk.gui.type_defs import Row, Rows, ColumnName  # pylint: disable=unused-import
+    from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName  # pylint: disable=unused-import
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False  # type: Union[bool, None, str]
@@ -131,8 +131,6 @@ multisite_commands = []  # type: List[Dict[str, Any]]
 multisite_datasources = {}  # type: Dict[str, Any]
 multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
 multisite_sorters = {}  # type: Dict[str, Any]
-
-FilterHeaders = str
 
 
 @visual_type_registry.register

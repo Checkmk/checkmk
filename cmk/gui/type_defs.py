@@ -32,6 +32,7 @@ ViewSpec = Dict[str, Any]
 AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
+FilterHeaders = str
 
 # Visual specific
 FilterName = str

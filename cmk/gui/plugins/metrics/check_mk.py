@@ -6516,6 +6516,12 @@ check_metrics["check_mk_active-tcp"] = {
     },
 }
 
+check_metrics["check_mk_active-ldap"] = {
+    "time": {
+        "name": "response_time"
+    },
+}
+
 check_metrics["check-mk-host-tcp"] = {
     "time": {
         "name": "response_time"

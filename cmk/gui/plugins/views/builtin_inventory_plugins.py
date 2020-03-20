@@ -331,7 +331,7 @@ inventory_displayhints.update({
             "physical_volume_status",
             "physical_volume_total_partitions",
             "physical_volume_free_partitions"],
-        "view":"physicalvolumes_of_host"
+        "view": "physicalvolumes_of_host"
     },
     ".hardware.storage.physical_volumes:*.volume_group_name": {"title": _("Volume Group Name")},
     ".hardware.storage.physical_volumes:*.physical_volume_name": {"title": _("Physical Volume Name")},

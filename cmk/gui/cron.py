@@ -6,7 +6,7 @@
 
 import os
 import time
-from typing import Optional  # pylint: disable=unused-import
+from typing import Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -28,7 +28,7 @@ from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
-loaded_with_language = None  # type: Optional[str]
+loaded_with_language = False  # type: Union[bool, None, str]
 
 lock_file = cmk.utils.paths.tmp_dir + "/cron.lastrun"
 

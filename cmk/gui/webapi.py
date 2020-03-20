@@ -8,6 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
+from typing import Union  # pylint: disable=unused-import
 
 import dicttoxml  # type: ignore[import]
 
@@ -47,7 +48,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_host_attributes,
 )
 
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 
 
 def load_plugins(force):

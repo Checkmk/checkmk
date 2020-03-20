@@ -53,7 +53,7 @@ from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint
 quicksearch_match_plugins = []  # type: List[Type[QuicksearchMatchPlugin]]
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 search_plugins = []  # type: List
 
 # TODO: Kept for pre 1.6 plugin compatibility

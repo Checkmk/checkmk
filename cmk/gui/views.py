@@ -121,7 +121,7 @@ if TYPE_CHECKING:
     from cmk.gui.type_defs import Row, Rows, ColumnName  # pylint: disable=unused-import
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.

@@ -76,7 +76,7 @@ if cmk_version.is_managed_edition():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 title_functions = []  # type: List[Callable]
 
 

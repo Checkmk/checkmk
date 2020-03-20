@@ -66,7 +66,7 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
 )
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = None  # type: Optional[str]
+loaded_with_language = False  # type: Union[bool, None, str]
 
 auth_logger = logger.getChild("auth")
 

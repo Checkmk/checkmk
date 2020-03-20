@@ -43,7 +43,7 @@ from cmk.gui.permissions import (
 )
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 compile_logger = logger.getChild("bi.compilation")
 
 

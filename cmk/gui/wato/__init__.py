@@ -79,7 +79,7 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Tuple as _Tuple, Optional as _Optional  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union  # pylint: disable=unused-import
 import six
 
 import cmk.utils.version as cmk_version
@@ -723,7 +723,7 @@ def save_network_scan_result(folder, result):
 
 modes = {}
 
-loaded_with_language = None
+loaded_with_language = False  # type: Union[bool, None, str]
 
 
 def load_plugins(force):

@@ -1701,6 +1701,12 @@ def _is_plugin_precompiled(path, precompiled_path):
     if file_magic != _MAGIC_NUMBER:
         return False
 
+    if sys.version_info[0] >= 3:
+        # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
+        # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
+        file_hash = int(struct.unpack("I", f.read(4))[0])
+        assert file_hash == 0
+
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]
     except struct.error:

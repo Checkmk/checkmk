@@ -19,10 +19,7 @@ def test_mgmt_board_data_source_is_ip_address():
     assert _is_ipaddress("fe80::807c:f8ff:fea9:9f12") is True
 
 
-@pytest.mark.parametrize("ip_in,ips_out", [
-    ("1.2.{3,4,5}.6", ["1.2.3.6", "1.2.4.6", "1.2.5.6"]),
-    (["0.0.0.0", "1.1.1.1/32"], ["0.0.0.0", "1.1.1.1/32"]),
-    ("0.0.0.0 1.1.1.1/32", ["0.0.0.0", "1.1.1.1/32"]),
-])
-def test_normalize_ip(ip_in, ips_out):
-    assert _abstract._normalize_ip_addresses(ip_in) == ips_out
+def test_normalize_ip():
+    assert _abstract._normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert _abstract._normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert _abstract._normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

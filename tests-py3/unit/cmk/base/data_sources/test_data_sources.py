@@ -7,56 +7,15 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.data_sources import DataSources
+from cmk.base.data_sources.piggyback import PiggyBackDataSource
+from cmk.base.data_sources.programs import DSProgramDataSource, SpecialAgentDataSource
+from cmk.base.data_sources.snmp import SNMPDataSource
+from cmk.base.data_sources.tcp import TCPDataSource
 from testlib.base import Scenario
 
 
-@pytest.mark.parametrize("hostname,settings", [
-    ("agent-host", {
-        "tags": {},
-        "sources": ['TCPDataSource', 'PiggyBackDataSource'],
-    }),
-    ("ping-host", {
-        "tags": {
-            "agent": "no-agent"
-        },
-        "sources": ['PiggyBackDataSource'],
-    }),
-    ("snmp-host", {
-        "tags": {
-            "agent": "no-agent",
-            "snmp_ds": "snmp-v2"
-        },
-        "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
-    }),
-    ("snmpv1-host", {
-        "tags": {
-            "agent": "no-agent",
-            "snmp_ds": "snmp-v1"
-        },
-        "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
-    }),
-    ("dual-host", {
-        "tags": {
-            "agent": "cmk-agent",
-            "snmp_ds": "snmp-v2"
-        },
-        "sources": ['TCPDataSource', 'SNMPDataSource', 'PiggyBackDataSource'],
-    }),
-    ("all-agents-host", {
-        "tags": {
-            "agent": "all-agents"
-        },
-        "sources": ['DSProgramDataSource', 'SpecialAgentDataSource', 'PiggyBackDataSource'],
-    }),
-    ("all-special-host", {
-        "tags": {
-            "agent": "special-agents"
-        },
-        "sources": ['SpecialAgentDataSource', 'PiggyBackDataSource'],
-    }),
-])
-def test_data_sources_of_hosts(monkeypatch, hostname, settings):
-    ts = Scenario().add_host(hostname, tags=settings["tags"])
+def make_scenario(hostname, tags):
+    ts = Scenario().add_host(hostname, tags=tags)
     ts.set_ruleset("datasource_programs", [
         ('echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host'], {}),
     ])
@@ -67,8 +26,35 @@ def test_data_sources_of_hosts(monkeypatch, hostname, settings):
             'all-agents-host',
             'all-special-host',
         ], {}),]})
+    return ts
+
+
+@pytest.mark.parametrize("hostname, tags, sources", [
+    ("agent-host", {}, [TCPDataSource, PiggyBackDataSource]),
+    ("ping-host", {
+        "agent": "no-agent"
+    }, [PiggyBackDataSource]),
+    ("snmp-host", {
+        "agent": "no-agent",
+        "snmp_ds": "snmp-v2"
+    }, [SNMPDataSource, PiggyBackDataSource]),
+    ("snmp-host", {
+        "agent": "no-agent",
+        "snmp_ds": "snmp-v1"
+    }, [SNMPDataSource, PiggyBackDataSource]),
+    ("dual-host", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v2"
+    }, [TCPDataSource, SNMPDataSource, PiggyBackDataSource]),
+    ("all-agents-host", {
+        "agent": "all-agents"
+    }, [DSProgramDataSource, SpecialAgentDataSource, PiggyBackDataSource]),
+    ("all-special-host", {
+        "agent": "special-agents"
+    }, [SpecialAgentDataSource, PiggyBackDataSource]),
+])
+def test_get_sources(monkeypatch, hostname, tags, sources):
+    ts = make_scenario(hostname, tags)
     ts.apply(monkeypatch)
 
-    sources = DataSources(hostname, "127.0.0.1")
-    source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
-    assert settings["sources"] == source_names, "Wrong sources for %s" % hostname
+    assert [s.__class__ for s in DataSources(hostname, "127.0.0.1").get_data_sources()] == sources

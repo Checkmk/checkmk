@@ -53,6 +53,7 @@ def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
     ds = SpecialAgentDataSource("testhost", "127.0.0.1", special_agent_id, None)
     monkeypatch.setattr(config, "special_agent_info",
                         {special_agent_id: lambda a, b, c: info_func_result})
+
     command_line, command_stdin = ds._get_command_line_and_stdin()
     assert command_line == agent_prefix + expected[0]
     assert command_stdin == expected[1]

@@ -18,15 +18,18 @@ from testlib.base import Scenario
 def test_data_source_cache_default(monkeypatch):
     Scenario().add_host("hostname").apply(monkeypatch)
     source = SNMPDataSource("hostname", "ipaddress")
-    assert not source.is_agent_cache_disabled()
+
+    assert source.is_agent_cache_disabled() is False
 
 
 def test_disable_data_source_cache(monkeypatch):
     Scenario().add_host("hostname").apply(monkeypatch)
     source = SNMPDataSource("hostname", "ipaddress")
-    assert not source.is_agent_cache_disabled()
+
+    assert source.is_agent_cache_disabled() is False
+
     source.disable_data_source_cache()
-    assert source.is_agent_cache_disabled()
+    assert source.is_agent_cache_disabled() is True
 
 
 def test_disable_data_source_cache_no_read(mocker, monkeypatch):
@@ -52,27 +55,17 @@ def test_disable_data_source_cache_no_write(mocker, monkeypatch):
     disabled_checker.assert_called_once()
 
 
-@pytest.mark.parametrize("result,address,resolvable", [
-    (None, None, True),
-    ("127.0.0.1", "127.0.0.1", True),
-    ("127.0.1.1", "lolo", True),
-    (None, "lolo", False),
+@pytest.mark.parametrize("address, result", [
+    (None, None),
+    ("127.0.0.1", "127.0.0.1"),
+    ("lolo", "127.0.1.1"),
 ])
-def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address,
-                                                           resolvable):
+def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, address, result):
     Scenario().add_host("hostname").apply(monkeypatch)
-    # TODO: Extremely obscure code belwo: The class seems to be abstract??!!
+    # TODO: Extremely obscure code below: The class seems to be abstract??!!
     source = SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
 
-    if resolvable:
-        monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")
-    else:
-
-        def raise_exc(h):
-            raise MKIPAddressLookupError("Failed to...")
-
-        monkeypatch.setattr(ip_lookup, "lookup_ip_address", raise_exc)
-
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")
     monkeypatch.setattr(config, "host_attributes", {
         "hostname": {
             "management_address": address
@@ -80,6 +73,24 @@ def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, 
     })
 
     assert source._management_board_ipaddress("hostname") == result
+
+
+def test_mgmt_board_data_source_address_unresolvable(monkeypatch):
+    Scenario().add_host("hostname").apply(monkeypatch)
+    # TODO: Extremely obscure code below: The class seems to be abstract??!!
+    source = SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
+
+    def failed_ip_lookup(h):
+        raise MKIPAddressLookupError("Failed to ...")
+
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", failed_ip_lookup)
+    monkeypatch.setattr(config, "host_attributes", {
+        "hostname": {
+            "management_address": "lolo"
+        },
+    })
+
+    assert source._management_board_ipaddress("hostname") is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

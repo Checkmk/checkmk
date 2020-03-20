@@ -321,9 +321,11 @@ class UserSelection(DropdownChoice):
             elements = sorted([(name, "%s - %s" % (name, us.get("alias", name)))
                                for (name, us) in users.items()
                                if (not only_contacts or us.get("contactgroups")) and
-                               (not only_automation or us.get("automation_secret"))])
+                               (not only_automation or us.get("automation_secret"))
+                              ])  # type: List[Tuple[Optional[UserId], Text]]
             if nv is not None:
-                elements = [(None, none_value)] + elements
+                empty = [(None, none_value)]  # type: List[Tuple[Optional[UserId], Text]]
+                elements = empty + elements
             return elements
 
         return lambda: get_wato_users(none_value)

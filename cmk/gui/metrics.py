@@ -18,6 +18,7 @@ import abc
 import math
 import string
 import json
+from typing import Any, List, Tuple, Union  # pylint: disable=unused-import
 
 import six
 
@@ -61,7 +62,7 @@ from cmk.gui.plugins.metrics.utils import (  # pylint: disable=unused-import
 #   |  Typical code for loading Multisite plugins of this module           |
 #   '----------------------------------------------------------------------'
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 
 
 def load_plugins(force):
@@ -153,7 +154,7 @@ def _perfometer_expressions(perfometer):
     """Returns all metric expressions of a perfometer
     This is used for checking which perfometer can be displayed for a given service later.
     """
-    required = []
+    required = []  # type: List[Any]
 
     if perfometer["type"] == "linear":
         required += perfometer["segments"][:]
@@ -425,7 +426,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
-            pos = 0
+            pos = 0.0
         else:
             half_value = float(half_value)
             h = math.log(half_value, base)  # value to be displayed at 50%
@@ -539,7 +540,7 @@ class MetricometerRendererDual(MetricometerRenderer):
                   "two definitions, not %d") % len(perfometer["perfometers"]))
 
     def get_stack(self):
-        content = []
+        content = []  # type: List[Tuple[int, str]]
         for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
@@ -621,12 +622,12 @@ def page_graph_dashlet():
     spec = html.request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_identification = json.loads(html.request.var("spec"))
+    graph_identification = json.loads(html.request.get_str_input_mandatory("spec"))
 
     render = html.request.var("render")
     if not render:
         raise MKUserError("render", _("Missing render parameter"))
-    custom_graph_render_options = json.loads(html.request.var("render"))
+    custom_graph_render_options = json.loads(html.request.get_str_input_mandatory("render"))
 
     host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
 
@@ -645,6 +646,7 @@ def page_graph_dashlet():
 
 
 def render_metrics_table(translated_metrics, host_name, service_description):
+    # TODO: Don't paste together strings by hand, use our HTML utilities.
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
         output += "<tr>"
@@ -653,17 +655,18 @@ def render_metrics_table(translated_metrics, host_name, service_description):
         output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
         if not cmk_version.is_raw_edition():
             output += "<td>"
-            output += html.render_popup_trigger(
-                html.render_icon("custom_graph",
-                                 title=_("Add this metric to dedicated graph"),
-                                 cssclass="iconbutton"),
-                ident="add_metric_to_graph_" + host_name + ";" + service_description,
-                what="add_metric_to_graph",
-                url_vars=[
-                    ("host", host_name),
-                    ("service", service_description),
-                    ("metric", metric_name),
-                ])
+            output += str(
+                html.render_popup_trigger(
+                    html.render_icon("custom_graph",
+                                     title=_("Add this metric to dedicated graph"),
+                                     cssclass="iconbutton"),
+                    ident="add_metric_to_graph_" + host_name + ";" + service_description,
+                    what="add_metric_to_graph",
+                    url_vars=[
+                        ("host", host_name),
+                        ("service", service_description),
+                        ("metric", metric_name),
+                    ]))
             output += "</td>"
         output += "</tr>"
     output += "</table>"

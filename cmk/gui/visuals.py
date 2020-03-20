@@ -10,10 +10,11 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Callable, Dict, Iterator, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -196,7 +197,8 @@ def save(what, visuals, user_id=None):
 # FIXME: Currently all user visual files of this type are locked. We could optimize
 # this not to lock all files but only lock the files the user is about to modify.
 def load(what, builtin_visuals, skip_func=None, lock=False):
-    visuals = {}
+    # type: (str, Dict[Any, Any], Optional[Callable[[Dict[Any, Any]], bool]], bool) -> Dict[Tuple[UserId, str], Dict[str, Any]]
+    visuals = {}  # type: Dict[Tuple[UserId, str], Dict[str, Any]]
 
     # first load builtins. Set username to ''
     for name, visual in builtin_visuals.items():
@@ -209,7 +211,7 @@ def load(what, builtin_visuals, skip_func=None, lock=False):
         visual.setdefault('description', '')
         visual.setdefault('hidden', False)
 
-        visuals[('', name)] = visual
+        visuals[(UserId(''), name)] = visual
 
     # Now scan users subdirs for files "user_*.mk"
     visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
@@ -230,7 +232,8 @@ def transform_old_visual(visual):
 
 
 def load_user_visuals(what, builtin_visuals, skip_func, lock):
-    visuals = {}
+    # type: (str, Dict[Any, Any], Optional[Callable[[Dict[Any, Any]], bool]], bool) -> Dict[Any, Any]
+    visuals = {}  # type: Dict[Any, Any]
 
     subdirs = os.listdir(config.config_dir)
     for user in subdirs:
@@ -249,7 +252,7 @@ def load_user_visuals(what, builtin_visuals, skip_func, lock):
             if not os.path.exists(path):
                 continue
 
-            if not userdb.user_exists(user):
+            if not userdb.user_exists(UserId(user)):
                 continue
 
             user_visuals = _user_visuals_cache.get(path)
@@ -336,7 +339,7 @@ def available(what, all_visuals):
             return True
 
         if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
-            user_groups = set(userdb.contactgroups_of_user(user))
+            user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
             if user_groups.intersection(visual["public"][1]):
                 return True
 
@@ -447,7 +450,8 @@ def page_list(what,
     delname = html.request.var("_delete")
     if delname and html.transaction_valid():
         if config.user.may('general.delete_foreign_%s' % what):
-            user_id = html.request.var('_user_id', config.user.id)
+            user_id_str = html.request.get_unicode_input('_user_id', config.user.id)
+            user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = config.user.id
 
@@ -695,7 +699,7 @@ def get_context_specs(visual, info_handler):
 
 
 def process_context_specs(context_specs):
-    context = {}
+    context = {}  # type: Dict[Any, Any]
     for info_key, spec in context_specs:
         ident = 'context_' + info_key
 
@@ -735,7 +739,7 @@ def page_edit_visual(what,
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type.plural_title)
     visual = {
         'link_from': {},
-    }
+    }  # type: Dict[str, Any]
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
     visualname = html.request.var("load_name")
@@ -767,7 +771,8 @@ def page_edit_visual(what,
             if cloneuser == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:
-            owner_user_id = html.request.var("owner", config.user.id)
+            user_id_str = html.request.get_unicode_input("owner", config.user.id)
+            owner_user_id = None if user_id_str is None else UserId(user_id_str)
             visual = all_visuals.get((owner_user_id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname))  # load builtin visual
@@ -830,7 +835,7 @@ def page_edit_visual(what,
              title=_('Do not show a context button to this %s') % visual_type.title,
              totext="",
          )),
-    ]
+    ]  # type: List[Tuple[str, ValueSpec]]
     if config.user.may("general.publish_" + what):
         with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
         visibility_elements.append(('public',
@@ -842,7 +847,7 @@ def page_edit_visual(what,
     vs_general = Dictionary(
         title=_("General Properties"),
         render='form',
-        optional_keys=None,
+        optional_keys=False,
         elements=[
             single_infos_spec(single_infos),
             ('name',
@@ -1212,8 +1217,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
                     if filter_object.info in single_infos:
                         context[filter_name] = html.request.get_unicode_input_mandatory(varname)
                         break
-                    else:
-                        this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
+                    this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
             if this_filter_vars:
                 context[filter_name] = this_filter_vars
     return context
@@ -1253,10 +1257,8 @@ def get_filter_headers(table, infos, context):
                 html.request.set_var(filter_name, filter_vars)
 
         # Apply the site hint / filter (Same logic as in views.py)
-        if html.request.var("site"):
-            only_sites = [html.request.var("site")]
-        else:
-            only_sites = None
+        site_str = html.request.var("site")
+        only_sites = [site_str] if site_str else None
 
         # Now compute filter headers for all infos of the used datasource
         for filter_name, filter_class in filter_registry.items():
@@ -1298,18 +1300,15 @@ class VisualFilterList(ListOfMultiple):
 
     @classmethod
     def _get_filter_specs(cls, infos, ignore):
-        fspecs = {}
+        fspecs = {}  # type: Dict[str, VisualFilter]
         for info in infos:
             for fname, filter_ in filters_allowed_for_info(info).items():
                 if fname not in fspecs and fname not in ignore:
-                    fspecs[fname] = VisualFilter(
-                        fname,
-                        title=filter_.title,
-                    )
+                    fspecs[fname] = VisualFilter(fname, title=filter_.title)
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore = kwargs.pop("ignore", set())
+        ignore = kwargs.pop("ignore", set())  # type: Set[Text]
         self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))

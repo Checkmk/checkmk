@@ -569,12 +569,13 @@ class GUIViewRenderer(ViewRenderer):
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
         # In case of the web service we show errors only on single site installations.
-        if config.show_livestatus_errors \
-           and display_options.enabled(display_options.W) \
-           and html.output_format == "html":
+        if (config.show_livestatus_errors and display_options.enabled(display_options.W) and
+                html.output_format == "html"):
             for info in sites.live().dead_sites().values():
-                html.show_error("<b>%s - %s</b><br>%s" %
-                                (info["site"]["alias"], _('Livestatus error'), info["exception"]))
+                if isinstance(info["site"], dict):
+                    html.show_error(
+                        "<b>%s - %s</b><br>%s" %
+                        (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
         # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
         if display_options.enabled(display_options.R):
@@ -673,14 +674,16 @@ def transform_old_dict_based_icons():
 
 
 def _register_tag_plugins():
-    if hasattr(_register_tag_plugins, "_config_hash") \
-       and _register_tag_plugins._config_hash == hash(repr(config.tags.get_dict_format())):
+    if getattr(_register_tag_plugins, "_config_hash", None) == _calc_config_hash():
         return  # No re-register needed :-)
-
     _register_host_tag_painters()
     _register_host_tag_sorters()
+    setattr(_register_tag_plugins, "_config_hash", _calc_config_hash())
 
-    _register_tag_plugins._config_hash = hash(repr(config.tags.get_dict_format()))
+
+def _calc_config_hash():
+    # type: () -> int
+    return hash(repr(config.tags.get_dict_format()))
 
 
 config.register_post_config_load_hook(_register_tag_plugins)

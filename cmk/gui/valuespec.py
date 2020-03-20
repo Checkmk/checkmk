@@ -2086,7 +2086,7 @@ class ListOfMultiple(ValueSpec):
         self,
         choices,  # type: List[_Tuple[str, ValueSpec]]
         choice_page_name,  # type: str
-        page_request_vars=None,  # type: Dict[Text, Text]
+        page_request_vars=None,  # type: Dict[Text, Any]
         size=None,  # type: _Optional[int]
         add_label=None,  # type: _Optional[Text]
         del_label=None,  # type: _Optional[Text]
@@ -2158,9 +2158,12 @@ class ListOfMultiple(ValueSpec):
                       class_="vlof_filter" if self._delete_style == "filter" else None)
         html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
         html.jsbutton(
-            varprefix + '_add', self._add_label, "cmk.valuespecs.listofmultiple_add(%s, %s, %s)" %
-            (json.dumps(varprefix), json.dumps(
-                self._choice_page_name), json.dumps(self._page_request_vars)))
+            varprefix + '_add',
+            self._add_label,
+            "cmk.valuespecs.listofmultiple_add(%s, %s, %s)" % (
+                json.dumps(varprefix),  #
+                json.dumps(self._choice_page_name),
+                json.dumps(self._page_request_vars)))
 
     def show_choice_row(self, varprefix, ident, value):
         # type: (str, str, Dict[str, Any]) -> None

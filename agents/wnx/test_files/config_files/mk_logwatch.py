@@ -515,7 +515,14 @@ class LogLinesIter(object):
         self._lines = []
 
     def push_back_line(self, line):
-        self._lines.insert(0, line.encode(self._enc))
+        """
+        in Python-3 only bytes as param is expected
+        still current tests may or will deliver unicode
+        """
+        if isinstance(line, bytes):
+            self._lines.insert(0, line)  # in python 3 we expect only bytes
+        else:
+            self._lines.insert(0, line.encode(self._enc))
 
     def next_line(self):
         if self._reached_end:  # optimization only

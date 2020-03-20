@@ -107,7 +107,7 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
 
 def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):
     # TODO: these don't have scan functions. Fix that! (CMK-4046)
-    known_offenders = {'emc_ecs_cpu_util', 'emc_ecs_mem'}
+    known_offenders = {'emc_ecs_mem'}
     assert not set(snmp_scan_functions) & known_offenders  # make sure this kept up to date
     assert set(snmp_scan_functions) | known_offenders == set(snmp_info)
 

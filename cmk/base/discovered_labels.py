@@ -116,12 +116,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
 
 
 class ABCLabel(object):  # pylint: disable=useless-object-inheritance
-    """Representing a service label in Checkmk
-
-    This class is meant to be exposed to the check API. It will be usable in
-    the discovery function to create a new label like this:
-
-    yield ServiceLabel(u"my_label_key", u"my_value")
+    """Representing a label in Checkmk
     """
 
     __slots__ = ["_name", "_value"]
@@ -152,9 +147,24 @@ class ABCLabel(object):  # pylint: disable=useless-object-inheritance
         # type: () -> Text
         return "%s:%s" % (self._name, self._value)
 
+    def __repr__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self._name, self._value)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" % (type(self), type(other)))
+        return self.__dict__ == other.__dict__
+
 
 class ServiceLabel(ABCLabel):
-    pass
+    # This docstring is exposed by the agent_based API!
+    """Representing a service label in Checkmk
+
+    This class creates a service label that can be passed to a 'Service' object.
+    It can be used in the discovery function to create a new label like this:
+
+    my_label = ServiceLabel(u"my_label_key", u"my_value")
+    """
 
 
 class HostLabel(ABCLabel):

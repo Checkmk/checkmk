@@ -7,6 +7,7 @@ ENV LANG=C.UTF-8
 
 ARG PACKAGES
 
+# Install 'setuptools<45' to prevent deprection warning (https://github.com/pypa/setuptools/issues/1458)
 RUN apt-get update \
     && apt-get install -y \
     gdebi \
@@ -29,9 +30,9 @@ RUN apt-get update \
     && apt-get install -y nodejs \
     && apt-get install -y \
     $PACKAGES \
-    && pip install --upgrade pip \
-    && pip install --upgrade setuptools \
-    && pip install enum34 typing \
+    && pip install --upgrade pip==20.0.2 zipp==1.2.0 \
+    && pip install --upgrade 'setuptools<45' \
+    && pip install enum34==1.1.10 typing==3.7.4.1 \
     && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && rm -rf /var/lib/apt/lists/*
 

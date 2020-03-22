@@ -546,7 +546,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 def _convert_perf_data(p):
     # type: (List[UncleanPerfValue]) -> str
-    # replace None with "" and fill up to 7 values
+    # replace None with "" and fill up to 6 values
     normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 

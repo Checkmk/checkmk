@@ -67,7 +67,7 @@ class LayoutPython(Layout):
             html.write_text("[")
             for cell in cells:
                 joined_row = join_row(row, cell)
-                _tdclass, content = cell.render_content(joined_row)
+                content = cell.render_for_export(joined_row)
                 html.write(repr(escaping.strip_tags(content)))
                 html.write_text(",")
             html.write_text("],")
@@ -87,7 +87,7 @@ class JSONLayout(Layout):
             painted_row = []
             for cell in cells:
                 joined_row = join_row(row, cell)
-                content = cell.render_content(joined_row)[1]
+                content = cell.render_for_export(joined_row)
                 if isinstance(content, (list, dict)):
                     # Allow painters to return lists and dicts, then json encode them
                     # as such data structures without wrapping them into strings
@@ -197,7 +197,7 @@ class CSVLayout(Layout):
                 else:
                     html.write(csv_separator)
                 joined_row = join_row(row, cell)
-                _tdclass, content = cell.render_content(joined_row)
+                content = cell.render_for_export(joined_row)
                 html.write('"%s"' % self._format_for_csv(content))
 
     def _format_for_csv(self, raw_data):

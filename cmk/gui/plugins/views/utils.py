@@ -1940,6 +1940,24 @@ class Cell(object):
             raise MKGeneralException('Failed to paint "%s": %s' %
                                      (self.painter_name(), traceback.format_exc()))
 
+    # TODO: We really should have some intermediate "data" layer that would make it possible to
+    # extract the data for the export in a cleaner way.
+    def render_for_export(self, row):
+        # type: (Row) -> CellContent
+        rendered_txt = self.render_content(row)[1]
+        if rendered_txt is None:
+            return ""
+
+        txt = rendered_txt.strip()  # type: Text
+
+        # Similar to the PDF rendering hack above, but this time we extract the title from our icons
+        # and add them to the CSV export instead of stripping the whole HTML tag.
+        # Current limitation: *one* image
+        assert not isinstance(txt, tuple)
+        if txt.lower().startswith("<img"):
+            txt = re.sub('.*title=["\']([^\'"]*)["\'].*', "\\1", str(txt))
+        return txt
+
     def render_content(self, row):
         if not row:
             return "", ""  # nothing to paint

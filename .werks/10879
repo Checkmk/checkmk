@@ -1,0 +1,17 @@
+Title: View CSV export: Add titles of icons to exported columns
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p11
+Date: 1584902019
+
+In previous versions, the CSV export completely removed the HTML code of icons
+from the cells, which resulted in some cells containing only icons being
+completely empty.
+
+Now the hover titles of icons are displayed in the CSV exports instead of
+icons.

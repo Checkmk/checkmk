@@ -14,5 +14,5 @@ item:
  The ID of the PNode.
 
 inventory:
- Finds one item per PNode
+ One service is created for each PNode.
 

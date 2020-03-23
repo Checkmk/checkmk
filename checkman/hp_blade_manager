@@ -21,4 +21,4 @@ item:
  Number of the manager
 
 inventory:
- All manager boards with the present state "present" are automatically inventorized.
+ One service is created for each manager boards with the state "present".

@@ -12,7 +12,7 @@ description:
  Returns {CRIT} on state "failed" and {UNKN} on every other state.
 
 inventory:
- Creates one check for every PSU in the HNAS system.
+ One service is created for each PSU in the HNAS system.
 
 item:
  The ID of the PNode plus the ID of the PSU, separated by a dot. E. g. 1.2

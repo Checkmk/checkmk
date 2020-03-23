@@ -15,4 +15,4 @@ item:
  Name of the product
 
 inventory:
- Only one service will be created.
+ One service is created for the system health.

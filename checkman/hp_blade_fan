@@ -15,4 +15,4 @@ item:
  Number of the fan
 
 inventory:
- All FANs with the present state "present" are automatically inventorized.
+ One service is created for each fan with the state "present".

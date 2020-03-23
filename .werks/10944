@@ -1,0 +1,10 @@
+Title: agent_jira: Updated mkp of feature pack to version 1.2
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584990145
+Class: fix
+
+Fixed limitation of 1000 processed results.

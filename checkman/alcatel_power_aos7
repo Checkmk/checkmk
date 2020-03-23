@@ -15,19 +15,35 @@ description:
 
  - OmniSwitch 10K: AOS 8.3.1.377.R01 Service Release
 
- Check status:
+ The status of the service is
 
- - {OK} in case the monitored value is one of:
-   {up}, {master}
+ {OK} in case the monitored value is one of:
 
- - {WARN} in case the monitored value is one of:
-   {testing}, {secondary}, {idle}, {pwrsave}
+ - {up}
 
- - {CRIT} in case the monitored value is one of:
-   {down}, {unpowered}
+ - {master}
 
- - {UNKNOWN} in case the monitored value is one of:
-   {unknown}
+ {WARN} in case the monitored value is one of:
+
+ - {testing}
+
+ - {secondary}
+
+ - {idle}
+
+ - {pwrsave}
+
+ {CRIT} in case the monitored value is one of:
+
+ - {down}
+
+ - {unpowered}
+
+ {UNKNOWN} in case the monitored value is one of:
+
+ - {unknown}
+
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
 
 item:
  The ID of the power supply as output from the SNMP agent.

@@ -4,13 +4,37 @@ catalog: hw/network/alcatel
 license: GPL
 distribution: check_mk
 description:
- This Check Monitors the oper, alarm and admin states in Alcatel switchtes supporting the
- TIMETRA-CHASSIS-MIB. It rasises {CRIT} if the component enters an Alarm state.
- There is also {CRIT} if the Operstate changes to "failed" or "out of serrvices", or the Adminstate
- changes to "diagnose" or "operate switch".
- There is a {WARN} in case of "booting", "diagnosing" "upgrade", "downgrade".
+ This Check Monitors the
+
+ - oper
+
+ - alarm
+
+ - admin
+
+ states in Alcatel switches.
+
+ It raises {CRIT}
+
+ - if the component enters an Alarm state.
+
+ - if the Operstate changes to "failed" or "out of serrvices"
+
+ - if the Adminstate changes to "diagnose" or "operate switch"
+
+ There is a {WARN} in case of
+
+ - "booting"
+
+ - "diagnosing"
+
+ - "upgrade"
+
+ - "downgrade"
 
  No Configuration is needed.
+
+ The check uses the ALCATEL-IND1-TIMETRA-CHASSIS-MIB.
 
 item:
  The name of the device.

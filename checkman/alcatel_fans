@@ -15,7 +15,19 @@ description:
 
  - OmniSwitch 6450-10: AOS 6.7.2.191.R04 GA
 
- The status is automaticly reported by the device, so no configuration is needed
+ The service is {OK} if the fan state is "running".
+
+ In all other cases
+
+ - "not running"
+
+ - "has no status"
+
+ the service goes {CRIT}.
+
+ The status is automatically reported by the device, so no configuration is needed
+
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
 
 item:
  Number of the fan based on the order in info entries

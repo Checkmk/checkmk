@@ -15,7 +15,9 @@ description:
 
  - OmniSwitch 6450-10: AOS 6.7.2.191.R04 GA
 
- If one of the two power supplies fails, the check returns {CRIT}.
+ If one of the two power supplies fails, the service goes {CRIT}.
+
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
 
 item:
  The ID of the power supply as output from the SNMP agent.

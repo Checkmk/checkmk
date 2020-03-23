@@ -17,6 +17,10 @@ description:
 
  If the CPU Temperature is supported depends on the switch mode (not supported on Hawk models).
 
+ The check has configurable levels for {WARN}/{CRIT} (default: 45, 50)
+
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
+
 item:
  The slot index and the name of the CPU. The slot index is optional
 

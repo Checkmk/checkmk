@@ -16,7 +16,19 @@ description:
 
  - OmniSwitch 10K: AOS 8.3.1.377.R01 Service Release
 
- The status is automaticly reported by the device, so no configuration is needed.
+ The service is {OK} if the fan state is "running".
+
+ In all other cases
+
+ - "not running"
+
+ - "has no status"
+
+ the service goes {CRIT}.
+
+ The status is automatically reported by the device, so no configuration is needed
+
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
 
 item:
  Number of the fan based on the order in info entries

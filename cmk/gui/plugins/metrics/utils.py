@@ -191,7 +191,7 @@ def split_unit(value_text):
 
 
 def parse_perf_data(perf_data_string, check_command=None):
-    # type: (str, Optional[str]) -> Tuple[List, Optional[str]]
+    # type: (str, Optional[str]) -> Tuple[List, str]
     """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:

@@ -2720,7 +2720,7 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def normalize_choices(self, choices):
-        # type: (List[Union[_Tuple[str, Text], CascadingDropdownCleanChoice]]) -> CascadingDropdownCleanChoices
+        # type: (CascadingDropdownChoiceList) -> CascadingDropdownCleanChoices
         new_choices = []  # type: CascadingDropdownCleanChoices
         for entry in choices:
             if len(entry) == 2:  # plain entry with no sub-valuespec
@@ -3953,7 +3953,7 @@ class Timerange(CascadingDropdown):
         self,
         allow_empty=False,  # type: bool
         include_time=False,  # type: bool
-        choices=None,  # type: Union[None, List[Union[_Tuple[Text, Text], _Tuple[Text, Text, ValueSpec]]], Callable]
+        choices=None,  # type: Union[None, CascadingDropdownChoiceList, Callable[[], CascadingDropdownChoiceList]]
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: _Optional[Text]
@@ -3999,10 +3999,10 @@ class Timerange(CascadingDropdown):
         self._fixed_choices = choices
 
     def _prepare_choices(self):
+        # type: () -> CascadingDropdownChoiceList
         # TODO: We have dispatching code like this all over place...
         if self._fixed_choices is None:
-            choices = [
-            ]  # type: List[Union[_Tuple[_Optional[Text], Text], _Tuple[Text, Text, ValueSpec]]]
+            choices = []  # type: CascadingDropdownChoiceList
         elif isinstance(self._fixed_choices, list):
             choices = list(self._fixed_choices)
         elif callable(self._fixed_choices):
@@ -4011,7 +4011,7 @@ class Timerange(CascadingDropdown):
             raise ValueError("invalid type for choices")
 
         if self._allow_empty:
-            choices += [(None, '')]
+            choices += [(None, '', None)]
 
         choices += self._get_graph_timeranges() + [
             ("d0", _("Today")),

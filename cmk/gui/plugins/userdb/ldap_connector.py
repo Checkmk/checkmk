@@ -310,9 +310,8 @@ class LDAPUserConnector(UserConnector):
            and self._config == self._ldap_obj_config:
             self._logger.info('LDAP CONNECT - Using existing connecting')
             return  # Use existing connections (if connection settings have not changed)
-        else:
-            self._logger.info('LDAP CONNECT - Connecting...')
-            self.disconnect()
+        self._logger.info('LDAP CONNECT - Connecting...')
+        self.disconnect()
 
         # Some major config var validations
 
@@ -441,8 +440,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
             if catch:
                 raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
-            else:
-                raise
+            raise
 
     def servers(self):
         connect_params = self._get_connect_params()
@@ -517,8 +515,7 @@ class LDAPUserConnector(UserConnector):
                       "The LDAP connections %s and %s both use "
                       "the suffix %s which is not allowed.") %
                     (LDAPUserConnector.connection_suffixes[suffix], self.id(), suffix))
-            else:
-                LDAPUserConnector.connection_suffixes[suffix] = self.id()
+            LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
     def needed_attributes(self):
         # type: () -> List[Text]
@@ -651,9 +648,8 @@ class LDAPUserConnector(UserConnector):
                     (escaping.escape_attribute(base), escaping.escape_attribute(scope),
                      escaping.escape_attribute(filt), escaping.escape_attribute(
                          ','.join(columns)), last_exc))
-            else:
-                raise MKLDAPException(
-                    _('Unable to successfully perform the LDAP search (%s)') % last_exc)
+            raise MKLDAPException(
+                _('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
         self._logger.info('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
         return result
@@ -662,12 +658,11 @@ class LDAPUserConnector(UserConnector):
         # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
         if scope in ['sub', 'subtree']:
             return ldap.SCOPE_SUBTREE
-        elif scope == 'base':
+        if scope == 'base':
             return ldap.SCOPE_BASE
-        elif scope == 'one':
+        if scope == 'one':
             return ldap.SCOPE_ONELEVEL
-        else:
-            raise Exception('Invalid scope specified: %s' % scope)
+        raise Exception('Invalid scope specified: %s' % scope)
 
     # Returns the ldap filter depending on the configured ldap directory type
     def ldap_filter(self, key, handle_config=True):
@@ -1091,9 +1086,8 @@ class LDAPUserConnector(UserConnector):
         enforce_this_connection = self._user_enforces_this_connection(user_id)
         if enforce_this_connection is False:
             return None  # Skip this connection, another one is enforced
-        else:
-            # Always use the stripped user ID for communication with the LDAP server
-            user_id = self._strip_suffix(user_id)
+        # Always use the stripped user ID for communication with the LDAP server
+        user_id = self._strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the user_id as tuple which are both needed for
@@ -1144,10 +1138,9 @@ class LDAPUserConnector(UserConnector):
 
         if not matched_connection_ids:
             return None
-        elif len(matched_connection_ids) > 1:
+        if len(matched_connection_ids) > 1:
             raise MKUserError(None, _("Unable to match connection"))
-        else:
-            return matched_connection_ids[0] == self.id()
+        return matched_connection_ids[0] == self.id()
 
     def _username_matches_suffix(self, username, suffix):
         return username.endswith('@' + suffix)
@@ -2300,7 +2293,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                     'locked': True,
                     'serial': user.get('serial', 0) + 1,
                 }
-            elif not locked_in_ad and locked_in_cmk:
+            if not locked_in_ad and locked_in_cmk:
                 return {
                     'locked': False,
                 }

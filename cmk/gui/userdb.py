@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -248,7 +248,7 @@ def need_to_change_pw(username):
             # from needing to set a new password after enabling aging.
             save_custom_attr(username, 'last_pw_change', str(int(time.time())))
             return False
-        elif time.time() - last_pw_change > max_pw_age:
+        if time.time() - last_pw_change > max_pw_age:
             return 'expired'
     return False
 
@@ -367,8 +367,7 @@ def is_valid_user_session(username, session_id):
     session_info = load_session_info(username)
     if session_info is None:
         return False  # no session active
-    else:
-        active_session_id, last_activity = session_info
+    active_session_id, last_activity = session_info
 
     if session_id == active_session_id:
         return True  # Current session. Fine.
@@ -742,7 +741,7 @@ def get_online_user_ids():
 
 def split_dict(d, keylist, positive):
     # type: (Dict[str, Any], List[str], bool) -> Dict[str, Any]
-    return dict([(k, v) for (k, v) in d.items() if (k in keylist) == positive])
+    return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
 def save_users(profiles):
@@ -887,11 +886,11 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in updated_profiles.items():
-        users[uid] = dict([
-            (p, val)
+        users[uid] = {
+            p: val
             for p, val in profile.items()
             if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]
-        ])
+        }
 
     # Check_MK's monitoring contacts
     store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"),
@@ -1108,7 +1107,7 @@ def hook_login(username, password):
 
             return result
 
-        elif result is False:
+        if result is False:
             return False
 
     return False
@@ -1130,8 +1129,7 @@ def hook_save(users):
         except Exception as e:
             if config.debug:
                 raise
-            else:
-                show_exception(connection_id, _("Error during saving"), e)
+            show_exception(connection_id, _("Error during saving"), e)
 
 
 def general_userdb_job():
@@ -1200,8 +1198,7 @@ def ajax_sync():
         logger.exception("error synchronizing user DB")
         if config.debug:
             raise
-        else:
-            html.write('ERROR %s\n' % e)
+        html.write('ERROR %s\n' % e)
 
 
 @gui_background_job.job_registry.register

@@ -5991,6 +5991,7 @@ def test_registered_display_hints(load_plugins):
     '.hardware.storage.disks:*.size',
     '.hardware.storage.disks:*.type',
     '.hardware.storage.disks:*.vendor',
+    '.hardware.storage.physical_volumes:',
     ".hardware.storage.physical_volumes:*.volume_group_name",
     ".hardware.storage.physical_volumes:*.physical_volume_name",
     ".hardware.storage.physical_volumes:*.physical_volume_status",

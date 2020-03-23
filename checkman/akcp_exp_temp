@@ -4,8 +4,30 @@ catalog: hw/environment/akcp
 license: GPL
 distribution:
 description:
- This check monitors all online temperature sensors on AKCP securityProbe environment monitoring boards which have expansion boards
- daisy chained to them.
+ This check monitors all online temperature sensors on AKCP securityProbe
+ environment monitoring boards which have expansion boards daisy chained to them.
+
+ The check has configureable borders for {WARN}/{CRIT}.
+
+ The services is {OK} if the sensors's state is
+
+ - 'normal'
+
+ - 'relay off'
+
+ The service is {UNKN} if
+
+ - no temperature is found
+
+ The service goes {CRIT} if the sensor state is
+
+ - 'sensor error'
+
+ - 'no status'
+
+ - 'sensor is offline'
+
+ The check uses the SPAGENT-MIB
 
 item:
  The description of the sensor as string as specified by the user during board configuration.

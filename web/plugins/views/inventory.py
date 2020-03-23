@@ -305,7 +305,7 @@ def inv_paint_mssql_is_clustered(clustered):
 
 @decorate_inv_paint
 def inv_paint_mssql_node_names(node_names):
-    return "", ", ".join(node_names)
+    return "", node_names
 
 
 @decorate_inv_paint

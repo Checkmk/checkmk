@@ -7,7 +7,7 @@
 import abc
 import ast
 import time
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List  # pylint: disable=unused-import
 
 import six
 from mypy_extensions import NamedArg
@@ -27,8 +27,6 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, SNMPTable, RawSNMPData, PersistedSNMPSections, SNMPSections, SNMPSectionContent,
     SNMPCredentials,
 )
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import SNMPTree
 
 from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
 from .host_sections import AbstractHostSections
@@ -233,18 +231,16 @@ class SNMPDataSource(ABCSNMPDataSource):
 
         snmp_config = self._snmp_config
         info = {}  # type: RawSNMPData
-        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
+        oid_info = None  # type: Optional[OIDInfo]
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
             has_snmp_info = False
             section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-            snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-            if snmp_section_plugin:
-                oid_info = snmp_section_plugin.trees
+            if section_name in config.snmp_info:
+                oid_info = config.snmp_info[section_name]  # type: ignore[assignment]
             elif section_name in cmk.base.inventory_plugins.inv_info:
-                # TODO: merge this into config.registered_snmp_sections!
                 oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
                 if oid_info:
                     has_snmp_info = True

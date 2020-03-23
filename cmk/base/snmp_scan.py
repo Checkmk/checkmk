@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Set, Optional, Iterable
+from typing import Callable, Set, List, Optional, Iterable  # pylint: disable=unused-import
 import re
 
 from cmk.utils.exceptions import MKGeneralException
@@ -17,11 +17,10 @@ import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    SNMPHostConfig, OID, DecodedString,
+    SNMPHostConfig, OID, ScanFunction, DecodedString,
 )
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
-from cmk.base.api import PluginName
 
 from cmk.base.api.agent_based.section_types import (
     SNMPDetectAtom,
@@ -111,10 +110,9 @@ def _snmp_scan(host_config,
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
     if for_inv:
-        these_plugin_names = list(inventory_plugins.inv_info)
+        these_plugin_names = inventory_plugins.inv_info
     else:
-        # TODO (mo): stop converting to string!
-        these_plugin_names = [str(n) for n in config.registered_snmp_sections]
+        these_plugin_names = config.check_info
 
     found_by_positive_result = set()  # type: Set[CheckPluginName]
     found_by_default = set()  # type: Set[CheckPluginName]
@@ -128,14 +126,11 @@ def _snmp_scan(host_config,
             continue
 
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-        section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-        if section_plugin:
-            detection_spec = section_plugin.detect_spec
-        else:
-            # TODO (mo): migrate section definitions from inventory plugins to
-            #            section plugins and remove this conditional entirely
-            info = inventory_plugins.inv_info[section_name]
-            detection_spec = info.get("snmp_scan_function")  # type: ignore
+        detection_spec = None  # type: Optional[ScanFunction]
+        if section_name in config.snmp_scan_functions:
+            detection_spec = config.snmp_scan_functions[section_name]
+        elif section_name in inventory_plugins.inv_info:
+            detection_spec = inventory_plugins.inv_info[section_name].get("snmp_scan_function")
 
         if detection_spec:
             try:

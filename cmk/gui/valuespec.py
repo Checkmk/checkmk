@@ -2996,7 +2996,7 @@ class ListChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListChoice
-        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]
+        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List[_Tuple[Text, Text]]]]
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]

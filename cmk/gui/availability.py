@@ -207,7 +207,7 @@ def get_av_display_options(what):
             filename="wato.py",
         )
         long_output_labelling = [
-            ("timeline_long_output",
+            (u"timeline_long_output",
              _("Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)") %
              ruleset_search_url)
         ]
@@ -223,15 +223,15 @@ def get_av_display_options(what):
          ListChoice(
              title=_("Labelling Options"),
              choices=[
-                 ("omit_headers", _("Do not display column headers")),
-                 ("omit_host", _("Do not display the host name")),
-                 ("show_alias", _("Display the host alias")),
-                 ("use_display_name", _("Use alternative display name for services")),
-                 ("omit_buttons", _("Do not display icons for history and timeline")),
-                 ("omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
+                 (u"omit_headers", _("Do not display column headers")),
+                 (u"omit_host", _("Do not display the host name")),
+                 (u"show_alias", _("Display the host alias")),
+                 (u"use_display_name", _("Use alternative display name for services")),
+                 (u"omit_buttons", _("Do not display icons for history and timeline")),
+                 (u"omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
              ] + long_output_labelling + [
-                 ("display_timeline_legend", _("Display legend for timeline")),
-                 ("omit_av_levels", _("Do not display legend for availability levels")),
+                 (u"display_timeline_legend", _("Display legend for timeline")),
+                 (u"omit_av_levels", _("Do not display legend for availability levels")),
              ])),
 
         # Visual levels for the availability
@@ -1096,44 +1096,43 @@ def compute_availability_groups(what, av_data, avoptions):
     if not grouping:
         return [(None, av_data)]
 
-    else:
-        availability_tables = []  # type: AVGroups
+    availability_tables = []  # type: AVGroups
 
-        # Grouping is one of host/hostgroup/servicegroup
+    # Grouping is one of host/hostgroup/servicegroup
 
-        # 1. Get complete list of all groups
-        all_group_ids = get_av_groups(av_data, avoptions)
+    # 1. Get complete list of all groups
+    all_group_ids = get_av_groups(av_data, avoptions)
 
-        # 2. Compute names for the groups and sort according to these names
-        if grouping != "host":
-            group_titles = dict(sites.all_groups(grouping[:-7]))
+    # 2. Compute names for the groups and sort according to these names
+    if grouping != "host":
+        group_titles = dict(sites.all_groups(grouping[:-7]))
 
-        titled_groups = []  # type: List[_Tuple[Text, AVGroupKey]]
-        for group_id in all_group_ids:
-            if grouping == "host":
-                assert isinstance(group_id, tuple)
-                titled_groups.append((group_id[1], group_id))  # omit the site name
+    titled_groups = []  # type: List[_Tuple[Text, AVGroupKey]]
+    for group_id in all_group_ids:
+        if grouping == "host":
+            assert isinstance(group_id, tuple)
+            titled_groups.append((group_id[1], group_id))  # omit the site name
+        else:
+            if group_id is None:
+                title = _("Not contained in any group")
             else:
-                if group_id is None:
-                    title = _("Not contained in any group")
-                else:
-                    assert isinstance(group_id, HostOrServiceGroupName)
-                    title = group_titles.get(group_id, group_id)
-                titled_groups.append((title, group_id))  # ACHTUNG
+                assert isinstance(group_id, HostOrServiceGroupName)
+                title = group_titles.get(group_id, group_id)
+            titled_groups.append((title, group_id))  # ACHTUNG
 
-        # 3. Loop over all groups and render them
-        for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
-            group_table = []
-            for entry in av_data:
-                group_ids = entry["groups"]  # type: AVGroupIds
-                if group_id is None and group_ids:
-                    continue  # This is not an ungrouped object
-                elif group_id and group_ids and group_id not in group_ids:
-                    continue  # Not this group
-                group_table.append(entry)
-            availability_tables.append((title, group_table))
+    # 3. Loop over all groups and render them
+    for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
+        group_table = []
+        for entry in av_data:
+            group_ids = entry["groups"]  # type: AVGroupIds
+            if group_id is None and group_ids:
+                continue  # This is not an ungrouped object
+            if group_id and group_ids and group_id not in group_ids:
+                continue  # Not this group
+            group_table.append(entry)
+        availability_tables.append((title, group_table))
 
-        return availability_tables
+    return availability_tables
 
 
 def object_title(what, av_entry):
@@ -1639,7 +1638,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
                 continue
 
             # Chaos period has ended? One not-small phase:
-            elif chaos_begin and chaos_end:
+            if chaos_begin and chaos_end:
                 # Only output chaos phases with a certain length
                 if chaos_count >= 4:
                     spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
@@ -1709,7 +1708,7 @@ def find_next_choord(broken, scale):
         epoch = time.mktime(broken)
         epoch += 3600
         broken[:] = list(time.localtime(epoch))
-        title = time.strftime("%H:%M", broken)
+        title = six.ensure_text(time.strftime("%H:%M", broken))
 
     elif scale == "2hours":
         broken[3] = int(broken[3] / 2) * 2

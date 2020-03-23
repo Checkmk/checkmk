@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List, Tuple, Text, Any, Optional, Callable
+from typing import Dict, Union, List, Tuple, Text, Any, Optional, Callable, NamedTuple
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
@@ -21,13 +21,24 @@ ViewName = str
 ColumnName = str
 PainterParameters = Dict  # TODO: Improve this type
 PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
-PainterSpec = Union[  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName],
-          Text],  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName]],  #
-    Tuple[PainterNameSpec, Optional[ViewName]],  #
-]  #
+
+
+class PainterSpec(
+        NamedTuple('PainterSpec', [
+            ('painter_name', PainterNameSpec),
+            ('link_view', Optional[ViewName]),
+            ('tooltip', Optional[ColumnName]),
+            ('join_index', Optional[ColumnName]),
+            ('column_title', Optional[Text]),
+        ])):
+    def __new__(cls, *value):
+        value = value + (None,) * (5 - len(value))
+        return super(PainterSpec, cls).__new__(cls, *value)
+
+    def __repr__(self):
+        return str(tuple(self))
+
+
 ViewSpec = Dict[str, Any]
 AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]

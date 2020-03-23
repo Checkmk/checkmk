@@ -27,6 +27,7 @@ from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry 
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
+    transform_painter_spec,
 )
 from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
 
@@ -496,6 +497,10 @@ def _transform_dashboards(boards):
         # Also transform dashlets
         for dashlet in dashboard['dashlets']:
             visuals.transform_old_visual(dashlet)
+
+            if dashlet['type'] == 'view':
+                # abusing pass by reference to mutate dashlet
+                transform_painter_spec(dashlet)
 
             if dashlet['type'] == 'pnpgraph':
                 if 'service' not in dashlet['single_infos']:

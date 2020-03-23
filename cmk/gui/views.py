@@ -45,6 +45,7 @@ from cmk.gui.valuespec import (
     IconSelector,
     ListOf,
     Tuple,
+    Transform,
     TextUnicode,
     Alternative,
     CascadingDropdown,
@@ -115,6 +116,7 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
+from cmk.gui.type_defs import PainterSpec
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
@@ -319,7 +321,7 @@ class View(object):
             if not painter_exists(e):
                 continue
 
-            if Cell.is_join_cell(e):
+            if e.join_index is not None:
                 cells.append(JoinCell(self, e))
             else:
                 cells.append(Cell(self, e))
@@ -986,7 +988,6 @@ def view_editor_general_properties(ds_name):
 
 
 def view_editor_column_spec(ident, title, ds_name):
-    painters = painters_of_datasource(ds_name)
 
     allow_empty = True
     empty_text = None
@@ -994,19 +995,16 @@ def view_editor_column_spec(ident, title, ds_name):
         allow_empty = False
         empty_text = _("Please add at least one column to your view.")
 
-    vs_column = Tuple(
-        title=_('Column'),
-        elements=[
-            CascadingDropdown(
-                title=_('Column'),
-                choices=painter_choices_with_params(painters),
-                no_preselect=True,
-                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                render_sub_vs_request_vars={
-                    "ds_name": ds_name,
-                    "painter_type": "painter",
-                },
-            ),
+    def column_elements(_painters, painter_type):
+        elements = [
+            CascadingDropdown(title=_('Column'),
+                              choices=painter_choices_with_params(_painters),
+                              no_preselect=True,
+                              render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                              render_sub_vs_request_vars={
+                                  "ds_name": ds_name,
+                                  "painter_type": painter_type,
+                              }),
             DropdownChoice(
                 title=_('Link'),
                 choices=view_choices,
@@ -1014,10 +1012,25 @@ def view_editor_column_spec(ident, title, ds_name):
             ),
             DropdownChoice(
                 title=_('Tooltip'),
-                choices=[(None, "")] + painter_choices(painters),
-            ),
-        ],
-    )
+                choices=[(None, "")] + painter_choices(_painters),
+            )
+        ]
+        if painter_type == 'join_painter':
+            elements.extend([
+                TextUnicode(
+                    title=_('of Service'),
+                    allow_empty=False,
+                ),
+                TextUnicode(title=_('Title'))
+            ])
+        else:
+            elements.extend([FixedValue(None, totext=""), FixedValue(None, totext="")])
+        # UX/GUI Better ordering of fields and reason for transform
+        elements.insert(1, elements.pop(3))
+        return elements
+
+    painters = painters_of_datasource(ds_name)
+    vs_column = Tuple(title=_('Column'), elements=column_elements(painters, 'painter'))
 
     join_painters = join_painters_of_datasource(ds_name)
     if ident == 'columns' and join_painters:
@@ -1029,38 +1042,18 @@ def view_editor_column_spec(ident, title, ds_name):
                     help=_("A joined column can display information about specific services for "
                            "host objects in a view showing host objects. You need to specify the "
                            "service description of the service you like to show the data for."),
-                    elements=[
-                        CascadingDropdown(
-                            title=_('Column'),
-                            choices=painter_choices_with_params(join_painters),
-                            no_preselect=True,
-                            render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                            render_sub_vs_request_vars={
-                                "ds_name": ds_name,
-                                "painter_type": "join_painter",
-                            },
-                        ),
-                        TextUnicode(
-                            title=_('of Service'),
-                            allow_empty=False,
-                        ),
-                        DropdownChoice(
-                            title=_('Link'),
-                            choices=view_choices,
-                            sorted=True,
-                        ),
-                        DropdownChoice(
-                            title=_('Tooltip'),
-                            choices=[(None, "")] + painter_choices(join_painters),
-                        ),
-                        TextUnicode(title=_('Title'),),
-                    ],
+                    elements=column_elements(join_painters, "join_painter"),
                 ),
             ],
             style='dropdown',
-            match=lambda x: 1 * (x is not None and len(x) == 5),
+            match=lambda x: 1 * (x is not None and x[1] is not None),
         )
 
+    vs_column = Transform(
+        vs_column,
+        back=lambda value: (value[0], value[2], value[3], value[1], value[4]),
+        forth=lambda value: (value[0], value[3], value[1], value[2], value[4]),
+    )
     return (ident,
             Dictionary(
                 title=title,
@@ -1179,9 +1172,6 @@ def render_view_config(view, general_properties=True):
 # the valuespec This needs to perform the inverted steps of the
 # transform_valuespec_value_to_view() function. FIXME: One day we should
 # rewrite this to make no transform needed anymore
-# FIXME: For the painters spec we need to stop relying on tuple length and
-# accessing by location. Change to namedtuple and access by name. Keep in
-# mind the Nasty join_index, viewname position shift/swap/rearrangement
 def transform_view_to_valuespec_value(view):
     view["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
@@ -1201,25 +1191,7 @@ def transform_view_to_valuespec_value(view):
 
     view['grouping'] = {"grouping": view.get('group_painters', [])}
     view['sorting'] = {"sorters": view.get('sorters', {})}
-
-    columns = []
-    view['columns'] = {"columns": columns}
-    for entry in view.get('painters', []):
-        if len(entry) == 5:
-            pname, viewname, tooltip, join_index, col_title = entry
-            columns.append((pname, join_index, viewname, tooltip or None, col_title))
-
-        elif len(entry) == 4:
-            pname, viewname, tooltip, join_index = entry
-            columns.append((pname, join_index, viewname, tooltip or None, ''))
-
-        elif len(entry) == 3:
-            pname, viewname, tooltip = entry
-            columns.append((pname, viewname, tooltip or None))
-
-        else:
-            pname, viewname = entry
-            columns.append((pname, viewname, None))
+    view['columns'] = {"columns": view.get('painters', [])}
 
 
 def transform_valuespec_value_to_view(ident, attrs):
@@ -1241,24 +1213,7 @@ def transform_valuespec_value_to_view(ident, attrs):
         return {'group_painters': attrs['grouping']}
 
     if ident == 'columns':
-        painters = []
-        for column in attrs['columns']:
-            if len(column) == 5:
-                pname, join_index, viewname, tooltip, col_title = column
-            else:
-                pname, viewname, tooltip = column
-                join_index, col_title = None, None
-
-            viewname = viewname if viewname else None
-
-            if join_index and col_title:
-                painters.append((pname, viewname, tooltip, join_index, col_title))
-            elif join_index:
-                painters.append((pname, viewname, tooltip, join_index))
-            else:
-                painters.append((pname, viewname, tooltip))
-
-        return {'painters': painters}
+        return {'painters': [PainterSpec(*v) for v in attrs['columns']]}
 
     return {ident: attrs}
 
@@ -1371,7 +1326,6 @@ def page_view():
     painter_options = PainterOptions.get_instance()
     painter_options.load(view.name)
     painter_options.update_from_url(view)
-
     view_renderer = GUIViewRenderer(view, show_buttons=True)
     show_view(view, view_renderer)
 
@@ -2291,7 +2245,7 @@ def get_painter_title_for_choices(painter):
     if painter.columns == ["site"]:
         info_title = _("Site")
 
-    dummy_cell = Cell(View("", {}, {}), (painter.ident, None))
+    dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
     return u"%s: %s" % (info_title, painter.title(dummy_cell))
 
 

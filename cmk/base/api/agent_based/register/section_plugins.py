@@ -12,21 +12,17 @@ import inspect
 import itertools
 
 if sys.version_info[0] >= 3:
-    from inspect import signature
+    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
 else:
-    from funcsigs import signature
+    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel  # pylint: disable=unused-import
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import (
-    AgentParseFunction,
-    AgentSectionPlugin,
-    HostLabelFunction,
-    SNMPDetectSpec,
-    SNMPParseFunction,
+from cmk.base.api.agent_based.section_types import (  # pylint: disable=unused-import
+    AgentParseFunction, AgentSectionPlugin, HostLabelFunction, SNMPDetectSpec, SNMPParseFunction,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.section_types import SNMPTree

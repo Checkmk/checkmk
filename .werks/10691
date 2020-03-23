@@ -1,0 +1,15 @@
+Title: mk_logwatch supports UTF-16 LE BOM encoded files
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p11
+Date: 1584971100
+
+Since this release mk_logwatch is able to process files encoded with UTF-16LE.
+Those files must have correct byte order mark(BOM). 
+
+This type of encoding is used usually by Windows software.

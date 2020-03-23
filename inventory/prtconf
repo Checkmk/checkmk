@@ -39,14 +39,14 @@ class PrtconfParser():
         self.index = 0
         self.parse()
 
-    def get(self,key):
-        return(self.dictionary.get(key))
+    def get(self, key):
+        return (self.dictionary.get(key))
 
-    def __setitem__(self,key,element):
-        self.dictionary[key]=element
+    def __setitem__(self, key, element):
+        self.dictionary[key] = element
 
-    def __getitem__(self,key):
-        return(self.dictionary[key])
+    def __getitem__(self, key):
+        return (self.dictionary[key])
 
     def parse(self):
         self.parseTuples()
@@ -108,7 +108,7 @@ INSTALLED RESOURCE LIST'''
 
     def parseActiveVolumeGroup(self, name):
         while (not (self.startswith("===="))):
-            self.activeVolumeGroups.append([name]+self.line()[0].split())
+            self.activeVolumeGroups.append([name] + self.line()[0].split())
             self.skip()
 
     def parseInactiveVolumeGroups(self):
@@ -225,11 +225,12 @@ def fillKeyValuePairs(inventory_tree, parsed):
 
 
 def fillVolumeGroups(inventory_tree, parsed):
-
     def natural_sort(volumes):
         convert = lambda text: int(text) if text.isdigit() else text.lower()
-        alphanum_key = lambda volume: [ convert(c) for c in re.split('([0-9]+)', volume['physical_volume_name'])]
-        return sorted(volumes, key = alphanum_key)
+        alphanum_key = lambda volume: [
+            convert(c) for c in re.split('([0-9]+)', volume['physical_volume_name'])
+        ]
+        return sorted(volumes, key=alphanum_key)
 
     node = inv_tree_list(".hardware.volumes.physical_volumes:")
     infos = []
@@ -253,6 +254,7 @@ def fillVolumeGroups(inventory_tree, parsed):
         dic["physical_volume_free_partitions"] = ""
         infos.append(dic)
     node.extend(natural_sort(infos))
+
 
 inv_info['prtconf'] = {
     "inv_function": inv_prtconf,

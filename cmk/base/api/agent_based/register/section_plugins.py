@@ -7,8 +7,14 @@
 """
 from typing import (  # pylint: disable=unused-import
     Any, Generator, List, Optional, Union)
+import sys
 import inspect
 import itertools
+
+if sys.version_info[0] >= 3:
+    from inspect import signature
+else:
+    from funcsigs import signature
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
@@ -36,7 +42,7 @@ def _validate_parse_function(parse_function):
     if inspect.isgeneratorfunction(parse_function):
         raise TypeError("parse function must not be a generator function: %r" % (parse_function,))
 
-    parameters = inspect.signature(parse_function).parameters
+    parameters = signature(parse_function).parameters
     if list(parameters) != ['string_table']:
         raise ValueError("parse function must accept exactly one argument 'string_table'")
 
@@ -49,7 +55,7 @@ def _validate_host_label_function(host_label_function):
         raise TypeError("host label function must be a generator function: %r" %
                         (host_label_function,))
 
-    parameters = inspect.signature(host_label_function).parameters
+    parameters = signature(host_label_function).parameters
     if list(parameters) not in (['section'], ['_section']):
         raise ValueError("host label function must accept exactly one argument 'section'")
 

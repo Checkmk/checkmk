@@ -6,6 +6,7 @@
 """Helper to register a new-sytyle section based on config.check_info
 """
 from typing import Callable
+import sys
 import ast
 import inspect
 from cmk.base.api.agent_based.utils import (
@@ -21,6 +22,25 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
+
+if sys.version_info[0] >= 3:
+
+    def _is_none(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.NameConstant) and expr.value is None
+
+    def _is_false(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.NameConstant) and expr.value is False
+else:
+
+    def _is_none(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.Name) and expr.id == 'None'
+
+    def _is_false(expr):
+        # type: (ast.AST) -> bool
+        return isinstance(expr, ast.Name) and expr.id == 'False'
 
 
 def _explicit_conversions(function_name):
@@ -214,15 +234,13 @@ def _ast_convert_compare(comp_ast):
         )
 
     if isinstance(comp_ast.ops[0], ast.IsNot):
-        assert isinstance(comp_ast.comparators[0], ast.NameConstant)
-        assert comp_ast.comparators[0].value is None
+        assert _is_none(comp_ast.comparators[0])
         if _is_oid_function(comp_ast.left):
             return exists(_ast_convert_to_str(comp_ast.left))
         raise NotImplementedError()  # regex, I think
 
     if isinstance(comp_ast.ops[0], ast.Is):
-        assert isinstance(comp_ast.comparators[0], ast.NameConstant)
-        assert comp_ast.comparators[0].value is None
+        assert _is_none(comp_ast.comparators[0])
         assert _is_oid_function(comp_ast.left)
         return not_exists(_ast_convert_to_str(comp_ast.left))
 
@@ -332,7 +350,7 @@ def create_detect_spec(name, snmp_scan_function):
 
     expression_ast = _get_expression_from_function(name, scan_func_ast)
 
-    if isinstance(expression_ast, ast.NameConstant) and expression_ast.value is False:
+    if _is_false(expression_ast):
         spec = []
     else:
         spec = _ast_convert_dispatcher(expression_ast)

@@ -2796,6 +2796,10 @@ def _valuespec_special_agents_jira():
                                    ),
                                    Integer(
                                        title=_("Limit number of processed search results"),
+                                       help=_("Here you can define, how many search results "
+                                              "should be processed. The max. internal limit "
+                                              "of Jira is 1000 results. If you want to "
+                                              "ignore any limit, set -1 here. Default is 50."),
                                        default_value=50,
                                    ),
                                ],)),

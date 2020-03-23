@@ -54,8 +54,12 @@ class SNMPTree:
     be handed a list of lists with the values of the corresponding
     OIDs.
     """
-    def __init__(self, *, base, oids):
-        # type: (str, List[Union[str, OIDSpec, CompatibleOIDEnd]]) -> None
+    def __init__(self, *args, **kwargs):
+        # ty#pe: (str, List[Union[str, OIDSpec, CompatibleOIDEnd]]) -> None
+        if args or list(kwargs) != ['base', 'oids']:
+            # TODO (mo): unhack this CMK-3983
+            raise TypeError("keyword arguments only!")
+        base, oids = kwargs['base'], kwargs['oids']
         # replace int by OIDEnd once ready
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)

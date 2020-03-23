@@ -128,13 +128,13 @@ def _create_supercedes(supercedes):
 
 
 def create_agent_section_plugin(
-    *,
-    name,  # type: str
+    #*,
+    name=None,  # type: Optional[str]
     parsed_section_name=None,  # type: Optional[str]
-    parse_function,  # type: AgentParseFunction
+    parse_function=None,  # type: Optional[AgentParseFunction]
     host_label_function=None,  # type: Optional[HostLabelFunction]
     supercedes=None,  # type:  Optional[List[str]]
-    forbidden_names,  # type: List[PluginName]
+    forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -142,6 +142,9 @@ def create_agent_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
+    # TODO (mo): unhack this CMK-3983
+    if (name is None or parse_function is None or forbidden_names is None):
+        raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
     if supercedes is not None:
         raise NotImplementedError("supercedes is not yet available")
@@ -162,15 +165,15 @@ def create_agent_section_plugin(
 
 
 def create_snmp_section_plugin(
-    *,
-    name,  # type: str
+    #*,
+    name=None,  # type: Optional[str]
     parsed_section_name=None,  # type: Optional[str]
-    parse_function,  # type: SNMPParseFunction
+    parse_function=None,  # type: Optional[SNMPParseFunction]
     host_label_function=None,  # type: Optional[HostLabelFunction]
     supercedes=None,  # type:  Optional[List[str]]
-    detect_spec,  # type: SNMPDetectSpec
-    trees,  # type: List[SNMPTree]
-    forbidden_names,  # type: List[PluginName]
+    detect_spec=None,  # type: Optional[SNMPDetectSpec]
+    trees=None,  # type: Optional[List[SNMPTree]]
+    forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> SNMPSectionPlugin
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -178,6 +181,10 @@ def create_snmp_section_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
+    # TODO (mo): unhack this CMK-3983
+    if (name is None or parse_function is None or detect_spec is None or trees is None or
+            forbidden_names is None):
+        raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
     if supercedes is not None:
         raise NotImplementedError("supercedes is not yet available")

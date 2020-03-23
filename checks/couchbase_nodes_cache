@@ -6,7 +6,7 @@
 
 
 @get_parsed_item_data
-def check_couchbase_nodes_cache(_item, params, data):
+def check_couchbase_nodes_cache(item, params, data):
 
     misses = data.get('ep_bg_fetched')
     hits = data.get('get_hits')
@@ -14,7 +14,7 @@ def check_couchbase_nodes_cache(_item, params, data):
         return
     total = misses + hits
     hit_perc = (hits / float(total)) * 100.0 if total != 0 else 100.0
-    miss_rate = get_rate("%s.cache_misses", time.time(), misses)
+    miss_rate = get_rate("%s.cache_misses" % item, time.time(), misses)
 
     yield check_levels(
         miss_rate,

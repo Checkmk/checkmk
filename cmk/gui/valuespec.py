@@ -190,7 +190,7 @@ class ValueSpec(object):
 
         1. validate_datatype : Ensure the python data type is as expected
         2. _validate_value   : Valuespec type specific validations
-        3. _custom_validate  : instance specific validations
+        3. self._validate    : instance specific validations
         """
         # TODO: Would be really good to enable this to prevent unexpected data
         # types being written to the configuration. For the moment we can not
@@ -203,7 +203,8 @@ class ValueSpec(object):
         #       being enabled.
         #self.validate_datatype(value, varprefix)
         self._validate_value(value, varprefix)
-        self._custom_validate(value, varprefix)
+        if self._validate:
+            self._validate(value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         # type: (Any, str) -> None
@@ -218,15 +219,6 @@ class ValueSpec(object):
         it has been returned by from_html_vars() or because it has been checked
         with validate_datatype())."""
         pass
-
-    def _custom_validate(self, value, varprefix):
-        # type: (Any, str) -> None
-        """Call instance specific validations
-
-        These are the ones that are configured by the valuespec instance argument
-        validate = ...."""
-        if self._validate:
-            self._validate(value, varprefix)
 
 
 class FixedValue(ValueSpec):
@@ -1383,7 +1375,6 @@ class Url(TextAscii):
         super(Url, self)._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
-            self._custom_validate(value, varprefix)
             return
 
         parts = six.moves.urllib.parse.urlparse(value)
@@ -2998,7 +2989,6 @@ class CascadingDropdown(ValueSpec):
                 if vs:
                     assert isinstance(value, tuple)
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
-                self._custom_validate(value, varprefix)
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 

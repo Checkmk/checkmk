@@ -80,8 +80,8 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         encryption_settings = self._host_config.agent_encryption
 
-        socktype = (socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET)
-        s = socket.socket(socktype, socket.SOCK_STREAM)
+        family = (socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET)
+        s = socket.socket(family, socket.SOCK_STREAM)
 
         timeout = self._get_timeout()
 

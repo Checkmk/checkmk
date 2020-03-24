@@ -207,6 +207,7 @@ catalog_titles = {
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
         "sansymphony"   : "Datacore SANsymphony",
+        "silverpeak"    : "Silver Peak",
         "skype"         : "Skype",
         "splunk"        : "Splunk",
         "sshd"          : "SSH Daemon",

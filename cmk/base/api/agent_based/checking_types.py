@@ -32,9 +32,7 @@ class Parameters(collections.abc.Mapping):
 
 
 class Service:
-    """Services are to be yielded by the discovery function
-
-    This class service label that can be yielded by the discover function.
+    """This class represents services that the discover function yields
 
     my_drive_service = Service(
         item="disc_name",

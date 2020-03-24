@@ -47,27 +47,29 @@ class TCPDataSource(CheckMKAgentDataSource):
         # type: () -> str
         return "agent"
 
-    def set_port(self, port):
-        # type: (int) -> None
-        self._port = port
-
-    def _get_port(self):
+    @property
+    def port(self):
         # type: () -> int
-        if self._port is not None:
-            return self._port
+        if self._port is None:
+            return self._host_config.agent_port
+        return self._port
 
-        return self._host_config.agent_port
+    @port.setter
+    def port(self, value):
+        # type: (Optional[int]) -> None
+        self._port = value
 
-    def set_timeout(self, timeout):
-        # type: (float) -> None
-        self._timeout = timeout
-
-    def _get_timeout(self):
+    @property
+    def timeout(self):
         # type: () -> float
-        if self._timeout:
-            return self._timeout
+        if self._timeout is None:
+            return self._host_config.tcp_connect_timeout
+        return self._timeout
 
-        return self._host_config.tcp_connect_timeout
+    @timeout.setter
+    def timeout(self, value):
+        # type: (Optional[float]) -> None
+        self._timeout = value
 
     def _execute(self):
         # type: () -> RawAgentData
@@ -81,11 +83,11 @@ class TCPDataSource(CheckMKAgentDataSource):
             socket.socket(socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET,
                           socket.SOCK_STREAM), (
                               self._ipaddress,
-                              self._get_port(),
-                          ), self._get_timeout(), self._logger)
+                              self.port,
+                          ), self.timeout, self._logger)
 
-        if len(output) == 0:  # may be caused by xinetd not allowing our address
-            raise MKEmptyAgentData("Empty output from agent at TCP port %s" % self._get_port)
+        if not output:  # may be caused by xinetd not allowing our address
+            raise MKEmptyAgentData("Empty output from agent at TCP port %s" % self.port)
 
         if len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
@@ -107,11 +109,9 @@ class TCPDataSource(CheckMKAgentDataSource):
 
             while True:
                 data = sock.recv(4096, socket.MSG_WAITALL)
-
-                if data and len(data) > 0:
-                    output_lines.append(data)
-                else:
+                if not data:
                     break
+                output_lines.append(data)
 
         except socket.error as e:
             if cmk.utils.debug.enabled():

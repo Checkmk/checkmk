@@ -39,12 +39,12 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source._hostname == hostname
     assert source._ipaddress == ipaddress
     assert source.id() == "agent"
-    assert source._get_port() == 6556
-    assert source._get_timeout() == 5.0
+    assert source.port == 6556
+    assert source.timeout == 5.0
     # From the base class
     assert source.get_check_plugin_names() == set()
     assert source.name() == ("agent:%s:%s" % (hostname, ipaddress if ipaddress else ""))
-    assert source.describe() == "TCP: %s:%s" % (ipaddress, source._get_port())
+    assert source.describe() == "TCP: %s:%s" % (ipaddress, source.port)
     assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None

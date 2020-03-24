@@ -1257,9 +1257,9 @@ class AutomationDiagHost(Automation):
             if isinstance(source, data_sources.DSProgramDataSource) and cmd:
                 source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
             elif isinstance(source, data_sources.TCPDataSource):
-                source.set_port(agent_port)
+                source.port = agent_port
                 if tcp_connect_timeout is not None:
-                    source.set_timeout(tcp_connect_timeout)
+                    source.timeout = tcp_connect_timeout
             elif isinstance(source, data_sources.snmp.SNMPDataSource):
                 continue
 

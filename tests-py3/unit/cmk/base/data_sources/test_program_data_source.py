@@ -87,23 +87,23 @@ class TestDSProgramDataSource:
 class TestSpecialAgentDataSource:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_attribute_defaults(self, monkeypatch, ipaddress):
-        id = "my_id"
+        the_id = "my_id"
         hostname = "testhost"
         params = {}
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = SpecialAgentDataSource(hostname, ipaddress, id, params)
+        source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
-        assert source.id() == "special_%s" % id
+        assert source.id() == "special_%s" % the_id
         # ProgramDataSource
         assert source._cpu_tracking_id() == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_unconfigured_get_command_line_and_stdin_raise_KeyError(self, monkeypatch, ipaddress):
-        id = "my_id"
+        the_id = "my_id"
         hostname = "testhost"
         params = {}
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = SpecialAgentDataSource(hostname, ipaddress, id, params)
+        source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
         # TODO(ml): Does this make sense?
         with pytest.raises(KeyError):

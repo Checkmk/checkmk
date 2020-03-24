@@ -7,7 +7,6 @@
 import pytest  # type: ignore[import]
 
 import cmk.base.data_sources.abstract as _abstract
-from testlib.base import Scenario
 
 
 def test_mgmt_board_data_source_is_ip_address():

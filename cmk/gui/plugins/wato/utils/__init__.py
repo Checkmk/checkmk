@@ -34,38 +34,12 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (
-    TextAscii,
-    TextAsciiAutocomplete,
-    Dictionary,
-    Tuple,
-    Checkbox,
-    Integer,
-    DropdownChoice,
-    Alternative,
-    Password,
-    Transform,
-    FixedValue,
-    ListOf,
-    ListOfMultiple,
-    RegExpUnicode,
-    RegExp,
-    TextUnicode,
-    ElementSelection,
-    OptionalDropdownChoice,
-    Percentage,
-    Float,
-    CascadingDropdown,
-    ListChoice,
-    ListOfStrings,
-    DualListChoice,
-    ValueSpec,
-    Url,
-    MonitoredHostname,
-    ABCPageListOfMultipleGetChoice,
-    rule_option_elements,
-    DocumentationURL,
-    RuleComment,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
+    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
+    ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname, OptionalDropdownChoice,
+    Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii, TextAsciiAutocomplete,
+    TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
     WatoMode,)
@@ -260,7 +234,7 @@ def _list_user_icons_and_actions():
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[Text]
+    help=None,  # type: ValueSpecHelp
     only_v3=False,  # type: bool
     default_value="public",  # type: Text
     allow_none=False  # type: bool
@@ -594,12 +568,13 @@ def passwordstore_choices():
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None,  # type: Union[None, Text, Callable[[], Text]]
+    help=None,  # type: ValueSpecHelp
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
+        help=help,
         choices=[
             ("password", _("Explicit"), Password(
                 allow_empty=allow_empty,
@@ -622,7 +597,7 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
-    help=None,  # type: Union[None, Text, Callable[[], Text]]
+    help=None,  # type: ValueSpecHelp
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):

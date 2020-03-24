@@ -650,7 +650,8 @@ img.icon.reloading {
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
 @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
 
-img.iconbutton.reload_failed {
+img.iconbutton.reload_failed,
+img.icon.reload_failed {
     -webkit-filter: sepia(100%);
     filter: sepia(100%);
 }

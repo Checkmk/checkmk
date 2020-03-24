@@ -884,7 +884,8 @@ tr.groupheader {
   }
 }
 
-img.iconbutton {
+img.iconbutton,
+img.icon {
   width: 20px;
   height: 20px;
   padding: 0 2px;
@@ -907,7 +908,6 @@ img.iconbutton {
 }
 
 /* reschedule check icon */
-/* TODO: Reproduce these reloading/reload html elements */
 img.iconbutton.reloading,
 img.icon.reloading {
   animation: spin 1s linear infinite;

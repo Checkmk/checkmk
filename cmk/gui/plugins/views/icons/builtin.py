@@ -197,8 +197,8 @@ class RescheduleIcon(Icon):
                     icon = 'reload_cmk'
                     txt = _('Reschedule \'Check_MK\' service')
 
-            url = 'onclick:cmk.views.reschedule_check(this, \'%s\', \'%s\', \'%s\', \'%s\');' % \
-                (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
+            url = 'onclick:cmk.views.reschedule_check(this, %s, %s, %s, %s);' % \
+                (json.dumps(row["site"]), json.dumps(row["host_name"]), json.dumps(servicedesc), json.dumps(wait_svc))
             # _self is needed to prevent wrong linking when views are parts of dashlets
             return icon, txt, (url, "_self")
 

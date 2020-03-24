@@ -2690,73 +2690,78 @@ def ajax_popup_action_menu():
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("ajax_reschedule")
-def ajax_reschedule():
-    try:
-        do_reschedule()
-    except Exception as e:
-        html.write("['ERROR', '%s']\n" % e)
+@page_registry.register_page("ajax_reschedule")
+class PageRescheduleCheck(AjaxPage):
+    """Is called to trigger a host / service check"""
+    def page(self):
+        request = html.get_request()
+        return self._do_reschedule(request)
 
+    def _do_reschedule(self, request):
+        if not config.user.may("action.reschedule"):
+            raise MKGeneralException("You are not allowed to reschedule checks.")
 
-def do_reschedule():
-    if not config.user.may("action.reschedule"):
-        raise MKGeneralException("You are not allowed to reschedule checks.")
+        site = request.get("site")
+        host = request.get("host")
+        if not host or not site:
+            raise MKGeneralException("Action reschedule: missing host name")
 
-    site = html.request.var("site")
-    host = html.request.var("host", "")
-    if not host:
-        raise MKGeneralException("Action reschedule: missing host name")
+        service = request.get("service", "")
+        wait_svc = request.get("wait_svc", "")
 
-    service = html.request.get_unicode_input("service", "")
-    wait_svc = html.request.get_unicode_input("wait_svc", "")
+        if service:
+            cmd = "SVC"
+            what = "service"
+            spec = "%s;%s" % (host, service)
 
-    if service:
-        cmd = "SVC"
-        what = "service"
-        spec = "%s;%s" % (host, service)
-
-        if wait_svc:
-            wait_spec = u'%s;%s' % (host, wait_svc)
-            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
+            if wait_svc:
+                wait_spec = u'%s;%s' % (host, wait_svc)
+                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
+            else:
+                wait_spec = spec
+                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
         else:
+            cmd = "HOST"
+            what = "host"
+            spec = host
             wait_spec = spec
-            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
-    else:
-        cmd = "HOST"
-        what = "host"
-        spec = host
-        wait_spec = spec
-        add_filter = ""
+            add_filter = ""
 
-    try:
         now = int(time.time())
         sites.live().command(
             "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now),
             site)
-        sites.live().set_only_sites([site])
-        query = u"GET %ss\n" \
-                "WaitObject: %s\n" \
-                "WaitCondition: last_check >= %d\n" \
-                "WaitTimeout: %d\n" \
-                "WaitTrigger: check\n" \
-                "Columns: last_check state plugin_output\n" \
-                "Filter: host_name = %s\n%s" \
-                % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
-        row = sites.live().query_row(query)
-        sites.live().set_only_sites()
+
+        try:
+            sites.live().set_only_sites([site])
+            query = u"GET %ss\n" \
+                    "WaitObject: %s\n" \
+                    "WaitCondition: last_check >= %d\n" \
+                    "WaitTimeout: %d\n" \
+                    "WaitTrigger: check\n" \
+                    "Columns: last_check state plugin_output\n" \
+                    "Filter: host_name = %s\n%s" \
+                    % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
+            row = sites.live().query_row(query)
+        finally:
+            sites.live().set_only_sites()
+
         last_check = row[0]
         if last_check < now:
-            html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" %
-                       (config.reschedule_timeout))
-        else:
-            if service == "Check_MK":
-                # Passive services triggered by Check_MK often are updated
-                # a few ms later. We introduce a small wait time in order
-                # to increase the chance for the passive services already
-                # updated also when we return.
-                time.sleep(0.7)
-            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2]))
+            return {
+                "state": "TIMEOUT",
+                "message": _("Check not executed within %d seconds") % (config.reschedule_timeout),
+            }
 
-    except Exception as e:
-        sites.live().set_only_sites()
-        raise MKGeneralException(_("Cannot reschedule check: %s") % e)
+        if service == "Check_MK":
+            # Passive services triggered by Check_MK often are updated
+            # a few ms later. We introduce a small wait time in order
+            # to increase the chance for the passive services already
+            # updated also when we return.
+            time.sleep(0.7)
+
+        # Row is currently not used by the frontend, but may be useful for debugging
+        return {
+            "state": "OK",
+            "row": row,
+        }

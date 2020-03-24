@@ -11,4 +11,4 @@ item:
  The name of the board
 
 inventory:
- One service for each board is created
+ One service is created for each board.

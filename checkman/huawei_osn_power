@@ -12,4 +12,4 @@ item:
  The slot ID of the Piu Board ({{BID}})
 
 inventory:
- One service for each PSU is created
+ One service is created for each PSU.

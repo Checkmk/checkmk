@@ -16,5 +16,5 @@ item:
  The stack member number and the entity number seperated by a {{/}}
 
 inventory:
- One service for each stack member is created.
+ One service is created for each stack member.
  This check does not discover any services if the stacking function is disabled.

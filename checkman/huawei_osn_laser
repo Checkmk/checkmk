@@ -12,4 +12,4 @@ item:
  The location of the laser
 
 inventory:
- One service for each laser is created
+ One service is created for each laser.

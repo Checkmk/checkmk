@@ -13,6 +13,6 @@ description:
  of that check for details.
 
 inventory:
- If the needed information is available via SNMP one service
- for the target host will be created.
+ One service is created for the target host if the needed information
+ is available via SNMP.
 

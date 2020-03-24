@@ -9,5 +9,5 @@ description:
  Leves for {WARN} and {CRIT} can be set using Wato.
 
 inventory:
- One service will be created for each system.
+ One service is created for each system.
 

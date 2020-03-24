@@ -12,6 +12,5 @@ description:
  of the current usage.
 
 inventory:
- One check is automatically created if at least one CPU
- entry is found in the SNMP output.
+ One service is created if at least one CPU entry is found.
 

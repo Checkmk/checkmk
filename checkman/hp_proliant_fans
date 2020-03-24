@@ -16,5 +16,4 @@ item:
  The index of the fan followed by th label of the fan in brackets
 
 inventory:
- One check is automatically created for each FAN sensor which is
- provided in the SNMP output.
+ One service is created for each FAN sensor.

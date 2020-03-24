@@ -21,6 +21,5 @@ item:
  The system chassis number followed by the bay number
 
 inventory:
- One check is automatically created for each PSU entry which is provided
- and marked as present in the SNMP output. Additionally one service is
- created which sums up the used capacity.
+ One service is created for each present PSU entry.
+ Additionally one service is created which sums up the used capacity.

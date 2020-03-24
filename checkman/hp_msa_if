@@ -15,4 +15,4 @@ item:
  The interface identifier.
 
 inventory:
- One service per interface is created.
+ One service is created for each interface.

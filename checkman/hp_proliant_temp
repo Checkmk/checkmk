@@ -19,5 +19,4 @@ item:
  sensor in brackets
 
 inventory:
- One check is automatically created for each temperature sensor which is
- provided in the SNMP output.
+ One service is created for each temperature sensor.

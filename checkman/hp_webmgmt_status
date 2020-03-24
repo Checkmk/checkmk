@@ -17,5 +17,5 @@ item:
  The unique device identification.
 
 inventory:
- One service per management object is discovered, usually one.
+ One service is created for each management object which is usually one.
 

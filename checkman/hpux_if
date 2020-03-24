@@ -36,6 +36,6 @@ item:
  by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
- The inventory creates one service for each NIC found on the system. NICs are
- assumed to be of type {6} (Ethernet).
+ One service is created for each NIC found on the system.
+ NICs are assumed to be of type {6} (Ethernet).
 

@@ -17,5 +17,5 @@ item:
  Empty string
 
 inventory:
- On each switch which supports this MIB one service {Memory} is being created.
+ One service is created on each switch.
 

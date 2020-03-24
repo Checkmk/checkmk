@@ -16,4 +16,4 @@ item:
  The {{Drive Array Logical Drive Index}} followed by the {{Logical Drive OS Name}}.
 
 inventory:
- One check is automatically created for each logical device.
+ One service is created for each logical device.

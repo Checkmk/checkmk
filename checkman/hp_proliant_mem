@@ -17,5 +17,4 @@ item:
  A value of 0 indicates memory installed directly on the system board.
 
 inventory:
- One check is automatically created for each memory module which is
- provided in the SNMP output and marked as present.
+ One check is automatically created for each present memory module.

@@ -81,7 +81,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         encryption_settings = self._host_config.agent_encryption
 
         family = (socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET)
-        s = socket.socket(family, socket.SOCK_STREAM)
+        sock = socket.socket(family, socket.SOCK_STREAM)
 
         timeout = self._get_timeout()
 
@@ -89,14 +89,14 @@ class TCPDataSource(CheckMKAgentDataSource):
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" %
                            (self._ipaddress, port, timeout))
         try:
-            s.settimeout(timeout)
-            s.connect((self._ipaddress, port))
-            s.settimeout(None)
+            sock.settimeout(timeout)
+            sock.connect((self._ipaddress, port))
+            sock.settimeout(None)
 
             self._logger.debug("Reading data from agent")
 
             while True:
-                data = s.recv(4096, socket.MSG_WAITALL)
+                data = sock.recv(4096, socket.MSG_WAITALL)
 
                 if data and len(data) > 0:
                     output_lines.append(data)
@@ -108,7 +108,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                 raise
             raise MKAgentError("Communication failed: %s" % e)
         finally:
-            s.close()
+            sock.close()
 
         output = b''.join(output_lines)
 

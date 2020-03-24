@@ -29608,6 +29608,9 @@ msgstr "Anzahl von Services mit Status WARN (Servicegruppe)"
 msgid "Number of shared and exclusive locks"
 msgstr "Anzahl von gemeinsamen und exklusiven Locks"
 
+msgid "Number of signed-in web users"
+msgstr "Anzahl angemeldeter Web-Benutzer"
+
 msgid "Number of spare disks"
 msgstr "Anzahl der Ersatzlplatten"
 
@@ -33025,6 +33028,9 @@ msgstr "Anderen Benutzern freigeben"
 
 msgid "Publisher"
 msgstr "Publisher"
+
+msgid "Pulse Secure users"
+msgstr "Pulse Secure Benutzer"
 
 msgid "Push configuration to this site"
 msgstr "Konfiguration auf diese Instanz übertragen"

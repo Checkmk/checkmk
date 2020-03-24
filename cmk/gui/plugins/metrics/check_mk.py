@@ -12223,3 +12223,12 @@ graph_info["couchbase_bucket_fragmentation"] = {
         ("views_fragmentation", "stack"),
     ],
 }
+
+graph_info["current_users"] = {
+    "title": _("Number of signed-in users"),
+    "metrics": [("current_users", "area"),],
+    "scalars": [
+        "current_users:warn",
+        "current_users:crit",
+    ],
+}

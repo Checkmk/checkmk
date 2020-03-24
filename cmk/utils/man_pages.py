@@ -211,6 +211,7 @@ catalog_titles = {
         "websphere_mq"  : "WebSphere MQ",
         "zerto"         : "Zerto",
         "ibm_mq"        : "IBM MQ",
+        "pulse_secure"  : "Pulse Secure",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

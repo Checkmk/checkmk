@@ -5514,23 +5514,26 @@ class Labels(ValueSpec):
         max_labels=None,  # type: _Optional[int]
         # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[Text]
+        help=None,  # type: ValueSpecHelp
         default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[Callable[[str, Any], None]]
     ):
-        help_ = help if help is not None else ""
-        help_ += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
-                   "For example <tt>os:windows</tt>.")
         super(Labels, self).__init__(title=title,
-                                     help=help_,
+                                     help=help,
                                      default_value=default_value,
                                      validate=validate)
-
         self._world = world
         # Set this source to mark the labels that have no explicit label source set
         self._label_source = label_source
         # Set to positive integer to limit the number of labels to add to this field
         self._max_labels = max_labels
+
+    def help(self):
+        # type: () -> Union[Text, HTML, None]
+        h = super(Labels, self).help()
+        return (u"" if h is None else h) + _(
+            "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>."
+        )
 
     def canonical_value(self):
         return {}

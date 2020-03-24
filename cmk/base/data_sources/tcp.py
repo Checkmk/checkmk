@@ -86,8 +86,8 @@ class TCPDataSource(CheckMKAgentDataSource):
         timeout = self._get_timeout()
 
         output_lines = []  # type: List[bytes]
-        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" %
-                           (self._ipaddress, port, timeout))
+        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)", self._ipaddress, port,
+                           timeout)
         try:
             sock.settimeout(timeout)
             sock.connect((self._ipaddress, port))

@@ -35,7 +35,8 @@ def test_ipmi_parse_sensor_reading(reading, parsed):
 def test_attribute_defaults(monkeypatch, ipaddress):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = IPMIManagementBoardDataSource(hostname, ipaddress)
+    # NOTE: pylint is quite buggy when it comes to class hierarchies and abstract methods!
+    source = IPMIManagementBoardDataSource(hostname, ipaddress)  # pylint: disable=abstract-class-instantiated
 
     assert source.id() == "mgmt_ipmi"
     assert source.title() == "Management board - IPMI"

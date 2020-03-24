@@ -125,26 +125,31 @@ class TCPDataSource(CheckMKAgentDataSource):
     @staticmethod
     def _decrypt(output, encryption_settings):
         # type: (RawAgentData, Dict[str, str]) -> RawAgentData
-        output_is_plaintext = output.startswith(b"<<<")
-        if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
-            raise MKAgentError(
-                "Agent output is plaintext but encryption is enforced by configuration")
-        if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
-            try:
-                # simply check if the protocol is an actual number
-                protocol = int(output[0:2])
+        if output.startswith(b"<<<"):
+            # The output is not encrypted.
+            if encryption_settings["use_regular"] == "enforce":
+                raise MKAgentError(
+                    "Agent output is plaintext but encryption is enforced by configuration")
+            return output
 
-                output = TCPDataSource._decrypt_package(output[2:],
-                                                        encryption_settings["passphrase"], protocol)
-            except ValueError:
-                raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
-            except Exception as e:
-                if encryption_settings["use_regular"] == "enforce":
-                    raise MKAgentError("Failed to decrypt agent output: %s" % e)
+        if encryption_settings["use_regular"] not in ["enforce", "allow"]:
+            return output
 
-                # of course the package might indeed have been encrypted but
-                # in an incorrect format, but how would we find that out?
-                # In this case processing the output will fail
+        try:
+            # simply check if the protocol is an actual number
+            protocol = int(output[0:2])
+
+            output = TCPDataSource._decrypt_package(output[2:], encryption_settings["passphrase"],
+                                                    protocol)
+        except ValueError:
+            raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
+        except Exception as e:
+            if encryption_settings["use_regular"] == "enforce":
+                raise MKAgentError("Failed to decrypt agent output: %s" % e)
+
+            # of course the package might indeed have been encrypted but
+            # in an incorrect format, but how would we find that out?
+            # In this case processing the output will fail
 
         return output
 

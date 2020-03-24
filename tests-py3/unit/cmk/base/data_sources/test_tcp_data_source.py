@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 
 import cmk.base.data_sources.abstract as _abstract
 from cmk.base.data_sources.tcp import TCPDataSource
+from cmk.base.exceptions import MKAgentError
 from testlib.base import Scenario
 
 
@@ -69,3 +70,26 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
     assert source.get_summary_result_for_discovery() == defaults
     assert source.get_summary_result_for_inventory() == defaults
     assert source.get_summary_result_for_checking() == defaults
+
+
+def test_decrypt_plaintext_is_noop():
+    settings = {"use_regular": "allow"}
+    output = b"<<<section:sep(0)>>>\nbody\n"
+
+    assert TCPDataSource._decrypt(output, settings) == output
+
+
+def test_decrypt_plaintext_with_enforce_raises_MKAgentError():
+    settings = {"use_regular": "enforce"}
+    output = b"<<<section:sep(0)>>>\nbody\n"
+
+    with pytest.raises(MKAgentError):
+        TCPDataSource._decrypt(output, settings)
+
+
+def test_decrypt_payload_with_wrong_protocol_raises_MKAgentError():
+    settings = {"use_regular": "enforce"}
+    output = b"the first two bytes are not a number"
+
+    with pytest.raises(MKAgentError):
+        TCPDataSource._decrypt(output, settings)

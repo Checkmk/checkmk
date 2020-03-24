@@ -416,11 +416,12 @@ class Integer(ValueSpec):
         self._display_format = display_format
         self._align = align
 
-        if size is None and maxvalue is not None:
-            self._size = 1 + int(math.log10(maxvalue)) + \
-               (3 if isinstance(maxvalue, float) else 0)
+        if size is not None:
+            self._size = size
+        elif maxvalue is not None:
+            self._size = 1 + int(math.log10(maxvalue)) + (3 if isinstance(maxvalue, float) else 0)
         else:
-            self._size = size if size is not None else 5
+            self._size = 5
 
     def canonical_value(self):
         # type: () -> Union[float, int]

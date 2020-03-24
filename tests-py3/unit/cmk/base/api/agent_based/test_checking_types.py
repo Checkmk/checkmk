@@ -69,7 +69,7 @@ def test_service_invalid(item, parameters, labels):
 
 def test_service_kwargs_only():
     with pytest.raises(TypeError):
-        _ = Service(None)
+        _ = Service(None)  # pylint: disable=too-many-function-args
 
 
 def test_service_features():

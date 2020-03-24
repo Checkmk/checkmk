@@ -160,7 +160,6 @@ def parse_arguments(argv):
 
 
 def set_up_logging(verbosity):
-
     fmt = "%(levelname)s: %(message)s"
     if verbosity >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
@@ -170,10 +169,8 @@ def set_up_logging(verbosity):
 
     logging.basicConfig(level=lvl, format=fmt)
 
-    return
 
-
-class CouchbaseClient(object):
+class CouchbaseClient:
     def __init__(self, host, port, timeout, user, password):
         self._session = requests.Session()
         self._timeout = timeout

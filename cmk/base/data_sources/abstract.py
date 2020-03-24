@@ -698,9 +698,9 @@ class CheckMKAgentDataSource(
         if config.agent_simulator:
             raw_data = cmk.base.agent_simulator.process(raw_data)
 
-        return self._parse_info(raw_data)
+        return self._parse_host_section(raw_data)
 
-    def _parse_info(self, raw_data):
+    def _parse_host_section(self, raw_data):
         # type: (RawAgentData) -> AgentHostSections
         """Split agent output in chunks, splits lines by whitespaces.
 

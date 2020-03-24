@@ -1267,7 +1267,7 @@ class AutomationDiagHost(Automation):
 
             # We really receive a byte string here. The agent sections
             # may have different encodings and are normally decoded one
-            # by one (CheckMKAgentDataSource._parse_info).  For the
+            # by one (CheckMKAgentDataSource._parse_host_section).  For the
             # moment we use UTF-8 with fallback to latin-1 by default,
             # similar to the CheckMKAgentDataSource, but we do not
             # respect the ecoding options of sections.

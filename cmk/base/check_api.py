@@ -176,6 +176,10 @@ Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
+# The class 'as_float' has been moved to the cmk.base.api domain.
+# import it here under the old name
+from cmk.base.api.agent_based.checking_types import MetricFloat as as_float  # pylint: disable=unused-import
+
 
 def saveint(i):
     # type: (Any) -> int
@@ -203,18 +207,6 @@ def savefloat(f):
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-class as_float(float):
-    """Extends the float representation for Infinities in such way that
-    they can be parsed by eval"""
-    def __repr__(self):
-        # type: () -> str
-        if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
-        if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
-        return super(as_float, self).__repr__()
 
 
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()

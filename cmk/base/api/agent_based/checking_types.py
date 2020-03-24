@@ -6,6 +6,7 @@
 """Types and classes used by the API for check plugins
 """
 from typing import List, Optional
+import sys
 import collections
 
 from cmk.base.discovered_labels import ServiceLabel
@@ -86,3 +87,15 @@ class Service:
     def __repr__(self):
         return "%s(item=%r, parameters=%r, labels=%r)" % (self.__class__.__name__, self.item,
                                                           self.parameters, self._labels)
+
+
+class MetricFloat(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+    def __repr__(self):
+        # type: () -> str
+        if self > sys.float_info.max:
+            return '1e%d' % (sys.float_info.max_10_exp + 1)
+        if self < -1 * sys.float_info.max:
+            return '-1e%d' % (sys.float_info.max_10_exp + 1)
+        return super(MetricFloat, self).__repr__()

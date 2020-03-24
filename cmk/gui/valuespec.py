@@ -2649,9 +2649,10 @@ def HostState(**kwargs):
 
 CascadingDropdownChoiceValue = Union[None, Text, _Tuple[_Optional[str], Any]]
 CascadingDropdownCleanChoice = _Tuple[_Optional[str], Text, _Optional[ValueSpec]]
-CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[str, Text],
+CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[_Optional[str], Text],
                                                       CascadingDropdownCleanChoice]]]
-CascadingDropdownChoiceList = List[Union[_Tuple[str, Text], CascadingDropdownCleanChoice]]
+CascadingDropdownChoiceList = List[Union[_Tuple[_Optional[str], Text],
+                                         CascadingDropdownCleanChoice]]
 CascadingDropdownChoices = Union[CascadingDropdownChoiceList, CascadingDropdownChoiceFunc]
 CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
 

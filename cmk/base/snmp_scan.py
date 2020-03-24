@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Set, Optional, Iterable
+from typing import Any, Iterable, Callable, Dict, Optional, Set, Union
 import re
 
 from cmk.utils.exceptions import MKGeneralException
@@ -17,7 +17,7 @@ import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    SNMPHostConfig, OID, DecodedString,
+    ScanFunction, SNMPHostConfig, OID, DecodedString,
 )
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
@@ -127,15 +127,8 @@ def _snmp_scan(host_config,
         if not for_inv and not cmk.base.check_utils.is_snmp_check(check_plugin_name):
             continue
 
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-        section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-        if section_plugin:
-            detection_spec = section_plugin.detect_spec
-        else:
-            # TODO (mo): migrate section definitions from inventory plugins to
-            #            section plugins and remove this conditional entirely
-            info = inventory_plugins.inv_info[section_name]
-            detection_spec = info.get("snmp_scan_function")  # type: ignore
+        detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,
+                                                              inventory_plugins.inv_info)
 
         if detection_spec:
             try:
@@ -188,6 +181,20 @@ def _snmp_scan(host_config,
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(host_config)
     return filtered
+
+
+def _get_detection_spec_from_plugin_name(check_plugin_name, inv_info):
+    # type: (CheckPluginName, Dict[str, Any]) -> Union[SNMPDetectSpec, Optional[ScanFunction]]
+    # This function will hopefully shrink and finally disappear during API development.
+    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+    section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
+    if section_plugin:
+        return section_plugin.detect_spec
+
+    # TODO (mo): migrate section definitions from inventory plugins to
+    #            section plugins and remove this conditional entirely
+    info = inv_info[section_name]
+    return info.get("snmp_scan_function")
 
 
 def _output_snmp_check_plugins(title, collection):

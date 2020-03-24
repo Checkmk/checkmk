@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+import shutil
 import pytest  # type: ignore[import]
 
-import shutil
 import yaml
 
 from cmk.utils import msi_patch
@@ -49,9 +49,9 @@ def test_low_level_functions(conf_dir, cmk_dir):
     assert len(msi_patch.generate_uuid()) == 38
     p = conf_dir / "msi_state.yml"
     msi_patch.write_state_file(p, 12, "12")
-    pos, id = msi_patch.load_state_file(p)
-    assert pos == 12
-    assert id == "12"
+    _pos, _id = msi_patch.load_state_file(p)
+    assert _pos == 12
+    assert _id == "12"
 
 
 def test_patch_package_code_by_state_file(conf_dir, cmk_dir):
@@ -108,9 +108,9 @@ def test_patch_package_code_with_state(conf_dir, cmk_dir):
     new_content = dst.read_bytes()
     assert new_content.find(uuid.encode('ascii')) != -1
 
-    pos, id_ = msi_patch.load_state_file(p)
-    assert pos == 4
-    assert id_ == uuid
+    _pos, _id = msi_patch.load_state_file(p)
+    assert _pos == 4
+    assert _id == uuid
 
     # prepare test file
     shutil.copy(str(src), str(dst))
@@ -129,9 +129,9 @@ def test_patch_package_code_with_state(conf_dir, cmk_dir):
     state = yaml.safe_load(yaml_content)
     assert state is not None
 
-    pos, id_ = msi_patch.load_state_file(p)
-    assert pos == -1
-    assert id_ == ""
+    _pos, _id = msi_patch.load_state_file(p)
+    assert _pos == -1
+    assert _id == ""
 
 
 def check_content(new_content, base_content, pos, uuid, marker):
@@ -198,10 +198,10 @@ def test_patch_package_code_by_marker(conf_dir, cmk_dir):
     assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid, state_file=st_f)
 
     new_content = dst.read_bytes()
-    loc = new_content.find(uuid.encode('ascii'))
-    pos, id = msi_patch.load_state_file(st_f)
-    assert loc == pos
-    assert id == uuid
+    _loc = new_content.find(uuid.encode('ascii'))
+    _pos, _id = msi_patch.load_state_file(st_f)
+    assert _loc == _pos
+    assert _id == uuid
 
 
 def test_patch_package_code(conf_dir, cmk_dir):

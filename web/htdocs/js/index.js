@@ -27,6 +27,7 @@ import * as crash_reporting from "crash_reporting";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
+import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
@@ -90,6 +91,7 @@ export const cmk_export = {
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,
+        sidebar: sidebar, /* needed for add snapin page */
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
@@ -109,4 +111,3 @@ export const cmk_export = {
         figures: cmk_figures,
     }
 };
-

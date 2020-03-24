@@ -31,7 +31,6 @@ import io
 import socket
 import sre_constants
 import time
-import types
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple, Type,
     Union,
@@ -107,7 +106,7 @@ class ValueSpec(object):
 
     def help(self):
         # type: () -> Union[Text, HTML, None]
-        if isinstance(self._help, (types.LambdaType, types.FunctionType, types.MethodType)):
+        if callable(self._help):
             return self._help()
 
         if isinstance(self._help, HTML):
@@ -149,7 +148,7 @@ class ValueSpec(object):
         This is optional and only used in the value editor for same cases where
         the default value is known."""
         try:
-            if isinstance(self._default_value, (types.FunctionType, types.MethodType)):
+            if callable(self._default_value):
                 return self._default_value()
             return self._default_value
         except Exception:

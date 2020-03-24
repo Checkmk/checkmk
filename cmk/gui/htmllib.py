@@ -1449,6 +1449,10 @@ class html(ABCHTMLGenerator):
         # type: (OutputFunnelInput) -> None
         self.output_funnel.write(text)
 
+    def write_binary(self, data):
+        # type: (bytes) -> None
+        self.output_funnel.write_binary(data)
+
     @contextmanager
     def plugged(self):
         # type: () -> Iterator[None]

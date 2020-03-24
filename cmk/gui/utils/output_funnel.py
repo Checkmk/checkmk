@@ -53,6 +53,11 @@ class OutputFunnel(object):
         else:
             self._lowlevel_write(six.ensure_binary(text))
 
+    # Please note that this does not work with the plugs at the moment (The plugs store text)
+    def write_binary(self, data):
+        # type: (bytes) -> None
+        self._response.stream.write(data)
+
     def _lowlevel_write(self, text):
         # type: (bytes) -> None
         self._response.stream.write(text)

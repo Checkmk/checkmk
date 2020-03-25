@@ -550,40 +550,53 @@ class _GroupSelection(ElementSelection):
 
 def ContactGroupSelection(**kwargs):
     """Select a single contact group"""
-    return _GroupSelection("contact",
-                           choices=lambda: _group_choices(load_contact_group_information()),
-                           **kwargs)
+    return _GroupSelection("contact", choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupSelection(**kwargs):
     """Select a single service group"""
-    return _GroupSelection("service",
-                           choices=lambda: _group_choices(load_service_group_information()),
-                           **kwargs)
+    return _GroupSelection("service", choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupSelection(**kwargs):
     """Select a single host group"""
-    return _GroupSelection("host",
-                           choices=lambda: _group_choices(load_host_group_information()),
-                           **kwargs)
+    return _GroupSelection("host", choices=_sorted_host_group_choices, **kwargs)
 
 
 def ContactGroupChoice(**kwargs):
     """Select multiple contact groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_contact_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupChoice(**kwargs):
     """Select multiple service groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_service_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupChoice(**kwargs):
     """Select multiple host groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+    return DualListChoice(choices=_sorted_host_group_choices, **kwargs)
+
+
+def _sorted_contact_group_choices():
+    cache_id = "sorted_contact_group_choices"
+    if cache_id not in current_app.g:
+        current_app.g[cache_id] = _group_choices(load_contact_group_information())
+    return current_app.g[cache_id]
+
+
+def _sorted_service_group_choices():
+    cache_id = "sorted_service_group_choices"
+    if cache_id not in current_app.g:
+        current_app.g[cache_id] = _group_choices(load_service_group_information())
+    return current_app.g[cache_id]
+
+
+def _sorted_host_group_choices():
+    cache_id = "sorted_host_group_choices"
+    if cache_id not in current_app.g:
+        current_app.g[cache_id] = _group_choices(load_host_group_information())
+    return current_app.g[cache_id]
 
 
 def _group_choices(group_information):

@@ -30,6 +30,7 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.gui.globals import current_app
 
 
 def builtin_timeperiods():
@@ -48,8 +49,12 @@ def builtin_timeperiods():
 
 
 def load_timeperiods():
+    if "timeperiod_information" in current_app.g:
+        return current_app.g["timeperiod_information"]
     timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
     timeperiods.update(builtin_timeperiods())
+
+    current_app.g["timeperiod_information"] = timeperiods
     return timeperiods
 
 
@@ -59,6 +64,7 @@ def save_timeperiods(timeperiods):
                           "timeperiods",
                           _filter_builtin_timeperiods(timeperiods),
                           pprint_value=config.wato_pprint_config)
+    current_app.g["timeperiod_information"] = timeperiods
 
 
 def _filter_builtin_timeperiods(timeperiods):

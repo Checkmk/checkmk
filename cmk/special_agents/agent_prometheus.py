@@ -95,7 +95,7 @@ class NodeExporter:
                 mountpoint_dict[entity_name] = int(float(mountpoint_info["value"]))
 
         result = []  # type: List[str]
-        for device, device_info in temp_result.items():
+        for _device, device_info in temp_result.items():
             if all(k in device_info for k in ("type", "size", "used", "available", "mountpoint")):
                 device_parsed = "{name} {type} {size} {used} {available} None {mountpoint}".format(
                     **device_info)

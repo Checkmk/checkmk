@@ -8,10 +8,18 @@ Knowledge: undoc
 Level: 2
 Version: 1.7.0i1
 
-We are now converting all plugins in the share/check_mk/checks
-and local/share/check_mk/checks to the new format expected by
-the future API. Although we are trying to migrate as many check
-plugins as possible on the fly, for some plugins this may fail.
+We are now converting all plugins to the new format expected by
+the future API. Migrated are plugins from
+
+<ul>
+  <li>share/check_mk/checks</li>
+  <li>local/share/check_mk/checks</li>
+  <li>share/check_mk/inventory</li>
+  <li>local/share/check_mk/inventory</li>
+</ul>
+
+Although we are trying to migrate as many check and inventory plugins
+as possible on the fly, for some plugins this may fail.
 
 These are the anticipated reasons why auto-migration may fail:
 
@@ -20,6 +28,11 @@ These are the anticipated reasons why auto-migration may fail:
 Checkmk refuses to auto-migrate cluster aware (those with node_info
 set to True) SNMP check plugins. Auto converting the data layout
 is too error prone.
+
+<h4>A missing SNMP scan function</h4>
+
+Every Checkplugin that specifies an 'snmp_info' key must
+specify 'snmp_scan_function' as well.
 
 <h4>A complex SNMP scan function</h4>
 

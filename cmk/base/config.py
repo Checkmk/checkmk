@@ -1900,8 +1900,8 @@ def convert_check_info():
             snmp_scan_functions[section_name] = info["snmp_scan_function"]
 
 
-_AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
-                           "Please refer to Werk 10601 for more information.")
+AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
+                          "Please refer to Werk 10601 for more information.")
 
 
 def _extract_agent_and_snmp_sections():
@@ -1940,7 +1940,7 @@ def _extract_agent_and_snmp_sections():
             # test otherwise.
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
-            #console.warning(_AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            #console.warning(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
             pass
 
 

@@ -14,5 +14,5 @@ item:
  The item is the name of custom service defined in the datasource rule.
 
 inventory:
- One service for each custom service configured within the datasource rule
- will be created. E.g. {"Jira My_custom_service_name"}.
+ One service is created for each custom service configured within the datasource rule.
+ E.g. {"Jira My_custom_service_name"}.

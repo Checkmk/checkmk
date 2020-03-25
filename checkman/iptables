@@ -13,6 +13,5 @@ description:
  service rediscovery can be performed.
 
 inventory:
- One check per system is created if the agent plugin mk_iptables was
- deployed.
+ One service is created for each system if the agent plugin mk_iptables was deployed.
 

@@ -12,5 +12,5 @@ item:
  Current value of the counter
 
 inventory:
- Creates up to two items - one per temperature sensor.
+ One service is created for each temperature sensor (up to two).
 

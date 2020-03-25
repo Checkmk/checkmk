@@ -16,4 +16,4 @@ item:
  The display name of the node
 
 inventory:
- One service per node {"Jenkins Node"} will be created
+ One service is created for each node ({"Jenkins Node"}).

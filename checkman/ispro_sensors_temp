@@ -18,4 +18,4 @@ item:
  The name of the temperature sensor
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

@@ -58,15 +58,15 @@ def test_validate_host_label_function_value(host_label_function, exception_type)
         section_plugins._validate_host_label_function(host_label_function)
 
 
-def test_validate_supercedings():
-    supercedes = [
+def test_validate_supersedings():
+    supersedes = [
         PluginName("foo"),
         PluginName("bar"),
         PluginName("foo"),
     ]
 
     with pytest.raises(ValueError, match="duplicate"):
-        section_plugins._validate_supercedings(supercedes)
+        section_plugins._validate_supersedings(supersedes)
 
 
 def test_create_agent_section_plugin():
@@ -75,7 +75,7 @@ def test_create_agent_section_plugin():
             name="norris",
             parsed_section_name="chuck",
             parse_function=_parse_dummy,
-            supercedes=None,
+            supersedes=None,
             forbidden_names=[],
         )
 
@@ -84,7 +84,7 @@ def test_create_agent_section_plugin():
             name="norris",
             parsed_section_name=None,
             parse_function=_parse_dummy,
-            supercedes=["Foo", "Bar"],
+            supersedes=["Foo", "Bar"],
             forbidden_names=[],
         )
 
@@ -92,7 +92,7 @@ def test_create_agent_section_plugin():
         name="norris",
         parsed_section_name=None,  # "chuck"
         parse_function=_parse_dummy,
-        supercedes=None,  # ["Foo", "Bar"],
+        supersedes=None,  # ["Foo", "Bar"],
         forbidden_names=[],
     )
 
@@ -102,7 +102,7 @@ def test_create_agent_section_plugin():
     assert plugin.parsed_section_name == PluginName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
-    assert plugin.supercedes == []  # [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supersedes == []  # [PluginName("Bar"), PluginName("Foo")]
 
 
 def test_create_snmp_section_plugin():
@@ -125,7 +125,7 @@ def test_create_snmp_section_plugin():
             parse_function=_parse_dummy,
             trees=trees,
             detect_spec=detect,
-            supercedes=None,
+            supersedes=None,
             forbidden_names=[],
         )
 
@@ -136,7 +136,7 @@ def test_create_snmp_section_plugin():
             parse_function=_parse_dummy,
             trees=trees,
             detect_spec=detect,
-            supercedes=["Foo", "Bar"],
+            supersedes=["Foo", "Bar"],
             forbidden_names=[],
         )
 
@@ -146,7 +146,7 @@ def test_create_snmp_section_plugin():
         parse_function=_parse_dummy,
         trees=trees,
         detect_spec=detect,
-        supercedes=None,  # ["Foo", "Bar"],
+        supersedes=None,  # ["Foo", "Bar"],
         forbidden_names=[],
     )
 
@@ -158,4 +158,4 @@ def test_create_snmp_section_plugin():
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
-    assert plugin.supercedes == []  # [PluginName("Bar"), PluginName("Foo")]
+    assert plugin.supersedes == []  # [PluginName("Bar"), PluginName("Foo")]

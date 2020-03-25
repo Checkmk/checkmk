@@ -56,10 +56,10 @@ def _validate_host_label_function(host_label_function):
         raise ValueError("host label function must accept exactly one argument 'section'")
 
 
-def _validate_supercedings(supercedes):
+def _validate_supersedings(supersedes):
     # type: (List[PluginName]) -> None
-    if not len(supercedes) == len(set(supercedes)):
-        raise ValueError("duplicate supercedes entry")
+    if not len(supersedes) == len(set(supersedes)):
+        raise ValueError("duplicate supersedes entry")
 
 
 def _validate_detect_spec(detect_spec):
@@ -118,15 +118,15 @@ def _create_host_label_function(host_label_function):
     return host_label_function
 
 
-def _create_supercedes(supercedes):
+def _create_supersedes(supersedes):
     # type: (Optional[List[str]]) -> List[PluginName]
-    if supercedes is None:
+    if supersedes is None:
         return []
 
-    supercedes_plugins = [PluginName(n) for n in supercedes]
-    _validate_supercedings(supercedes_plugins)
+    supersedes_plugins = [PluginName(n) for n in supersedes]
+    _validate_supersedings(supersedes_plugins)
 
-    return sorted(supercedes_plugins)
+    return sorted(supersedes_plugins)
 
 
 def create_agent_section_plugin(
@@ -135,7 +135,7 @@ def create_agent_section_plugin(
     parsed_section_name=None,  # type: Optional[str]
     parse_function=None,  # type: Optional[AgentParseFunction]
     host_label_function=None,  # type: Optional[HostLabelFunction]
-    supercedes=None,  # type:  Optional[List[str]]
+    supersedes=None,  # type:  Optional[List[str]]
     forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> AgentSectionPlugin
@@ -148,8 +148,8 @@ def create_agent_section_plugin(
     if (name is None or parse_function is None or forbidden_names is None):
         raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
-    if supercedes is not None:
-        raise NotImplementedError("supercedes is not yet available")
+    if supersedes is not None:
+        raise NotImplementedError("supersedes is not yet available")
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
@@ -162,7 +162,7 @@ def create_agent_section_plugin(
         PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
         parse_function,
         _create_host_label_function(host_label_function),
-        _create_supercedes(supercedes),
+        _create_supersedes(supersedes),
     )
 
 
@@ -172,7 +172,7 @@ def create_snmp_section_plugin(
     parsed_section_name=None,  # type: Optional[str]
     parse_function=None,  # type: Optional[SNMPParseFunction]
     host_label_function=None,  # type: Optional[HostLabelFunction]
-    supercedes=None,  # type:  Optional[List[str]]
+    supersedes=None,  # type:  Optional[List[str]]
     detect_spec=None,  # type: Optional[SNMPDetectSpec]
     trees=None,  # type: Optional[List[SNMPTree]]
     forbidden_names=None,  # type: Optional[List[PluginName]]
@@ -188,8 +188,8 @@ def create_snmp_section_plugin(
             forbidden_names is None):
         raise TypeError()
     # TODO (mo): Well, implement it, and remove pragma below!
-    if supercedes is not None:
-        raise NotImplementedError("supercedes is not yet available")
+    if supersedes is not None:
+        raise NotImplementedError("supersedes is not yet available")
     if parsed_section_name is not None:
         raise NotImplementedError("parsed_section_name is not yet available")
 
@@ -204,7 +204,7 @@ def create_snmp_section_plugin(
         PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
         parse_function,
         _create_host_label_function(host_label_function),
-        _create_supercedes(supercedes),
+        _create_supersedes(supersedes),
         detect_spec,
         trees,
     )

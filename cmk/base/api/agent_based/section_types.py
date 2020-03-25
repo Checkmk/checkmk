@@ -128,7 +128,7 @@ AgentSectionPlugin = NamedTuple("AgentSectionPlugin", [
     ("parsed_section_name", PluginName),
     ("parse_function", AgentParseFunction),
     ("host_label_function", HostLabelFunction),
-    ("supercedes", List[PluginName]),
+    ("supersedes", List[PluginName]),
 ])
 
 SNMPSectionPlugin = NamedTuple("SNMPSectionPlugin", [
@@ -136,7 +136,7 @@ SNMPSectionPlugin = NamedTuple("SNMPSectionPlugin", [
     ("parsed_section_name", PluginName),
     ("parse_function", SNMPParseFunction),
     ("host_label_function", HostLabelFunction),
-    ("supercedes", List[PluginName]),
+    ("supersedes", List[PluginName]),
     ("detect_spec", SNMPDetectSpec),
     ("trees", List[SNMPTree]),
 ])

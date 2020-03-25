@@ -955,7 +955,7 @@ def migrate_old_site_config(site_config):
 
 # During development of the 1.6 version the site configuration has been cleaned up in several ways:
 # 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
-#    deprecated long time ago and was not configurable in WATO. This has now been superceeded by
+#    deprecated long time ago and was not configurable in WATO. This has now been superseded by
 #    the dedicated "disabled" attribute.
 # 2. The "socket" attribute was optional. A not present socket meant "connect to local unix" socket.
 #    This is now replaced with a value like this ("local", None) to reflect the generic

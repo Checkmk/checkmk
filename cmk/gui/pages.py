@@ -19,6 +19,8 @@ from cmk.utils.exceptions import MKException
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
+PageResult = Any
+AjaxPageResult = Dict[str, Any]
 
 
 class Page(six.with_metaclass(abc.ABCMeta, object)):
@@ -34,7 +36,7 @@ class Page(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def page(self):
-        # type: () -> Any
+        # type: () -> PageResult
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -58,7 +60,7 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
 
     @abc.abstractmethod
     def page(self):
-        # type: () -> Dict[str, Any]
+        # type: () -> AjaxPageResult
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 

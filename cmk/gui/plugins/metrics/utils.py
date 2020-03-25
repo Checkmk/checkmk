@@ -10,7 +10,9 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union,
+)
 
 import six
 
@@ -23,6 +25,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.valuespec import DropdownChoice
+
+LegacyPerfometer = Tuple[str, Any]
+Perfometer = Dict[str, Any]
+TranslatedMetrics = Dict[str, Dict[str, Any]]
 
 
 class AutomaticDict(OrderedDict):
@@ -42,7 +48,7 @@ class AutomaticDict(OrderedDict):
 unit_info = {}  # type: Dict[str, Any]
 metric_info = {}  # type: Dict[str, Dict[str, Any]]
 check_metrics = {}  # type: Dict[str, Dict[str, Any]]
-perfometer_info = []  # type: List[Dict[str, Any]]
+perfometer_info = []  # type: List[Union[LegacyPerfometer, Perfometer]]
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -321,7 +327,7 @@ def get_metric_info(metric_name, color_index):
 
 
 def translate_metrics(perf_data, check_command):
-    # type: (List[Tuple], str) -> Dict[str, Dict[str, Any]]
+    # type: (List[Tuple], str) -> TranslatedMetrics
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 

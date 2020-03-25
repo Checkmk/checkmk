@@ -357,6 +357,25 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
+    def get_float_input(self, varname, deflt=None):
+        # type: (str, Optional[float]) -> Optional[float]
+
+        value = self.var(varname, "%s" % deflt if deflt is not None else None)
+        if value is None:
+            return None
+
+        try:
+            return float(value)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not a float.") % varname)
+
+    def get_float_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[float]) -> float
+        value = self.get_float_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
 
 class Response(werkzeug.wrappers.Response):
     # NOTE: Currently we rely on a *relavtive* Location header in redirects!

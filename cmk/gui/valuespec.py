@@ -381,8 +381,8 @@ class Integer(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         size=None,  # type: _Optional[int]
-        minvalue=None,  # type: Union[None, int, float]
-        maxvalue=None,  # type: Union[None, int, float]
+        minvalue=None,  # type: _Optional[int]
+        maxvalue=None,  # type: _Optional[int]
         label=None,  # type: _Optional[Text]
         unit="",  # type: Text
         thousand_sep=None,  # type: _Optional[Text]
@@ -410,15 +410,13 @@ class Integer(ValueSpec):
         if size is not None:
             self._size = size
         elif maxvalue is not None:
-            self._size = 1 + int(math.log10(maxvalue)) + (3 if isinstance(maxvalue, float) else 0)
+            self._size = 1 + int(math.log10(maxvalue))
         else:
             self._size = 5
 
     def canonical_value(self):
-        # type: () -> Union[float, int]
-        if self._minvalue:
-            return self._minvalue
-        return 0
+        # type: () -> int
+        return self._minvalue if self._minvalue else 0
 
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
@@ -454,15 +452,12 @@ class Integer(ValueSpec):
         return html.request.get_integer_input_mandatory(varprefix)
 
     def value_to_text(self, value):
-        # type: (float) -> Text
+        # type: (int) -> Text
         text = self._display_format % value
         if self._thousand_sep:
-            sepped = u""
-            rest = text
-            while len(rest) > 3:
-                sepped = self._thousand_sep + rest[-3:] + sepped
-                rest = rest[:-3]
-            sepped = rest + sepped
+            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
+            for pos in range(len(sepped), len(text), 3):
+                sepped += self._thousand_sep + text[pos:pos + 3]
             text = sepped
 
         if self._unit:
@@ -2253,7 +2248,7 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
             return {"html_code": html.drain()}
 
 
-class Float(Integer):
+class Float(ValueSpec):
     """Same as Integer, but for floating point values"""
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -2274,43 +2269,78 @@ class Float(Integer):
         default_value=DEF_VALUE,  # type: Any
         validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
-        super(Float, self).__init__(size=size,
-                                    minvalue=minvalue,
-                                    maxvalue=maxvalue,
-                                    label=label,
-                                    unit=unit,
-                                    thousand_sep=thousand_sep,
-                                    display_format=display_format,
-                                    align=align,
-                                    title=title,
+        super(Float, self).__init__(title=title,
                                     help=help,
                                     default_value=default_value,
                                     validate=validate)
+        # TODO: inconsistency with default_value. All should be named with underscore
+        self._minvalue = minvalue
+        self._maxvalue = maxvalue
+        self._label = label
+        self._unit = unit
+        self._thousand_sep = thousand_sep
+        self._display_format = display_format
+        self._align = align
+
+        if size is not None:
+            self._size = size
+        elif maxvalue is not None:
+            self._size = 4 + int(math.log10(maxvalue))
+        else:
+            self._size = 5
+
         self._decimal_separator = decimal_separator
         self._allow_int = allow_int
+
+    def canonical_value(self):
+        # type: () -> float
+        return self._minvalue if self._minvalue else 0.0
+
+    def render_input(self, varprefix, value):
+        # type: (str, float) -> None
+        if self._label:
+            html.write(self._label)
+            html.nbsp()
+        if self._align == "right":
+            style = "text-align: right;"
+        else:
+            style = ""
+        if value == "":  # This is needed for ListOfIntegers
+            html.text_input(varprefix,
+                            default_value="",
+                            cssclass="number",
+                            size=self._size,
+                            style=style)
+        else:
+            html.text_input(varprefix,
+                            self._render_value(value),
+                            size=self._size,
+                            style=style,
+                            cssclass="number")
+        if self._unit:
+            html.nbsp()
+            html.write(self._unit)
 
     def _render_value(self, value):
         # type: (float) -> Text
         return self._display_format % utils.savefloat(value)
 
-    def canonical_value(self):
-        # type: () -> float
-        return float(Integer.canonical_value(self))
+    def from_html_vars(self, varprefix):
+        # type: (str) -> float
+        return html.request.get_float_input_mandatory(varprefix)
 
     def value_to_text(self, value):
         # type: (float) -> Text
-        return super(Float, self).value_to_text(value).replace(".", self._decimal_separator)
+        text = self._display_format % value
+        if self._thousand_sep:
+            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
+            for pos in range(len(sepped), len(text), 3):
+                sepped += self._thousand_sep + text[pos:pos + 3]
+            text = sepped
 
-    # TODO: Cleanup this hierarchy problem
-    def from_html_vars(self, varprefix):  # type: ignore[override]
-        # type: (str) -> float
-        try:
-            return float(html.request.get_str_input_mandatory(varprefix, ""))
-        except Exception:
-            raise MKUserError(
-                varprefix,
-                _("The text <b><tt>%s</tt></b> is not a valid floating point number.") %
-                html.request.var(varprefix))
+        if self._unit:
+            text += "&nbsp;" + self._unit
+        return text.replace(".", self._decimal_separator)
 
     def validate_datatype(self, value, varprefix):
         # type: (float, str) -> None
@@ -2324,6 +2354,17 @@ class Float(Integer):
             varprefix,
             _("The value %r has type %s, but must be of type float%s") %
             (value, _type_name(value), _(" or int") if self._allow_int else ''))
+
+    def validate_value(self, value, varprefix):
+        # type: (float, str) -> None
+        if self._minvalue is not None and value < self._minvalue:
+            raise MKUserError(
+                varprefix,
+                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
+        if self._maxvalue is not None and value > self._maxvalue:
+            raise MKUserError(
+                varprefix,
+                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
 
 
 class Percentage(Float):

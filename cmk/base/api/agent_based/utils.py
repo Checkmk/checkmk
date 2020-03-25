@@ -53,6 +53,11 @@ def _negate(spec):
     return [[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]]
 
 
+def matches(oidstr, value):
+    # type: (str, str) -> SNMPDetectSpec
+    return [[(oidstr, value, True)]]
+
+
 def contains(oidstr, value):
     # type: (str, str) -> SNMPDetectSpec
     return [[(oidstr, '.*%s.*' % re.escape(value), True)]]
@@ -76,6 +81,11 @@ def equals(oidstr, value):
 def exists(oidstr):
     # type: (str) -> SNMPDetectSpec
     return [[(oidstr, '.*', True)]]
+
+
+def not_matches(oidstr, value):
+    # type: (str, str) -> SNMPDetectSpec
+    return _negate(matches(oidstr, value))
 
 
 def not_contains(oidstr, value):

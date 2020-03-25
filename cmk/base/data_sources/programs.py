@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections
 import os
 import signal
-import collections
+import sys
+import six
+from logging import Logger  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     Set, Union, Text, Optional, Tuple, Dict,
 )
-import sys
-import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -54,13 +55,14 @@ class ProgramDataSource(CheckMKAgentDataSource):
     def _execute(self):
         # type: () -> RawAgentData
         command_line, command_stdin = self._get_command_line_and_stdin()
-        return self._get_agent_info_program(command_line, command_stdin)
+        return ProgramDataSource._fetch_raw_data(command_line, command_stdin, self._logger)
 
-    def _get_agent_info_program(self, commandline, command_stdin):
-        # type: (Union[bytes, Text], Optional[str]) -> RawAgentData
+    @staticmethod
+    def _fetch_raw_data(commandline, command_stdin, logger):
+        # type: (Union[bytes, Text], Optional[str], Logger) -> RawAgentData
         exepath = commandline.split()[0]  # for error message, hide options!
 
-        self._logger.debug("Calling external program %r" % (commandline))
+        logger.debug("Calling external program %r" % (commandline))
         p = None
         try:
             if config.monitoring_core == "cmc":

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger  # pylint: disable=unused-import
 from typing import cast, Optional, Set, List  # pylint: disable=unused-import
 
 import six
@@ -95,13 +96,23 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         if not self._credentials:
             raise MKAgentError("Missing credentials")
 
+        if self._ipaddress is None:
+            raise MKAgentError("Missing IP address")
+
+        return IPMIManagementBoardDataSource._fetch_raw_data(self._ipaddress, self._credentials,
+                                                             self._logger)
+
+    @staticmethod
+    def _fetch_raw_data(ipaddress, credentials, logger):
+        # type: (HostAddress, IPMICredentials, Logger) -> RawAgentData
         connection = None
         try:
-            connection = self._create_ipmi_connection()
+            connection = IPMIManagementBoardDataSource._create_ipmi_connection(
+                ipaddress, credentials, logger)
 
             output = b""
-            output += self._fetch_ipmi_sensors_section(connection)
-            output += self._fetch_ipmi_firmware_section(connection)
+            output += IPMIManagementBoardDataSource._fetch_ipmi_sensors_section(connection, logger)
+            output += IPMIManagementBoardDataSource._fetch_ipmi_firmware_section(connection, logger)
 
             return output
         except Exception as e:
@@ -116,32 +127,32 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             if connection:
                 connection.ipmi_session.logout()
 
-    def _create_ipmi_connection(self):
-        # type: () -> ipmi_cmd.Command
+    @staticmethod
+    def _create_ipmi_connection(ipaddress, credentials, logger):
+        # type: (HostAddress, IPMICredentials, Logger) -> ipmi_cmd.Command
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        credentials = self._credentials
-
-        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
-                           (self._ipaddress, credentials["username"]))
-        return ipmi_cmd.Command(bmc=self._ipaddress,
+        logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
+                     (ipaddress, credentials["username"]))
+        return ipmi_cmd.Command(bmc=ipaddress,
                                 userid=credentials["username"],
                                 password=credentials["password"],
                                 privlevel=2)
 
-    def _fetch_ipmi_sensors_section(self, connection):
-        # type: (ipmi_cmd.Command) -> RawAgentData
-        self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
+    @staticmethod
+    def _fetch_ipmi_sensors_section(connection, logger):
+        # type: (ipmi_cmd.Command, Logger) -> RawAgentData
+        logger.debug("Fetching sensor data via UDP from %s:623" % (connection.bmc))
 
         try:
             sdr = ipmi_sdr.SDR(connection)
         except NotImplementedError as e:
-            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
-            self._logger.debug("Exception", exc_info=True)
+            logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
+            logger.debug("Exception", exc_info=True)
             return b""
 
         sensors = []
-        has_no_gpu = not self._has_gpu(connection)
+        has_no_gpu = not IPMIManagementBoardDataSource._has_gpu(connection, logger)
         for number in sdr.get_sensor_numbers():
             rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
@@ -153,7 +164,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(self._parse_sensor_reading(number, reading))
+                sensors.append(IPMIManagementBoardDataSource._parse_sensor_reading(number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
@@ -185,14 +196,15 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             health_txt,
         ]
 
-    def _fetch_ipmi_firmware_section(self, connection):
-        # type: (ipmi_cmd.Command) -> RawAgentData
-        self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
+    @staticmethod
+    def _fetch_ipmi_firmware_section(connection, logger):
+        # type: (ipmi_cmd.Command, Logger) -> RawAgentData
+        logger.debug("Fetching firmware information via UDP from %s:623" % (connection.bmc))
         try:
             firmware_entries = connection.get_firmware()
         except Exception as e:
-            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
-            self._logger.debug("Exception", exc_info=True)
+            logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
+            logger.debug("Exception", exc_info=True)
             return b""
 
         output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
@@ -203,14 +215,16 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         return output
 
-    # helper to sort out not installed GPU components
-    def _has_gpu(self, connection):
-        self._logger.debug("Fetching inventory information via UDP from %s:623" % (self._ipaddress))
+    @staticmethod
+    def _has_gpu(connection, logger):
+        # type: (ipmi_cmd.Command, Logger) -> bool
+        # helper to sort out not installed GPU components
+        logger.debug("Fetching inventory information via UDP from %s:623" % (connection.bmc))
         try:
             inventory_entries = connection.get_inventory_descriptions()
         except Exception as e:
-            self._logger.log(VERBOSE, "Failed to fetch inventory information: %r" % e)
-            self._logger.debug("Exception", exc_info=True)
+            logger.log(VERBOSE, "Failed to fetch inventory information: %r" % e)
+            logger.debug("Exception", exc_info=True)
             # in case of connection problems, we don't want to ignore possible
             # GPU entries
             return True

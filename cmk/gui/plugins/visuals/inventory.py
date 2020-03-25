@@ -400,7 +400,7 @@ class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
     @property
     def filtertext(self):
         "Returns the string to filter"
-        return html.request.var(self.htmlvars[0], "").strip().lower()
+        return html.request.get_str_input_mandatory(self.htmlvars[0], "").strip().lower()
 
     def need_inventory(self):
         # type: () -> bool
@@ -476,7 +476,7 @@ class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
 
         def _scaled_bound(value):
             try:
-                return float(html.request.var(value)) * self._scale
+                return html.request.get_float_input_mandatory(value) * self._scale
             except (TypeError, ValueError):
                 return None
 

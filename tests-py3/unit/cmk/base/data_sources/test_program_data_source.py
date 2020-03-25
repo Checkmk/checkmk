@@ -46,7 +46,7 @@ from testlib.base import Scenario
         ("'list0' 'list1'", "stdin_blob"),
     ),
 ])
-def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
+def test_command_line_and_stdin(monkeypatch, info_func_result, expected):
     Scenario().add_host("testhost").apply(monkeypatch)
     special_agent_id = "bi"
     agent_prefix = "%s/special/agent_%s " % (cmk.utils.paths.agents_dir, special_agent_id)
@@ -54,9 +54,8 @@ def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
     monkeypatch.setattr(config, "special_agent_info",
                         {special_agent_id: lambda a, b, c: info_func_result})
 
-    command_line, command_stdin = ds._get_command_line_and_stdin()
-    assert command_line == agent_prefix + expected[0]
-    assert command_stdin == expected[1]
+    assert ds.source_cmdline == agent_prefix + expected[0]
+    assert ds.source_stdin == expected[1]
 
 
 class TestDSProgramDataSource:
@@ -71,17 +70,18 @@ class TestDSProgramDataSource:
         assert source.name() == ""
         # ProgramDataSource
         assert source._cpu_tracking_id() == "ds"
-        assert source._get_command_line_and_stdin() == ("", None)
+        assert source.source_cmdline == ""
+        assert source.source_stdin == None
         assert source.describe() == "Program: "
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_translate_legacy_macro(self, monkeypatch, ipaddress):
+    def test_template_translation(self, monkeypatch, ipaddress):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
         source = DSProgramDataSource(hostname, ipaddress, template)
 
-        assert source._translate_legacy_macros(template) == "<NOTHING>x%sx%sx<host>x<ip>x" % (
+        assert source.source_cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
             ipaddress if ipaddress is not None else "", hostname)
 
 
@@ -99,7 +99,7 @@ class TestSpecialAgentDataSource:
         assert source._cpu_tracking_id() == "ds"
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_unconfigured_get_command_line_and_stdin_raise_KeyError(self, monkeypatch, ipaddress):
+    def test_unconfigured_command_line_raise_KeyError(self, monkeypatch, ipaddress):
         the_id = "my_id"
         hostname = "testhost"
         params = {}
@@ -108,7 +108,7 @@ class TestSpecialAgentDataSource:
 
         # TODO(ml): Does this make sense?
         with pytest.raises(KeyError):
-            source._get_command_line_and_stdin()
+            source.source_cmdline
 
         with pytest.raises(KeyError):
             source.describe()

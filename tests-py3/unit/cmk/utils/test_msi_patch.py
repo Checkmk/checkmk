@@ -5,12 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+import os
 import shutil
+from pathlib import Path
+
 import pytest  # type: ignore[import]
 
 import yaml
 
 from cmk.utils import msi_patch
+
+
+@pytest.fixture()
+def conf_dir(tmp_path):
+    path = tmp_path / "temp"
+    path.mkdir(parents=True)
+    return path
+
 
 aaa_marker = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode('ascii')
 
@@ -42,7 +53,7 @@ def test_parse_command_line():
         assert True
 
 
-def test_low_level_functions(conf_dir, cmk_dir):
+def test_low_level_functions(conf_dir):
     assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
     assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
     assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
@@ -54,14 +65,21 @@ def test_low_level_functions(conf_dir, cmk_dir):
     assert _id == "12"
 
 
-def test_patch_package_code_by_state_file(conf_dir, cmk_dir):
+def _get_test_file(fname):
+    # we want to check that files are present
+    # This check is mostly required to keep the test with BUILD in sync: scm checkout valid dirs,
+    # directory tree, etc.
+    root_path = Path("../agents/wnx/test_files/msibuild/msi")
+    assert root_path.exists(), "test dir is absent, work dir is '{}'".format(os.getcwd())
+    src = root_path / fname
+    assert src.exists(), "test file '{}' is absent, work dir is '{}'".format(src, os.getcwd())
+    return src
+
+
+def test_patch_package_code_by_state_file(conf_dir):
     # prepare file to tests
-    if not cmk_dir.exists():
-        pytest.skip("cmk_dir is not good")
     fname = u"test_bin.tst"
-    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
-    if not src.exists():
-        pytest.skip("Path with MSI doesn't exist")
+    src = _get_test_file(fname=fname)
 
     uuid = msi_patch.generate_uuid()
 
@@ -82,14 +100,10 @@ def test_patch_package_code_by_state_file(conf_dir, cmk_dir):
     assert new_content.find(uuid.encode('ascii')) == 4
 
 
-def test_patch_package_code_with_state(conf_dir, cmk_dir):
+def test_patch_package_code_with_state(conf_dir):
     # prepare file to tests
-    if not cmk_dir.exists():
-        pytest.skip("cmk_dir is not good")
     fname = u"test_bin.tst"
-    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
-    if not src.exists():
-        pytest.skip("Path with MSI doesn't exist")
+    src = _get_test_file(fname=fname)
 
     uuid = msi_patch.generate_uuid()
 
@@ -137,9 +151,10 @@ def test_patch_package_code_with_state(conf_dir, cmk_dir):
 def check_content(new_content, base_content, pos, uuid, marker):
     # type: (bytes, bytes, int, str, bytes) -> None
     assert new_content.find(marker) == -1
-    new_pos = new_content.find(uuid.encode('ascii'))
+    new_pos = new_content.decode('utf-8').find(uuid)
     assert new_pos == pos
-    assert new_content[pos:pos + len(uuid)] == uuid
+    z = new_content[pos:pos + len(uuid)]
+    assert z.decode('utf-8') == uuid
     assert new_content[:pos] == base_content[:pos]
     assert new_content[pos + len(uuid):] == base_content[pos + len(uuid):]
 
@@ -161,14 +176,10 @@ def test_uuid_base():
         "012")
 
 
-def test_patch_package_code_by_marker(conf_dir, cmk_dir):
+def test_patch_package_code_by_marker(conf_dir):
     # prepare file to tests
-    if not cmk_dir.exists():
-        pytest.skip("cmk_dir is not good")
     fname = u"test_bin.tst"
-    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
-    if not src.exists():
-        pytest.skip("Path with MSI doesn't exist")
+    src = _get_test_file(fname=fname)
 
     uuid = msi_patch.generate_uuid()
 
@@ -204,14 +215,10 @@ def test_patch_package_code_by_marker(conf_dir, cmk_dir):
     assert _id == uuid
 
 
-def test_patch_package_code(conf_dir, cmk_dir):
+def test_patch_package_code(conf_dir):
     # prepare file to tests
-    if not cmk_dir.exists():
-        pytest.skip("cmk_dir is not good")
     fname = u"test_bin.tst"
-    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
-    if not src.exists():
-        pytest.skip("Path with MSI doesn't exist")
+    src = _get_test_file(fname=fname)
 
     uuid = msi_patch.generate_uuid()
     marker = msi_patch.TRADITIONAL_UUID.encode('ascii')

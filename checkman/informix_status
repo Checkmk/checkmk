@@ -16,4 +16,4 @@ item:
  Name of the instance
 
 inventory:
- One service per instance.
+ One service is created for each instance.

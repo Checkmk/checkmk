@@ -14,4 +14,4 @@ item:
  Name of the tablespace
 
 inventory:
- One service per tablespace.
+ One service is created for each tablespace.

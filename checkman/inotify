@@ -17,4 +17,4 @@ item:
  {{file}} or {{folder}} plus the path to it
 
 inventory:
- One check is created for every explictely specified file and folder in the mk_inotify.cfg.
+ One service is created for each explictely specified file and folder in the mk_inotify.cfg.

@@ -8,4 +8,4 @@ description:
  goes WARN or CRIT when the voltage is outside a defined interval.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

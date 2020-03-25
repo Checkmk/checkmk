@@ -17,4 +17,4 @@ item:
  The slot ID.
 
 inventory:
- One service for each slot is created.
+ One service is created for each slot.

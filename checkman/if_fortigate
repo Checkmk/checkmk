@@ -15,3 +15,11 @@ description:
  of {ifAlias}, because {ifAlias} is not useful in Fortigate firewalls.
 
  Please refer to the if64 manpage for documentation.
+
+inventory:
+ One service is created for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
+ {32} (frameRelay), {117} (gigabitEthernet) or several others.
+
+ For further details look at {if64} manpage.
+

@@ -13,4 +13,4 @@ item:
  The node identifier.
 
 inventory:
- One service for each node is created.
+ One service is created for each node.

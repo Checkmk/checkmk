@@ -19,4 +19,4 @@ item:
  Type of the device (i.e. {{System}} or {{CPU}}) and the index
 
 inventory:
- One service for each sensor is created.
+ One service is created for each sensor.

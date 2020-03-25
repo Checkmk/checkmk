@@ -18,3 +18,10 @@ description:
  That way you are able to ignore the effective state of the interface as
  long as it is "admin down" and still get alarmed if ports go down while
  the admin status is up.
+
+inventory:
+ One service is created for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
+ {32} (frameRelay), {117} (gigabitEthernet) or several others.
+
+ For further details look at {if64} manpage.

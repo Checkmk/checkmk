@@ -10,5 +10,5 @@ item:
  {{RX}} or {{TX}}
 
 inventory:
- One check per PLL is created.
+ One service is created for each PLL.
 

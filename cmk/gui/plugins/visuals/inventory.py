@@ -477,7 +477,7 @@ class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
         def _scaled_bound(value):
             try:
                 return html.request.get_float_input_mandatory(value) * self._scale
-            except (TypeError, ValueError):
+            except MKUserError:
                 return None
 
         return [_scaled_bound(val) for val in self.htmlvars[:2]]

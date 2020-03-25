@@ -6,10 +6,10 @@ distribution: check_mk
 description:
  This check makes sure the essential {dspmq} and {runmqsc} IBM MQ tools are
  usable by the agent. It also reports the plugin version.
- 
+
  The state is CRITICAL when one of the tools is not usable. The state is also
  CRITICAL if the plugin version does not match a specific or minimal version.
 
 item:
- One service per host.
+ One service is created for each host.
 

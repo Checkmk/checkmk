@@ -22,5 +22,4 @@ item:
  The ID of the RAID Array as delivered by lsarray command.
 
 inventory:
- Creates one check for every RAID Array on the IBM SVC / Storwize V3700 / V7000
- device.
+ One service is created for each RAID Array.

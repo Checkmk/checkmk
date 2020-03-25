@@ -9,10 +9,16 @@ description:
 
  For each metric thresholds for WARN or CRITICAL state can be configured.
 
+ The checks shows the
+
+ - queue name
+
+ - maximum number of messages
+
+ - maximum message size
+
 item:
  The name of the queue, prefixed by the queue manager name.
 
 inventory:
- For each queue manager, show the queue name, maximum number of messages and
- maximum message size.
-
+ One service is created for each queue manager.

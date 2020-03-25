@@ -16,7 +16,7 @@ description:
  Alternatively, limits can be configured via a rule.
 
 inventory:
- The service discovery will find one service per temperature sensor
+ One service is created for each temperature sensor.
 
 item:
  The name of the temperature sensor as extracted from the OID {tempDescr}

@@ -16,4 +16,4 @@ item:
  ID of the drive
 
 inventory:
-  One item per connected drive is created.
+ One service is created for each connected drive.

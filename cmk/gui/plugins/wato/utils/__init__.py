@@ -629,7 +629,9 @@ def HTTPProxyReference():
                  help=
                  _("Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
                    "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                   "Have a look at the python requests module documentation for further information."
+                   "Have a look at the python requests module documentation for further information. Note "
+                   "that these variables must be defined as a site-user in ~/etc/environment and that "
+                   "this might affect other notification methods which also use the requests module."
                   ),
                  totext=_("Use proxy settings from the process environment"),
              )),

@@ -6581,6 +6581,12 @@ metric_info['gc_bytes_rate'] = {
     "color": "42/a",
 }
 
+metric_info['log_file_utilization'] = {
+    "title": _("Percentage of log file used"),
+    "unit": "%",
+    "color": "42/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -10195,6 +10201,12 @@ perfometer_info.append({
     "exponent": 2,
 })
 
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["log_file_utilization"],
+    "total": 100.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -10928,6 +10940,10 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
 graph_info["disk_utilization"] = {
     "metrics": [("disk_utilization", "area"),],
     "range": (0, 100),
+    "scalars": [
+        "disk_utilization:warn",
+        "disk_utilization:crit",
+    ],
 }
 
 graph_info["disk_throughput"] = {

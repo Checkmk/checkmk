@@ -33029,6 +33029,12 @@ msgstr "Anderen Benutzern freigeben"
 msgid "Publisher"
 msgstr "Publisher"
 
+msgid "Pulse Secure disk utilization"
+msgstr "Pulse Secure Festplattennutzung"
+
+msgid "Pulse Secure IVE memory utilization"
+msgstr "Pulse Secure IVE Speichernutzung"
+
 msgid "Pulse Secure users"
 msgstr "Pulse Secure Benutzer"
 
@@ -50222,6 +50228,9 @@ msgstr "Obere Schwellen für die Lizenzgröße"
 msgid "Upper levels for disk usage"
 msgstr "Obere Schwellen für die Festplattennutzung"
 
+msgid "Upper levels for disk utilization"
+msgstr "Obere Schwellen für die Festplattennutzung"
+
 msgid "Upper levels for encountered exceptions"
 msgstr "Obere Schwellen für aufgetretene Exceptions"
 
@@ -50239,6 +50248,12 @@ msgstr "Obere Schwellen für Indices"
 
 msgid "Upper levels for infections"
 msgstr "Obere Schwellen für Infizierungen"
+
+msgid "Upper levels for IVE RAM utilization"
+msgstr "Obere Schwellen für die IVE RAM-Nutzung"
+
+msgid "Upper levels for IVE swap utilization"
+msgstr "Obere Schwellen für die IVE Swap-Nutzung"
 
 msgid "Upper levels for latency"
 msgstr "Obere Schwellen für Latenzzeit"

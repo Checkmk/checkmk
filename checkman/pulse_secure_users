@@ -4,8 +4,8 @@ catalog: app/pulse_secure
 license: GPL
 distribution: check_mk
 description:
- This check monitors the number of signed-in Pulse Secure web users via
- SNMP. The check has cluster capabilities.
+ This check monitors the number of signed-in Pulse Secure web users.
+ The check has cluster capabilities.
 
  There are no default upper levels, but they can be configured using
  the rule "Pulse Secure users".

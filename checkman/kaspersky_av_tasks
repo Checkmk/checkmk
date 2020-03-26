@@ -12,4 +12,4 @@ item:
  Name of the job
 
 inventory:
- One service will be created for each task will be created.
+ One service is created for each task.

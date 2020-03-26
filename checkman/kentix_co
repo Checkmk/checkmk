@@ -9,3 +9,6 @@ description:
 
  The device allows to configure an upper levels. Default
  levels are set to 10, 25 parts per million
+
+inventory:
+ One service is created.

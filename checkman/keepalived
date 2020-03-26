@@ -11,4 +11,4 @@ item:
  The ID of the VRRP instance
 
 inventory:
- One service for each VRRP is created.
+ One service is created for each VRRP.

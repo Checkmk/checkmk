@@ -10,5 +10,5 @@ description:
  This check works with KESL.
 
 inventory:
- One service will be created for each system will be created.
+ One service is created for each system.
 

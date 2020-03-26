@@ -7,7 +7,7 @@ description:
  This check monitors the configured SSL VPN tunnels.
  SSL VPN can be enabled/disabled and provides per virtual domain individually,
  hence there is one service per domain.
- This check is currently purely informational and is thus always "OK".
+ This check can be configured via a WATO rule concerning the number of vpn tunnels.
 
 item:
  Name of the SSL VPN tunnel

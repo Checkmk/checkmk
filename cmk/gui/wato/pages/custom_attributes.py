@@ -9,8 +9,12 @@ import abc
 import os
 import pprint
 import re
+from typing import (  # pylint: disable=unused-import
+    Text, Dict, Any,
+)
 import six
 
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
@@ -67,18 +71,20 @@ def save_custom_attrs_to_mk_file(attrs):
 
 
 def custom_attr_types():
+    # type: () -> Choices
     return [
         ('TextAscii', _('Simple Text')),
     ]
 
 
+# TODO: Refactor to be valuespec based
 class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
 
     def _from_vars(self):
-        self._name = html.request.var("edit")  # missing -> new custom attr
+        self._name = html.request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -87,40 +93,46 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
         self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
         if not self._new:
-            self._attr = [a for a in self._attrs if a['name'] == self._name]
-            if not self._attr:
+            matching_attrs = [a for a in self._attrs if a['name'] == self._name]
+            if not matching_attrs:
                 raise MKUserError(None, _('The attribute does not exist.'))
-            else:
-                self._attr = self._attr[0]
+            self._attr = matching_attrs[0]  # type: Dict[str, Any]
         else:
             self._attr = {}
 
     @abc.abstractproperty
     def _type(self):
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
     def _topics(self):
+        # type: () -> Choices
         raise NotImplementedError()
 
     @abc.abstractproperty
     def _default_topic(self):
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
     def _macro_help(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     @abc.abstractproperty
     def _macro_label(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _update_config(self):
+        # type: () -> None
         raise NotImplementedError()
 
     @abc.abstractmethod
     def title(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     def _add_extra_attrs_from_html_vars(self):
@@ -134,7 +146,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
         if not html.check_transaction():
             return
 
-        title = html.request.get_unicode_input("title").strip()
+        title = html.request.get_unicode_input_mandatory("title").strip()
         if not title:
             raise MKUserError("title", _("Please specify a title."))
 
@@ -144,13 +156,13 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
                     "alias",
                     _("This alias is already used by the attribute %s.") % this_attr['name'])
 
-        topic = html.request.var('topic', '').strip()
-        help_txt = html.request.get_unicode_input('help').strip()
+        topic = html.request.get_unicode_input_mandatory('topic', '').strip()
+        help_txt = html.request.get_unicode_input_mandatory('help', '').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 
         if self._new:
-            self._name = html.request.var("name", '').strip()
+            self._name = html.request.get_ascii_input_mandatory("name", '').strip()
             if not self._name:
                 raise MKUserError("name", _("Please specify a name for the new attribute."))
             if ' ' in self._name:
@@ -163,7 +175,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
             if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
-            ty = html.request.var('type', '').strip()
+            ty = html.request.get_ascii_input_mandatory('type', '').strip()
             if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
@@ -202,7 +214,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
             _("The name of the attribute is used as an internal key. It cannot be "
               "changed later."))
         if self._new:
-            html.text_input("name", self._attr.get('name'))
+            html.text_input("name", self._attr.get('name', ''))
             html.set_focus("name")
         else:
             html.write_text(self._name)
@@ -210,7 +222,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         forms.section(_("Title") + "<sup>*</sup>")
         html.help(_("The title is used to label this attribute."))
-        html.text_input("title", self._attr.get('title'))
+        html.text_input("title", self._attr.get('title', ''))
 
         forms.section(_('Topic'))
         html.help(_('The attribute is added to this section in the edit dialog.'))
@@ -223,7 +235,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
         forms.section(_('Data type'))
         html.help(_('The type of information to be stored in this attribute.'))
         if self._new:
-            html.dropdown('type', custom_attr_types(), deflt=self._attr.get('type'))
+            html.dropdown('type', custom_attr_types(), deflt=self._attr.get('type', ''))
         else:
             html.write(dict(custom_attr_types())[self._attr.get('type')])
 
@@ -275,10 +287,12 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     @property
     def _default_topic(self):
+        # type: () -> str
         return 'personal'
 
     @property
     def _macro_help(self):
+        # type: () -> Text
         return _(
             'The attribute can be added to the contact definiton in order to use it for notifications.'
         )

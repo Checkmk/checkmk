@@ -15,4 +15,4 @@ item:
  The name of the application server instance as configured by the agent
 
 inventory:
- One check is created for each JVM instance sent by the agent.
+ One service is created for each JVM instance sent by the agent.

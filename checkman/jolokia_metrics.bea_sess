@@ -20,7 +20,7 @@ item:
  This name is probably dependant on running a loadbalanced install or not.
 
 inventory:
- One check is created for each selvet running inside a weblogic
+ One service is created for each selvet running inside a weblogic
  instance sent by the agent.
 
 

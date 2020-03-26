@@ -10,6 +10,7 @@ import ast
 import sys
 import argparse
 import json
+import time
 import logging
 from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
 from collections import OrderedDict, defaultdict
@@ -100,6 +101,55 @@ class NodeExporter:
                 device_parsed = "{name} {type} {size} {used} {available} None {mountpoint}".format(
                     **device_info)
                 result.append(device_parsed)
+        return result
+
+    def diskstat_summary(self):
+        # type: () -> List[str]
+
+        diskstat_list = [("reads_completed", "node_disk_reads_completed_total"),
+                         ("reads_merged", "node_disk_reads_merged_total"),
+                         ("sectors_read", "node_disk_read_bytes_total/512"),
+                         ("time_reading", "node_disk_read_time_seconds_total*1000"),
+                         ("writes_completed", "node_disk_writes_completed_total"),
+                         ("writes_merged", "node_disk_writes_merged_total"),
+                         ("sectors_written", "node_disk_written_bytes_total/512"),
+                         ("time_spent_writing", "node_disk_write_time_seconds_total*1000"),
+                         ("ios_progress", "node_disk_io_now"),
+                         ("time_io", "node_disk_io_time_seconds_total*1000"),
+                         ("weighted_time_io", "node_disk_io_time_weighted_seconds_total"),
+                         ("discards_completed", "node_disk_io_time_weighted_seconds_total"),
+                         ("discards_merged", "node_disk_io_time_weighted_seconds_total"),
+                         ("sectors_discarded", "node_disk_discarded_sectors_total"),
+                         ("time_discarding", "node_disk_discard_time_seconds_total * 1000")]
+
+        return self._process_diskstat_info(diskstat_list,
+                                           self._retrieve_diskstat_info(diskstat_list))
+
+    def _process_diskstat_info(self, diskstat_list, diskstat_info_dict):
+        # type: (List[Tuple[str, str]], Dict[str, Dict[str, Union[int, str]]]) -> List[str]
+
+        result = []  # type: List[str]
+        diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
+        result.append("%d" % time.time())
+        for device_name, device_info in diskstat_info_dict.items():
+            if all(k in device_info for k in diskstat_entities_list):
+                device_parsed = "None None {device} {reads_completed} {reads_merged} {sectors_read} {time_reading} {writes_completed} " \
+                                "{writes_merged} {sectors_written} {time_spent_writing} {ios_progress} {time_io} {weighted_time_io} " \
+                                "{discards_completed} {discards_merged} {sectors_discarded} {time_discarding}".format(**device_info)
+                result.append(device_parsed)
+        return result
+
+    def _retrieve_diskstat_info(self, diskstat_list):
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, Union[int, str]]]
+
+        result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
+        for entity_name, promql_query in diskstat_list:
+            for device_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                device_dict = result.setdefault(device_info["labels"]["device"], {})
+                if "device" not in device_dict:
+                    device_dict["device"] = device_info["labels"]["device"]
+                device_dict[entity_name] = int(float(device_info["value"]))
         return result
 
 
@@ -1326,8 +1376,12 @@ class ApiData:
             df_section = [
                 "<<<df>>>", '\n'.join(self.node_exporter.df_summary()), "<<<df>>>",
                 "[df_inodes_start]", '\n'.join(self.node_exporter.df_inodes_summary()),
-                "[df_inodes_end]"
+                "[df_inodes_end]\n"
             ]
+            yield "\n".join(df_section)
+
+        if "diskstat" in node_options:
+            df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary())]
             yield "\n".join(df_section)
 
 

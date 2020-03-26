@@ -8,7 +8,7 @@ description:
  Levels for expected values can be set via WATO.
 
 inventory:
- One service per port is created.
+ One service is created for each port.
 
 item:
  The name of the port if given otherwise the port number.

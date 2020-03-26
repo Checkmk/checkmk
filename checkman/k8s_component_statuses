@@ -9,7 +9,7 @@ description:
  If the status of a component is unknown the check returns {UNKNOWN}.
 
 inventory:
- One service per component is created.
+ One service is created for each component.
 
 item:
  The name of the component.

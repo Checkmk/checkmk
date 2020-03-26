@@ -9,5 +9,5 @@ description:
  aren't actualy usable as the number of cores processing that load isn't known.
 
 inventory:
- Since this check is obsolete, no items are discovered
+ No service is created since this check is obsolete.
 

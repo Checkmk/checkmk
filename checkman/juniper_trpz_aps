@@ -13,5 +13,5 @@ description:
  per node.
 
 inventory:
- One service for the number of access points
+ One service is created for the number of access points.
 

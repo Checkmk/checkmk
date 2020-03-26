@@ -8,5 +8,5 @@ description:
  The current utilization is informational only and does not generate alarms.
 
 inventory:
- One service for the first CPU will be created
+ One service is created for the first CPU.
 

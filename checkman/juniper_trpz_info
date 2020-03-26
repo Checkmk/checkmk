@@ -7,5 +7,5 @@ description:
  Show the serial number and firmware version
 
 inventory:
- One service for each controller will be creted
+ One service is created for each controller.
 

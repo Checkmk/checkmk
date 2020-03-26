@@ -14,4 +14,4 @@ item:
  The name or the description of the routing engine.
 
 inventory:
- One service for each routing engine will be created.
+ One service is created for each routing engine.

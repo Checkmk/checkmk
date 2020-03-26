@@ -9,4 +9,4 @@ item:
  The logical disk partition filesystem.
 
 inventory:
- One service per filesystem
+ One service is created for each filesystem.

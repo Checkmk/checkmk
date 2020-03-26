@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable
+from typing import Callable, List
+import os.path
 import sys
 import ast
 import inspect
@@ -101,13 +102,20 @@ def _explicit_conversions(function_name):
     raise NotImplementedError(function_name)
 
 
-def _get_scan_function_ast(name, snmp_scan_function):
-    # type: (str, Callable) -> ast.AST
+def _get_scan_function_ast(name, snmp_scan_function, fallback_files):
+    # type: (str, Callable, List[str]) -> ast.AST
     src_file_name = inspect.getsourcefile(snmp_scan_function)
-    assert src_file_name is not None
-    with open(src_file_name) as src_file:
-        source = src_file.read()
-    tree = ast.parse(source, filename=src_file_name)
+    read_files = fallback_files if src_file_name is None else [src_file_name]
+
+    source = ""
+    for file_name in read_files:
+        if not os.path.exists(file_name):
+            continue
+        with open(file_name) as src_file:
+            source = "%s\n%s" % (source, src_file.read())
+    assert source != ""
+
+    tree = ast.parse(source, filename=str(read_files[0]))
 
     for statement in tree.body:
         if isinstance(statement, ast.FunctionDef) and statement.name == snmp_scan_function.__name__:
@@ -341,12 +349,12 @@ def _ast_convert_dispatcher(arg):
     raise ValueError(ast.dump(arg))
 
 
-def create_detect_spec(name, snmp_scan_function):
-    # type: (str, Callable) -> SNMPDetectSpec
+def create_detect_spec(name, snmp_scan_function, fallback_files):
+    # type: (str, Callable, List[str]) -> SNMPDetectSpec
     if name in ("if", "if64"):
         raise NotImplementedError(name)
 
-    scan_func_ast = _get_scan_function_ast(name, snmp_scan_function)
+    scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
 
     expression_ast = _get_expression_from_function(name, scan_func_ast)
 

@@ -111,6 +111,6 @@ def test_snmp_can_functions(name, oids_data, expected_result):
 
     assert bool(scan_function(oid_function)) is expected_result
 
-    converted_detect_spec = create_detect_spec(name, scan_function)
+    converted_detect_spec = create_detect_spec(name, scan_function, [])
     actual_result = snmp_scan._evaluate_snmp_detection(oid_function, converted_detect_spec)
     assert actual_result is expected_result

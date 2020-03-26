@@ -22,14 +22,6 @@ ColumnName = str
 PainterParameters = Dict  # TODO: Improve this type
 PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
-OldPainterSpec = Union[  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName],
-          Text],  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
-    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName]],  #
-    Tuple[PainterNameSpec, Optional[ViewName]],  #
-]  #
-
 
 class PainterSpec(
         NamedTuple('PainterSpec', [

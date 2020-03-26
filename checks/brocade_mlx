@@ -145,7 +145,7 @@ def check_brocade_mlx_module_mem(item, params, info):
             data["mem_total"] - data["mem_avail"],
             data["mem_total"],
             (mode, (warn, crit)),
-            metric_name="memused",
+            metric_name="mem_used",
         )
     except KeyError:
         return None

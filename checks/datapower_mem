@@ -28,7 +28,7 @@ def check_datapower_mem(item, params, info):
                                 mem_used_bytes,
                                 mem_total_bytes,
                                 params.get("levels"),
-                                metric_name="memory_used")
+                                metric_name="mem_used")
 
 
 check_info['datapower_mem'] = {

@@ -6869,18 +6869,14 @@ check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
     }
 }
 
-check_metrics["check_mk-hp_procurve_mem"] = {
-    "memory_used": {
-        "name": "mem_used"
-    },
-}
-
 memory_simple_translation = {
     "memory_used": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True,
     },
 }
 
+check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
 check_metrics["check_mk-datapower_mem"] = memory_simple_translation
 check_metrics["check_mk-ucd_mem"] = memory_simple_translation
 check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
@@ -7074,7 +7070,8 @@ check_metrics["check_mk-mem.win"] = {
 
 check_metrics["check_mk-brocade_mlx.module_mem"] = {
     "memused": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True,
     },
 }
 

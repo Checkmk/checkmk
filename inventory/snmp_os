@@ -34,5 +34,5 @@ inv_info['snmp_os'] = {
             '3.0',  # sysUpTime
             '5.0',  # sysName
         ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.1.0") not in [None, ""],
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.1.0"),
 }

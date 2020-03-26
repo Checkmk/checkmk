@@ -33,6 +33,9 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
+ManPage = Dict[six.text_type, Any]
+ManPageCatalogPath = Tuple[str, ...]
+
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
         "environment" : "Environmental sensors",
@@ -267,9 +270,7 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
-
-ManPage = Dict[six.text_type, Any]
+_manpage_catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
 
 
 def man_page_exists(name):
@@ -330,8 +331,8 @@ def man_page_catalog_titles():
 
 
 def load_man_page_catalog():
-    # type: () -> Dict[Tuple[str,...], List[Dict]]
-    catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
+    # type: () -> Dict[ManPageCatalogPath, List[Dict]]
+    catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -348,7 +349,7 @@ def load_man_page_catalog():
 
 
 def print_man_page_browser(cat=()):
-    # typxe: (Tuple[str]) -> None
+    # typxe: (ManPageCatalogPath) -> None
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 

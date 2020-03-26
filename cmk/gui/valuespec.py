@@ -272,7 +272,7 @@ class Age(ValueSpec):
         self,
         label=None,  # type: _Optional[Text]
         minvalue=None,  # type: _Optional[Seconds]
-        maxvalue=None,  # type: Union[None, Seconds, float]
+        maxvalue=None,  # type: _Optional[Seconds]
         display=None,  # type: _Optional[List[str]]
         title=None,  # type: _Optional[Text]
         help=None,  # type: _Optional[ValueSpecHelp]

@@ -8,7 +8,7 @@ from typing import List  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import PainterSpec  # pylint: disable=unused-import
+from cmk.gui.type_defs import OldPainterSpec  # pylint: disable=unused-import
 
 from . import (
     multisite_builtin_views,)
@@ -23,9 +23,9 @@ service_view_painters = [
     ('svc_state_age', None),
     ('svc_check_age', None),
     ('perfometer', None),
-]  # type: List[PainterSpec]
+]  # type: List[OldPainterSpec]
 
-_host_host_painter = ('host', 'host')  # type: PainterSpec
+_host_host_painter = ('host', 'host')  # type: OldPainterSpec
 
 # Same as list of services, but extended by the hostname
 host_service_view_painters = service_view_painters[:]
@@ -41,7 +41,7 @@ host_view_painters = [
     ('num_services_unknown', 'host_unknown'),
     ('num_services_crit', 'host_crit'),
     ('num_services_pending', 'host_pending'),
-]  # type: List[PainterSpec]
+]  # type: List[OldPainterSpec]
 
 multisite_builtin_views.update({
     'allhosts': {

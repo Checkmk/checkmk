@@ -62,11 +62,12 @@ class ModeBulkEdit(WatoMode):
         return "folder", _("Edited %d hosts") % len(host_names)
 
     def page(self):
+        # type: () -> None
         host_names = get_hostnames_from_checkboxes()
         hosts = dict([
             (host_name, watolib.Folder.current().host(host_name)) for host_name in host_names
         ])
-        current_host_hash = sha256(six.ensure_binary(repr(hosts)))
+        current_host_hash = sha256(six.ensure_binary(repr(hosts))).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
         # and then another bulk edit has made, the attributes need to be reset before

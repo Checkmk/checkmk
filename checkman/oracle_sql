@@ -1,4 +1,4 @@
-title: Custom SQLs for Oracle DBs
+title: Oracle Database: Custom SQLs
 agents: linux, aix, solaris
 catalog: app/oracle
 license: GPL

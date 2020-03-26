@@ -1,4 +1,4 @@
-title: State of an IBM MQ Channel
+title: IBM MQ: State of Channels
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
 license: GPL

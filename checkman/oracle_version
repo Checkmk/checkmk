@@ -1,4 +1,4 @@
-title: Version of an Oracle Database checked by Login
+title: Oracle Database: Version
 agents: linux, hpux, windows, solaris
 catalog: app/oracle
 license: GPL

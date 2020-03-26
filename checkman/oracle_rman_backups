@@ -1,4 +1,4 @@
-title: Oracle RMAN Backups
+title: Oracle: RMAN Backups
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL

@@ -1,4 +1,4 @@
-title: Log Switch Activity of Oracle Database
+title: Oracle Database: Log Switch Activity
 agents: linux, hpux, windows, solaris
 catalog: app/oracle
 license: GPL

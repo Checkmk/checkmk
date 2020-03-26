@@ -1,4 +1,4 @@
-title: Oracle Database Instance: Uptime
+title: Oracle Instance: Uptime of Database
 agents: linux, aix, hpux, solaris, windows
 distribution: check_mk
 catalog: app/oracle

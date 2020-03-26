@@ -1,4 +1,4 @@
-title: Number of Active Sessions in Oracle Database
+title: Oracle Database: Number of Active Sessions
 agents: linux, hpux, solaris
 catalog: app/oracle
 license: GPL

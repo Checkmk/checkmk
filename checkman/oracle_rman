@@ -1,4 +1,4 @@
-title: Check the RMAN Backup Status
+title: Oracle: RMAN Backup Status
 agents: linux, aix, hp/ux, Solaris
 catalog: app/oracle
 license: GPL

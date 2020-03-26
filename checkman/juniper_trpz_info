@@ -1,4 +1,4 @@
-title: Juniper/ Trapeze Serial and Firmware Version
+title: Juniper/Trapeze: Serial and Firmware Version
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

@@ -1,4 +1,4 @@
-title: Fortigate Devices: Network Interfaces via Standard MIB Using 64 Bit Counters
+title: FortiGate Devices: Network Interfaces via Standard MIB Using 64 Bit Counters
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

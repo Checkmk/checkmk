@@ -1,4 +1,4 @@
-title: Data fragmentation of couchbase buckets
+title: Couchbase Buckets: Data Fragmentation
 agents: special
 catalog: app/couchbase
 license: GPL

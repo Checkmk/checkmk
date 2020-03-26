@@ -1,4 +1,4 @@
-title: Oracle ASM Disk Groups
+title: Oracle: ASM Disk Groups
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL

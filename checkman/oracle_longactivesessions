@@ -1,4 +1,4 @@
-title: Oracle Database Long Active Sessions
+title: Oracle Database: Long Active Sessions
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL

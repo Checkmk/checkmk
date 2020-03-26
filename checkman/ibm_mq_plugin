@@ -1,4 +1,4 @@
-title: Availability of the IBM MQ Command Line Tools
+title: IBM MQ: Availability of Command Line Tools
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
 license: GPL

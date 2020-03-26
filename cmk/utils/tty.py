@@ -106,14 +106,12 @@ def colorset(fg=-1, bg=-1, attr=-1):
     # type: (int, int, int) -> str
     if not sys.stdout.isatty():
         return ""
-
     if attr >= 0:
         return "\033[3%d;4%d;%dm" % (fg, bg, attr)
-    elif bg >= 0:
+    if bg >= 0:
         return "\033[3%d;4%dm" % (fg, bg)
-    elif fg >= 0:
+    if fg >= 0:
         return "\033[3%dm" % fg
-
     return normal
 
 
@@ -121,7 +119,9 @@ def get_size():
     # type: () -> Tuple[int, int]
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
-        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
+        # TODO: Use the following instead?
+        # array.array(b'h' if six.PY2 else u'h', [0, 0, 0, 0])
+        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)  # type: ignore
         lines, columns = struct.unpack("HHHH", ws)[:2]
         if lines > 0 and columns > 0:
             return lines, columns

@@ -7,7 +7,7 @@
 
 import abc
 from typing import (  # pylint: disable=unused-import
-    Dict, Type, Optional, Any, Text, Union,
+    Dict, Type, Any, Text, Union,
 )
 import six
 
@@ -42,10 +42,7 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def _verify_slave_site_config(self, site_id):
-        # type: (Optional[str]) -> None
-        if not site_id:
-            raise MKGeneralException(_("Missing variable siteid"))
-
+        # type: (str) -> None
         our_id = config.omd_site()
 
         if not config.is_single_local_site():

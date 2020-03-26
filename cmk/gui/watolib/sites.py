@@ -702,10 +702,8 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def get_request(self):
         # type: () -> PushSnapshotRequest
-        site_id = html.request.var("siteid")
-
+        site_id = html.request.get_ascii_input_mandatory("siteid")
         self._verify_slave_site_config(site_id)
-        assert site_id is not None
 
         snapshot = html.request.uploaded_file("snapshot")
         if not snapshot:

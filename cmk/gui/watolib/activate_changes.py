@@ -11,6 +11,7 @@ import shutil
 import time
 from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -240,9 +241,9 @@ class ActivateChanges(object):
     def _changes_of_site(self, site_id):
         return self._changes_by_site[site_id]
 
-    # Returns the list of sites that should be used when activating all
-    # affected sites.
     def dirty_and_active_activation_sites(self):
+        # type: () -> List[SiteId]
+        """Returns the list of sites that should be used when activating all affected sites"""
         dirty = []
         for site_id, site in activation_sites().items():
             status = self._get_site_status(site_id, site)[1]
@@ -735,6 +736,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("Activation cleanup finished"))
 
     def _do_housekeeping(self):
+        # type: () -> None
         """Cleanup stale activations in case it is needed"""
         with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
@@ -770,7 +772,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                                               activation_id)
                 try:
                     shutil.rmtree(activation_dir)
-                except Exception as e:
+                except Exception:
                     self._logger.error("  Failed to delete the activation directory '%s'" %
                                        activation_dir,
                                        exc_info=True)

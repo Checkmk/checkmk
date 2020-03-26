@@ -4661,13 +4661,14 @@ class Tuple(ValueSpec):
 
 
 DictionaryEntry = _Tuple[str, ValueSpec]
+DictionaryElements = Union[List[DictionaryEntry], Callable[[], List[DictionaryEntry]]]
 
 
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements,  # type: Union[List[_Tuple[str, ValueSpec]], Callable[[], List[_Tuple[str, ValueSpec]]]]
+        elements,  # type: DictionaryElements
         empty_text=None,  # type: _Optional[Text]
         default_text=None,  # type: _Optional[Text]
         optional_keys=True,  # type: Union[bool, List[str]]

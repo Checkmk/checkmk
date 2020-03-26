@@ -51,7 +51,6 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
         try:
             plugin_context = _new_inv_context(get_check_api_context, get_inventory_context)
-            known_plugins = inv_info
 
             _load_plugin_includes(f, plugin_context)
 
@@ -64,8 +63,8 @@ def load_plugins(get_check_api_context, get_inventory_context):
             continue
 
         # Now store the check context for all plugins found in this file
-        for check_plugin_name in set(inv_info).difference(known_plugins):
-            _plugin_contexts[check_plugin_name] = plugin_context
+        for check_plugin_name in inv_info:
+            _plugin_contexts.setdefault(check_plugin_name, plugin_context)
 
 
 def _new_inv_context(get_check_api_context, get_inventory_context):

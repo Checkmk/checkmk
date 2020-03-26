@@ -7,7 +7,9 @@
 this mode is used."""
 
 import copy
-from typing import List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    List, Tuple, cast,
+)
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -57,10 +59,15 @@ class ModeBulkDiscovery(WatoMode):
             vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
-        self._recurse, self._only_failed, self._only_failed_invcheck, \
-            self._only_ok_agent = self._bulk_discovery_params["selection"]
-        self._use_cache, self._do_scan, self._bulk_size = \
-            self._bulk_discovery_params["performance"]
+        # The cast is needed for the moment, because mypy does not understand our data structure here
+        (self._recurse, self._only_failed, self._only_failed_invcheck,
+         self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
+                                     self._bulk_discovery_params["selection"])
+
+        # The cast is needed for the moment, because mypy does not understand our data structure here
+        (self._use_cache, self._do_scan,
+         self._bulk_size) = cast(Tuple[bool, bool, int], self._bulk_discovery_params["performance"])
+
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
 
@@ -118,7 +125,9 @@ class ModeBulkDiscovery(WatoMode):
             msgs.append(
                 _("You have selected <b>%d</b> hosts for bulk discovery.") %
                 len(self._get_hosts_to_discover()))
-            selection = self._bulk_discovery_params["selection"]
+            # The cast is needed for the moment, because mypy does not understand our data structure here
+            selection = cast(Tuple[bool, bool, bool, bool],
+                             self._bulk_discovery_params["selection"])
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
         msgs.append(

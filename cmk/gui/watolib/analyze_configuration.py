@@ -8,7 +8,7 @@ checks and tells the user what could be improved."""
 
 import traceback
 from typing import (  # pylint: disable=unused-import
-    Type, Iterator, Text, Optional, List, Any,
+    Dict, Type, Iterator, Text, Optional, List, Any,
 )
 
 from livestatus import LocalConnection
@@ -34,6 +34,7 @@ class ACResult(object):
     status = None  # type: Optional[int]
 
     def __init__(self, text):
+        # type: (Text) -> None
         super(ACResult, self).__init__()
         self.text = text
         self.site_id = config.omd_site()
@@ -64,10 +65,14 @@ class ACResult(object):
         return worst_cls(", ".join(texts))
 
     def status_name(self):
+        # type: () -> Text
+        if self.status is None:
+            return u""
         return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
     def from_repr(cls, repr_data):
+        # type: (Dict[str, Any]) -> ACResult
         result_class_name = repr_data.pop("class_name")
         result = globals()[result_class_name](repr_data["text"])
 
@@ -77,6 +82,7 @@ class ACResult(object):
         return result
 
     def __repr__(self):
+        # type: () -> str
         return repr({
             "site_id": self.site_id,
             "class_name": self.__class__.__name__,
@@ -254,7 +260,6 @@ class AutomationCheckAnalyzeConfig(AutomationCommand):
         return "check-analyze-config"
 
     def get_request(self):
-        # type: () -> None
         return None
 
     def execute(self, _unused_request):

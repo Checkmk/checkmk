@@ -30,11 +30,18 @@ import re
 import io
 import socket
 import sre_constants
+import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple, Type,
-    Union,
+    Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple,
+    Type, TypeVar, Union,
 )
+
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from typing_extensions import Protocol
+else:
+    from typing import Protocol  # pylint: disable=no-name-in-module
+
 import uuid
 from PIL import Image  # type: ignore[import]
 
@@ -79,6 +86,41 @@ DEF_VALUE = object()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[Text, HTML, Callable[[], Union[Text, HTML]]]
+
+C = TypeVar('C', bound='Comparable')
+
+
+# Look, mom, we finally have Haskell type classes! :-D Naive version requiring
+# only <, hopefully some similar class will make it into typing soon...
+class Comparable(Protocol):
+    @abc.abstractmethod
+    def __lt__(self, other):
+        # type: (C, C) -> bool
+        pass
+
+
+# NOTE: Bounds are inclusive!
+class Bounds(Generic[C]):
+    def __init__(self, lower, upper):
+        # type: (_Optional[C], _Optional[C]) -> None
+        super(Bounds, self).__init__()
+        self.__lower = lower
+        self.__upper = upper
+
+    def lower(self, default):
+        # type: (C) -> C
+        return default if self.__lower is None else self.__lower
+
+    def validate_value(self, value, varprefix):
+        # type: (C, str) -> None
+        if self.__lower is not None and value < self.__lower:
+            raise MKUserError(
+                varprefix,
+                _("%s is too low. The minimum allowed value is %s.") % (value, self.__lower))
+        if self.__upper is not None and self.__upper < value:
+            raise MKUserError(
+                varprefix,
+                _("%s is too high. The maximum allowed value is %s.") % (value, self.__upper))
 
 
 class ValueSpec(object):
@@ -285,17 +327,14 @@ class Age(ValueSpec):
                                   default_value=default_value,
                                   validate=validate)
         self._label = label
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
+        self._bounds = Bounds[Seconds](minvalue, maxvalue)
         self._display = display if display is not None else \
             ["days", "hours", "minutes", "seconds"]
         self._cssclass = cssclass
 
     def canonical_value(self):
         # type: () -> Seconds
-        if self._minvalue:
-            return self._minvalue
-        return 0
+        return self._bounds.lower(0)
 
     def render_input(self, varprefix, value):
         # type: (str, Seconds) -> None
@@ -366,14 +405,7 @@ class Age(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         # type: (Seconds, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
 
 
 class Integer(ValueSpec):
@@ -398,9 +430,7 @@ class Integer(ValueSpec):
                                       help=help,
                                       default_value=default_value,
                                       validate=validate)
-        # TODO: inconsistency with default_value. All should be named with underscore
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
+        self._bounds = Bounds[int](minvalue, maxvalue)
         self._label = label
         self._unit = unit
         self._thousand_sep = thousand_sep
@@ -416,7 +446,7 @@ class Integer(ValueSpec):
 
     def canonical_value(self):
         # type: () -> int
-        return self._minvalue if self._minvalue else 0
+        return self._bounds.lower(0)
 
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
@@ -474,14 +504,7 @@ class Integer(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         # type: (int, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
 
 
 class Filesize(Integer):
@@ -2273,9 +2296,7 @@ class Float(ValueSpec):
                                     help=help,
                                     default_value=default_value,
                                     validate=validate)
-        # TODO: inconsistency with default_value. All should be named with underscore
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
+        self._bounds = Bounds[float](minvalue, maxvalue)
         self._label = label
         self._unit = unit
         self._thousand_sep = thousand_sep
@@ -2294,7 +2315,7 @@ class Float(ValueSpec):
 
     def canonical_value(self):
         # type: () -> float
-        return self._minvalue if self._minvalue else 0.0
+        return self._bounds.lower(0.0)
 
     def render_input(self, varprefix, value):
         # type: (str, float) -> None
@@ -2357,14 +2378,7 @@ class Float(ValueSpec):
 
     def validate_value(self, value, varprefix):
         # type: (float, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
 
 
 class Percentage(Float):

@@ -19,11 +19,14 @@
 
 import os
 import json
-from typing import Dict  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, Any, Text, List, Tuple, Optional as _Optional,
+)
 import six
 
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -41,8 +44,10 @@ from cmk.gui.valuespec import (
     DualListChoice,
     Optional,
 )
+from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -70,6 +75,7 @@ from cmk.gui.permissions import (
 
 class Base(object):
     def __init__(self, d):
+        # type: (Dict[str, Any]) -> None
         super(Base, self).__init__()
 
         # The dictionary with the name _ holds all information about
@@ -78,6 +84,7 @@ class Base(object):
         self._ = d
 
     def internal_representation(self):
+        # type: () -> Dict[str, Any]
         return self._
 
     # You always must override the following method. Not all phrases
@@ -93,6 +100,7 @@ class Base(object):
     # moment we use dedicated methods, wrong usage will be found by pylint.
     @classmethod
     def phrase(cls, phrase):
+        # type: (str) -> Text
         return _("MISSING '%s'") % phrase
 
     # Implement this function in a subclass in order to add parameters
@@ -142,7 +150,7 @@ class Base(object):
     # page type by calling parameters() for each class
     @classmethod
     def _collect_parameters(cls, mode):
-        topics = {}
+        topics = {}  # type: Dict[Text, List[DictionaryEntry]]
         for topic, elements in cls.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
@@ -168,33 +176,42 @@ class Base(object):
     # that pages in question of a dictionary format that is not
     # compatible.
     def name(self):
+        # type: () -> str
         return self._["name"]
 
     def title(self):
+        # type: () -> Text
         return self._["title"]
 
     def description(self):
+        # type: () -> Text
         return self._.get("description", "")
 
     def is_hidden(self):
+        # type: () -> bool
         return False
 
     def _can_be_linked(self):
+        # type: () -> bool
         return True
 
     def render_title(self):
+        # type: () -> Text
         return _u(self.title())
 
     def is_empty(self):
+        # type: () -> bool
         return False
 
     def _show_in_sidebar(self):
+        # type: () -> bool
         return not self.is_empty() and not self.is_hidden()
 
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
     def default_name(cls):
+        # type: () -> str
         stem = cls.type_name()
         nr = 1
         while True:
@@ -211,6 +228,7 @@ class Base(object):
 
     @classmethod
     def default_topic(cls):
+        # type: () -> Text
         return _("Other")
 
     # Store for all instances of this page type. The key into
@@ -261,6 +279,7 @@ class Base(object):
     def pages(cls):
         for instance in cls.__instances.values():
             return instance
+        return None
 
     # Stub function for finding a page by name. Overriden by
     # Overridable.
@@ -269,9 +288,11 @@ class Base(object):
         for instance in cls.__instances.values():
             if instance.name() == name:
                 return instance
+        return None
 
     @classmethod
     def type_name(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     # Lädt alle Dinge vom aktuellen User-Homeverzeichnis und
@@ -511,6 +532,7 @@ class Overridable(Base):
         return "general.edit_" + cls.type_name()
 
     def owner(self):
+        # type: () -> UserId
         return self._["owner"]
 
     # Checks if the current user is allowed to see a certain page
@@ -567,7 +589,7 @@ class Overridable(Base):
                     % (self.type_name(), self.owner(), self.name(), backurl)
 
     def delete_url(self):
-        add_vars = [('_delete', self.name())]
+        add_vars = [('_delete', self.name())]  # type: HTTPVariables
         if not self.is_mine():
             add_vars.append(('_owner', self.owner()))
         return html.makeactionuri(add_vars)
@@ -750,15 +772,15 @@ class Overridable(Base):
 
         # First load builtin pages. Set username to ''
         for name, page_dict in cls.builtin_pages().items():
-            page_dict["owner"] = ''  # might have been forgotten on copy action
+            page_dict["owner"] = UserId(u'')  # might have been forgotten on copy action
             page_dict["public"] = True
             page_dict["name"] = name
             new_page = cls(page_dict)
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        for user in os.listdir(config.config_dir):
-            user = ensure_unicode(user)
+        for user_dir in os.listdir(config.config_dir):
+            user = UserId(ensure_unicode(user_dir))
             try:
                 path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
                                               cls.type_name())
@@ -789,6 +811,7 @@ class Overridable(Base):
 
     @classmethod
     def save_user_instances(cls, owner=None):
+        # type: (_Optional[UserId]) -> None
         if not owner:
             owner = config.user.id
 
@@ -846,7 +869,7 @@ class Overridable(Base):
         def has_reporting():
             try:
                 # The suppression below is OK, we just want to check if the module is there.
-                import cmk.gui.cee.reporting  # pylint: disable=unused-variable,redefined-outer-name
+                import cmk.gui.cee.reporting  # noqa: F401 # pylint: disable=unused-variable,redefined-outer-name
                 return True
             except ImportError:
                 return False
@@ -867,7 +890,7 @@ class Overridable(Base):
         # Deletion
         delname = html.request.var("_delete")
         if delname and html.transaction_valid():
-            owner = html.request.var('_owner', config.user.id)
+            owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
 
             try:
                 instance = cls.instance((owner, delname))
@@ -976,7 +999,7 @@ class Overridable(Base):
 
                     # Owner
                     if instance.is_builtin():
-                        ownertxt = html.i(_("builtin"))
+                        ownertxt = html.render_i(_("builtin"))
                     else:
                         ownertxt = instance.owner()
                     table.cell(_('Owner'), ownertxt)
@@ -1017,11 +1040,12 @@ class Overridable(Base):
 
     @classmethod
     def _bulk_delete_after_confirm(cls, what):
-        to_delete = []
+        to_delete = []  # type: List[Tuple[UserId, str]]
         for varname, _value in html.request.itervars(prefix="_c_%s+" % what):
             if html.get_checkbox(varname):
                 checkbox_ident = varname.split("_c_%s+" % what)[-1]
-                to_delete.append(checkbox_ident.split("+", 1))
+                raw_user, name = checkbox_ident.split("+", 1)
+                to_delete.append((UserId(raw_user), name))
 
         if not to_delete:
             return
@@ -1070,7 +1094,8 @@ class Overridable(Base):
             if mode == "edit":
                 title = cls.phrase("edit")
 
-                owner_user_id = html.request.var("owner", config.user.id)
+                owner_user_id = UserId(
+                    html.request.get_unicode_input_mandatory("owner", config.user.id))
                 if owner_user_id == config.user.id:
                     page = cls.find_my_page(page_name)
                 else:
@@ -1103,13 +1128,14 @@ class Overridable(Base):
         vs = Dictionary(
             title=_("General Properties"),
             render='form',
-            optional_keys=None,
+            optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
         )
 
         def validate(page_dict):
-            owner_user_id = html.request.var("owner", config.user.id)
+            owner_user_id = UserId(html.request.get_unicode_input_mandatory(
+                "owner", config.user.id))
             page_name = page_dict["name"]
             if owner_user_id == config.user.id:
                 page = cls.find_my_page(page_name)
@@ -1132,7 +1158,7 @@ class Overridable(Base):
                 for key, value in page_dict.items():
                     new_page_dict.setdefault(key, value)
 
-            owner = html.request.var("owner", config.user.id)
+            owner = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
             new_page_dict["owner"] = owner
             new_page = cls(new_page_dict)
 
@@ -1162,20 +1188,23 @@ class Overridable(Base):
         return
 
 
-class PublishTo(CascadingDropdown):
-    def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
-        kwargs.setdefault("title", _('Make this %s available for other users') % type_title)
-        super(PublishTo, self).__init__(choices=[
-            (True, _("Publish to all users")),
-            ("contact_groups", _("Publish to members of contact groups"),
-             ContactGroupChoice(
-                 with_foreign_groups=with_foreign_groups,
-                 title=_("Publish to members of contact groups"),
-                 rows=5,
-                 size=80,
-             )),
-        ],
-                                        **kwargs)
+def PublishTo(title=None, type_title=None, with_foreign_groups=True):
+    # type: (_Optional[Text], _Optional[Text], bool) -> CascadingDropdown
+    if title is None:
+        title = _('Make this %s available for other users') % type_title
+
+    choices = [
+        (True, _("Publish to all users")),
+        ("contact_groups", _("Publish to members of contact groups"),
+         ContactGroupChoice(
+             with_foreign_groups=with_foreign_groups,
+             title=_("Publish to members of contact groups"),
+             rows=5,
+             size=80,
+         )),
+    ]  # type: CascadingDropdownChoiceList
+
+    return CascadingDropdown(title=title, choices=choices)
 
 
 class ContactGroupChoice(DualListChoice):
@@ -1284,10 +1313,10 @@ class OverridableContainer(Overridable, Container):
     # class by the URL variable page_type.
     @classmethod
     def ajax_add_element(cls):
-        page_type_name = html.request.var("page_type")
-        page_name = html.request.var("page_name")
-        element_type = html.request.var("element_type")
-        create_info = json.loads(html.request.var("create_info"))
+        page_type_name = html.request.get_ascii_input_mandatory("page_type")
+        page_name = html.request.get_ascii_input_mandatory("page_name")
+        element_type = html.request.get_ascii_input_mandatory("element_type")
+        create_info = json.loads(html.request.get_ascii_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

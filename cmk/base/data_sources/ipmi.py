@@ -202,7 +202,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         try:
             inventory_entries = connection.get_inventory_descriptions()
         except Exception as e:
-            self._logger.verbose("Failed to fetch inventory information: %r" % e)
+            self._logger.log(VERBOSE, "Failed to fetch inventory information: %r" % e)
             self._logger.debug("Exception", exc_info=True)
             # in case of connection problems, we don't want to ignore possible
             # GPU entries

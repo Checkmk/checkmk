@@ -1,0 +1,13 @@
+Title: fortigate_sslvpn: Addition of WATO configuration option for number of tunnels
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1585226099
+
+This change introduces the option to configure a WATO configuration
+for the number of active vpn tunnels.

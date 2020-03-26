@@ -169,7 +169,7 @@ class ModeAjaxBackupJobState(AjaxPage):
     def page(self):
         config.user.need_permission("wato.backups")
         if html.request.var("job") == "restore":
-            page = backup.PageBackupRestoreState()
+            page = backup.PageBackupRestoreState()  # type: backup.PageAbstractBackupJobState
         else:
             page = ModeBackupJobState()
         page.show_job_details()
@@ -270,4 +270,5 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 
     def _show_backup_list(self):
         # type: () -> None
-        self._target.show_backup_list("Check_MK")
+        assert self._target is not None
+        self._target.show_backup_list(only_type="Check_MK")

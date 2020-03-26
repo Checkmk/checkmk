@@ -272,7 +272,7 @@ class Age(ValueSpec):
         self,
         label=None,  # type: _Optional[Text]
         minvalue=None,  # type: _Optional[Seconds]
-        maxvalue=None,  # type: Union[None, Seconds, float]
+        maxvalue=None,  # type: _Optional[Seconds]
         display=None,  # type: _Optional[List[str]]
         title=None,  # type: _Optional[Text]
         help=None,  # type: _Optional[ValueSpecHelp]
@@ -2688,11 +2688,14 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceValue = Union[None, Text, _Tuple[_Optional[str], Any]]
-CascadingDropdownCleanChoice = _Tuple[_Optional[str], Text, _Optional[ValueSpec]]
-CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[_Optional[str], Text],
-                                                      CascadingDropdownCleanChoice]]]
-CascadingDropdownChoiceList = List[Union[_Tuple[_Optional[str], Text],
+CascadingDropdownChoiceElementValue = Union[None, Text, str, bool]
+CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
+                                     _Tuple[CascadingDropdownChoiceElementValue, Any]]
+CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceElementValue, Text,
+                                      _Optional[ValueSpec]]
+CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[CascadingDropdownChoiceElementValue,
+                                                             Text], CascadingDropdownCleanChoice]]]
+CascadingDropdownChoiceList = List[Union[_Tuple[CascadingDropdownChoiceElementValue, Text],
                                          CascadingDropdownCleanChoice]]
 CascadingDropdownChoices = Union[CascadingDropdownChoiceList, CascadingDropdownChoiceFunc]
 CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
@@ -2899,7 +2902,7 @@ class CascadingDropdown(ValueSpec):
         vs.render_input(varprefix, value)
 
     def _show_sub_valuespec_container(self, varprefix, choice_id, value):
-        # type: (str, _Optional[Text], Any) -> None
+        # type: (str, CascadingDropdownChoiceElementValue, Any) -> None
         html.span("", id_="%s_sub" % varprefix)
 
         request_vars = {
@@ -2924,6 +2927,8 @@ class CascadingDropdown(ValueSpec):
                 if value == val:
                     return title
                 continue
+
+            assert isinstance(value, tuple)
 
             if not value:
                 continue

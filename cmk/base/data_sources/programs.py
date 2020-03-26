@@ -9,11 +9,10 @@ import collections
 import os
 import signal
 import sys
-import six
 from logging import Logger  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    Set, Union, Text, Optional, Tuple, Dict,
-)
+from typing import Dict, Optional, Set, Text, Union  # pylint: disable=unused-import
+
+import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

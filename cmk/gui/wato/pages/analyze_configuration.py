@@ -12,6 +12,9 @@ import time
 import multiprocessing
 import traceback
 import ast
+from typing import (  # pylint: disable=unused-import
+    Dict, Any,
+)
 import six
 
 import cmk.utils.paths
@@ -292,7 +295,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._logger.debug("Got test results")
 
         # Group results by category in first instance and then then by test
-        results_by_category = {}
+        results_by_category = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})

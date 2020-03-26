@@ -71,7 +71,7 @@ class TestDSProgramDataSource:
         # ProgramDataSource
         assert source._cpu_tracking_id() == "ds"
         assert source.source_cmdline == ""
-        assert source.source_stdin == None
+        assert source.source_stdin is None
         assert source.describe() == "Program: "
 
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
@@ -108,7 +108,9 @@ class TestSpecialAgentDataSource:
 
         # TODO(ml): Does this make sense?
         with pytest.raises(KeyError):
-            source.source_cmdline
+            # pyflake pepole are highly ignorant regarding common practice...
+            # :-P See https://github.com/PyCQA/pyflakes/issues/393
+            _ignore_me = source.source_cmdline  # noqa: F841
 
         with pytest.raises(KeyError):
             source.describe()

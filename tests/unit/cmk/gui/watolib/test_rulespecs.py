@@ -7,6 +7,8 @@
 # yapf: disable
 import pytest  # type: ignore[import]
 
+import cmk.utils.version as cmk_version
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
@@ -1293,7 +1295,7 @@ def _expected_rulespec_group_choices():
 
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected += [
         ('agents/agent_plugins', u'&nbsp;&nbsp;\u2319 Agent Plugins'),
         ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
@@ -1400,7 +1402,7 @@ def test_rulespec_get_all_groups():
         'eventconsole',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_rulespec_groups += [
         'agents/automatic_updates',
         'agents/linux_agent',
@@ -1432,7 +1434,7 @@ def test_rulespec_get_host_groups():
         'eventconsole',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_rulespec_host_groups += [
         'agents/agent_plugins',
         'agents/automatic_updates',

@@ -16,4 +16,4 @@ item:
  The unit number and the internal name of the access module
 
 inventory:
- None
+ One service is created for each module.

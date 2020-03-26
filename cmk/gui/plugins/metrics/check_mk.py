@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, Any  # pylint: disable=unused-import
 import cmk.utils.render
 
 from cmk.gui.i18n import _
@@ -441,6 +442,12 @@ metric_info["hops"] = {
 
 metric_info["uptime"] = {
     "title": _("Uptime"),
+    "unit": "s",
+    "color": "#80f000",
+}
+
+metric_info["time_difference"] = {
+    "title": _("Time difference"),
     "unit": "s",
     "color": "#80f000",
 }
@@ -4016,15 +4023,15 @@ metric_info["sslproxy_active_sessions"] = {
 
 def register_varnish_metrics():
     for what, descr, color in [
-        ("busy", "too many", "11/a"),
-        ("unhealthy", "not attempted", "13/a"),
-        ("req", "requests", "15/a"),
-        ("recycle", "recycles", "21/a"),
-        ("retry", "retry", "23/a"),
-        ("fail", "failures", "25/a"),
-        ("toolate", "was closed", "31/a"),
-        ("conn", "success", "33/a"),
-        ("reuse", "reuses", "35/a"),
+        ("busy", _("too many"), "11/a"),
+        ("unhealthy", _("not attempted"), "13/a"),
+        ("req", _("requests"), "15/a"),
+        ("recycle", _("recycles"), "21/a"),
+        ("retry", _("retry"), "23/a"),
+        ("fail", _("failures"), "25/a"),
+        ("toolate", _("was closed"), "31/a"),
+        ("conn", _("success"), "33/a"),
+        ("reuse", _("reuses"), "35/a"),
     ]:
         metric_info_key = "varnish_backend_%s_rate" % what
         metric_info[metric_info_key] = {
@@ -4034,9 +4041,9 @@ def register_varnish_metrics():
         }
 
     for what, descr, color in [
-        ("hit", "hits", "11/a"),
-        ("miss", "misses", "13/a"),
-        ("hitpass", "hits for pass", "21/a"),
+        ("hit", _("hits"), "11/a"),
+        ("miss", _("misses"), "13/a"),
+        ("hitpass", _("hits for pass"), "21/a"),
     ]:
         metric_info_key = "varnish_cache_%s_rate" % what
         metric_info[metric_info_key] = {
@@ -4590,6 +4597,12 @@ metric_info["dns_nxdomain"] = {
 
 metric_info["filehandler_perc"] = {
     "title": _("Used file handles"),
+    "unit": "%",
+    "color": "#4800ff",
+}
+
+metric_info["capacity_perc"] = {
+    "title": _("Available capacity"),
     "unit": "%",
     "color": "#4800ff",
 }
@@ -6350,6 +6363,60 @@ metric_info["num_streams"] = {
     "color": "11/a",
 }
 
+metric_info["docs_fragmentation"] = {
+    "title": _("Documents fragmentation"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["views_fragmentation"] = {
+    "title": _("Views fragmentation"),
+    "unit": "%",
+    "color": "15/a",
+}
+
+metric_info["item_memory"] = {
+    "color": "26/a",
+    "title": _("Item memory"),
+    "unit": "bytes",
+}
+
+metric_info["vbuckets"] = {
+    "title": _("vBuckets"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["pending_vbuckets"] = {
+    "title": _("Pending vBuckets"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["resident_items_ratio"] = {
+    "title": _("Resident items ratio"),
+    "unit": "%",
+    "color": "23/a",
+}
+
+metric_info["fetched_items"] = {
+    "title": _("Number of fetched items"),
+    "unit": "count",
+    "color": "23/b",
+}
+
+metric_info["disk_fill_rate"] = {
+    "title": _("Disk fill rate"),
+    "unit": "1/s",
+    "color": "31/a",
+}
+
+metric_info["disk_drain_rate"] = {
+    "title": _("Disk drain rate"),
+    "unit": "1/s",
+    "color": "31/b",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -6380,6 +6447,24 @@ metric_info['jira_diff'] = {
     "title": _("Difference"),
     "unit": "count",
     "color": "11/a",
+}
+
+metric_info["memused_couchbase_bucket"] = {
+    "color": "#80ff40",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
+metric_info["mem_low_wat"] = {
+    "title": _("Low watermark"),
+    "unit": "bytes",
+    "color": "#7060b0",
+}
+
+metric_info["mem_high_wat"] = {
+    "title": _("High watermark"),
+    "unit": "bytes",
+    "color": "23/b",
 }
 
 #.
@@ -6498,6 +6583,12 @@ check_metrics["check_mk_active-http"] = {
 }
 
 check_metrics["check_mk_active-tcp"] = {
+    "time": {
+        "name": "response_time"
+    },
+}
+
+check_metrics["check_mk_active-ldap"] = {
     "time": {
         "name": "response_time"
     },
@@ -9774,6 +9865,12 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type": "linear",
+    "segments": ["capacity_perc"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
     "type": "logarithmic",
     "metric": "fan",
     "half_value": 3000,
@@ -9973,6 +10070,18 @@ perfometer_info.append({
     'metric': 'nimble_write_latency_total',
     'half_value': 10,
     'exponent': 2.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["fragmentation"],
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "items_count",
+    "half_value": 1000,
+    "exponent": 2,
 })
 
 #.
@@ -10885,6 +10994,12 @@ graph_info["bandwidth_translated"] = {
         ("if_in_octets,8,*@bits/s", "area", _("Input bandwidth")),
         ("if_out_octets,8,*@bits/s", "-area", _("Output bandwidth")),
     ],
+    "scalars": [
+        ("if_in_octets:warn", _("Warning (In)")),
+        ("if_in_octets:crit", _("Critical (In)")),
+        ("if_out_octets:warn,-1,*", _("Warning (Out)")),
+        ("if_out_octets:crit,-1,*", _("Critical (Out)")),
+    ],
 }
 
 # Same but for checks that have been translated in to bits/s
@@ -10899,6 +11014,12 @@ graph_info["bandwidth"] = {
             "if_out_bps",
             "-area",
         ),
+    ],
+    "scalars": [
+        ("if_in_bps:warn", _("Warning (In)")),
+        ("if_in_bps:crit", _("Critical (In)")),
+        ("if_out_bps:warn,-1,*", _("Warning (Out)")),
+        ("if_out_bps:crit,-1,*", _("Critical (Out)")),
     ],
 }
 
@@ -11608,7 +11729,7 @@ def register_hop_response_graph():
         "title": _("Hop response times"),
         "metrics": [],
         "optional_metrics": [],
-    }
+    }  # type: Dict[str, Any]
     for idx in range(1, MAX_NUMBER_HOPS):
         color = indexed_color(idx, MAX_NUMBER_HOPS)
         new_graph["metrics"].append(
@@ -12084,4 +12205,21 @@ graph_info["temperature"] = {
         "temp:warn",
         "temp:crit",
     ]
+}
+
+graph_info["couchbase_bucket_memory"] = {
+    "title": _("Bucket memory"),
+    "metrics": [
+        ("memused_couchbase_bucket", "area"),
+        ("mem_low_wat", "line"),
+        ("mem_high_wat", "line"),
+    ],
+}
+
+graph_info["couchbase_bucket_fragmentation"] = {
+    "title": _("Fragmentation"),
+    "metrics": [
+        ("docs_fragmentation", "area"),
+        ("views_fragmentation", "stack"),
+    ],
 }

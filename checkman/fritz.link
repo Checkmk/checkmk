@@ -13,5 +13,6 @@ description:
  special agent uses uPnP to get the needed information from the device.
 
 inventory:
- One check per system is created if the agent has a section {<<<fritz>>>} and
+ One service is created for each system
+ if the agent has a section {<<<fritz>>>} and
  at least the keys {NewLinkStatus} and {NewPhysicalLinkStatus} are provided in this section.

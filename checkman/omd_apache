@@ -1,4 +1,4 @@
-title: Apache access statistics of OMD sites
+title: Checkmk Sites: Apache access statistics
 agents: linux
 catalog: app/omd
 license: GPL

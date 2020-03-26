@@ -7,6 +7,7 @@
 
 import time
 
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 
 import cmk.gui.config as config
@@ -202,7 +203,7 @@ class ModeTimeperiods(WatoMode):
     def _find_usages_in_alert_handler_rules(self, tpname):
         used_in = []
 
-        if cmk.is_raw_edition():
+        if cmk_version.is_raw_edition():
             return used_in
 
         for index, rule in enumerate(alert_handling.load_alert_handler_rules()):

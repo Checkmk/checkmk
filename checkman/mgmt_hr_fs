@@ -1,4 +1,4 @@
-title: SNMP Management Board: Used space in filesystems
+title: SNMP Management Board: Used Space in Filesystems
 agents: snmp
 catalog: os/storage
 license: GPL

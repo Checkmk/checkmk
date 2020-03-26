@@ -21,7 +21,9 @@ def check_dns_arguments(params):
         # TODO: Use six.string_types when this is a module.
         if isinstance(exp, six.string_types):
             exp = [exp]
-        args += ["-a", ",".join(exp)]
+        for entry in exp:
+            sorted_entry = ",".join(sorted(entry.split(",")))
+            args += ['-a', sorted_entry]
 
     if settings.get("expected_authority"):
         args.append("-A")

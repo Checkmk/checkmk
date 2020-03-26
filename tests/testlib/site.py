@@ -166,7 +166,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         command_timestamp = self._command_timestamp(last_check_before)
 
         command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % \
-            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp)
+            (command_timestamp, hostname, service_description, command_timestamp)
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
         self.live.command(command)
@@ -245,7 +245,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
+        # Needed during py2/py3 migration
+        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
+
+        kwargs.setdefault("encoding", "utf-8")
 
         if not self._is_running_as_site_user():
             sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
@@ -254,10 +258,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
             ]
             cmd_txt = " ".join(cmd)
-            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
+            return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
 
         sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-        return subprocess.Popen(  # nosec
+        return Popen(  # nosec
             subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
 
     def omd(self, mode, *args):
@@ -306,22 +310,37 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         else:
             shutil.rmtree(self.path(rel_path))
 
+    # TODO: Rename to write_text_file?
     def write_file(self, rel_path, content):
-        if isinstance(content, six.text_type):
-            content = content.encode("utf-8")
         if not self._is_running_as_site_user():
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
+            p.communicate(six.ensure_text(content))
+            p.stdin.close()
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
+
+    def write_binary_file(self, rel_path, content):
+        if not self._is_running_as_site_user():
+            p = self.execute(["tee", self.path(rel_path)],
+                             stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"),
+                             encoding=None)
             p.communicate(content)
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            parent_path = os.path.dirname(self.path(rel_path))
-            if not os.path.exists(parent_path):
-                os.makedirs(parent_path)
-            return open(self.path(rel_path), "wb").write(content)
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("wb") as f:
+                f.write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):
         if not self._is_running_as_site_user():
@@ -432,7 +451,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
         # Prevent build problems of livestatus
         logger.debug("Cleanup git files")
-        assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
+        assert subprocess.call(["sudo", "git", "clean", "-xfd",
+                                cmk_path() + "/livestatus"]) >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
@@ -441,7 +461,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
-                    "bash -x .f12" % (path, self.id)) >> 8 == 0
+                    "bash .f12" % (path, self.id)) >> 8 == 0
                 logger.debug("Executing .f12 in \"%s\" DONE", path)
                 sys.stdout.flush()
 
@@ -467,12 +487,12 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path(version=2)
+        venv = virtualenv_path(version=3)
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python2.7/site-packages"
+        platlib64 = venv / "lib64/python3.7/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -487,10 +507,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):
@@ -523,32 +543,26 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if not self.is_running():
             return  # Nothing to do
 
-        logger.debug("= BEGIN PROCESSES BEFORE =======================================")
-        os.system("ps -fwwu %s" % self.id)  # nosec
-        logger.debug("= END PROCESSES BEFORE =======================================")
+        #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
+        #os.system("ps -fwwu %s" % self.id)  # nosec
+        #logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:
             logger.error("omd stop exit code: %d", stop_exit_code)
 
-        logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
-        os.system("ps -fwwu %s" % self.id)  # nosec
-        logger.debug("= END PROCESSES AFTER STOP =======================================")
+        #logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
+        #os.system("ps -fwwu %s" % self.id)  # nosec
+        #logger.debug("= END PROCESSES AFTER STOP =======================================")
 
-        try:
-            i = 0
-            while self.is_running():
-                i += 1
-                if i > 10:
-                    raise Exception("Could not stop site %s" % self.id)
-                logger.warning("The site %s is still running, sleeping... (round %d)", self.id, i)
-                sys.stdout.flush()
-                time.sleep(0.2)
-        except Exception:
-            logger.debug("= BEGIN PROCESSES AFTER WAIT =======================================")
-            os.system("ps -fwwu %s" % self.id)  # nosec
-            logger.debug("= END PROCESSES AFTER WAIT =======================================")
-            raise
+        i = 0
+        while self.is_running():
+            i += 1
+            if i > 10:
+                raise Exception("Could not stop site %s" % self.id)
+            logger.warning("The site %s is still running, sleeping... (round %d)", self.id, i)
+            sys.stdout.flush()
+            time.sleep(0.2)
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
@@ -655,7 +669,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                         {
                             'condition': {},
                             'options': {},
-                            'value': [('TESTGROUP', ('*gwia*', ''))]
+                            # TODO: This should obviously be 'str' in Python 3, but the GUI is
+                            # currently in Python 2 and expects byte strings. Change this once
+                            # the GUI is based on Python 3.
+                            'value': [(b'TESTGROUP', (b'*gwia*', b''))]
                         },
                     ],
                 }
@@ -663,9 +680,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def _missing_but_required_wato_files(self):
         required_files = [
-            "etc/check_mk/conf.d/wato/rules.mk", "etc/check_mk/multisite.d/wato/tags.mk",
-            "etc/check_mk/conf.d/wato/global.mk", "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret"
+            "etc/check_mk/conf.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/wato/tags.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "var/check_mk/web/automation",
+            "var/check_mk/web/automation/automation.secret",
         ]
 
         missing = []
@@ -802,7 +821,9 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
 def get_site_factory(prefix, update_from_git, install_test_python_modules):
     version = os.environ.get("VERSION", CMKVersion.DAILY)
     edition = os.environ.get("EDITION", CMKVersion.CEE)
-    branch = os.environ.get("BRANCH", current_base_branch_name())
+    branch = os.environ.get("BRANCH")
+    if branch is None:
+        branch = current_base_branch_name()
 
     logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
     return SiteFactory(

@@ -58,25 +58,17 @@ def is_hr_mem(oid):
 
 
 def _is_ucd(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
-    for name in [
-            "linux",
-            "cmc-tc",
-            "hp onboard administrator",
-            "barracuda",
-            "pfsense",
-            "genugate",
-            "bomgar",
-    ]:
-        if name in sys_descr:
-            return True
-
-    # Artec email archive appliances
-    if oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' \
-       and "version" in sys_descr and "serial" in sys_descr:
-        return True
-
-    return False
+    return ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "cmc-tc" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "hp onboard administrator" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "genugate" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            "bomgar" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+            # Artec email archive appliances
+            (oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' and
+             "version" in oid(".1.3.6.1.2.1.1.1.0").lower() and
+             "serial" in oid(".1.3.6.1.2.1.1.1.0").lower()))
 
 
 def _is_ucd_mem(oid):

@@ -33,17 +33,15 @@ PredictionInfo = Dict  # TODO: improve this type
 
 
 def is_dst(timestamp):
-    # type: (int) -> int
+    # type: (float) -> bool
     """Check wether a certain time stamp lies with in daylight saving time (DST)"""
-    return time.localtime(timestamp).tm_isdst
+    return bool(time.localtime(timestamp).tm_isdst)
 
 
 def timezone_at(timestamp):
-    # type: (int) -> int
+    # type: (float) -> int
     """Returns the timezone *including* DST shift at a certain point of time"""
-    if is_dst(timestamp):
-        return time.altzone
-    return time.timezone
+    return time.altzone if is_dst(timestamp) else time.timezone
 
 
 def rrd_timestamps(twindow):
@@ -286,6 +284,8 @@ def clean_prediction_files(pred_file, force=False):
             os.remove(file_path)
 
 
+# TODO: We should really *parse* the loaded data, currently the type signature
+# is a blatant lie!
 def retrieve_data_for_prediction(info_file, timegroup):
     # type: (Text, Timegroup) -> Optional[PredictionInfo]
     try:

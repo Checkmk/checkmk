@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 32E: Sensor voltage
+title: AVTECH Room Alert 32E: Sensor Voltage
 agents: snmp
 catalog: hw/environment/avtech
 license: GPL

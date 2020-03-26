@@ -15,7 +15,7 @@ import subprocess
 import time  # pylint: disable=unused-import
 # NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
-from typing import Optional as TypingOptional, List, Callable, Text, Union  # pylint: disable=unused-import
+from typing import Optional as _Optional, List, Callable, Text, Union  # pylint: disable=unused-import
 
 import six
 
@@ -34,35 +34,12 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (
-    TextAscii,
-    TextAsciiAutocomplete,
-    Dictionary,
-    Tuple,
-    Checkbox,
-    Integer,
-    DropdownChoice,
-    Alternative,
-    Password,
-    Transform,
-    FixedValue,
-    ListOf,
-    ListOfMultiple,
-    RegExpUnicode,
-    RegExp,
-    TextUnicode,
-    ElementSelection,
-    OptionalDropdownChoice,
-    Percentage,
-    Float,
-    CascadingDropdown,
-    ListChoice,
-    ListOfStrings,
-    DualListChoice,
-    ValueSpec,
-    Url,
-    MonitoredHostname,
-    ABCPageListOfMultipleGetChoice,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
+    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
+    ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname, OptionalDropdownChoice,
+    Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii, TextAsciiAutocomplete,
+    TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
     WatoMode,)
@@ -88,10 +65,6 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MainModule,
     WatoModule,
     register_modules,
-)
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
@@ -260,8 +233,8 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Text]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     only_v3=False,  # type: bool
     default_value="public",  # type: Text
     allow_none=False  # type: bool
@@ -594,13 +567,14 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
+        help=help,
         choices=[
             ("password", _("Explicit"), Password(
                 allow_empty=allow_empty,
@@ -622,8 +596,8 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):
@@ -2232,29 +2206,6 @@ class FolderChoice(DropdownChoice):
         kwargs["choices"] = watolib.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
-
-
-def rule_option_elements(disabling=True):
-    elements = [
-        ("description",
-         TextUnicode(
-             title=_("Description"),
-             help=_("A description or title of this rule"),
-             size=80,
-         )),
-        ("comment", RuleComment()),
-        ("docu_url", DocumentationURL()),
-    ]
-    if disabling:
-        elements += [
-            ("disabled",
-             Checkbox(
-                 title=_("Rule activation"),
-                 help=_("Disabled rules are kept in the configuration but are not applied."),
-                 label=_("do not apply this rule"),
-             )),
-        ]
-    return elements
 
 
 def get_check_information():

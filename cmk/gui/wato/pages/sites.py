@@ -25,7 +25,10 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-import cmk
+import cmk.utils.version as cmk_version
+import cmk.utils.paths
+
+import cmk.gui.sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -117,7 +120,7 @@ class ModeEditSite(WatoMode):
         self._clone_id = html.request.var("clone")
         self._new = self._site_id is None
 
-        if cmk.is_demo() and self._new:
+        if cmk_version.is_demo() and self._new:
             num_sites = len(self._site_mgmt.load_sites())
             if num_sites > 1:
                 raise MKUserError(None, _get_demo_message())
@@ -623,7 +626,7 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self):
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if cmk.is_demo():
+        if cmk_version.is_demo():
             html.show_message(_get_demo_message())
 
         html.div("", id_="message_container")

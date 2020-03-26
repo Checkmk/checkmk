@@ -20,9 +20,13 @@ def parse_couchbase_nodes_operations(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_operations(_item, params, operations):
-    return check_levels(operations, 'op_s', params.get('ops'), unit="/s")
+# We deliberately do not use @get_parsed_item_data here to also account for the case where the
+# Couchbase server does 0 operations / sec. This case would result in "UNKN - Item not found in
+# agent output" because parsed[item] would evaluate to False in get_parsed_item_data
+def check_couchbase_nodes_operations(item, params, parsed):
+    if item not in parsed or (not parsed[item] and parsed[item] != 0):
+        return None
+    return check_levels(parsed[item], 'op_s', params.get('ops'), unit="/s")
 
 
 check_info['couchbase_nodes_operations'] = {

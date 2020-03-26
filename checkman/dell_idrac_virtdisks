@@ -18,5 +18,5 @@ item:
  The virtual disk name.
 
 inventory:
- One check is created for each virtual disk.
+ One service is created for each virtual disk.
 

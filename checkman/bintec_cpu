@@ -9,4 +9,4 @@ description:
  utilization over an extended period of time.
 
 inventory:
- Creates one check per host if the data is provided by device
+ One service is created for each host.

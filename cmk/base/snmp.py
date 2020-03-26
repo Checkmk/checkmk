@@ -7,7 +7,7 @@
 import os
 import sys
 import subprocess
-from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -30,6 +30,8 @@ import cmk.base.agent_simulator
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
+from cmk.base.api.agent_based.section_types import SNMPTree
+
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
@@ -168,16 +170,27 @@ def create_snmp_host_config(hostname):
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
-    # type: (SNMPHostConfig, CheckPluginName, OIDInfo, bool) -> SNMPTable
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
     # and the columns and also prefixed to the index column. This
     # allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
-    if len(oid_info) == 2:
+    suboids = [None]  # type: List
+    if isinstance(oid_info, SNMPTree):
+        # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
+        #            once we have the auto-conversion of SNMPTrees in place.
+        #            In particular:
+        #              * remove all 'suboids' related code (index_column!)
+        #              * remove all casts, and extend the livetime of the
+        #                 SNMPTree Object as far as possible.
+        #             * I think the below code can be improved by making
+        #               SNMPTree an iterable.
+        tmp_base = str(oid_info.base)
+        oid, targetcolumns = cast(OIDWithColumns, (tmp_base, oid_info.oids))
+    elif len(oid_info) == 2:
         oid, targetcolumns = cast(OIDWithColumns, oid_info)
-        suboids = [None]  # type: List
     else:
         oid, suboids, targetcolumns = cast(OIDWithSubOIDsAndColumns, oid_info)
 
@@ -194,7 +207,9 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         max_len_col = -1
 
         for colno, column in enumerate(targetcolumns):
-            fetchoid, value_encoding = _compute_fetch_oid(oid, suboid, column)
+            fetchoid = _compute_fetch_oid(oid, suboid, column)
+            value_encoding = "binary" if isinstance(
+                column, snmp_utils.OIDBytes) else "string"  # type: SNMPValueEncoding
 
             # column may be integer or string like "1.5.4.2.3"
             # if column is 0, we do not fetch any data from snmp, but use
@@ -611,19 +626,16 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
 
 
 def _compute_fetch_oid(oid, suboid, column):
-    # type: (OID, Optional[OID], Column) -> Tuple[OID, SNMPValueEncoding]
-    fetchoid = oid
-    value_encoding = "string"
-
+    # type: (Union[OID,snmp_utils.OIDSpec], Optional[OID], Column) -> OID
     if suboid:
-        fetchoid += "." + str(suboid)
+        fetchoid = "%s.%s" % (oid, suboid)
+    else:
+        fetchoid = str(oid)
 
     if str(column) != "":
         fetchoid += "." + str(column)
-        if isinstance(column, snmp_utils.OIDBytes):
-            value_encoding = "binary"
 
-    return fetchoid, value_encoding
+    return fetchoid
 
 
 def _sanitize_snmp_encoding(snmp_config, columns):

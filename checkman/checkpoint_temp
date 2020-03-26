@@ -16,5 +16,5 @@ description:
  "Temperature" rule.
 
 inventory:
- One service per temperature sensor will be discovered.
+ One service is created for each temperature sensor.
 

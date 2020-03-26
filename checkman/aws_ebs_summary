@@ -10,4 +10,4 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 inventory:
- One summary service is created.
+ One service is created.

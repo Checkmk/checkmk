@@ -12,5 +12,5 @@ item:
  Index of power module
 
 inventory:
- All power modules are detected automatically
+ One service is created for each power module.
 

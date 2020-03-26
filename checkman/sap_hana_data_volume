@@ -1,4 +1,4 @@
-title: SAP HANA Data Volume
+title: SAP HANA: Data Volume
 agents: linux
 catalog: app/sap_hana
 license: GPL

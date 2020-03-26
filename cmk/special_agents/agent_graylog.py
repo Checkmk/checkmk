@@ -11,7 +11,10 @@ import json
 import sys
 import requests
 import urllib3  # type: ignore[import]
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+import cmk.utils.password_store
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+cmk.utils.password_store.replace_passwords()
 
 GraylogSection = NamedTuple("GraylogSection", [
     ("name", Text),

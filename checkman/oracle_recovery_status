@@ -1,4 +1,4 @@
-title: Check Checkpoint and user managed Backup state of datafiles
+title: Check Checkpoint and User Managed Backup State of Datafiles
 agents: linux, aix, hp/ux, Solaris
 catalog: app/oracle
 license: GPL

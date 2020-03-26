@@ -1,4 +1,4 @@
-title: APC Symmetra UPS: Battery current
+title: APC Symmetra UPS: Battery Current
 agents: snmp
 catalog: hw/power/apc
 license: GPL
@@ -11,4 +11,4 @@ item:
  The current phase containing the device state, voltage and current.
 
 inventory:
- One service is created.
+ One service is created for each battery.

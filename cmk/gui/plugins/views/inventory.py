@@ -270,6 +270,8 @@ class PainterInventoryTree(Painter):
 
 class ABCRowTable(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        self._add_declaration_errors()
+
         # Create livestatus filter for filtering out hosts
         host_columns = ["host_name"] + list({
             c for c in columns if c.startswith("host_") and c != "host_name"
@@ -277,7 +279,8 @@ class ABCRowTable(RowTable):
 
         query = "GET hosts\n"
         query += "Columns: " + (" ".join(host_columns)) + "\n"
-        query += "".join(filt.filter(self._info_name) for filt in all_active_filters)
+        query += "".join(
+            filt.filter(info_name) for filt in all_active_filters for info_name in self._info_names)
 
         if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
                 display_options.W):
@@ -287,7 +290,7 @@ class ABCRowTable(RowTable):
             html.close_tt()
             html.close_div()
 
-        data = self._get_inv_data(only_sites, query)
+        data = self._get_raw_data(only_sites, query)
 
         # Now create big table of all inventory entries of these hosts
         headers = ["site"] + host_columns
@@ -299,7 +302,7 @@ class ABCRowTable(RowTable):
                 rows.append(subrow)
         return rows
 
-    def _get_inv_data(self, only_sites, query):
+    def _get_raw_data(self, only_sites, query):
         sites.live().set_only_sites(only_sites)
         sites.live().set_prepend_site(True)
         data = sites.live().query(query)
@@ -307,9 +310,20 @@ class ABCRowTable(RowTable):
         sites.live().set_only_sites(None)
         return data
 
-    @abc.abstractmethod
     def _get_rows(self, hostrow):
+        inv_data = self._get_inv_data(hostrow)
+        return self._prepare_rows(inv_data)
+
+    @abc.abstractmethod
+    def _get_inv_data(self, hostrow):
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _prepare_rows(self, inv_data):
+        raise NotImplementedError()
+
+    def _add_declaration_errors(self):
+        pass
 
 
 #.
@@ -422,7 +436,7 @@ def inv_paint_mssql_is_clustered(clustered):
 
 @decorate_inv_paint
 def inv_paint_mssql_node_names(node_names):
-    return "", ", ".join(node_names)
+    return "", node_names
 
 
 @decorate_inv_paint
@@ -762,11 +776,11 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
 
 class RowTableInventory(ABCRowTable):
     def __init__(self, info_name, inventory_path):
-        self._info_name = info_name
+        self._info_names = [info_name]
         self._inventory_path = inventory_path
         self._add_host_columns = ["host_structured_status"]
 
-    def _get_rows(self, hostrow):
+    def _get_inv_data(self, hostrow):
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -782,12 +796,15 @@ class RowTableInventory(ABCRowTable):
         invdata = inventory.get_inventory_data(merged_tree, self._inventory_path)
         if invdata is None:
             return []
+        return invdata
 
+    def _prepare_rows(self, inv_data):
+        info_name = self._info_names[0]
         entries = []
-        for entry in invdata:
+        for entry in inv_data:
             newrow = {}
             for key, value in entry.items():
-                newrow[self._info_name + "_" + key] = value
+                newrow[info_name + "_" + key] = value
             entries.append(newrow)
         return entries
 
@@ -823,7 +840,108 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         painters.append((column, '', ''))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, invpath)
+    _declare_views(infoname, title_plural, painters, filters, [invpath])
+
+
+class RowMultiTableInventory(ABCRowTable):
+    def __init__(self, sources, match_by, errors):
+        self._sources = sources
+        self._info_names = [infoname for infoname, _path in sources]
+        self._match_by = match_by
+        self._add_host_columns = ["host_structured_status"]
+        self._errors = errors
+
+    def _get_inv_data(self, hostrow):
+        try:
+            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            return []
+
+        if merged_tree is None:
+            return []
+
+        multi_inv_data = []
+        for info_name, inventory_path in self._sources:
+            inv_data = inventory.get_inventory_data(merged_tree, inventory_path)
+            if inv_data is None:
+                continue
+            multi_inv_data.append((info_name, inv_data))
+        return multi_inv_data
+
+    def _prepare_rows(self, inv_data):
+        joined_rows = {}
+        for this_info_name, this_inv_data in inv_data:
+            for entry in this_inv_data:
+                inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
+                inst.update({this_info_name + "_" + k: v for k, v in entry.items()})
+        return [joined_rows[match_by_key] for match_by_key in sorted(joined_rows)]
+
+    def _add_declaration_errors(self):
+        if self._errors:
+            html.add_user_error("declare_invtable_view", ", ".join(self._errors))
+
+
+def declare_joined_inventory_table_view(tablename, title_singular, title_plural, tables, match_by):
+
+    _register_info_class(tablename, title_singular, title_plural)
+
+    info_names = []
+    invpaths = []
+    titles = []
+    errors = []
+    for this_tablename in tables:
+        vi = visual_info_registry.get(this_tablename)
+        ds = data_source_registry.get(this_tablename)
+        if ds is None or vi is None:
+            errors.append("Missing declare_invtable_view for inventory table view '%s'" %
+                          this_tablename)
+            continue
+        info_names.append(ds._ident)
+        invpaths.append(ds._inventory_path)
+        titles.append(vi._title)
+
+    # Create the datasource (like a database view)
+    ds_class = type(
+        "DataSourceInventory%s" % tablename.title(), (DataSource,), {
+            "_ident": tablename,
+            "_sources": zip(info_names, invpaths),
+            "_match_by": match_by,
+            "_errors": errors,
+            "_title": "%s: %s" % (_("Inventory"), title_plural),
+            "_infos": ["host"] + info_names,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+            "table": property(lambda s: RowMultiTableInventory(s._sources, s._match_by, s._errors)),
+            "infos": property(lambda s: s._infos),
+            "keys": property(lambda s: []),
+            "id_keys": property(lambda s: []),
+        })
+    data_source_registry.register(ds_class)
+
+    known_common_columns = set()
+    painters = []
+    filters = []
+    for this_invpath, this_infoname, this_title in zip(invpaths, info_names, titles):
+        for name in _inv_find_subtable_columns(this_invpath):
+            if name in match_by:
+                # Filter out duplicate common columns which are used to join tables
+                if name in known_common_columns:
+                    continue
+                known_common_columns.add(name)
+
+            column = this_infoname + "_" + name
+
+            # Declare a painter, sorter and filters for each path with display hint
+            _declare_invtable_column(this_infoname, this_invpath, this_title, name, column)
+
+            painters.append((column, '', ''))
+            filters.append(column)
+
+    _declare_views(tablename, title_plural, painters, filters, invpaths)
 
 
 def _register_info_class(infoname, title_singular, title_plural):
@@ -841,7 +959,7 @@ def _register_info_class(infoname, title_singular, title_plural):
     visual_info_registry.register(info_class)
 
 
-def _declare_views(infoname, title_plural, painters, filters, invpath):
+def _declare_views(infoname, title_plural, painters, filters, invpaths):
     # Declare two views: one for searching globally. And one
     # for the items of one host.
     view_spec = {
@@ -898,7 +1016,7 @@ def _declare_views(infoname, title_plural, painters, filters, invpath):
         'mustsearch': False,
         'link_from': {
             'single_infos': ['host'],
-            'has_inventory_tree': invpath,
+            'has_inventory_tree': invpaths,
         },
 
         # Columns
@@ -1214,11 +1332,11 @@ multisite_builtin_views["inv_hosts_ports"] = {
 
 class RowTableInventoryHistory(ABCRowTable):
     def __init__(self):
-        self._info_name = "invhist"
+        self._info_names = ["invhist"]
         self._inventory_path = None
         self._add_host_columns = []
 
-    def _get_rows(self, hostrow):
+    def _get_inv_data(self, hostrow):
         hostname = hostrow.get("host_name")
         history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
         if corrupted_history_files:
@@ -1226,8 +1344,10 @@ class RowTableInventoryHistory(ABCRowTable):
                 "load_inventory_delta_tree",
                 _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                   % ", ".join(sorted(corrupted_history_files))))
+        return history_deltas
 
-        for timestamp, delta_info in history_deltas:
+    def _prepare_rows(self, inv_data):
+        for timestamp, delta_info in inv_data:
             new, changed, removed, delta_tree = delta_info
             newrow = {
                 "invhist_time": int(timestamp),

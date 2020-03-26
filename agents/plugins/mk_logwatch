@@ -11,6 +11,7 @@ Options:
     -d               Debug mode: Colored output, no saving of status.
     -c CONFIG_FILE   Use this config file
     -h               Show help.
+    --no_state       No state
     -v               Verbose output for debugging purposes (no debug mode).
 
 You should find an example configuration file at
@@ -52,8 +53,8 @@ IPV4_REGEX = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
 ENCODINGS = (
-    ('\xFF\xFE', "utf_16"),
-    ('\xFE\xFF', "utf_16_be"),
+    (b'\xFF\xFE', "utf_16"),
+    (b'\xFE\xFF', "utf_16_be"),
 )
 
 TTY_COLORS = {
@@ -94,6 +95,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods
         self.verbosity = argv.count('-v') + 2 * argv.count('-vv')
         self.config = argv[argv.index('-c') + 1] if '-c' in argv else None
         self.debug = '-d' in argv or '--debug' in argv
+        self.no_state = '--no_state' in argv
 
 
 #   .--MEI-Cleanup---------------------------------------------------------.
@@ -240,6 +242,14 @@ def is_indented(line):
 
 
 def parse_filenames(line):
+    if platform.system() == "Windows":
+        # we can't use pathlib: Python 2.5 has no pathlib
+        # to garantie that backslash is escaped
+        _processed_line = line.replace('\\', '/')
+        _processed_line = os.path.normpath(_processed_line)
+        _processed_line = _processed_line.replace('\\', '\\\\')
+        return shlex.split(_processed_line)
+
     return shlex.split(line)
 
 
@@ -259,7 +269,7 @@ def get_config_files(directory, config_file_arg=None):
 def iter_config_lines(files, debug=False):
     for file_ in files:
         try:
-            with open(file_) as fid:
+            with open(file_, 'rb') as fid:
                 try:
                     decoded = (line.decode('utf-8') for line in fid)
                     for line in decoded:
@@ -414,6 +424,10 @@ class LogLinesIter(object):
         self._reached_end = False  # used for optimization only
         self._enc = encoding or self._get_encoding()
         self._newline = u'\n'.encode(self._enc)
+        self._nl = u'\n'  # common new line for the future code
+        # for Windows we need a bit special processing. It is difficult to fit this processing
+        # in current architecture smoothly
+        self._utf16 = self._enc == "utf_16"
 
     def __enter__(self):
         return self
@@ -440,7 +454,10 @@ class LogLinesIter(object):
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
-                self._buffer = self._buffer[len(bom):]
+                if sys.version[0] == "3":
+                    self._buffer = self._buffer[len(bom):].decode(encoding)
+                else:
+                    self._buffer = self._buffer[len(bom):]
                 LOGGER.debug("Detected %r encoding by BOM", encoding)
                 return encoding
 
@@ -454,15 +471,28 @@ class LogLinesIter(object):
         Try to read more lines from file.
         """
         # try to read at least to end of next line
-        while self._newline not in self._buffer:
-            new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
-            if not new_bytes:
-                break
-            self._buffer += new_bytes
+        if self._utf16:
+            # unicode only processing. In future e have to convert
+            # this file to process data only  as unicode
+            while self._nl not in self._buffer:
+                new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
+                if not new_bytes:
+                    break
+                self._buffer += new_bytes.decode("utf-16")  # unicode
 
-        raw_lines = self._buffer.split(self._newline)
-        self._buffer = raw_lines.pop()  # unfinished line
-        self._lines.extend(l + self._newline for l in raw_lines)
+            raw_lines = self._buffer.split(self._nl)
+            self._buffer = raw_lines.pop()  # unfinished line
+            self._lines.extend(l + self._nl for l in raw_lines)
+        else:
+            while self._newline not in self._buffer:
+                new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
+                if not new_bytes:
+                    break
+                self._buffer += new_bytes
+
+            raw_lines = self._buffer.split(self._newline)
+            self._buffer = raw_lines.pop()  # unfinished line
+            self._lines.extend(l + self._newline for l in raw_lines)
 
     def set_position(self, position):
         if position is None:
@@ -472,9 +502,9 @@ class LogLinesIter(object):
         os.lseek(self._fd, position, os.SEEK_SET)
 
     def get_position(self):
-        '''
+        """
         Return the position where we want to continue next time
-        '''
+        """
         pointer_pos = os.lseek(self._fd, 0, os.SEEK_CUR)
         bytes_unused = sum((len(l) for l in self._lines), len(self._buffer))
         return pointer_pos - bytes_unused
@@ -485,7 +515,14 @@ class LogLinesIter(object):
         self._lines = []
 
     def push_back_line(self, line):
-        self._lines.insert(0, line.encode(self._enc))
+        """
+        in Python-3 only bytes as param is expected
+        still current tests may or will deliver unicode
+        """
+        if isinstance(line, bytes):
+            self._lines.insert(0, line)  # in python 3 we expect only bytes
+        else:
+            self._lines.insert(0, line.encode(self._enc))
 
     def next_line(self):
         if self._reached_end:  # optimization only
@@ -496,6 +533,8 @@ class LogLinesIter(object):
 
         if self._lines:
             # in case of decoding error, replace with U+FFFD REPLACEMENT CHARACTER
+            if self._enc == "utf_16":
+                return self._lines.pop(0)
             return self._lines.pop(0).decode(self._enc, "replace")
 
         self._reached_end = True
@@ -565,7 +604,7 @@ def process_logfile(section, filestate, debug):
     # truncated or wrapped while keeping the same inode. We assume
     # that it contains all new data in that case and restart from
     # beginning.
-    if offset > stat.st_size:
+    if offset is not None and offset > stat.st_size:
         offset = None
 
     # now seek to offset where interesting data begins
@@ -808,6 +847,18 @@ class ClusterConfigBlock(object):
         self.ips_or_subnets = ips_or_subnets
 
 
+def _decode_to_unicode(match):
+    # (Union[bytes, unicode, str]) -> unicode
+    # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
+    # we can't use 'six': this code may be executed using Python 2.5/2.6
+    if sys.version[0] == "2":
+        # Python 2: str @Windows && @Linux
+        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+
+    # Python 3: bytes @Linux and unicode @Windows
+    return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
+
+
 def find_matching_logfiles(glob_pattern):
     """
     Evaluate globbing pattern to a list of logfile IDs
@@ -842,8 +893,10 @@ def find_matching_logfiles(glob_pattern):
             continue
         if os.path.islink(match):
             match = os.readlink(match)
-        # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
-        match_readable = match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+
+        # match is bytes in Linux and unicode/str in Windows
+        match_readable = _decode_to_unicode(match)
+
         file_refs.append((match, match_readable))
 
     return file_refs
@@ -1018,11 +1071,16 @@ def write_output(header, lines, options):
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
-    encoded_lines = (l.encode('utf-8') for l in lines)
+    if sys.version[0] == "3":
+        # in Python 3 we use 100% unicode and hope that this is good idea
+        sys.stdout.write(header)
+        filtered_enc_lines = _filter_maxoutputsize(lines, options.maxoutputsize)
+    else:
+        # Original strange code for Python 2
+        encoded_lines = (l.encode('utf-8') for l in lines)
+        sys.stdout.write(header.encode('utf-8'))
+        filtered_enc_lines = _filter_maxoutputsize(encoded_lines, options.maxoutputsize)
 
-    filtered_enc_lines = _filter_maxoutputsize(encoded_lines, options.maxoutputsize)
-
-    sys.stdout.write(header.encode('utf-8'))
     for line in filtered_enc_lines:
         sys.stdout.write(line)
 
@@ -1061,7 +1119,11 @@ def main(argv=None):
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
-        sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))
+        # Python 2.5/2.6 compatible solution
+        if sys.version[0] == "3":
+            sys.stdout.write("[[[%s:missing]]]\n" % pattern)
+        else:
+            sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))
 
     state = State(status_filename)
     try:
@@ -1083,7 +1145,8 @@ def main(argv=None):
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")
         return
-    state.write()
+    if not args.no_state:
+        state.write()
 
 
 if __name__ == "__main__":

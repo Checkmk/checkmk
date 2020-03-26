@@ -1,4 +1,4 @@
-title: IBM Integrated Management Module (IMM): Fan rpm
+title: IBM Integrated Management Module (IMM): Fan RPM
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

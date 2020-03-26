@@ -10,18 +10,39 @@ def check_couchbase_bucket_mem(_item, params, data):
     warn, crit = params.get("levels", (None, None))
     mode = "abs_used" if isinstance(warn, int) else "perc_used"
     try:
-        return check_memory_element(
+        yield check_memory_element(
             "Usage",
             data["mem_total"] - data["mem_free"],
             data["mem_total"],
             (mode, (warn, crit)),
-            metric_name="memused",
+            metric_name="memused_couchbase_bucket",
         )
     except (KeyError, TypeError):
-        return None
+        pass
+
+    low_watermark = data.get("ep_mem_low_wat")
+    if low_watermark is not None:
+        yield check_levels(
+            low_watermark,
+            "mem_low_wat",
+            None,
+            infoname="Low watermark",
+            human_readable_func=get_bytes_human_readable,
+        )
+
+    high_watermark = data.get("ep_mem_high_wat")
+    if high_watermark is not None:
+        yield check_levels(
+            high_watermark,
+            "mem_high_wat",
+            None,
+            infoname="High watermark",
+            human_readable_func=get_bytes_human_readable,
+        )
 
 
 check_info['couchbase_buckets_mem'] = {
+    'parse_function': parse_couchbase_lines,
     'inventory_function': discover(lambda _k, v: 'mem_total' in v and 'mem_free' in v),
     'check_function': check_couchbase_bucket_mem,
     'service_description': 'Couchbase Bucket %s Memory',

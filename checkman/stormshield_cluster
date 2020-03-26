@@ -1,4 +1,4 @@
-title: Stormshield HA Status
+title: Stormshield: HA-Status
 agents: snmp
 catalog: app/stormshield
 license: GPL

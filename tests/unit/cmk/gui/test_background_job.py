@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 
 import testlib
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
@@ -41,9 +41,10 @@ def test_registered_background_jobs():
         'BulkDiscoveryBackgroundJob',
         'UserSyncBackgroundJob',
         'ServiceDiscoveryBackgroundJob',
+        'ActivationCleanupBackgroundJob',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_jobs += [
             'BakeAgentsBackgroundJob',
             'ReportingBackgroundJob',

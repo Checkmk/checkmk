@@ -6,7 +6,7 @@
 
 from typing import Optional as _Optional, Tuple as _Tuple  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
 
 from . import (
@@ -4903,7 +4903,7 @@ multisite_builtin_views['cmk_servers'] = {
 
 def cmk_sites_painters():
     service_painters = []
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         service_painters += [
             ('invcmksites_cmc', None, None),
             ('invcmksites_dcd', None, None),
@@ -4924,7 +4924,7 @@ def cmk_sites_painters():
         ('invcmksites_stunnel', None, None),
     ]
 
-    if cmk.is_raw_edition():
+    if cmk_version.is_raw_edition():
         service_painters += [
             ('invcmksites_npcd', None, None),
         ]

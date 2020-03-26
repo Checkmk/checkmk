@@ -1,4 +1,4 @@
-title: F5 Big-IP: CPU temperature
+title: F5 Big-IP: CPU Temperature
 agents: snmp
 catalog: hw/network/f5
 license: GPL
@@ -11,5 +11,5 @@ item:
  The name of the sensor
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor.
 

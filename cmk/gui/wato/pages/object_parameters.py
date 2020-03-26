@@ -9,8 +9,6 @@ modified via rules."""
 
 from typing import List, Tuple, Optional, Text  # pylint: disable=unused-import
 
-import cmk
-
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -406,7 +404,7 @@ class ModeObjectParameters(WatoMode):
         # patterns are configured in logwatch_rules. We do not have access to the actual
         # patterns here but just to the useless "None". In order not to complicate things
         # we simply display nothing here.
-        elif varname == "logwatch_rules":
+        if varname == "logwatch_rules":
             pass
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:

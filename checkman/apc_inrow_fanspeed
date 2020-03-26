@@ -7,3 +7,5 @@ description:
   The current Fanspeed in percent for a InRow Cooling devices.
   The Ouput in only informatial and everytime {OK}
 
+inventory:
+ One service is created.

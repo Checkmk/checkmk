@@ -15,7 +15,9 @@ import logging
 import os
 import pprint
 import sys
-from typing import Any, Dict, Iterable, List, Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Iterable, List, Optional, Union,
+)
 try:
     # Python has a totally braindead history of changes in this area:
     #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
@@ -44,6 +46,10 @@ from cmk.utils.exceptions import MKException
 from .defaults import default_config, default_rule_pack
 from .settings import Settings, settings as create_settings
 
+ECRulePackSpec = Dict[str, Any]  # TODO: improve this type
+ECRulePack = Union[ECRulePackSpec, "MkpRulePackProxy"]
+ECRulePacks = List[ECRulePack]
+
 
 class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
@@ -66,7 +72,7 @@ class MkpRulePackProxy(MutableMapping):
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
         self.id_ = rule_pack_id
-        self.rule_pack = None  # type: Optional[Dict[str, Any]]
+        self.rule_pack = None  # type: Optional[ECRulePack]
 
     def __getitem__(self, key):
         if self.rule_pack is None:
@@ -106,7 +112,7 @@ class MkpRulePackProxy(MutableMapping):
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack):
-        # type: (Dict[str, Any]) -> None
+        # type: (ECRulePack) -> None
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
             raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' %
@@ -143,7 +149,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def type_of(rule_pack, id_to_mkp):
-        # type: (Dict[str, Any], Dict[Any, Any]) -> RulePackType
+        # type: (ECRulePack, Dict[Any, Any]) -> RulePackType
         """
         Returns the type of rule pack for a given rule pack ID to MKP mapping.
         """
@@ -270,14 +276,14 @@ def load_config(settings):
 
 
 def load_rule_packs():
-    # type: () -> Any
+    # type: () -> ECRulePacks
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
     in the rule packs are already bound to the referenced object."""
     return load_config(_default_settings())["rule_packs"]
 
 
 def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
-    # type: (List[Dict[str, Any]], bool, Optional[Path]) -> None
+    # type: (ECRulePacks, bool, Optional[Path]) -> None
     """Saves the given rule packs to rules.mk. By default they are saved to the
     default directory for rule packs. If dir_ is given it is used instead of
     the default."""
@@ -300,7 +306,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
 # save_rule_packs(), otherwise there is a race condition when the EC
 # recursively reads all *.mk files!
 def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
-    # type: (Dict[str, Any], bool, Optional[Path]) -> None
+    # type: (ECRulePack, bool, Optional[Path]) -> None
     """
     Export the representation of a rule pack (i.e. a dict) to a .mk
     file accessible by the WATO module Extension Packages. In case
@@ -337,7 +343,8 @@ def add_rule_pack_proxies(file_names):
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs = load_rule_packs()
+    rule_packs = []  # type: ECRulePacks
+    rule_packs += load_rule_packs()
     ids = [os.path.splitext(fn)[0] for fn in file_names]
     for id_ in ids:
         rule_packs.append(MkpRulePackProxy(id_))
@@ -371,7 +378,8 @@ def release_packaged_rule_packs(file_names):
     if not file_names:
         return
 
-    rule_packs = load_rule_packs()
+    rule_packs = []  # type: ECRulePacks
+    rule_packs += load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 

@@ -111,9 +111,13 @@ def check_fibrechannel_common(item, params, parsed):
     total_ops = fcp_if["total_ops"]
     for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
                        ("avg_write_latency", "Write Latency")]:
-        # According to NetApp's "Performance Management Design Guide",
-        # the latency is a function of `total_ops`.
-        value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what))
+        try:
+            # According to NetApp's "Performance Management Design Guide",
+            # the latency is a function of `total_ops`.
+            value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what), onwrap=RAISE)
+        except MKCounterWrapped:
+            value = None
+
         if value is not None:
             yield check_levels(value,
                                "%s_latency" % what,

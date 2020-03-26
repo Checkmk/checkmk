@@ -1,4 +1,4 @@
-title: FireEye Appliances: RAID status
+title: FireEye Appliances: RAID Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

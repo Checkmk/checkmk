@@ -1,4 +1,4 @@
-title: UCS Bladecenter Fans: Temperature information
+title: UCS Bladecenter Fans: Temperature Information
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPL

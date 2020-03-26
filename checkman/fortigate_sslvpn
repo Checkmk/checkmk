@@ -1,4 +1,4 @@
-title: FortiGate firewalls: Status of SSL VPN Tunnels
+title: FortiGate Firewalls: Status of SSL VPN Tunnels
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL
@@ -13,5 +13,5 @@ item:
  Name of the SSL VPN tunnel
 
 inventory:
- One service per virtual domain will be created
+ One service is created for each virtual domain.
 

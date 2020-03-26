@@ -1,4 +1,4 @@
-title: TP-LINK switches: Power over Ethernet
+title: TP-LINK Switches: Power over Ethernet
 agents: snmp
 catalog: hw/network/tplink
 license: GPL

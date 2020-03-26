@@ -5,6 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the CPU usage of Dell EMC (Elastic Cloud Storage) systems. Levels can be set via the rule 'CPU utilization on Linux/UNIX'.
+ Make sure to create the rule 'Hosts without system description OID' for this host.
 
 inventory:
- One check for a device will be created. Make sure to create the rule 'Hosts without system description OID' for this host.
+ One service is created for each device.

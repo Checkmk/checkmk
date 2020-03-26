@@ -469,6 +469,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         return result
 
     def set_ruleset(self, ruleset_name, ruleset_spec):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
         request = {
             "ruleset_name": ruleset_name,
         }
@@ -476,7 +477,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
 
         result = self._api_request(
             "webapi.py?action=set_ruleset&output_format=python&request_format=python", {
-                "request": repr(request),
+                "request": pformat(request),
             },
             output_format="python")
 
@@ -541,9 +542,10 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         return result
 
     def set_site(self, site_id, site_config):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
         result = self._api_request(
             "webapi.py?action=set_site&request_format=python&output_format=python",
-            {"request": repr({
+            {"request": pformat({
                 "site_id": site_id,
                 "site_config": site_config
             })},
@@ -574,8 +576,9 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         assert result is None
 
     def set_all_sites(self, configuration):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
         result = self._api_request("webapi.py?action=set_all_sites&request_format=python",
-                                   {"request": repr(configuration)})
+                                   {"request": pformat(configuration)})
 
         assert result is None
 

@@ -4,15 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import (  # pylint: disable=unused-import
+    Dict, List, Tuple, Union, Text,
+)
+
 import cmk.utils.store as store
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    TimeperiodName,)
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
 
+TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
+TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
+
 
 def builtin_timeperiods():
+    # type: () -> TimeperiodSpecs
     return {
         "24X7": {
             "alias": _("Always"),
@@ -28,12 +38,14 @@ def builtin_timeperiods():
 
 
 def load_timeperiods():
+    # type: () -> TimeperiodSpecs
     timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
     timeperiods.update(builtin_timeperiods())
     return timeperiods
 
 
 def save_timeperiods(timeperiods):
+    # type: (TimeperiodSpecs) -> None
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "timeperiods.mk",
                           "timeperiods",
@@ -42,6 +54,7 @@ def save_timeperiods(timeperiods):
 
 
 def _filter_builtin_timeperiods(timeperiods):
+    # type: (TimeperiodSpecs) -> TimeperiodSpecs
     builtin_keys = builtin_timeperiods().keys()
     return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 

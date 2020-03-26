@@ -18,7 +18,7 @@ from typing import (  # pylint: disable=unused-import
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -45,7 +45,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 )
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
     import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
@@ -63,7 +63,7 @@ _submit_to_core = True
 _show_perfdata = False
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
-UncleanPerfValue = Optional[Union[str, float]]
+UncleanPerfValue = Union[None, str, float]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -82,7 +82,7 @@ UncleanPerfValue = Optional[Union[str, float]]
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", six.ensure_str(cmk.__version__))
+    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -407,6 +407,12 @@ def determine_check_params(entries):
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries = {}  # type: Dict[str, Any]
     for entry in entries[::-1]:
+        if not isinstance(entry, dict):
+            # Ignore (old) default parameters like
+            #   'NAME_default_levels' = (80.0, 85.0)
+            # A rule with a timespecifc parameter settings always has an
+            # implicit default parameter set, even if no timeperiod matches.
+            continue
         timespecific_entries.update(_evaluate_timespecific_entry(entry))
 
     return timespecific_entries
@@ -453,7 +459,7 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
-    # type: (Optional[Union[ServiceCheckResult, Tuple, Iterable]], bool) -> ServiceCheckResult
+    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
@@ -540,7 +546,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 def _convert_perf_data(p):
     # type: (List[UncleanPerfValue]) -> str
-    # replace None with "" and fill up to 7 values
+    # replace None with "" and fill up to 6 values
     normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 

@@ -9,5 +9,5 @@ description:
  returned by the device.
 
 inventory:
- One service per host will be created.
+ One service is created for each host.
 

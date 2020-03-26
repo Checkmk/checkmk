@@ -1,1 +1,0 @@
-template-diskstat.php

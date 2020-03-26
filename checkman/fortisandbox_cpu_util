@@ -10,5 +10,5 @@ description:
  configurable levels.
 
 inventory:
- One check per host will be created.
+ One service is created for each host.
 

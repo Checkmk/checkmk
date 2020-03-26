@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of threads
+title: Kernel Tunables: Number of Threads
 agents: hpux
 catalog: os/kernel
 license: GPL

@@ -1,6 +1,6 @@
-title: DDN S2A: Read/write wait
+title: DDN S2A: Read/Write Wait
 agents: ddn_s2a
-catalog: os/storage
+catalog: hw/storagehw/ddn_s2a
 license: GPL
 distribution: check_mk
 description:
@@ -11,4 +11,4 @@ item:
  "Disk" or "Host"
 
 inventory:
- Two services per device are created, one each for disk and host r/w-delay respectively.
+ Two services are created for each device, one each for disk and host r/w-delay respectively.

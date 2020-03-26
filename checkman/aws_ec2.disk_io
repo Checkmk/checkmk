@@ -10,7 +10,8 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the instance if all required metrics (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.
+ Name of the instance
 
 inventory:
- One service will be created.
+ One service is created for each disk if all required metrics
+ (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.

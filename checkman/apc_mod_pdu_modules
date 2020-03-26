@@ -12,3 +12,6 @@ description:
  The check goes to {CRIT} if one of the modules goes in unkown or not presend state.
  It goes to {WARN} if the devices reports an warning state for the module.
  The check also reports the current output in kw
+
+inventory:
+ One service is created

@@ -1,4 +1,4 @@
-title: Aruba WLAN controller: Clients
+title: Aruba WLAN Controller: Clients
 agents: snmp
 catalog: hw/network/aruba
 license: GPL
@@ -8,4 +8,4 @@ description:
  The service is always OK.
 
 inventory:
- One service will be created.
+ One service is created.

@@ -15,4 +15,4 @@ item:
  The name or index of the sensor.
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

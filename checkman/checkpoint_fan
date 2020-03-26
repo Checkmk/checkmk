@@ -1,4 +1,4 @@
-title: Checkpoint Firewalls: Fan status
+title: Checkpoint Firewalls: Fan Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
@@ -14,5 +14,5 @@ description:
  {UNKNOWN}.
 
 inventory:
- One service per case fan will be discovered.
+ One service is created for each case fan.
 

@@ -217,101 +217,114 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 
 def _valuespec_generic_metrics_prometheus():
     return Dictionary(
-        elements=[
-            ("port",
-             Integer(
-                 title=_('API-Port'),
-                 help=_("If no port is given a default vaulue of 443 will be used."),
-                 default_value=443,
-             )),
-            (
-                "exporter",
-                Dictionary(
-                    elements=[
-                        ("kube_state",
-                         Dictionary(elements=[
-                             ("entities",
-                              ListChoice(
-                                  choices=[
-                                      ("cluster", _("Cluster")),
-                                      ("nodes", _("Nodes")),
-                                      ("services", _("Services")),
-                                      ("pods", _("Pods")),
-                                      ("daemon_sets", _("Daemon sets")),
-                                  ],
-                                  default_value=["cluster", "nodes"],
-                                  allow_empty=False,
-                                  title=_("Retrieve information about..."),
-                                  help=_(
-                                      "For your Kubernetes cluster select for which entity levels "
-                                      "you would like to retrieve information about. Piggyback hosts "
-                                      "for the respective entities will be created."))),
-                             ("cluster_name",
-                              TextAscii(
-                                  title=_('Cluster name: '),
-                                  allow_empty=False,
-                                  help=_("You must specify a name for your Kubernetes cluster"))),
+        elements=
+        [("port",
+          Integer(
+              title=_('API-Port'),
+              help=_("If no port is given a default vaulue of 443 will be used."),
+              default_value=443,
+          )),
+         (
+             "exporter",
+             Dictionary(
+                 elements=[(
+                     "node_exporter",
+                     Dictionary(
+                         elements=[
+                             (
+                                 "entities",
+                                 ListChoice(
+                                     choices=[
+                                         ("df", _("Filesystems")),
+                                     ],
+                                     default_value=["df"],
+                                     allow_empty=False,
+                                     title=_("Retrieve information about..."),
+                                     help=_(
+                                         "For your respective kernel select the hardware or OS entity "
+                                         "you would like to retrieve information about.")),
+                             ),
                          ],
-                                    title=_("Kube state metrics"),
-                                    optional_keys=[])),
-                        ("cadvisor",
-                         Dictionary(
-                             elements=[
-                                 ("diskio",
-                                  ListChoice(
-                                      choices=[
-                                          ("container",
-                                           _("Group by Container")), ("pod", _("Group by Pod"))
-                                      ],
-                                      title=_("Disk IO"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the Disk IO information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("cpu",
-                                  ListChoice(
-                                      choices=[
-                                          ("container",
-                                           _("Group by Container")), ("pod", _("Group by Pod"))
-                                      ],
-                                      title=_("CPU Utilisation"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the CPU information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("df",
-                                  ListChoice(
-                                      choices=[
-                                          ("container",
-                                           _("Group by Container")), ("pod", _("Group by Pod"))
-                                      ],
-                                      title=_("Filesystem"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the Filesystem information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("if",
-                                  ListChoice(
-                                      choices=[
-                                          ("pod", _("Group by Pod"))
-                                      ],
-                                      title=_("Network"),
-                                      allow_empty=False,
-                                  )),
-                                 ("memory",
-                                  ListChoice(
-                                      choices=[(
-                                          "container",
-                                          _("Group by Container")), ("pod", _("Group by Pod"))],
-                                      title=_("Filesystem"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
+                         title=_("Node Exporter metrics"),
+                         optional_keys=[],
+                     )),
+                           ("kube_state",
+                            Dictionary(elements=[
+                                ("entities",
+                                 ListChoice(
+                                     choices=[
+                                         ("cluster", _("Cluster")),
+                                         ("nodes", _("Nodes")),
+                                         ("services", _("Services")),
+                                         ("pods", _("Pods")),
+                                         ("daemon_sets", _("Daemon sets")),
+                                     ],
+                                     default_value=["cluster", "nodes"],
+                                     allow_empty=False,
+                                     title=_("Retrieve information about..."),
+                                     help=
+                                     _("For your Kubernetes cluster select for which entity levels "
+                                       "you would like to retrieve information about. Piggyback hosts "
+                                       "for the respective entities will be created."))),
+                                ("cluster_name",
+                                 TextAscii(
+                                     title=_('Cluster name: '),
+                                     allow_empty=False,
+                                     help=_("You must specify a name for your Kubernetes cluster"))
+                                ),
+                            ],
+                                       title=_("Kube state metrics"),
+                                       optional_keys=[])),
+                           ("cadvisor",
+                            Dictionary(
+                                elements=[
+                                    ("diskio",
+                                     ListChoice(
+                                         choices=[("container", _("Group by Container")),
+                                                  ("pod", _("Group by Pod"))],
+                                         title=_("Disk IO"),
+                                         allow_empty=False,
+                                         help=_("You must specify by which entity level you "
+                                                "would like the Disk IO information to be "
+                                                "aggregated. It is possible to select multiple "
+                                                "options here."),
+                                     )),
+                                    ("cpu",
+                                     ListChoice(
+                                         choices=[("container", _("Group by Container")),
+                                                  ("pod", _("Group by Pod"))],
+                                         title=_("CPU Utilisation"),
+                                         allow_empty=False,
+                                         help=_("You must specify by which entity level you "
+                                                "would like the CPU information to be "
+                                                "aggregated. It is possible to select multiple "
+                                                "options here."),
+                                     )),
+                                    ("df",
+                                     ListChoice(
+                                         choices=[("container", _("Group by Container")),
+                                                  ("pod", _("Group by Pod"))],
+                                         title=_("Filesystem"),
+                                         allow_empty=False,
+                                         help=_("You must specify by which entity level you "
+                                                "would like the Filesystem information to be "
+                                                "aggregated. It is possible to select multiple "
+                                                "options here."),
+                                     )),
+                                    ("if",
+                                     ListChoice(
+                                         choices=[("pod", _("Group by Pod"))],
+                                         title=_("Network"),
+                                         allow_empty=False,
+                                     )),
+                                    ("memory",
+                                     ListChoice(
+                                         choices=[("container", _("Group by Container")),
+                                                  ("pod", _("Group by Pod"))],
+                                         title=_("Filesystem"),
+                                         allow_empty=False,
+                                         help=_(
+                                             "You must specify by which entity level you "
                                              "would like the memory information to be "
                                              "aggregated. It is possible to select multiple "
                                              "options here. The container's used memory will be "
@@ -319,98 +332,95 @@ def _valuespec_generic_metrics_prometheus():
                                              "used memory will be shown in reference to its "
                                              "specified limit or the machine memory if a limit is "
                                              "not applicable."),
-                                  )),
-                                 ("container_id",
-                                  DropdownChoice(
-                                      title=_("Host name used for containers"),
-                                      help=_(
-                                          "Choose which identifier is used for the monitored containers."
-                                          " This will affect the name used for the piggyback host"
-                                          " corresponding to the container, as well as items for"
-                                          " services created on the node for each container."),
-                                      choices=[
-                                          ("short",
-                                           _("Short - Use the first 12 characters of the docker container ID"
-                                            )),
-                                          ("long", _("Long - Use the full docker container ID")),
-                                          ("name", _("Name - Use the containers' name")),
-                                      ],
-                                  )),
-                             ],
-                             title=_("CAdvisor"),
-                             validate=_check_not_empty_exporter_dict,
-                             optional_keys=["diskio", "cpu", "df", "if", "memory"],
-                         ))
-                    ],
-                    title=_("Exporters"),
-                    validate=_check_not_empty_exporter_dict,
-                    help=_("You can specify which Source Targets including Exporters "
-                           "are connected to your Prometheus instance. The Prometheus "
-                           "Special Agent will automatically generate services for the "
-                           "selected monitoring information. You can create your own "
-                           "defined services with the custom PromQL query option below "
-                           "if one of the Source Target types are not listed here."),
-                ),
-            ),
-            ("promql_checks",
-             ListOf(
-                 Dictionary(elements=[
-                     ("service_description",
-                      TextAscii(
-                          title=_('Service description: '),
-                          allow_empty=False,
-                      )),
-                     ("metric_components",
-                      ListOf(
-                          Dictionary(
-                              title=_('PromQL query'),
-                              elements=[
-                                  ("metric_label",
-                                   TextAscii(
-                                       title=_('Metric Label'),
-                                       allow_empty=False,
-                                       help=_("The metric label is displayed alongside the "
-                                              "queried value within the resulting service. "
-                                              "The metric name will be taken as label if "
-                                              "nothing was specified."),
-                                   )),
-                                  ("metric_name",
-                                   TextAscii(
-                                       title=_('Metric Name: '),
-                                       allow_empty=False,
-                                       help=_("Feel free to specify any naming. However, "
-                                              "providing a fitting metric name results in the "
-                                              "generation of a suitable graph display of the "
-                                              "metric. One can refer to other existing check "
-                                              "plug-ins in order to inspect existing metric "
-                                              "names and examples. Otherwise one can also "
-                                              "refer to the \"Guidelines for coding check "
-                                              "plug-ins\" section in the Offical Guide for "
-                                              "further details."),
-                                   )),
-                                  ("promql_query",
-                                   TextAscii(title=_('PromQL query: '), allow_empty=False,
-                                             size=80)),
-                              ],
-                              optional_keys=["metric_label"],
-                          ),
-                          title=_('PromQL queries for Service'),
-                          allow_empty=False,
-                          magic='@;@',
-                          validate=_validate_prometheus_service_metrics,
-                      )),
-                     ("host_name",
-                      TextAscii(title=_('Assign service to following host: '),
-                                allow_empty=False,
-                                help="Specify the host to which the resulting "
-                                "service will be assigned to. The host "
-                                "should be configured to allow Piggyback "
-                                "data")),
-                 ],
-                            optional_keys=["host_name"]),
-                 title=_("Service creation using PromQL queries"),
-             ))
-        ],
+                                     )),
+                                    ("container_id",
+                                     DropdownChoice(
+                                         title=_("Host name used for containers"),
+                                         help=
+                                         _("Choose which identifier is used for the monitored containers."
+                                           " This will affect the name used for the piggyback host"
+                                           " corresponding to the container, as well as items for"
+                                           " services created on the node for each container."),
+                                         choices=[
+                                             ("short",
+                                              _("Short - Use the first 12 characters of the docker container ID"
+                                               )),
+                                             ("long", _("Long - Use the full docker container ID")),
+                                             ("name", _("Name - Use the containers' name")),
+                                         ],
+                                     )),
+                                ],
+                                title=_("CAdvisor"),
+                                validate=_check_not_empty_exporter_dict,
+                                optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                            ))],
+                 title=_("Exporters"),
+                 validate=_check_not_empty_exporter_dict,
+                 help=_("You can specify which Source Targets including Exporters "
+                        "are connected to your Prometheus instance. The Prometheus "
+                        "Special Agent will automatically generate services for the "
+                        "selected monitoring information. You can create your own "
+                        "defined services with the custom PromQL query option below "
+                        "if one of the Source Target types are not listed here."),
+             ),
+         ),
+         ("promql_checks",
+          ListOf(
+              Dictionary(elements=[
+                  ("service_description",
+                   TextAscii(
+                       title=_('Service description: '),
+                       allow_empty=False,
+                   )),
+                  ("metric_components",
+                   ListOf(
+                       Dictionary(
+                           title=_('PromQL query'),
+                           elements=[
+                               ("metric_label",
+                                TextAscii(
+                                    title=_('Metric Label'),
+                                    allow_empty=False,
+                                    help=_("The metric label is displayed alongside the "
+                                           "queried value within the resulting service. "
+                                           "The metric name will be taken as label if "
+                                           "nothing was specified."),
+                                )),
+                               ("metric_name",
+                                TextAscii(
+                                    title=_('Metric Name: '),
+                                    allow_empty=False,
+                                    help=_("Feel free to specify any naming. However, "
+                                           "providing a fitting metric name results in the "
+                                           "generation of a suitable graph display of the "
+                                           "metric. One can refer to other existing check "
+                                           "plug-ins in order to inspect existing metric "
+                                           "names and examples. Otherwise one can also "
+                                           "refer to the \"Guidelines for coding check "
+                                           "plug-ins\" section in the Offical Guide for "
+                                           "further details."),
+                                )),
+                               ("promql_query",
+                                TextAscii(title=_('PromQL query: '), allow_empty=False, size=80)),
+                           ],
+                           optional_keys=["metric_label"],
+                       ),
+                       title=_('PromQL queries for Service'),
+                       allow_empty=False,
+                       magic='@;@',
+                       validate=_validate_prometheus_service_metrics,
+                   )),
+                  ("host_name",
+                   TextAscii(title=_('Assign service to following host: '),
+                             allow_empty=False,
+                             help="Specify the host to which the resulting "
+                             "service will be assigned to. The host "
+                             "should be configured to allow Piggyback "
+                             "data")),
+              ],
+                         optional_keys=["host_name"]),
+              title=_("Service creation using PromQL queries"),
+          ))],
         title=_("Prometheus"),
         optional_keys=["port", "exporter"],
     )
@@ -493,16 +503,6 @@ def _valuespec_special_agents_vsphere():
                  default_value=60,
                  minvalue=1,
                  unit=_("seconds"),
-             )),
-            ("use_pysphere",
-             Checkbox(
-                 title=_("Compatibility mode"),
-                 label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                 true_label=_("Support 4.1"),
-                 false_label=_("fast"),
-                 help=_("The current very performant implementation of the ESX special agent "
-                        "does not support older ESX versions than 5.0. Please use the slow "
-                        "compatibility mode for those old hosts."),
              )),
             ("infos",
              Transform(
@@ -600,6 +600,7 @@ def _valuespec_special_agents_vsphere():
             "snapshot_display",
             "vm_piggyname",
         ],
+        ignored_keys=["use_pysphere"],
     ),
                      title=_("Check state of VMWare ESX via vSphere"),
                      help=_(
@@ -2805,6 +2806,10 @@ def _valuespec_special_agents_jira():
                                    ),
                                    Integer(
                                        title=_("Limit number of processed search results"),
+                                       help=_("Here you can define, how many search results "
+                                              "should be processed. The max. internal limit "
+                                              "of Jira is 1000 results. If you want to "
+                                              "ignore any limit, set -1 here. Default is 50."),
                                        default_value=50,
                                    ),
                                ],)),

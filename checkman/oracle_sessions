@@ -1,11 +1,11 @@
-title: Number of active sessions in ORACLE database
+title: Number of Active Sessions in Oracle Database
 agents: linux, hpux, solaris
 catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
  This check monitors the number of active sessions in an
- ORACLE database. You can set warn/crit levels.
+ Oracle database. You can set warn/crit levels.
 
  This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation

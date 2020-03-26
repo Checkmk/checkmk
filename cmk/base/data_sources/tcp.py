@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging  # pylint: disable=unused-import
 import socket
-from typing import Tuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, List, Tuple, Optional  # pylint: disable=unused-import
 from hashlib import sha256, md5
 from Cryptodome.Cipher import AES
 
@@ -46,27 +47,29 @@ class TCPDataSource(CheckMKAgentDataSource):
         # type: () -> str
         return "agent"
 
-    def set_port(self, port):
-        # type: (int) -> None
-        self._port = port
-
-    def _get_port(self):
+    @property
+    def port(self):
         # type: () -> int
-        if self._port is not None:
-            return self._port
+        if self._port is None:
+            return self._host_config.agent_port
+        return self._port
 
-        return self._host_config.agent_port
+    @port.setter
+    def port(self, value):
+        # type: (Optional[int]) -> None
+        self._port = value
 
-    def set_timeout(self, timeout):
-        # type: (float) -> None
-        self._timeout = timeout
-
-    def _get_timeout(self):
+    @property
+    def timeout(self):
         # type: () -> float
-        if self._timeout:
-            return self._timeout
+        if self._timeout is None:
+            return self._host_config.tcp_connect_timeout
+        return self._timeout
 
-        return self._host_config.tcp_connect_timeout
+    @timeout.setter
+    def timeout(self, value):
+        # type: (Optional[float]) -> None
+        self._timeout = value
 
     def _execute(self):
         # type: () -> RawAgentData
@@ -76,73 +79,83 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         self._verify_ipaddress()
 
-        port = self._get_port()
+        output = self._fetch_raw_data(
+            socket.socket(socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET,
+                          socket.SOCK_STREAM), (
+                              self._ipaddress,
+                              self.port,
+                          ), self.timeout, self._logger)
 
-        encryption_settings = self._host_config.agent_encryption
+        if not output:  # may be caused by xinetd not allowing our address
+            raise MKEmptyAgentData("Empty output from agent at TCP port %s" % self.port)
 
-        socktype = (socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET)
-        s = socket.socket(socktype, socket.SOCK_STREAM)
+        if len(output) < 16:
+            raise MKAgentError("Too short output from agent: %r" % output)
 
-        timeout = self._get_timeout()
+        output = self._decrypt(output, self._host_config.agent_encryption)
+        return output
 
+    @staticmethod
+    def _fetch_raw_data(sock, address, timeout, logger):
+        # type: (socket.socket, Tuple[Optional[str], int], float, logging.Logger) -> RawAgentData
         output_lines = []  # type: List[bytes]
-        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" %
-                           (self._ipaddress, port, timeout))
+        logger.debug("Connecting via TCP to %s:%d (%ss timeout)", address[0], address[1], timeout)
         try:
-            s.settimeout(timeout)
-            s.connect((self._ipaddress, port))
-            s.settimeout(None)
+            sock.settimeout(timeout)
+            sock.connect(address)
+            sock.settimeout(None)
 
-            self._logger.debug("Reading data from agent")
+            logger.debug("Reading data from agent")
 
             while True:
-                data = s.recv(4096, socket.MSG_WAITALL)
-
-                if data and len(data) > 0:
-                    output_lines.append(data)
-                else:
+                data = sock.recv(4096, socket.MSG_WAITALL)
+                if not data:
                     break
+                output_lines.append(data)
 
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKAgentError("Communication failed: %s" % e)
         finally:
-            s.close()
+            sock.close()
 
-        output = b''.join(output_lines)
+        return b''.join(output_lines)
 
-        if len(output) == 0:  # may be caused by xinetd not allowing our address
-            raise MKEmptyAgentData("Empty output from agent at TCP port %d" % port)
+    @staticmethod
+    def _decrypt(output, encryption_settings):
+        # type: (RawAgentData, Dict[str, str]) -> RawAgentData
+        if output.startswith(b"<<<"):
+            # The output is not encrypted.
+            if encryption_settings["use_regular"] == "enforce":
+                raise MKAgentError(
+                    "Agent output is plaintext but encryption is enforced by configuration")
+            return output
 
-        if len(output) < 16:
-            raise MKAgentError("Too short output from agent: %r" % output)
+        if encryption_settings["use_regular"] not in ["enforce", "allow"]:
+            return output
 
-        output_is_plaintext = output.startswith(b"<<<")
-        if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
-            raise MKAgentError(
-                "Agent output is plaintext but encryption is enforced by configuration")
-        if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
-            try:
-                # simply check if the protocol is an actual number
-                protocol = int(output[0:2])
+        try:
+            # simply check if the protocol is an actual number
+            protocol = int(output[0:2])
 
-                output = self._decrypt_package(output[2:], encryption_settings["passphrase"],
-                                               protocol)
-            except ValueError:
-                raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
-            except Exception as e:
-                if encryption_settings["use_regular"] == "enforce":
-                    raise MKAgentError("Failed to decrypt agent output: %s" % e)
+            output = TCPDataSource._decrypt_package(output[2:], encryption_settings["passphrase"],
+                                                    protocol)
+        except ValueError:
+            raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
+        except Exception as e:
+            if encryption_settings["use_regular"] == "enforce":
+                raise MKAgentError("Failed to decrypt agent output: %s" % e)
 
-                # of course the package might indeed have been encrypted but
-                # in an incorrect format, but how would we find that out?
-                # In this case processing the output will fail
+            # of course the package might indeed have been encrypted but
+            # in an incorrect format, but how would we find that out?
+            # In this case processing the output will fail
 
         return output
 
     # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
+    @staticmethod
+    def _decrypt_package(encrypted_pkg, encryption_key, protocol):
         # type: (bytes, str, int) -> RawAgentData
         encrypt_digest = sha256 if protocol == 2 else md5
 

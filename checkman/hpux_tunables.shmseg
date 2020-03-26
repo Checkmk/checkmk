@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of Shared Memory Segments
+title: Kernel Tunables: Number of Shared Memory Segments
 agents: hpux
 catalog: os/kernel
 license: GPL

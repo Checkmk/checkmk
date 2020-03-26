@@ -11,3 +11,6 @@ description:
 
 item:
  Index of the Raid Controller
+
+inventory:
+ One service is created for each Raid Controller.

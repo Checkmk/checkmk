@@ -1,4 +1,4 @@
-title: VMWare ESX Host System: Overall state and power state
+title: VMWare ESX Host System: Overall State and Power State
 agents: vsphere
 catalog: os/misc
 license: GPL
@@ -19,5 +19,5 @@ description:
  as well.
 
 inventory:
- On each ESX host one check is generated.
+ One service is created for each ESX Host System.
 

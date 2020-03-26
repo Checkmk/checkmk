@@ -1,4 +1,4 @@
-title: GEIST watchdog: Dew point Sensor
+title: GEIST Watchdog: Dew Point Sensor
 agents: snmp
 catalog: hw/environment/geist
 license: GPL

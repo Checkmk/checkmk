@@ -33,7 +33,7 @@ class Speedometer(SidebarSnapin):
     def show(self):
         html.open_div(class_="speedometer")
         html.img(html.theme_url("images/speedometer.png"), id_="speedometerbg")
-        html.canvas('', width=228, height=136, id_="speedometer")
+        html.canvas('', width="228", height="136", id_="speedometer")
         html.close_div()
 
         html.javascript("""
@@ -159,9 +159,10 @@ speedometer_show_speed(0, 0, 0);
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
-            last_perc = float(html.request.var("last_perc"))
-            scheduled_rate = float(html.request.var("scheduled_rate"))
-            last_program_start = int(html.request.var("program_start"))
+            # TODO: Do we need a get_float_input_mandatory?
+            last_perc = float(html.request.get_str_input_mandatory("last_perc"))
+            scheduled_rate = float(html.request.get_str_input_mandatory("scheduled_rate"))
+            last_program_start = html.request.get_integer_input_mandatory("program_start")
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.
@@ -198,12 +199,11 @@ speedometer_show_speed(0, 0, 0);
             last_perc = 0.0
             title = _("No performance data: %s") % e
 
-        data = {
-            "scheduled_rate": scheduled_rate,
-            "program_start": program_start,
-            "percentage": percentage,
-            "last_perc": last_perc,
-            "title": title,
-        }
-
-        html.write(json.dumps(data))
+        html.write(
+            json.dumps({
+                "scheduled_rate": scheduled_rate,
+                "program_start": program_start,
+                "percentage": percentage,
+                "last_perc": last_perc,
+                "title": title,
+            }))

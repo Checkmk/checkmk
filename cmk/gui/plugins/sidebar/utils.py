@@ -8,21 +8,28 @@
 import abc
 import traceback
 import json
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Optional, Text, Any, Dict, List, Tuple, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.sites import SiteId  # pylint: disable=unused-import
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.type_defs import RoleName, PermissionName  # pylint: disable=unused-import
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
     declare_permission,
 )
+
+# TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
+# of cycles and untyped dependencies. So for now this is just a reminder.
+CustomSnapins = Any
 
 # Constants to be used in snapins
 snapin_width = 230
@@ -36,14 +43,17 @@ PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 class PermissionSectionSidebarSnapins(PermissionSection):
     @property
     def name(self):
+        # type: () -> str
         return "sidesnap"
 
     @property
     def title(self):
+        # type: () -> Text
         return _("Sidebar snapins")
 
     @property
     def do_sort(self):
+        # type: () -> bool
         return True
 
 
@@ -53,49 +63,60 @@ class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def type_name(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def title(cls):
+        # type: () -> Text
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def description(cls):
+        # type: () -> Text
         raise NotImplementedError()
 
     @abc.abstractmethod
     def show(self):
+        # type: () -> None
         raise NotImplementedError()
 
     @classmethod
     def refresh_regularly(cls):
+        # type: () -> bool
         return False
 
     @classmethod
     def refresh_on_restart(cls):
+        # type: () -> bool
         return False
 
     @classmethod
     def is_customizable(cls):
+        # type: () -> bool
         """Whether or not a snapin type can be used for custom snapins"""
         return False
 
     @classmethod
     def is_custom_snapin(cls):
+        # type: () -> bool
         """Whether or not a snapin type is a customized snapin"""
         return False
 
     @classmethod
     def permission_name(cls):
+        # type: () -> PermissionName
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[RoleName]
         return ["admin", "user", "guest"]
 
     def styles(self):
+        # type: () -> Optional[str]
         return None
 
     def page_handlers(self):
@@ -110,6 +131,7 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
     be customized by the user"""
     @classmethod
     def is_customizable(cls):
+        # type: () -> bool
         """Whether or not a snapin type can be used for custom snapins"""
         return True
 
@@ -126,6 +148,8 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
         raise NotImplementedError()
 
 
+# TODO: We should really use the InstanceRegistry here... :-/ Using the
+# ClassRegistry obfuscates the code and makes typing a nightmare.
 class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
     def plugin_base_class(self):
@@ -135,6 +159,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return plugin_class.type_name()
 
     def registration_hook(self, plugin_class):
+        # type: (Type[SidebarSnapin]) -> None
         declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
@@ -146,21 +171,25 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             cmk.gui.pages.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self):
+        # type: () -> List[Tuple[str, SidebarSnapin]]
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
                 if snapin_type.is_customizable() and not snapin_type.is_custom_snapin()]
 
     def register_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
 
     def _clear_custom_snapins(self):
+        # type: () -> None
         for snapin_type_id, snapin_type in self.items():
             if snapin_type.is_custom_snapin():
                 del self[snapin_type_id]
 
     def _add_custom_snapins(self, custom_snapins):
+        # type: (List[CustomSnapins]) -> None
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -169,11 +198,18 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             except KeyError:
                 continue
 
+            # TODO: This is just our assumption, can we enforce this via
+            # typing? Probably not in the current state of affairs where things
+            # which should be instances are classes... :-/
+            if not issubclass(base_snapin_type, SidebarSnapin):
+                raise ValueError("invalid snapin type %r" % base_snapin_type)
+
             if not base_snapin_type.is_customizable():
                 continue
 
+            # TODO: The stuff below is completely untypeable... :-P * * *
             @self.register
-            class CustomSnapin(base_snapin_type):
+            class CustomSnapin(base_snapin_type):  # type: ignore[valid-type,misc]
                 _custom_snapin = custom_snapin
 
                 @classmethod
@@ -287,6 +323,7 @@ def nagioscgilink(text, target):
 
 
 def snapin_site_choice(ident, choices):
+    # type: (SiteId, List[Tuple[SiteId, Text]]) -> Optional[List[SiteId]]
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":
@@ -297,11 +334,13 @@ def snapin_site_choice(ident, choices):
     if len(choices) <= 1:
         return None
 
-    choices = [
+    dropdown_choices = [
         ("", _("All sites")),
-    ] + choices
+    ]  # type: Choices
+    dropdown_choices += choices
+
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", choices, deflt=site, onchange=onchange)
+    html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
 
     return only_sites
 

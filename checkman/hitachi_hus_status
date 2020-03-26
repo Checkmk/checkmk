@@ -9,4 +9,4 @@ description:
  It reports the global state as number and detailed information with the name of affected components.
 
 inventory:
- On service will be created
+ One service is created.

@@ -1,4 +1,4 @@
-title: Cisco devices: CPU utilization
+title: Cisco Devices: CPU Utilization
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -16,5 +16,5 @@ description:
 
 
 inventory:
- One service per Cisco device is created.
+ One service is created for each Cisco device.
 

@@ -13,4 +13,4 @@ description:
  the check is {CRIT}.
 
 inventory:
- None
+ One service is created for each sensor.

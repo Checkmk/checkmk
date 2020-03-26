@@ -6,7 +6,7 @@
 
 import sys
 import traceback
-from typing import Any, Optional, Callable, Dict, List, NamedTuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NamedTuple, Union  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.i18n
@@ -21,7 +21,7 @@ Hook = NamedTuple("Hook", [
 hooks = {}  # type: Dict[str, List[Hook]]
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = None  # type: Optional[str]
+loaded_with_language = False  # type: Union[bool, None, str]
 
 
 # Load all login plugins

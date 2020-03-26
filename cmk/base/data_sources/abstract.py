@@ -75,6 +75,18 @@ class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, Persis
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
 
 
+# Abstract methods:
+#
+# def _execute(self):
+# def _empty_raw_data(self):
+# def _empty_host_sections(self):
+# def _from_cache_file(self, raw_data):
+# def _to_cache_file(self, raw_data):
+# def _convert_to_sections(self, raw_data):
+# def _gather_check_plugin_names(self):
+# def _cpu_tracking_id(self):
+# def id(self):
+# def describe(self):
 class DataSource(
         six.with_metaclass(
             abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
@@ -604,6 +616,11 @@ class DataSource(
         cls._use_outdated_cache_file = state
 
 
+# Abstract methods:
+#
+# def _execute(self):
+# def id(self):
+# def describe(self):
 class CheckMKAgentDataSource(
         six.with_metaclass(
             abc.ABCMeta, DataSource[RawAgentData, AgentSections, PersistedAgentSections,
@@ -681,9 +698,9 @@ class CheckMKAgentDataSource(
         if config.agent_simulator:
             raw_data = cmk.base.agent_simulator.process(raw_data)
 
-        return self._parse_info(raw_data)
+        return self._parse_host_section(raw_data)
 
-    def _parse_info(self, raw_data):
+    def _parse_host_section(self, raw_data):
         # type: (RawAgentData) -> AgentHostSections
         """Split agent output in chunks, splits lines by whitespaces.
 
@@ -956,6 +973,18 @@ class CheckMKAgentDataSource(
                 (agent_version, expected_version, e))
 
 
+# Abstract methods:
+#
+# def _execute(self):
+# def _empty_raw_data(self):
+# def _empty_host_sections(self):
+# def _from_cache_file(self, raw_data):
+# def _to_cache_file(self, raw_data):
+# def _convert_to_sections(self, raw_data):
+# def _gather_check_plugin_names(self):
+# def _cpu_tracking_id(self):
+# def id(self):
+# def describe(self):
 class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     """Abstract base class for all data sources that work with the management board configuration"""
 

@@ -29,7 +29,7 @@ sys.path.insert(0, str(script_path.parent.parent))
 # Make the repo directory available (cmk/livestatus lib)
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from testlib.utils import is_running_as_site_user, cmk_path, current_base_branch_name
+from testlib.utils import is_running_as_site_user, cmk_path
 from testlib.site import get_site_factory
 from testlib.version import CMKVersion
 
@@ -51,7 +51,15 @@ def main(args):
     sf = get_site_factory(prefix="int_",
                           update_from_git=version == "git",
                           install_test_python_modules=True)
-    site = sf.get_site(current_base_branch_name())
+
+    if os.environ.get("REUSE"):
+        logger.info("Reuse existing site")
+        site = sf.get_existing_site("test")
+        site.start()
+    else:
+        logger.info("Creating new site")
+        site = sf.get_site("test")
+
     logger.info("Site %s is ready!", site.id)
 
     logger.info("===============================================")
@@ -61,8 +69,16 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
-        shutil.copy(site.path("junit.xml"), "/results")
-        shutil.copytree(site.path("var/log"), "/results/logs")
+        if _is_dockerized():
+            if os.path.exists("/results"):
+                shutil.rmtree("/results")
+                os.mkdir("/results")
+            shutil.copy(site.path("junit.xml"), "/results")
+            shutil.copytree(site.path("var/log"), "/results/logs")
+
+
+def _is_dockerized():
+    return Path("/.dockerenv").exists()
 
 
 def _centos6_mtab_fix():
@@ -94,8 +110,8 @@ def _execute_as_site_user(site, args):
     env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
     cmd_parts = [
-        "python",
-        site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov", "--junitxml",
+        "python3",
+        site.path("local/bin/pytest"), "-T", "integration", "-p", "no:cov", "--junitxml",
         site.path("junit.xml")
     ] + args
 

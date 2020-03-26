@@ -17,6 +17,7 @@ import six
 
 import livestatus
 
+import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
 from cmk.utils.encoding import ensure_unicode
 
@@ -262,7 +263,7 @@ class PageCrash(ABCCrashReportPage):
 
     def _get_version(self):
         # type: () -> Text
-        return cmk.__version__
+        return cmk_version.__version__
 
     def _get_crash_report_target(self):
         # type: () -> Text

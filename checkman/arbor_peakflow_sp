@@ -15,5 +15,5 @@ description:
  "Memory and Swap usage on Arbor devices"
 
 inventory:
- Exactly one service is discovered.
+ One service is created.
 

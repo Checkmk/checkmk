@@ -87,6 +87,12 @@ _unpack_package() {
     tar -xz -C "${TARGET_DIR}" -f "${ARCHIVE_PATH}"
 }
 
+_cleanup_package() {
+    local ARCHIVE_PATH="$1"
+    log "Cleaning up ${ARCHIVE_PATH}"
+    rm -f "${ARCHIVE_PATH}"
+}
+
 _create_package() {
     local ARCHIVE_PATH="$1"
     local TARGET_DIR="$2"
@@ -147,4 +153,6 @@ cached_build() {
         _create_package "${ARCHIVE_PATH}" "${TARGET_DIR}" "${DIR_NAME}"
         _upload_to_mirror "${ARCHIVE_PATH}" "${MIRROR_BASE_URL}" "${MIRROR_CREDENTIALS}"
     fi
+
+    _cleanup_package "${ARCHIVE_PATH}"
 }

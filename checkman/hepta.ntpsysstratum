@@ -1,4 +1,4 @@
-title: Hepta 8030 Stratum: Time sync
+title: Hepta 8030 Stratum: Time Sync
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -10,7 +10,7 @@ description:
  the reported state is "Stratum is using secondary reference (via NTP).
 
 inventory:
- One service for ntpSysStratum
+ One service is created.
 
 item:
  The fixed statement {{ntpSysStratum}}

@@ -13,6 +13,7 @@ from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 
 import cmk.utils
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
@@ -22,7 +23,6 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 import cmk.gui.sites
-import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
@@ -33,14 +33,16 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
     MKUserError,
-    RequestTimeout,
 )
+import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.plugins.userdb.utils import user_sync_default_config
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.utils
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 from cmk.gui.watolib.changes import (
     SiteChanges,
@@ -96,7 +98,7 @@ def get_replication_paths():
     ]
 
     # TODO: Move this to CEE specific code again
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         paths += [
             ("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
              ["sitespecific.mk"]),
@@ -171,13 +173,6 @@ def _load_replication_status(lock=False):
     return {site_id: _load_site_replication_status(site_id, lock=lock) for site_id in config.sites}
 
 
-def _save_replication_status(status):
-    status = {}
-
-    for site_id, repl_status in config.sites.items():
-        _save_site_replication_status(site_id, repl_status)
-
-
 class ActivateChanges(object):
     def __init__(self):
         self._repstatus = {}
@@ -201,38 +196,8 @@ class ActivateChanges(object):
 
     def _load_changes_by_site(self):
         self._changes_by_site = {}
-
-        self._migrate_old_changes()
-
         for site_id in activation_sites():
             self._changes_by_site[site_id] = SiteChanges(site_id).load()
-
-    # Between 1.4.0i* and 1.4.0b4 the changes were stored in
-    # self._repstatus[site_id]["changes"], migrate them.
-    # TODO: Drop this one day.
-    def _migrate_old_changes(self):
-        has_old_changes = False
-        for site_id, status in self._repstatus.items():
-            if status.get("changes"):
-                has_old_changes = True
-                break
-
-        if not has_old_changes:
-            return
-
-        repstatus = _load_replication_status(lock=True)
-
-        for site_id, status in self._repstatus.items():
-            site_changes = SiteChanges(site_id)
-            for change_spec in status.get("changes", []):
-                site_changes.save_change(change_spec)
-
-            try:
-                del status["changes"]
-            except KeyError:
-                pass
-
-        _save_replication_status(repstatus)
 
     def confirm_site_changes(self, site_id):
         SiteChanges(site_id).clear()
@@ -428,7 +393,6 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         self._start_activation()
-        self._do_housekeeping()
 
         return self._activation_id
 
@@ -563,7 +527,7 @@ class ActivateChangesManager(ActivateChanges):
             log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
-            if cmk.is_managed_edition():
+            if cmk_version.is_managed_edition():
                 import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
                 managed_snapshots.CMESnapshotManager(
                     work_dir, self._get_site_configurations()).generate_snapshots()
@@ -685,8 +649,7 @@ class ActivateChangesManager(ActivateChanges):
 
         site_globals.update({
             "wato_enabled": not site.get("disable_wato", True),
-            "userdb_automatic_sync": site.get("user_sync",
-                                              userdb.user_sync_default_config(site_id)),
+            "userdb_automatic_sync": site.get("user_sync", user_sync_default_config(site_id)),
         })
 
         store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
@@ -750,43 +713,95 @@ class ActivateChangesManager(ActivateChanges):
     def site_filename(cls, site_id):
         return "site_%s.mk" % site_id
 
+
+@gui_background_job.job_registry.register
+class ActivationCleanupBackgroundJob(WatoBackgroundJob):
+    job_prefix = "activation_cleanup"
+
+    @classmethod
+    def gui_title(cls):
+        return _("Activation cleanup")
+
+    def __init__(self):
+        super(ActivationCleanupBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
+
+    def do_execute(self, job_interface):
+        self._do_housekeeping()
+        job_interface.send_result_message(_("Activation cleanup finished"))
+
     def _do_housekeeping(self):
         """Cleanup stale activations in case it is needed"""
         with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
-                # skip the current activation_id
-                if self._activation_id == activation_id:
-                    continue
-
+                self._logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
                 manager.load()
 
+                # Try to detect whether or not the activation is still in progress. In case the
+                # activation information can not be read, it is likely that the activation has
+                # just finished while we were iterating the activations.
+                # In case loading fails continue with the next activations
                 try:
+                    delete = True
+
                     try:
                         manager.load_activation(activation_id)
-                    except RequestTimeout:
-                        raise
-                    except Exception:
-                        # Not existant anymore!
-                        delete = True
-                        raise
+                        delete = not manager.is_running()
+                    except MKUserError:
+                        # "Unknown activation process", is normal after activation -> Delete, but no
+                        # error message logging
+                        self._logger.debug("Is not running")
+                except Exception as e:
+                    self._logger.warning("  Failed to load activation (%s), trying to delete...",
+                                         e,
+                                         exc_info=True)
 
-                    delete = not manager.is_running()
-                finally:
-                    if delete:
-                        shutil.rmtree(
-                            "%s/%s" %
-                            (ActivateChangesManager.activation_tmp_base_dir, activation_id))
+                self._logger.info("  -> %s", "Delete" if delete else "Keep")
+                if not delete:
+                    continue
+
+                activation_dir = os.path.join(ActivateChangesManager.activation_tmp_base_dir,
+                                              activation_id)
+                try:
+                    shutil.rmtree(activation_dir)
+                except Exception as e:
+                    self._logger.error("  Failed to delete the activation directory '%s'" %
+                                       activation_dir,
+                                       exc_info=True)
 
     def _existing_activation_ids(self):
-        ids = []
+        try:
+            files = os.listdir(ActivateChangesManager.activation_tmp_base_dir)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+            files = []
 
-        for activation_id in os.listdir(ActivateChangesManager.activation_tmp_base_dir):
+        ids = []
+        for activation_id in files:
             if len(activation_id) == 36 and activation_id[8] == "-" and activation_id[13] == "-":
                 ids.append(activation_id)
-
         return ids
+
+
+def execute_activation_cleanup_background_job():
+    # type: () -> None
+    """This function is called by the GUI cron job once a minute.
+
+    Errors are logged to var/log/web.log. """
+    job = ActivationCleanupBackgroundJob()
+    if job.is_active():
+        logger.debug("Another activation cleanup job is already running: Skipping this time")
+        return
+
+    job.set_function(job.do_execute)
+    job.start()
 
 
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):

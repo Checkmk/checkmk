@@ -75,64 +75,60 @@ checks = {
     '': [
         (
             'CP-SOC_Dokumente', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '19.2% used (1.92 of 10.00 GB)', [
-                        (
-                            'CP-SOC_Dokumente', 1966.43359375, 8192.0, 9216.0,
-                            0, 10240.0
-                        ), ('fs_size', 10240.0, None, None, None, None)
+                        ('fs_used', 1966.43359375, 8192.0, 9216.0, 0, 10240.0),
+                        ('fs_size', 10240.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'CP-SOC_Malware', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '1.41% used (144.62 MB of 10.00 GB)', [
-                        (
-                            'CP-SOC_Malware', 144.625, 8192.0, 9216.0, 0,
-                            10240.0
-                        ), ('fs_size', 10240.0, None, None, None, None)
+                        ('fs_used', 144.625, 8192.0, 9216.0, 0, 10240.0),
+                        ('fs_size', 10240.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'FD-MIS-Drop$', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '5.02% used (1.51 of 30.00 GB)', [
                         (
-                            'FD-MIS-Drop$', 1543.28515625, 24576.0, 27648.0, 0,
+                            'fs_used', 1543.28515625, 24576.0, 27648.0, 0,
                             30720.0
                         ), ('fs_size', 30720.0, None, None, None, None)
                     ]
@@ -141,21 +137,21 @@ checks = {
         ),
         (
             'fd-content-db', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '46.6% used (23.30 of 50.00 GB)', [
                         (
-                            'fd-content-db', 23857.62890625, 40960.0, 46080.0,
-                            0, 51200.0
+                            'fs_used', 23857.62890625, 40960.0, 46080.0, 0,
+                            51200.0
                         ), ('fs_size', 51200.0, None, None, None, None)
                     ]
                 )
@@ -163,65 +159,61 @@ checks = {
         ),
         (
             'fd-interface-BCLONE', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '0.84% used (42.86 MB of 5.00 GB)', [
-                        (
-                            'fd-interface-BCLONE', 42.85546875, 4096.0, 4608.0,
-                            0, 5120.0
-                        ), ('fs_size', 5120.0, None, None, None, None)
+                        ('fs_used', 42.85546875, 4096.0, 4608.0, 0, 5120.0),
+                        ('fs_size', 5120.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'fd-interface-BOFA', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '18.38% used (940.89 MB of 5.00 GB)', [
-                        (
-                            'fd-interface-BOFA', 940.88671875, 4096.0, 4608.0,
-                            0, 5120.0
-                        ), ('fs_size', 5120.0, None, None, None, None)
+                        ('fs_used', 940.88671875, 4096.0, 4608.0, 0, 5120.0),
+                        ('fs_size', 5120.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'fd-interface-BPROD', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '33.33% used (5.00 of 15.00 GB)', [
                         (
-                            'fd-interface-BPROD', 5119.0859375, 12288.0,
-                            13824.0, 0, 15360.0
+                            'fs_used', 5119.0859375, 12288.0, 13824.0, 0,
+                            15360.0
                         ), ('fs_size', 15360.0, None, None, None, None)
                     ]
                 )
@@ -229,19 +221,19 @@ checks = {
         ),
         (
             'fd-interface-BRM', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '0.009% used (96.00 kB of 1.00 GB)', [
-                        ('fd-interface-BRM', 0.09375, 819.2, 921.6, 0, 1024.0),
+                        ('fs_used', 0.09375, 819.2, 921.6, 0, 1024.0),
                         ('fs_size', 1024.0, None, None, None, None)
                     ]
                 )
@@ -249,86 +241,80 @@ checks = {
         ),
         (
             'fd-interface-BTEST', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '0.05% used (4.64 MB of 10.00 GB)', [
-                        (
-                            'fd-interface-BTEST', 4.640625, 8192.0, 9216.0, 0,
-                            10240.0
-                        ), ('fs_size', 10240.0, None, None, None, None)
+                        ('fs_used', 4.640625, 8192.0, 9216.0, 0, 10240.0),
+                        ('fs_size', 10240.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'fd-interface-LEGACY', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '45.02% used (4.50 of 10.00 GB)', [
-                        (
-                            'fd-interface-LEGACY', 4609.8828125, 8192.0,
-                            9216.0, 0, 10240.0
-                        ), ('fs_size', 10240.0, None, None, None, None)
+                        ('fs_used', 4609.8828125, 8192.0, 9216.0, 0, 10240.0),
+                        ('fs_size', 10240.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'fd-interface-TCLONE', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '61.87% used (6.19 of 10.00 GB)', [
-                        (
-                            'fd-interface-TCLONE', 6335.41015625, 8192.0,
-                            9216.0, 0, 10240.0
-                        ), ('fs_size', 10240.0, None, None, None, None)
+                        ('fs_used', 6335.41015625, 8192.0, 9216.0, 0, 10240.0),
+                        ('fs_size', 10240.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
             'jiraarchiv', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
                     0, '1.11% used (570.25 MB of 50.00 GB)', [
                         (
-                            'jiraarchiv', 570.24609375, 40960.0, 46080.0, 0,
+                            'fs_used', 570.24609375, 40960.0, 46080.0, 0,
                             51200.0
                         ), ('fs_size', 51200.0, None, None, None, None)
                     ]

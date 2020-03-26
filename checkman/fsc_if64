@@ -13,5 +13,5 @@ description:
  values and passes it on to the if64 check.
 
 inventory:
- One service per interface is created.
+ One service is created for each interface.
 

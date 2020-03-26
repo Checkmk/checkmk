@@ -1,4 +1,4 @@
-title: Socomec Modulys UPS Device: Battery temperature
+title: Socomec Modulys UPS Device: Battery Temperature
 agents: snmp
 catalog: hw/power/socomec
 license: GPL

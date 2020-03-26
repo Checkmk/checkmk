@@ -17,5 +17,5 @@ description:
  as well.
 
 inventory:
- On each ESX host one check is generated.
+ One service is created for each ESX Host System.
 

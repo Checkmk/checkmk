@@ -10,5 +10,5 @@ description:
  critical or non-recoverable errors the status {CRIT}.
 
 inventory:
- One service per host will be created.
+ One service is created for each host.
 

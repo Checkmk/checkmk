@@ -9,11 +9,11 @@ import os
 import json
 import pprint
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.gui.escaping as escaping
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -237,7 +237,7 @@ class BIManagement(object):
             ("disabled", False),
         ]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             option_keys.append(("customer", managed.default_customer_id()))
 
         # Create dict with all aggregation options
@@ -770,7 +770,7 @@ class ModeBI(WatoMode, BIManagement):
                     new.append(group)
             return new
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
             cme_elements = []
@@ -1348,7 +1348,7 @@ class ModeBIAggregations(ModeBI):
 
                 table.text_cell(_("ID"), aggregation.get("ID"))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.text_cell(_("Customer"))
                     if "customer" in aggregation:
                         html.write_text(managed.get_customer_name(aggregation))

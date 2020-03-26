@@ -1,10 +1,10 @@
-title: Various aspects of ORACLE tablespaces
+title: Various Aspects of Oracle Tablespaces
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This check monitors the state of ORACLE tablespaces. It
+ This check monitors the state of Oracle tablespaces. It
  checks the current and maximum size, the online state
  and the autoextension and optionally the setting of
  the increment size.
@@ -20,7 +20,7 @@ description:
  {Increment size}: If the configuration parameter
  {oracle_tablespaces_check_default_increment} is set to
  {True} (which is the default), then the check will warn
- you, if the increment size is set to the ORACLE default
+ you, if the increment size is set to the Oracle default
  value of {1} (which is generally considered as a non-optimal
  setting).
 

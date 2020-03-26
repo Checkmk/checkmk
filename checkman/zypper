@@ -1,4 +1,4 @@
-title: Check for (security) updates via Zypper
+title: Zypper: (Security) Updates
 agents: linux
 catalog: os/misc
 license: GPL

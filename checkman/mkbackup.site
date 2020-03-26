@@ -1,4 +1,4 @@
-title: Checkmk site: Backup job state
+title: Checkmk Site: Backup Job State
 agents: linux
 catalog: app/checkmk
 license: GPL

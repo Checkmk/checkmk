@@ -1,4 +1,4 @@
-title: Number of TCP connections per state
+title: Windows: Number of TCP connections
 agents: windows
 catalog: os/networking
 license: GPL

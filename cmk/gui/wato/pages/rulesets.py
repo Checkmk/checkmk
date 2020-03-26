@@ -10,12 +10,12 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, Text, List, Optional, Union  # pylint: disable=unused-import
+from typing import Dict, Generator, List, Optional, Text, Union  # pylint: disable=unused-import
 
 import six
 
 import cmk.gui.escaping as escaping
-from cmk import ensure_unicode
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -40,6 +40,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     RegExpUnicode,
     DropdownChoice,
+    rule_option_elements,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions  # pylint: disable=unused-import
@@ -59,7 +60,6 @@ from cmk.gui.plugins.wato import (
     global_buttons,
     make_action_link,
     add_change,
-    rule_option_elements,
     may_edit_ruleset,
     search_form,
     ConfigHostname,
@@ -1915,7 +1915,7 @@ class RuleConditionRenderer(object):
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list = []
+        text_list = []  # type: List[Union[HTML, Text]]
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")

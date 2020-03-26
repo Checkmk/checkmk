@@ -16,4 +16,4 @@ description:
  Levels are configurable for surge queue length and spillover.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (SurgeQueueLength, SpilloverCount) are given.

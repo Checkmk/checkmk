@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Power supplies status
+title: Intel True Fabric Scale Switches: Power Supplies Status
 agents: snmp
 catalog: hw/network/intel
 license: GPL

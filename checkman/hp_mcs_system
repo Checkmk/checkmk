@@ -1,4 +1,4 @@
-title: HPE MCS 200: System health
+title: HPE MCS 200: System Health
 agents: snmp
 catalog: hw/environment/hpe
 license: GPL
@@ -15,4 +15,4 @@ item:
  Name of the product
 
 inventory:
- Only one service will be created.
+ One service is created for the system health.

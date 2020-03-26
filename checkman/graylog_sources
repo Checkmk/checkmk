@@ -15,4 +15,4 @@ item:
  The name of the source.
 
 inventory:
- One service for each source {"Graylog Source my_source"} will be created.
+ One service is created for each source.

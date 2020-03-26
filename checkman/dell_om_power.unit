@@ -1,4 +1,4 @@
-title: Dell OpenManage: PSU unit state
+title: Dell OpenManage: PSU Unit State
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -13,4 +13,4 @@ item:
  The index of the PSU
 
 inventory:
- One service for each PSU is created
+ One service is created for each PSU.

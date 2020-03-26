@@ -38,5 +38,5 @@ item:
  The name of the access point.
 
 inventory:
- One check for each access point which is successfully connected.
+ One service is created for each access point which is successfully connected.
 

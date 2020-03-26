@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 //
 //
@@ -14,6 +15,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "cma_core.h"
 
@@ -54,6 +56,8 @@ public:
     std::wstring buildCommandLineForced(
         const std::filesystem::path& script) const noexcept;
 
+    void removeExtension(std::string_view ext);
+
 private:
     void reset() noexcept;
     std::string name_;
@@ -87,7 +91,7 @@ private:
 
 enum class InstallMode { normal, force };
 
-void Install(InstallMode mode) noexcept;
+using StringViewPair = std::pair<std::string_view, std::string_view>;
 
 class ModuleCommander {
 public:
@@ -104,6 +108,8 @@ public:
                         const std::filesystem::path& user,
                         InstallMode mode) const;
 
+    std::vector<std::string> getExtensions() const;
+
     static std::filesystem::path GetModBackup(
         const std::filesystem::path& user) {
         return user / dirs::kUserInstallDir / dirs::kInstalledModules;
@@ -114,7 +120,11 @@ public:
         return user / dirs::kUserModules;
     }
 
+    [[nodiscard]] static const std::vector<StringViewPair>
+    GetSystemExtensions();
+
 private:
+    void removeSystemExtensions(YAML::Node& node);
     // internals static API
     static bool InstallModule(const Module& module,
                               const std::filesystem::path& root,

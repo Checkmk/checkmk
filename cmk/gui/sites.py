@@ -13,14 +13,14 @@ from livestatus import (  # type: ignore[import]  # pylint: disable=unused-impor
     MultiSiteConnection, MKLivestatusQueryError, SiteId, SiteConfiguration, SiteConfigurations,
 )
 
-from cmk import is_managed_edition
+from cmk.utils.version import is_managed_edition
 
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports
 
 import cmk.gui.config as config
 from cmk.gui.globals import g, html
-from cmk.gui.config import UserType  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -35,7 +35,7 @@ from cmk.gui.config import UserType  # pylint: disable=unused-import
 
 
 def live(user=None, force_authuser=None):
-    # type: (Optional[UserType], Optional[UserId]) -> MultiSiteConnection
+    # type: (Optional[LoggedInUser], Optional[UserId]) -> MultiSiteConnection
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
     _ensure_connected(user, force_authuser)
@@ -47,7 +47,7 @@ SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
 
 
 def states(user=None, force_authuser=None):
-    # type: (Optional[UserType], Optional[UserId]) -> SiteStates
+    # type: (Optional[LoggedInUser], Optional[UserId]) -> SiteStates
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
     return g.site_status
@@ -99,7 +99,7 @@ def all_groups(what):
 
 # Build up a connection to livestatus to either a single site or multiple sites.
 def _ensure_connected(user, force_authuser):
-    # type: (Optional[UserType], Optional[UserId]) -> None
+    # type: (Optional[LoggedInUser], Optional[UserId]) -> None
     if 'live' in g:
         return
 
@@ -116,7 +116,7 @@ def _ensure_connected(user, force_authuser):
 
 
 def _connect_multiple_sites(user):
-    # type: (UserType) -> None
+    # type: (LoggedInUser) -> None
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
 
@@ -164,7 +164,7 @@ def _connect_multiple_sites(user):
 
 
 def _get_enabled_and_disabled_sites(user):
-    # type: (UserType) -> Tuple[SiteConfigurations, SiteConfigurations]
+    # type: (LoggedInUser) -> Tuple[SiteConfigurations, SiteConfigurations]
     enabled_sites = {}  # type: SiteConfigurations
     disabled_sites = {}  # type: SiteConfigurations
 
@@ -259,7 +259,7 @@ def _set_initial_site_states(enabled_sites, disabled_sites):
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def _set_livestatus_auth(user, force_authuser):
-    # type: (UserType, Optional[UserId]) -> None
+    # type: (LoggedInUser, Optional[UserId]) -> None
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
         g.live.set_auth_user('read', user_id)
@@ -280,7 +280,7 @@ def _set_livestatus_auth(user, force_authuser):
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user(user, force_authuser):
-    # type: (UserType, Optional[UserId]) -> Optional[UserId]
+    # type: (LoggedInUser, Optional[UserId]) -> Optional[UserId]
     if not user.may("general.see_all"):
         return user.id
     if force_authuser == "1":
@@ -296,7 +296,7 @@ def _livestatus_auth_user(user, force_authuser):
 
 @contextmanager
 def only_sites(sites):
-    # type: (Optional[Union[List[SiteId], SiteId]]) -> Iterator[None]
+    # type: (Union[None, List[SiteId], SiteId]) -> Iterator[None]
     """Livestatus query over sites"""
     if not sites:
         sites = None

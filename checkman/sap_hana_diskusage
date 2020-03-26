@@ -1,4 +1,4 @@
-title: SAP HANA Disk Usage
+title: SAP HANA: Disk Usage
 agents: linux
 catalog: app/sap_hana
 license: GPL

@@ -13,4 +13,4 @@ item:
  sensor ID. Otherwise the sensor ID only.
 
 inventory:
- Creates one check for every Pressure Sensor (function = 16).
+ One service is created for every pressure sensor (function = 16).

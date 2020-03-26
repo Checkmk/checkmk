@@ -6,7 +6,7 @@
 
 from testlib.base import Scenario
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
 import cmk.base.config as config
@@ -42,7 +42,7 @@ def test_registered_automations():
         'get-rule-mismatch-reason',
     ]
 
-    if cmk.is_enterprise_edition():
+    if cmk_version.is_enterprise_edition():
         needed_automations += [
             'bake-agents',
         ]

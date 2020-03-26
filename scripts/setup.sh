@@ -364,12 +364,6 @@ have to log in twice"
 ask_title "Integration with PNP4Nagios 0.6"
 # -------------------------------------------------------------------
 
-ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates $OMD_ROOT/local/share/check_mk/pnp-templates "PNP4Nagios templates" \
-  "Check_MK ships templates for PNP4Nagios for most of its checks.
-Those templates make the history graphs look nice. PNP4Nagios
-expects such templates in the directory pnp/templates in your
-document root for static web pages"
-
 ask_dir rrd_path /var/lib/nagios/rrd $HOMEBASEDIR/var/nagios/rrd $OMD_ROOT/var/pnp4nagios/perfdata "RRD files" \
     "Configure the directory PNP4Nagios stores the RRD database files in"
 
@@ -702,8 +696,6 @@ do
 	   tar xzf $SRCDIR/inventory.tar.gz -C $DESTDIR$inventorydir &&
 	   mkdir -p $DESTDIR$web_dir &&
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
-	   mkdir -p $DESTDIR$pnptemplates &&
-	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
 	   mkdir -p $DESTDIR$docdir &&
 	   tar xzf $SRCDIR/doc.tar.gz -C $DESTDIR$docdir &&
 	   mkdir -p $DESTDIR$checkmandir &&

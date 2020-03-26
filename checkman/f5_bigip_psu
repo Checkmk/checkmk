@@ -14,6 +14,5 @@ item:
  Name of the power supply
 
 inventory:
- The check gather a list of the existing power supplies in a system.
- One service is created per power supply (PSU)
+ One service is created for each power supply (PSU) on a system.
 

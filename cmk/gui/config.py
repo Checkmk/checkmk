@@ -21,20 +21,22 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from werkzeug.local import LocalProxy
-
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
     SiteId, SiteConfiguration, SiteConfigurations,
 )
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import local
+# TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
+# this is a bit difficult due to our beloved circular imports. :-/ Or should we
+# do this the other way round? Anyway, we will know when the cycle has been
+# broken...
+from cmk.gui.globals import local, user
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -49,13 +51,11 @@ import cmk.gui.plugins.config
 # later handled with the default_config dict and _load_default_config()
 from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
-
-UserType = Union["LoggedInUser", LocalProxy]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -866,9 +866,6 @@ def _set_user(_user):
     local.user = _user
 
 
-# This holds the currently logged in user object
-user = LocalProxy(lambda: local.user)  # type: UserType
-
 #.
 #   .--User Handling-------------------------------------------------------.
 #   |    _   _                 _   _                 _ _ _                 |
@@ -958,7 +955,7 @@ def migrate_old_site_config(site_config):
 
 # During development of the 1.6 version the site configuration has been cleaned up in several ways:
 # 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
-#    deprecated long time ago and was not configurable in WATO. This has now been superceeded by
+#    deprecated long time ago and was not configurable in WATO. This has now been superseded by
 #    the dedicated "disabled" attribute.
 # 2. The "socket" attribute was optional. A not present socket meant "connect to local unix" socket.
 #    This is now replaced with a value like this ("local", None) to reflect the generic
@@ -1041,12 +1038,12 @@ def _migrate_string_encoded_socket(value):
 
 def omd_site():
     # type: () -> SiteId
-    return SiteId(cmk.omd_site())
+    return SiteId(cmk_version.omd_site())
 
 
 def url_prefix():
     # type: () -> str
-    return "/%s/" % cmk.omd_site()
+    return "/%s/" % cmk_version.omd_site()
 
 
 def default_single_site_configuration():
@@ -1204,13 +1201,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, Text]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1226,7 +1223,7 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 

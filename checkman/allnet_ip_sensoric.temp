@@ -14,5 +14,5 @@ item:
  sensor ID. Otherwise the sensor ID only.
 
 inventory:
- Creates one check for every Temperature Sensor (function = 1).
+ One service is created for every temperature sensor (function = 1).
 

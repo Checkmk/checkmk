@@ -27,9 +27,9 @@ discovery = {
 
 checks = {
     '': [
-        (u'Free Cooling Valve Open Position', {"levels": (23, 50)}, [
-            (1, "42.00 % (warn/crit at 23.00 %/50.00 %)", [
-                ('filehandler_perc', 42.0, 23.0, 50.0, None, None),
+        (u'Free Cooling Valve Open Position', {"min_capacity": (50, 45)}, [
+            (2, "42.00 % (warn/crit below 50.00 %/45.00 %)", [
+                ('capacity_perc', 42.0, None, None, None, None),
             ]),
         ]),
     ],

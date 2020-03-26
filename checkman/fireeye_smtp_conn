@@ -1,4 +1,4 @@
-title: FireEye Appliances: SMTP connections
+title: FireEye Appliances: SMTP Connections
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

@@ -1,4 +1,4 @@
-title: HP BladeSystem Enclosures: Power supplies
+title: HP BladeSystem Enclosures: Power Supplies
 agents: snmp
 catalog: hw/server/hp
 license: GPL
@@ -20,4 +20,4 @@ item:
  Number of the PSU
 
 inventory:
- All PSUs with the present state "present" are automatically inventorized.
+ One service is created for each PSU with the state "present".

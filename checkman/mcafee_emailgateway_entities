@@ -1,4 +1,4 @@
-title: McAfee Email gateway: Entities
+title: McAfee Email Gateway: Entities
 agents: snmp
 catalog: app/mcafee
 license: GPL

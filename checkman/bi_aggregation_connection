@@ -1,4 +1,4 @@
-title: Status information for BI aggregation connection
+title: Checkmk: Status information for BI aggregation connection
 agents: BI
 catalog: app/omd
 license: GPL
@@ -7,3 +7,6 @@ description:
  The check shows some status information for the agent_bi special agent.
  The information includes connection errors, missing data from sites and
  missing aggregations, because of missing data.
+
+inventory:
+ One service is created for each connection

@@ -32,10 +32,11 @@ item:
  The name of the aggregate or volume on the NetAPP filer.
 
 inventory:
- df supports inventory. All filesystem the agent reports
- will be inventorized except mount points listed in
+ One service is created for each filesystem
+ the agent reports except mount points listed in
  {inventory_df_exclude_mountpoints} and filesystem types
  listed in {inventory_df_exclude_fs}. The Windows agent
  only reports fixed disks. The Linux agent reports filesystems
  that have a size and are not of type smbfs, tmpfs, cifs or nfs.
+
 

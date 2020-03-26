@@ -1,4 +1,4 @@
-title: Length of the qmail Mailqueue
+title: qmail: Mailqueue Length
 agents: linux
 catalog: app/qmail
 license: GPL

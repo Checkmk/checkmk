@@ -1,4 +1,4 @@
-title: MTR ping/traceroute to destination
+title: MTR Ping/traceroute to Destination
 agents: linux
 catalog: os/networking
 license: GPL

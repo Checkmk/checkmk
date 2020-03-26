@@ -16,3 +16,6 @@ description:
 
  In addition to the state, the check displays the following other parameters
  of the server: drsiKVMFirmwareVersion
+
+inventory:
+ One service is created.

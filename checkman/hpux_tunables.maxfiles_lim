@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of open files
+title: Kernel Tunables: Number of Open Files
 agents: hpux
 catalog: os/kernel
 license: GPL

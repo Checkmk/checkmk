@@ -21,6 +21,8 @@
 #include "tools/_misc.h"
 #include "zip.h"
 
+using namespace std::literals;
+
 namespace cma::cfg::modules {
 
 void Module::reset() noexcept {
@@ -123,6 +125,15 @@ bool Module::isMyScript(const std::filesystem::path &script) const noexcept {
     return false;
 }
 
+// To remove owned extension if usage of the module is forbidden in config
+void Module::removeExtension(std::string_view ext) {
+    auto end = std::remove_if(
+        exts_.begin(), exts_.end(),
+        [ext](const std::string &cur_ext) { return cur_ext == ext; });
+
+    exts_.erase(end, exts_.end());
+}
+
 std::wstring Module::buildCommandLineForced(
     const std::filesystem::path &script) const noexcept {
     try {
@@ -157,6 +168,16 @@ std::wstring Module::buildCommandLine(const std::filesystem::path &script) const
     }
 }
 
+// Table to keep logic pairs of 'system tool' and its file extension
+static const std::vector<StringViewPair> SystemExtensions = {
+    {cma::cfg::vars::kModulesPython, ".py"sv}};
+
+// API
+[[nodiscard]] const std::vector<StringViewPair>
+ModuleCommander::GetSystemExtensions() {
+    return SystemExtensions;
+}
+
 [[nodiscard]] std::vector<Module> LoadFromConfig(const YAML::Node &yaml) {
     try {
         auto m = yaml[groups::kModules];
@@ -188,6 +209,7 @@ std::wstring Module::buildCommandLine(const std::filesystem::path &script) const
 
             vec.push_back(m);
         }
+
         XLOG::l.i("Processed [{}] modules", vec.size());
         return vec;
 
@@ -235,8 +257,31 @@ std::wstring Module::buildCommandLine(const std::filesystem::path &script) const
     return true;
 }
 
+// internal API, shoudl not be called directly
+// scans all modules and remove form each corresponding extension if
+// usage of the modules defined as 'system'
+void ModuleCommander::removeSystemExtensions(YAML::Node &node) {
+    try {
+        auto m = node[groups::kModules];
+
+        for (auto &sys_ex : ModuleCommander::GetSystemExtensions()) {
+            auto system =
+                GetVal(m, sys_ex.first,
+                       std::string(defaults::kModuleUsageDefaultMode));
+            if (system == values::kModuleUsageSystem) {
+                for (auto &module_node : modules_) {
+                    module_node.removeExtension(sys_ex.second);
+                }
+            }
+        }
+    } catch (const std::exception &e) {
+        XLOG::l.i("Not possible to find modules.*** '{}'", e.what());
+    }
+}
+
 void ModuleCommander::readConfig(YAML::Node &node) {
     modules_ = LoadFromConfig(node);
+    removeSystemExtensions(node);
 }
 
 int ModuleCommander::findModuleFiles(const std::filesystem::path &root) {
@@ -308,8 +353,8 @@ bool ModuleCommander::isBelongsToModules(
         });
 }
 
-// looks for the kTargetDir file in target_dir - this is symbolic link to folder
-// for remove content
+// looks for the kTargetDir file in target_dir - this is symbolic link to
+// folder for remove content
 bool ModuleCommander::RemoveContentByTargetDir(
     const std::vector<std::wstring> &content,
     const std::filesystem::path &target_dir) {
@@ -328,6 +373,9 @@ bool ModuleCommander::RemoveContentByTargetDir(
             return false;
         }
         fs::path d{*dir};
+
+        auto count = wtools::KillProcessesByDir(d);
+        XLOG::l.i("Killed [{}] processes from dir '{}'", count, d.u8string());
         for (auto line : content) {
             fs::remove_all(d / line, ec);
         }
@@ -389,7 +437,13 @@ bool ModuleCommander::UninstallModuleZip(
     name.replace_extension("");
     auto target_dir = mod_root / name;
     auto list = cma::tools::zip::List(file.wstring());
-    RemoveContentByTargetDir(list, target_dir);
+    bool relink = RemoveContentByTargetDir(list, target_dir);
+
+    if (!relink) {
+        auto count = wtools::KillProcessesByDir(target_dir);
+        XLOG::l.i("Killed [{}] processes from dir '{}'", count,
+                  target_dir.u8string());
+    }
 
     fs::remove_all(target_dir, ec);
     fs::remove(file, ec);
@@ -436,6 +490,17 @@ bool ModuleCommander::PrepareCleanTargetDir(
     fs::create_directories(mod_dir, ec);
 
     return true;
+}
+
+std::vector<std::string> ModuleCommander::getExtensions() const {
+    std::vector<std::string> result;
+
+    for (auto &m : modules_) {
+        auto exts = m.exts();
+        result.insert(result.end(), exts.begin(), exts.end());
+    }
+
+    return result;
 }
 
 bool ModuleCommander::InstallModule(const Module &mod,

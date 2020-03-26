@@ -7,5 +7,5 @@ description:
  This check monitors the number of active VPN Sessions (e.g. Anyconnect) on a cisco server.
 
 inventory:
- One service will be created.
+ One service is created.
 

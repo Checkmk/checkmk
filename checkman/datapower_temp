@@ -17,4 +17,4 @@ item:
  Name of the temperature sensor
 
 inventory:
- On each gateway one service is created for each sensor found
+ One service is created for every sensor on each gateway.

@@ -994,7 +994,7 @@ class NamespaceList(K8sList[Namespace]):  # pylint: disable=too-many-ancestors
 
 class PersistentVolumeList(K8sList[PersistentVolume]):  # pylint: disable=too-many-ancestors
     def list_volumes(self):
-        # type: () -> Dict[str, Dict[str, Union[Optional[List[str]], Optional[float], Dict[str, Optional[str]]]]]
+        # type: () -> Dict[str, Dict[str, Union[None, List[str], float, Dict[str, Optional[str]]]]]
         # TODO: Output details of the different types of volumes
         return {
             pv.name: {

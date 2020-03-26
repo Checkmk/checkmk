@@ -41,13 +41,13 @@ def output_profile():
 
     # TODO Change shebang as soon as we migrate to Python 3
     with show_profile.open("w") as f:
-        f.write("""#!/usr/bin/env python
+        f.write("""#!/usr/bin/env python3
 import sys
 import pstats
 try:
     profile_file = sys.argv[1]
 except IndexError:
-    profile_file = %s
+    profile_file = "%s"
 stats = pstats.Stats(profile_file)
 stats.sort_stats('time').print_stats()""" % _profile_path)
 

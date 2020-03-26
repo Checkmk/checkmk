@@ -9,7 +9,6 @@ import time
 from logging import Logger  # pylint: disable=unused-import
 from typing import Any, Dict, Set  # pylint: disable=unused-import
 
-import cmk
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE

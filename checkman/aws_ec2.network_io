@@ -10,7 +10,7 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the instance if all required metrics (NetworkIn and NetworkOut) are given.
+ Name of the instance
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (NetworkIn, NetworkOut) are given.

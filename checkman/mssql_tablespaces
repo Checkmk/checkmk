@@ -1,4 +1,4 @@
-title: MSSQL tablespace size information
+title: MS SQL Tablespaces: Size information
 agents: windows
 catalog: app/mssql
 license: GPL

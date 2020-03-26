@@ -1,4 +1,4 @@
-title: Infoblox devices: Grid replication status
+title: Infoblox Devices: Grid Replication Status
 agents: snmp
 catalog: hw/network/infoblox
 license: GPL

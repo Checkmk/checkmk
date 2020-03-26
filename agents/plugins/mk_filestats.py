@@ -74,21 +74,23 @@ described by the following four phases:
     * ``output: extremes_only''
       Only report the youngest, oldest, smallest, and biggest files. In case
       checks only require this information, we can signifficantly reduce data.
+    * ``output: single_file''
+      Monitor a single file and send its metrics. If a input_pattern of a .cfg section
+      matches multiple files, the agent sents one subsection per file.
 
 You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
 import errno
-import re
+import glob
+import logging
 import os
+import re
+import shlex
 import sys
 import time
-import glob
-import shlex
-import logging
-
-from stat import S_ISREG, S_ISDIR
+from stat import S_ISDIR, S_ISREG
 
 try:
     import ConfigParser as configparser
@@ -421,6 +423,21 @@ def output_aggregator_extremes_only(group_name, files_iter):
     yield repr({"type": "summary", "count": count})
 
 
+def output_aggregator_single_file(group_name, files_iter):
+
+    for lazy_file in files_iter:
+
+        count_format_specifiers = group_name.count("%s")
+
+        if count_format_specifiers == 0:
+            subsection_name = group_name
+        else:
+            subsection_name = group_name % ((lazy_file.path,) + (('%s',) *
+                                                                 (count_format_specifiers - 1)))
+        yield "[[[single_file %s]]]" % subsection_name
+        yield lazy_file.dumps()
+
+
 def get_output_aggregator(config):
     output_spec = config.get("output")
     try:
@@ -428,6 +445,7 @@ def get_output_aggregator(config):
             "count_only": output_aggregator_count_only,
             "extremes_only": output_aggregator_extremes_only,
             "file_stats": output_aggregator_file_stats,
+            "single_file": output_aggregator_single_file,
         }[output_spec]
     except KeyError:
         raise ValueError("unknown 'output' spec: %r" % output_spec)

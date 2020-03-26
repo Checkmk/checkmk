@@ -1,4 +1,4 @@
-title: CPS UPS Device: Output phase
+title: CPS UPS Device: Output Phase
 agents: snmp
 catalog: hw/power/cps
 license: GPL

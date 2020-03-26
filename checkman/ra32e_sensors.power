@@ -1,4 +1,4 @@
-title: AVTECH Room Alert 32E: Sensor power status
+title: AVTECH Room Alert 32E: Sensor Power Status
 agents: snmp
 catalog: hw/environment/avtech
 license: GPL

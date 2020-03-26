@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Name and disk free of datastores
+title: Virtual Machine under ESX: Name and Disk Free of Datastores
 agents: vsphere
 catalog: os/storage
 license: GPL
@@ -14,4 +14,4 @@ description:
  as well.
 
 inventory:
- On each VM one check is generated.
+ One service is created for each Virtual Machine.

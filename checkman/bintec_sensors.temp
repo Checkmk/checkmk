@@ -12,5 +12,5 @@ item:
  The sensorDescr from SNMP.
 
 inventory:
- Creates one check per temperature sensor (sensorType 1).
+ One service is created for each temperature sensor.
 

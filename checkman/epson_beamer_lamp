@@ -1,4 +1,4 @@
-title: Epson beamer: Lamp runtime
+title: Epson Beamer: Lamp Runtime
 agents: snmp
 catalog: hw/environment/epson
 license: GPL
@@ -7,4 +7,4 @@ description:
  This check monitors the lamp runtime of Epson beamers.
 
 inventory:
- One service per beamer is created.
+ One service is created for each beamer.

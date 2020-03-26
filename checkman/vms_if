@@ -1,4 +1,4 @@
-title: Traffic of network interfaces on OpenVMS
+title: OpenVMS: Traffic of network interfaces
 agents: openvms
 catalog: os/networking
 license: GPL

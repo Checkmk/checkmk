@@ -1,4 +1,4 @@
-title: Hepta 8030: Time synchronization
+title: Hepta 8030: Time Synchronization
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -10,7 +10,7 @@ description:
  If the device synchronization is invalid or it is in mode Crystal, the state will be CRIT.
 
 inventory:
- One service for synchronization state.
+ One service is created.
 
 item:
  The fixed statement {{SyncModuleTimeSyncState}}

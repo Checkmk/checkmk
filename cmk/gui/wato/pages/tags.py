@@ -883,7 +883,7 @@ def _rename_tags_after_confirmation(operation):
               "Removed tag groups will be removed from hosts and folders, removed tags will be "
               "replaced with the default value for the tag group (for hosts and folders). What "
               "rules concern, you have to decide how to proceed."))
-        html.begin_form("confirm")
+        html.begin_form("confirm", method="POST")
 
         if affected_rulesets and _is_removing_tags(operation):
             html.br()
@@ -1060,10 +1060,10 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     if current in operation.remove_tag_ids or current in operation.replace_tag_ids:
         affected.append(host_or_folder)
         if mode != TagCleanupMode.CHECK:
-            new_tag = operation[current]
             if current in operation.remove_tag_ids:
                 del attributes[attrname]
             elif current in operation.replace_tag_ids:
+                new_tag = operation.replace_tag_ids[current]
                 attributes[attrname] = new_tag
             else:
                 raise NotImplementedError()

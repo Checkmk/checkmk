@@ -1,4 +1,4 @@
-title: Perle Mediaconverter: Fan status
+title: Perle Mediaconverter: Fan Status
 agents: snmp
 catalog: hw/network/perle
 license: GPL

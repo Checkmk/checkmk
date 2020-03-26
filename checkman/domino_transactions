@@ -9,3 +9,5 @@ description:
  minute on a Lotus Domino Server.  Warning and critical upper limits can be
  set.
 
+inventory:
+ One service is created for each record.

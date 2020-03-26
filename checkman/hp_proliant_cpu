@@ -1,4 +1,4 @@
-title: HP Proliant Servers: Physical CPU state
+title: HP Proliant Servers: Physical CPU State
 agents: snmp
 catalog: hw/server/hp
 license: GPL

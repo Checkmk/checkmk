@@ -1,4 +1,4 @@
-title: McAfee Email gateway: CPU load
+title: McAfee Email Gateway: CPU Load
 agents: snmp
 catalog: app/mcafee
 license: GPL

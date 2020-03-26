@@ -7,7 +7,7 @@
 
 def inventory_tplink_cpu(info):
     if len(info) >= 1:
-        return [(None, {})]
+        yield None, {}
 
 
 def check_tplink_cpu(_no_item, params, info):
@@ -19,8 +19,10 @@ def check_tplink_cpu(_no_item, params, info):
         cores.append(("core%d" % num_cpus, core_util))
         util += core_util
         num_cpus += 1
-    if num_cpus == 0:
-        return
+
+    if not num_cpus:
+        return None
+
     util = float(util) / num_cpus
     return check_cpu_util(util, params, cores=cores)
 

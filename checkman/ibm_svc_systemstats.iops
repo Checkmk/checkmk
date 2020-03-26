@@ -1,4 +1,4 @@
-title: IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total
+title: IBM SVC / V7000: IO Operations/sec for Drives/MDisks/VDisks in Total
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL

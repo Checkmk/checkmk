@@ -1,4 +1,4 @@
-title: Liebert MPH/MPX devices: PDU AUX sensors
+title: Liebert MPH/MPX Devices: PDU AUX Sensors
 agents: snmp
 catalog: hw/environment/emerson
 license: GPL

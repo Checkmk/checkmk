@@ -14,7 +14,6 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
-import cmk
 import cmk.utils.store as store
 from cmk.gui import sites
 from cmk.gui.globals import html
@@ -559,7 +558,7 @@ class Topology(object):
         except MKGrowthExceeded as e:
             # Unexpected interuption, unable to display all nodes
             self.add_error(str(e))
-        except MKGrowthInterruption as e:
+        except MKGrowthInterruption:
             # Valid interruption, since the growth should stop when a given number of nodes is exceeded
             pass
 

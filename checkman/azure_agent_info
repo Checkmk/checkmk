@@ -1,4 +1,4 @@
-title: Microsoft Azure Agent Info
+title: Microsoft Azure: Agent Info
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -9,6 +9,6 @@ description:
  the monitored groups and encountered issues.
 
 inventory:
- One service is created per monitored resource group and one for the
+ One service is created for each monitored resource group and one for the
  host that the agent is assigned to.
 

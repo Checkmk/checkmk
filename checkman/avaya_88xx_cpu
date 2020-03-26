@@ -1,4 +1,4 @@
-title: Avaya 88xx: CPU utilization
+title: Avaya 88xx: CPU Utilization
 agents: snmp
 catalog: hw/network/avaya
 license: GPL
@@ -8,4 +8,4 @@ description:
  The levels can be configured (default 90, 95).
 
 inventory:
- Creates one service for each CPU.
+ One service is created for each CPU.

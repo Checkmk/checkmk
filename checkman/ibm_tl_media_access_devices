@@ -1,4 +1,4 @@
-title: IBM tape library: Media access devices
+title: IBM Tape Library: Media Access Devices
 agents: snmp
 catalog: hw/storagehw/ibm
 license: GPL

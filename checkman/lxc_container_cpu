@@ -1,4 +1,4 @@
-title: Linux container CPU utilization
+title: Linux Container (LXC): CPU Utilization
 agents: linux
 catalog: containerization/lxc
 license: GPL

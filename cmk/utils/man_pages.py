@@ -214,6 +214,7 @@ catalog_titles = {
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",
+        "ddn_s2a"       : "DDN S2A",
         "freebsd"       : "FreeBSD",
         "hpux"          : "HP-UX",
         "linux"         : "Linux",

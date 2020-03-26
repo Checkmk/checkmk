@@ -1,4 +1,4 @@
-title: Length of the nullmailer mailqueue
+title: Nullmailer: Mailqueue Length
 agents: linux
 catalog: app/nullmailer
 license: GPL

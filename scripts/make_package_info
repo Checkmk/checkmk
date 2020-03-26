@@ -24,7 +24,7 @@ package = {
     "files": filelists
 }
 
-parts = ["checks", "checkman", "agents", "web", "pnp-templates", "doc"]
+parts = ["checks", "checkman", "agents", "web", "doc"]
 for part in parts:
     tarfile = part + ".tar.gz"
     filelist = []  # type: List[str]

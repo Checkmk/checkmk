@@ -6,10 +6,6 @@
 
 
 def scan_domino(oid):
-    dev_sys_obj_id = oid(".1.3.6.1.2.1.1.2.0", "")
-    supported_sys_obj_ids = [
-        ".1.3.6.1.4.1.311.1.1.3.1.2",
-        ".1.3.6.1.4.1.8072.3.1.10",
-        ".1.3.6.1.4.1.8072.3.2.10",
-    ]
-    return any(dev_sys_obj_id.startswith(sys_obj_id) for sys_obj_id in supported_sys_obj_ids)
+    return (oid(".1.3.6.1.2.1.1.2.0", "").startswith(".1.3.6.1.4.1.311.1.1.3.1.2") or
+            oid(".1.3.6.1.2.1.1.2.0", "").startswith(".1.3.6.1.4.1.8072.3.1.10") or
+            oid(".1.3.6.1.2.1.1.2.0", "").startswith(".1.3.6.1.4.1.8072.3.2.10"))

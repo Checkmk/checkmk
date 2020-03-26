@@ -7,6 +7,8 @@
 import abc
 import re
 import traceback
+from typing import Any, Dict, List, Set, Tuple  # pylint: disable=unused-import
+
 import six
 
 import livestatus
@@ -115,7 +117,7 @@ class TooManyRowsError(MKException):
 class LivestatusSearchBase(object):
     def _build_url(self, url_params):
         new_params = url_params[:]
-        return html.makeuri(new_params, delvars="q", filename="view.py")
+        return html.makeuri(new_params, delvars=["q"], filename="view.py")
 
 
 # Handles exactly one livestatus query
@@ -129,6 +131,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._livestatus_command = None  # Computed livestatus query
         self._rows = []  # Raw data from livestatus
         self._elements = []  # Postprocessed rows
+        self._queried_livestatus_columns = []  # type: List[str]
 
     def get_filter_behaviour(self):
         return self._filter_behaviour
@@ -187,9 +190,10 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             self._rows.pop()  # Remove limit+1nth element
 
     def _generate_livestatus_command(self):
+        # type: () -> None
         self._determine_livestatus_table()
         columns_to_query = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains = {}  # Filters sorted by domain
+        livestatus_filter_domains = {}  # type: Dict[str, List[str]]
 
         self._used_search_plugins = self._get_used_search_plugins()
 
@@ -258,12 +262,13 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._livestatus_table = table_to_query
 
     def _get_livestatus_default_columns(self):
+        # type: () -> List[str]
         return {
             "services": ["description", "host_name"],
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }[self._livestatus_table]
+        }.get(self._livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self):
         exact_match = self.num_rows() == 1
@@ -292,8 +297,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
-            entry = {"text_tokens": []}
-            url_params = []
+            entry = {"text_tokens": []}  # type: Dict[str, Any]
+            url_params = []  # type: List[Tuple[str, str]]
             skip_site = False
             for filter_shortname in self._used_filters:
                 plugin = self._get_plugin_with_shortname(filter_shortname)
@@ -323,20 +328,20 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if exact_match:
             if self._livestatus_table == "hosts":
                 return "host"
-            elif self._livestatus_table == "services":
+            if self._livestatus_table == "services":
                 return "allservices"
-            elif self._livestatus_table == "hostgroups":
+            if self._livestatus_table == "hostgroups":
                 return "hostgroup"
-            elif self._livestatus_table == "servicegroups":
+            if self._livestatus_table == "servicegroups":
                 return "servicegroup"
         else:
             if self._livestatus_table == "hosts":
                 return "searchhost"
-            elif self._livestatus_table == "services":
+            if self._livestatus_table == "services":
                 return "searchsvc"
-            elif self._livestatus_table == "hostgroups":
+            if self._livestatus_table == "hostgroups":
                 return "hostgroups"
-            elif self._livestatus_table == "servicegroups":
+            if self._livestatus_table == "servicegroups":
                 return "svcgroups"
 
     def _generate_display_texts(self):
@@ -355,7 +360,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if self._livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
             new_elements = []
-            used_groups = set()
+            used_groups = set()  # type: Set[str]
             for element in self._elements:
                 if element["display_text"] in used_groups:
                     continue
@@ -377,7 +382,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                     element["display_text"] += " <b>%s</b>" % hostname
 
     def _element_texts_unique(self):
-        used_texts = set()
+        # type: () -> bool
+        used_texts = set()  # type: Set[str]
         for entry in self._elements:
             if entry["display_text"] in used_texts:
                 return False
@@ -395,7 +401,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         try:
             self._query_data()
         except TooManyRowsError as e:
-            html.show_warning(e)
+            html.show_warning(str(e))
 
         self._evaluate_results()
         self._render_dropdown_elements()
@@ -407,7 +413,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             pass
 
         # Generate a search page for the topmost search_object with results
-        url_params = []
+        url_params = []  # type: List[Tuple[str, str]]
         for search_object in self._search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())
@@ -437,7 +443,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             found_filters.append((match.group(1), match.start()))
 
         if found_filters:
-            filter_spec = {}
+            filter_spec = {}  # type: Dict[str, List[str]]
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
                 filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
@@ -721,7 +727,7 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
     def get_match_topic(self):
         if self._livestatus_field == "name":
             return _("Hostname")
-        elif self._livestatus_field == "address":
+        if self._livestatus_field == "address":
             return _("Hostaddress")
         return _("Hostalias")
 

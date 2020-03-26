@@ -1,4 +1,4 @@
-title: ORACLE ASM Disk Groups
+title: Oracle ASM Disk Groups
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -35,7 +35,7 @@ item:
  The name of the disk group as delivered by the agent without the {/} at the
  end.
 
- See also check manpage for {df}. All configurations are usable for ORACLE ASM
+ See also check manpage for {df}. All configurations are usable for Oracle ASM
  Disk Groups as well.
 
 inventory:

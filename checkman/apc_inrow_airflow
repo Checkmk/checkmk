@@ -6,3 +6,5 @@ distribution: check_mk
 description:
   The current Airflow for a InRow Cooling devices.
 
+inventory:
+ One service is created.

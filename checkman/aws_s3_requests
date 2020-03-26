@@ -16,7 +16,8 @@ description:
  is a paid feature
 
 item:
- Name of the instance if all required metrics (AllRequests) are given.
+ Name of the instance
 
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (AllRequests) are given.

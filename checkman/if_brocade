@@ -1,4 +1,4 @@
-title: Brocade VDX devices: Network interfaces via standard MIB using 64 Bit counters
+title: Brocade VDX Devices: Network Interfaces via Standard MIB Using 64 Bit Counters
 agents: snmp
 catalog: hw/network/brocade
 license: GPL

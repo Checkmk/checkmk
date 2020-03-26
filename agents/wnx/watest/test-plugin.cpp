@@ -705,7 +705,7 @@ TEST(PluginTest, FilesAndFolders) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     {
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
         EXPECT_EQ(groups::plugins.foldersCount(), 2);
@@ -2650,5 +2650,41 @@ TEST(PluginTest, ModulesCmdLine) {
     for (auto& [name, entry] : pm) {
         EXPECT_TRUE(entry.cmdLine().empty());
     }
+}
+TEST(PluginTest, AllowedExtensions) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+
+    cma::OnStartTest();
+    auto yaml = cma::cfg::GetLoadedConfig();
+    yaml = YAML::Load(
+        "global:\n"
+        "  enabled: yes\n"
+        "  execute: ['x', 'y']\n"
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: aaaa\n"
+        "      exts: ['.a.x', 'b']\n"
+        "      exec: zzz\n"
+
+    );
+
+    ON_OUT_OF_SCOPE(OnStartTest());
+
+    cma::srv::ServiceProcessor sp;
+    auto& mc = sp.getModuleCommander();
+    mc.LoadDefault();
+    PluginsProvider pp;
+    pp.registerOwner(&sp);
+    auto exts = pp.gatherAllowedExtensions();
+    std::vector<std::string> expected = {"a.x", "b", "x", "y"};
+    EXPECT_EQ(exts, expected);
+
+    PluginsProvider pp2;
+    exts = pp2.gatherAllowedExtensions();
+    expected = {"x", "y"};
+    EXPECT_EQ(exts, expected);
 }
 }  // namespace cma::provider

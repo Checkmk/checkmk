@@ -1,4 +1,4 @@
-title: HP BladeSystem Enclosures: Manager boards
+title: HP BladeSystem Enclosures: Manager Boards
 agents: snmp
 catalog: hw/server/hp
 license: GPL
@@ -21,4 +21,4 @@ item:
  Number of the manager
 
 inventory:
- All manager boards with the present state "present" are automatically inventorized.
+ One service is created for each manager boards with the state "present".

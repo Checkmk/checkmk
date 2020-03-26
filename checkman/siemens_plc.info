@@ -1,4 +1,4 @@
-title: Siemens PLC: Output text values
+title: Siemens PLC: Output Text Values
 agents: siemens_plc
 catalog: hw/server/siemens
 license: GPL

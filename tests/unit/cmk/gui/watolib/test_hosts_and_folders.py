@@ -36,8 +36,8 @@ def test_env(mocked_user, load_config, load_plugins):
     yield
 
     # Cleanup WATO folders created by the test
-    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path())
-    os.mkdir(hosts_and_folders.Folder.root_folder().filesystem_path())
+    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
 
 
 @pytest.mark.parametrize("attributes,expected_tags", [
@@ -254,3 +254,125 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
     data = folder._load_hosts_file()
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == folder_credentials
+
+
+@pytest.fixture
+def make_folder(mocker, fs):
+    """
+    Returns a function to create patched folders for tests. Note that the global setting
+    "Hide folders without read permissions" will currently always be set during setup.
+    """
+    # Set the disk size of the fake in memory filesystem to zero bytes to ensure that no
+    # files are written by accident e.g. in CREFolder.__init__:
+    fs.set_disk_usage(0)
+
+    mocker.patch.object(hosts_and_folders.config,
+                        'wato_hide_folders_without_read_permissions',
+                        True,
+                        create=True)
+
+    def prefixed_title(self_, current_depth, pretty):
+        return "_" * current_depth + self_.title()
+
+    mocker.patch.object(hosts_and_folders.Folder, '_prefixed_title', prefixed_title)
+
+    def may(self_, _permission):
+        return self_._may_see
+
+    mocker.patch.object(hosts_and_folders.Folder, 'may', may)
+
+    # convenience method NOT present in Folder
+    def add_subfolders(self_, folders):
+        for folder in folders:
+            self_._subfolders[folder.name()] = folder
+            folder._parent = self_
+        return self_
+
+    mocker.patch.object(hosts_and_folders.Folder, 'add_subfolders', add_subfolders, create=True)
+
+    def f(name, title, root_dir='/', parent_folder=None, may_see=True):
+        folder = hosts_and_folders.Folder(name,
+                                          folder_path=None,
+                                          parent_folder=parent_folder,
+                                          title=title,
+                                          root_dir=root_dir)
+        folder._may_see = may_see
+        return folder
+
+    return f
+
+
+def only_root(folder):
+    return folder('', title='Main directory')
+
+
+def three_levels(folder):
+    return folder('', title='Main directory').add_subfolders([
+        folder('a', title='A').add_subfolders([
+            folder('c', title='C'),
+            folder('d', title='D'),
+        ]),
+        folder('b', title='B').add_subfolders([
+            folder('e', title='E').add_subfolders([
+                folder('f', title='F'),
+            ]),
+        ]),
+    ])
+
+
+def three_levels_leaf_permissions(folder):
+    return folder('', title='Main directory', may_see=False).add_subfolders([
+        folder('a', title='A', may_see=False).add_subfolders([
+            folder('c', title='C', may_see=False),
+            folder('d', title='D'),
+        ]),
+        folder('b', title='B', may_see=False).add_subfolders([
+            folder('e', title='E', may_see=False).add_subfolders([
+                folder('f', title='F'),
+            ]),
+        ]),
+    ])
+
+
+@pytest.mark.parametrize('actual_builder,expected', [
+    (only_root, [('', 'Main directory')]),
+    (three_levels, [
+        ('', 'Main directory'),
+        ('a', '_A'),
+        ('a/c', '__C'),
+        ('a/d', '__D'),
+        ('b', '_B'),
+        ('b/e', '__E'),
+        ('b/e/f', '___F'),
+    ]),
+    (three_levels_leaf_permissions, [
+        ('', 'Main directory'),
+        ('a', '_A'),
+        ('a/d', '__D'),
+        ('b', '_B'),
+        ('b/e', '__E'),
+        ('b/e/f', '___F'),
+    ]),
+])
+def test_recursive_subfolder_choices(make_folder, actual_builder, expected):
+    actual = actual_builder(make_folder)
+    assert actual.recursive_subfolder_choices() == expected
+
+
+def test_recursive_subfolder_choices_function_calls(mocker, make_folder):
+    """Every folder should only be visited once"""
+    spy = mocker.spy(hosts_and_folders.Folder, '_walk_tree')
+
+    tree = three_levels_leaf_permissions(make_folder)
+    tree.recursive_subfolder_choices()
+
+    assert spy.call_count == 7
+
+
+def test_subfolder_creation():
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.create_subfolder('foo', 'Foo Folder', {})
+
+    # Upon instantiation, all the subfolders should be already known.
+    folder = hosts_and_folders.Folder.root_folder()
+    assert len(folder._subfolders) == 1

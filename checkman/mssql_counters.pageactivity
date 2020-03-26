@@ -1,4 +1,4 @@
-title: MSSQL page activity
+title: MS SQL Server: Page activity
 agents: windows
 catalog: app/mssql
 license: GPL

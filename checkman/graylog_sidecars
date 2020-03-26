@@ -16,4 +16,4 @@ item:
  The name of the sidecar.
 
 inventory:
- One service for each node {"Graylog Sidecar my_sidecar"} will be created.
+ One service is created for each node.

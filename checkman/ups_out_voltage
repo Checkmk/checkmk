@@ -1,4 +1,4 @@
-title: Generic UPS Device: Out voltage
+title: Generic UPS Device: Out Voltage
 agents: snmp
 catalog: hw/power/generic
 license: GPL

@@ -13,4 +13,4 @@ item:
  Name of the Source NAT (network address translation)
 
 inventory:
- One check is generated per source NAT.
+ One service is created for each source NAT.

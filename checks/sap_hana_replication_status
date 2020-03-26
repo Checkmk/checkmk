@@ -20,13 +20,13 @@ def parse_sap_hana_replication_status(info):
 
 
 SAP_HANA_REPL_STATUS_MAP = {
-    "0": (3, "unknown status from replication script"),
-    "10": (2, "no system replication"),
-    "11": (2, "error"),
-    "12": (2, "unknown"),
-    "13": (1, "initializing"),
-    "14": (0, "syncing"),
-    "15": (0, "active"),
+    "0": (3, "unknown status from replication script", "state_unknown"),
+    "10": (2, "no system replication", "state_no_replication"),
+    "11": (2, "error", "state_error"),
+    "12": (2, "unknown", "state_replication_unknown"),
+    "13": (1, "initializing", "state_initializing"),
+    "14": (0, "syncing", "state_syncing"),
+    "15": (0, "active", "state_active"),
 }
 
 
@@ -39,11 +39,10 @@ def inventory_sap_hana_replication_status(parsed):
 @get_parsed_item_data
 def check_sap_hana_replication_status(item, params, data):
     sys_repl_status = data["sys_repl_status"]
-    state, state_readable = SAP_HANA_REPL_STATUS_MAP.get(sys_repl_status,
-                                                         (3, "unknown[%s]" % sys_repl_status))
-    yield state, "System replication: %s" % state_readable
+    state, state_readable, param_key = SAP_HANA_REPL_STATUS_MAP.get(
+        sys_repl_status, (3, "unknown[%s]" % sys_repl_status, "state_unknown"))
 
-    yield 0, "Mode: %s" % data["mode"]
+    yield params.get(param_key, state), "System replication: %s" % state_readable
 
 
 check_info['sap_hana_replication_status'] = {
@@ -51,5 +50,6 @@ check_info['sap_hana_replication_status'] = {
     'inventory_function': inventory_sap_hana_replication_status,
     'check_function': check_sap_hana_replication_status,
     'service_description': 'SAP HANA Replication Status %s',
+    'group': 'sap_hana_replication_status',
     'includes': ['sap_hana.include'],
 }

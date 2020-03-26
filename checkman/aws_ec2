@@ -10,4 +10,4 @@ description:
  If both tests have passed the check is OK otherwise CRIT.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (StatusCheckFailed_System, StatusCheckFailed_Instance) are given.

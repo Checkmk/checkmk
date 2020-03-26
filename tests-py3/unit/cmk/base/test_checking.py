@@ -146,6 +146,42 @@ import cmk.base.checking
             2: 4,
             3: 3
         }),
+        # (Old) tuple based default params
+        (cmk.base.config.TimespecificParamList([
+            {
+                "tp_default_value": {
+                    "key": (1, 1)
+                },
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), ["tp"], {
+            "key": (2, 2)
+        }),
+        (cmk.base.config.TimespecificParamList([
+            {
+                "tp_default_value": {
+                    "key": (1, 1)
+                },
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), [], {
+            "key": (1, 1)
+        }),
+        (cmk.base.config.TimespecificParamList([
+            {
+                "tp_default_value": {},
+                "tp_values": [("tp", {
+                    "key": (2, 2),
+                })]
+            },
+            (3, 3),
+        ]), [], {}),
     ])
 def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
     monkeypatch.setattr(cmk.base.core, "timeperiod_active",

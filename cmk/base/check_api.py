@@ -176,6 +176,10 @@ Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
+# The class 'as_float' has been moved to the cmk.base.api domain.
+# import it here under the old name
+from cmk.base.api.agent_based.checking_types import MetricFloat as as_float  # pylint: disable=unused-import
+
 
 def saveint(i):
     # type: (Any) -> int
@@ -203,18 +207,6 @@ def savefloat(f):
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-class as_float(float):
-    """Extends the float representation for Infinities in such way that
-    they can be parsed by eval"""
-    def __repr__(self):
-        # type: () -> str
-        if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
-        if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
-        return super(as_float, self).__repr__()
 
 
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
@@ -384,7 +376,7 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
-    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Optional[Union[int, float]]) -> List
+    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
     if not dsname:
         return []
 
@@ -653,7 +645,7 @@ def validate_filter(filter_function):
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[Dict[Any, Any], str]]) -> Callable
+    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to

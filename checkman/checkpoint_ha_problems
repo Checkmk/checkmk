@@ -16,5 +16,5 @@ description:
  "Filter", "Synchronization", "cphad" and "fwd".
 
 inventory:
- One service per problem category will be discovered.
+ One service is created for each problem category.
 

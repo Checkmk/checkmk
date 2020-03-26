@@ -16,5 +16,5 @@ item:
  Logical disk number as reported by omreport
 
 inventory:
- One check is created for each virtual disk
+ One service is created for each virtual disk.
 

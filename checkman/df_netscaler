@@ -12,7 +12,7 @@ description:
  the check and its numerous features.
 
 inventory:
- All filesystems found will be inventorized except mount points listed
+ One service is created for each filesystem except mount points listed
  in {inventory_df_exclude_mountpoints} and filesystems with zero size.
 
 item:

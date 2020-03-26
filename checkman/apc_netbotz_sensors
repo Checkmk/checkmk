@@ -1,4 +1,4 @@
-title: APC Netbotz Devices: Temperature sensor
+title: APC Netbotz Devices: Temperature Sensor
 agents: snmp
 catalog: hw/power/apc
 license: GPL
@@ -14,4 +14,4 @@ item:
  The temperature sensor identifier.
 
 inventory:
- One service per sensor is created.
+ One service is created for each temperature sensor.

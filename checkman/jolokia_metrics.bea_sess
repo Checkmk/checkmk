@@ -1,4 +1,4 @@
-title: BEA Weblogic: Number of JVM sessions
+title: BEA Weblogic: Number of JVM Sessions
 agents: linux
 catalog: app/java
 license: GPL

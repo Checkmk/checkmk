@@ -13,7 +13,9 @@ description:
  and the burst balance can be set.
 
 item:
- Name of the instance if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.
+ Name of the instance
 
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (CPUCreditUsage, CPUCreditBalance) are given.
+

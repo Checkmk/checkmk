@@ -1,4 +1,4 @@
-title: SAP HANA Statistics Server
+title: SAP HANA: Statistics Server
 agents: linux
 catalog: app/sap_hana
 license: GPL

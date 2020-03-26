@@ -23,10 +23,6 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
-)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
@@ -38,6 +34,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextUnicode,
     Checkbox,
+    DocumentationURL,
+    RuleComment,
 )
 
 
@@ -150,7 +148,7 @@ class SimpleListMode(SimpleWatoModeBase):
         raise NotImplementedError()
 
     def _handle_custom_action(self, action):
-        # type: (str) -> Optional[Union[bool, Tuple[Optional[str], Text]]]
+        # type: (str) -> Union[None, bool, Tuple[Optional[str], Text]]
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -199,7 +197,8 @@ class SimpleListMode(SimpleWatoModeBase):
                               _("This %s does not exist.") % self._mode_type.name_singular())
 
         if ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("_delete", \
+            raise MKUserError(
+                "_delete",
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular())
 
         self._validate_deletion(ident, entries[ident])
@@ -398,7 +397,8 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             raise MKUserError("ident", _("This ID is already in use. Please choose another one."))
 
         if not self._new and self._ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("ident", \
+            raise MKUserError(
+                "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
         entries[self._ident] = self._entry

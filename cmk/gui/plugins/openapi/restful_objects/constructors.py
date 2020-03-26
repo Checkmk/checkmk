@@ -3,14 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import hashlib
 import json
-import typing
-
-if typing.TYPE_CHECKING:
-    from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
-    from werkzeug.datastructures import ETags  # pylint: disable=unused-import
+from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
 
 from connexion import ProblemException  # type: ignore[import]
+from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request, response
 
@@ -165,8 +163,10 @@ def serve_json(data, profile=None):
         content_type += ';profile="%s"' % (profile,)
     response.set_content_type(content_type)
     response.set_data(json.dumps(data))
-    response.original_data = data
-    return response._get_current_object()
+    # HACK: See wrap_with_validation.
+    response.original_data = data  # type: ignore[attr-defined]
+    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def action_parameter(action, parameter, friendly_name, optional, pattern):
@@ -181,4 +181,42 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
 
 def sucess(status=200):
     response.status_code = status
-    return response._get_current_object()
+    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    return response._get_current_object()  # type: ignore[attr-defined]
+
+
+def etag_of_dict(dict_):
+    """Build a sha256 hash over a dictionary's content.
+
+    Keys are sorted first to ensure a stable hash.
+
+    Args:
+        dict_ (dict): A dictionary.
+
+    Returns:
+        str: The hex-digest of the built hash.
+
+    """
+    _hash = hashlib.sha256()
+    for key in sorted(dict_.keys()):
+        _hash.update(dict_[key])
+    return ETags(strong_etags=_hash.hexdigest())
+
+
+def etag_of_obj(obj):
+    """Build an ETag from an objects last updated time.
+
+    Args:
+        obj: An object with a `updated_at` method.
+
+    Returns:
+        The value which the method returns, else raises a `ProblemException`.
+
+    """
+    updated_at = obj.updated_at()
+    assert updated_at is not None
+    if updated_at is None:
+        raise ProblemException(500, "Object %r has no meta_data." % (obj.name(),),
+                               "Can't create ETag.")
+
+    return ETags(strong_etags=[str(updated_at)])

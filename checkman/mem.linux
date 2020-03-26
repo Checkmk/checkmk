@@ -1,4 +1,4 @@
-title: Detailed usage of RAM, Swap, VMalloc and other memory areas on Linux
+title: Linux: Detailed Usage of RAM, Swap, VMalloc and other Memory Areas
 agents: linux
 catalog: os/kernel
 license: GPL

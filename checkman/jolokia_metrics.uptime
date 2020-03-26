@@ -1,4 +1,4 @@
-title: Uptime of JVM
+title: Java Virtual Machine: Uptime (deprecated)
 agents: linux
 catalog: app/java
 license: GPL

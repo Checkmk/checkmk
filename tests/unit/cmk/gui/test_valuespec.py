@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
 
@@ -161,3 +162,47 @@ def test_dictionary_value_to_json_conversion(value, result):
         assert abcd_vs.value_to_text(value) == result
         json_value = abcd_vs.value_to_json(value)
         assert abcd_vs.value_from_json(json_value) == value
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "user@localhost",
+        "harri.hirsch@example.com",
+        "!#$%&'*+-=?^_`{|}~@c.de",  # other printable ASCII characters
+        u"user@localhost",
+        u"harri.hirsch@example.com",
+        u"!#$%&'*+-=?^_`{|}~@c.de",
+        u"אሗ@test.de",  # non-ASCII characters
+    ])
+def test_email_validation(address):
+    vs.EmailAddress().validate_value(address, "")
+
+
+@pytest.mark.parametrize("address", [
+    "a..b@c.de",
+    "ab@c..de",
+    u"a..b@c.de",
+    u"ab@c..de",
+])
+def test_email_validation_non_compliance(address):
+    # TODO: validate_value should raise an exception in these
+    #       cases since subsequent dots without any ASCII
+    #       character in between are not allowed in RFC5322.
+    vs.EmailAddress().validate_value(address, "")
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        "text",
+        "user@foo",
+        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        "אሗ@test.com",  # UTF-8 encoded bytestrings are not allowed
+        u"text",
+        u"user@foo",
+        u"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+    ])
+def test_email_validation_raises(address):
+    with pytest.raises(MKUserError):
+        vs.EmailAddress().validate_value(address, "")

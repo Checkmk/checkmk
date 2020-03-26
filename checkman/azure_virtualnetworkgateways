@@ -1,4 +1,4 @@
-title: Microsoft Azure Virtual Network Gateways
+title: Microsoft Azure Virtual Network Gateways: Connections
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -14,5 +14,5 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per virtual network gateway.
+ One service is created for each virtual network gateway.
 

@@ -1,4 +1,4 @@
-title: Kubernetes ingresses
+title: Kubernetes: Ingresses
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

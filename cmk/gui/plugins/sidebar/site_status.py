@@ -38,14 +38,15 @@ class SiteStatus(SidebarSnapin):
                  "and disabling the site connection")
 
     def show(self):
-        html.open_table(cellspacing=0, class_="sitestate")
+        # type: () -> None
+        html.open_table(cellspacing="0", class_="sitestate")
 
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in config.sorted_sites():
             site = config.site(sitename)
 
-            state = sites.states().get(sitename, {}).get("state")
+            state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
             if state is None:
                 state = "missing"

@@ -15,9 +15,6 @@ item:
  is another service.
 
 inventory:
- Since Checkmk cannot know which tasks should be monitored, an inventory
- needs some configuration. The configuration is done via {inv_domino_tasks_rules}.
-
- During inventory Checkmk tries to match all entries on each
- process found on the target host. If an entry matches, a new check will
- be created according to the entry (if it's not already existing).
+ One service is created for each task if one entry matches.
+ Each entry found on target host processes is tried to be matched.
+ The match configuration is done via {inv_domino_tasks_rules}.

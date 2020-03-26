@@ -1,4 +1,4 @@
-title: Arbor Peakflow: TMS host faults
+title: Arbor Peakflow: TMS Host Faults
 agents: snmp
 catalog: hw/network/arbor
 license: GPL
@@ -8,4 +8,4 @@ description:
  there are any.
 
 inventory:
- Exactly one service is created.
+ One service is created.

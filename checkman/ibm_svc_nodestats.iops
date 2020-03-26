@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: IO operations/sec for Drives/MDisks/VDisks per Node
+title: IBM SVC / Storwize V3700 / V7000: IO Operations/sec for Drives/MDisks/VDisks per Node
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL

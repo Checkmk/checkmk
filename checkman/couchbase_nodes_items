@@ -1,4 +1,4 @@
-title: Couchbase nodes: Items
+title: Couchbase Nodes: Items
 agents: special
 catalog: app/couchbase
 license: GPL
@@ -9,10 +9,10 @@ description:
  items on a Couchbase node.
 
  You can configure levels on each using the WATO rule
- "Couchbase Node Items"
+ "Couchbase Items"
 
 inventory:
- One service per node is created.
+ One service is created for each node.
 
 item:
  The name of the node.

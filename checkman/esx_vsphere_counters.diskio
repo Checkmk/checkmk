@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: Disk throughput
+title: VMWare ESX Host Systems: Disk Throughput
 agents: vsphere
 catalog: os/storage
 license: GPL
@@ -13,5 +13,5 @@ item:
  The fixed statement {{SUMMARY}}
 
 inventory:
- One service per ESX host is being created.
+ One service is created for each ESX host.
 

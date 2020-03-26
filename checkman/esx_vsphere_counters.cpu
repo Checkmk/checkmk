@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: CPU ready time on the host system
+title: Virtual Machine under ESX: CPU Ready Time on the Host System
 agents: vsphere
 catalog: os/kernel
 license: GPL
@@ -9,4 +9,4 @@ description:
  The default levels, as recommended from the VMware, are 5% for warning and 10% for critical.
 
 inventory:
- One check for an ESX host system is created.
+ One service is created for the CPU on the ESX host system.

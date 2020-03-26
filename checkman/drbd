@@ -1,4 +1,4 @@
-title: General state of DR:BD devices
+title: General State of DR:BD Devices
 agents: linux
 catalog: os/storage
 license: GPL
@@ -16,6 +16,6 @@ item:
  The name of the DRBD device e.g. {drbd0}
 
 inventory:
- Each configured DRBD device will result in one service during inventory. All
- devices with the connection state "Unconfigured" are skipped.
+ One service is created for each configured DRBD device.
+ All devices with the connection state "Unconfigured" are skipped.
 

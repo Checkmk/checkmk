@@ -13,14 +13,14 @@ import traceback
 import json
 import functools
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as TypingTuple,
-    Callable,
+    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as _Tuple, Callable,
 )
 import six
 
 import livestatus
 from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
 
@@ -108,20 +108,20 @@ from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unuse
 import cmk.gui.plugins.views.inventory
 import cmk.gui.plugins.views.availability
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
     import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-    from cmk.gui.type_defs import Row, Rows, ColumnName  # pylint: disable=unused-import
+    from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName  # pylint: disable=unused-import
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
@@ -131,8 +131,6 @@ multisite_commands = []  # type: List[Dict[str, Any]]
 multisite_datasources = {}  # type: Dict[str, Any]
 multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
 multisite_sorters = {}  # type: Dict[str, Any]
-
-FilterHeaders = str
 
 
 @visual_type_registry.register
@@ -211,7 +209,8 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     hostname = context.get("host")
     if hostname is None:
         return True  # No host data? Keep old behaviour
-    elif hostname == "":
+
+    if hostname == "":
         return False
 
     # TODO: host is not correctly validated by visuals. Do it here for the moment.
@@ -233,6 +232,14 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     if struct_tree.is_empty():
         return False
 
+    if isinstance(invpath, list):
+        # For plugins/views/inventory.py:RowMultiTableInventory we've to check
+        # if a given host has inventory data below several inventory paths
+        return any(_has_children(struct_tree, ipath) for ipath in invpath)
+    return _has_children(struct_tree, invpath)
+
+
+def _has_children(struct_tree, invpath):
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
@@ -347,9 +354,9 @@ class View(object):
                 entry = SorterEntry(*entry)
 
             sorter_name = entry.sorter
-            hash_id = None
+            uuid = None
             if ":" in entry.sorter:
-                sorter_name, hash_id = entry.sorter.split(':', 1)
+                sorter_name, uuid = entry.sorter.split(':', 1)
 
             sorter = sorter_registry.get(sorter_name, None)
 
@@ -358,7 +365,7 @@ class View(object):
 
             sorter = sorter()
             if hasattr(sorter, 'derived_columns'):
-                sorter.derived_columns(self, hash_id)
+                sorter.derived_columns(self, uuid)
 
             sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
         return sorters
@@ -560,12 +567,13 @@ class GUIViewRenderer(ViewRenderer):
         # In multi site setups error messages of single sites do not block the
         # output and raise now exception. We simply print error messages here.
         # In case of the web service we show errors only on single site installations.
-        if config.show_livestatus_errors \
-           and display_options.enabled(display_options.W) \
-           and html.output_format == "html":
+        if (config.show_livestatus_errors and display_options.enabled(display_options.W) and
+                html.output_format == "html"):
             for info in sites.live().dead_sites().values():
-                html.show_error("<b>%s - %s</b><br>%s" %
-                                (info["site"]["alias"], _('Livestatus error'), info["exception"]))
+                if isinstance(info["site"], dict):
+                    html.show_error(
+                        "<b>%s - %s</b><br>%s" %
+                        (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
         # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
         if display_options.enabled(display_options.R):
@@ -664,14 +672,16 @@ def transform_old_dict_based_icons():
 
 
 def _register_tag_plugins():
-    if hasattr(_register_tag_plugins, "_config_hash") \
-       and _register_tag_plugins._config_hash == hash(repr(config.tags.get_dict_format())):
+    if getattr(_register_tag_plugins, "_config_hash", None) == _calc_config_hash():
         return  # No re-register needed :-)
-
     _register_host_tag_painters()
     _register_host_tag_sorters()
+    setattr(_register_tag_plugins, "_config_hash", _calc_config_hash())
 
-    _register_tag_plugins._config_hash = hash(repr(config.tags.get_dict_format()))
+
+def _calc_config_hash():
+    # type: () -> int
+    return hash(repr(config.tags.get_dict_format()))
 
 
 config.register_post_config_load_hook(_register_tag_plugins)
@@ -818,7 +828,7 @@ def show_create_view_dialog(next_url=None):
                 next_url = next_url + '&datasource=%s' % ds
             raise HTTPRedirect(next_url)
         except MKUserError as e:
-            html.div(e, class_=["error"])
+            html.div(str(e), class_=["error"])
             html.add_user_error(e.varname, e)
 
     html.begin_form('create_view')
@@ -921,192 +931,201 @@ def view_editor_options():
     ]
 
 
-def view_editor_specs(ds_name, general_properties=True):
-    specs = []
-    if general_properties:
-        specs.append(('view',
-                      Dictionary(
-                          title=_('View Properties'),
-                          render='form',
-                          optional_keys=None,
-                          elements=[
-                              ('datasource',
-                               FixedValue(
-                                   ds_name,
-                                   title=_('Datasource'),
-                                   totext=data_source_registry[ds_name]().title,
-                                   help=_('The datasource of a view cannot be changed.'),
-                               )),
-                              ('options',
-                               ListChoice(
-                                   title=_('Options'),
-                                   choices=view_editor_options(),
-                                   default_value=['user_sortable'],
-                               )),
-                              ('browser_reload',
-                               Integer(
-                                   title=_('Automatic page reload'),
-                                   unit=_('seconds'),
-                                   minvalue=0,
-                                   help=_('Set to \"0\" to disable the automatic reload.'),
-                               )),
-                              ('layout',
-                               DropdownChoice(
-                                   title=_('Basic Layout'),
-                                   choices=layout_registry.get_choices(),
-                                   default_value='table',
-                                   sorted=True,
-                               )),
-                              ('num_columns',
-                               Integer(
-                                   title=_('Number of Columns'),
-                                   default_value=1,
-                                   minvalue=1,
-                                   maxvalue=50,
-                               )),
-                              ('column_headers',
-                               DropdownChoice(
-                                   title=_('Column Headers'),
-                                   choices=[
-                                       ("off", _("off")),
-                                       ("pergroup", _("once per group")),
-                                       ("repeat", _("repeat every 20'th row")),
-                                   ],
-                                   default_value='pergroup',
-                               )),
-                          ],
-                      )))
+def view_editor_general_properties(ds_name):
+    return Dictionary(
+        title=_('View Properties'),
+        render='form',
+        optional_keys=False,
+        elements=[
+            ('datasource',
+             FixedValue(
+                 ds_name,
+                 title=_('Datasource'),
+                 totext=data_source_registry[ds_name]().title,
+                 help=_('The datasource of a view cannot be changed.'),
+             )),
+            ('options',
+             ListChoice(
+                 title=_('Options'),
+                 choices=view_editor_options(),
+                 default_value=['user_sortable'],
+             )),
+            ('browser_reload',
+             Integer(
+                 title=_('Automatic page reload'),
+                 unit=_('seconds'),
+                 minvalue=0,
+                 help=_('Set to \"0\" to disable the automatic reload.'),
+             )),
+            ('layout',
+             DropdownChoice(
+                 title=_('Basic Layout'),
+                 choices=layout_registry.get_choices(),
+                 default_value='table',
+                 sorted=True,
+             )),
+            ('num_columns',
+             Integer(
+                 title=_('Number of Columns'),
+                 default_value=1,
+                 minvalue=1,
+                 maxvalue=50,
+             )),
+            ('column_headers',
+             DropdownChoice(
+                 title=_('Column Headers'),
+                 choices=[
+                     ("off", _("off")),
+                     ("pergroup", _("once per group")),
+                     ("repeat", _("repeat every 20'th row")),
+                 ],
+                 default_value='pergroup',
+             )),
+        ],
+    )
 
-    def column_spec(ident, title, ds_name):
-        painters = painters_of_datasource(ds_name)
 
-        allow_empty = True
-        empty_text = None
-        if ident == 'columns':
-            allow_empty = False
-            empty_text = _("Please add at least one column to your view.")
+def view_editor_column_spec(ident, title, ds_name):
+    painters = painters_of_datasource(ds_name)
 
-        vs_column = Tuple(
-            title=_('Column'),
+    allow_empty = True
+    empty_text = None
+    if ident == 'columns':
+        allow_empty = False
+        empty_text = _("Please add at least one column to your view.")
+
+    vs_column = Tuple(
+        title=_('Column'),
+        elements=[
+            CascadingDropdown(
+                title=_('Column'),
+                choices=painter_choices_with_params(painters),
+                no_preselect=True,
+                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                render_sub_vs_request_vars={
+                    "ds_name": ds_name,
+                    "painter_type": "painter",
+                },
+            ),
+            DropdownChoice(
+                title=_('Link'),
+                choices=view_choices,
+                sorted=True,
+            ),
+            DropdownChoice(
+                title=_('Tooltip'),
+                choices=[(None, "")] + painter_choices(painters),
+            ),
+        ],
+    )
+
+    join_painters = join_painters_of_datasource(ds_name)
+    if ident == 'columns' and join_painters:
+        vs_column = Alternative(
             elements=[
-                CascadingDropdown(
-                    title=_('Column'),
-                    choices=painter_choices_with_params(painters),
-                    no_preselect=True,
-                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                    render_sub_vs_request_vars={
-                        "ds_name": ds_name,
-                        "painter_type": "painter",
-                    },
-                ),
-                DropdownChoice(
-                    title=_('Link'),
-                    choices=view_choices,
-                    sorted=True,
-                ),
-                DropdownChoice(
-                    title=_('Tooltip'),
-                    choices=[(None, "")] + painter_choices(painters),
+                vs_column,
+                Tuple(
+                    title=_('Joined column'),
+                    help=_("A joined column can display information about specific services for "
+                           "host objects in a view showing host objects. You need to specify the "
+                           "service description of the service you like to show the data for."),
+                    elements=[
+                        CascadingDropdown(
+                            title=_('Column'),
+                            choices=painter_choices_with_params(join_painters),
+                            no_preselect=True,
+                            render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                            render_sub_vs_request_vars={
+                                "ds_name": ds_name,
+                                "painter_type": "join_painter",
+                            },
+                        ),
+                        TextUnicode(
+                            title=_('of Service'),
+                            allow_empty=False,
+                        ),
+                        DropdownChoice(
+                            title=_('Link'),
+                            choices=view_choices,
+                            sorted=True,
+                        ),
+                        DropdownChoice(
+                            title=_('Tooltip'),
+                            choices=[(None, "")] + painter_choices(join_painters),
+                        ),
+                        TextUnicode(title=_('Title'),),
+                    ],
                 ),
             ],
+            style='dropdown',
+            match=lambda x: 1 * (x is not None and len(x) == 5),
         )
 
-        join_painters = join_painters_of_datasource(ds_name)
-        if ident == 'columns' and join_painters:
-            vs_column = Alternative(
+    return (ident,
+            Dictionary(
+                title=title,
+                render='form',
+                optional_keys=False,
                 elements=[
-                    vs_column,
-                    Tuple(
-                        title=_('Joined column'),
-                        help=_(
-                            "A joined column can display information about specific services for "
-                            "host objects in a view showing host objects. You need to specify the "
-                            "service description of the service you like to show the data for."),
-                        elements=[
-                            CascadingDropdown(
-                                title=_('Column'),
-                                choices=painter_choices_with_params(join_painters),
-                                no_preselect=True,
-                                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-                                render_sub_vs_request_vars={
-                                    "ds_name": ds_name,
-                                    "painter_type": "join_painter",
-                                },
-                            ),
-                            TextUnicode(
-                                title=_('of Service'),
-                                allow_empty=False,
-                            ),
-                            DropdownChoice(
-                                title=_('Link'),
-                                choices=view_choices,
-                                sorted=True,
-                            ),
-                            DropdownChoice(
-                                title=_('Tooltip'),
-                                choices=[(None, "")] + painter_choices(join_painters),
-                            ),
-                            TextUnicode(title=_('Title'),),
-                        ],
-                    ),
+                    (ident,
+                     ListOf(
+                         vs_column,
+                         title=title,
+                         add_label=_('Add column'),
+                         allow_empty=allow_empty,
+                         empty_text=empty_text,
+                     )),
                 ],
-                style='dropdown',
-                match=lambda x: 1 * (x is not None and len(x) == 5),
-            )
+            ))
 
-        return (ident,
-                Dictionary(
-                    title=title,
-                    render='form',
-                    optional_keys=None,
-                    elements=[
-                        (ident,
-                         ListOf(
-                             vs_column,
-                             title=title,
-                             add_label=_('Add column'),
-                             allow_empty=allow_empty,
-                             empty_text=empty_text,
-                         )),
-                    ],
-                ))
 
-    specs.append(column_spec('columns', _('Columns'), ds_name))
+def view_editor_sorter_specs(view):
+    def _sorter_choices(view):
+        ds_name = view['datasource']
 
-    specs.append(
-        ('sorting',
-         Dictionary(
-             title=_('Sorting'),
-             render='form',
-             optional_keys=None,
-             elements=[
-                 ('sorters',
-                  ListOf(
-                      Tuple(
-                          elements=[
-                              DropdownChoice(
-                                  title=_('Column'),
-                                  choices=[(name, get_sorter_title_for_choices(p))
-                                           for name, p in sorters_of_datasource(ds_name).items()],
-                                  sorted=True,
-                                  no_preselect=True,
-                              ),
-                              DropdownChoice(
-                                  title=_('Order'),
-                                  choices=[(False, _("Ascending")), (True, _("Descending"))],
-                              ),
-                          ],
-                          orientation='horizontal',
-                      ),
-                      title=_('Sorting'),
-                      add_label=_('Add sorter'),
-                  )),
-             ],
-         )),)
+        for name, p in sorters_of_datasource(ds_name).items():
+            yield name, get_sorter_title_for_choices(p)
 
-    specs.append(column_spec('grouping', _('Grouping'), ds_name))
+        for painter_spec in view.get('painters', []):
+            if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
+                    "svc_metrics_hist", "svc_metrics_forecast"
+            ]:
+                hist_sort = sorters_of_datasource(ds_name).get(painter_spec[0][0])
+                uuid = painter_spec[0][1].get('uuid', "")
+                if hist_sort and uuid:
+                    title = "History" if "hist" in painter_spec[0][0] else "Forecast"
+                    yield ('%s:%s' % (painter_spec[0][0], uuid),
+                           "Services: Metric %s - Column: %s" %
+                           (title, painter_spec[0][1]['column_title']))
 
-    return specs
+    return ('sorting',
+            Dictionary(
+                title=_('Sorting'),
+                render='form',
+                optional_keys=False,
+                elements=[
+                    ('sorters',
+                     ListOf(
+                         Tuple(
+                             elements=[
+                                 DropdownChoice(
+                                     title=_('Column'),
+                                     choices=list(_sorter_choices(view)),
+                                     sorted=True,
+                                     no_preselect=True,
+                                 ),
+                                 DropdownChoice(
+                                     title=_('Order'),
+                                     choices=[(False, _("Ascending")), (True, _("Descending"))],
+                                 ),
+                             ],
+                             orientation='horizontal',
+                         ),
+                         title=_('Sorting'),
+                         add_label=_('Add sorter'),
+                     )),
+                ],
+            ))
 
 
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
@@ -1145,7 +1164,14 @@ def render_view_config(view, general_properties=True):
 
     view['datasource'] = ds_name
 
-    for ident, vs in view_editor_specs(ds_name, general_properties):
+    if general_properties:
+        view_editor_general_properties(ds_name).render_input('view', view.get('view'))
+
+    for ident, vs in [
+            view_editor_column_spec('columns', _('Columns'), ds_name),
+            view_editor_sorter_specs(view),
+            view_editor_column_spec('grouping', _('Grouping'), ds_name),
+    ]:
         vs.render_input(ident, view.get(ident))
 
 
@@ -1153,6 +1179,9 @@ def render_view_config(view, general_properties=True):
 # the valuespec This needs to perform the inverted steps of the
 # transform_valuespec_value_to_view() function. FIXME: One day we should
 # rewrite this to make no transform needed anymore
+# FIXME: For the painters spec we need to stop relying on tuple length and
+# accessing by location. Change to namedtuple and access by name. Keep in
+# mind the Nasty join_index, viewname position shift/swap/rearrangement
 def transform_view_to_valuespec_value(view):
     view["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
@@ -1193,54 +1222,45 @@ def transform_view_to_valuespec_value(view):
             columns.append((pname, viewname, None))
 
 
-def transform_valuespec_value_to_view(view):
-    for ident, attrs in view.items():
-        # Transform some valuespec specific options to legacy view
-        # format. We do not want to change the view data structure
-        # at the moment.
-        if ident == 'view':
-            if "options" in attrs:
-                # First set all options to false
-                for option, _title in view_editor_options():
-                    view[option] = False
+def transform_valuespec_value_to_view(ident, attrs):
+    # Transform some valuespec specific options to legacy view format.
+    # We do not want to change the view data structure at the moment.
 
-                # Then set the selected single options
-                for option in attrs['options']:
-                    view[option] = True
+    if ident == 'view':
+        options = attrs.pop("options", [])
+        if options:
+            for option, _title in view_editor_options():
+                attrs[option] = option in options
 
-                # And cleanup
-                del attrs['options']
+        return attrs
 
-            view.update(attrs)
-            del view["view"]
+    if ident == 'sorting':
+        return attrs
 
-        elif ident == 'sorting':
-            view.update(attrs)
-            del view["sorting"]
+    if ident == 'grouping':
+        return {'group_painters': attrs['grouping']}
 
-        elif ident == 'grouping':
-            view['group_painters'] = attrs['grouping']
-            del view["grouping"]
+    if ident == 'columns':
+        painters = []
+        for column in attrs['columns']:
+            if len(column) == 5:
+                pname, join_index, viewname, tooltip, col_title = column
+            else:
+                pname, viewname, tooltip = column
+                join_index, col_title = None, None
 
-        elif ident == 'columns':
-            painters = []
-            for column in attrs['columns']:
-                if len(column) == 5:
-                    pname, join_index, viewname, tooltip, col_title = column
-                else:
-                    pname, viewname, tooltip = column
-                    join_index, col_title = None, None
+            viewname = viewname if viewname else None
 
-                viewname = viewname if viewname else None
+            if join_index and col_title:
+                painters.append((pname, viewname, tooltip, join_index, col_title))
+            elif join_index:
+                painters.append((pname, viewname, tooltip, join_index))
+            else:
+                painters.append((pname, viewname, tooltip))
 
-                if join_index and col_title:
-                    painters.append((pname, viewname, tooltip, join_index, col_title))
-                elif join_index:
-                    painters.append((pname, viewname, tooltip, join_index))
-                else:
-                    painters.append((pname, viewname, tooltip))
-            view['painters'] = painters
-            del view["columns"]
+        return {'painters': painters}
+
+    return {ident: attrs}
 
 
 # Extract properties of view from HTML variables and construct
@@ -1251,14 +1271,18 @@ def transform_valuespec_value_to_view(view):
 def create_view_from_valuespec(old_view, view):
     ds_name = old_view.get('datasource', html.request.var('datasource'))
     view['datasource'] = ds_name
-    vs_value = {}
-    for ident, vs in view_editor_specs(ds_name):
+
+    def update_view(ident, vs):
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
-        vs_value[ident] = attrs
+        view.update(transform_valuespec_value_to_view(ident, attrs))
 
-    transform_valuespec_value_to_view(vs_value)
-    view.update(vs_value)
+    for ident, vs in [('view', view_editor_general_properties(ds_name)),
+                      view_editor_column_spec('columns', _('Columns'), ds_name),
+                      view_editor_column_spec('grouping', _('Grouping'), ds_name)]:
+        update_view(ident, vs)
+
+    update_view(*view_editor_sorter_specs(view))
     return view
 
 
@@ -1471,7 +1495,7 @@ def show_view(view, view_renderer, only_count=False):
                     _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
                     ", ".join(sorted(corrupted_inventory_files)))
 
-        if not cmk.is_raw_edition():
+        if not cmk_version.is_raw_edition():
             import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module
             sla_params = []
             for cell in cells:
@@ -1703,7 +1727,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
                                 limit=None,
                                 all_active_filters=None)
 
-    JoinMasterKey = TypingTuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
+    JoinMasterKey = _Tuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
     JoinSlaveKey = Union[str, Text]  # pylint: disable=unused-variable
 
     per_master_entry = {}  # type: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]]
@@ -2435,7 +2459,7 @@ def do_actions(view, what, action_rows, backurl):
         return False
 
     count = 0
-    already_executed = set([])
+    already_executed = set()
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command_entry in core_commands:
@@ -2666,73 +2690,78 @@ def ajax_popup_action_menu():
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("ajax_reschedule")
-def ajax_reschedule():
-    try:
-        do_reschedule()
-    except Exception as e:
-        html.write("['ERROR', '%s']\n" % e)
+@page_registry.register_page("ajax_reschedule")
+class PageRescheduleCheck(AjaxPage):
+    """Is called to trigger a host / service check"""
+    def page(self):
+        request = html.get_request()
+        return self._do_reschedule(request)
 
+    def _do_reschedule(self, request):
+        if not config.user.may("action.reschedule"):
+            raise MKGeneralException("You are not allowed to reschedule checks.")
 
-def do_reschedule():
-    if not config.user.may("action.reschedule"):
-        raise MKGeneralException("You are not allowed to reschedule checks.")
+        site = request.get("site")
+        host = request.get("host")
+        if not host or not site:
+            raise MKGeneralException("Action reschedule: missing host name")
 
-    site = html.request.var("site")
-    host = html.request.var("host", "")
-    if not host:
-        raise MKGeneralException("Action reschedule: missing host name")
+        service = request.get("service", "")
+        wait_svc = request.get("wait_svc", "")
 
-    service = html.request.get_unicode_input("service", "")
-    wait_svc = html.request.get_unicode_input("wait_svc", "")
+        if service:
+            cmd = "SVC"
+            what = "service"
+            spec = "%s;%s" % (host, service)
 
-    if service:
-        cmd = "SVC"
-        what = "service"
-        spec = "%s;%s" % (host, service)
-
-        if wait_svc:
-            wait_spec = u'%s;%s' % (host, wait_svc)
-            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
+            if wait_svc:
+                wait_spec = u'%s;%s' % (host, wait_svc)
+                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
+            else:
+                wait_spec = spec
+                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
         else:
+            cmd = "HOST"
+            what = "host"
+            spec = host
             wait_spec = spec
-            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
-    else:
-        cmd = "HOST"
-        what = "host"
-        spec = host
-        wait_spec = spec
-        add_filter = ""
+            add_filter = ""
 
-    try:
         now = int(time.time())
         sites.live().command(
             "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now),
             site)
-        sites.live().set_only_sites([site])
-        query = u"GET %ss\n" \
-                "WaitObject: %s\n" \
-                "WaitCondition: last_check >= %d\n" \
-                "WaitTimeout: %d\n" \
-                "WaitTrigger: check\n" \
-                "Columns: last_check state plugin_output\n" \
-                "Filter: host_name = %s\n%s" \
-                % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
-        row = sites.live().query_row(query)
-        sites.live().set_only_sites()
+
+        try:
+            sites.live().set_only_sites([site])
+            query = u"GET %ss\n" \
+                    "WaitObject: %s\n" \
+                    "WaitCondition: last_check >= %d\n" \
+                    "WaitTimeout: %d\n" \
+                    "WaitTrigger: check\n" \
+                    "Columns: last_check state plugin_output\n" \
+                    "Filter: host_name = %s\n%s" \
+                    % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
+            row = sites.live().query_row(query)
+        finally:
+            sites.live().set_only_sites()
+
         last_check = row[0]
         if last_check < now:
-            html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" %
-                       (config.reschedule_timeout))
-        else:
-            if service == "Check_MK":
-                # Passive services triggered by Check_MK often are updated
-                # a few ms later. We introduce a small wait time in order
-                # to increase the chance for the passive services already
-                # updated also when we return.
-                time.sleep(0.7)
-            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2]))
+            return {
+                "state": "TIMEOUT",
+                "message": _("Check not executed within %d seconds") % (config.reschedule_timeout),
+            }
 
-    except Exception as e:
-        sites.live().set_only_sites()
-        raise MKGeneralException(_("Cannot reschedule check: %s") % e)
+        if service == "Check_MK":
+            # Passive services triggered by Check_MK often are updated
+            # a few ms later. We introduce a small wait time in order
+            # to increase the chance for the passive services already
+            # updated also when we return.
+            time.sleep(0.7)
+
+        # Row is currently not used by the frontend, but may be useful for debugging
+        return {
+            "state": "OK",
+            "row": row,
+        }

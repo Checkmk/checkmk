@@ -4,12 +4,24 @@ catalog: hw/storagehw/hpe
 license: GPL
 distribution: check_mk
 description:
- This check shows general information about the filer. These are the serial
- number, the model name, system version and amount of connected nodes. The
- state will change to {CRIT} if a node is not available anymore.
+ This check shows general information about the filer.
+
+ These are:
+
+ - the serial number
+
+ - the model name
+
+ - system version
+
+ - amount of connected nodes
+
+ The service state goes to {CRIT} if a node is not available anymore.
+
+ The check uses the 3PAR special agent.
 
 item:
  Name of the system.
 
 inventory:
- Only one service is created
+ One service is created for each system

@@ -1,4 +1,4 @@
-title: Rittal CMC-III LCP: Air In and Temperature
+title: Rittal CMC-III LCP: Air in and Temperature
 agents: snmp
 catalog: hw/environment/rittal
 license: GPL
@@ -19,4 +19,4 @@ description:
  average temperature read from the device.
 
 inventory:
- None
+ One service is created for each sensor.

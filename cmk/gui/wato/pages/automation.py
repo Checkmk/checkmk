@@ -8,8 +8,11 @@ automation functions on slaves,"""
 
 import traceback
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
+
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -47,8 +50,8 @@ class ModeAutomationLogin(AjaxPage):
             response = _get_login_secret(create_on_demand=True)
         else:
             response = {
-                "version": cmk.__version__,
-                "edition_short": cmk.edition_short(),
+                "version": cmk_version.__version__,
+                "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
         html.write_html(repr(response))
@@ -168,8 +171,7 @@ class ModeAutomation(AjaxPage):
             logger.exception("error executing automation command")
             if config.debug:
                 raise
-            html.write_text(_("Internal automation error: %s\n%s") % \
-                            (e, traceback.format_exc()))
+            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
 
 def _get_login_secret(create_on_demand=False):

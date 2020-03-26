@@ -39,6 +39,7 @@ from testlib.utils import (
     add_python_paths,
     is_enterprise_repo,
     is_managed_repo,
+    get_standard_linux_agent_output,
 )
 from testlib.fixtures import web, ec
 from testlib.site import Site, SiteFactory
@@ -64,7 +65,7 @@ def skip_unwanted_test_types(item):
         pytest.skip("Not testing type %r" % test_type_name)
 
 
-# Some cmk.* code is calling things like cmk. is_raw_edition() at import time
+# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
@@ -76,16 +77,17 @@ def fake_version_and_paths():
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk  # pylint: disable=import-outside-toplevel
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
+    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
     # TODO: handle CME case
     #if is_managed_repo():
-    #    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+    #    monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cee" % cmk_version.__version__)
     #elif is_enterprise_repo():
     if is_enterprise_repo():
-        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+        monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cee" % cmk_version.__version__)
     else:
-        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cre" % cmk.__version__)
+        monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cre" % cmk_version.__version__)
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
@@ -264,9 +266,7 @@ def create_linux_test_host(request, web, site, hostname):
         hostname)
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/%s" % hostname,
-        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
+    site.write_file("var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output())
 
 
 #.

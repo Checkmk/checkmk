@@ -6,17 +6,25 @@
 
 import time
 import itertools
+from typing import List, Text, TYPE_CHECKING, Set  # pylint: disable=unused-import
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
+import cmk.utils.render
+
 import cmk.gui.config as config
 
 import cmk.gui.availability as availability
-from cmk.gui.table import table_element
+from cmk.gui.availability import (  # pylint: disable=unused-import
+    AVObjectType, AVOptions, AVObjectSpec, AVSpan, AVMode, AVRowCells, AVObjectCells, AVData,
+    AVRawData, AVEntry,
+)
+from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 
 from cmk.gui.exceptions import MKUserError
 
@@ -35,6 +43,10 @@ from cmk.gui.plugins.views import (
     view_title,
     display_options,
 )
+
+if TYPE_CHECKING:
+    from cmk.gui.type_defs import FilterHeaders, Rows  # pylint: disable=unused-import
+    from cmk.gui.views import View  # pylint: disable=unused-import
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -57,6 +69,7 @@ from cmk.gui.plugins.views import (
 
 # Get availability options without rendering the valuespecs
 def get_availability_options_from_url(what):
+    # type: (AVObjectType) -> AVOptions
     with html.plugged():
         avoptions = render_availability_options(what)
         html.drain()
@@ -64,6 +77,7 @@ def get_availability_options_from_url(what):
 
 
 def render_availability_options(what):
+    # type: (AVObjectType) -> AVOptions
     if html.request.var("_reset"):
         config.user.save_file("avoptions", {})
         html.request.del_vars("avo_")
@@ -91,11 +105,7 @@ def render_availability_options(what):
     if html.request.var("_unset_logrow_limit") == "1":
         avoptions["logrow_limit"] = 0
 
-    range_vs = None
-    for name, height, _show_in_reporting, vs in avoption_entries:
-        if name == 'rangespec':
-            range_vs = vs
-
+    range_vs = availability.vs_rangespec()
     try:
         range_, range_title = range_vs.compute_range(avoptions["rangespec"])
         avoptions["range"] = range_, range_title
@@ -150,6 +160,7 @@ def render_availability_options(what):
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
 def render_availability_page(view, filterheaders):
+    # type: (View, FilterHeaders) -> None
     config.user.need_permission("general.see_availability")
 
     if handle_edit_annotations():
@@ -170,7 +181,7 @@ def render_availability_page(view, filterheaders):
     # - Show availability table (stats) "table"
     # - Show timeline                   "timeline"
     # --> controlled by URL variable "av_mode"
-    av_mode = html.request.var("av_mode", "table")
+    av_mode = html.request.get_ascii_input_mandatory("av_mode", "table")
 
     if av_mode == "timeline":
         title = _("Availability Timeline")
@@ -183,17 +194,18 @@ def render_availability_page(view, filterheaders):
     # --> controlled by URL variables "av_site", "av_host" and "av_service"
     # --> controlled by "av_aggr" in case of BI aggregate
     title += " - "
+    av_object = None  # type: AVObjectSpec
     if html.request.var("av_host"):
-        av_object = (html.request.var("av_site"), html.request.var("av_host"),
-                     html.request.var("av_service"))
+        av_object = (html.request.get_str_input_mandatory("av_site"),
+                     html.request.get_str_input_mandatory("av_host"),
+                     html.request.get_text_input_mandatory("av_service"))
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]
     elif html.request.var("av_aggr"):
-        av_object = (None, None, html.request.var("av_aggr"))
+        av_object = (None, None, html.request.get_text_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        av_object = None
         title += view_title(view.spec)
 
     # Deletion must take place before computation, since it affects the outcome
@@ -312,7 +324,7 @@ def render_availability_page(view, filterheaders):
 
 
 def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions):
-
+    # type: (AVObjectType, AVRawData, AVData, AVMode, AVObjectSpec, AVOptions) -> None
     if av_mode == "timeline":
         render_availability_timelines(what, av_data, avoptions)
     else:
@@ -353,11 +365,13 @@ def render_availability_tables(availability_tables, what, avoptions):
 
 
 def render_availability_timelines(what, av_data, avoptions):
+    # type: (AVObjectType, AVData, AVOptions) -> None
     for timeline_nr, av_entry in enumerate(av_data):
         _render_availability_timeline(what, av_entry, avoptions, timeline_nr)
 
 
 def _render_availability_timeline(what, av_entry, avoptions, timeline_nr):
+    # type: (AVObjectType, AVEntry, AVOptions, int) -> None
     html.open_h3()
     html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
     html.close_h3()
@@ -390,8 +404,8 @@ def _render_availability_timeline(what, av_entry, avoptions, timeline_nr):
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
-                if html.request.var("timewarp") and int(html.request.var("timewarp")) == int(
-                        row["from"]):
+                if html.request.var("timewarp") and html.request.get_integer_input_mandatory(
+                        "timewarp") == int(row["from"]):
                     html.disabled_icon_button("timewarp_off")
                 else:
                     html.icon_button(url,
@@ -422,6 +436,7 @@ def _render_availability_timeline(what, av_entry, avoptions, timeline_nr):
 
 
 def render_timeline_legend(what):
+    # type: (AVObjectType) -> None
     html.open_div(class_="avlegend timeline")
 
     html.h3(_('Timeline colors'))
@@ -565,9 +580,10 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
+    # type: (Text, Rows) -> None
     config.user.need_permission("general.see_availability")
 
-    av_mode = html.request.var("av_mode", "availability")
+    av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
     avoptions = get_availability_options_from_url("bi")
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
@@ -609,15 +625,11 @@ def render_bi_availability(title, aggr_rows):
         else:
             livestatus_limit = (len(aggr_rows) * logrow_limit)
 
-        spans = []
+        spans = []  # type: List[AVSpan]
 
         # iterate all aggregation rows
-        timewarpcode = ""
-
-        try:
-            timewarp = int(html.request.var("timewarp"))
-        except (ValueError, TypeError):
-            timewarp = None
+        timewarpcode = HTML()
+        timewarp = html.request.get_integer_input("timewarp")
 
         has_reached_logrow_limit = False
         timeline_containers, fetched_rows = availability.get_timeline_containers(
@@ -756,7 +768,7 @@ def render_bi_availability(title, aggr_rows):
 def get_relevant_annotations(annotations, by_host, what, avoptions):
     (from_time, until_time), _range_title = avoptions["range"]
     annos_to_render = []
-    annos_rendered = set()
+    annos_rendered = set()  # type: Set[int]
 
     for site_host, avail_entries in by_host.items():
         for service in avail_entries.keys():
@@ -845,7 +857,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell(_("Annotation"), html.render_text(annotation["text"]))
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
-            if not cmk.is_raw_edition():
+            if not cmk_version.is_raw_edition():
                 table.cell(_("Hide in report"),
                            _("Yes") if annotation.get("hide_from_report") else _("No"))
 
@@ -918,7 +930,7 @@ def edit_annotation():
 
 def _vs_annotation():
     extra_elements = []
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         extra_elements.append(("hide_from_report", Checkbox(title=_("Hide annotation in report"))))
 
     return Dictionary(
@@ -995,6 +1007,7 @@ def handle_edit_annotations():
 
 
 def _output_csv(what, av_mode, av_data, avoptions):
+    # type: (AVObjectType, AVMode, AVData, AVOptions) -> None
     if av_mode == "table":
         _output_availability_csv(what, av_data, avoptions)
     elif av_mode == "timeline":
@@ -1004,12 +1017,14 @@ def _output_csv(what, av_mode, av_data, avoptions):
 
 
 def _output_availability_timelines_csv(what, av_data, avoptions):
+    # type: (AVObjectType, AVData, AVOptions) -> None
     _av_output_set_content_disposition("Checkmk-Availability-Timeline")
     for timeline_nr, av_entry in enumerate(av_data):
         _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr)
 
 
 def _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr):
+    # type: (AVObjectType, AVEntry, AVOptions, int) -> None
     timeline_layout = availability.layout_timeline(
         what,
         av_entry["timeline"],
@@ -1046,8 +1061,10 @@ def _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr):
 
 
 def _output_availability_csv(what, av_data, avoptions):
+    # type: (AVObjectType, AVData, AVOptions) -> None
     def cells_from_row(table, group_titles, group_cells, object_titles, cell_titles, row_object,
                        row_cells):
+        # type: (Table, List[Text], List[Text], List[Text], List[Text], AVObjectCells, AVRowCells) -> None
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
@@ -1086,18 +1103,21 @@ def _output_availability_csv(what, av_data, avoptions):
             table.row()
 
             if "summary" in av_table:
+                row_object = [(_("Summary"), "")]  # type: AVObjectCells
+                row_object += [(u"", "")] * pad
                 cells_from_row(
                     table,
                     group_titles,
                     group_cells,
                     av_table["object_titles"],
                     av_table["cell_titles"],
-                    [(_("Summary"), "")] + [("", "")] * pad,
+                    row_object,
                     av_table["summary"],
                 )
 
 
 def _av_output_set_content_disposition(title):
+    # type: (Text) -> None
     filename = '%s-%s.csv' % (
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),

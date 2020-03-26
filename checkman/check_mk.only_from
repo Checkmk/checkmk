@@ -1,4 +1,4 @@
-title: Check IP restriction of Checkmk agent
+title: Check IP Restriction of Checkmk Agent
 agents: linux, windows
 catalog: generic
 license: GPL

@@ -1,4 +1,4 @@
-title: Kubernetes pods filesystem resources
+title: Kubernetes: Pods Filesystem Resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

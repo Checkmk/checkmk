@@ -1,4 +1,4 @@
-title: ORACLE Database Processes
+title: Oracle Database Processes
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 
@@ -17,7 +18,7 @@ import cmk.utils.paths
 # level and one site per customer with exactly the same name
 def pre_activate_changes_cleanup(_unused):
     log = open('%s/tmp/hook.log' % cmk.utils.paths.omd_root, 'w')
-    log.write('omd_site: %s, omd_root: %s\n' % (cmk.omd_site(), cmk.utils.paths.omd_root))
+    log.write('omd_site: %s, omd_root: %s\n' % (cmk_version.omd_site(), cmk.utils.paths.omd_root))
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.utils.paths.omd_root
     for dirname, dirnames, filenames in os.walk(confd):
         for subdirname in dirnames:

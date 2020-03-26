@@ -12,4 +12,4 @@ item:
  The outdoor temperature ID.
 
 inventory:
- One service per outdoor temperature is created.
+ One service is created for each outdoor temperature sensor.

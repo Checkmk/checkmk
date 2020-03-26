@@ -1,4 +1,4 @@
-title: Unitrends Backup Schedules
+title: Unitrends: Backup Schedules
 agents: linux
 catalog: app/unitrends
 license: GPL

@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Reflock state
+title: Meinberg LANTIME Devices: Reflock State
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

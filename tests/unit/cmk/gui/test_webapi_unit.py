@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # force loading of web API plugins
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.webapi  # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
@@ -73,7 +73,7 @@ def test_registered_api_call_collections():
         'set_site',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_api_actions += [
             'bake_agents',
             'get_graph',

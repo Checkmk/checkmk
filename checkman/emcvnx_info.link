@@ -1,4 +1,4 @@
-title: EMC VNX Storage: Information about the management port settings
+title: EMC VNX Storage: Information about the Management Port Settings
 agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL
@@ -13,4 +13,4 @@ description:
  EMC's command line tool naviseccli.
 
 inventory:
- Finds exactly one item on every EMC VNX storage system called EMC VNX Link
+ One service is created for each EMC VNX storage system called EMC VNX Link.

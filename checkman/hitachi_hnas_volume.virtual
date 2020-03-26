@@ -17,5 +17,5 @@ item:
  the virtual volume belongs to.
 
 inventory:
- One item per virtual volume.
+ One service is created for each virtual volume.
 

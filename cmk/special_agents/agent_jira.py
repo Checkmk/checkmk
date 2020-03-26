@@ -94,7 +94,6 @@ def _handle_project(jira, args):
         for workflow in project.get("Workflow", []):
 
             max_results = 0
-            startat = 0
             field = None
             svc_desc = None
             jql = "project = '%s' AND status = '%s'" % (project_name, workflow)
@@ -102,7 +101,6 @@ def _handle_project(jira, args):
                 jira,
                 jql,
                 field,
-                startat,
                 max_results,
                 args,
                 project_name,
@@ -138,21 +136,18 @@ def _handle_custom_query(jira, args):
     for query in projects:
 
         jql = query["Query"][0]
-        max_results = query["Limit"][0]
+        max_results = query["Limit"][0] if query["Limit"][0] != "-1" else None
         svc_desc = query["Description"][0]
         field = query["Field"][0]
-        startat = None
         project = None
         if field == "None":
             # count number of search results
             max_results = 0
-            startat = 0
             field = None
             issues = _handle_search_issues(
                 jira,
                 jql,
                 field,
-                startat,
                 max_results,
                 args,
                 project,
@@ -167,7 +162,6 @@ def _handle_custom_query(jira, args):
             jira,
             jql,
             field,
-            startat,
             max_results,
             args,
             project,
@@ -203,10 +197,9 @@ def _handle_custom_query(jira, args):
     return
 
 
-def _handle_search_issues(jira, jql, field, startat, max_results, args, project, svc_desc):
+def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
     try:
         issues = jira.search_issues(jql,
-                                    startAt=startat,
                                     maxResults=max_results,
                                     json_result=False,
                                     fields=field,

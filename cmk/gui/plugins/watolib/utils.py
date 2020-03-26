@@ -7,7 +7,7 @@
 import abc
 import os
 import pprint
-from typing import Optional, Type, Text, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Text, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.store as store
@@ -51,7 +51,7 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def get_all_default_globals(cls):
-        settings = {}
+        settings = {}  # type: Dict[str, Any]
         for domain in ABCConfigDomain.enabled_domains():
             settings.update(domain().default_globals())
         return settings
@@ -70,7 +70,7 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
 
     def load(self, site_specific=False):
         filename = self.config_file(site_specific)
-        settings = {}
+        settings = {}  # type: Dict[str, Any]
 
         if not os.path.exists(filename):
             return {}
@@ -298,7 +298,7 @@ def register_configvar(group,
 
     # New API is to hand over the class via group argument
     if isinstance(group, six.string_types):
-        group = config_variable_group_registry[group]
+        group = config_variable_group_registry[six.ensure_str(group)]
 
     cls = type(
         "LegacyConfigVariable%s" % varname.title(), (ConfigVariable,), {

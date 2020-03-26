@@ -1,4 +1,4 @@
-title: Jira: Custom service
+title: Jira: Custom Service
 agents: jira
 catalog: app/jira
 license: GPL

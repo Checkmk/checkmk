@@ -1,4 +1,4 @@
-title: Casa CMTS: CPU temperature
+title: Casa CMTS: CPU Temperature
 agents: snmp
 catalog: hw/network/casa
 license: GPL
@@ -11,5 +11,5 @@ item:
  The description of the cpu as provided by the device.
 
 inventory:
- One check for each cpu is created by the inventory.
+ One service is created for each CPU.
 

@@ -14,7 +14,7 @@ description:
  No limits can be defined for this check,
 
 inventory:
- On each gateway one service is created for each fan found.
+ One service is created for every fan on each gateway.
 
 item:
  The item name is derived from the extracted ID number of the fan and

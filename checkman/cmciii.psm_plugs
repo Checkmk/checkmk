@@ -15,4 +15,4 @@ item:
  The unit name and the name of the power plug
 
 inventory:
- None
+ One service is created for each plug.

@@ -11,7 +11,7 @@ description:
  The check has been tested with a cisco model ASA 5510.
 
 inventory:
- One check is created for each IPSEC and remote access tunnel found during inventory
+ One service is created for each IPSEC and remote access tunnel.
 
 item:
  Check item is the ip address of the remote tunnel endpoint

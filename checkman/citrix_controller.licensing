@@ -14,5 +14,5 @@ description:
  "InOutOfBoxGracePeriod" and "InSupplementalGracePeriod".
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.
 

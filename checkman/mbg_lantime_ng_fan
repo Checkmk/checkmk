@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Fans (NG MIB)
+title: Meinberg LANTIME Devices: Fans (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL

@@ -1,4 +1,4 @@
-title: Memory pool usage of a JVM
+title: Java Virtual Machine: Memory Pool Usage
 agents: linux
 catalog: app/java
 license: GPL

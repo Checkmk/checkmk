@@ -12,5 +12,5 @@ item:
  The ID of the FAN like reported in the output of the SNMP agent.
 
 inventory:
- One check is created for each Fan.
+ One service is created for each Fan.
 

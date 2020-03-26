@@ -1,4 +1,4 @@
-title: State of Bonding network interface on Open vSwitch
+title: Open vSwitch: State of Bonding Network Interface
 agents: linux
 catalog: os/networking
 license: GPL

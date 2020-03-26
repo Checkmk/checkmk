@@ -45,7 +45,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.paths
 import cmk.utils.defines
@@ -82,7 +82,7 @@ from cmk.gui.valuespec import (
     Transform,
     DropdownChoice,
     ListOf,
-    EmailAddressUnicode,
+    EmailAddress,
     DualListChoice,
     UserID,
     FixedValue,
@@ -110,6 +110,7 @@ from cmk.gui.config import (
 import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.git
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.auth_php
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import
 from cmk.gui.watolib.notifications import save_notification_rules
@@ -262,7 +263,7 @@ from cmk.gui.watolib.utils import (
     site_neutral_path,
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.watolib.utils import (
@@ -276,7 +277,7 @@ from cmk.gui.plugins.watolib.utils import (
 
 import cmk.gui.plugins.watolib
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.watolib  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -354,7 +355,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         save_global_settings(self._initial_global_settings())
 
         content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
-        content += 'df_use_fs_used_as_metric_name = True\n'
         store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
                         content)
 
@@ -615,7 +615,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         }
 
-        if cmk.is_demo():
+        if cmk_version.is_demo():
             settings["cmc_cmk_helpers"] = 3
 
         return settings

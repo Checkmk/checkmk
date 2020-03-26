@@ -14,4 +14,4 @@ description:
  These are configurable.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.

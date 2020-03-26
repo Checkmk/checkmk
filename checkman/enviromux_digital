@@ -1,4 +1,4 @@
-title: NTI Enviromux 16D: Digital auxiliary sensors
+title: NTI Enviromux 16D: Digital Auxiliary Sensors
 agents: snmp
 catalog: hw/environment/nti
 license: GPL
@@ -14,5 +14,5 @@ perfdata:
  None
 
 inventory:
- All available digital sensors are automatically discovered.
+ One service is created for each available digital sensor.
 

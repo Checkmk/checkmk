@@ -10,7 +10,7 @@ from typing import Optional, Dict, List  # pylint: disable=unused-import
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.log as log
@@ -1686,7 +1686,7 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""", cmk.__version__, six.ensure_str(cmk.edition_short().upper()))
+""", cmk_version.__version__, six.ensure_str(cmk_version.edition_short().upper()))
 
 
 modes.register(

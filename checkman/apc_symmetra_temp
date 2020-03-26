@@ -11,5 +11,5 @@ item:
  The name of the sensor as configured in your management card.
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One item is created for each available temperature sensor.
 

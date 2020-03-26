@@ -1,4 +1,4 @@
-title: Cisco UCS: CPU operation status
+title: Cisco UCS: CPU Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -16,4 +16,4 @@ description:
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
 
 inventory:
- One service per CPU is created.
+ One service is created for each CPU.

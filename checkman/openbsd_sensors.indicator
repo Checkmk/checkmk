@@ -1,4 +1,4 @@
-title: Check for hardware sensors on OpenBSD devices
+title: OpenBSD Devices: Indicator Sensors
 agents: snmp, openbsd
 catalog: os/hardware
 license: GPL

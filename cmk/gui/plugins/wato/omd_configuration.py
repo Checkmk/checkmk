@@ -14,6 +14,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
@@ -111,7 +112,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
     def _monitoring_core_choices(self):
         cores = []
-        if not cmk.is_raw_edition():
+        if not cmk_version.is_raw_edition():
             cores.append(("cmc", _("Check_MK Micro Core")))
 
         cores += [

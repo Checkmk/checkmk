@@ -1,4 +1,4 @@
-title: Microsoft Azure Storage Accounts: Data flow
+title: Microsoft Azure Storage Accounts: Data Flow
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -14,5 +14,5 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per storage account.
-
+ One service is created for each storage account if all required metrics
+ (total_Ingress, total_Egress, total_Transactions) are given.

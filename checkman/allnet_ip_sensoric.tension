@@ -13,4 +13,4 @@ item:
  sensor ID. Otherwise the sensor ID only.
 
 inventory:
- Creates one check for every Electric Tension Sensor (function = 12).
+ One service is created for every electric tension sensor (function = 12).

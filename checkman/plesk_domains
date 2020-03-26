@@ -1,4 +1,4 @@
-title: Dumps out the domains configured in Plesk
+title: Plesk: Configured Domains
 agents: linux
 catalog: app/plesk
 license: GPL

@@ -1,4 +1,4 @@
-title: Node status and link status of heartbeat nodes
+title: Heartbeat Cluster: Node Status and Link Status
 agents: linux
 catalog: os/services
 license: GPL
@@ -19,4 +19,4 @@ item:
 
 
 inventory:
- Each node of a cluster will result in one service on each member of the cluster.
+ One service is created for each node of a cluster.

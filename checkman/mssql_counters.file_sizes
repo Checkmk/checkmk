@@ -1,4 +1,4 @@
-title: Size of data- and logfiles of MSSQL tablespaces
+title: MS SQL Tablespaces: Size of Data- and Logfiles
 agents: windows
 catalog: app/mssql
 license: GPL

@@ -9,7 +9,7 @@ import base64
 import traceback
 import time
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.render as render
 
 import cmk.gui.userdb as userdb
@@ -22,13 +22,17 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import (
+    cleanup_connection_id,
+    get_connection,
+)
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _, _u, get_languages, get_language_alias
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     UserID,
-    EmailAddressUnicode,
+    EmailAddress,
     Alternative,
     DualListChoice,
     FixedValue,
@@ -44,7 +48,7 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -103,7 +107,11 @@ class ModeUsers(WatoMode):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
-                job.set_function(job.do_sync, add_to_changelog=True, enforce_sync=True)
+                job.set_function(job.do_sync,
+                                 add_to_changelog=True,
+                                 enforce_sync=True,
+                                 load_users_func=userdb.load_users,
+                                 save_users_func=userdb.save_users)
 
                 try:
                     job.start()
@@ -225,8 +233,8 @@ class ModeUsers(WatoMode):
                 if uid != config.user.id:
                     html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
 
-                user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-                connection = userdb.get_connection(user_connection_id)
+                user_connection_id = cleanup_connection_id(user.get('connector'))
+                connection = get_connection(user_connection_id)
 
                 # Buttons
                 table.cell(_("Actions"), css="buttons")
@@ -275,7 +283,7 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never logged in"))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"), managed.get_customer_name(user))
 
                 # Connection
@@ -417,7 +425,7 @@ class ModeEditUser(WatoMode):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._roles = userdb.load_roles()
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
@@ -513,7 +521,7 @@ class ModeEditUser(WatoMode):
             user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
         # Email address
-        user_attrs["email"] = EmailAddressUnicode().from_html_vars("email")
+        user_attrs["email"] = EmailAddress().from_html_vars("email")
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
@@ -525,7 +533,7 @@ class ModeEditUser(WatoMode):
         # Pager
         user_attrs["pager"] = html.request.var("pager", '').strip()
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
@@ -630,7 +638,7 @@ class ModeEditUser(WatoMode):
         forms.section(_("Email address"))
         email = self._user.get("email", "")
         if not self._is_locked("email"):
-            EmailAddressUnicode().render_input("email", email)
+            EmailAddress().render_input("email", email)
         else:
             html.write_text(email)
             html.hidden_field("email", email)
@@ -644,7 +652,7 @@ class ModeEditUser(WatoMode):
         lockable_input('pager', '')
         html.help(_("The pager address is optional "))
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             forms.section(self._vs_customer.title())
             self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
 
@@ -972,11 +980,11 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user):
-    languages = [l for l in cmk.gui.i18n.get_languages() if not config.hide_language(l[0])]
+    languages = [l for l in get_languages() if not config.hide_language(l[0])]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % cmk.gui.i18n.get_language_alias(config.default_language)
+        default_label = _('Default: %s') % get_language_alias(config.default_language)
         html.div(default_label,
                  class_="inherited",
                  id_="attr_default_language",

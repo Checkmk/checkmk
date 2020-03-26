@@ -12,5 +12,5 @@ item:
  Name of the director
 
 inventory:
- Creates one check for each director.
+ One service is created for each director.
 

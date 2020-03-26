@@ -1,4 +1,4 @@
-title: Kemp Loadmaster: HA state and firmware version
+title: Kemp Loadmaster: HA State and Firmware Version
 agents: snmp
 catalog: hw/network/kemp
 license: GPL

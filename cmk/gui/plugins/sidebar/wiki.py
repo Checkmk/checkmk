@@ -43,6 +43,7 @@ class Wiki(SidebarSnapin):
         return _("Shows the Wiki Navigation of the OMD Site")
 
     def show(self):
+        # type: () -> None
         filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
         html.javascript("""
         function wiki_search()
@@ -116,9 +117,11 @@ class Wiki(SidebarSnapin):
             if ul_started:
                 html.close_ul()
         except IOError:
-            sidebar = html.render_a("sidebar",
-                                    href="/%s/wiki/doku.php?id=%s" %
-                                    (config.omd_site(), _("sidebar")),
-                                    target="main")
-            html.write_html("<p>To get a navigation menu, you have to create a %s in your wiki first.</p>"\
-                                                                               % sidebar)
+            html.write_html(
+                html.render_p(
+                    html.render_text("To get a navigation menu, you have to create a ") +
+                    html.render_a("sidebar",
+                                  href="/%s/wiki/doku.php?id=%s" %
+                                  (config.omd_site(), _("sidebar")),
+                                  target="main") +  #
+                    html.render_text(" in your wiki first.")))

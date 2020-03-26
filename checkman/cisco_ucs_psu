@@ -1,4 +1,4 @@
-title: Cisco UCS: PSU operation status
+title: Cisco UCS: PSU Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -14,4 +14,4 @@ description:
  a {WARNING} or {CRITICAL} status, based on the severity of the issue.
 
 inventory:
- One service per PSU is created.
+ One service is created for each PSU.

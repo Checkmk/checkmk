@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS: External sensor humidity
+title: NTI Enviromux SEMS: External Sensor Humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPL
@@ -14,5 +14,5 @@ perfdata:
  One graph for the relivative humidity.
 
 inventory:
- All available external humidity sensors are automatically discovered.
+ One service is created for each available external humidity sensor.
 

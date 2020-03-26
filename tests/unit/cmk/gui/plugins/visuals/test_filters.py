@@ -8,7 +8,7 @@
 from collections import namedtuple
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tags
 
 import cmk.gui.config
@@ -985,7 +985,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
             "zzz": {},
         }[host_name]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         import cmk.gui.cee.agent_bakery as agent_bakery # pylint: disable=redefined-outer-name
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
@@ -1006,7 +1006,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
             html.request.set_var(key, val)
 
         # TODO: Fix this for real...
-        if not cmk.is_raw_edition or test.ident != "deployment_has_agent":
+        if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]()
             assert filt.filter_table(test.rows) == test.expected_rows
 

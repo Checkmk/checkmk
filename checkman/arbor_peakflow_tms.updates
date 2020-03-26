@@ -9,7 +9,7 @@ description:
  This check is always OK and no configuration is supported.
 
 inventory:
- Discovers two services, one for each type of configuration supported.
+ One service is created one for each type of configuration supported.
 
 item:
  The item names are "Device" and "Mitigation"

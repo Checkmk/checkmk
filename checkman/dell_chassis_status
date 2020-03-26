@@ -17,3 +17,6 @@ description:
  In addition to the state, the check displays the following other parameters
  of the server: drsProductURL, drsProductChassisLocation, drsProductChassisName
  drsSystemServiceTag, drsProductChassisDataCenter, drsFirmwareVersion
+
+inventory:
+ One service is created.

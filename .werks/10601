@@ -1,0 +1,33 @@
+Title: Auto migration of check plugins to new section definitions
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1584701112
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+We are now converting all plugins in the share/check_mk/checks
+and local/share/check_mk/checks to the new format expected by
+the future API. Although we are trying to migrate as many check
+plugins as possible on the fly, for some plugins this may fail.
+
+These are the anticipated reasons why auto-migration may fail:
+
+<h4>A complex SNMP scan function</h4>
+
+If Checkmk fails to auto-migrate a legacy SNMP plugin to a section
+definition, this is most likely due to an elaborate scan function.
+For the auto-migration to work, the scan function must be fairly
+simple. Make sure your scan function has the following properties:
+
+<ul>
+ <li>it only consists of one single return statement</li>
+ <li>it does not in turn call other functions (not even 'all' or 'any')</li>
+ <li>it does not negate compound expressions</li>
+</ul>
+
+If in doubt, take a look at scan functions that succeed to be migrated
+to see what options are available.
+

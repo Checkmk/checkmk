@@ -1,4 +1,4 @@
-title: Check automatic agent deployments of Checkmk Agent
+title: Check Automatic Agent Deployments of Checkmk Agent
 agents: linux, windows
 catalog: generic
 license: GPL

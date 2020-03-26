@@ -1,4 +1,4 @@
-title: Casa CMTS: CPU memory
+title: Casa CMTS: CPU Memory
 agents: snmp
 catalog: hw/network/casa
 license: GPL
@@ -10,3 +10,5 @@ description:
 item:
  The description of the cpu module as provided by the device.
 
+inventory:
+ One service is created for each CPU.

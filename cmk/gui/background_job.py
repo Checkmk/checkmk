@@ -27,8 +27,6 @@ else:
 
 import six
 
-from cmk.gui.i18n import _
-import cmk
 import cmk.utils.log
 from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
@@ -36,6 +34,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk.gui.log
+from cmk.gui.i18n import _
 
 JobId = str
 JobParameters = Dict[str, Any]

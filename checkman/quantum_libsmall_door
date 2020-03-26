@@ -1,4 +1,4 @@
-title: Quantum tape libraries: Door status
+title: Quantum Tape Libraries: Door Status
 agents: snmp
 catalog: hw/storagehw/quantum
 license: GPL

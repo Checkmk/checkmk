@@ -14,5 +14,5 @@ description:
  any other state will be treated as {CRIT}.
 
 inventory:
- One service per power supply will be discovered.
+ One service is created for each power supply.
 

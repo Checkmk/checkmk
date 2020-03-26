@@ -7,7 +7,7 @@
 from typing import cast, Any, Callable  # pylint: disable=unused-import
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -19,7 +19,7 @@ from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupErro
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
 else:
     keepalive = None  # type: ignore[assignment]

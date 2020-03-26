@@ -1,4 +1,4 @@
-title: Bosch Video over IP: CPU utilization
+title: Bosch Video over IP: CPU Utilization
 agents: snmp
 catalog: hw/environment/bosch
 license: GPL
@@ -10,5 +10,5 @@ item:
  {{Total}}, {{Coder}} or {{VCA}}.
 
 inventory:
- Creates one check .
+ One service is created.
 

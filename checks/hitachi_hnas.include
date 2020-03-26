@@ -70,11 +70,7 @@ def parse_virtual_volumes(map_label, virtual_volumes, quotas):
 
 
 def hitachin_hnas_scan_function(oid):
-    system_oid = oid(".1.3.6.1.2.1.1.2.0")
-
-    if system_oid.startswith(".1.3.6.1.4.1.11096.6"):
-        return True
-
-    # e.g. HM800 report "linux" as type. Check the vendor tree too
-    return system_oid.startswith(".1.3.6.1.4.1.8072.3.2.10") \
-        and oid(".1.3.6.1.4.1.11096.6.1.*")
+    return (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11096.6") or
+            # e.g. HM800 report "linux" as type. Check the vendor tree too
+            (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and
+             oid(".1.3.6.1.4.1.11096.6.1.*")))

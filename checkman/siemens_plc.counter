@@ -1,4 +1,4 @@
-title: Siemens PLC: Counter values
+title: Siemens PLC: Counter Values
 agents: siemens_plc
 catalog: hw/server/siemens
 license: GPL

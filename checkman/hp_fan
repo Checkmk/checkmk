@@ -12,4 +12,4 @@ item:
  The tray index and the fan index, e.g. 0/3
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.

@@ -1,0 +1,48 @@
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+])
+
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+node (NODE) {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+        COMMON_IMAGE.pull()
+        // The commands are executed with the 1001:1000 UID:GID (non-root).
+        // This is the UID of the jenkins user on the node which does not exist
+        // in the container. For the moment this does not look like a problem.
+        // But it may be that we get to the point where we need an existing
+        // user in the container.
+        COMMON_IMAGE.inside('--ulimit nofile=1024:1024 --init') {
+            stage('checkout sources') {
+                checkout(scm)
+            }
+
+            stage('execute test') {
+                dir ('tests-py3') {
+                    def EXIT_CODE = sh(
+                        script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit",
+                        returnStatus: true
+                    )
+                    println("Exit code was: " + EXIT_CODE)
+                }
+            }
+
+            stage('process results') {
+                archiveArtifacts("bandit_results.xml")
+                xunit([Custom(
+                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/bandit-xunit.xsl",
+                    deleteOutputFiles: true,
+                    failIfNotNew: true,
+                    pattern: "bandit_results.xml",
+                    skipNoTestFiles: false,
+                    stopProcessingIfError: true
+                )])
+            }
+        }
+    }
+}
+

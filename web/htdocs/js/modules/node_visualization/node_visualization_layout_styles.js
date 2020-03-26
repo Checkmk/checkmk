@@ -839,7 +839,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         let cos_x = Math.cos(rad)
         let sin_x = Math.sin(rad)
 
-        cmk.d3_flextree.flextree().nodeSize(node=>{
+        d3_flextree.flextree().nodeSize(node=>{
             if (node.data.use_style && node != this.style_root_node) {
                 // TODO: improve
                 if (node.data.use_style.type() == "block") {

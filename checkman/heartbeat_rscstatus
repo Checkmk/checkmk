@@ -1,4 +1,4 @@
-title: Ressource status of heartbeat nodes using crm=no
+title: Heartbeat Cluster: Resource Status (Cluster Resource Manager deactivated)
 agents: linux
 catalog: os/services
 license: GPL
@@ -9,10 +9,11 @@ description:
  usable when the heartbeat cluster is configured not to use the crm
  (Cluster Resource Manager).
 
- Each node will get one service from this check.
-
  The check will result in a CRITICAL state when resource status during a check
  differs from the inventorized resource status.
 
  The resource status can be "all", "foreign", "local" or "none.
+
+inventory:
+ One service is created for each node.
 

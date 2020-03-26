@@ -32,7 +32,7 @@ else:
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex
@@ -67,6 +67,12 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     SectionName, CheckParameters, DiscoveredService,
 )
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
+)
 
 # TODO: Prefix helper functions with "_".
 
@@ -93,7 +99,7 @@ CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     Union[str, List[str]]]
-HostCheckCommand = Optional[Union[str, Tuple[str, Union[int, str]]]]
+HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
 GroupDefinitions = Dict[str, Text]
@@ -1235,6 +1241,15 @@ def get_http_proxy(http_proxy):
     return None
 
 
+def get_registered_section_plugin(plugin_name):
+    # type: (PluginName) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
+    if plugin_name in registered_agent_sections:
+        return registered_agent_sections[plugin_name]
+    if plugin_name in registered_snmp_sections:
+        return registered_snmp_sections[plugin_name]
+    return None
+
+
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1313,6 +1328,11 @@ snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 
+# The following data structures hold information registered by the API functions
+# with the correspondig name, e.g. register.agent_section -> registered_agent_sections
+registered_agent_sections = {}  # type: Dict[PluginName, AgentSectionPlugin]
+registered_snmp_sections = {}  # type: Dict[PluginName, SNMPSectionPlugin]
+
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
@@ -1371,6 +1391,9 @@ def _initialize_data_structures():
     snmp_scan_functions.clear()
     active_check_info.clear()
     special_agent_info.clear()
+
+    registered_agent_sections.clear()
+    registered_snmp_sections.clear()
 
 
 def get_plugin_paths(*dirs):
@@ -1482,6 +1505,7 @@ def load_checks(get_check_api_context, filelist):
 
     # Now convert check_info to new format.
     convert_check_info()
+    _extract_agent_and_snmp_sections()
     verify_checkgroup_members()
     initialize_check_type_caches()
 
@@ -1701,6 +1725,12 @@ def _is_plugin_precompiled(path, precompiled_path):
     if file_magic != _MAGIC_NUMBER:
         return False
 
+    if sys.version_info[0] >= 3:
+        # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
+        # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
+        file_hash = int(struct.unpack("I", f.read(4))[0])
+        assert file_hash == 0
+
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]
     except struct.error:
@@ -1856,6 +1886,49 @@ def convert_check_info():
 
         if info["snmp_scan_function"] and section_name not in snmp_scan_functions:
             snmp_scan_functions[section_name] = info["snmp_scan_function"]
+
+
+_AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
+                           "Please refer to Werk 10601 for more information.")
+
+
+def _extract_agent_and_snmp_sections():
+    # type: () -> None
+    """Here comes the next layer of converting-to-"new"-api.
+
+    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    in check_info, snmp_scan_functions and snmp_info to create API compliant plugin objects.
+    """
+    for check_plugin_name in sorted(check_info):
+        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        is_snmp_plugin = section_name in snmp_info
+
+        if get_registered_section_plugin(PluginName(section_name)):
+            continue
+
+        check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
+        try:
+            if is_snmp_plugin:
+                snmp_section_plugin = create_snmp_section_plugin_from_legacy(
+                    section_name,
+                    check_info_dict,
+                    snmp_scan_functions[section_name],
+                    snmp_info[section_name],
+                )
+                registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
+            else:
+                agent_section_plugin = create_agent_section_plugin_from_legacy(
+                    section_name,
+                    check_info_dict,
+                )
+                registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
+        except (NotImplementedError, KeyError):
+            # TODO (mo): Uncomment this once we have a solution for the plugins currently
+            # failing here. For now we need too keep it commented out, because we can't
+            # test otherwise.
+            #if cmk.utils.debug.enabled():
+            #    raise MKGeneralException(exc)
+            console.warning(_AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
 
 
 # This function validates the checks which are members of checkgroups to have either
@@ -2166,15 +2239,28 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     host_only_tcp = set()
 
     for check_plugin_name in check_plugin_names:
+        lookup_plugin_name = check_plugin_name
         if check_plugin_name not in plugins_info:
+            # Some plugins do not properly specify a main check.
+            # This is accounted for at various places, and in order to migrate to the new check API
+            # we need to add this one: If we don't find the section, we just look at the first
+            # matching subcheck.
+            # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
+            # '_get_management_board_precedence'.
+            for name in plugins_info:
+                if cmk.base.check_utils.section_name_of(name) == check_plugin_name:
+                    lookup_plugin_name = name
+                    break
+
+        if lookup_plugin_name not in plugins_info:
             msg = "Unknown plugin file %s" % check_plugin_name
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             console.verbose("%s\n" % msg)
             continue
 
-        is_snmp_check_ = is_snmp_check_f(check_plugin_name)
-        mgmt_board = _get_management_board_precedence(check_plugin_name, plugins_info)
+        is_snmp_check_ = is_snmp_check_f(lookup_plugin_name)
+        mgmt_board = _get_management_board_precedence(lookup_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:
             if is_snmp_check_:
                 host_precedence_snmp.add(check_plugin_name)
@@ -2567,7 +2653,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         if spec == "ignore":
             return None
         if spec == "site":
-            return cmk.__version__
+            return cmk_version.__version__
         if isinstance(spec, str):
             # Compatibility to old value specification format (a single version string)
             return spec
@@ -2607,7 +2693,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def only_from(self):
-        # type: () -> Optional[Union[List[str], str]]
+        # type: () -> Union[None, List[str], str]
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])
         if not ruleset:
@@ -3111,7 +3197,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         if host_config:
             return host_config
 
-        config_class = HostConfig if cmk.is_raw_edition() else CEEHostConfig
+        config_class = HostConfig if cmk_version.is_raw_edition() else CEEHostConfig
         host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
@@ -3191,7 +3277,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }  # type: Tags
 
@@ -3235,7 +3321,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk.omd_site(),
+            'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
         }
 
@@ -3643,7 +3729,7 @@ def get_config_cache():
     # type: () -> ConfigCache
     config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
-        cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
+        cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()
     return config_cache["cache"]
 

@@ -1,4 +1,4 @@
-title: Usage of physical and virtual RAM using SNMP
+title: SNMP HOST-RESOURCES-MIB: Usage of Physical and Virtual RAM
 agents: snmp
 catalog: os/kernel
 license: GPL

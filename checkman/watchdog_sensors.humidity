@@ -1,4 +1,4 @@
-title: GEIST watchdog: Humidity Sensor
+title: GEIST Watchdog: Humidity Sensor
 agents: snmp
 catalog: hw/environment/geist
 license: GPL

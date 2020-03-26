@@ -76,7 +76,7 @@ class Profile(object):
         with script_path.open("w", encoding="utf-8") as f:
             f.write(u"#!/usr/bin/env python\n"
                     "import pstats\n"
-                    "stats = pstats.Stats(%r)\n"
+                    "stats = pstats.Stats(\"%s\")\n"
                     "stats.sort_stats('time').print_stats()\n" % self._profile_file)
         script_path.chmod(0o755)
         cmk.utils.log.logger.info("Created profile dump script: %s", script_path)

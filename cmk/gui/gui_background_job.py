@@ -182,7 +182,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
         log.init_logging()  # NOTE: We run in a subprocess!
-        self._logger = log.logger.getChild("background_process")
+        self._logger = log.logger.getChild("background-job")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
@@ -340,7 +340,7 @@ class GUIBackgroundStatusSnapshot(object):
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self):
         super(GUIBackgroundJobManager,
-              self).__init__(logger=log.logger.getChild("background_job_manager"))
+              self).__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(self, job_class):
         job_ids = super(GUIBackgroundJobManager, self).get_running_job_ids(job_class)

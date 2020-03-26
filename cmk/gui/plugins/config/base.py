@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
 
-from typing import Dict as _Dict, List as _List, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict as _Dict, List as _List, Tuple as _Tuple, Any as _Any,
+)
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -37,6 +39,7 @@ log_levels = {
     "cmk.web.auth": 30,
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
+    "cmk.web.background-job": 30,
 }
 
 multisite_users = {}  # type: _Dict
@@ -301,7 +304,7 @@ default_user_profile = {
     'contactgroups': [],
     'roles': ['user'],
     'force_authuser': False,
-}
+}  # type: _Dict[str, _Any]
 lock_on_logon_failures = False
 user_idle_timeout = None
 single_user_session = None

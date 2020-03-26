@@ -11,7 +11,7 @@ import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 import cmk.gui.i18n
@@ -31,12 +31,12 @@ import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
-from cmk.gui.config import UserType  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
 
 # Helper functions to be used by snapins
@@ -53,7 +53,7 @@ from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint
 quicksearch_match_plugins = []  # type: List[Type[QuicksearchMatchPlugin]]
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 search_plugins = []  # type: List
 
 # TODO: Kept for pre 1.6 plugin compatibility
@@ -146,7 +146,7 @@ def transform_old_quicksearch_match_plugins():
 class UserSidebarConfig(object):
     """Manages the configuration of the users sidebar"""
     def __init__(self, user, default_config):
-        # type: (UserType, List[Tuple[str, str]]) -> None
+        # type: (LoggedInUser, List[Tuple[str, str]]) -> None
         super(UserSidebarConfig, self).__init__()
         self._user = user
         self._default_config = copy.deepcopy(default_config)
@@ -480,7 +480,7 @@ class SidebarRenderer(object):
             html.open_a(href="version.py", target="main", title=_("Open release notes"))
             html.write(self._get_check_mk_edition_title())
             html.br()
-            html.write(cmk.__version__)
+            html.write(cmk_version.__version__)
 
             if werks.may_acknowledge():
                 num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
@@ -496,12 +496,12 @@ class SidebarRenderer(object):
         html.close_div()
 
     def _get_check_mk_edition_title(self):
-        if cmk.is_enterprise_edition():
-            if cmk.is_demo():
+        if cmk_version.is_enterprise_edition():
+            if cmk_version.is_demo():
                 return "Enterprise (Demo)"
             return "Enterprise"
 
-        elif cmk.is_managed_edition():
+        elif cmk_version.is_managed_edition():
             return "Managed"
 
         return "Raw"

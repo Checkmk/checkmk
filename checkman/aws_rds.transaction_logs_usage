@@ -12,7 +12,9 @@ description:
  No default levels are set. Upper levels are configurable.
 
 item:
- Name of the instance if all required metrics (TransactionLogsDiskUsage) are given.
+ Name of the instance
 
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (TransactionLogsDiskUsage) are given.
+

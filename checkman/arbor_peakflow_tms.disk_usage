@@ -1,4 +1,4 @@
-title: Arbor Peakflow TMS: disk usage
+title: Arbor Peakflow TMS: Disk Usage
 agents: snmp
 catalog: hw/network/arbor
 license: GPL
@@ -13,7 +13,7 @@ description:
  regular levels, specified in percent, are supported.
 
 inventory:
- One service is discovered.
+ One service is created.
 
 item:
  The sole item is named "/".

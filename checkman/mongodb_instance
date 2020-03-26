@@ -1,4 +1,4 @@
-title: MongoDB Instance
+title: MongoDB: Instance
 agents: linux
 catalog: app/mongodb
 license: GPL

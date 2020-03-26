@@ -166,6 +166,9 @@ class PageKeyManagement(object):
 class PageEditKey(object):
     back_mode = "keys"
 
+    def __init__(self):
+        self._minlen = None
+
     def load(self):
         raise NotImplementedError()
 
@@ -234,6 +237,7 @@ class PageEditKey(object):
                      help=self._passphrase_help(),
                      allow_empty=False,
                      is_stored_plain=False,
+                     minlen=self._minlen,
                  )),
             ],
             optional_keys=False,

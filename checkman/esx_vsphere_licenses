@@ -1,4 +1,4 @@
-title: ESX VSphere Licenses
+title: ESX VSphere: Licenses
 agents: vsphere
 catalog: os/misc
 license: GPL
@@ -10,5 +10,5 @@ item:
  Name of license
 
 inventory:
- One service per license type will be created.
+ One service is created for each license type.
 

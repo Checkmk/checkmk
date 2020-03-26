@@ -1,4 +1,4 @@
-title: MySQL InnoDB engine IO statistics
+title: MySQL InnoDB engine: IO statistics
 agents: linux
 catalog: app/mysql
 license: GPL

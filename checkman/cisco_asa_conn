@@ -15,4 +15,4 @@ item:
   One item for each connection is generated.
 
 inventory:
-  The check creates one service for each connection.
+  One service is created for each connection.

@@ -1,4 +1,4 @@
-title: SNMP Management Board: HP Proliant Servers: Physical CPU state
+title: SNMP Management Board: HP Proliant Servers: Physical CPU State
 agents: snmp
 catalog: hw/server/hp
 license: GPL

@@ -29,7 +29,7 @@ else:
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
@@ -264,8 +264,8 @@ def _get_generic_crash_info(type_name, details):
         "crash_type": type_name,
         "time": time.time(),
         "os": _get_os_info(),
-        "version": cmk.__version__,
-        "edition": cmk.edition_short(),
+        "version": cmk_version.__version__,
+        "edition": cmk_version.edition_short(),
         "core": _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths": sys.path,

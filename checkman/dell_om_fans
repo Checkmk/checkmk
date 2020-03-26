@@ -17,4 +17,4 @@ item:
  The fan index
 
 inventory:
- One service for each fan is created
+ One service is created for each fan.

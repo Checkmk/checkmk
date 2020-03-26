@@ -15,5 +15,5 @@ item:
  sensor ID. Otherwise the sensor ID only.
 
 inventory:
- Creates one check for every Humidity Sensor (function = 2).
+ One service is created for every humidity sensor (function = 2).
 

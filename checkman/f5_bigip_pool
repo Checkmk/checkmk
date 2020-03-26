@@ -22,6 +22,6 @@ item:
  Name of the pool
 
 inventory:
- The check collects a list of the pools defined on a system. It will include
- non-enabled ones, as this is considered a temporary state.
+ One service is created for each pool defined on a system,
+ even if the pool is not enabled, as this is considered a temporary state.
 

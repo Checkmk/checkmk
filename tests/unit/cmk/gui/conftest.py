@@ -7,8 +7,11 @@
 # pylint: disable=redefined-outer-name
 import contextlib
 import os
-
-import pathlib2
+import sys
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
@@ -106,9 +109,19 @@ def with_user(register_builtin_html, load_config):
 
 
 @pytest.fixture(scope='function')
-def recreate_openapi_spec():
+def recreate_openapi_spec(mocker):
     from cmk.gui.plugins.openapi import specgen
-    store.save_bytes_to_file(paths.web_dir + "/htdocs/openapi/checkmk.yaml", specgen.generate())
+    spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
+    openapi_spec_dir = mocker.patch('cmk.gui.wsgi.routing.openapi_spec_dir')
+    openapi_spec_dir.return_value = spec_path
+    store.save_bytes_to_file(spec_path + "/checkmk.yaml", specgen.generate())
+    yield
+
+
+@pytest.fixture()
+def suppress_automation_calls(mocker):
+    mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
+    mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
     yield
 
 
@@ -119,9 +132,9 @@ def with_automation_user(register_builtin_html, load_config):
 
 
 def _makepath(path):
-    pathlib2.Path(path).mkdir(parents=True, exist_ok=True)
+    Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def _touch(path):
-    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)
-    pathlib2.Path(path).touch()
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).touch()

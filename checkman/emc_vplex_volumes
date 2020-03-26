@@ -29,8 +29,10 @@ item:
  disk device, e.g. {"VPZ-B-S-L323_vol"}.
 
 inventory:
-  The inventory is configured via the {diskstat_inventory} rule. If this is set
-  to {["summary"]} (the default), then one check will be created for all volumes.
-  If it is set to {["physical"]} then one check will be created per volume.
+  One service is created for all directors if the configuration
+  is set to {["summary"]} (default).
+  If the configuration is set to {["physical"]} one service is created
+  for each director.
   You can also set {["summary", "physical"]} to create both variants.
+  The configuration is set via the {diskstat_inventory} rule.
 

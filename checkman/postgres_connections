@@ -1,4 +1,4 @@
-title: PostgreSQL Database Connections
+title: PostgreSQL: Connections
 agents: linux
 catalog: app/postgresql
 license: GPL

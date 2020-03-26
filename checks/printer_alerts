@@ -224,6 +224,7 @@ def check_printer_alerts(_no_item, _no_params, parsed):
 check_config_variables.append("printer_alerts_text_map")
 
 check_info["printer_alerts"] = {
+    'parse_function': parse_printer_alerts,
     'check_function': check_printer_alerts,
     'inventory_function': inventory_printer_alerts,
     'service_description': 'Alerts',

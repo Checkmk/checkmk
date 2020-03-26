@@ -16,4 +16,4 @@ item:
  The unit number and the internal name of the canbus port
 
 inventory:
- All canbus ports of the device are inventorized
+ One service is created for each canbus port.

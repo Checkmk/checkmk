@@ -1,4 +1,4 @@
-title: Database Size for PostgreSQL
+title: PostgreSQL: Size
 agents: linux
 catalog: app/postgresql
 license: GPL

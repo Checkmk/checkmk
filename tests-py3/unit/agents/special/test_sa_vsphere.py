@@ -18,7 +18,6 @@ DEFAULT_AGRS = {
     "port": 443,
     "hostname": None,
     "skip_placeholder_vm": False,
-    "pysphere": False,
     "host_pwr_display": None,
     "vm_pwr_display": None,
     "snapshot_display": None,
@@ -69,9 +68,6 @@ DEFAULT_AGRS = {
     }),
     (['-P'], {
         "skip_placeholder_vm": True
-    }),
-    (['--pysphere'], {
-        "pysphere": True
     }),
     (['--host_pwr_display', 'vm'], {
         "host_pwr_display": "vm"

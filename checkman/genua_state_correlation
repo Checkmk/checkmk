@@ -12,8 +12,11 @@ description:
  introduced in a bug in some versions of genuscreen.
 
 inventory:
- The inventory process checks if the device has a system description OID
- of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen",
- "genuscript" or "genubox" (case insensitive).
- If this is true and at least two carp interfaces are found, then the system
- is inventorized.
+ One service is created for the state of the carp interface
+ if
+
+ - the carp interface has a system description OID (.1.3.6.1.2.1.1.2.0)
+
+ - OID name contains "genuscreen", "genuscript" or "genubox" (case insensitive).
+
+ - at least two carp interfaces are found

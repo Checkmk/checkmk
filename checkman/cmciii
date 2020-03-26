@@ -16,4 +16,4 @@ item:
  Name of the device
 
 inventory:
- None
+ One service is created for each state.

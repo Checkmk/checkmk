@@ -1,4 +1,4 @@
-title: Cisco Wireless LAN Controller (WLC): Connected WLAN accesspoints
+title: Cisco Wireless LAN Controller (WLC): Connected WLAN Accesspoints
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -14,5 +14,5 @@ description:
  with the model 5508.
 
 inventory:
- One check for each online accesspoint is created
+ One service is created for each online accesspoint.
 

@@ -11,7 +11,7 @@ import base64
 import pickle
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
@@ -121,7 +121,7 @@ def mk_eval(s):
 
 
 def has_agent_bakery():
-    return not cmk.is_raw_edition()
+    return not cmk_version.is_raw_edition()
 
 
 def site_neutral_path(path):

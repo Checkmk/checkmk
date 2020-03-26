@@ -1,6 +1,6 @@
 title: DDN S2A: Power-On Time
 agents: ddn_s2a
-catalog: os/storage
+catalog: hw/storagehw/ddn_s2a
 license: GPL
 distribution: check_mk
 description:
@@ -8,4 +8,4 @@ description:
  from the uptime value supplied via SNMP, hence the different service description.
 
 inventory:
- One service per device is created.
+ One service is created for each device.

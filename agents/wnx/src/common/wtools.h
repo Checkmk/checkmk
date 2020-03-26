@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // wtools.h
 //
@@ -63,6 +64,10 @@ using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
 
 // returns <exit_code, 0>, <0, error> or <-1, error>
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
+[[nodiscard]] std::wstring GetProcessPath(uint32_t pid) noexcept;
+
+[[nodiscard]] int KillProcessesByDir(const std::filesystem::path& dir) noexcept;
 
 uint32_t GetParentPid(uint32_t pid);
 

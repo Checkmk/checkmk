@@ -1,4 +1,4 @@
-title: Number of JVM sessions
+title: Java Virtual Machine: Number of Sessions
 agents: linux
 catalog: app/java
 license: GPL

@@ -1,4 +1,4 @@
-title: Avaya devices: Power Supplies
+title: Avaya Devices: Power Supplies
 agents: snmp
 catalog: hw/network/avaya
 license: GPL
@@ -12,4 +12,4 @@ item:
  The index of the power supply.
 
 inventory:
- Creates one service for each installed power supply.
+ One service is created for each installed power supply.

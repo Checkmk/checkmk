@@ -9,6 +9,7 @@ import sys
 import tarfile
 import logging
 import subprocess
+import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,8 @@ from testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
+# Increase this to enforce invalidation of all existing images
+_DOCKER_BUILD_ID = 1
 
 logger = logging.getLogger()
 
@@ -54,6 +57,12 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
                     docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
                 ],
                 binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
+                # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
+                # docker daemon wide, but set some fixed local network which is not being routed.
+                # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
+                sysctls={
+                    "net.ipv6.conf.eth0.disable_ipv6": 1,
+                },
             ),
             stdin_open=True,
             tty=True,
@@ -107,7 +116,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
 
 
 def _docker_client():
-    return docker.from_env(timeout=600)
+    return docker.from_env(timeout=1200)
 
 
 def _get_or_load_image(client, image_name_with_tag):
@@ -187,6 +196,15 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
     with _start(
             client,
             image=base_image_name_with_tag,
+            labels={
+                "org.tribe29.build_time": "%d" % time.time(),
+                "org.tribe29.build_id": base_image.short_id,
+                "org.tribe29.base_image": base_image_name_with_tag,
+                "org.tribe29.base_image_hash": base_image.short_id,
+                "org.tribe29.cmk_edition_short": version.edition_short,
+                "org.tribe29.cmk_version": version.version,
+                "org.tribe29.cmk_branch": version.branch(),
+            },
             command=["tail", "-f", "/dev/null"],  # keep running
             volumes=list(_image_build_volumes().keys()),
             host_config=client.api.create_host_config(
@@ -233,6 +251,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
             client.images.push(image_name_with_tag)
             logger.info("  Upload complete")
         except docker.errors.APIError as e:
+            logger.warning("  An error occurred")
             _handle_api_error(e)
 
     return image_name_with_tag
@@ -292,7 +311,7 @@ def _container_env(version):
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
         # Write to this result path by default (may be overridden e.g. by integration tests)
-        "PYTEST_ADDOPTS": "--junitxml=/results/junit.xml",
+        "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }
 
 

@@ -11,7 +11,6 @@ In the future all inventory code should be moved to this module."""
 import os
 from typing import Set, Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
 
-import cmk
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store

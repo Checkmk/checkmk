@@ -1,4 +1,4 @@
-title: GUDE Power Control: Relay port status and electricity
+title: GUDE Power Control: Relay Port Status and Electricity
 agents: snmp
 catalog: hw/power/gude
 license: GPL
@@ -14,4 +14,4 @@ item:
  The name of the relay port.
 
 inventory:
- One service per relay port is created.
+ One service is created for each relay port.

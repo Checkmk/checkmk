@@ -21,4 +21,4 @@ item:
  The name of the location variable configured for the power unit
 
 inventory:
- All power units
+ One service is created for each power unit.

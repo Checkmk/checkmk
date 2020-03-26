@@ -17,4 +17,4 @@ item:
  The name of backend and server, separated by a "/".
 
 inventory:
- One service for each server is created.
+ One service is created for each server.

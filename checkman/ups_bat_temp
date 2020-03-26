@@ -1,4 +1,4 @@
-title: Generic UPS Device: Temperature sensor
+title: Generic UPS Device: Temperature Sensor
 agents: snmp
 catalog: hw/power/generic
 license: GPL

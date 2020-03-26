@@ -1,4 +1,4 @@
-title: Microsoft Azure AD Connect Sync
+title: Microsoft Azure AD Connect: Sync
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -12,4 +12,4 @@ item:
  The organization name registered with Azure
 
 inventory:
- One service is created per Azure organization
+ One service is created per Azure organization if sync is enabled

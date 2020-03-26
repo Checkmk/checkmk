@@ -118,6 +118,7 @@ include \
     packages/perl-modules/perl-modules.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
+    packages/postgresql/postgresql.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \

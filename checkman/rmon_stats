@@ -1,4 +1,4 @@
-title: Traffic Analysis of Network Interfaces using RMON
+title: Traffic Analysis of Network Interfaces Using RMON
 agents: snmp
 catalog: hw/network/generic
 license: GPL

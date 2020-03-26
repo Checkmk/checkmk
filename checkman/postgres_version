@@ -1,4 +1,4 @@
-title: Postgres Version
+title: PostgreSQL: Version
 agents: linux
 catalog: app/postgresql
 license: GPL

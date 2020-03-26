@@ -9,7 +9,6 @@ import abc
 import time
 from typing import NamedTuple  # pylint: disable=unused-import
 
-import cmk
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode
 
@@ -44,6 +43,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     ListOfStrings,
     Checkbox,
+    rule_option_elements,
 )
 
 from cmk.gui.plugins.wato import (
@@ -53,7 +53,6 @@ from cmk.gui.plugins.wato import (
     global_buttons,
     make_action_link,
     add_change,
-    rule_option_elements,
     notification_parameter_registry,
 )
 from cmk.gui.watolib.notifications import (

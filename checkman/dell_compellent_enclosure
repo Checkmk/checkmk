@@ -1,4 +1,4 @@
-title: Dell Compellent: Enclosure status
+title: Dell Compellent: Enclosure Status
 agents: snmp
 catalog: hw/storagehw/dell
 license: GPL
@@ -13,4 +13,4 @@ item:
  The Enclosure number
 
 inventory:
- One service for each enclosure is created
+ One service is created for each enclosure.

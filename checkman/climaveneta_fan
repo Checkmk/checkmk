@@ -10,5 +10,5 @@ item:
  The ID of the fan (1 or 2)
 
 inventory:
- For each fan one service is created
+ One service is created for each fan.
 

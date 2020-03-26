@@ -9,7 +9,7 @@ description:
  the number of open file descriptors per node.
 
 inventory:
- One check for each node will be created
+ One service is created for each node.
 
 item:
  Description of the node

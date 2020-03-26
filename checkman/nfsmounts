@@ -1,4 +1,4 @@
-title: Health of NFS mounts
+title: Health of NFS Mounts
 agents: linux, aix
 catalog: os/services
 license: GPL

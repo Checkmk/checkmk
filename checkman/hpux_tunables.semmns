@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of IPC Semaphores
+title: Kernel Tunables: Number of IPC Semaphores
 agents: hpux
 catalog: os/kernel
 license: GPL

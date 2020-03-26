@@ -1,4 +1,4 @@
-title: Tomcat number of threads in thread pool
+title: Java Virtual Machine: Tomcat Threads
 agents: linux
 license: GPL
 catalog: app/java

@@ -1,4 +1,4 @@
-title: Huawei Switches: PSU operation status
+title: Huawei Switches: PSU Operation Status
 agents: snmp
 catalog: hw/network/huawei
 license: GPL

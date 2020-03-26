@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk wide type definitions"""
 
-from typing import NewType, Any, Text, Optional, Dict, Set, List, Tuple
+from typing import Union, NewType, Any, Text, Optional, Dict, Set, List, Tuple
 
 HostName = str
 HostAddress = str
@@ -37,3 +37,8 @@ TimeRange = Tuple[int, int]
 
 UserId = NewType("UserId", Text)
 EventRule = Dict[str, Any]  # TODO Improve this
+
+AgentHash = str
+BakeryOpSys = str
+AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
+BakeryHostName = Union[bool, None, HostName]

@@ -1,4 +1,4 @@
-title: MySQL Database: Galera Sync Status
+title: MySQL: Galera Sync Status
 agents: linux
 catalog: app/mysql
 license: GPL

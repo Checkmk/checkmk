@@ -1,4 +1,4 @@
-title: Operational status of network interfaces - DEPRECATED
+title: Operational Status of Network Interfaces - DEPRECATED
 agents: snmp
 catalog: hw/network/generic
 license: GPL

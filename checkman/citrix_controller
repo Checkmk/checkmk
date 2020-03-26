@@ -1,4 +1,4 @@
-title: Citrix XenApp Controller: Overall state
+title: Citrix XenApp Controller: Overall State
 agents: windows
 catalog: app/citrix
 license: GPL
@@ -11,5 +11,5 @@ description:
  state is Active.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.
 

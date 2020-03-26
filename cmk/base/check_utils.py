@@ -41,7 +41,7 @@ AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
-FinalSectionContent = Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
+FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
 AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
 AbstractRawData = Union[RawAgentData, "RawSNMPData"]

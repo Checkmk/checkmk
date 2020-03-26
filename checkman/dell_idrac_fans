@@ -16,3 +16,6 @@ description:
 
 item:
  Index of the cooling device
+
+inventory:
+ One service is created for each fan.

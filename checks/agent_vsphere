@@ -43,9 +43,6 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if "timeout" in params:
         args += ['--timeout', params["timeout"]]
 
-    if params.get("use_pysphere"):
-        args.append(' --pysphere')
-
     if params.get("vm_pwr_display"):
         args += ['--vm_pwr_display', params.get("vm_pwr_display")]
 

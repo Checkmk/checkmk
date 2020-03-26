@@ -1,4 +1,4 @@
-title: Splunk: System messages
+title: Splunk: System Messages
 agents: splunk
 catalog: app/splunk
 license: GPL

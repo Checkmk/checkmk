@@ -1,4 +1,4 @@
-title: Number of JVM threads
+title: Java Virtual Machine: Number of Threads
 agents: linux
 catalog: app/java
 license: GPL

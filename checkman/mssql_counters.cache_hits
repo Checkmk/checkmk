@@ -1,4 +1,4 @@
-title: MSSQL cache hit ratio
+title: MS SQL Server: Cache Hit ratio
 agents: windows
 catalog: app/mssql
 license: GPL

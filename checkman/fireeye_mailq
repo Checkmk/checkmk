@@ -12,5 +12,5 @@ description:
  'deferred', 'hold' or 'drop' queues exceeds configurable values.
 
 inventory:
- One service per host is created.
+ One service is created for each host.
 

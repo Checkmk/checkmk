@@ -238,7 +238,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     title=None,  # type: _Optional[Text]
     help=None,  # type: _Optional[ValueSpecHelp]
     only_v3=False,  # type: bool
-    default_value="public",  # type: Text
+    default_value="public",  # type: _Optional[Text]
     allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):

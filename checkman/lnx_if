@@ -40,9 +40,9 @@ item:
  by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
- The inventory creates one service for each port that fulfills configurable conditions.
- Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
- {32} (frameRelay) or {117} (gigabitEthernet).
+ One service is created for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types
+ {6} (ethernetCsmacd), {32} (frameRelay) or {117} (gigabitEthernet).
 
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.

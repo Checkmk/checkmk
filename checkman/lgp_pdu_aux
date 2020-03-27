@@ -14,8 +14,6 @@ description:
  The lower and upper thresholds configured in the device are read from the device
  and used for warning/critical states.
 
- One service is created for each AUX device.
-
 item:
  The type, the system label and the index of the PDU seperated by a {{-}}
 

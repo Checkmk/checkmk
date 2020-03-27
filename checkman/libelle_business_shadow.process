@@ -11,4 +11,4 @@ description:
  {CRIT} is returned otherwise.
 
 inventory:
- Creates exactly one check per device.
+ One service is created for each device.

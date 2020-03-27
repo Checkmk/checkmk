@@ -10,5 +10,5 @@ description:
  For this check to work the "mk_logins" plugin needs to be installed.
 
 inventory:
- Creates one service if the agent output contains the section.
+ One service is created.
 

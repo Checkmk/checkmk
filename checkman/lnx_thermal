@@ -4,12 +4,12 @@ catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:
-  This check monitors the temperature provided by the kernel in
-  /sys/class/thermal/thermal_zone* and reports values in °C
+ This check monitors the temperature provided by the kernel in
+ /sys/class/thermal/thermal_zone* and reports values in °C
 
 item:
-  "Zone "+(The ID of the thermal zone)
+ "Zone "+(The ID of the thermal zone)
 
 inventory:
-  Creates one check for earch thermal zone.
+ One service is created for each thermal zone.
 

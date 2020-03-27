@@ -12,4 +12,4 @@ item:
  The item will be the data label of the OID
 
 inventory:
- One service for each item will be discovered
+ One service is created for each compressor.

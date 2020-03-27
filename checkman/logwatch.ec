@@ -10,6 +10,6 @@ description:
  logwatch patterns before they are forwarded to the Event Console.
 
 inventory:
- One service "Log Forwarding" is created on each host when the option {logwatch_forward_to_ec} is
- set to {True}.
+ One service {"Log Forwarding"} is created on each host when the option
+ {logwatch_forward_to_ec} is set to {True}.
 

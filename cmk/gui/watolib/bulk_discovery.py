@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
@@ -51,15 +52,10 @@ def get_tasks(hosts_to_discover, bulk_size):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    if render_form:
-        render = "form"
-    else:
-        render = None
+    selection_elements = []  # type: List[ValueSpec]
 
     if include_subfolders:
-        selection_elements = [Checkbox(label=_("Include all subfolders"), default_value=True)]
-    else:
-        selection_elements = []
+        selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
 
     selection_elements += [
         Checkbox(label=_("Only include hosts that failed on previous discovery"),
@@ -70,7 +66,7 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 
     return Dictionary(
         title=_("Bulk discovery"),
-        render=render,
+        render="form" if render_form else "normal",
         elements=[
             ("mode",
              DropdownChoice(
@@ -93,9 +89,11 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
                    ])),
             ("error_handling",
-             Checkbox(title=_("Error handling"),
-                      label=_("Ignore errors in single check plugins"),
-                      default_value=True)),
+             Checkbox(
+                 title=_("Error handling"),
+                 label=_("Ignore errors in single check plugins"),
+                 default_value=True,
+             )),
         ],
         optional_keys=[],
     )

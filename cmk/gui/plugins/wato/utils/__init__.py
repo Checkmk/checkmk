@@ -21,7 +21,6 @@ import six
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.globals import g
 import cmk.gui.mkeventd
 import cmk.gui.config as config
 from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
@@ -31,7 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (  # pylint: disable=unused-import
@@ -521,40 +520,53 @@ class _GroupSelection(ElementSelection):
 
 def ContactGroupSelection(**kwargs):
     """Select a single contact group"""
-    return _GroupSelection("contact",
-                           choices=lambda: _group_choices(load_contact_group_information()),
-                           **kwargs)
+    return _GroupSelection("contact", choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupSelection(**kwargs):
     """Select a single service group"""
-    return _GroupSelection("service",
-                           choices=lambda: _group_choices(load_service_group_information()),
-                           **kwargs)
+    return _GroupSelection("service", choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupSelection(**kwargs):
     """Select a single host group"""
-    return _GroupSelection("host",
-                           choices=lambda: _group_choices(load_host_group_information()),
-                           **kwargs)
+    return _GroupSelection("host", choices=_sorted_host_group_choices, **kwargs)
 
 
 def ContactGroupChoice(**kwargs):
     """Select multiple contact groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_contact_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupChoice(**kwargs):
     """Select multiple service groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_service_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupChoice(**kwargs):
     """Select multiple host groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+    return DualListChoice(choices=_sorted_host_group_choices, **kwargs)
+
+
+def _sorted_contact_group_choices():
+    cache_id = "sorted_contact_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_contact_group_information())
+    return g.cache_id
+
+
+def _sorted_service_group_choices():
+    cache_id = "sorted_service_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_service_group_information())
+    return g.cache_id
+
+
+def _sorted_host_group_choices():
+    cache_id = "sorted_host_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_host_group_information())
+    return g.cache_id
 
 
 def _group_choices(group_information):

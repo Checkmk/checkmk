@@ -1,0 +1,11 @@
+Title: jira_issues: Fixed possible UnicodeEncodeError
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.6.0p11
+Date: 1585322254
+Class: fix
+
+If error messages contain non ASCII characters, the notification plugin failed
+with an UnicodeEncodeError. This has been fixed.

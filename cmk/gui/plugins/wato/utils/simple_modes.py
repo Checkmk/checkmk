@@ -14,7 +14,9 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, List, Type, Union, Text, Tuple, Dict,
+)
 import six
 
 from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
@@ -125,7 +127,7 @@ class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
         super(SimpleWatoModeBase, self).__init__()
 
     def _add_change(self, action, entry, text):
-        # type: (str, dict, str) -> None
+        # type: (str, Dict, Text) -> None
         """Add a WATO change entry for this object type modifications"""
         watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
                            text,
@@ -174,11 +176,12 @@ class SimpleListMode(SimpleWatoModeBase):
         if not html.transaction_valid():
             return
 
-        if not html.request.has_var("_action"):
+        action_var = html.request.get_str_input("_action")
+        if action_var is None:
             return
 
-        if html.request.var("_action") != "delete":
-            return self._handle_custom_action(html.request.var("_action"))
+        if action_var != "delete":
+            return self._handle_custom_action(action_var)
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
@@ -271,7 +274,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                                   _("This %s does not exist.") % self._mode_type.name_singular())
 
             self._new = False
-            self._ident = ident
+            self._ident = ident  # type: Optional[str]
             self._entry = entry
             return
 

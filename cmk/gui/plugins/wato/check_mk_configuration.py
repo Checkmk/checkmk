@@ -6,9 +6,13 @@
 
 import re
 import logging
+from typing import (  # pylint: disable=unused-import
+    Dict, List,
+)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
+from cmk.utils.tags import TagGroup  # pylint: disable=unused-import
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -18,35 +22,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-    TextUnicode,
-    HTTPUrl,
-    DropdownChoice,
-    Tuple,
-    ListOf,
-    Integer,
-    Float,
-    Transform,
-    ListOfStrings,
-    IPNetwork,
-    CascadingDropdown,
-    MonitoringState,
-    RegExpUnicode,
-    IconSelector,
-    PasswordSpec,
-    ListOfTimeRanges,
-    Age,
-    FixedValue,
-    Optional,
-    Alternative,
-    ListChoice,
-    Checkbox,
-    ID,
-    ListOfCAs,
-    LogLevelChoice,
-    Labels,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Dictionary, TextAscii, TextUnicode, HTTPUrl, DropdownChoice, Tuple, ListOf, Integer, Float,
+    Transform, ListOfStrings, IPNetwork, CascadingDropdown, MonitoringState, RegExpUnicode,
+    IconSelector, PasswordSpec, ListOfTimeRanges, Age, FixedValue, Optional, Alternative,
+    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoiceList,
 )
 
 from cmk.gui.plugins.wato import (
@@ -763,7 +743,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - consist only of checkbox tags
         #  - contain at least two entries
         choices = []
-        by_topic = {}
+        by_topic = {}  # type: Dict[str, List[TagGroup]]
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic, []).append(tag_group)
@@ -2170,12 +2150,11 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         )
 
     def _default_user_profile_elements(self):
-        elements = []
-
         if cmk_version.is_managed_edition():
             import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-            elements += managed.customer_choice_element()
-
+            elements = managed.customer_choice_element()
+        else:
+            elements = []
         return elements + [
             ('roles',
              ListChoice(
@@ -2663,7 +2642,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                          )),
                         ("proxy_url", HTTPProxyInput()),
                     ],
-                    optional_keys=None,
+                    optional_keys=False,
                 ),
                 title=_("HTTP proxies"),
                 movable=False,
@@ -3126,13 +3105,7 @@ rulespec_registry.register(
 
 
 def _host_check_commands_host_check_command_choices():
-    if config.user.may('wato.add_or_modify_executables'):
-        custom_choice = [
-            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
-        ]
-    else:
-        custom_choice = []
-    return [
+    choices = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Check_MK Micro Core)")),
         ("tcp", _("TCP Connect"),
@@ -3147,7 +3120,11 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ] + custom_choice
+    ]  # type: CascadingDropdownChoiceList
+    if config.user.may('wato.add_or_modify_executables'):
+        return choices + [
+            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
+        ]
 
 
 def _valuespec_host_check_commands():

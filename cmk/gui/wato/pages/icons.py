@@ -7,6 +7,7 @@
 import os
 import io
 import six
+from PIL import Image, PngImagePlugin  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -23,6 +24,7 @@ from cmk.gui.valuespec import (
     Dictionary,
 )
 
+from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -57,22 +59,26 @@ class ModeIcons(WatoMode):
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):
-        return Dictionary(title=_('Icon'),
-                          optional_keys=False,
-                          render="form",
-                          elements=[('icon',
-                                     ImageUpload(
-                                         title=_('Icon'),
-                                         allow_empty=False,
-                                         max_size=(80, 80),
-                                         validate=self._validate_icon,
-                                     )),
-                                    ('category',
-                                     DropdownChoice(
-                                         title=_('Category'),
-                                         choices=config.wato_icon_categories,
-                                         no_preselect=True,
-                                     ))])
+        return Dictionary(
+            title=_('Icon'),
+            optional_keys=False,
+            render="form",
+            elements=[
+                ('icon',
+                 ImageUpload(
+                     title=_('Icon'),
+                     allow_empty=False,
+                     max_size=(80, 80),
+                     validate=self._validate_icon,
+                 )),
+                ('category',
+                 DropdownChoice(
+                     title=_('Category'),
+                     choices=config.wato_icon_categories,
+                     no_preselect=True,
+                 )),
+            ],
+        )
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
@@ -85,6 +91,7 @@ class ModeIcons(WatoMode):
                   'choose another name for your icon.'))
 
     def action(self):
+        # type: () -> ActionResult
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
@@ -96,7 +103,7 @@ class ModeIcons(WatoMode):
                 elif c is False:
                     return ""
                 else:
-                    return
+                    return None
 
         elif html.request.has_var("_do_upload"):
             vs_upload = self._vs_upload()
@@ -104,9 +111,10 @@ class ModeIcons(WatoMode):
             vs_upload.validate_value(icon_info, '_upload_icon')
             self._upload_icon(icon_info)
 
+        return None
+
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
-        from PIL import Image, PngImagePlugin  # type: ignore[import]
         im = Image.open(io.BytesIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
@@ -125,6 +133,7 @@ class ModeIcons(WatoMode):
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
     def page(self):
+        # type: () -> None
         html.h3(_("Upload Icon"))
         html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
 

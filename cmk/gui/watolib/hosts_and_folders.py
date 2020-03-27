@@ -1543,15 +1543,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         ])
 
     def locked(self):
-        # type: () -> bool
+        # type: () -> Union[bool, Text]
         return self._locked
 
     def locked_subfolders(self):
-        # type: () -> bool
+        # type: () -> Union[bool, Text]
         return self._locked_subfolders
 
     def locked_hosts(self):
-        # type: () -> bool
+        # type: () -> Union[bool, Text]
         self._load_hosts_on_demand()
         return self._locked_hosts
 

@@ -9,12 +9,15 @@ import six
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 from cmk.gui.table import table_element
-import cmk.gui.plugins.userdb.ldap_connector
+from cmk.gui.plugins.userdb.ldap_connector import (
+    LDAPUserConnector,
+    LDAPAttributePluginGroupsToRoles,
+    LDAPConnectionValuespec,
+)
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -68,7 +71,7 @@ class ModeLDAPConfig(LDAPMode):
     def action(self):
         connections = load_connection_config(lock=True)
         if html.request.has_var("_delete"):
-            index = int(html.request.var("_delete"))
+            index = html.request.get_integer_input_mandatory("_delete")
             connection = connections[index]
             c = wato_confirm(
                 _("Confirm deletion of LDAP connection"),
@@ -150,7 +153,7 @@ class ModeEditLDAPConnection(LDAPMode):
         return ["global"]
 
     def _from_vars(self):
-        self._connection_id = html.request.var("id")
+        self._connection_id = html.request.get_ascii_input("id")
         self._connection_cfg = {}
         self._connections = load_connection_config(lock=html.is_transaction())
 
@@ -198,6 +201,8 @@ class ModeEditLDAPConnection(LDAPMode):
         else:
             self._connection_cfg["id"] = self._connection_id
             self._connections[self._connection_nr] = self._connection_cfg
+
+        assert self._connection_id is not None
 
         if self._new:
             log_what = "new-ldap-connection"
@@ -248,6 +253,8 @@ class ModeEditLDAPConnection(LDAPMode):
                        'LDAP Documentation</a>.'))))
         else:
             connection = userdb.get_connection(self._connection_id)
+            assert isinstance(connection, LDAPUserConnector)
+
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))
                 with table_element('test', searchable=False) as table:
@@ -257,7 +264,7 @@ class ModeEditLDAPConnection(LDAPMode):
                             state, msg = test_func(connection, address)
                         except Exception as e:
                             state = False
-                            msg = _('Exception: %s') % html.render_text(e)
+                            msg = _('Exception: %s') % html.render_text("%s" % e)
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
@@ -364,7 +371,7 @@ class ModeEditLDAPConnection(LDAPMode):
         params = active_plugins['groups_to_roles']
         connection.connect(enforce_new=True, enforce_server=address)
 
-        plugin = cmk.gui.plugins.userdb.ldap_connector.LDAPAttributePluginGroupsToRoles()
+        plugin = LDAPAttributePluginGroupsToRoles()
         ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
@@ -387,5 +394,4 @@ class ModeEditLDAPConnection(LDAPMode):
         return True, _('Found all %d groups.') % num_groups
 
     def _valuespec(self):
-        return cmk.gui.plugins.userdb.ldap_connector.LDAPConnectionValuespec(
-            self._new, self._connection_id)
+        return LDAPConnectionValuespec(self._new, self._connection_id)

@@ -79,7 +79,7 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         if errors:
             html.open_div(class_="info")
-            html.open_table(class_="validationerror", boder=0, cellspacing=0, cellpadding=0)
+            html.open_table(class_="validationerror", boder="0", cellspacing="0", cellpadding="0")
             html.open_tr()
 
             html.open_td(class_="img")
@@ -104,13 +104,14 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
             html.close_table()
             html.close_div()
 
-        lock_message = ""
-        if watolib.Folder.current().locked_hosts():
-            if watolib.Folder.current().locked_hosts() is True:
+        lock_message = u""
+        locked_hosts = watolib.Folder.current().locked_hosts()
+        if locked_hosts:
+            if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
-            else:
-                lock_message = watolib.Folder.current().locked_hosts()
-        if len(lock_message) > 0:
+            elif isinstance(locked_hosts, six.text_type):
+                lock_message = locked_hosts
+        if lock_message:
             html.div(lock_message, class_="info")
 
         html.begin_form("edit_host", method="POST")
@@ -177,7 +178,7 @@ class ModeEditHost(HostMode):
         return ["hosts"]
 
     def _init_host(self):
-        hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
+        hostname = html.request.get_ascii_input_mandatory("host")
 
         if not watolib.Folder.current().has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -313,7 +314,7 @@ class CreateHostMode(HostMode):
         attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = html.request.var("host")
+        hostname = html.request.get_ascii_input_mandatory("host")
         Hostname().validate_value(hostname, "host")
 
         if html.check_transaction():

@@ -42,7 +42,9 @@ from cmk.gui.valuespec import (  # pylint: disable=unused-import
     TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
-    WatoMode,)
+    ActionResult,
+    WatoMode,
+)
 from cmk.gui.plugins.wato.utils.simple_modes import (
     SimpleModeType,
     SimpleListMode,

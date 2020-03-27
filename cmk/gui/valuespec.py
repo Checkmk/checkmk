@@ -33,8 +33,8 @@ import sre_constants
 import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple,
-    Type, TypeVar, Union,
+    Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text,
+    Tuple as _Tuple, Type, TypeVar, Union,
 )
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
@@ -408,6 +408,58 @@ class Age(ValueSpec):
         self._bounds.validate_value(value, varprefix)
 
 
+class NumericRenderer(object):
+    def __init__(
+        self,
+        size,  # type: _Optional[int]
+        maxvalue,  # type: _Optional[SupportsFloat]
+        label,  # type: _Optional[Text]
+        unit,  # type: Text
+        thousand_sep,  # type: _Optional[Text]
+        align,  # type: str
+    ):
+        super(NumericRenderer, self).__init__()
+        if size is not None:
+            self._size = size
+        elif maxvalue is not None:
+            self._size = (4 if isinstance(maxvalue, float) else 1) + int(math.log10(maxvalue))
+        else:
+            self._size = 5
+        self._label = label
+        self._unit = unit
+        self._thousand_sep = thousand_sep
+        self._align = align
+
+    def text_input(self, varprefix, text):
+        # type: (str, Text) -> None
+        html.text_input(varprefix,
+                        default_value=text,
+                        cssclass="number",
+                        size=self._size,
+                        style="text-align: right;" if self._align == "right" else "")
+
+    def render_input(self, varprefix, text):
+        # type: (str, Text) -> None
+        if self._label:
+            html.write(self._label)
+            html.nbsp()
+        self.text_input(varprefix, text)
+        if self._unit:
+            html.nbsp()
+            html.write(self._unit)
+
+    def format_text(self, text):
+        # type: (Text) -> Text
+        if self._thousand_sep:
+            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
+            for pos in range(len(sepped), len(text), 3):
+                sepped += self._thousand_sep + text[pos:pos + 3]
+            text = sepped
+        if self._unit:
+            text += "&nbsp;" + self._unit
+        return text
+
+
 class Integer(ValueSpec):
     """Editor for a single integer"""
     def __init__(  # pylint: disable=redefined-builtin
@@ -431,18 +483,13 @@ class Integer(ValueSpec):
                                       default_value=default_value,
                                       validate=validate)
         self._bounds = Bounds[int](minvalue, maxvalue)
-        self._label = label
-        self._unit = unit
-        self._thousand_sep = thousand_sep
+        self._renderer = NumericRenderer(size=size,
+                                         maxvalue=maxvalue,
+                                         label=label,
+                                         unit=unit,
+                                         thousand_sep=thousand_sep,
+                                         align=align)
         self._display_format = display_format
-        self._align = align
-
-        if size is not None:
-            self._size = size
-        elif maxvalue is not None:
-            self._size = 1 + int(math.log10(maxvalue))
-        else:
-            self._size = 5
 
     def canonical_value(self):
         # type: () -> int
@@ -450,18 +497,7 @@ class Integer(ValueSpec):
 
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-        style = "text-align: right;" if self._align == "right" else ""
-        html.text_input(varprefix,
-                        default_value=self._render_value(value),
-                        cssclass="number",
-                        size=self._size,
-                        style=style)
-        if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+        self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value):
         # type: (int) -> Text
@@ -473,23 +509,16 @@ class Integer(ValueSpec):
 
     def value_to_text(self, value):
         # type: (int) -> Text
-        text = self._display_format % value
-        if self._thousand_sep:
-            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
-            for pos in range(len(sepped), len(text), 3):
-                sepped += self._thousand_sep + text[pos:pos + 3]
-            text = sepped
-        if self._unit:
-            text += "&nbsp;" + self._unit
-        return text
+        return self._renderer.format_text(self._render_value(value))
 
     def validate_datatype(self, value, varprefix):
         # type: (int, str) -> None
-        if not isinstance(value, numbers.Integral):
-            raise MKUserError(
-                varprefix,
-                _("The value %r has the wrong type %s, but must be of type int") %
-                (value, _type_name(value)))
+        if isinstance(value, numbers.Integral):
+            return
+        raise MKUserError(
+            varprefix,
+            _("The value %r has the wrong type %s, but must be of type int") %
+            (value, _type_name(value)))
 
     def _validate_value(self, value, varprefix):
         # type: (int, str) -> None
@@ -512,10 +541,7 @@ class Filesize(Integer):
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
         exp, count = self.get_exponent(value)
-        html.text_input(varprefix + '_size',
-                        default_value=str(count),
-                        size=self._size,
-                        cssclass="number")
+        self._renderer.text_input(varprefix + '_size', str(count))
         html.nbsp()
         choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]  # type: Choices
         html.dropdown(varprefix + '_unit', choices, deflt=str(exp))
@@ -2286,19 +2312,13 @@ class Float(ValueSpec):
                                     default_value=default_value,
                                     validate=validate)
         self._bounds = Bounds[float](minvalue, maxvalue)
-        self._label = label
-        self._unit = unit
-        self._thousand_sep = thousand_sep
+        self._renderer = NumericRenderer(size=size,
+                                         maxvalue=maxvalue,
+                                         label=label,
+                                         unit=unit,
+                                         thousand_sep=thousand_sep,
+                                         align=align)
         self._display_format = display_format
-        self._align = align
-
-        if size is not None:
-            self._size = size
-        elif maxvalue is not None:
-            self._size = 4 + int(math.log10(maxvalue))
-        else:
-            self._size = 5
-
         self._decimal_separator = decimal_separator
         self._allow_int = allow_int
 
@@ -2308,18 +2328,7 @@ class Float(ValueSpec):
 
     def render_input(self, varprefix, value):
         # type: (str, float) -> None
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-        style = "text-align: right;" if self._align == "right" else ""
-        html.text_input(varprefix,
-                        default_value=self._render_value(value),
-                        cssclass="number",
-                        size=self._size,
-                        style=style)
-        if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+        self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value):
         # type: (float) -> Text
@@ -2331,24 +2340,15 @@ class Float(ValueSpec):
 
     def value_to_text(self, value):
         # type: (float) -> Text
-        text = self._display_format % value
-        if self._thousand_sep:
-            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
-            for pos in range(len(sepped), len(text), 3):
-                sepped += self._thousand_sep + text[pos:pos + 3]
-            text = sepped
-        if self._unit:
-            text += "&nbsp;" + self._unit
-        return text.replace(".", self._decimal_separator)
+        txt = self._renderer.format_text(self._render_value(value))
+        return txt.replace(".", self._decimal_separator)
 
     def validate_datatype(self, value, varprefix):
         # type: (float, str) -> None
         if isinstance(value, float):
             return
-
         if isinstance(value, numbers.Integral) and self._allow_int:
             return
-
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but must be of type float%s") %

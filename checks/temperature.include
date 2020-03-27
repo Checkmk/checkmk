@@ -7,10 +7,10 @@
 from typing import Union, Tuple, Optional, AnyStr, List
 
 # TODO: Can be removed with python 3.8+
-if sys.version_info[0] == 3 and sys.version_info[1] < 8:
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from mypy_extensions import TypedDict
 else:
-    from typing import TypedDict
+    from typing import TypedDict  # pylint: disable=no-name-in-module
 
 
 def minn(a, b):
@@ -50,7 +50,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
 def from_celsius(tempc, unit, relative=False):
     if unit == "f":
         return celsius_to_fahrenheit(tempc, relative)
-    elif unit == "k":
+    if unit == "k":
         if relative:
             return tempc
         return tempc + 273.15
@@ -60,12 +60,12 @@ def from_celsius(tempc, unit, relative=False):
 def to_celsius(reading, unit, relative=False):
     if isinstance(reading, tuple):
         return tuple([to_celsius(x, unit, relative) for x in reading])
-    elif unit == "f":
+    if unit == "f":
         return fahrenheit_to_celsius(reading, relative)
-    elif unit == "k":
+    if unit == "k":
         if relative:
             return reading
-        elif reading is None:
+        if reading is None:
             return None
         return reading - 273.15
     return reading
@@ -551,7 +551,7 @@ def check_temperature_list(sensorlist, params, unique_name):
     def worststate(a, b):
         if a != 3 and b != 3:
             return max(a, b)
-        elif a != 2 and b != 2:
+        if a != 2 and b != 2:
             return 3
         return 2
 

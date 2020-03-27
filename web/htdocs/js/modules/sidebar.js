@@ -897,6 +897,17 @@ export function fetch_nagvis_snapin_contents() {
 }
 
 /************************************************
+ * Bookmark snapin
+ *************************************************/
+
+export function add_bookmark() {
+    var url = parent.frames[1].location;
+    var title = parent.frames[1].document.title;
+    ajax.get_url("add_bookmark.py?title=" + encodeURIComponent(title)
+                 + "&url=" + encodeURIComponent(url), utils.update_contents, "snapin_bookmarks");
+}
+
+/************************************************
  * Popup Message Handling
  *************************************************/
 

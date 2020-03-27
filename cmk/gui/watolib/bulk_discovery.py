@@ -25,10 +25,16 @@ from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
-                                             ("host_name", str)])
-DiscoveryTask = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
-                                             ("host_names", list)])
+DiscoveryHost = NamedTuple("DiscoveryHost", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_name", str),
+])
+DiscoveryTask = NamedTuple("DiscoveryTask", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_names", list),
+])
 
 
 def get_tasks(hosts_to_discover, bulk_size):
@@ -185,7 +191,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         counts, failed_hosts = check_mk_automation(task.site_id,
                                                    "inventory",
                                                    arguments,
-                                                   timeout=timeout)
+                                                   timeout=timeout,
+                                                   non_blocking_http=True)
 
         return counts, failed_hosts
 

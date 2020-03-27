@@ -7,7 +7,7 @@
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name
-# - Consolidate ListOf and ListOfStrings/ListOfIntegers
+# - Consolidate ListOf and ListOfStrings
 # - Checkbox
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
@@ -454,10 +454,8 @@ class Integer(ValueSpec):
             html.write(self._label)
             html.nbsp()
         style = "text-align: right;" if self._align == "right" else ""
-        # TODO: Huh??? This is needed for ListOfIntegers
-        default_value = "" if value == "" else self._render_value(value)
         html.text_input(varprefix,
-                        default_value=default_value,
+                        default_value=self._render_value(value),
                         cssclass="number",
                         size=self._size,
                         style=style)
@@ -2314,10 +2312,8 @@ class Float(ValueSpec):
             html.write(self._label)
             html.nbsp()
         style = "text-align: right;" if self._align == "right" else ""
-        # TODO: Huh??? This is needed for ListOfIntegers
-        default_value = "" if value == "" else self._render_value(value)
         html.text_input(varprefix,
-                        default_value=default_value,
+                        default_value=self._render_value(value),
                         cssclass="number",
                         size=self._size,
                         style=style)

@@ -1,16 +1,16 @@
-title: UCD SNMP Daemon: Total and used Memory
+title: UCD SNMP Daemon: Memory check
 agents: snmp
 catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
- This check monitors the available and total memory
+ This check monitors the memory and swap
  via SNMP on systems running the UCD SNMP daemon.
  This daemon is mostly found on Linux systems and used by some hardware
- appliances (such as Riverbed Steelhead).
+ appliances (such as Riverbed Steelhead or Dell EMC ECS).
 
- Upper default levels are set to 80, 90 %. These levels are configurable.
- Note that the check counts buffered and cached memory as free memory, as
+ Upper default levels are set to 80, 90%. These levels are configurable.
+ Note that the check counts memory free, buffered and cached memory as actual free memory, as
  one should for Linux systems.
 
 item:

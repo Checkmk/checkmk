@@ -10,15 +10,20 @@
 # works but is not consistent.  This will be fixed in the future.
 # If we change this we loose history and parameter sets have to be adapted.
 
-# .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
-# .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
-# .1.3.6.1.4.1.2021.4.14.0 100    --> UCD-SNMP-MIB::memBuffer.0
-# .1.3.6.1.4.1.2021.4.15.0 200    --> UCD-SNMP-MIB::memCached.0
+# .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
+# .1.3.6.1.4.1.2021.4.3.0 8388604   --> UCD-SNMP-MIB::MemTotalSwap.0
+# .1.3.6.1.4.1.2021.4.4.0 8388604   --> UCD-SNMP-MIB::MemAvailSwap.0
+# .1.3.6.1.4.1.2021.4.5.0 4003584   --> UCD-SNMP-MIB::MemTotalReal.0
+# .1.3.6.1.4.1.2021.4.11.0 12233816 --> UCD-SNMP-MIB::MemTotalFree.0
+# .1.3.6.1.4.1.2021.4.12.0 16000    --> UCD-SNMP-MIB::memMinimumSwap.0
+# .1.3.6.1.4.1.2021.4.13.0 3163972  --> UCD-SNMP-MIB::memShared.0
+# .1.3.6.1.4.1.2021.4.14.0 30364    --> UCD-SNMP-MIB::memBuffer.0
+# .1.3.6.1.4.1.2021.4.15.0 10216780 --> UCD-SNMP-MIB::memCached.0
+# .1.3.6.1.4.1.2021.4.100.0 0       --> UCD-SNMP-MIB::memSwapError.0
+# .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
 # suggested by cutomer
 factory_settings["ucd_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
-
-BUFFER_CACHE_KEYS = ['memBuffer', 'memCached']
 
 
 def _info_str_to_bytes(info_str):
@@ -26,27 +31,40 @@ def _info_str_to_bytes(info_str):
 
 
 def parse_ucd_mem(info):
-
     if not info:
         return {}
 
-    # memTotal and memAvailable are mandatory
+    parsed = {}
+    error, swap_total, swap_avail, mem_total, mem_avail, mem_free, swap_min, mem_shared, mem_buffer, mem_cached, error_swap, error_swap_msg = info[
+        0]
     try:
-        parsed_mem = {
-            "memTotal": _info_str_to_bytes(info[0][0]),
-            "memAvail": _info_str_to_bytes(info[0][1])
+        parsed = {
+            # error messages
+            'error': error,
+            'error_swap': int(error_swap),
+            'error_swap_msg': error_swap_msg,
+            # memory
+            'MemTotal': _info_str_to_bytes(mem_total),
+            'MemAvail': _info_str_to_bytes(mem_avail),
+            'MemFree': _info_str_to_bytes(mem_free),
+            'Shared': _info_str_to_bytes(mem_shared),
+            'Buffer': _info_str_to_bytes(mem_buffer),
+            'Cached': _info_str_to_bytes(mem_cached),
+            # swap
+            'SwapTotal': _info_str_to_bytes(swap_total),
+            'SwapFree': _info_str_to_bytes(swap_avail),
+            'SwapMinimum': _info_str_to_bytes(swap_min),
         }
+
+        # additional memory values that need to be calculated
+        parsed["MemUsed"] = parsed["MemTotal"] - (parsed["MemAvail"] + parsed["Buffer"] +
+                                                  parsed["Cached"])
+        parsed["SwapUsed"] = parsed["SwapTotal"] - parsed["SwapFree"]
+        parsed["TotalTotal"] = parsed["MemTotal"] + parsed["SwapTotal"]
+        parsed["TotalUsed"] = parsed["MemUsed"] + parsed["SwapUsed"]
     except ValueError:
-        return {}
-
-    # memTotal and memAvailable are optional
-    for key, val in zip(BUFFER_CACHE_KEYS, info[0][2:]):
-        try:
-            parsed_mem[key] = _info_str_to_bytes(val)
-        except ValueError:
-            pass
-
-    return parsed_mem
+        pass
+    return parsed
 
 
 def inventory_ucd_mem(parsed):
@@ -54,20 +72,20 @@ def inventory_ucd_mem(parsed):
 
 
 def check_ucd_mem(item, params, parsed):
+    error = parsed['error']
+    if error != 'swap':
+        yield 1, 'Error: %s' % error
 
-    mem_used_bytes = parsed["memTotal"] - parsed["memAvail"]
+    if parsed['error_swap'] != 0:
+        yield 1, parsed['error_swap_msg']
 
-    # buffer and cache count as free memory
-    for key in BUFFER_CACHE_KEYS:
-        mem_used_bytes -= parsed.get(key, 0)
+    # map legacy levels
+    if params.get('levels') is not None:
+        params['levels_ram'] = params.pop('levels')
 
-    return check_memory_element(
-        "Usage",
-        mem_used_bytes,
-        parsed["memTotal"],
-        params.get("levels"),
-        metric_name="mem_used",
-    )
+    results = check_memory_dict(parsed, params)
+    for state, infotext, perfdata in results.values():
+        yield state, infotext, perfdata
 
 
 check_info['ucd_mem'] = {
@@ -79,16 +97,25 @@ check_info['ucd_mem'] = {
     'snmp_info': (
         ".1.3.6.1.4.1.2021.4",
         [
-            "5",  # memTotal     -> kB
-            "6",  # memAvailable -> kB
-            "14",  # memBuffer    -> kB
-            "15",  # memCached    -> kB
+            "2",  # memErrorName
+            "3",  # memTotalSwap
+            "4",  # memAvailSwap
+            "5",  # memTotalReal
+            "6",  # memAvailReal
+            "11",  # MemTotalFree
+            "12",  # memMinimumSwap
+            "13",  # memShared
+            "14",  # memBuffer
+            "15",  # memCached
+            "100",  # memSwapError
+            "101",  # smemSwapErrorMsg
         ]),
+
     # Some devices are reporting wrong data on
     # HOST-RESOURCES-MIB. Use UCD-MIB in these
     # cases instead
     'snmp_scan_function': is_ucd_mem,
     'default_levels_variable': 'ucd_mem_default_levels',
     'group': 'memory_simple',
-    'includes': ["ucd_hr.include", "mem.include"],
+    'includes': ["ucd_hr.include", "mem", "mem.include"],
 }

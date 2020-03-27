@@ -20,7 +20,7 @@
 #    implement the "Remove all downtimes" button in a normal hosts/
 #    services views.
 
-import os, sys, getopt, time, urllib
+import os, sys, getopt, time, urllib.request, urllib.parse, urllib.error
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -150,7 +150,7 @@ verbose("Secret:        " + (opt_secret or "(none specified)"))
 
 
 def make_url(base, variables):
-    vartext = "&".join(["%s=%s" % (varname, urllib.quote(value)) for (varname, value) in variables])
+    vartext = "&".join(["%s=%s" % (varname, urllib.parse.quote(value)) for (varname, value) in variables])
     return base + "?" + vartext
 
 
@@ -158,14 +158,14 @@ def set_downtime(variables, add_vars):
     url = make_url(opt_url + "view.py", variables + add_vars)
     verbose("URL:           " + url)
     try:
-        pipe = urllib.urlopen(url)
+        pipe = urllib.request.urlopen(url)
         lines = pipe.readlines()
         verbose(" --> Got %d lines of response" % len(lines))
         if opt_verbose > 1:
             for line in lines:
                 verbose("OUTPUT: %s" % line.rstrip())
         for line in lines:
-            if line.startswith('<div class=error>'):
+            if line.startswith(b'<div class=error>'):
                 bail_out(line[17:].split('<')[0])
     except Exception as e:
         bail_out("Cannot call Multisite URL: %s" % e)

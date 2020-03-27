@@ -232,5 +232,6 @@ class ModePatternEditor(WatoMode):
         # type: (HostName, CheckPluginName, Item) -> ServiceName
         # TODO: re-enable once the GUI is using Python3
         #return cmk.base.export.service_description(hostname, check_plugin_name, item)
+        assert item is not None
         return watolib.check_mk_local_automation("get-service-name",
                                                  [hostname, check_plugin_name, item])

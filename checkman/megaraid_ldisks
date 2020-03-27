@@ -15,9 +15,10 @@ description:
  with the driver {mptsas}, whereas {MegaCli} uses a device created
  by the driver {megaraid_sas}.
 
+ All states other than {Optimal} are considere critical.
+
 item:
  The number of the adapter and the logical disk, separated by a slash, e.g. {"0/0"}.
 
 inventory:
- All logical disks are automatically inventorized. All states other than
- {Optimal} are considere critical.
+ One service is created for each logical disk.

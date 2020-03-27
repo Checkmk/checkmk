@@ -38,5 +38,5 @@ description:
  possible RAM corruption.
 
 inventory:
- One item per Linux host is being created.
+ One service is created for each Linux host.
 

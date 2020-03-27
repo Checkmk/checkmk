@@ -20,4 +20,4 @@ item:
  example {"0/4"} for enclosure {0} and slot {4}.
 
 inventory:
- One service is created for each found disk.
+ One service is created for each disk.

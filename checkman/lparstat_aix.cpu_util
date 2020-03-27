@@ -14,5 +14,5 @@ description:
  is displayed.
 
 inventory:
- On each LPAR one service is generated.
+ One service is created on each LPAR.
 

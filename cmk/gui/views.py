@@ -35,20 +35,9 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
-from cmk.gui.valuespec import (
-    Hostname,
-    DropdownChoice,
-    Integer,
-    ListChoice,
-    Dictionary,
-    FixedValue,
-    IconSelector,
-    ListOf,
-    Tuple,
-    Transform,
-    TextUnicode,
-    Alternative,
-    CascadingDropdown,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Alternative, CascadingDropdown, Dictionary, DropdownChoice, FixedValue, Hostname, IconSelector,
+    Integer, ListChoice, ListOf, TextUnicode, Transform, Tuple, ValueSpec,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
@@ -1030,7 +1019,8 @@ def view_editor_column_spec(ident, title, ds_name):
         return elements
 
     painters = painters_of_datasource(ds_name)
-    vs_column = Tuple(title=_('Column'), elements=column_elements(painters, 'painter'))
+    vs_column = Tuple(title=_('Column'), elements=column_elements(painters,
+                                                                  'painter'))  # type: ValueSpec
 
     join_painters = join_painters_of_datasource(ds_name)
     if ident == 'columns' and join_painters:
@@ -1138,7 +1128,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         value = ast.literal_eval(request["encoded_value"])
 
         with html.plugged():
-            vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
+            vs.show_sub_valuespec(six.ensure_str(request["varprefix"]), sub_vs, value)
             return {"html_code": html.drain()}
 
     def _get_sub_vs(self, vs, choice_id):
@@ -1357,9 +1347,10 @@ def show_view(view, view_renderer, only_count=False):
     # Is hopefully cleaned up soon.
     if view.datasource.ident in ['hosts', 'services']:
         if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
-            html.request.set_var("opthost_group", html.request.var("hostgroup"))
+            html.request.set_var("opthost_group", html.request.get_str_input_mandatory("hostgroup"))
         if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
-            html.request.set_var("optservice_group", html.request.var("servicegroup"))
+            html.request.set_var("optservice_group",
+                                 html.request.get_str_input_mandatory("servicegroup"))
 
     # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
     # which is of single context "host" using a host name of a unrelated event, the list of
@@ -1373,9 +1364,8 @@ def show_view(view, view_renderer, only_count=False):
     # with the current mode.
     if _is_ec_unrelated_host_view(view):
         # Set the value for the event host filter
-        if not html.request.has_var("event_host") and (html.request.has_var("event_host") or
-                                                       html.request.has_var("host")):
-            html.request.set_var("event_host", html.request.var("host"))
+        if not html.request.has_var("event_host") and html.request.has_var("host"):
+            html.request.set_var("event_host", html.request.get_str_input_mandatory("host"))
 
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:
@@ -1809,10 +1799,11 @@ def view_optiondial_off(option):
 # browser reload of the DIV containing the actual status data is done.
 @cmk.gui.pages.register("ajax_set_viewoption")
 def ajax_set_viewoption():
-    view_name = html.request.var("view_name")
-    option = html.request.var("option")
-    value = html.request.var("value")
-    value = {'true': True, 'false': False}.get(value, value)
+    view_name = html.request.get_str_input_mandatory("view_name")
+    option = html.request.get_str_input_mandatory("option")
+    value_str = html.request.var("value")
+    value_mapping = {'true': True, 'false': False}  # type: Dict[Optional[str], bool]
+    value = value_mapping.get(value_str, value_str)  # type: Union[None, str, bool, int]
     if isinstance(value, str) and value[0].isdigit():
         try:
             value = int(value)
@@ -1917,7 +1908,8 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
             if host:
                 url = _link_to_host_by_name(host)
             else:
-                url = _link_to_folder_by_path(html.request.var("wato_folder", ""))
+                url = _link_to_folder_by_path(
+                    html.request.get_str_input_mandatory("wato_folder", ""))
             html.context_button(_("WATO"),
                                 url,
                                 "wato",
@@ -2073,7 +2065,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
             vars_values.append((var, singlecontext_request_vars[var]))
 
         add_site_hint = visuals.may_add_site_hint(name,
-                                                  info_keys=visual_info_registry.keys(),
+                                                  info_keys=list(visual_info_registry.keys()),
                                                   single_info_keys=visual["single_infos"],
                                                   filter_names=dict(vars_values).keys())
 
@@ -2111,7 +2103,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
 
 @cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
-    id_ = html.request.var("id")
+    id_ = html.request.get_str_input_mandatory("id")
     counts = config.user.button_counts
     for i in counts:
         counts[i] *= 0.95
@@ -2310,7 +2302,7 @@ def show_command_form(is_open, datasource):
     html.hidden_fields()  # set all current variables, exception action vars
 
     # Show command forms, grouped by (optional) command group
-    by_group = {}
+    by_group = {}  # type: Dict[Any, List[Any]]
     for command_class in command_registry.values():
         command = command_class()
         if what in command.tables and config.user.may(command.permission().name):
@@ -2395,10 +2387,10 @@ def do_actions(view, what, action_rows, backurl):
         return False  # no actions done
 
     if not action_rows:
-        message = _("No rows selected to perform actions for.")
+        message_no_rows = _("No rows selected to perform actions for.")
         if html.output_format == "html":  # sorry for this hack
-            message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
-        html.show_error(message)
+            message_no_rows += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
+        html.show_error(message_no_rows)
         return False  # no actions done
 
     command = None
@@ -2445,7 +2437,7 @@ def do_actions(view, what, action_rows, backurl):
             if html.request.var("show_checkboxes") == "1":
                 html.request.del_var("selection")
                 weblib.selection_id()
-                backurl += "&selection=" + html.request.var("selection")
+                backurl += "&selection=" + html.request.get_str_input_mandatory("selection")
                 message += '<br><a href="%s">%s</a>' % (backurl,
                                                         _('Back to view with checkboxes reset'))
             if html.request.var("_show_result") == "0":

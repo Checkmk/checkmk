@@ -453,22 +453,14 @@ class Integer(ValueSpec):
         if self._label:
             html.write(self._label)
             html.nbsp()
-        if self._align == "right":
-            style = "text-align: right;"
-        else:
-            style = ""
-        if value == "":  # This is needed for ListOfIntegers
-            html.text_input(varprefix,
-                            default_value="",
-                            cssclass="number",
-                            size=self._size,
-                            style=style)
-        else:
-            html.text_input(varprefix,
-                            self._render_value(value),
-                            size=self._size,
-                            style=style,
-                            cssclass="number")
+        style = "text-align: right;" if self._align == "right" else ""
+        # TODO: Huh??? This is needed for ListOfIntegers
+        default_value = "" if value == "" else self._render_value(value)
+        html.text_input(varprefix,
+                        default_value=default_value,
+                        cssclass="number",
+                        size=self._size,
+                        style=style)
         if self._unit:
             html.nbsp()
             html.write(self._unit)
@@ -489,7 +481,6 @@ class Integer(ValueSpec):
             for pos in range(len(sepped), len(text), 3):
                 sepped += self._thousand_sep + text[pos:pos + 3]
             text = sepped
-
         if self._unit:
             text += "&nbsp;" + self._unit
         return text
@@ -2322,22 +2313,14 @@ class Float(ValueSpec):
         if self._label:
             html.write(self._label)
             html.nbsp()
-        if self._align == "right":
-            style = "text-align: right;"
-        else:
-            style = ""
-        if value == "":  # This is needed for ListOfIntegers
-            html.text_input(varprefix,
-                            default_value="",
-                            cssclass="number",
-                            size=self._size,
-                            style=style)
-        else:
-            html.text_input(varprefix,
-                            self._render_value(value),
-                            size=self._size,
-                            style=style,
-                            cssclass="number")
+        style = "text-align: right;" if self._align == "right" else ""
+        # TODO: Huh??? This is needed for ListOfIntegers
+        default_value = "" if value == "" else self._render_value(value)
+        html.text_input(varprefix,
+                        default_value=default_value,
+                        cssclass="number",
+                        size=self._size,
+                        style=style)
         if self._unit:
             html.nbsp()
             html.write(self._unit)
@@ -2358,7 +2341,6 @@ class Float(ValueSpec):
             for pos in range(len(sepped), len(text), 3):
                 sepped += self._thousand_sep + text[pos:pos + 3]
             text = sepped
-
         if self._unit:
             text += "&nbsp;" + self._unit
         return text.replace(".", self._decimal_separator)

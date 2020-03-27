@@ -561,7 +561,9 @@ class JobRenderer(object):
 
             cls.show_job_row_headers()
             odd = "even"
-            for job_id, job_status in sorted(jobs_info.items(), reverse=True):
+            for job_id, job_status in sorted(jobs_info.items(),
+                                             key=lambda x: x[1]["started"],
+                                             reverse=True):
                 cls.render_job_row(job_id, job_status, odd, **kwargs)
                 odd = "even" if odd == "odd" else "odd"
 

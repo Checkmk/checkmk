@@ -1209,7 +1209,7 @@ def get_graph_timerange_from_painter_options():
 
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
-    # type: (Timestamp, bool, bool, str, str) -> CellSpec
+    # type: (Timestamp, bool, int, str, str) -> CellSpec
     if not has_been_checked:
         return "age", "-"
 

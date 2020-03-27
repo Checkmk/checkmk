@@ -73,7 +73,6 @@ else
     if db2 +o connect to "$DB"; then
         millis_after=$(date +"%s%3N")
         millis_diff=$(( millis_after - millis_before ))
-
         echo "<<<db2_connections>>>"
         echo "[[[$INSTANCE:$DB]]]"
         echo "$DB_PORT"

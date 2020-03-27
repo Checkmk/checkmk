@@ -12,6 +12,10 @@
 # See http://mathias-kettner.de/cms_monitoring_oracle.html
 # for more details regarding configuration.
 
+# TODO
+# - cleanup ORACLE_SID, MK_SID, local sid
+# - separate remote instance, local, ASM
+
 #   .--default config------------------------------------------------------.
 #   |       _       __             _ _                      __ _           |
 #   |    __| | ___ / _| __ _ _   _| | |_    ___ ___  _ __  / _(_) __ _     |
@@ -21,12 +25,14 @@
 #   |                                                            |___/     |
 #   '----------------------------------------------------------------------'
 
-SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
-ASYNC_SECTIONS="tablespaces rman jobs resumable"
-SYNC_ASM_SECTIONS="instance processes"
-ASYNC_ASM_SECTIONS="asm_diskgroup"
-CACHE_MAXAGE=600
-OLRLOC=/etc/oracle/olr.loc
+load_default_config () {
+    SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
+    ASYNC_SECTIONS="tablespaces rman jobs resumable"
+    SYNC_ASM_SECTIONS="instance processes"
+    ASYNC_ASM_SECTIONS="asm_diskgroup"
+    CACHE_MAXAGE=600
+    OLRLOC=/etc/oracle/olr.loc
+}
 
 #.
 #   .--usage---------------------------------------------------------------.
@@ -39,6 +45,7 @@ OLRLOC=/etc/oracle/olr.loc
 #   '----------------------------------------------------------------------'
 
 display_usage () {
+    load_default_config
     cat <<MK-ORA-USAGE
 
 USAGE:
@@ -113,12 +120,17 @@ CONFIGURATION:
                         This variable has priority 3.
                         Default is empty.
 
+CONFIGURATION REMOTE INSTANCES:
+  REMOTE_INSTANCE_<id>="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:<version>:<tnsalias>"
+                        <piggybackhost> and <tnsalias> are optional.
+
 CONFIGURATION CUSTOM SQLS:
   The following variables for custom SQLs can be used in the configuration file
   mk_oracle.cfg. Global variables can be set in mk_oracle.cfg; local variables
   can be set within a section definition. Sections are defined in mk_oracle.cfg.
   There are global and local variables. The local variables have precedence and
   overwrite the global ones.
+  The variable "\$ORACLE_SID" can be used within every section.
 
   SQLS_SECTIONS="<section>,..."
                         Registry of custom SQL sections. If this configuration
@@ -135,7 +147,7 @@ CONFIGURATION CUSTOM SQLS:
 
   SQLS_SIDS="<sid>,..." List of SIDs for which the custom SQLs will be executed.
                         If not set then the section will be ignored. You can use
-                        \$SIDS in order to execute the custom SQLs for all SIDs.
+                        "\$SIDS" in order to execute the custom SQLs for all SIDs.
                         Can be set globally or within a section definition.
 
   SQLS_DIR=/PATH/TO/SQLDIR
@@ -247,25 +259,29 @@ done
 #   |                                           |___/                      |
 #   '----------------------------------------------------------------------'
 
-if [ ! "$MK_CONFDIR" ]; then
-    echo "MK_CONFDIR not set!" >&2
-    exit 1
-fi
+load_config () {
+    if [ ! "$MK_CONFDIR" ]; then
+        echo "MK_CONFDIR not set!" >&2
+        exit 1
+    fi
 
-if [ ! "$MK_VARDIR" ]; then
-    #TODO Which default? (run_cached/ mk_oracle.found, log file)
-    export MK_VARDIR=$MK_CONFDIR
-fi
+    if [ ! "$MK_VARDIR" ]; then
+        #TODO Which default? (run_cached/ mk_oracle.found, log file)
+        export MK_VARDIR=$MK_CONFDIR
+    fi
 
-if  [ ! -d "$MK_VARDIR/log" ]; then
-    mkdir "$MK_VARDIR/log"
-fi
+    if  [ ! -d "$MK_VARDIR/log" ]; then
+        mkdir "$MK_VARDIR/log"
+    fi
 
-# Source the optional configuration file for this agent plugin
-if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/mk_oracle.cfg"
-fi
+    load_default_config
+
+    # Source the optional configuration file for this agent plugin
+    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "$MK_CONFDIR/mk_oracle.cfg"
+    fi
+}
 
 #.
 #   .--OS env--------------------------------------------------------------.
@@ -531,7 +547,7 @@ set_ora_env () {
 
     LD_LIBRARY_PATH=$ORACLE_HOME/lib
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
-        logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
+        logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for SID '${ORACLE_SID}' not found or not existing!"
         return 2
     fi
 
@@ -1991,7 +2007,6 @@ sql_asm_diskgroup () {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 unset_custom_sqls_vars () {
     unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
     unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
@@ -2182,27 +2197,6 @@ handle_custom_sql_errors () {
     fi
 }
 
-
-export -f unset_custom_sqls_vars
-export -f custom_sql_section
-export -f do_async_custom_sqls
-export -f handle_custom_sql_errors
-
-
-# globals
-custom_sqls_sections_arr=($(echo "$SQLS_SECTIONS" | tr ',' '\n'))
-
-# globals and locals
-custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
-custom_sqls_section_sep="$SQLS_SECTION_SEP"
-custom_sqls_sids="$SQLS_SIDS"
-custom_sqls_dir="$SQLS_DIR"
-custom_sqls_sql="$SQLS_SQL"
-custom_sqls_parameters="$SQLS_PARAMETERS"
-custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
-unset_custom_sqls_vars
-
-
 #.
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
@@ -2213,12 +2207,25 @@ unset_custom_sqls_vars
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+print_dummy_sections () {
+    for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
+        echo "<<<oracle_${section}>>>"
+    done
+}
+
+
 do_dummy_sections () {
-    if ! $MK_ORA_LOGGING; then
-        for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
-            echo "<<<oracle_${section}>>>"
-        done
+    if $MK_ORA_LOGGING; then
+        return
     fi
+
+    print_dummy_sections
+
+    for piggyback_host in $PIGGYBACK_HOSTS; do
+        echo "<<<<${piggyback_host}>>>>"
+        print_dummy_sections
+        echo "<<<<>>>>"
+    done
 }
 
 
@@ -2696,13 +2703,12 @@ do_checks () {
         local do_async_sections=${ASYNC_ASM_SECTIONS}
         local do_sync_sections=${SYNC_ASM_SECTIONS}
     else
-        local dummy="SYNC_SECTIONS_${ORACLE_SID}"
-        local SYNC_SECTIONS_SID=${!dummy}
+        local sync_dummy="SYNC_SECTIONS_${ORACLE_SID}"
+        local SYNC_SECTIONS_SID=${!sync_dummy}
         local do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
-        unset dummy
 
-        local dummy="ASYNC_SECTIONS_${ORACLE_SID}"
-        local ASYNC_SECTIONS_SID=${!dummy}
+        local async_dummy="ASYNC_SECTIONS_${ORACLE_SID}"
+        local ASYNC_SECTIONS_SID=${!async_dummy}
         local do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
     fi
 
@@ -2766,26 +2772,44 @@ export -f mk_ora_sqlplus
 export -f ora_session_environment
 export -f do_async_checks
 export -f set_ora_env
+export -f unset_custom_sqls_vars
+export -f custom_sql_section
+export -f do_async_custom_sqls
+export -f handle_custom_sql_errors
 
-#   ---preliminaries--------------------------------------------------------
-
-logging "--------------------------------------------------------------------"
 if $MK_ORA_LOGGING; then
     echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
 fi
 
-set_os_env
-logging "[preliminaries]" "OS: ${OS_TYPE}" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
-        "ASYNC_SECTIONS: ${ASYNC_SECTIONS}" "SYNC_ASM_SECTIONS: ${SYNC_ASM_SECTIONS}"\
-        "ASYNC_ASM_SECTIONS: ${ASYNC_ASM_SECTIONS}" "CACHE_MAXAGE: ${CACHE_MAXAGE}"\
-        "ONLY_SIDS: ${ONLY_SIDS}" "SKIP_SIDS: ${SKIP_SIDS}"
+logging "--------------------------------------------------------------------"
 
+#   ---load config----------------------------------------------------------
+
+load_config
+
+# globals
+custom_sqls_sections_arr=($(echo "$SQLS_SECTIONS" | tr ',' '\n'))
+
+# globals and locals
+custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
+custom_sqls_section_sep="$SQLS_SECTION_SEP"
+custom_sqls_sids="$SQLS_SIDS"
+custom_sqls_dir="$SQLS_DIR"
+custom_sqls_sql="$SQLS_SQL"
+custom_sqls_parameters="$SQLS_PARAMETERS"
+custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
+unset_custom_sqls_vars
+
+#   ---preliminaries--------------------------------------------------------
+
+set_os_env
 
 # Get list of all running databases. Do not work on ASM in this plugin.
 # => Ignore a running ASM-Instance!
 # shellcheck disable=SC2016
-SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' | "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' | cut -d"_" -f3-)
-
+SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |\
+       "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |\
+       cut -d"_" -f3- | sort)
 
 # Are there any remote configurations?
 for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do
@@ -2794,22 +2818,20 @@ for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*
     PIGGYBACK_HOSTS="$(echo "$(eval "echo \${$remote_instance}")" | cut -d":" -f6) ${PIGGYBACK_HOSTS}"
 done
 
+PIGGYBACK_HOSTS="$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)"
 
 logging "[preliminaries]" "SIDs: ${SIDS//\\n/ }"\
-        "Remote instances: ${REMOTE_INSTANCES}"\
-        "Piggyback hosts: ${PIGGYBACK_HOSTS}"
-
+        "Remote instances: ${REMOTE_INSTANCES}" "Piggyback hosts: ${PIGGYBACK_HOSTS//\\n/ }"\
+        "OS: ${OS_TYPE}" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
+        "ASYNC_SECTIONS: ${ASYNC_SECTIONS}" "SYNC_ASM_SECTIONS: ${SYNC_ASM_SECTIONS}"\
+        "ASYNC_ASM_SECTIONS: ${ASYNC_ASM_SECTIONS}" "CACHE_MAXAGE: ${CACHE_MAXAGE}"\
+        "ONLY_SIDS: ${ONLY_SIDS}" "SKIP_SIDS: ${SKIP_SIDS}"
 
 if [ "$PIGGYBACK_HOSTS" ]; then
-    PIGGYBACK_HOSTS=$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)
-    logging "[preliminaries]" "Removed duplicate piggyback hosts"\
-            "Remaining piggyback hosts: ${PIGGYBACK_HOSTS}"
-
     if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
         touch "$MK_VARDIR/mk_oracle.found"
     fi
 fi
-
 
 # If we do not have found any running database instance, then either
 # no ORACLE is present on this system or it's just currently not running.
@@ -2820,10 +2842,8 @@ if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
     exit 1
 fi
 
-
 # From now on we expect databases on this system (for ever)
 touch "$MK_VARDIR/mk_oracle.found"
-
 
 # Make sure that always all sections are present, even
 # in case of an error. Note: the section <<<oracle_instance>>>
@@ -2832,21 +2852,12 @@ touch "$MK_VARDIR/mk_oracle.found"
 # do not contain valid data anyway.
 do_dummy_sections
 
-
-if [ "$PIGGYBACK_HOSTS" ]; then
-    for piggyback_host in $PIGGYBACK_HOSTS; do
-        echo "<<<<${piggyback_host}>>>>"
-        do_dummy_sections
-        echo "<<<<>>>>"
-    done
-fi
-
 #   ---local----------------------------------------------------------------
 
 for sid in $SIDS; do
     skip=$(skip_sid "$sid")
-    logging "[${sid}] [local]" "Skipping: $skip"
     if [ "$skip" == "yes" ]; then
+        logging "[${sid}] [local]" "Skip"
         continue
     fi
 

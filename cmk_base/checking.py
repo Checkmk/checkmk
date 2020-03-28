@@ -643,7 +643,8 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, cmk_base.utils.make_utf8(service), now, now, state, cmk_base.utils.make_utf8(output)))
+""" % (cmk_base.utils.make_utf8(host), cmk_base.utils.make_utf8(service), now, now, state,
+        cmk_base.utils.make_utf8(output)))
 
 
 def _open_checkresult_file():

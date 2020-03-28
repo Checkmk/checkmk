@@ -34,7 +34,7 @@ import sys
 import time
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text,
-    Tuple as _Tuple, Type, TypeVar, Union,
+    Tuple as _Tuple, Type, TypeVar, Union, Sequence,
 )
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
@@ -2680,7 +2680,7 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceElementValue = Union[None, Text, str, bool]
+CascadingDropdownChoiceElementValue = Union[None, Text, str, bool, int]
 CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
                                      _Tuple[CascadingDropdownChoiceElementValue, Any]]
 CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceElementValue, Text,
@@ -3032,6 +3032,12 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
 
+ListChoiceChoiceValue = Union[Text, str]
+ListChoiceChoiceList = Sequence[Union[_Tuple[Text, Text], _Tuple[str, Text]]]
+ListChoiceChoices = Union[None, ListChoiceChoiceList, Dict[ListChoiceChoiceValue, Text],
+                          Callable[[], ListChoiceChoiceList]]
+
+
 class ListChoice(ValueSpec):
     """A list of checkboxes representing a list of values"""
     @staticmethod
@@ -3042,7 +3048,7 @@ class ListChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListChoice
-        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List[_Tuple[Text, Text]]]]
+        choices=None,  # type: ListChoiceChoices
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]
@@ -3188,7 +3194,7 @@ class DualListChoice(ListChoice):
         rows=None,  # type: _Optional[int]
         size=None,  # type: _Optional[int]
         # ListChoice
-        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]
+        choices=None,  # type: ListChoiceChoices
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]

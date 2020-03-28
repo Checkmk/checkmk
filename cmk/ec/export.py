@@ -20,7 +20,9 @@ from .settings import (
 )
 
 from .rule_packs import (
+    ECRulePack,
     ECRulePacks,
+    ECRuleSpec,
     MkpRulePackProxy,
     RulePackType,
     rule_pack_dir,

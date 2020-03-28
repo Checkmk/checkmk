@@ -12,7 +12,9 @@ import re
 import io
 import time
 import zipfile
-from typing import Union, Dict, Text  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Union, Dict, Text, Optional as _Optional, List,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -36,6 +38,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.render
+import cmk.utils.packaging
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -52,6 +55,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
+from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     TextUnicode,
     DropdownChoice,
@@ -82,7 +86,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,
@@ -189,7 +193,7 @@ def substitute_help():
 
 
 def ActionList(vs, **kwargs):
-    def validate_action_list(self, value, varprefix):
+    def validate_action_list(value, varprefix):
         action_ids = [v["id"] for v in value]
         rule_packs = load_mkeventd_rules()
         for rule_pack in rule_packs:
@@ -246,12 +250,12 @@ class RuleState(CascadingDropdown):
                         'First the CRITICAL pattern is tested, then WARNING and OK at last. '
                         'When none of the patterns matches, the events state is set to UNKNOWN.'),
              )),
-        ]
+        ]  # type: CascadingDropdownChoiceList
         CascadingDropdown.__init__(self, choices=choices, **kwargs)
 
 
 def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
-    elements = []
+    elements = []  # type: List[DictionaryEntry]
     if fixed_id:
         elements.append(("id",
                          FixedValue(
@@ -732,12 +736,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=4),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=0),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     default_value=4,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     default_value=0,
+                 ),
              ],
          )),
         ("match_facility",
@@ -745,7 +753,7 @@ def vs_mkeventd_rule(customer=None):
              title=_("Match syslog facility"),
              help=_("Make the rule match only if the message has a certain syslog facility. "
                     "Messages not having a facility are classified as <tt>user</tt>."),
-             choices=cmk.gui.mkeventd.syslog_facilities,
+             choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
          )),
         ("match_sl",
          Tuple(
@@ -757,12 +765,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.service_levels,
-                                prefix_values=True),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.service_levels,
-                                prefix_values=True),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=cmk.gui.mkeventd.service_levels,
+                     prefix_values=True,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=cmk.gui.mkeventd.service_levels,
+                     prefix_values=True,
+                 ),
              ],
          )),
         ("match_timeperiod",
@@ -798,12 +810,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=7),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=5),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     default_value=7,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     default_value=5,
+                 ),
              ],
          )),
         ("cancel_application",
@@ -968,7 +984,7 @@ def load_mkeventd_rules():
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    rule_stats = {}
+    rule_stats = {}  # type: Dict[str, int]
     for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
         rule_stats.setdefault(rule_id, 0)
         rule_stats[rule_id] += count
@@ -1150,13 +1166,13 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                 ("priority",
                  DropdownChoice(
                      title=_("Syslog Priority"),
-                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
                      default_value=5,
                  )),
                 ("facility",
                  DropdownChoice(
                      title=_("Syslog Facility"),
-                     choices=cmk.gui.mkeventd.syslog_facilities,
+                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
                      default_value=1,
                  )),
                 ("sl",
@@ -1208,7 +1224,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Deletion of rule packs
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rule_pack = self._rule_packs[nr]
             c = wato_confirm(
                 _("Confirm rule pack deletion"),
@@ -1366,7 +1382,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 if id_ in found_packs:
-                    css_matches_search = "matches_search"
+                    css_matches_search = "matches_search"  # type: _Optional[str]
                 else:
                     css_matches_search = None
 
@@ -1496,7 +1512,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
-        found_packs = {}
+        found_packs = {}  # type: Dict[str, List[ec.ECRuleSpec]]
         for rule_pack in rule_packs:
             if search_expression in rule_pack["id"].lower() \
                or search_expression in rule_pack["title"].lower():
@@ -1579,7 +1595,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return action_outcome
 
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rules = self._rules
             rule = rules[nr]
             c = wato_confirm(
@@ -1648,7 +1664,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
-                    css_matches_search = "matches_search"
+                    css_matches_search = "matches_search"  # type: _Optional[str]
                 else:
                     css_matches_search = None
 
@@ -1778,9 +1794,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices = [("", "")] + [(pack["id"], pack["title"])
-                                            for pack in self._rule_packs
-                                            if pack is not self._rule_pack]
+                    choices = [("", u"")]  # type: Choices
+                    choices += [(pack["id"], pack["title"])
+                                for pack in self._rule_packs
+                                if pack is not self._rule_pack]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
             if len(self._rule_packs) > 1:
@@ -1814,7 +1831,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack = {"rules": []}
+            self._rule_pack = {"rules": []}  # type: ec.ECRulePack
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -1917,9 +1934,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         else:
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
-            rule_id = html.request.var("rule_id")
-            if rule_id is None:
-                raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
+            rule_id = html.request.get_ascii_input_mandatory("rule_id")
 
             self._rule_pack = None
             for nr, pack in enumerate(self._rule_packs):
@@ -1935,8 +1950,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         self._rules = self._rule_pack["rules"]
 
-        self._edit_nr = int(html.request.var("edit", -1))  # missing -> new rule
-        self._clone_nr = int(html.request.var("clone", -1))  # Only needed in 'new' mode
+        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
+        self._clone_nr = html.request.get_integer_input_mandatory("clone",
+                                                                  -1)  # Only needed in 'new' mode
         self._new = self._edit_nr < 0
 
         if self._new:
@@ -3730,7 +3746,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
             help=_("When sending notifications from the monitoring system to the event console "
                    "the following syslog facility will be set for these messages. Choosing "
                    "a unique facility makes creation of rules easier."),
-            choices=cmk.gui.mkeventd.syslog_facilities,
+            choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
         )
 
     def need_restart(self):

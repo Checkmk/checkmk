@@ -282,6 +282,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         contact_groups = load_contact_group_information()
 
         if only_own:
+            assert config.user.id is not None
             user_groups = userdb.contactgroups_of_user(config.user.id)
         else:
             user_groups = []

@@ -48,7 +48,7 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     def _from_vars(self):
-        self._hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
+        self._hostname = html.request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
@@ -133,6 +133,8 @@ class ModeObjectParameters(WatoMode):
         self._show_labels(host_info["labels"], "host", host_info["label_sources"])
 
     def _show_service_info(self, all_rulesets):
+        assert self._service is not None
+
         serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
                                                   [self._hostname, self._service])
         if not serviceinfo:

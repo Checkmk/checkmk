@@ -1,0 +1,17 @@
+Title: Check_MK discovery: Was not always able to discover new snmp checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1585410910
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p11
+
+The "Check_MK discovery" check was unable to discover entirely new check_types.
+Its discovery phase always relies on cached data, if available.
+Since the SNMP datasource only fetches the data it actually needs, there is no guarantee that all
+services will be discovered.
+
+So the "Check_MK discovery" service failed to discover any interfaces, if the snmp host did not have any interfaces beforehand.
+Through WATO however, the discovery was successfull, since this mechanism may bypass the snmp caching entirely.

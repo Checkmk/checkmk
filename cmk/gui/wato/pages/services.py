@@ -46,7 +46,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
-from cmk.gui.view_utils import render_labels
+from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
@@ -1351,7 +1351,9 @@ class DiscoveryPageRenderer(object):
             # Do not show long output
             service_details = output.split("\n", 1)
             if service_details:
-                html.write_text(service_details[0])
+                html.write_html(
+                    format_plugin_output(service_details[0],
+                                         shall_escape=config.escape_plugin_output))
             return
 
         div_id = "activecheck_%s" % descr

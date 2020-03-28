@@ -1,0 +1,15 @@
+Title: Services: Escape service details equal to status views
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1585403437
+Class: fix
+
+The service details (aka plugin output) was escaped in an unusual way
+on the service discovery page. It allowed some tags to be rendered
+without escaping (internally known as permissive encoding).
+
+Even if it was not really problematic, at least it confused users. So now the
+escaping is done the same way as in the status views.

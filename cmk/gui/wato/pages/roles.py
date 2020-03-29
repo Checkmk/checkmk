@@ -20,6 +20,8 @@ configuration of all roles.
 """
 
 import re
+from typing import (  # pylint: disable=unused-import
+    Optional,)
 
 import cmk.utils.store as store
 
@@ -32,7 +34,7 @@ from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
@@ -104,7 +106,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
     def action(self):
         if html.request.var("_delete"):
-            delid = html.request.var("_delete")
+            delid = html.request.get_ascii_input_mandatory("_delete")
 
             if delid not in self._roles:
                 raise MKUserError(None, _("This role does not exist."))
@@ -127,7 +129,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
         elif html.request.var("_clone"):
             if html.check_transaction():
-                cloneid = html.request.var("_clone")
+                cloneid = html.request.get_ascii_input_mandatory("_clone")
 
                 try:
                     cloned_role = self._roles[cloneid]
@@ -223,7 +225,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         config.load_dynamic_permissions()
 
     def _from_vars(self):
-        self._role_id = html.request.var("edit")
+        self._role_id = html.request.get_ascii_input_mandatory("edit")
 
         try:
             self._role = self._roles[self._role_id]
@@ -247,9 +249,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         if not unique:
             raise MKUserError("alias", info)
 
-        new_id = html.request.var("id")
-        if len(new_id) == 0:
-            raise MKUserError("id", _("Please specify an ID for the new role."))
+        new_id = html.request.get_ascii_input_mandatory("id")
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
             raise MKUserError(
                 "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
@@ -261,7 +261,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         # based on
         if not self._role.get("builtin"):
-            basedon = html.request.var("basedon")
+            basedon = html.request.get_ascii_input_mandatory("basedon")
             if basedon not in config.builtin_role_ids:
                 raise MKUserError("basedon",
                                   _("Invalid valid for based on. Must be id of builtin rule."))
@@ -326,8 +326,12 @@ class ModeEditRole(RoleManagement, WatoMode):
                   "update or installation of an addons new permissions appear, the user role will get or "
                   "not get those new permissions based on the default settings of the builtin role it's "
                   "based on."))
-            choices = [(i, r["alias"]) for i, r in self._roles.items() if r.get("builtin")]
-            html.dropdown("basedon", choices, deflt=self._role.get("basedon", "user"), ordered=True)
+            role_choices = [(i, r["alias"]) for i, r in self._roles.items() if r.get("builtin")
+                           ]  # type: Choices
+            html.dropdown("basedon",
+                          role_choices,
+                          deflt=self._role.get("basedon", "user"),
+                          ordered=True)
 
         forms.end()
 
@@ -363,8 +367,11 @@ class ModeEditRole(RoleManagement, WatoMode):
                 pvalue = self._role["permissions"].get(perm.name)
                 def_value = base_role_id in perm.defaults
 
-                choices = [("yes", _("yes")), ("no", _("no")),
-                           ("default", _("default (%s)") % (def_value and _("yes") or _("no")))]
+                choices = [
+                    ("yes", _("yes")),
+                    ("no", _("no")),
+                    ("default", _("default (%s)") % (def_value and _("yes") or _("no"))),
+                ]  # type: Choices
                 deflt = {True: "yes", False: "no"}.get(pvalue, "default")
 
                 html.dropdown("perm_" + perm.name, choices, deflt=deflt, style="width: 130px;")
@@ -414,7 +421,7 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role["permissions"].get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name = "perm_yes_default"
+                                icon_name = "perm_yes_default"  # type: Optional[str]
                             else:
                                 icon_name = None
                         else:

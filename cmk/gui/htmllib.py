@@ -49,7 +49,8 @@ import pprint
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING,
-    TypeVar)
+    TypeVar,
+)
 
 import six
 
@@ -2504,7 +2505,7 @@ class html(ABCHTMLGenerator):
         if varname:
             self.form_vars.append(varname)
 
-        chs = choices[:]
+        chs = list(choices)
         if ordered:
             # Sort according to display texts, not keys
             chs.sort(key=lambda a: a[1].lower())

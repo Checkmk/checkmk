@@ -5,11 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
+from typing import List  # pylint: disable=unused-import
+
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     FixedValue,
     Alternative,
@@ -46,7 +49,7 @@ def dummy_rulespec():
 def vs_conditions():
     return Transform(
         VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
-        forth=lambda c: RuleConditions(None).from_config(c),
+        forth=lambda c: RuleConditions("").from_config(c),
         back=lambda c: c.to_config_with_folder(),
     )
 
@@ -179,7 +182,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                     totext=_("Administrators (having the permission "
                              "\"Write access to all predefined conditions\")"),
                 )
-            ]
+            ]  # type: List[ValueSpec]
         else:
             admin_element = []
 
@@ -228,7 +231,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
         super(ModeEditPredefinedCondition, self)._save(entries)
 
-        conditions = RuleConditions(None).from_config(entries[self._ident]["conditions"])
+        conditions = RuleConditions("").from_config(entries[self._ident]["conditions"])
 
         # Update rules of source folder in case the folder was changed
         if old_path is not None and old_path != conditions.host_folder:

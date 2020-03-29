@@ -29,6 +29,14 @@ Checkmk refuses to auto-migrate cluster aware (those with node_info
 set to True) check plugins. Auto converting the data layout
 is too error prone. These plugins must be migrated manually.
 
+<h4>Checkplugins using 'extra_sections'</h4>
+
+Checkmk refuses to auto-migrate check plugins that make use of the
+'extra_sections' feature. In the new API the destiction between the
+regular section and additional 'extra_sections' is not made, and all
+section content will be passed in its 'parsed' version.
+Therefore these Plugins have to be migrated manually.
+
 <h4>A missing SNMP scan function</h4>
 
 Every Checkplugin that specifies an 'snmp_info' key must

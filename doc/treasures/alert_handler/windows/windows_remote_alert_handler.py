@@ -30,6 +30,10 @@
 #  along with Check_MK. If not, email to mk@mathias-kettner.de
 #  or write to the postal address provided at www.mathias-kettner.de
 
+from cmk.gui.cee.plugins.wato.alert_handling import (
+    register_alert_handler_parameters,)
+from cmk.gui.plugins.wato.utils import (
+    PasswordFromStore,)
 
 register_alert_handler_parameters(
     "windows_remote",

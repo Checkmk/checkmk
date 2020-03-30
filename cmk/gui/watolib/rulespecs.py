@@ -1094,11 +1094,6 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
     def plugin_base_class(self):
         return Rulespec
 
-    def plugin_name(self, instance):
-        # type: (Any) -> str
-        # not-yet-a-type: (Rulespec) -> str
-        return instance.name
-
     def get_by_group(self, group_name):
         # type: (str) -> List[Rulespec]
         rulespecs = []

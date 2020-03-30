@@ -85,6 +85,10 @@ class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
         return self._entries.get(key, deflt)
 
 
+# Abstract methods:
+#
+# def plugin_base_class(self) -> Type
+# def plugin_name(self, plugin_class: Type) -> Type
 class ClassRegistry(ABCRegistry):
     def register(self, plugin_class):
         # type: (Type) -> Type
@@ -97,9 +101,15 @@ class ClassRegistry(ABCRegistry):
         return plugin_class
 
 
+# Abstract methods:
+#
+# def plugin_base_class(self) -> Type
 class InstanceRegistry(ABCRegistry):
     def register(self, instance):  # pylint: disable=arguments-differ
         # type: (Any) -> Any
+        if not isinstance(instance, self.plugin_base_class()):
+            raise ValueError('%r is not an instance of %s' %
+                             (instance, self.plugin_base_class().__name__))
         self.registration_hook(instance)
         self._entries[self.plugin_name(instance)] = instance
         return instance

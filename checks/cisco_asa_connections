@@ -43,6 +43,7 @@ check_info['cisco_asa_connections'] = {
                                 '5', # CISCO-FIREWALL-MIB::cfwConnectionStatValue
                               ]),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
+                                          or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services") \
                                           or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group"                 : "cisco_fw_connections",
     "has_perfdata"          : True,

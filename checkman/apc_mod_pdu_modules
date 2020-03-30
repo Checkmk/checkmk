@@ -3,15 +3,31 @@ agents: snmp
 catalog: hw/power/apc
 license: GPL
 distribution: check_mk
+description:
+ This check monitors the
+
+ - status
+
+ - the current output in kw
+
+ of the modules attached to the PDU system.
+
+ The service goes to {CRIT} if one of the modules goes in state
+
+ - unkown
+
+ - notPresent
+
+ It goes to {WARN} if the devices reports the state "warning" for the module.
+
+ In state "normal" the service is {OK}.
+
+ If no status is found the service goes {UNKNOWN}.
+
+ This check uses the PowerNet-MIB.
 
 item:
  Description of the load equipment
-
-description:
- Checks the status of the modules attached to the PDU system.
- The check goes to {CRIT} if one of the modules goes in unkown or not presend state.
- It goes to {WARN} if the devices reports an warning state for the module.
- The check also reports the current output in kw
 
 inventory:
  One service is created

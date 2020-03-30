@@ -7,8 +7,14 @@ description:
  This check monitors the temperature sensors of APC Netbotz devices
  which support the NETBOTZV2 MIB, e.g. Netbotz 450 series.
 
- Default levels are set to 20, 25, 30, 35 degree celius.
- These levels are configurable.
+ You can configure lower and upper levels for {CRIT} and {WARN}
+ (default: {WARN}: 25, 30 {CRIT}: 20, 35)
+
+ The service goes {WARN} or {CRIT} if the temperature is higher
+ than given upper levels or lower than the given lower levels.
+ Otherwise it returns {OK}.
+
+ This check uses the NETBOTZV2-MIB.
 
 item:
  The temperature sensor identifier.

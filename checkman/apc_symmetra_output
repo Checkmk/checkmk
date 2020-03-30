@@ -4,10 +4,19 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This check monitors output voltage, current and load of APC Symmetra UPS
- which support the PowerNet-MIB.
- Lower default levels are set to 220, 220 voltage. These and other levels
- are configurable.
+ This check monitors
+
+ - output voltage
+
+ - current
+
+ - load
+
+ of APC Symmetra UPS.
+
+ You can configure lower levels for {WARN}/{CRIT} (default: 220, 220).
+
+ This check uses the PowerNet-MIB.
 
 item:
  The current phase containing the device state, voltage and current.

@@ -4,7 +4,27 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This Check monitors the output measurements of a APC Automatic Transfer Switch.
+ This check monitors the output measurements of a APC Automatic Transfer Switch.
+
+ The check monitors the
+
+ - Voltage
+
+ - Power
+
+ - Current
+
+ - Load
+
+ of the switch.
+
+ The checks has configureable upper levels for voltage (default: 240, 250)
+ and load (default: 85, 95).
+
+ The service goes {WARN}/{CRIT} if the measurements are higher than the upper levels.
+ Otherwise the service is {OK}.
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created for each power phase

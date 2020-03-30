@@ -4,7 +4,16 @@ catalog: hw/environment/apc
 license: GPL
 distribution: check_mk
 description:
-  The current Airflow for a InRow Cooling devices.
+ The current Airflow for a InRow Cooling devices.
+
+ You can configure lower and upper levels for {CRIT} and {WARN}
+ (default: {WARN}: 500.0, 1000.0 {CRIT}: 200.0, 1100.0)
+
+ The service goes {WARN} or {CRIT} if the airflow is higher
+ than given upper levels or lower than the given lower levels.
+ Otherwise it returns {OK}.
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created.

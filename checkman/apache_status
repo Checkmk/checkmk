@@ -6,10 +6,37 @@ distribution: check_mk
 description:
  This check parses the information provided by the Apache status module.
  If you have enabled that module (on Debian/Ubuntu this is the default),
- then below the URL {/server-status} Apache show interesting information
- about the number of connections and the like. The agent plugin {apache_status}
- fetches that data and this check processes it. The status is always OK,
- but it fetches interesting performance data.
+ then below the URL {/server-status} Apache show interesting information like:
+
+ - Uptime since the server was started/restarted
+
+ - Number of idle workers
+
+ - Number of buys workers
+
+ - Number of open slots
+
+ - Total number of slots
+
+ - Total number of accesses
+
+ - CPU Load (for each worker, total for all workers)
+
+ - Averages (number of requests per second, number of bytes served per second, number of bytes per request)
+
+ - Scoreboard
+
+ - Total connections
+
+ - Information about connection (writing, keep alive, closing)
+
+ - The number of busy servers
+
+ - The number of idle servers
+
+ The agent plugin {apache_status} fetches that data and this check processes it.
+
+ The status is always {OK} but it fetches interesting performance data.
 
  As a preparation you need to install the agent plugin {apache_status}
  into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).

@@ -6,8 +6,11 @@ distribution: check_mk
 description:
  Checks Humidity Sensors in ALLNET IP Sensoric devices.
 
- The check returns {WARN} or {CRIT} if the humidity in percent is higher
- then given upper levels or lower than the given lower levels.
+ You can configure lower and upper levels for {CRIT} and {WARN}
+ (default: {WARN}: 40, 60 {CRIT}: 35, 65)
+
+ The service goes {WARN} or {CRIT} if the humidity in percent is higher
+ than given upper levels or lower than the given lower levels.
  Otherwise it returns {OK}.
 
 item:

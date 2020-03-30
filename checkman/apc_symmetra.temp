@@ -6,8 +6,12 @@ distribution: check_mk
 description:
  This check monitors battery temperature of APC Symmetra UPS which
  support the PowerNet-MIB.
- Default levels are set to 50, 60 degree celsius. Upper and lower
- levels are configurable.
+
+ You can configure upper levels for {WARN}/{CRIT} (default: 50, 60).
+
+ The service goes {WARN}/{CRIT} if the temperature is higher than these levels.
+
+ This check uses the PowerNet-MIB.
 
 item:
  Name of the temperature sensor

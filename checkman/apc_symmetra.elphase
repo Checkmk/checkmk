@@ -4,8 +4,13 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This check monitors battery current of APC Symmetra UPS which support the PowerNet-MIB.
- Upper default levels are set to 1, 1 ampere. These levels are configurable.
+ This check monitors battery current of APC Symmetra UPS.
+
+ You can configure upper levels for {WARN}/{CRIT} (default:  1, 1).
+
+ The service goes {WARN}/{CRIT} if the current exceeds these levels.
+
+ This check uses the PowerNet-MIB.
 
 item:
  The current phase containing the device state, voltage and current.

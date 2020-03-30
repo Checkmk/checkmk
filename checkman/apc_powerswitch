@@ -5,8 +5,14 @@ license: GPL
 distribution: check_mk
 description:
  Checks the status of a power outlet of an APC Powerswitch/APC PDU.
- Returns {OK} if the power outlet status is {on}
- and {WARN} if the power outlet status if {off}
+
+ You can configure the {WARN} and {CRIT} states by default 2 ({off}) is
+ a warning state.
+
+ Depending on the configuration the service is {WARN} or {CRIT}.
+ Non covered states are {OK}.
+
+ This check uses the PowerNet-MIB.
 
 item:
  The single power outlet port with it's number as delivered by SNMP.

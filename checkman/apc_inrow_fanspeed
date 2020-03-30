@@ -5,7 +5,10 @@ license: GPL
 distribution: check_mk
 description:
   The current Fanspeed in percent for a InRow Cooling devices.
-  The Ouput in only informatial and everytime {OK}
+
+  The output in only informational and always {OK}.
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created.

@@ -7,6 +7,15 @@ description:
  This check monitors the humidity of sensors attached
  to several APC devices.
 
+ You can configure lower and upper levels for {CRIT} and {WARN}
+ (default: {WARN}: 40, 60 {CRIT}: 35, 65)
+
+ The service goes {WARN} or {CRIT} if the humidity in percent is higher
+ than given upper levels or lower than the given lower levels.
+ Otherwise it returns {OK}.
+
+ This check uses the PowerNet-MIB.
+
 item:
  The item is the sensor description of the sensor as string.
 

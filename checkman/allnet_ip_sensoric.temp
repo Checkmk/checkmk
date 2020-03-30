@@ -6,8 +6,10 @@ distribution: check_mk
 description:
  Checks Temperature Sensors in ALLNET IP Sensoric devices.
 
- The check returns {WARN} or {CRIT} if the temperature in degree celsius is higher
- then given levels and {OK} otherwise.
+ You can configure upper levels (default: {WARN}: 35 {CRIT}: 40).
+
+ The service goes {WARN} or {CRIT} if the temperature in degree celsius
+ is higher than given levels and {OK} otherwise.
 
 item:
  If a name is reported for the sensor by the device: The name and the

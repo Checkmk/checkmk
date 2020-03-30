@@ -6,6 +6,12 @@ distribution: check_mk
 description:
  The current temperature of all sensors in an InRow Cooling device.
 
+ You can configure upper levels for {WARN}/{CRIT} (default: 30, 35).
+
+ The service goes {WARN}/{CRIT} if the temperature is higher than these levels.
+
+ This check uses the PowerNet-MIB.
+
 item:
  The current mode of the check (i.e. RackInlet, Supply Air, Return Air, Entering Fluid, Leaving Fluid).
 

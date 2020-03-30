@@ -5,14 +5,58 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors some aspects of an APC Symmetra UPS:
- the battery and output status, self test,  battery capacity,
- battery replace, battery number batt packs, battery remaining time,
- calibration result and last diagnostic date.
 
- Default capacity levels are set to 80, 95 percent. These are configurable.
- The device sends its own state in case of battery and output status,
- battery replace and calibration result.
- Default level for an invalid calibration is OK, but can be configured to another state.
+ - battery status
+
+ - output status
+
+ - self test
+
+ - battery capacity
+
+ - battery replace
+
+ - battery number batt packs
+
+ - battery remaining time
+
+ - calibration result
+
+ - last diagnostic date
+
+ You can configure {WARN} and {CRIT} levels for capacity (default: 80, 95 percent).
+
+ You can configure the state for calibration (default: {OK}) and
+ battery replace (default: {WARN}) aswell.
+
+ The device sends its own state for some metrics (battery, battery replace, output, calibration).
+
+ Battery state:
+
+ - {OK}: "normal" (2)
+
+ - {CRIT}: "low" (3), "in fault condition" (4)
+
+ - {UNKNOWN}: "unknown" (1)
+
+ Battery replace state:
+
+ - {OK}: "no replacement needed" (1)
+
+ - Depending on configuration (default: {WARN}): "battery needs replacement" (2)
+
+ Output/Calibration state:
+
+ - Depending on configuration (default: {OK}): "calibration invalid" and
+   "on line" (2), "on smart boost" (4), "on smart trim" (12)
+
+ - {CRIT}: No calibration in progress and none of the states (2, 4, 12)
+
+ - {UNKNOWN}: None of the states (1-20)
+
+ - {OK}: In all other cases
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created.

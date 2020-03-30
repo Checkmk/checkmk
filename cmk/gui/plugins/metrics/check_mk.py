@@ -7945,23 +7945,18 @@ check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
     }
 }
 
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = {
+mem_vsphere_hostsystem = {
     "usage": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True
     },
     "mem_total": {
         "auto_graph": False
     },
 }
 
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = {
-    "usage": {
-        "name": "mem_used"
-    },
-    "mem_total": {
-        "auto_graph": False
-    },
-}
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = mem_vsphere_hostsystem
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = mem_vsphere_hostsystem
 
 check_metrics["check_mk-ibm_svc_host"] = {
     "active": {
@@ -7981,17 +7976,14 @@ check_metrics["check_mk-ibm_svc_host"] = {
     },
 }
 
-check_metrics["check_mk-juniper_screenos_mem"] = {
+juniper_mem = {
     "usage": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True
     },
 }
-
-check_metrics["check_mk-juniper_trpz_mem"] = {
-    "usage": {
-        "name": "mem_used"
-    },
-}
+check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
+check_metrics["check_mk-juniper_trpz_mem"] = juniper_mem
 
 check_metrics["check_mk-ibm_svc_nodestats.iops"] = {
     "read": {

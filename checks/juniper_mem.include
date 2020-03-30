@@ -20,7 +20,7 @@ def check_juniper_mem_generic(_no_item, params, info):
     warn, crit = params
     warn_kb = (mem_size_kb / 100.0) * warn
     crit_kb = (mem_size_kb / 100.0) * crit
-    perf = [("usage", usage, warn_kb * 1024, crit_kb * 1024, 0, mem_size)]
+    perf = [("mem_used", usage, warn_kb * 1024, crit_kb * 1024, 0, mem_size)]
     message = "Used: %s/%s (%.0f%%)" % \
     ( get_bytes_human_readable(usage), get_bytes_human_readable(mem_size), usage_perc )
     levels = " (warn/crit at %.0f%%/%0.f%%)" % (warn, crit)

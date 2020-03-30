@@ -11,7 +11,6 @@ import traceback
 from typing import (  # pylint: disable=unused-import
     NamedTuple, Optional, Tuple, List, Text, Union,
 )
-import six
 
 import livestatus
 

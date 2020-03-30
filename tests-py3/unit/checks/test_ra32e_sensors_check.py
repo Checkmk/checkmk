@@ -33,7 +33,7 @@ pytestmark = pytest.mark.checks
                 ('ra32e_sensors', "Heat Index", {},
                  BasicCheckResult(0, u'20.7 °C', [('temp', 20.70)])),
                 ('ra32e_sensors.humidity', "Internal", {},
-                 BasicCheckResult(0, '60.0%', [('humidity', 60.0, 101, 101, 0, 100)])),
+                 BasicCheckResult(0, '60.0%', [('humidity', 60.0, None, None, 0, 100)])),
             ]),
         (  # temp sensor (ignores fahrenheit value)
             [[[u'', u'', u'']], [[u'2.0', u'2580', u'9999', '', '', '']]], [

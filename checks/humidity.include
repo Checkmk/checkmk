@@ -5,50 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# old params = (crit_low , warn_low, warn, crit)
 def check_humidity(humidity, params):
-    if not params:
-        params = {
-            "levels_lower": (-1, -1),
-            "levels": (101, 101),
-        }
+    if isinstance(params, dict):
+        levels = ((params.get("levels") or (None, None)) + (params.get("levels_lower") or
+                                                            (None, None)))
     elif isinstance(params, (list, tuple)):
-        params = {
-            "levels_lower": (params[1], params[0]),
-            "levels": (params[2], params[3]),
-        }
+        # old params = (crit_low , warn_low, warn, crit)
+        levels = (params[2], params[3], params[1], params[0])
+    else:
+        levels = None
 
-    warn_lower, crit_lower = params.get("levels_lower", (None, None))
-    warn_upper, crit_upper = params.get("levels", (None, None))
-    perfdata = [("humidity", humidity, warn_upper, crit_upper, 0, 100)]
-    infotext = get_percent_human_readable(humidity)
-
-    if warn_lower is not None and crit_lower is not None:
-        levelstext_lower = " (warn/crit below %s/%s)" % (get_percent_human_readable(warn_lower),
-                                                         get_percent_human_readable(crit_lower))
-    if warn_upper is not None and crit_upper is not None:
-        levelstext_upper = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn_upper),
-                                                      get_percent_human_readable(crit_upper))
-
-    status = 0
-    levelstext = ""
-    if crit_lower is not None and humidity < crit_lower:
-        status = 2
-        levelstext = levelstext_lower
-
-    elif crit_upper is not None and humidity >= crit_upper:
-        status = 2
-        levelstext = levelstext_upper
-
-    elif warn_lower is not None and humidity < warn_lower:
-        status = 1
-        levelstext = levelstext_lower
-
-    elif warn_upper is not None and humidity >= warn_upper:
-        status = 1
-        levelstext = levelstext_upper
-
-    if status:
-        infotext += levelstext
-
-    return status, infotext, perfdata
+    return check_levels(
+        humidity,
+        "humidity",
+        levels,
+        human_readable_func=get_percent_human_readable,
+        boundaries=(0, 100),
+    )

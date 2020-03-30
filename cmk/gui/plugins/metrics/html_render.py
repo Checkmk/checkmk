@@ -683,9 +683,8 @@ def render_time_range_selection(graph_recipe, graph_render_options):
     output = "<table class=timeranges>"  # type: RenderOutput
     graph_render_options = copy.deepcopy(graph_render_options)
     for timerange_attrs in config.graph_timeranges:
-        timerange_duration = timerange_attrs["duration"]
-        assert isinstance(timerange_duration, six.string_types)
-        duration = int(timerange_duration)
+        duration = timerange_attrs["duration"]
+        assert isinstance(duration, int)
         graph_render_options.update({
             "size": (20, 4),
             "font_size": 6.0,  # pt

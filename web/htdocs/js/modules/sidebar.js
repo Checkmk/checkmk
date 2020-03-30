@@ -915,6 +915,7 @@ export function wiki_search(omd_site) {
     var oInput = document.getElementById("wiki_search_field");
     top.frames["main"].location.href = "/" + encodeURIComponent(omd_site)
         + "/wiki/doku.php?do=search&id=" + escape(oInput.value);
+    utils.prevent_default_events();
 }
 
 /************************************************

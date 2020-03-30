@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import argparse
 import os
 from subprocess import Popen, PIPE, DEVNULL
@@ -57,7 +58,7 @@ def list_instances(config):
                         close_fds=True,
                         encoding="utf-8")
         stdout = process.communicate()[0]
-        return [instance for instance in stdout.split("\n")]
+        return stdout.split("\n")
     except (OSError, ValueError) as e:
         if config.is_verbose():
             print(" database list error with Exception {}".format(e,))
@@ -86,7 +87,6 @@ def check_database(config, name):
 def list_databases(config, instance):
     # type: (Config, str) -> Iterable[str]
     try:
-        env = os.environ
         process = Popen(args=["db2.exe", "list", "db", "directory"],
                         shell=False,
                         stdout=PIPE,
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     c = Config()
     instances = list_instances(config=c)
     if len(instances) == 0:
-        exit(0)
+        sys.exit(0)
 
     print_header()
     for i in instances:
@@ -116,4 +116,4 @@ if __name__ == '__main__':
         for d in db:
             print(d)
 
-    exit(0)
+    sys.exit(0)

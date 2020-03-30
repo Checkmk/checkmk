@@ -181,6 +181,8 @@ def discovery_systemd_units_services(parsed):
         return False
 
     def state_match(rule_states, state):
+        if not rule_states:
+            return True
         return any(s in (None, state) for s in rule_states)
 
     for settings in host_extra_conf(host_name(), discovery_systemd_units_services_rules):

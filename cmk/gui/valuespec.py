@@ -2457,18 +2457,18 @@ class Checkbox(ValueSpec):
                 (value, _type_name(value)))
 
 
-DropdownChoiceValue = Any
+DropdownChoiceValue = Any  # TODO: Can we be more specific?
+DropdownChoiceEntry = _Tuple[DropdownChoiceValue, Text]
+DropdownChoices = Union[List[DropdownChoiceEntry], Callable[[], List[DropdownChoiceEntry]]]
 
 
 class DropdownChoice(ValueSpec):
-    """A type-save dropdown choice
+    """A type-safe dropdown choice
 
     Parameters:
     help_separator: if you set this to a character, e.g. "-", then
     value_to_text will omit texts from the character up to the end of
     a choices name.
-    Note: The list of choices may contain 2-tuples or 3-tuples.
-    The format is (value, text {, icon} )
     choices may also be a function that returns - when called
     without arguments - such a tuple list. That way the choices
     can by dynamically computed"""
@@ -2477,7 +2477,7 @@ class DropdownChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # DropdownChoice
-        choices,  # type: Union[List[_Tuple[Any, Text]], Callable[[], List[_Tuple[Any, Text]]]]
+        choices,  # type: DropdownChoices
         sorted=False,  # type: bool
         label=None,  # type: _Optional[Text]
         help_separator=None,  # type: Text
@@ -2508,24 +2508,25 @@ class DropdownChoice(ValueSpec):
         self._label = label
         self._prefix_values = prefix_values
         self._sorted = sorted
-        self._empty_text = empty_text if empty_text is not None else \
-            _("There are no elements defined for this selection yet.")
+        self._empty_text = (empty_text if empty_text is not None else
+                            _("There are no elements defined for this selection yet."))
         self._invalid_choice = invalid_choice
-        self._invalid_choice_title = invalid_choice_title if invalid_choice_title is not None else \
-            _("Element '%r' does not exist anymore")
-        self._invalid_choice_error = invalid_choice_error if invalid_choice_error is not None else \
-            _("The selected element is not longer available. Please select something else.")
+        self._invalid_choice_title = (invalid_choice_title if invalid_choice_title is not None else
+                                      _("Element '%r' does not exist anymore"))
+        self._invalid_choice_error = (
+            invalid_choice_error if invalid_choice_error is not None else
+            _("The selected element is not longer available. Please select something else."))
         self._no_preselect = no_preselect
         self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title
-        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else \
-            _("Please make a selection")
+        self._no_preselect_error = (no_preselect_error if no_preselect_error is not None else
+                                    _("Please make a selection"))
         self._on_change = on_change
         self._read_only = read_only
         self._encode_value = encode_value
 
     def choices(self):
-        # type: () -> List[_Tuple[Any, Text]]
+        # type: () -> List[DropdownChoiceEntry]
         if callable(self._choices):
             result = self._choices()
         else:
@@ -2547,10 +2548,9 @@ class DropdownChoice(ValueSpec):
             html.write("%s " % self._label)
 
         choices = self.choices()
-
         defval = choices[0][0] if choices else None
         options = []
-        for entry in self.choices():
+        for entry in choices:
             if self._prefix_values:
                 entry = (entry[0], "%s - %s" % entry)
 
@@ -2587,8 +2587,7 @@ class DropdownChoice(ValueSpec):
 
     def value_to_text(self, value):
         # type: (DropdownChoiceValue) -> Text
-        for entry in self.choices():
-            val, title = entry[:2]
+        for val, title in self.choices():
             if value == val:
                 if self._help_separator:
                     return escaping.escape_attribute(
@@ -2606,8 +2605,7 @@ class DropdownChoice(ValueSpec):
         # type: (str) -> DropdownChoiceValue
         choices = self.choices()
 
-        for entry in choices:
-            val, _title = entry[:2]
+        for val, _title in choices:
             if self._is_selected_option_from_html(varprefix, val):
                 return val
 
@@ -2629,11 +2627,8 @@ class DropdownChoice(ValueSpec):
         return value
 
     def _options_for_html(self, orig_options):
-        # type: (List[_Tuple[Any, Text]]) -> List[_Tuple[DropdownChoiceValue, Text]]
-        options = []
-        for val, title in orig_options:
-            options.append((self._option_for_html(val), title))
-        return options
+        # type: (List[DropdownChoiceEntry]) -> List[_Tuple[DropdownChoiceValue, Text]]
+        return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
     def option_id(val):
@@ -3349,13 +3344,13 @@ class DualListChoice(ListChoice):
 
 
 class OptionalDropdownChoice(DropdownChoice):
-    """A type-save dropdown choice with one extra field that
+    """A type-safe dropdown choice with one extra field that
     opens a further value spec for entering an alternative
     Value."""
     def __init__(  # pylint: disable=redefined-builtin
         self,
         explicit,  # type: ValueSpec
-        choices,  # type: Union[List[_Tuple[Any, Text]], Callable[[], List[_Tuple[Any, Text]]]]
+        choices,  # type: DropdownChoices
         otherlabel=None,  # type: _Optional[Text]
         # DropdownChoice
         sorted=False,  # type: bool

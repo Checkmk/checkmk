@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.cee.plugins.wato.alert_handling import (
+    register_alert_handler_parameters,)
+from cmk.gui.plugins.wato.utils import (
+    PasswordFromStore,)
+
+
 register_alert_handler_parameters(
     "windows_remote",
     Dictionary(

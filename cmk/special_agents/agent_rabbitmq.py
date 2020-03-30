@@ -12,8 +12,10 @@ import sys
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]
+import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+cmk.utils.password_store.replace_passwords()
 
 Section = namedtuple('Section', ['name', 'uri'])
 

@@ -234,7 +234,7 @@ while test -n "$1"; do
 
         -s|--sections)
             shift
-            MK_ORA_SECTIONS=($(echo "$1" | tr ',' '\n'))
+            MK_ORA_SECTIONS=$(echo "$1" | tr ',' ' ')
             shift
             ;;
         --oratestversion)
@@ -2014,8 +2014,8 @@ unset_custom_sqls_vars () {
 
 
 do_custom_sqls () {
-    for section in "${custom_sqls_sections_arr[@]}"; do
-        if [ "$(do_section "$section")" = "no" ]; then
+    for section in $custom_sqls_sections; do
+        if [ "$MK_ORA_SECTIONS" ] && [[ "$MK_ORA_SECTIONS" != *"$section"* ]]; then
             logging -w "[${MK_SID}] [${section}] [custom_sql]"\
                     "The option '--sections' does not include section '${section}'"
             continue
@@ -2108,7 +2108,7 @@ do_custom_sqls () {
 
         local parameters=${SQLS_PARAMETERS:-$custom_sqls_parameters}
 
-        if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+        if [ -n "$MK_ORA_SECTIONS" ]; then
             local max_cache_age=
         elif [ -n "$SQLS_MAX_CACHE_AGE" ]; then
             local max_cache_age="$SQLS_MAX_CACHE_AGE"
@@ -2229,22 +2229,6 @@ do_dummy_sections () {
 }
 
 
-do_section () {
-    local section=$1
-    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
-        for mk_ora_section in "${MK_ORA_SECTIONS[@]}"; do
-            if [ "$mk_ora_section" = "${section}" ]; then
-                echo "yes"
-                return
-            fi
-        done
-        echo "no"
-    else
-        echo "yes"
-    fi
-}
-
-
 skip_sid () {
     local sid="$1"
     if [ "$ONLY_SIDS" ]; then
@@ -2285,21 +2269,11 @@ remove_excluded_sections () {
     # the sql_instance section at the beginning for every SID.
     local sections="$1"
     local excluded="$2"
-    local result=
-    local skip=
     for section in $sections; do
-        skip=
-        for exclude in $excluded; do
-            if [ "$exclude" = "$section" ]; then
-                skip=yes
-                break
-            fi
-        done
-        if [ "$skip" != yes ]; then
-            result=${result:+"$result "}"${section}"
+        if [[ "$excluded" != *"$section"* ]]; then
+            echo "$section"
         fi
     done
-    echo "$result"
 }
 
 
@@ -2334,7 +2308,7 @@ ora_session_environment () {
 
 run_cached () {
     logging "[${MK_SID}] [run_cached]" "Note: Asynchronous sections are not executed during logging"
-    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+    if [ -n "$MK_ORA_SECTIONS" ]; then
         return
     fi
 
@@ -2694,14 +2668,13 @@ do_testmode_custom_sql() {
 }
 
 do_checks () {
-    local excluded=
     local sections=
     local asections=
 
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM sections
-        local do_async_sections=${ASYNC_ASM_SECTIONS}
-        local do_sync_sections=${SYNC_ASM_SECTIONS}
+        local sections=${SYNC_ASM_SECTIONS}
+        local asections=${ASYNC_ASM_SECTIONS}
     else
         local sync_dummy="SYNC_SECTIONS_${ORACLE_SID}"
         local SYNC_SECTIONS_SID=${!sync_dummy}
@@ -2710,45 +2683,50 @@ do_checks () {
         local async_dummy="ASYNC_SECTIONS_${ORACLE_SID}"
         local ASYNC_SECTIONS_SID=${!async_dummy}
         local do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
-    fi
 
-    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
-        sections=$(
-            for section in $do_sync_sections $do_async_sections; do
-                if [ "$(do_section "$section")" = "yes" ]; then
-                    sections=${sections:+"$sections "}"${section}"
-                fi
-            done; echo "$sections")
-
-        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
-        MK_ASYNC_SECTIONS_QUERY=
-
-        logging "[${MK_SID}] [do_checks]" "Execute explicit sections: $sections"
-
-    else
-        excluded=$(eval "echo \$EXCLUDE_$MK_SID")
-        sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
-        asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
-
-        if $MK_ORA_LOGGING; then
-            MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do eval "sql_$section" ; done)
-            MK_ASYNC_SECTIONS_QUERY=
+        local excluded=
+        excluded=$(eval "echo \$EXCLUDE_$ORACLE_SID")
+        if [ "$excluded" ]; then
+            sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
+            asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
         else
-            MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
-            MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
-
+            sections="$do_sync_sections"
+            asections="$do_async_sections"
         fi
-
-        logging "[${MK_SID}] [do_checks]" "Note: async sections are executed as sync sections"\
-                "Excluded: $excluded" "Sections: $sections" "Async sections: $asections"
-
     fi
-    export MK_ASYNC_SECTIONS_QUERY
+
+    logging "[${ORACLE_SID}] [do_checks]" "Excluded: $excluded"\
+            "Sections: $sections" "Async sections: $asections"
 
     if $MK_ORA_DEBUG_CONNECT; then
-        do_testmode "$sections" "$asections" 2>&1
+        do_testmode "$sections" "$asections"
+        return
+    fi
+
+    if [ "$MK_ORA_SECTIONS" ]; then
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do
+            if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
+                eval "sql_$section"
+            fi
+        done)
+        MK_ASYNC_SECTIONS_QUERY=
+
+    elif $MK_ORA_LOGGING; then
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do eval "sql_$section" ; done)
+        MK_ASYNC_SECTIONS_QUERY=
+
     else
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
+        MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
+    fi
+
+    export MK_ASYNC_SECTIONS_QUERY
+
+    if [ "$MK_SYNC_SECTIONS_QUERY" ]; then
         do_sync_checks
+    fi
+
+    if [ "$MK_ASYNC_SECTIONS_QUERY" ]; then
         run_cached "$CACHE_MAXAGE" do_async_checks
     fi
 }
@@ -2788,7 +2766,7 @@ logging "--------------------------------------------------------------------"
 load_config
 
 # globals
-custom_sqls_sections_arr=($(echo "$SQLS_SECTIONS" | tr ',' '\n'))
+custom_sqls_sections=$(echo "$SQLS_SECTIONS" | tr ',' ' ')
 
 # globals and locals
 custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME

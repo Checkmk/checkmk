@@ -63,9 +63,9 @@ tearDown () {
         rm "${MK_CONFDIR}/mk_oracle.cfg"
     fi
     unset SYNC_SECTIONS ASYNC_SECTIONS SYNC_ASM_SECTIONS ASYNC_ASM_SECTIONS CACHE_MAXAGE OLRLOC
-    unset ONLY_SIDS SKIP_SIDS EXCLUDE_MySID EXCLUDE_OtherSID
+    unset ONLY_SIDS SKIP_SIDS EXCLUDE_MySID EXCLUDE_OtherSID SYNC_SECTIONS_MySID ASYNC_SECTIONS_MySID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
-    unset ORACLE_SID MK_SID
+    unset ORACLE_SID MK_SID MK_ORA_SECTIONS
 }
 
 #.
@@ -269,6 +269,29 @@ mocked-sql_undostat" "$MK_SYNC_SECTIONS_QUERY"
 mocked-sql_jobs" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
+
+test_mk_oracle_do_checks_sections_opt () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+SYNC_SECTIONS="instance sessions logswitches"
+ASYNC_SECTIONS="tablespaces rman jobs"
+EOF
+
+    load_config
+
+    # shellcheck disable=SC2034
+    MK_ORA_SECTIONS="instance logswitches tablespaces"
+    # shellcheck disable=SC2034
+    ORACLE_SID="MySID"
+    # shellcheck disable=SC2034
+    MK_SID="MySID"
+    do_checks
+
+    assertEquals "mocked-sql_instance
+mocked-sql_logswitches
+mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
+    assertEquals "" "$MK_ASYNC_SECTIONS_QUERY"
+}
+
 #   ---ASM------------------------------------------------------------------
 
 test_mk_oracle_do_checks_asm () {
@@ -286,6 +309,25 @@ EOF
     assertEquals "mocked-sql_instance
 mocked-sql_processes" "$MK_SYNC_SECTIONS_QUERY"
     assertEquals "mocked-sql_asm_diskgroup" "$MK_ASYNC_SECTIONS_QUERY"
+}
+
+test_mk_oracle_do_checks_asm_sections_opt () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+SYNC_ASM_SECTIONS="instance processes"
+ASYNC_ASM_SECTIONS="asm_diskgroup"
+EOF
+
+    load_config
+
+    # shellcheck disable=SC2034
+    MK_ORA_SECTIONS="instance asm_diskgroup"
+    # shellcheck disable=SC2034
+    ORACLE_SID="+MyASM"
+    do_checks
+
+    assertEquals "mocked-sql_instance
+mocked-sql_asm_diskgroup" "$MK_SYNC_SECTIONS_QUERY"
+    assertEquals "" "$MK_ASYNC_SECTIONS_QUERY"
 }
 
 #   ---remote instances-----------------------------------------------------

@@ -16,7 +16,8 @@ ContactgroupName = str
 TimeperiodName = str
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
-Ruleset = List[Dict]  # TODO: Improve this type
+RuleSpec = Dict[str, Any]  # TODO: Improve this type
+Ruleset = List[RuleSpec]  # TODO: Improve this type
 MetricName = str
 CheckPluginName = str
 InventoryPluginName = str
@@ -30,6 +31,10 @@ TaggroupID = str
 Tags = Dict[TagID, TagValue]
 TagList = Set[TagValue]
 TagGroups = Dict[TagID, TaggroupID]
+HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
+                           List[Union[Dict[str, str], str]]]
+ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, Text], Text]]],
+                              List[Union[Dict[str, Text], Text]]]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int

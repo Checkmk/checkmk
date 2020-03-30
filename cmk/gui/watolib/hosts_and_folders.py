@@ -2869,10 +2869,12 @@ def collect_hosts(folder):
 
 
 def folder_preserving_link(add_vars):
+    # type: (HTTPVariables) -> str
     return Folder.current().url(add_vars)
 
 
 def make_action_link(vars_):
+    # type: (HTTPVariables) -> str
     return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
 
 

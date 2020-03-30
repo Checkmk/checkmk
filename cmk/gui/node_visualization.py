@@ -553,6 +553,8 @@ class AjaxFetchTopology(AjaxPage):
     def _get_topology_instance(self, topology_config):
         # type: (TopologyConfig) -> Topology
         topology_class = topology_registry.get(topology_config["mode"])
+        if topology_class is None:
+            raise Exception("unknown topology")
         return topology_class(topology_config)
 
 

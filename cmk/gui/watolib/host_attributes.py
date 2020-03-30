@@ -544,7 +544,7 @@ def _declare_host_attribute_topic(ident, topic_title):
 
 def undeclare_host_attribute(attrname):
     if attrname in host_attribute_registry:
-        del host_attribute_registry[attrname]
+        host_attribute_registry.unregister(attrname)
 
 
 def undeclare_host_tag_attribute(tag_id):

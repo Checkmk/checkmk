@@ -4,21 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Tuple, Type, Dict, Any  # pylint: disable=unused-import
+from abc import abstractmethod
+from typing import Any, Dict, Mapping, Type, TypeVar  # pylint: disable=unused-import
 
-import abc
-import six
+_VT = TypeVar('_VT')
+
 
 # TODO: Refactor all plugins to one way of telling the registry it's name.
 #       for example let all use a static/class method .name().
 #       We could standardize this by making all plugin classes inherit
 #       from a plugin base class instead of "object".
-
-# TODO: Decide which base class to implement
-# (https://docs.python.org/2/library/collections.html) and cleanup
-
-
-class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
+class ABCRegistry(Mapping[str, _VT]):
     """The management object for all available plugins of a component.
 
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
@@ -30,15 +26,15 @@ class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         # type: () -> None
         super(ABCRegistry, self).__init__()
-        self._entries = {}  # type: Dict[str, Any]
+        self._entries = {}  # type: Dict[str, _VT]
 
     # TODO: Make staticmethod (But abc.abstractstaticmethod not available. How to make this possible?)
-    @abc.abstractmethod
+    @abstractmethod
     def plugin_base_class(self):
         # type: () -> Type
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def plugin_name(self, plugin_class):
         # type: (Type) -> str
         raise NotImplementedError()
@@ -47,42 +43,23 @@ class ABCRegistry(six.with_metaclass(abc.ABCMeta, object)):
         # type: (Type) -> None
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def register(self, plugin_class):
         # type: (Type) -> Type
         raise NotImplementedError()
 
-    def __contains__(self, text):
-        # type: (str) -> bool
-        return text in self._entries
-
-    def __delitem__(self, key):
+    def unregister(self, name):
         # type: (str) -> None
-        del self._entries[key]
+        del self._entries[name]
 
     def __getitem__(self, key):
-        # type: (str) -> Any
-        return self._entries[key]
+        return self._entries.__getitem__(key)
 
     def __len__(self):
-        # type: () -> int
-        return len(self._entries)
+        return self._entries.__len__()
 
-    def values(self):
-        # type: () -> Iterable[Any]
-        return self._entries.values()
-
-    def items(self):
-        # type: () -> Iterable[Tuple[str, Any]]
-        return self._entries.items()
-
-    def keys(self):
-        # type: () -> Iterable[str]
-        return self._entries.keys()
-
-    def get(self, key, deflt=None):
-        # type: (str, Any) -> Any
-        return self._entries.get(key, deflt)
+    def __iter__(self):
+        return self._entries.__iter__()
 
 
 # Abstract methods:

@@ -9,7 +9,7 @@ import ast
 import os
 import shutil
 import time
-from typing import List, Tuple, Union  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 from livestatus import SiteId  # pylint: disable=unused-import
 
@@ -23,7 +23,9 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
-import cmk.gui.sites
+from cmk.gui.sites import (  # pylint: disable=unused-import
+    SiteConfiguration, SiteStatus, states as sites_states, disconnect as sites_disconnect,
+)
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
@@ -96,7 +98,7 @@ def get_replication_paths():
         ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
         ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
         ("dir", "local", cmk.utils.paths.omd_root + "/local"),
-    ]
+    ]  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
 
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
@@ -258,14 +260,16 @@ class ActivateChanges(object):
         return config.site_is_local(site_id) or "secret" in site
 
     def _site_is_online(self, status):
+        # type: (str) -> bool
         return status in ["online", "disabled"]
 
     def _get_site_status(self, site_id, site):
+        # type: (SiteId, SiteConfiguration) -> Tuple[SiteStatus, str]
         if site.get("disabled"):
-            site_status = {}
+            site_status = SiteStatus({})
             status = "disabled"
         else:
-            site_status = cmk.gui.sites.states().get(site_id, {})
+            site_status = sites_states().get(site_id, SiteStatus({}))
             status = site_status.get("state", "unknown")
 
         return site_status, status
@@ -340,7 +344,7 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_until = None
         self._comment = None
         self._activate_foreign = False
-        self._activation_id = None
+        self._activation_id = None  # type: Optional[str]
         self._snapshot_id = None
         if not os.path.exists(self.activation_persisted_dir):
             os.makedirs(self.activation_persisted_dir)
@@ -527,6 +531,8 @@ class ActivateChangesManager(ActivateChanges):
             snapshot_name = cmk.gui.watolib.snapshots.create_snapshot(self._comment)
             log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
+            if self._activation_id is None:
+                raise Exception("activation ID is not set")
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
             if cmk_version.is_managed_edition():
                 import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
@@ -596,6 +602,8 @@ class ActivateChangesManager(ActivateChanges):
         shutil.rmtree(site_tmp_dir)
 
     def _get_site_tmp_dir(self, site_id):
+        if self._activation_id is None:
+            raise Exception("activation ID is not set")
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
                             "sync-%s-specific-%.4f" % (site_id, time.time()))
 
@@ -707,6 +715,8 @@ class ActivateChangesManager(ActivateChanges):
         return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
+        if self._activation_id is None:
+            raise Exception("activation ID is not set")
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
                             self.site_filename(site_id))
 
@@ -859,7 +869,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         # Cleanup existing livestatus connections (may be opened later when needed)
         if g:
-            cmk.gui.sites.disconnect()
+            sites_disconnect()
 
         # Cleanup resources of the apache
         for x in range(3, 256):
@@ -926,7 +936,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
     def _render_warnings(self, configuration_warnings):
-        html_code = "<div class=warning>"
+        html_code = u"<div class=warning>"
         html_code += "<b>%s</b>" % _("Warnings:")
         html_code += "<ul>"
         for domain, warnings in sorted(configuration_warnings.items()):

@@ -7,9 +7,7 @@
 import abc
 import json
 import inspect
-from typing import (  # pylint: disable=unused-import
-    Dict, Any, Text, Type, Callable, Optional,
-)
+from typing import Any, Callable, Dict, Mapping, Optional, Text, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -152,7 +150,10 @@ def get_page_handler(name, dflt=None):
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-    handle_class = page_registry.get(name)
+    # NOTE: Workaround for our non-generic registries... :-/
+    pr = page_registry  # type: Mapping[str, Type[Page]]
+    handle_class = pr.get(name)
     if handle_class is None:
         return dflt
-    return lambda: handle_class().handle_page()
+    # NOTE: We can'use functools.partial because of https://bugs.python.org/issue3445
+    return (lambda hc: lambda: hc().handle_page())(handle_class)

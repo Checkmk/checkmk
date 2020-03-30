@@ -1996,7 +1996,7 @@ def register_user_attribute_sync_plugins():
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
         plugin = plugin_class()
         if not plugin.is_builtin:
-            del ldap_attribute_plugin_registry[ident]
+            ldap_attribute_plugin_registry.unregister(ident)
 
     for name, attr in get_user_attributes():
         plugin_class = type(

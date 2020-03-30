@@ -296,11 +296,10 @@ class View(object):
                     None,
                     _("The Event Console view '%s' can not be rendered. The Event Console is possibly "
                       "disabled.") % self.name)
-            else:
-                raise MKUserError(
-                    None,
-                    _("The view '%s' using the datasource '%s' can not be rendered "
-                      "because the datasource does not exist.") % (self.name, self.datasource))
+            raise MKUserError(
+                None,
+                _("The view '%s' using the datasource '%s' can not be rendered "
+                  "because the datasource does not exist.") % (self.name, self.datasource))
 
     @property
     def row_cells(self):
@@ -683,7 +682,7 @@ def _register_host_tag_painters():
     # first remove all old painters to reflect delted painters during runtime
     for key in list(painter_registry.keys()):
         if key.startswith('host_tag_'):
-            del painter_registry[key]
+            painter_registry.unregister(key)
 
     for tag_group in config.tags.tag_groups:
         if tag_group.topic:
@@ -1762,7 +1761,7 @@ def get_limit():
     limitvar = html.request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
         return config.hard_query_limit
-    elif limitvar == "none" and config.user.may("general.ignore_hard_limit"):
+    if limitvar == "none" and config.user.may("general.ignore_hard_limit"):
         return None
     return config.soft_query_limit
 
@@ -2069,7 +2068,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
         add_site_hint = visuals.may_add_site_hint(name,
                                                   info_keys=list(visual_info_registry.keys()),
                                                   single_info_keys=visual["single_infos"],
-                                                  filter_names=dict(vars_values).keys())
+                                                  filter_names=list(dict(vars_values).keys()))
 
         if add_site_hint and html.request.var('site'):
             vars_values.append(('site', html.request.var('site')))
@@ -2125,11 +2124,10 @@ def _sort_data(view, data, sorters):
         # type: (Callable[[Row, Row], int], Row, Row) -> int
         if row1 is None and row2 is None:
             return 0
-        elif row1 is None:
+        if row1 is None:
             return -1
-        elif row2 is None:
+        if row2 is None:
             return 1
-
         return compfunc(row1, row2)
 
     def multisort(e1, e2):
@@ -2509,8 +2507,6 @@ def execute_hooks(hook):
                 raise MKGeneralException(
                     _('Problem while executing hook function %s in hook %s: %s') %
                     (hook_func.__name__, hook, traceback.format_exc()))
-            else:
-                pass
 
 
 def docu_link(topic, text):

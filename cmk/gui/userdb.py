@@ -1059,7 +1059,7 @@ def _clear_config_based_user_attributes():
     # type: () -> None
     for _name, attr in get_user_attributes():
         if attr.from_config():
-            del user_attribute_registry[attr.name()]
+            user_attribute_registry.unregister(attr.name())
 
 
 # Make the config module initialize the user attributes after loading the config

@@ -2698,7 +2698,7 @@ def _sub_valuespec(choice):
     if len(choice) == 3:
         # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
         vs = choice[2 + 0]
-        if isinstance(vs, ValueSpec):
+        if vs is None or isinstance(vs, ValueSpec):
             return vs
     raise Exception("invalid CascadingDropdownChoice %r" % (choice,))
 

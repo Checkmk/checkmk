@@ -13,7 +13,7 @@ import traceback
 import json
 import functools
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as _Tuple, Callable,
+    Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Text, Tuple as _Tuple, Union,
 )
 import six
 
@@ -36,8 +36,9 @@ import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Alternative, CascadingDropdown, Dictionary, DropdownChoice, FixedValue, Hostname, IconSelector,
-    Integer, ListChoice, ListOf, TextUnicode, Transform, Tuple, ValueSpec,
+    Alternative, CascadingDropdown, CascadingDropdownChoice, Dictionary, DropdownChoice,
+    DropdownChoiceEntry, FixedValue, Hostname, IconSelector, Integer, ListChoice, ListOf,
+    TextUnicode, Transform, Tuple, ValueSpec,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
@@ -985,6 +986,7 @@ def view_editor_column_spec(ident, title, ds_name):
         empty_text = _("Please add at least one column to your view.")
 
     def column_elements(_painters, painter_type):
+        empty_choices = [(None, "")]  # type: List[DropdownChoiceEntry]
         elements = [
             CascadingDropdown(title=_('Column'),
                               choices=painter_choices_with_params(_painters),
@@ -1001,7 +1003,7 @@ def view_editor_column_spec(ident, title, ds_name):
             ),
             DropdownChoice(
                 title=_('Tooltip'),
-                choices=[(None, "")] + painter_choices(_painters),
+                choices=empty_choices + painter_choices(_painters),
             )
         ]
         if painter_type == 'join_painter':
@@ -2153,6 +2155,7 @@ def sorters_of_datasource(ds_name):
 
 
 def painters_of_datasource(ds_name):
+    # type: (Text) -> Dict[str, Painter]
     return _allowed_for_datasource(painter_registry, ds_name)
 
 
@@ -2197,19 +2200,17 @@ def infos_needed_by_painter(painter, add_columns=None):
     return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters, add_params=False):
-    choices = []
+def painter_choices(painters):
+    # type: (Dict[str, Painter]) -> List[DropdownChoiceEntry]
+    return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
-    for name, painter in painters.items():
-        title = get_painter_title_for_choices(painter)
 
-        # Add the optional valuespec for painter parameters
-        if add_params and painter.parameters:
-            choices.append((name, title, painter.parameters))
-        else:
-            choices.append((name, title))
-
-    return sorted(choices, key=lambda x: x[1])
+def painter_choices_with_params(painters):
+    # type: (Dict[str, Painter]) -> List[CascadingDropdownChoice]
+    return sorted(((name, get_painter_title_for_choices(painter),
+                    painter.parameters if painter.parameters else None)
+                   for name, painter in painters.items()),
+                  key=lambda x: x[1])
 
 
 def get_sorter_title_for_choices(sorter):
@@ -2239,10 +2240,6 @@ def get_painter_title_for_choices(painter):
 
     dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
     return u"%s: %s" % (info_title, painter.title(dummy_cell))
-
-
-def painter_choices_with_params(painters):
-    return painter_choices(painters, add_params=True)
 
 
 #.

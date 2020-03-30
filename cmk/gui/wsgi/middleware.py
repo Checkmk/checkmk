@@ -58,5 +58,6 @@ class OverrideRequestMethod(object):
     def wsgi_app(self, environ, start_response):
         override = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE')
         if override:
-            environ['REQUEST_METHOD'] = override
+            if environ['REQUEST_METHOD'].lower() == 'post':
+                environ['REQUEST_METHOD'] = override
         return self.app(environ, start_response)

@@ -74,7 +74,7 @@ from cmk.gui.valuespec import (
     Password,
     rule_option_elements,
 )
-from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
@@ -1611,7 +1611,7 @@ class LDAPConnectionValuespec(Transform):
                  ],
                  optional_keys=["failover_servers"],
              )),
-        ]  # type: CascadingDropdownChoiceList
+        ]  # type: List[CascadingDropdownChoice]
 
         if ty == "ad":
             connect_to_choices.append((

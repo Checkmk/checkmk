@@ -55,7 +55,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
-from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     TextUnicode,
     DropdownChoice,
@@ -250,7 +250,7 @@ class RuleState(CascadingDropdown):
                         'First the CRITICAL pattern is tested, then WARNING and OK at last. '
                         'When none of the patterns matches, the events state is set to UNKNOWN.'),
              )),
-        ]  # type: CascadingDropdownChoiceList
+        ]  # type: List[CascadingDropdownChoice]
         CascadingDropdown.__init__(self, choices=choices, **kwargs)
 
 

@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (  # pylint: disable=unused-import
     Dictionary, TextAscii, TextUnicode, HTTPUrl, DropdownChoice, Tuple, ListOf, Integer, Float,
     Transform, ListOfStrings, IPNetwork, CascadingDropdown, MonitoringState, RegExpUnicode,
     IconSelector, PasswordSpec, ListOfTimeRanges, Age, FixedValue, Optional, Alternative,
-    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoiceList,
+    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoice,
 )
 
 from cmk.gui.plugins.wato import (
@@ -3120,7 +3120,7 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ]  # type: CascadingDropdownChoiceList
+    ]  # type: List[CascadingDropdownChoice]
     if config.user.may('wato.add_or_modify_executables'):
         return choices + [
             ("custom", _("Use a custom check plugin..."), PluginCommandLine()),

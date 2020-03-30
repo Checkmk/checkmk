@@ -2685,12 +2685,10 @@ CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
                                      _Tuple[CascadingDropdownChoiceElementValue, Any]]
 CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceElementValue, Text,
                                       _Optional[ValueSpec]]
-CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[CascadingDropdownChoiceElementValue,
-                                                             Text], CascadingDropdownCleanChoice]]]
-CascadingDropdownChoiceList = List[Union[_Tuple[CascadingDropdownChoiceElementValue, Text],
-                                         CascadingDropdownCleanChoice]]
-CascadingDropdownChoices = Union[CascadingDropdownChoiceList, CascadingDropdownChoiceFunc]
-CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
+CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceElementValue, Text]
+CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
+CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
+                                 Callable[[], List[CascadingDropdownChoice]]]
 
 
 class CascadingDropdown(ValueSpec):
@@ -2739,7 +2737,8 @@ class CascadingDropdown(ValueSpec):
 
         if isinstance(choices, list):
             self._choices = self.normalize_choices(
-                choices)  # type: Union[CascadingDropdownCleanChoices, CascadingDropdownChoiceFunc]
+                choices
+            )  # type: Union[List[CascadingDropdownCleanChoice], Callable[[], List[CascadingDropdownChoice]]]
         else:
             # function, store for later
             self._choices = choices
@@ -2765,8 +2764,8 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def normalize_choices(self, choices):
-        # type: (CascadingDropdownChoiceList) -> CascadingDropdownCleanChoices
-        new_choices = []  # type: CascadingDropdownCleanChoices
+        # type: (List[CascadingDropdownChoice]) -> List[CascadingDropdownCleanChoice]
+        new_choices = []  # type: List[CascadingDropdownCleanChoice]
         for entry in choices:
             if len(entry) == 2:  # plain entry with no sub-valuespec
                 entry = (entry[0], entry[1], None)  # normalize to three entries
@@ -2775,9 +2774,9 @@ class CascadingDropdown(ValueSpec):
         return new_choices
 
     def choices(self):
-        # type: () -> CascadingDropdownCleanChoices
+        # type: () -> List[CascadingDropdownCleanChoice]
         if isinstance(self._choices, list):
-            result = self._choices  # type: CascadingDropdownCleanChoices
+            result = self._choices  # type: List[CascadingDropdownCleanChoice]
         else:
             result = self.normalize_choices(self._choices())
 
@@ -4005,7 +4004,7 @@ class Timerange(CascadingDropdown):
         self,
         allow_empty=False,  # type: bool
         include_time=False,  # type: bool
-        choices=None,  # type: Union[None, CascadingDropdownChoiceList, Callable[[], CascadingDropdownChoiceList]]
+        choices=None,  # type: Union[None, List[CascadingDropdownChoice], Callable[[], List[CascadingDropdownChoice]]]
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: _Optional[Text]
@@ -4051,10 +4050,10 @@ class Timerange(CascadingDropdown):
         self._fixed_choices = choices
 
     def _prepare_choices(self):
-        # type: () -> CascadingDropdownChoiceList
+        # type: () -> List[CascadingDropdownChoice]
         # TODO: We have dispatching code like this all over place...
         if self._fixed_choices is None:
-            choices = []  # type: CascadingDropdownChoiceList
+            choices = []  # type: List[CascadingDropdownChoice]
         elif isinstance(self._fixed_choices, list):
             choices = list(self._fixed_choices)
         elif callable(self._fixed_choices):
@@ -6004,7 +6003,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         from_end_choice = [
             ("month_end", _("At the end of every month at day"),
              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-        ]  # type: CascadingDropdownChoiceList
+        ]  # type: List[CascadingDropdownChoice]
     else:
         from_end_choice = []
 
@@ -6013,7 +6012,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         ("month_begin", _("At the beginning of every month at day"), Integer(minvalue=1,
                                                                              maxvalue=28)),
-    ]  # type:  CascadingDropdownChoiceList
+    ]  # type:  List[CascadingDropdownChoice]
     return CascadingDropdown(title=_("Period"),
                              orientation="horizontal",
                              choices=dwm + from_end_choice,

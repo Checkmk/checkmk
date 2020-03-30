@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK vSphere Special Agent"""
-
+from typing import Iterable
 import argparse
 import collections
 import datetime
@@ -1162,7 +1162,7 @@ class ESXConnection:
         auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
         response = self._session.postsoap(self._soap_templates.login % auth)
 
-        server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
+        server_cookie = response.headers.get("set-cookie")
 
         if response.status_code != 200 or not server_cookie:
             raise SystemExit("Cannot login to vSphere Server (reason: [%s] %s). Please check the "
@@ -1551,12 +1551,13 @@ def convert_hostname(hostname, opt):
 
 
 def write_output(lines, opt):
+    # type: (Iterable[str], argparse.Namespace) -> None
     if opt.agent:
         for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
-            sys.stdout.write(chunk + "\n")
+            sys.stdout.write(chunk)
+        sys.stdout.write("\n")
 
-    for line in lines:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, str) else line) + "\n")
+    sys.stdout.writelines("%s\n" % line for line in lines)
     sys.stdout.flush()
 
 

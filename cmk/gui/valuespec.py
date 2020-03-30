@@ -2691,6 +2691,23 @@ CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
                                  Callable[[], List[CascadingDropdownChoice]]]
 
 
+def _normalize_choices(choices):
+    # type: (List[CascadingDropdownChoice]) -> List[CascadingDropdownCleanChoice]
+    return [(c[0], c[1], _sub_valuespec(c)) for c in choices]
+
+
+def _sub_valuespec(choice):
+    # type: (CascadingDropdownChoice) -> _Optional[ValueSpec]
+    if len(choice) == 2:
+        return None
+    if len(choice) == 3:
+        # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
+        vs = choice[2 + 0]
+        if isinstance(vs, ValueSpec):
+            return vs
+    raise Exception("invalid CascadingDropdownChoice %r" % (choice,))
+
+
 class CascadingDropdown(ValueSpec):
     """A Dropdown choice where the elements are ValueSpecs.
 
@@ -2736,7 +2753,7 @@ class CascadingDropdown(ValueSpec):
                                                 validate=validate)
 
         if isinstance(choices, list):
-            self._choices = self.normalize_choices(
+            self._choices = _normalize_choices(
                 choices
             )  # type: Union[List[CascadingDropdownCleanChoice], Callable[[], List[CascadingDropdownChoice]]]
         else:
@@ -2763,22 +2780,12 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_page_name = render_sub_vs_page_name
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
-    def normalize_choices(self, choices):
-        # type: (List[CascadingDropdownChoice]) -> List[CascadingDropdownCleanChoice]
-        new_choices = []  # type: List[CascadingDropdownCleanChoice]
-        for entry in choices:
-            if len(entry) == 2:  # plain entry with no sub-valuespec
-                entry = (entry[0], entry[1], None)  # normalize to three entries
-            # Mypy does not understand that we just erased the "tuple length of two" case
-            new_choices.append(entry)  # type: ignore[arg-type]
-        return new_choices
-
     def choices(self):
         # type: () -> List[CascadingDropdownCleanChoice]
         if isinstance(self._choices, list):
             result = self._choices  # type: List[CascadingDropdownCleanChoice]
         else:
-            result = self.normalize_choices(self._choices())
+            result = _normalize_choices(self._choices())
 
         if self._no_preselect:
             choice = (self._no_preselect_value, self._no_preselect_title, None

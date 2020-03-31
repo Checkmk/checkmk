@@ -744,3 +744,21 @@ def test_help_without_args(execute):
     assert p.stderr == AUTO_MIGRATION_ERRORS
     assert p.stdout.startswith("WAYS TO CALL:")
     assert "--snmpwalk" in p.stdout
+
+
+#.
+#   .--diagnostics---------------------------------------------------------.
+#   |             _ _                             _   _                    |
+#   |          __| (_) __ _  __ _ _ __   ___  ___| |_(_) ___ ___           |
+#   |         / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|          |
+#   |        | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \          |
+#   |         \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/          |
+#   |                       |___/                                          |
+#   '----------------------------------------------------------------------'
+
+
+def test_create_diagnostics_dump(execute):
+    p = execute(["cmk", "--create-diagnostics-dump"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout.startswith("Create diagnostics dump in")

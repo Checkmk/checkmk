@@ -42,6 +42,7 @@ pathlib_paths = [
     "local_mib_dir",
     "agent_based_plugins_dir",
     "local_agent_based_plugins_dir",
+    "diagnostics_dir",
 ]
 
 

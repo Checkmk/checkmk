@@ -38,6 +38,7 @@ import cmk.base.dump_host
 import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
+import cmk.base.diagnostics
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
@@ -1734,6 +1735,35 @@ modes.register(
         short_option="h",
         handler_function=mode_help,
         short_help="Print this help",
+        needs_config=False,
+        needs_checks=False,
+    ))
+
+#.
+#   .--diagnostics---------------------------------------------------------.
+#   |             _ _                             _   _                    |
+#   |          __| (_) __ _  __ _ _ __   ___  ___| |_(_) ___ ___           |
+#   |         / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|          |
+#   |        | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \          |
+#   |         \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/          |
+#   |                       |___/                                          |
+#   '----------------------------------------------------------------------'
+
+
+def mode_create_diagnostics_dump():
+    # type: () -> None
+    cmk.base.diagnostics.create_diagnostics_dump()
+
+
+modes.register(
+    Mode(
+        long_option="create-diagnostics-dump",
+        handler_function=mode_create_diagnostics_dump,
+        short_help="Create diagnostics dump",
+        long_help=[
+            "Create a dump containing information for diagnostic analysis "
+            "in the folder var/check_mk/diagnostics."
+        ],
         needs_config=False,
         needs_checks=False,
     ))

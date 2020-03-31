@@ -492,52 +492,7 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
 
 def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curves, mirrored):
-    dflt_min_value, dflt_max_value = None, None
-
-    # Now make sure that all points are within the range.
-    # Enlarge a given range if neccessary.
-    for curve in layouted_curves:
-        for point in curve["points"]:
-
-            # Line points
-            if isinstance(point, (float, int)):
-                dflt_max_value = max(dflt_max_value, point)
-                if dflt_min_value is None:
-                    dflt_min_value = point
-                elif point is not None:
-                    dflt_min_value = min(dflt_min_value, point)
-
-            # Area points
-            elif isinstance(point, tuple):
-                lower, higher = point
-                dflt_max_value = max(dflt_max_value, higher)
-                if dflt_min_value is None:
-                    dflt_min_value = lower
-                elif lower is not None:
-                    dflt_min_value = min(dflt_min_value, lower)
-
-    # If all of our data points are None, then we have no
-    # min/max values. In this case we assume 0 as a minimum
-    # value and 1 as a maximum. Otherwise we will run into
-    # an exception
-    if dflt_min_value is None and dflt_max_value is not None and dflt_max_value > 0:
-        min_value = -1 * dflt_max_value if mirrored else 0.0
-
-    elif dflt_max_value is None and dflt_min_value is not None and dflt_min_value < 0:
-        max_value = 1.0
-
-    elif dflt_min_value is None and dflt_max_value is not None:
-        if mirrored:
-            min_value = -1 * dflt_max_value
-        else:
-            min_value = dflt_max_value - 1.0
-
-    elif dflt_max_value is None and dflt_min_value is not None:
-        max_value = min_value + 1.0
-
-    else:
-        min_value = -1.0 if mirrored else 0.0
-        max_value = 1.0
+    min_value, max_value = _get_min_max_values_from_curves(layouted_curves, mirrored)
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = graph_recipe["explicit_vertical_range"]
@@ -583,6 +538,62 @@ def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curv
             max_value += 0.5 * vrange_per_ex
 
     return real_range, vrange, min_value, max_value
+
+
+def _get_min_max_values_from_curves(layouted_curves, mirrored):
+    dflt_min_value, dflt_max_value = _get_default_min_max_values(layouted_curves)
+    # If all of our data points are None, then we have no
+    # min/max values. In this case we assume 0 as a minimum
+    # value and 1 as a maximum. Otherwise we will run into
+    # an exception
+    if dflt_min_value is None and dflt_max_value is not None and dflt_max_value > 0:
+        min_value = -1 * dflt_max_value if mirrored else 0.0
+
+    elif dflt_max_value is None and dflt_min_value is not None and dflt_min_value < 0:
+        max_value = 1.0
+
+    elif dflt_min_value is None and dflt_max_value is not None:
+        if mirrored:
+            min_value = -1 * dflt_max_value
+        else:
+            min_value = dflt_max_value - 1.0
+
+    elif dflt_max_value is None and dflt_min_value is not None:
+        max_value = min_value + 1.0
+
+    else:
+        min_value = -1.0 if mirrored else 0.0
+        max_value = 1.0
+
+    return min_value, max_value
+
+
+def _get_default_min_max_values(layouted_curves):
+    dflt_min_value, dflt_max_value = None, None
+
+    # Now make sure that all points are within the range.
+    # Enlarge a given range if neccessary.
+    for curve in layouted_curves:
+        for point in curve["points"]:
+
+            # Line points
+            if isinstance(point, (float, int)):
+                dflt_max_value = max(dflt_max_value, point)
+                if dflt_min_value is None:
+                    dflt_min_value = point
+                elif point is not None:
+                    dflt_min_value = min(dflt_min_value, point)
+
+            # Area points
+            elif isinstance(point, tuple):
+                lower, higher = point
+                dflt_max_value = max(dflt_max_value, higher)
+                if dflt_min_value is None:
+                    dflt_min_value = lower
+                elif lower is not None:
+                    dflt_min_value = min(dflt_min_value, lower)
+
+    return dflt_min_value, dflt_max_value
 
 
 # Create labels for the neccessary range

@@ -20,14 +20,14 @@ def test_parse_sensor_reading_standard_case():
     reading = SensorReading(  #
         ['lower non-critical threshold'], 1, "Hugo", None, "", [42], "hugo-type", None, 0)
     assert IPMIManagementBoardDataSource._parse_sensor_reading(
-        0, reading) == [b"0", "Hugo", "hugo-type", b"N/A", "", b"WARNING"]
+        0, reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"WARNING"]
 
 
 def test_parse_sensor_reading_false_positive():
     reading = SensorReading(  #
         ['Present'], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1)
     assert IPMIManagementBoardDataSource._parse_sensor_reading(
-        0, reading) == [b"0", "Dingeling", "FancyDevice", b"3.14", b"C", b"Present"]
+        0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

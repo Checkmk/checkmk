@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import cast, Optional, Set, List  # pylint: disable=unused-import
+
+import six
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -176,10 +178,10 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         return [
             b"%d" % number,
-            reading.name,
-            reading.type,
+            six.ensure_binary(reading.name),
+            six.ensure_binary(reading.type),
             (b"%0.2f" % reading.value) if reading.value else b"N/A",
-            reading.units if reading.units != b"\xc2\xb0C" else b"C",
+            six.ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
             health_txt,
         ]
 
@@ -196,7 +198,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
-                output += b"%s|%s|%s\n" % (entity_name, attribute_name, value)
+                output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
+                output += b"\n"
 
         return output
 

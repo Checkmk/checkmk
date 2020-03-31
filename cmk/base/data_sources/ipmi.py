@@ -73,11 +73,12 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
     def describe(self):
         # type: () -> str
-        return "%s (Address: %s, User: %s)" % (
-            self.title(),
-            self._ipaddress,
-            self._credentials["username"],
-        )
+        items = []
+        if self._ipaddress:
+            items.append("Address: %s" % self._ipaddress)
+        if self._credentials:
+            items.append("User: %s" % self._credentials["username"])
+        return "%s (%s)" % (self.title(), ", ".join(items))
 
     def _cpu_tracking_id(self):
         # type: () -> str
@@ -89,6 +90,9 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
     def _execute(self):
         # type: () -> RawAgentData
+        if not self._credentials:
+            raise MKAgentError("Missing credentials")
+
         connection = None
         try:
             connection = self._create_ipmi_connection()

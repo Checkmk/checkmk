@@ -11,6 +11,7 @@ import time
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
@@ -429,19 +430,22 @@ class ModeEditUser(WatoMode):
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
+        # TODO: Should we turn the both fields below into Optional[UserId]?
         self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
         self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
+        # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
 
         self._users = userdb.load_users(lock=html.is_transaction())
 
-        if self._is_new_user:
-            if self._cloneid:
-                self._user = self._users.get(self._cloneid, userdb.new_user_template('htpasswd'))
-            else:
-                self._user = userdb.new_user_template('htpasswd')
+        if self._user_id is not None:
+            self._user = self._users.get(UserId(self._user_id),
+                                         userdb.new_user_template('htpasswd'))
+        elif self._cloneid:
+            self._user = self._users.get(UserId(self._cloneid),
+                                         userdb.new_user_template('htpasswd'))
         else:
-            self._user = self._users.get(self._user_id, userdb.new_user_template('htpasswd'))
+            self._user = userdb.new_user_template('htpasswd')
 
         self._locked_attributes = userdb.locked_attributes(self._user.get('connector'))
 
@@ -463,35 +467,38 @@ class ModeEditUser(WatoMode):
         if not html.check_transaction():
             return "users"
 
-        if self._is_new_user:
+        if self._user_id is None:  # same as self._is_new_user
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = html.request.get_unicode_input("edit").strip()
-            user_attrs = self._users[self._user_id]
+            self._user_id = html.request.get_unicode_input_mandatory("edit").strip()
+            user_attrs = self._users[UserId(self._user_id)]
 
         # Full name
-        user_attrs["alias"] = html.request.get_unicode_input("alias").strip()
+        user_attrs["alias"] = html.request.get_unicode_input_mandatory("alias").strip()
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
 
-        if self._user_id in self._users and self._users[
-                self._user_id]["locked"] != user_attrs["locked"] and user_attrs["locked"]:
+        if (UserId(self._user_id) in self._users and
+                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"] and
+                user_attrs["locked"]):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
         auth_method = html.request.var("authmethod")
         if auth_method == "secret":
-            secret = html.request.var("_auth_secret", "").strip()
+            secret = html.request.get_str_input_mandatory("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = hash_password(secret)
             increase_serial = True  # password changed, reflect in auth serial
 
         else:
-            password = html.request.var("_password_" + self._pw_suffix(), '').strip()
-            password2 = html.request.var("_password2_" + self._pw_suffix(), '').strip()
+            password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(),
+                                                            '').strip()
+            password2 = html.request.get_str_input_mandatory("_password2_" + self._pw_suffix(),
+                                                             '').strip()
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -531,7 +538,7 @@ class ModeEditUser(WatoMode):
             del user_attrs["idle_timeout"]
 
         # Pager
-        user_attrs["pager"] = html.request.var("pager", '').strip()
+        user_attrs["pager"] = html.request.get_str_input_mandatory("pager", '').strip()
 
         if cmk_version.is_managed_edition():
             customer = self._vs_customer.from_html_vars("customer")
@@ -933,9 +940,7 @@ class ModeEditUser(WatoMode):
         return watolib.load_configuration_settings().get("enable_rulebased_notifications")
 
     def _pw_suffix(self):
-        if self._is_new_user:
-            return 'new'
-        return base64.b64encode(self._user_id.encode("utf-8"))
+        return 'new' if self._user_id is None else base64.b64encode(self._user_id.encode("utf-8"))
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only

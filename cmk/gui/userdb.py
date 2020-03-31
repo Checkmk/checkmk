@@ -111,7 +111,7 @@ def sync_possible():
 
 
 def locked_attributes(connection_id):
-    # type: (str) -> List[str]
+    # type: (Optional[str]) -> List[str]
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
 

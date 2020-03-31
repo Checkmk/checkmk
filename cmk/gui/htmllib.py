@@ -1645,13 +1645,14 @@ class html(ABCHTMLGenerator):
         self.response.delete_cookie("language")
 
     def set_language_cookie(self, lang):
-        # type: (str) -> None
+        # type: (Optional[str]) -> None
         cookie_lang = self.request.cookie("language")
-        if cookie_lang != lang:
-            if lang is not None:
-                self.response.set_http_cookie("language", lang)
-            else:
-                self.del_language_cookie()
+        if cookie_lang == lang:
+            return
+        if lang is None:
+            self.del_language_cookie()
+        else:
+            self.response.set_http_cookie("language", lang)
 
     def help(self, text):
         # type: (Union[None, HTML, Text]) -> None

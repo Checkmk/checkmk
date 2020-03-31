@@ -15,5 +15,5 @@ item:
  One of the two statement {{Operations}} or {{Replica Operations}}.
 
 inventory:
- Creates a service for the {Operations} and another one for
+ One service is created for the {Operations} and another one for
  {Replica Operations} (if applicable).

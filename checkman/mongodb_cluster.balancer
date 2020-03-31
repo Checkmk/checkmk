@@ -7,4 +7,4 @@ description:
  This check monitors if balancer is enabled for the cluster. The balancer monitors the number of chunks on each shard.
 
 inventory:
- One service is created for the MongoDB balancer
+ One service is created for the MongoDB balancer.

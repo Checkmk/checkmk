@@ -13,4 +13,4 @@ description:
  to a pseudo host named after the replica set name instead.
 
 inventory:
- Creates one service.
+ One service is created.

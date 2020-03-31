@@ -18,4 +18,4 @@ item:
  Name of the cluster
 
 inventory:
- One service is created for each database named 'MongoDB Database: <database name>'
+ One service is created for each database named 'MongoDB Database: <database name>'.

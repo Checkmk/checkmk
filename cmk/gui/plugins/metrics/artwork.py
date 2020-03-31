@@ -559,7 +559,7 @@ def _get_min_max_values_from_curves(layouted_curves, mirrored):
             min_value = dflt_max_value - 1.0
 
     elif dflt_max_value is None and dflt_min_value is not None:
-        max_value = min_value + 1.0
+        max_value = dflt_min_value + 1.0
 
     else:
         min_value = -1.0 if mirrored else 0.0

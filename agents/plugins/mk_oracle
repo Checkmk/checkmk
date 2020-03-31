@@ -259,6 +259,37 @@ done
 #   |                                           |___/                      |
 #   '----------------------------------------------------------------------'
 
+filter_sections () {
+    OPT_SYNC_SECTIONS=
+    OPT_ASYNC_SECTIONS=
+    OPT_SYNC_ASM_SECTIONS=
+    OPT_ASYNC_ASM_SECTIONS=
+    OPT_SQLS_SECTIONS=
+    for section in $MK_ORA_SECTIONS; do
+        if [ -n "$SYNC_SECTIONS" ] && [[ "$SYNC_SECTIONS" == *"$section"* ]]; then
+            OPT_SYNC_SECTIONS="$OPT_SYNC_SECTIONS $section"
+        elif [ -n "$ASYNC_SECTIONS" ] && [[ "$ASYNC_SECTIONS" == *"$section"* ]]; then
+            OPT_ASYNC_SECTIONS="$OPT_ASYNC_SECTIONS $section"
+        fi
+
+        if [ -n "$SYNC_ASM_SECTIONS" ] && [[ "$SYNC_ASM_SECTIONS" == *"$section"* ]]; then
+            OPT_SYNC_ASM_SECTIONS="$OPT_SYNC_ASM_SECTIONS $section"
+        elif [ -n "$ASYNC_ASM_SECTIONS" ] && [[ "$ASYNC_ASM_SECTIONS" == *"$section"* ]]; then
+            OPT_ASYNC_ASM_SECTIONS="$OPT_ASYNC_ASM_SECTIONS $section"
+        fi
+
+        if [ -n "$SQLS_SECTIONS" ] && [[ "$SQLS_SECTIONS" == *"$section"* ]]; then
+            OPT_SQLS_SECTIONS="$OPT_SQLS_SECTIONS $section"
+        fi
+    done
+    SYNC_SECTIONS=$OPT_SYNC_SECTIONS
+    ASYNC_SECTIONS=$OPT_ASYNC_SECTIONS
+    SYNC_ASM_SECTIONS=$OPT_SYNC_ASM_SECTIONS
+    ASYNC_ASM_SECTIONS=$OPT_ASYNC_ASM_SECTIONS
+    SQLS_SECTIONS=$OPT_SQLS_SECTIONS
+}
+
+
 load_config () {
     if [ ! "$MK_CONFDIR" ]; then
         echo "MK_CONFDIR not set!" >&2
@@ -280,6 +311,29 @@ load_config () {
     if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
         # shellcheck source=/dev/null
         . "$MK_CONFDIR/mk_oracle.cfg"
+    fi
+
+    if [ -n "$MK_ORA_SECTIONS" ]; then
+        filter_sections
+    fi
+
+    # globals
+    custom_sqls_sections=$(echo "$SQLS_SECTIONS" | tr ',' ' ')
+
+    # globals and locals
+    custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
+    custom_sqls_section_sep="$SQLS_SECTION_SEP"
+    custom_sqls_sids="$SQLS_SIDS"
+    custom_sqls_dir="$SQLS_DIR"
+    custom_sqls_sql="$SQLS_SQL"
+    custom_sqls_parameters="$SQLS_PARAMETERS"
+    custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
+    unset_custom_sqls_vars
+
+    if $MK_ORA_LOGGING || [ -n "$MK_ORA_SECTIONS" ]; then
+        MK_DEBUG_MODE=true
+    else
+        MK_DEBUG_MODE=false
     fi
 }
 
@@ -2015,12 +2069,6 @@ unset_custom_sqls_vars () {
 
 do_custom_sqls () {
     for section in $custom_sqls_sections; do
-        if [ "$MK_ORA_SECTIONS" ] && [[ "$MK_ORA_SECTIONS" != *"$section"* ]]; then
-            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
-                    "The option '--sections' does not include section '${section}'"
-            continue
-        fi
-
         if ! type "$section" > /dev/null 2>&1; then
             logging -w "[${MK_SID}] [${section}] [custom_sql]"\
                     "Definition of '${section}' not found in configuration"
@@ -2108,7 +2156,7 @@ do_custom_sqls () {
 
         local parameters=${SQLS_PARAMETERS:-$custom_sqls_parameters}
 
-        if [ -n "$MK_ORA_SECTIONS" ]; then
+        if $MK_DEBUG_MODE; then
             local max_cache_age=
         elif [ -n "$SQLS_MAX_CACHE_AGE" ]; then
             local max_cache_age="$SQLS_MAX_CACHE_AGE"
@@ -2116,9 +2164,11 @@ do_custom_sqls () {
             local max_cache_age="$custom_sqls_max_cache_age"
         fi
 
-        # set custom credentials from section
-        db_connect=$(mk_ora_db_connect "$MK_SID")
-        export MK_DB_CONNECT=$db_connect
+        if [ -n "$SQLS_DBUSER" ]; then
+            # set custom credentials from section
+            db_connect=$(mk_ora_db_connect "$MK_SID")
+            export MK_DB_CONNECT=$db_connect
+        fi
 
         unset_custom_sqls_vars
 
@@ -2136,7 +2186,7 @@ do_custom_sqls () {
         if $MK_ORA_DEBUG_CONNECT; then
             do_testmode_custom_sql
         else
-            if $MK_ORA_LOGGING || [ -z "$max_cache_age" ]; then
+            if [ -z "$max_cache_age" ]; then
                 local output=
                 output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
                 handle_custom_sql_errors "$output"
@@ -2215,7 +2265,7 @@ print_dummy_sections () {
 
 
 do_dummy_sections () {
-    if $MK_ORA_LOGGING; then
+    if $MK_ORA_SECTIONS; then
         return
     fi
 
@@ -2307,8 +2357,8 @@ ora_session_environment () {
 #   '----------------------------------------------------------------------'
 
 run_cached () {
-    logging "[${MK_SID}] [run_cached]" "Note: Asynchronous sections are not executed during logging"
-    if [ -n "$MK_ORA_SECTIONS" ]; then
+    if $MK_DEBUG_MODE; then
+        # Just to be sure
         return
     fi
 
@@ -2320,9 +2370,6 @@ run_cached () {
     local now=
     local cf_atime=
     local mtime=
-
-    logging "[${MK_SID}] [run_cached]" "Cache file: $cache_file"\
-            "Cache max age: $maxage" "Command name: $cmd_name"
 
     if [ ! -d "$MK_VARDIR/cache" ]; then
         mkdir -p "$MK_VARDIR/cache"
@@ -2353,17 +2400,11 @@ run_cached () {
         fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        logging "[${MK_SID}] [run_cached]" "Cache file exists and is recent enough"
         cat "$cache_file"
     fi
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$use_cache_file" ] && [ ! -e "${cache_file}.new" ]; then
-        if $MK_ORA_LOGGING; then
-            logging "[${MK_SID}] [run_cached]" "Cache file outdated, new cache file would be created if logging disabled. Skip"
-            return
-        fi
-
         if $MK_ORA_DEBUG; then
             echo "set -o noclobber; exec > \"${cache_file}.new\" || exit 1; ${cmd_name} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | /bin/bash
         else
@@ -2678,11 +2719,30 @@ do_checks () {
     else
         local sync_dummy="SYNC_SECTIONS_${ORACLE_SID}"
         local SYNC_SECTIONS_SID=${!sync_dummy}
-        local do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
-
         local async_dummy="ASYNC_SECTIONS_${ORACLE_SID}"
         local ASYNC_SECTIONS_SID=${!async_dummy}
-        local do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
+        local do_sync_sections=
+        local do_async_sections=
+
+        if [ "$SYNC_SECTIONS_SID" ] && [ "$MK_ORA_SECTIONS" ]; then
+            do_sync_sections=$(for section in $SYNC_SECTIONS_SID; do
+                if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
+                    echo "$section"
+                fi
+            done)
+        else
+            do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
+        fi
+
+        if [ "$ASYNC_SECTIONS_SID" ] && [ "$MK_ORA_SECTIONS" ]; then
+            do_async_sections=$(for section in $ASYNC_SECTIONS_SID; do
+                if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
+                    echo "$section"
+                fi
+            done)
+        else
+            do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
+        fi
 
         local excluded=
         excluded=$(eval "echo \$EXCLUDE_$ORACLE_SID")
@@ -2703,18 +2763,9 @@ do_checks () {
         return
     fi
 
-    if [ "$MK_ORA_SECTIONS" ]; then
-        MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do
-            if [[ "$MK_ORA_SECTIONS" == *"$section"* ]]; then
-                eval "sql_$section"
-            fi
-        done)
-        MK_ASYNC_SECTIONS_QUERY=
-
-    elif $MK_ORA_LOGGING; then
+    if $MK_DEBUG_MODE; then
         MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do eval "sql_$section" ; done)
         MK_ASYNC_SECTIONS_QUERY=
-
     else
         MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
         MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
@@ -2761,24 +2812,9 @@ fi
 
 logging "--------------------------------------------------------------------"
 
-#   ---load config----------------------------------------------------------
+#   ---preliminaries--------------------------------------------------------
 
 load_config
-
-# globals
-custom_sqls_sections=$(echo "$SQLS_SECTIONS" | tr ',' ' ')
-
-# globals and locals
-custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
-custom_sqls_section_sep="$SQLS_SECTION_SEP"
-custom_sqls_sids="$SQLS_SIDS"
-custom_sqls_dir="$SQLS_DIR"
-custom_sqls_sql="$SQLS_SQL"
-custom_sqls_parameters="$SQLS_PARAMETERS"
-custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
-unset_custom_sqls_vars
-
-#   ---preliminaries--------------------------------------------------------
 
 set_os_env
 

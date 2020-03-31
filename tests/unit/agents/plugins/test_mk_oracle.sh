@@ -66,6 +66,7 @@ tearDown () {
     unset ONLY_SIDS SKIP_SIDS EXCLUDE_MySID EXCLUDE_OtherSID SYNC_SECTIONS_MySID ASYNC_SECTIONS_MySID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
     unset ORACLE_SID MK_SID MK_ORA_SECTIONS
+    unset custom_sqls_sections
 }
 
 #.
@@ -103,6 +104,24 @@ EOF
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"
     assertEquals "300" "$CACHE_MAXAGE"
     assertEquals "/other/path" "$OLRLOC"
+}
+
+
+test_mk_oracle_load_config_sections_opt () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+SQLS_SECTIONS="section1,section2,section3"
+EOF
+
+    # shellcheck disable=SC2034
+    MK_ORA_SECTIONS="instance logswitches tablespaces asm_diskgroup section1 section2"
+    load_config
+
+    assertEquals " instance logswitches" "$SYNC_SECTIONS"
+    assertEquals " tablespaces" "$ASYNC_SECTIONS"
+    assertEquals " instance" "$SYNC_ASM_SECTIONS"
+    assertEquals " asm_diskgroup" "$ASYNC_ASM_SECTIONS"
+    # shellcheck disable=SC2154
+    assertEquals " section1 section2" "$custom_sqls_sections"
 }
 
 #   ---skip_sids------------------------------------------------------------
@@ -276,10 +295,9 @@ SYNC_SECTIONS="instance sessions logswitches"
 ASYNC_SECTIONS="tablespaces rman jobs"
 EOF
 
-    load_config
-
     # shellcheck disable=SC2034
     MK_ORA_SECTIONS="instance logswitches tablespaces"
+    load_config
     # shellcheck disable=SC2034
     ORACLE_SID="MySID"
     # shellcheck disable=SC2034
@@ -290,6 +308,30 @@ EOF
 mocked-sql_logswitches
 mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
     assertEquals "" "$MK_ASYNC_SECTIONS_QUERY"
+}
+
+
+test_mk_oracle_do_checks_sid_sections_opt () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+SYNC_SECTIONS_MySID="instance sessions logswitches undostat"
+ASYNC_SECTIONS_MySID="tablespaces rman jobs"
+SQLS_SECTIONS="section1,section2,section3"
+EOF
+
+    # shellcheck disable=SC2034
+    MK_ORA_SECTIONS="instance tablespaces section1 section2"
+    load_config
+
+    # shellcheck disable=SC2034
+    ORACLE_SID="MySID"
+    # shellcheck disable=SC2034
+    MK_SID="MySID"
+    do_checks
+
+    assertEquals "mocked-sql_instance
+mocked-sql_tablespaces" "$MK_SYNC_SECTIONS_QUERY"
+    assertEquals "" "$MK_ASYNC_SECTIONS_QUERY"
+    assertEquals " section1 section2" "$custom_sqls_sections"
 }
 
 #   ---ASM------------------------------------------------------------------
@@ -317,10 +359,9 @@ SYNC_ASM_SECTIONS="instance processes"
 ASYNC_ASM_SECTIONS="asm_diskgroup"
 EOF
 
-    load_config
-
     # shellcheck disable=SC2034
     MK_ORA_SECTIONS="instance asm_diskgroup"
+    load_config
     # shellcheck disable=SC2034
     ORACLE_SID="+MyASM"
     do_checks

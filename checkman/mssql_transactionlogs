@@ -1,4 +1,4 @@
-title: MS SQL: Size Of Transaction Logs
+title: MS SQL: Size of Transaction Logs
 agents: windows
 catalog: app/mssql
 license: GPL

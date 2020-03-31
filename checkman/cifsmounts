@@ -1,4 +1,4 @@
-title: Health of CIFS Mounts mounted on UNIX/ Linux
+title: Health of CIFS Mounts Mounted on UNIX/ Linux
 agents: linux, aix
 catalog: os/services
 license: GPL

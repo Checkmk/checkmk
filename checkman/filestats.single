@@ -1,4 +1,4 @@
-title: Age and size of file (mk_filestats)
+title: Age and Size of File (mk_filestats)
 agents: windows, linux, freebsd, macosx, solaris, aix
 catalog: os/files
 license: GPL

@@ -1,4 +1,4 @@
-title: OpenVMS: CPU utilization and IO-Wait
+title: OpenVMS: CPU Utilization and IO-Wait
 agents: openvms
 catalog: os/kernel
 license: GPL

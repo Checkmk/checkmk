@@ -1,4 +1,4 @@
-title: Pulse Secure: Disk utilization
+title: Pulse Secure: Disk Utilization
 agents: snmp
 catalog: app/pulse_secure
 license: GPL

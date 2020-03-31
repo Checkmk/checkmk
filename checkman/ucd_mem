@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: Memory check
+title: UCD SNMP Daemon: Memory Check
 agents: snmp
 catalog: os/storage
 license: GPL

@@ -1,4 +1,4 @@
-title: Pulse Secure: Log file utilization
+title: Pulse Secure: Log File Utilization
 agents: snmp
 catalog: app/pulse_secure
 license: GPL

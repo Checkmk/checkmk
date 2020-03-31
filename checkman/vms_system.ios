@@ -1,4 +1,4 @@
-title: OpenVMS: Number of total IOs
+title: OpenVMS: Number of Total IOs
 agents: openvms
 catalog: os/storage
 license: GPL

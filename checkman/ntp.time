@@ -1,4 +1,4 @@
-title: NTP Time Synchronization using ntpd
+title: NTP Time Synchronization Using ntpd
 agents: linux
 catalog: os/services
 license: GPL

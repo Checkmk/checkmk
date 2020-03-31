@@ -1,4 +1,4 @@
-title: RabbitMQ: Cluster messages
+title: RabbitMQ: Cluster Messages
 agents: rabbitmq
 catalog: app/rabbitmq
 license: GPL

@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: CPU utilization
+title: UCD SNMP Daemon: CPU Utilization
 agents: snmp
 catalog: os/kernel
 license: GPL

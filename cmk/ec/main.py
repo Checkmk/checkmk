@@ -3756,10 +3756,10 @@ def load_master_config(settings, config, logger):
     # type: (Settings, Dict[str, Any], Logger) -> None
     path = settings.paths.master_config_file.value
     try:
-        config = ast.literal_eval(path.read_text(encoding="utf-8"))
-        config["rules"] = config["rules"]
-        config["rule_packs"] = config.get("rule_packs", [])
-        config["actions"] = config["actions"]
+        master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
+        config["rules"] = master_config["rules"]
+        config["rule_packs"] = master_config.get("rule_packs", [])
+        config["actions"] = master_config["actions"]
         logger.info("Replication: restored %d rule packs and %d actions from %s" %
                     (len(config["rule_packs"]), len(config["actions"]), path))
     except Exception:

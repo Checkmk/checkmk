@@ -946,6 +946,114 @@ export function wiki_search(omd_site) {
     utils.prevent_default_events();
 }
 
+
+/************************************************
+ * Wiki search snapin
+ *************************************************/
+
+var g_needle_timeout = null;
+
+export function speedometer_show_speed(last_perc, program_start, scheduled_rate) {
+    var url = "sidebar_ajax_speedometer.py" +
+                           "?last_perc=" + last_perc +
+                           "&scheduled_rate=" + scheduled_rate +
+                           "&program_start=" + program_start;
+
+    ajax.call_ajax(url, {
+        response_handler: function(handler_data, response_body) {
+            var data;
+            try {
+                data = JSON.parse(response_body);
+
+                var oDiv = document.getElementById("speedometer");
+
+                // Terminate reschedule when the speedometer div does not exist anymore
+                // (e.g. the snapin has been removed)
+                if (!oDiv)
+                    return;
+
+                oDiv.title = data.title;
+                oDiv = document.getElementById("speedometerbg");
+                oDiv.title = data.title;
+
+                move_needle(data.last_perc, data.percentage); // 50 * 100ms = 5s = refresh time
+            } catch(ie) {
+                // Ignore errors during re-rendering. Proceed with reschedule...
+                data = handler_data;
+            }
+
+            setTimeout(function(data) {
+                return function() {
+                    speedometer_show_speed(data.percentage, data.program_start, data.scheduled_rate);
+                };
+            }(data), 5000);
+        },
+        error_handler: function(handler_data, status_code, error_msg) {
+            setTimeout(function(data) {
+                return function() {
+                    return speedometer_show_speed(data.percentage, data.program_start, data.scheduled_rate);
+                };
+            }(handler_data), 5000);
+        },
+        method: "GET",
+        handler_data: {
+            "percentage"     : last_perc,
+            "last_perc"      : last_perc,
+            "program_start"  : program_start,
+            "scheduled_rate" : scheduled_rate
+        }
+    });
+}
+
+function show_speed(percentage) {
+    var canvas = document.getElementById("speedometer");
+    if (!canvas)
+        return;
+
+    var context = canvas.getContext("2d");
+    if (!context)
+        return;
+
+    if (percentage > 100.0)
+        percentage = 100.0;
+
+    var orig_x = 116;
+    var orig_y = 181;
+    var angle_0   = 232.0;
+    var angle_100 = 307.0;
+    var angle = angle_0 + (angle_100 - angle_0) * percentage / 100.0;
+    var angle_rad = angle / 360.0 * Math.PI * 2;
+    var length = 120;
+    var end_x = orig_x + (Math.cos(angle_rad) * length);
+    var end_y = orig_y + (Math.sin(angle_rad) * length);
+
+    context.clearRect(0, 0, 228, 136);
+    context.beginPath();
+    context.moveTo(orig_x, orig_y);
+    context.lineTo(end_x, end_y);
+    context.closePath();
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 2;
+    context.strokeStyle = "#000000";
+    context.stroke();
+}
+
+function move_needle(from_perc, to_perc) {
+    var new_perc = from_perc * 0.9 + to_perc * 0.1;
+
+    show_speed(new_perc);
+
+    if (g_needle_timeout != null)
+        clearTimeout(g_needle_timeout);
+
+    g_needle_timeout = setTimeout(function(new_perc, to_perc) {
+        return function() {
+            move_needle(new_perc, to_perc);
+        };
+    }(new_perc, to_perc), 50);
+}
+
 /************************************************
  * Popup Message Handling
  *************************************************/

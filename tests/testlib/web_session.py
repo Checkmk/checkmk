@@ -180,7 +180,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 
-        assert "side.py" in r.text
+        assert "sidebar" in r.text
         assert "dashboard.py" in r.text
 
     def set_language(self, lang):

@@ -76,8 +76,26 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
+# TODO: Always use quadruples (last entry can be an empty list). Null pattern FTW!!!1!11!!!
+ReplicationPath = Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]
+
+
+# This ugly dispatching is the price one has to pay for the even uglier union above...
+def _replace_omd_root(new_root, rp):
+    # type: (str, ReplicationPath) -> ReplicationPath
+    new_dir = rp[2].replace(cmk.utils.paths.omd_root, new_root)
+    if len(rp) == 3:
+        return rp[0], rp[1], new_dir
+    if len(rp) == 4:
+        # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
+        components = rp[3 + 0]
+        if isinstance(components, list):
+            return rp[0], rp[1], new_dir, components
+    raise Exception("invalid replication path %r" % (rp,))
+
+
 # Directories and files to synchronize during replication
-_replication_paths = []  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
+_replication_paths = []  # type: List[ReplicationPath]
 
 
 def add_replication_paths(paths):
@@ -98,7 +116,7 @@ def get_replication_paths():
         ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
         ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
         ("dir", "local", cmk.utils.paths.omd_root + "/local"),
-    ]  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
+    ]  # type: List[ReplicationPath]
 
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
@@ -234,7 +252,7 @@ class ActivateChanges(object):
                 return _("10+ changes")
         if changes_counter == 1:
             return _("1 change")
-        elif changes_counter > 1:
+        if changes_counter > 1:
             return _("%d changes") % changes_counter
 
     def grouped_changes(self):
@@ -295,6 +313,7 @@ class ActivateChanges(object):
         return store.load_object_from_file(site_state_path, {})
 
     def _get_last_change_id(self):
+        # type: () -> str
         return self._changes[-1][1]["id"]
 
     def has_changes(self):
@@ -340,12 +359,12 @@ class ActivateChangesManager(ActivateChanges):
     activation_persisted_dir = cmk.utils.paths.var_dir + "/wato/activation"
 
     def __init__(self):
-        self._sites = []
-        self._activate_until = None
-        self._comment = None
+        self._sites = []  # type: List[SiteId]
+        self._activate_until = None  # type: Optional[str]
+        self._comment = None  # type: Optional[str]
         self._activate_foreign = False
         self._activation_id = None  # type: Optional[str]
-        self._snapshot_id = None
+        self._snapshot_id = None  # TODO: Never set?!
         if not os.path.exists(self.activation_persisted_dir):
             os.makedirs(self.activation_persisted_dir)
         super(ActivateChangesManager, self).__init__()
@@ -370,19 +389,17 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    def start(self,
-              sites,
-              activate_until=None,
-              comment=None,
-              activate_foreign=False,
-              prevent_activate=False):
+    def start(
+        self,
+        sites,  # type: List[SiteId]
+        activate_until=None,  # type: Optional[str]
+        comment=None,  # type: Optional[str]
+        activate_foreign=False,  # type: bool
+        prevent_activate=False  # type: bool
+    ):
         self._sites = self._get_sites(sites)
-
-        if activate_until is None:
-            self._activate_until = self._get_last_change_id()
-        else:
-            self._activate_until = activate_until
-
+        self._activate_until = (self._get_last_change_id()
+                                if activate_until is None else activate_until)
         self._comment = comment
         self._activate_foreign = activate_foreign
         self._activation_id = self._new_activation_id()
@@ -555,11 +572,10 @@ class ActivateChangesManager(ActivateChanges):
 
             # Change all default replication paths to be in the site specific temporary directory
             # These paths are then packed into the sync snapshot
-            replication_components = []
-            for entry in map(list, self._get_replication_components(site_id)):
-                entry[2] = entry[2].replace(cmk.utils.paths.omd_root,
-                                            site_configuration["work_dir"])
-                replication_components.append(tuple(entry))
+            replication_components = [
+                _replace_omd_root(site_configuration["work_dir"], repl_comp)
+                for repl_comp in self._get_replication_components(site_id)
+            ]
 
             # Add site-specific global settings
             replication_components.append(("file", "sitespecific",
@@ -627,6 +643,7 @@ class ActivateChangesManager(ActivateChanges):
                   "these changes in their own."))
 
     def _get_replication_components(self, site_id):
+        # type: (SiteId) -> List[ReplicationPath]
         paths = get_replication_paths()[:]
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
@@ -673,7 +690,7 @@ class ActivateChangesManager(ActivateChanges):
 
         # This is doing the first fork and the ActivateChangesSite() is doing the second
         # (to avoid zombie processes when sync processes exit)
-        p = multiprocessing.Process(target=self._do_start_site_activation, args=[site_id])
+        p = multiprocessing.Process(target=self._do_start_site_activation, args=(site_id,))
         p.start()
         p.join()
 
@@ -699,14 +716,12 @@ class ActivateChangesManager(ActivateChanges):
         log_audit(None, "activate-changes", _("Started activation of site %s") % site_id)
 
     def get_state(self):
-        state = {
-            "sites": {},
+        return {
+            "sites": {
+                site_id: self._load_site_state(site_id)  #
+                for site_id in self._sites
+            }
         }
-
-        for site_id in self._sites:
-            state["sites"][site_id] = self._load_site_state(site_id)
-
-        return state
 
     def get_site_state(self, site_id):
         return self._load_site_state(site_id)
@@ -827,7 +842,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self.daemon = True
         self._prevent_activate = prevent_activate
 
-        self._time_started = None
+        self._time_started = None  # type: Optional[float]
         self._time_updated = None
         self._time_ended = None
         self._phase = None
@@ -862,7 +877,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def run(self):
         # Ensure this process is not detected as apache process by the apache init script
-        daemon.set_procname("cmk-activate-changes")
+        daemon.set_procname(b"cmk-activate-changes")
 
         # Detach from parent (apache) -> Remain running when apache is restarted
         os.setsid()
@@ -1081,8 +1096,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             if "Invalid automation command: activate-changes" in "%s" % e:
                 raise MKGeneralException(
                     "Activate changes failed (%s). The version of this site may be too old.")
-            else:
-                raise
+            raise
 
         return response
 
@@ -1126,6 +1140,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._save_state()
 
     def _set_status_details(self, phase, status_details):
+        if self._time_started is None:
+            raise Exception("start time not set")
         self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
 
         if phase != PHASE_DONE:

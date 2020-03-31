@@ -25,7 +25,10 @@
 import operator
 
 # suggested by customer
-factory_settings["ucd_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
+factory_settings["ucd_mem_default_levels"] = {
+    "levels": ("perc_used", (80.0, 90.0)),
+    "swap_errors": 0
+}
 
 
 def _info_str_to_bytes(info_str):
@@ -107,7 +110,7 @@ def check_ucd_mem(item, params, parsed):
     # swap errors
     if 'error_swap' in parsed:
         if parsed['error_swap'] != 0 and parsed['error_swap_msg']:
-            yield 0, 'Swap error: %s' % parsed['error_swap_msg']
+            yield params.get("swap_errors", 0), 'Swap error: %s' % parsed['error_swap_msg']
 
 
 check_info['ucd_mem'] = {

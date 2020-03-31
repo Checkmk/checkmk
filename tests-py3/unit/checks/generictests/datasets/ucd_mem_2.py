@@ -18,6 +18,7 @@ checks = {
         (
             None, {
                 'levels_ram': (80.0, 90.0),
+                'swap_errors': 2,
             }, [
                 (
                     0, 'RAM: 78.09% - 47.89 GB of 61.33 GB',
@@ -31,7 +32,7 @@ checks = {
                 (
                     0, 'Total virtual memory: 69.08% - 47.89 GB of 69.33 GB', []
                 ),
-                (0, u'Swap error: some error message', []),
+                (2, u'Swap error: some error message', []),
             ]
         )
     ]

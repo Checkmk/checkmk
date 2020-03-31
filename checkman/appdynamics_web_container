@@ -8,8 +8,10 @@ description:
  using the information collected by AppDynamics. Hence there is no need to
  query the application server itself.
 
- The WATO ruleset {JVM threads} applies crit/warn levels to the threads part
+ The WATO ruleset {JVM threads} applies {WARN}/{CRIT} levels to the threads part
  of this check.
+
+ The service goes {WARN}/{CRIT} if the amount of threads exceeds these levels.
 
 item:
  Name of the disk and either {{Heap}} or {{Non-Heap}}.

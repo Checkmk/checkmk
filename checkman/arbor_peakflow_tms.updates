@@ -6,7 +6,12 @@ distribution: check_mk
 description:
  Reports time of last change for configuration of mitigation and
  general device settings.
- This check is always OK and no configuration is supported.
+
+ This check is always {OK}.
+
+ No configuration is supported.
+
+ This check uses the PEAKFLOW-TMS-MIB.
 
 inventory:
  One service is created one for each type of configuration supported.

@@ -4,10 +4,14 @@ catalog: hw/network/arbor
 license: GPL
 distribution: check_mk
 description:
- Monitors cpu load of the management core on Arbor Pravail devices.
- This check can be configured using the "CPU load (not utilization!)"
- rule and will turn warn/crit if the configured load limits are
+ Monitors CPU Load of the management core on Arbor Pravail devices.
+
+ This check can be configured using the "CPU Load (not utilization!)" rule.
+
+ The service goes {WARN}/{CRIT} if the configured load limits are
  exceeded (default at 5/10)
+
+ This check uses the PRAVAIL-MIB.
 
 inventory:
  One service is created.

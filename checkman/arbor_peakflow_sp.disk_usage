@@ -4,16 +4,21 @@ catalog: hw/network/arbor
 license: GPL
 distribution: check_mk
 description:
- Monitors disk usage on Arbor Peakflow SP devices. This
- is based on a single percentage reported by the device,
- this check doesn't know the absolute size of the disk.
+ Monitors disk usage on Arbor Peakflow SP devices.
+ This is based on a single percentage reported by the device,
+ this check has no information about the absolute size of the disk.
+
  The device reports detailed usage statistics in a generic
- mib, handled by hr_fs but this is apparently not
+ MIB, handled by hr_fs but this is apparently not
  officially supported by the vendor.
 
  This check can be configured using the rule
  "Filesystems (used space and growth)" but only the
  regular levels, specified in percent, are supported.
+
+ The service goes {WARN}/{CRIT} if the configured disk usage is exceeded.
+
+ This check uses the PEAKFLOW-SP-MIB.
 
 inventory:
  One service is created.

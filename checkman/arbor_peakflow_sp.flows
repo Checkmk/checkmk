@@ -5,7 +5,12 @@ license: GPL
 distribution: check_mk
 description:
  Monitors accumulative flow count on Arbor Peakflow SP devices.
- This check is always OK and supports no configuration..
+
+ There is no supported configuration.
+
+ The service is always {OK}.
+
+ This check uses the PEAKFLOW-SP-MIB.
 
 inventory:
  One service is created.

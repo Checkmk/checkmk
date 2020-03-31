@@ -11,5 +11,5 @@ description:
  The check uses the SNMP OID {DISMAN-EVENT-MIB::sysUpTime}.
 
 inventory:
- One check per system is created if the host provides that information.
+ One service is created for each system.
 

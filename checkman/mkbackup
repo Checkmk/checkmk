@@ -12,4 +12,4 @@ item:
  The ID of the job
 
 inventory:
- One service per backup job will be created.
+ One service is created for each backup job.

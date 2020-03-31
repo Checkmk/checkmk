@@ -13,5 +13,5 @@ item:
  Name of the network
 
 inventory:
- One service for each network will be created.
+ One service is created for each network.
 

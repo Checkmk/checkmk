@@ -926,12 +926,6 @@ metric_info["mem_lnx_unevictable"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_active"] = {
-    "title": _("Active"),
-    "color": "#dd2020",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_anon_pages"] = {
     "title": _("Anonymous pages"),
     "color": "#cc4040",
@@ -947,12 +941,6 @@ metric_info["mem_lnx_active_anon"] = {
 metric_info["mem_lnx_active_file"] = {
     "title": _("Active (files)"),
     "color": "#ff8080",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_inactive"] = {
-    "title": _("Inactive"),
-    "color": "#275c6b",
     "unit": "bytes",
 }
 
@@ -5759,84 +5747,6 @@ metric_info["elapsed_time"] = {
     "color": "11/a",
 }
 
-metric_info["active_primary_shards"] = {
-    "title": _("Active primary shards"),
-    "unit": "count",
-    "color": "25/b",
-}
-
-metric_info["active_shards"] = {
-    "title": _("Active shards"),
-    "unit": "count",
-    "color": "25/a",
-}
-
-metric_info["active_shards_percent_as_number"] = {
-    "title": _("Active shards in percent"),
-    "unit": "%",
-    "color": "25/b",
-}
-
-metric_info["number_of_data_nodes"] = {
-    "title": _("Data nodes"),
-    "unit": "count",
-    "color": "22/b",
-}
-
-metric_info["delayed_unassigned_shards"] = {
-    "title": _("Delayed unassigned shards"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["initializing_shards"] = {
-    "title": _("Initializing shards"),
-    "unit": "count",
-    "color": "14/b",
-}
-
-metric_info["number_of_nodes"] = {
-    "title": _("Nodes"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["relocating_shards"] = {
-    "title": _("Relocating shards"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["unassigned_shards"] = {
-    "title": _("Unassigned shards"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["number_of_pending_tasks"] = {
-    "title": _("Pending Tasks"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["number_of_in_flight_fetch"] = {
-    "title": _("Ongoing shard info requests"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["task_max_waiting_in_queue_millis"] = {
-    "title": _("Task max waiting in queue"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["open_file_descriptors"] = {
-    "title": _("Number of open file descriptors"),
-    "unit": "count",
-    "color": "14/a",
-}
-
 metric_info["available_file_descriptors"] = {
     "title": _("Number of available file descriptors"),
     "unit": "count",
@@ -6217,12 +6127,6 @@ metric_info["items_non_res"] = {
 
 metric_info["items_count"] = {
     "title": _("Items"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["num_extents"] = {
-    "title": _("Extents"),
     "unit": "count",
     "color": "23/a",
 }

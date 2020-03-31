@@ -154,8 +154,7 @@ def discovery_systemd_units_services(parsed):
             if entry.startswith("~"):
                 if regex(entry[1:]).match(name):
                     return True
-                else:
-                    continue
+                continue
             elif entry == name:
                 return True
         return False

@@ -131,7 +131,7 @@ class NodeExporter:
         result = []  # type: List[str]
         diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
         result.append("%d" % time.time())
-        for device_name, device_info in diskstat_info_dict.items():
+        for _device_name, device_info in diskstat_info_dict.items():
             if all(k in device_info for k in diskstat_entities_list):
                 device_parsed = "None None {device} {reads_completed} {reads_merged} {sectors_read} {time_reading} {writes_completed} " \
                                 "{writes_merged} {sectors_written} {time_spent_writing} {ios_progress} {time_io} {weighted_time_io} " \

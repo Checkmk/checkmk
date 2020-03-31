@@ -116,8 +116,7 @@ def _snmp_scan(host_config,
         # TODO (mo): stop converting to string!
         these_plugin_names = [str(n) for n in config.registered_snmp_sections]
 
-    found_by_positive_result = set()  # type: Set[CheckPluginName]
-    found_by_default = set()  # type: Set[CheckPluginName]
+    found_plugins = set()  # type: Set[CheckPluginName]
 
     for check_plugin_name in these_plugin_names:
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
@@ -130,49 +129,47 @@ def _snmp_scan(host_config,
         detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,
                                                               inventory_plugins.inv_info)
 
-        if detection_spec:
-            try:
+        if detection_spec is None:
+            console.warning("   SNMP check %s: Could not detect specifications for plugin" %
+                            check_plugin_name)
 
-                def oid_function(oid, default_value=None, cp_name=check_plugin_name):
-                    # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
-                    value = snmp.get_single_oid(host_config,
-                                                oid,
-                                                cp_name,
-                                                do_snmp_scan=do_snmp_scan)
-                    return default_value if value is None else value
+            continue
 
-                if callable(detection_spec):
-                    result = detection_spec(oid_function)
-                else:
-                    result = _evaluate_snmp_detection(oid_function, detection_spec)
+        try:
 
-                if result is not None and not isinstance(result, (str, bool)):
-                    if on_error == "warn":
-                        console.warning("   SNMP scan function of %s returns invalid type %s." %
-                                        (check_plugin_name, type(result)))
-                    elif on_error == "raise":
-                        raise MKGeneralException("SNMP Scan aborted.")
-                elif result:
-                    found_by_positive_result.add(check_plugin_name)
-            except MKGeneralException:
-                # some error messages which we explicitly want to show to the user
-                # should be raised through this
-                raise
-            except Exception:
+            def oid_function(oid, default_value=None, cp_name=check_plugin_name):
+                # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
+                value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
+                return default_value if value is None else value
+
+            if callable(detection_spec):
+                result = detection_spec(oid_function)
+            else:
+                result = _evaluate_snmp_detection(oid_function, detection_spec)
+
+            if result is not None and not isinstance(result, (str, bool)):
                 if on_error == "warn":
-                    console.warning("   Exception in SNMP scan function of %s" % check_plugin_name)
+                    console.warning("   SNMP scan function of %s returns invalid type %s." %
+                                    (check_plugin_name, type(result)))
                 elif on_error == "raise":
-                    raise
-        else:
-            found_by_default.add(check_plugin_name)
+                    raise MKGeneralException("SNMP Scan aborted.")
+            elif result:
+                found_plugins.add(check_plugin_name)
+        except MKGeneralException:
+            # some error messages which we explicitly want to show to the user
+            # should be raised through this
+            raise
+        except Exception:
+            if on_error == "warn":
+                console.warning("   Exception in SNMP scan function of %s" % check_plugin_name)
+            elif on_error == "raise":
+                raise
 
-    _output_snmp_check_plugins("SNMP scan found", found_by_positive_result)
-    if found_by_default:
-        _output_snmp_check_plugins("SNMP without scan function", found_by_default)
+    _output_snmp_check_plugins("SNMP scan found", found_plugins)
 
     filtered = config.filter_by_management_board(
         host_config.hostname,
-        found_by_positive_result | found_by_default,
+        found_plugins,
         for_mgmt_board,
         for_discovery=True,
         for_inventory=for_inv,

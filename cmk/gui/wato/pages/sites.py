@@ -28,6 +28,7 @@ from cryptography.hazmat.primitives import hashes
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
+from cmk.gui.sites import SiteStatus  # pylint: disable=unused-import
 import cmk.gui.sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -116,8 +117,8 @@ class ModeEditSite(WatoMode):
         super(ModeEditSite, self).__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
-        self._site_id = html.request.var("edit")
-        self._clone_id = html.request.var("clone")
+        self._site_id = html.request.get_ascii_input("edit")
+        self._clone_id = html.request.get_ascii_input("clone")
         self._new = self._site_id is None
 
         if cmk_version.is_demo() and self._new:
@@ -469,15 +470,15 @@ class ModeDistributedMonitoring(WatoMode):
                             watolib.folder_preserving_link([("mode", "edit_site")]), "new")
 
     def action(self):
-        delete_id = html.request.var("_delete")
+        delete_id = html.request.get_ascii_input("_delete")
         if delete_id and html.transaction_valid():
             self._action_delete(delete_id)
 
-        logout_id = html.request.var("_logout")
+        logout_id = html.request.get_ascii_input("_logout")
         if logout_id:
             return self._action_logout(logout_id)
 
-        login_id = html.request.var("_login")
+        login_id = html.request.get_ascii_input("_login")
         if login_id:
             return self._action_login(login_id)
 
@@ -548,7 +549,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _action_login(self, login_id):
         configured_sites = self._site_mgmt.load_sites()
-        if html.request.var("_abort"):
+        if html.request.get_ascii_input("_abort"):
             return "sites"
 
         if not html.check_transaction():
@@ -558,8 +559,8 @@ class ModeDistributedMonitoring(WatoMode):
         error = None
         # Fetch name/password of admin account
         if html.request.has_var("_name"):
-            name = html.request.var("_name", "").strip()
-            passwd = html.request.var("_passwd", "").strip()
+            name = html.request.get_unicode_input_mandatory("_name", "").strip()
+            passwd = html.request.get_ascii_input_mandatory("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):
                     raise MKUserError(
@@ -587,9 +588,9 @@ class ModeDistributedMonitoring(WatoMode):
                 logger.exception("error logging in")
                 if config.debug:
                     raise
-                html.add_user_error("_name", error)
                 error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace(
                     "\n", "\n<br>")
+                html.add_user_error("_name", error)
 
         wato_html_head(_("Login into site \"%s\"") % site["alias"])
         if error:
@@ -785,7 +786,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
-        site_status = cmk.gui.sites.states().get(site_id, {})
+        site_status = cmk.gui.sites.states().get(site_id, SiteStatus({}))  # type: SiteStatus
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
         else:
@@ -904,7 +905,7 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
 
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
-        self._site_id = html.request.var("site")
+        self._site_id = html.request.get_ascii_input_mandatory("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
@@ -933,8 +934,8 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
-        varname = html.request.var("_varname")
-        action = html.request.var("_action")
+        varname = html.request.get_ascii_input("_varname")
+        action = html.request.get_ascii_input("_action")
         if not varname:
             return
 
@@ -1041,7 +1042,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def __init__(self):
         super(ModeSiteLivestatusEncryption, self).__init__()
-        self._site_id = html.request.var("site")
+        self._site_id = html.request.get_ascii_input_mandatory("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
@@ -1062,7 +1063,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if not html.check_transaction():
             return
 
-        action = html.request.var("_action")
+        action = html.request.get_ascii_input_mandatory("_action")
         if action != "trust":
             return
 

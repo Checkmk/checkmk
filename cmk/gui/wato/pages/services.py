@@ -1561,7 +1561,7 @@ class DiscoveryPageRenderer(object):
                 ("host", self._host.name()),
                 ("item", watolib.mk_repr(item)),
                 ("service", watolib.mk_repr(descr)),
-            ]),
+            ])
 
         html.icon_button(url, _("Edit and analyze the check parameters of this service"),
                          "check_parameters")

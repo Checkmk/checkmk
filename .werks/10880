@@ -1,0 +1,10 @@
+Title: Fix "Customer number of hosts" painter showing up hosts
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.5.0p25
+Date: 1585738714
+Class: fix
+
+The painter showed the number of UP hosts instead of the total number.

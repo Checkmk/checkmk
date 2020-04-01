@@ -761,4 +761,4 @@ def test_create_diagnostics_dump(execute):
     p = execute(["cmk", "--create-diagnostics-dump"])
     assert p.returncode == 0
     assert p.stderr == ""
-    assert p.stdout.startswith("Create diagnostics dump in")
+    assert p.stdout.startswith("Created diagnostics dump:")

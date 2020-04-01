@@ -21,7 +21,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import Choices, HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
@@ -701,9 +701,9 @@ class ModeEditUser(WatoMode):
             html.td("%s:" % _("Enforce change"))
             html.open_td()
             # Only make password enforcement selection possible when user is allowed to change the PW
-            if self._is_new_user or config.user_may(self._user_id,
-                                                    'general.edit_profile') and config.user_may(
-                                                        self._user_id, 'general.change_password'):
+            uid = None if self._user_id is None else UserId(self._user_id)
+            if (self._is_new_user or (config.user_may(uid, 'general.edit_profile') and
+                                      config.user_may(uid, 'general.change_password'))):
                 html.checkbox("enforce_pw_change",
                               self._user.get("enforce_pw_change", False),
                               label=_("Change password at next login or access"))
@@ -845,9 +845,12 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
+            user_np = self._user.get("notification_period")
+            if not isinstance(user_np, str):
+                raise Exception("invalid notification period %r" % (user_np,))
             html.dropdown("notification_period",
                           [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()],
-                          deflt=self._user.get("notification_period"),
+                          deflt=user_np,
                           ordered=True)
             html.help(
                 _("Only during this time period the "
@@ -980,7 +983,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user):
-    languages = [l for l in get_languages() if not config.hide_language(l[0])]
+    languages = [l for l in get_languages() if not config.hide_language(l[0])]  # type: Choices
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox=('_set_lang', active, 'language'))

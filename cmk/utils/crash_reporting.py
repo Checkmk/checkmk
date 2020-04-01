@@ -283,9 +283,9 @@ def _get_os_info():
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
-    elif os.path.exists("/etc/redhat-release"):
+    if os.path.exists("/etc/redhat-release"):
         return open("/etc/redhat-release").readline().strip()
-    elif os.path.exists("/etc/SuSE-release"):
+    if os.path.exists("/etc/SuSE-release"):
         return open("/etc/SuSE-release").readline().strip()
 
     info = {}
@@ -299,9 +299,8 @@ def _get_os_info():
 
     if "PRETTY_NAME" in info:
         return info["PRETTY_NAME"]
-    elif info:
+    if info:
         return "%s" % info
-
     return "UNKNOWN"
 
 

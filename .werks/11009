@@ -1,0 +1,9 @@
+Title: Fixed possible ValueError while searching for werk id in release notes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1585722746
+Class: fix
+

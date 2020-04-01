@@ -31,28 +31,32 @@ factory_settings["memory_default_levels"] = {"levels": (150.0, 200.0)}
 
 @get_parsed_item_data
 def check_couchbase_nodes_mem(_item, params, data):
+
     try:
         mem_total = data['mem_total']
         mem_free = data['mem_free']
         swap_total = data['swap_total']
         swap_used = data['swap_used']
     except KeyError:
-        return
+        return None
 
-    # TODO: Wait until memory functions are fixed, to see
-    # what levels should be applied here.
-    # TODO: which metrics to choose?
+    warn_ram, crit_ram = params.get("levels", (None, None))
+    mode_ram = "abs_used" if isinstance(warn_ram, int) else "perc_used"
+
     yield check_memory_element(
         "RAM",
         mem_total - mem_free,
         mem_total,
-        None,
+        (mode_ram, (warn_ram, crit_ram)),
+        metric_name="mem_used",
     )
+
     yield check_memory_element(
         "Swap",
         swap_used,
         swap_total,
         None,
+        metric_name="swap_used",
     )
 
 

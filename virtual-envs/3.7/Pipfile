@@ -58,7 +58,7 @@ certifi = "==2019.11.28"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.25.8"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
-pyghmi = "==1.5.3" # needed by base for IPMI
+pyghmi = "==1.5.13" # needed by base for IPMI
 requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD, connexion
 pykerberos = "==1.2.1" # needed by check_bi_aggr
 requests-kerberos = "==0.12.0" # needed by check_bi_aggr

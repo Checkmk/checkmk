@@ -26,6 +26,7 @@ class PasswordStore(WatoSimpleConfigFile):
         if config.user.may("wato.edit_all_passwords"):
             return entries
 
+        assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
 
         passwords = self.filter_editable_entries(entries)
@@ -37,5 +38,6 @@ class PasswordStore(WatoSimpleConfigFile):
         if config.user.may("wato.edit_all_passwords"):
             return entries
 
+        assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
         return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])

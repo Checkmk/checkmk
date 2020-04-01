@@ -36,7 +36,7 @@ def create_snapshot(comment):
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
                                                            time.localtime(time.time()))
 
-    data = {}
+    data = {}  # type: Dict[str, Any]
     data["comment"] = _("Activated changes by %s.") % config.user.id
 
     if comment:
@@ -69,7 +69,7 @@ def _do_create_snapshot(data):
 
         def get_basic_tarinfo(name):
             tarinfo = tarfile.TarInfo(name)
-            tarinfo.mtime = time.time()
+            tarinfo.mtime = int(time.time())
             tarinfo.uid = 0
             tarinfo.gid = 0
             tarinfo.mode = 0o644
@@ -188,7 +188,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         "created_by": "",
         "broken": False,
         "progress_status": "",
-    }
+    }  # type: Dict[str, Any]
 
     def access_snapshot(handler):
         if file_stream:

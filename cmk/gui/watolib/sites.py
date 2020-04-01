@@ -9,7 +9,9 @@ import re
 import time
 import shutil
 import traceback
-from typing import NamedTuple
+from typing import (  # pylint: disable=unused-import
+    NamedTuple, Type, Dict, Any,
+)
 import six
 
 import cmk.utils.version as cmk_version
@@ -64,8 +66,9 @@ from cmk.gui.plugins.watolib.utils import wato_fileheader
 class SiteManagementFactory(object):
     @staticmethod
     def factory():
+        # type: () -> SiteManagement
         if cmk_version.is_raw_edition():
-            cls = CRESiteManagement
+            cls = CRESiteManagement  # type: Type[SiteManagement]
         else:
             cls = CEESiteManagement
 
@@ -113,7 +116,7 @@ class SiteManagement(object):
                          allow_empty=False,
                      )),
                  ],
-                 optional_keys=None,
+                 optional_keys=False,
              )),
         ]
         return conn_choices
@@ -144,7 +147,7 @@ class SiteManagement(object):
                  )),
                 ("tls", cls._tls_valuespec()),
             ],
-            optional_keys=None,
+            optional_keys=False,
         )
 
     @classmethod
@@ -173,7 +176,7 @@ class SiteManagement(object):
                                 "leave this enabled."),
                           )),
                      ],
-                     optional_keys=None,
+                     optional_keys=False,
                  )),
             ],
             help=
@@ -283,7 +286,7 @@ class SiteManagement(object):
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
-        config_vars = {"sites": {}}
+        config_vars = {"sites": {}}  # type: Dict[str, Dict[str, Any]]
         exec(open(cls._sites_mk()).read(), config_vars, config_vars)
 
         if not config_vars["sites"]:

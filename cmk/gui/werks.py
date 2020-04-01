@@ -202,14 +202,12 @@ def _werk_table_option_entries():
             choices=sorted(translator.levels()),
         ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
-        ("id", "single",
-         TextAscii(
-             title=_("Werk ID"),
-             label="#",
-             regex="[0-9]{4}",
-             allow_empty=True,
-             size=4,
-         ), ""),
+        ("id", "single", TextAscii(
+            title=_("Werk ID"),
+            label="#",
+            regex="^[0-9]{1,5}$",
+            size=7,
+        ), ""),
         ("compatibility", "single",
          DropdownChoice(title=_("Compatibility"),
                         choices=[
@@ -348,7 +346,14 @@ def render_werks_table_row(table, translator, werk):
 
 
 def werk_matches_options(werk, werk_table_options):
-    if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
+    # check if werk id is int because valuespec is TextAscii
+    # else, set empty id to return all results beside input warning
+    try:
+        werk_to_match = int(werk_table_options["id"])
+    except ValueError:
+        werk_to_match = ""
+
+    if not ((not werk_to_match or werk["id"] == werk_to_match) and \
            werk["level"] in werk_table_options["levels"] and \
            werk["class"] in werk_table_options["classes"] and \
            werk["compatible"] in werk_table_options["compatibility"] and \

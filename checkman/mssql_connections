@@ -17,5 +17,5 @@ item:
  The MSSQL database identifier.
 
 inventory:
- One check is created for each database.
+ One service is created for each database.
 

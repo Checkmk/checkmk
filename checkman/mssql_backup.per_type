@@ -22,4 +22,4 @@ item:
  and the backup type.
 
 inventory:
- For each instance a sepearate check will be created for every backup type.
+ One service is created for each backup type for every instance.

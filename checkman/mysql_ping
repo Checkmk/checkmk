@@ -4,19 +4,19 @@ catalog: app/mysql
 license: GPL
 distribution: check_mk
 description:
-  This check checks if the MySQL deamon is alive and a connection is possible.
-  Otherwiese it returns {CRIT}. This check can also be used to detect wrong or
-  unconfigured mk_mysql plugins.
+ This check checks if the MySQL deamon is alive and a connection is possible.
+ Otherwiese it returns {CRIT}. This check can also be used to detect wrong or
+ unconfigured mk_mysql plugins.
 
-  This check needs the agent plugin {mk_mysql} to be installed.
-  Further details about this plugin and monitoring of MySQL can be
-  found in the Checkmk online documentation in the article
-  "Monitoring MySQL with Checkmk".
+ This check needs the agent plugin {mk_mysql} to be installed.
+ Further details about this plugin and monitoring of MySQL can be
+ found in the Checkmk online documentation in the article
+ "Monitoring MySQL with Checkmk".
 
 item:
  Name of the MySQL service
 
 inventory:
-  On each host where the agent plugin {mk_mysql} is being installed
-  one service per instance is being generated.
+ One service is created for each instance on each host where the agent plugin
+ {mk_mysql} is installed.
 

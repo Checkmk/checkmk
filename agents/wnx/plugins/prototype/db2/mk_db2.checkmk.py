@@ -153,7 +153,7 @@ class Database():
 
         print("<<<db2_tablespaces>>>")
         print("[[[{}:{}]]]".format(instance, database))
-        _ = "SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)"
+        _ = "SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)"  # noqa: E501
         # db2 "${SQL}" | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7}' | sed -e '/^[ ]*$/d' -e '/^-/d' -e '/selected/d'
 
         print("<<<db2_counters>>>")
@@ -230,7 +230,7 @@ class Database():
     def process_instance(self, instance, db_list, cur_time):
         # type (str, List[str]) -> None
 
-        snapshot = db.snapshot_databases(instance=i)
+        snapshot = db.snapshot_databases(instance=instance)
         db.print_db2_version_header()
         product_name = Database.find_value(key="Product name", data=snapshot)
         service_level = Database.find_value(key="Service level", data=snapshot)
@@ -250,7 +250,7 @@ class Database():
             db.process_databases(database=db_name,
                                  port=Database.find_port(instance=instance, database=db_name),
                                  now=cur_time,
-                                 instance=i)
+                                 instance=instance)
 
             # we need to do so
             # grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print $2}' | sed 'N;s/\n/,/g' | sed 's/ //g'
@@ -258,21 +258,21 @@ class Database():
             # expected DB2v11.5.0.1077,s1906101300(DYN1906101300WIN64)
 
     # TODO: use platform independent approach:
-    """
-    class ABCConnector():
-        @abc.abstractmethod
-        def run_db2(self, cmd):
-            raise NotImplementedError()
+    #
+    # class ABCConnector():
+    #     @abc.abstractmethod
+    #     def run_db2(self, cmd):
+    #         raise NotImplementedError()
+    #
+    # class WindowsConnector(ABCConnector):
+    #     def run_db2(self, cmd):
+    #         return ...
+    #
+    # def connector_registry():
+    #     if platform.system() == "Windows":
+    #         return WindowsConnector()
+    #     raise SystemExit("Unsupported Platform")
 
-    class WindowsConnector(ABCConnector):
-        def run_db2(self, cmd):
-            return ...
-
-    def connector_registry():
-        if platform.system() == "Windows":
-            return WindowsConnector()
-        raise SystemExit("Unsupported Platform")
-    """
     #
     # prototype just to check that db2 works as intended in a windows shell
     #

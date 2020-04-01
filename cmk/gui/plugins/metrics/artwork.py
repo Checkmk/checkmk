@@ -720,6 +720,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # Depending on which time range is being shown we have different
     # steps of granularity
 
+    # Labeling does not include bounds
     start_time += step  # RRD start has no data
     end_time -= step  # this closes the interval
 
@@ -808,7 +809,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
     labels = []  # type: List[Label]
-    seconds_per_char = (end_time - start_time) / (width - 7)
+    seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
             if isinstance(labelling, six.string_types):
@@ -832,7 +833,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     return {
         "labels": labels,
-        "range": (start_time, end_time),
+        "range": (start_time - step, end_time + step),
         "title": add_step_to_title(title_label, step),
     }
 

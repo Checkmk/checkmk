@@ -9,6 +9,8 @@ import re
 import pprint
 import base64
 import pickle
+from typing import (  # pylint: disable=unused-import
+    Any,)
 import six
 
 import cmk.utils.version as cmk_version
@@ -100,8 +102,10 @@ def default_site():
 
 
 def format_config_value(value):
-    format_func = pprint.pformat if config.wato_pprint_config else repr
-    return format_func(value)
+    # type: (Any) -> str
+    if config.wato_pprint_config:
+        return pprint.pformat(value)
+    return repr(value)
 
 
 def mk_repr(s):

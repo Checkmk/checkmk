@@ -13,6 +13,8 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
+    ('section', 'bluecat_dhcp'),
+    ('section', 'bluecat_dns'),
     ('section', 'checkpoint_connections'),
     ('section', 'checkpoint_fan'),
     ('section', 'checkpoint_firewall'),
@@ -27,6 +29,8 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'checkpoint_voltage'),
     ('section', 'cisco_mem_asa'),
     ('section', 'cisco_mem_asa64'),
+    ('section', 'cisco_wlc'),
+    ('section', 'domino_tasks'),
     ('section', 'f5_bigip_cluster'),
     ('section', 'f5_bigip_cluster_status'),
     ('section', 'f5_bigip_cluster_status.v11_2'),
@@ -39,8 +43,16 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'if64'),
     ('section', 'if64adm'),
     ('section', 'if_brocade'),
+    ('section', 'if_fortigate'),
     ('section', 'if_lancom'),
+    ('section', 'infoblox_node_services'),
+    ('section', 'infoblox_services'),
+    ('section', 'juniper_trpz_aps'),
+    ('section', 'juniper_trpz_aps_sessions'),
+    ('section', 'netscaler_sslcertificates'),
+    ('section', 'netscaler_vserver'),
     ('section', 'printer_pages'),
+    ('section', 'pulse_secure_users'),
     ('section', 'ucd_mem'),
 ]
 

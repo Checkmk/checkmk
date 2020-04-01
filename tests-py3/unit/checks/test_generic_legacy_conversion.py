@@ -122,7 +122,7 @@ def test_scan_function_translation(snmp_scan_functions):
         assert scan_func is not None
 
         # make sure we can convert the scan function
-        with known_exceptions(name):
+        if name not in KNOWN_FAILURES:
             _ = create_detect_spec(name, scan_func, [])
 
 

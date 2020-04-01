@@ -247,6 +247,11 @@ def create_snmp_section_plugin_from_legacy(check_plugin_name,
                                            snmp_info,
                                            scan_function_fallback_files=None):
     # type: (str, Dict[str, Any], Callable, Any, Optional[List[str]]) -> SNMPSectionPlugin
+    if check_info_dict.get("node_info"):
+        # We refuse to tranform these. There's no way we get the data layout recovery right.
+        # This would add 19 plugins to list of failures, but some are on the list anyway.
+        raise NotImplementedError("cannot auto-migrate cluster aware SNMP plugins")
+
     trees, recover_layout_function = _create_snmp_trees(snmp_info)
 
     parse_function = _create_snmp_parse_function(

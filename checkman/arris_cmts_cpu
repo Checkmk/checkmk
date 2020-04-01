@@ -5,7 +5,14 @@ license: GPL
 distribution:
 description:
  This check monitors the CPU utilization for ech CPU Slot on a arrais cmts devices.
- Please note that the reported utilization alrady is a average value computed by the device.
+
+ Please note that the reported utilization alrady is an average value computed by the device.
+
+ You can configure upper levels for {WARN}/{CRIT} (default: 90, 95)
+
+ The service goes {WARN}/{CRIT} if the temperature exceeds these levels.
+
+ The check uses the CADANT-CMTS-EQUIPMENT-MIB.
 
 item:
  If available the identifier of the CPU, otherwise the index of the module.

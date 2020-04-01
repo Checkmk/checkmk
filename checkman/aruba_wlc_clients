@@ -4,9 +4,11 @@ catalog: hw/network/aruba
 license: GPL
 distribution: check_mk
 description:
- This checks display the amount of connected clients in an wireless network.
- Per default the check only displays the information for each network, and also one
- summary. Levels can be set for each network via WATO.
+ This check displays the amount of connected clients in an wireless network.
+
+ You can configure levels for each network via WATO.
+
+ The check uses the WLSX-SYSTEMEXT-MIB
 
 item:
  Name of the wifi or "Summary" for the overall number of clients.

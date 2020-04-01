@@ -4,7 +4,13 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- Monitors the throughput status. Possible values are OK and WARN
+ Monitors the throughput status of Atto Fibrebridge 6500N Controllers.
+
+ The service goes {WARN} if the status is "warning" ("2").
+
+ In case the status is "normal" ("1") the service is {OK}.
+
+ This check uses the ATTO6500N-MIB.
 
 inventory:
  One service is created for each device

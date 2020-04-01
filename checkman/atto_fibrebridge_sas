@@ -4,8 +4,22 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- Monitors the operational state as well as the operational state
- of the associated physical interfaces.
+ Monitors the operational state of the SAS Port and the associated physical
+ interfaces of Atto Fibrebridge 6500N Controllers.
+
+ The service state changes depending on the operational state:
+
+ - {OK} for "online"
+
+ - {WARN} for "degraded"
+
+ - {CRIT} for "offline"
+
+ - {UNKOWN} for "unknown"
+
+ For the physical interfaces the service is always {OK}.
+
+ This check uses the ATTO6500N-MIB.
 
 item:
  The number of the SAS port.

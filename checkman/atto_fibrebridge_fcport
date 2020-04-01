@@ -4,7 +4,15 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- Monitors the rate of received and transmitted words.
+ Monitors the rate of received and transmitted words
+ of Atto Fibrebridge 6500N Controllers.
+
+ You can configure upper levels for {WARN}/{CRIT} (no defaults are set).
+
+ The service goes {WARN}/{CRIT} if the rate of received or transmitted words
+ exceeds one of these levels.
+
+ This check uses the ATTO6500N-MIB.
 
 item:
  The number of the fibrechannel port.

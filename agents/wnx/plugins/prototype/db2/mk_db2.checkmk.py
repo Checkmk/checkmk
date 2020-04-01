@@ -39,10 +39,10 @@ class Database():
     def is_verbose(self):
         return self.args.verbose
 
-    def write_log(self, str):
+    def write_log(self, message):
         # type:(str) -> None
         if self.is_verbose():
-            print(str)
+            print(message)
 
     def print_db2_version_header(self):
         print(r"<<<db2_version:sep(1)>>>")
@@ -54,7 +54,11 @@ class Database():
     @staticmethod
     def cleanup_input(data):
         # type: (str) -> List[str]
-        return [s for s in filter(len, [_line.replace("\r", "") for _line in data.split(sep="\n")])]
+        return [
+            _line.replace("\r", "")  #
+            for _line in data.split(sep="\n")
+            if len(_line)
+        ]
 
     @staticmethod
     def run_db2(args, instance):
@@ -79,7 +83,7 @@ class Database():
                             close_fds=True,
                             encoding="utf-8")
             stdout = process.communicate()[0]
-            return [instance for instance in stdout.strip().split(sep="\n")]
+            return stdout.strip().split(sep="\n")
         except (OSError, ValueError) as e:
             if self.is_verbose():
                 print(" database list error with Exception {}".format(e,))
@@ -299,20 +303,11 @@ class Database():
 # MAIN:
 if __name__ == '__main__':
     db = Database()
-    instances = db.list_instances()
-    if len(instances) == 0:
-        sys.exit(0)
-
-    cur_time = int(time.time())
-
-    for i in instances:
+    current_time = int(time.time())
+    for i in db.list_instances():
         databases = db.get_list_databases(instance=i)
-        db_list = [d for d in databases]
-        if not Database.is_database_presented(db_list=db_list):
-            continue
-
-        db.process_instance(instance=i, db_list=db_list, cur_time=cur_time)
-        # database reader:
-        # Database.shell_runner()
-
+        if Database.is_database_presented(db_list=databases):
+            db.process_instance(instance=i, db_list=databases, cur_time=current_time)
+            # database reader:
+            # Database.shell_runner()
     sys.exit(0)

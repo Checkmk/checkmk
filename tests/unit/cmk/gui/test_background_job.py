@@ -23,6 +23,7 @@ def debug_logging():
 
 def test_registered_background_jobs():
     assert sorted(gui_background_job.job_registry.keys()) == sorted([
+        'ActivateChangesSchedulerBackgroundJob',
         'ParentScanBackgroundJob',
         'BakeAgentsBackgroundJob',
         'DummyBackgroundJob',

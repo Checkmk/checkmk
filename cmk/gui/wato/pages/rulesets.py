@@ -1981,6 +1981,9 @@ class ModeCloneRule(EditRuleMode):
     def permissions(cls):
         return []
 
+    def title(self):
+        return _("Copy rule: %s") % self._rulespec.title
+
     def _set_rule(self):
         super(ModeCloneRule, self)._set_rule()
 

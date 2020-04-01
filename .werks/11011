@@ -1,0 +1,11 @@
+Title: Fixed title for copied rulesets
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1585727225
+Class: fix
+
+If you copied a rule, the title of the page was "Edit rule:". This has been
+changed to "Copy rule:".

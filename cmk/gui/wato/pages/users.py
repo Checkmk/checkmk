@@ -11,7 +11,7 @@ import time
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import UserId, timeperiod_spec_alias
 
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
@@ -375,9 +375,9 @@ class ModeUsers(WatoMode):
                         elif tp not in watolib.timeperiods.builtin_timeperiods():
                             url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
                                                                   ("edit", tp)])
-                            tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
+                            tp = html.render_a(timeperiod_spec_alias(timeperiods[tp], tp), href=url)
                         else:
-                            tp = timeperiods[tp].get("alias", tp)
+                            tp = timeperiod_spec_alias(timeperiods[tp], tp)
                         html.write(tp)
 
                 # the visible custom attributes
@@ -435,18 +435,14 @@ class ModeEditUser(WatoMode):
         self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
-
         self._users = userdb.load_users(lock=html.is_transaction())
-
+        new_user = userdb.new_user_template('htpasswd')
         if self._user_id is not None:
-            self._user = self._users.get(UserId(self._user_id),
-                                         userdb.new_user_template('htpasswd'))
+            self._user = self._users.get(UserId(self._user_id), new_user)
         elif self._cloneid:
-            self._user = self._users.get(UserId(self._cloneid),
-                                         userdb.new_user_template('htpasswd'))
+            self._user = self._users.get(UserId(self._cloneid), new_user)
         else:
-            self._user = userdb.new_user_template('htpasswd')
-
+            self._user = new_user
         self._locked_attributes = userdb.locked_attributes(self._user.get('connector'))
 
     def title(self):
@@ -849,9 +845,8 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            choices = [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()]
             html.dropdown("notification_period",
-                          choices,
+                          [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()],
                           deflt=self._user.get("notification_period"),
                           ordered=True)
             html.help(

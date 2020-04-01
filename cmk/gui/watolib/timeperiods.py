@@ -4,13 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (  # pylint: disable=unused-import
-    Dict, List, Tuple, Union, Text,
-)
+from typing import Dict  # pylint: disable=unused-import
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    TimeperiodName,)
+from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -18,7 +15,6 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.gui.globals import g
 
-TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
 TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 

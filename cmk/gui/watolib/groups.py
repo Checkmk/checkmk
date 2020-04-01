@@ -11,6 +11,7 @@ from typing import Tuple, Dict, List, Text  # pylint: disable=unused-import
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
+from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -360,7 +361,8 @@ def is_alias_used(my_what, my_name, my_alias):
     # Timeperiods
     timeperiods = cmk.gui.watolib.timeperiods.load_timeperiods()
     for key, value in timeperiods.items():
-        if value.get("alias") == my_alias and (my_what != "timeperiods" or my_name != key):
+        if timeperiod_spec_alias(value) == my_alias and (my_what != "timeperiods" or
+                                                         my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles

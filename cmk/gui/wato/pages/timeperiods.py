@@ -9,6 +9,7 @@ import time
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
+from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -21,19 +22,9 @@ from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    FixedValue,
-    Dictionary,
-    Optional,
-    Integer,
-    FileUpload,
-    TextAscii,
-    TextUnicode,
-    ListOf,
-    Tuple,
-    ListChoice,
-    CascadingDropdown,
-    ListOfTimeRanges,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    ValueSpec, FixedValue, Dictionary, Optional, Integer, FileUpload, TextAscii, TextUnicode,
+    ListOf, Tuple, ListChoice, CascadingDropdown, ListOfTimeRanges,
 )
 
 from cmk.gui.plugins.wato import (
@@ -161,9 +152,10 @@ class ModeTimeperiods(WatoMode):
         used_in = []
         for tpn, tp in watolib.timeperiods.load_timeperiods().items():
             if tpname in tp.get("exclude", []):
-                used_in.append(
-                    ("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn), _("excluded")),
-                     watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
+                used_in.append(("%s: %s (%s)" %
+                                (_("Timeperiod"), timeperiod_spec_alias(tp, tpn), _("excluded")),
+                                watolib.folder_preserving_link([("mode", "edit_timeperiod"),
+                                                                ("edit", tpn)])))
         return used_in
 
     def _find_usages_in_notification_rules(self, tpname):
@@ -263,12 +255,12 @@ class ModeTimeperiods(WatoMode):
 
                 table.cell(_("Actions"), css="buttons")
                 if name in watolib.timeperiods.builtin_timeperiods():
-                    html.write_text(html.i(_("(builtin)")))
+                    html.i(_("(builtin)"))
                 else:
                     self._action_buttons(name)
 
                 table.text_cell(_("Name"), name)
-                table.text_cell(_("Alias"), timeperiod.get("alias", ""))
+                table.text_cell(_("Alias"), timeperiod_spec_alias(timeperiod))
 
     def _action_buttons(self, name):
         edit_url = watolib.folder_preserving_link([
@@ -314,7 +306,7 @@ class ModeTimeperiodImportICal(WatoMode):
         return Dictionary(
             title=_('Import iCalendar File'),
             render="form",
-            optional_keys=None,
+            optional_keys=False,
             elements=[
                 ('file',
                  FileUpload(
@@ -617,7 +609,7 @@ class ModeEditTimeperiod(WatoMode):
                 allow_empty=False,
                 size=80,
                 validate=self._validate_id,
-            )
+            )  # type: ValueSpec
         else:
             name_element = FixedValue(self._name,)
 
@@ -638,7 +630,7 @@ class ModeEditTimeperiod(WatoMode):
                 ("exclude", self._vs_exclude()),
             ],
             render="form",
-            optional_keys=None,
+            optional_keys=False,
         )
 
     def _validate_id(self, value, varprefix):
@@ -662,7 +654,7 @@ class ModeEditTimeperiod(WatoMode):
                 ("day_specific", _("Weekday specific times"),
                  Dictionary(
                      elements=self._weekday_elements(),
-                     optional_keys=None,
+                     optional_keys=False,
                      indent=False,
                  )),
             ],
@@ -731,7 +723,7 @@ class ModeEditTimeperiod(WatoMode):
 
         for tpname, tp in self._timeperiods.items():
             if not self._timeperiod_excludes(tpname):
-                other_tps.append((tpname, tp.get("alias") or tpname))
+                other_tps.append((tpname, timeperiod_spec_alias(tp, tpname)))
 
         return sorted(other_tps, key=lambda a: a[1].lower())
 
@@ -803,7 +795,7 @@ class ModeEditTimeperiod(WatoMode):
 
         vs_spec = {
             "name": self._name,
-            "alias": tp_spec.get("alias", ""),
+            "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),
             "exceptions": sorted(exceptions),

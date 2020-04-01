@@ -88,12 +88,12 @@ class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
     def _get_tags_using_aux_tag(self, aux_tag):
         # type: (cmk.utils.tags.AuxTag) -> Set[cmk.utils.tags.GroupedTag]
-        used_tags = set()
-        for tag_group in self._effective_config.tag_groups:
-            for tag in tag_group.tags:
-                if aux_tag.id in tag.aux_tag_ids:
-                    used_tags.add(tag)
-        return used_tags
+        return {
+            tag  #
+            for tag_group in self._effective_config.tag_groups
+            for tag in tag_group.tags
+            if aux_tag.id in tag.aux_tag_ids
+        }
 
 
 @mode_registry.register
@@ -312,6 +312,7 @@ class ModeTags(ABCTagMode):
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self):
+        # type: () -> None
         with table_element("auxtags",
                            _("Auxiliary tags"),
                            help=_(
@@ -332,8 +333,10 @@ class ModeTags(ABCTagMode):
                 table.text_cell(_("Title"), _u(aux_tag.title))
                 table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
                 table.text_cell(
-                    _("Tags using this auxiliary tag"),
-                    ", ".join(sorted([tag.id for tag in self._get_tags_using_aux_tag(aux_tag)])))
+                    _("Tags using this auxiliary tag"), ", ".join(
+                        sorted(tag.id
+                               for tag in self._get_tags_using_aux_tag(aux_tag)
+                               if tag.id is not None)))
 
     def _show_aux_tag_icons(self, aux_tag):
         # type: (cmk.utils.tags.AuxTag) -> None
@@ -445,6 +448,9 @@ class ModeTagUsage(ABCTagMode):
         self._show_tag_group_icons(tag_group)
 
         table.text_cell(_("Tag group"), _u(tag_group.choice_title))
+        # TODO: This check shouldn't be necessary if we get our types right.
+        if tag.title is None or tag.id is None or tag_group.id is None:
+            raise Exception("uninitialized tag/tag group")
         table.text_cell(_("Tag"), _u(tag.title))
 
         operation = OperationReplaceGroupedTags(tag_group.id,
@@ -496,6 +502,9 @@ class ModeTagUsage(ABCTagMode):
         table.text_cell(_("Used by tags"))
         _show_aux_tag_used_by_tags(self._get_tags_using_aux_tag(aux_tag))
 
+        # TODO: This check shouldn't be necessary if we get our types right.
+        if aux_tag.id is None:
+            raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(aux_tag.id)
         affected_folders, affected_hosts, affected_rulesets = \
             _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
@@ -848,7 +857,7 @@ def _rename_tags_after_confirmation(operation):
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
             (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
-    message = ""
+    message = u""
     affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 

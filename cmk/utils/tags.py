@@ -7,7 +7,7 @@
 
 import re
 import abc
-from typing import Any, Dict, List, Set  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text  # pylint: disable=unused-import
 import six
 
 from cmk.utils.i18n import _
@@ -48,8 +48,18 @@ def _validate_tag_id(tag_id):
 class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(ABCTag, self).__init__()
-        self._initialize()
+        # TODO: See below, this was self._initialize()
+        # NOTE: All the Optionals below are probably just plain wrong and just
+        # an artifact of our broken 2-stage initialization.
+        self.id = None  # type: Optional[str]
+        self.title = None  # type: Optional[Text]
+        self.topic = None  # type: Optional[Text]
 
+    # TODO: We *really* have to nuke these _initialize methods everywhere, they
+    # either effectively blocking sane typing or lead to code duplication. The
+    # solution is actually quite easy and standard: The parse_config method
+    # should *not* be an instance method at all, it should just be a factory
+    # method/function.
     def _initialize(self):
         self.id = None
         self.title = None

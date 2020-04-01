@@ -9,6 +9,8 @@ import base64
 import traceback
 import time
 
+import six
+
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
 from cmk.utils.type_defs import UserId, timeperiod_spec_alias
@@ -232,7 +234,8 @@ class ModeUsers(WatoMode):
                            css="checkbox")
 
                 if uid != config.user.id:
-                    html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
+                    html.checkbox("_c_user_%s" %
+                                  six.ensure_str(base64.b64encode(uid.encode("utf-8"))))
 
                 user_connection_id = cleanup_connection_id(user.get('connector'))
                 connection = get_connection(user_connection_id)
@@ -457,7 +460,6 @@ class ModeEditUser(WatoMode):
                 _("Notifications"),
                 watolib.folder_preserving_link([("mode", "user_notifications"),
                                                 ("user", self._user_id)]), "notifications")
-        return
 
     def action(self):
         if not html.check_transaction():

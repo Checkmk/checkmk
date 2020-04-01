@@ -9,7 +9,7 @@
 
 checkname = 'ucd_mem'
 
-info = [['swap', '8388604', '8388604', '64313712', '3845212', '12233816', '16000', '3163972', '30364', '10216780', '1', 'some error message']]
+info = [['64313712', '3845212', '8388604', '8388604', '12233816', '16000', '3163972', '30364', '10216780', '1', 'swap', 'some error message']]
 
 discovery = {'': [('', {})]}
 
@@ -17,9 +17,8 @@ checks = {
     '': [
         (
             None, {
-                'levels_ram': (80.0, 90.0)
+                'levels_ram': (80.0, 90.0),
             }, [
-                (1, u'some error message', []),
                 (
                     0, 'RAM: 78.09% - 47.89 GB of 61.33 GB',
                         [
@@ -31,7 +30,8 @@ checks = {
                     ('swap_used', 0, None, None, 0, 8589930496)]),
                 (
                     0, 'Total virtual memory: 69.08% - 47.89 GB of 69.33 GB', []
-                )
+                ),
+                (0, u'Swap error: some error message', []),
             ]
         )
     ]

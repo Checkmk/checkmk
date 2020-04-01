@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -43,7 +43,11 @@ checks = {
                             'fs_used', 473297.193359375, 457712.4359375,
                             514926.4904296875, 0, 572140.544921875
                         ),
-                        ('fs_size', 572140.544921875, None, None, None, None)
+                        ('fs_size', 572140.544921875, None, None, None, None),
+                        (
+                            'fs_used_percent', 82.72393864762776, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -65,7 +69,11 @@ checks = {
                         (
                             'fs_used', 9721.9013671875, 25800.0, 29025.0, 0,
                             32250.0
-                        ), ('fs_size', 32250.0, None, None, None, None)
+                        ), ('fs_size', 32250.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 30.145430595930232, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -90,7 +98,11 @@ checks = {
                             'fs_used', 1498687.818359375, 1238962.4359375,
                             1393832.7404296875, 0, 1548703.044921875
                         ),
-                        ('fs_size', 1548703.044921875, None, None, None, None)
+                        ('fs_size', 1548703.044921875, None, None, None, None),
+                        (
+                            'fs_used_percent', 96.7705089283257, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -113,7 +125,11 @@ checks = {
                             'fs_used', 33844.068359375, 457712.4359375,
                             514926.4904296875, 0, 572140.544921875
                         ),
-                        ('fs_size', 572140.544921875, None, None, None, None)
+                        ('fs_size', 572140.544921875, None, None, None, None),
+                        (
+                            'fs_used_percent', 5.91534172149893, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

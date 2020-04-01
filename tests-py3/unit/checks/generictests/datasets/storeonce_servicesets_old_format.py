@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -50,7 +50,11 @@ checks = {
                             'fs_used', 10807365276.0, 29669065864.704296,
                             33377699097.792336, 0, 37086332330.88037
                         ),
-                        ('fs_size', 37086332330.88037, None, None, None, None)
+                        ('fs_size', 37086332330.88037, None, None, None, None),
+                        (
+                            'fs_used_percent', 29.14110022953421, None, None,
+                            None, None
+                        )
                     ]
                 ), (0, 'Dedup ratio: 15.95', [])
             ]

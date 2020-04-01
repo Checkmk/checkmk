@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
 # type: ignore
-
 checkname = 'netapp_api_aggr'
 
 info = [
@@ -42,7 +41,11 @@ checks = {
                             'fs_used', 47908714.765625, 61548267.690625,
                             69241801.15195313, 0, 76935334.61328125
                         ),
-                        ('fs_size', 76935334.61328125, None, None, None, None)
+                        ('fs_size', 76935334.61328125, None, None, None, None),
+                        (
+                            'fs_used_percent', 62.27140624842955, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -64,7 +67,11 @@ checks = {
                         (
                             'fs_used', 91511435.3671875, 97657704.0,
                             109864917.0, 0, 122072130.0
-                        ), ('fs_size', 122072130.0, None, None, None, None)
+                        ), ('fs_size', 122072130.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 74.96505170114382, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

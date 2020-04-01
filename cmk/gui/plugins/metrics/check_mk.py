@@ -1451,6 +1451,12 @@ metric_info["fs_used"] = {
     "color": "#00ffc6",
 }
 
+metric_info["fs_used_percent"] = {
+    "title": _("Used filesystem space %"),
+    "unit": "%",
+    "color": "#00ffc6",
+}
+
 metric_info["inodes_used"] = {
     "title": _("Used inodes"),
     "unit": "count",
@@ -7226,10 +7232,14 @@ df_basic_perfvarnames = [
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
         "name": "fs_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
     "fs_size": {
         "scale": MB
@@ -7311,10 +7321,14 @@ for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
 check_metrics["check_mk-netapp_api_volumes"] = {
     "~(?!%s).*$" % "|".join(df_netapp_perfvarnames): {
         "name": "fs_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
     "fs_size": {
         "scale": MB
@@ -8272,7 +8286,14 @@ check_metrics["check_mk-oracle_performance"] = {
 check_metrics["check_mk-db2_logsize"] = {
     "~[_/]": {
         "name": "fs_used",
+        "scale": MB,
+        "deprecated": True
+    },
+    "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
 }
 

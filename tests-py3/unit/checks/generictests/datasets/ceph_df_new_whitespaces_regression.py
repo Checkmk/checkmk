@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -46,7 +46,11 @@ checks = {
                 (
                     0, '3.16% used (8.00 of 253.00 GB)', [
                         ('fs_used', 8192.0, 207257.6, 233164.8, 0, 259072.0),
-                        ('fs_size', 259072.0, None, None, None, None)
+                        ('fs_size', 259072.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 3.1620553359683794, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -68,7 +72,11 @@ checks = {
                         (
                             'fs_used', 1638.3999999999942, 64389.12, 72437.76,
                             0, 80486.4
-                        ), ('fs_size', 80486.4, None, None, None, None)
+                        ), ('fs_size', 80486.4, None, None, None, None),
+                        (
+                            'fs_used_percent', 2.035623409669204, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -88,7 +96,11 @@ checks = {
                 (
                     0, '0.04% used (32.00 MB of 77.03 GB)', [
                         ('fs_used', 32.0, 63104.0, 70992.0, 0, 78880.0),
-                        ('fs_size', 78880.0, None, None, None, None)
+                        ('fs_size', 78880.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 0.04056795131845842, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

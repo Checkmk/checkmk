@@ -12,18 +12,19 @@ var g_sidebar_folded = false;
 
 export function initialize_sidebar(update_interval, refresh, restart) {
     if (restart) {
-        set_sidebar_restart_time(Math.floor(Date.parse(new Date()) / 1000));
+        sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
     }
-    set_sidebar_update_interval(update_interval);
+
+    sidebar_update_interval = update_interval;
+
     register_edge_listeners();
     set_sidebar_size();
-    set_refresh_snapins(refresh);
-    set_restart_snapins(restart);
+
+    refresh_snapins = refresh;
+    restart_snapins = restart;
+
     execute_sidebar_scheduler();
     register_event_handlers();
-    window.onresize = function() {
-        set_sidebar_size();
-    };
     if (is_content_frame_accessible()) {
         update_content_location();
     }
@@ -39,6 +40,9 @@ export function register_event_handlers() {
     window.addEventListener("mousedown", startDragScroll, false);
     window.addEventListener("mouseup", stopDragScroll,  false);
     window.addEventListener("wheel", scrollWheel, false);
+    window.onresize = function() {
+        set_sidebar_size();
+    };
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -513,21 +517,6 @@ var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
 var sidebar_update_interval = null;
 
-export function set_restart_snapins(snapins) {
-    restart_snapins = snapins;
-}
-
-export function set_refresh_snapins(snapins) {
-    refresh_snapins = snapins;
-}
-
-export function set_sidebar_update_interval(interval) {
-    sidebar_update_interval = interval;
-}
-
-export function set_sidebar_restart_time(t) {
-    sidebar_restart_time = t;
-}
 
 export function add_snapin(name) {
     ajax.call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {

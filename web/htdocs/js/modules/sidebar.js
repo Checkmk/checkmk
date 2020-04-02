@@ -10,7 +10,7 @@ var g_content_loc   = null;
 var g_sidebar_folded = false;
 
 
-export function initialize_sidebar(update_interval, refresh, restart) {
+export function initialize_sidebar(update_interval, refresh, restart, static_) {
     if (restart) {
         sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
     }
@@ -22,6 +22,7 @@ export function initialize_sidebar(update_interval, refresh, restart) {
 
     refresh_snapins = refresh;
     restart_snapins = restart;
+    static_snapins = static_;
 
     execute_sidebar_scheduler();
     register_event_handlers();
@@ -512,6 +513,8 @@ function scrollWheel(event){
 var refresh_snapins = null;
 // The restart snapins are notified about the restart of the nagios instance(s)
 var restart_snapins = null;
+// Snapins that only have to be reloaded on demand
+var static_snapins = null;
 // Contains a timestamp which holds the time of the last nagios restart handling
 var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
@@ -539,6 +542,13 @@ export function add_snapin(name) {
                 const entry = result.name;
                 if (restart_snapins.indexOf(entry) === -1) {
                     restart_snapins.push(entry);
+                }
+            }
+
+            if (!result.refresh && !result.restart){
+                const entry = result.name;
+                if (static_snapins.indexOf(entry) === -1) {
+                    static_snapins.push(entry);
                 }
             }
 
@@ -596,6 +606,11 @@ function remove_snapin(id)
     const restart_index = restart_snapins.indexOf(name);
     if (restart_index !== -1) {
         restart_snapins.splice(refresh_index, 1);
+    }
+
+    const static_index = static_snapins.indexOf(name);
+    if (static_index !== -1) {
+        static_snapins.splice(static_index, 1);
     }
 
     // reload main frame if it is currently displaying the "add snapin" page
@@ -675,6 +690,7 @@ function bulk_update_contents(ids, codes)
 
 var g_seconds_to_update = null;
 var g_sidebar_scheduler_timer = null;
+var g_sidebar_full_reload = false;
 
 export function refresh_single_snapin(name) {
     const url = "sidebar_snapin.py?names=" + name;
@@ -688,6 +704,7 @@ export function reset_sidebar_scheduler() {
         g_sidebar_scheduler_timer = null;
     }
     g_seconds_to_update = 1;
+    g_sidebar_full_reload = true;
     execute_sidebar_scheduler();
 }
 
@@ -709,7 +726,7 @@ export function execute_sidebar_scheduler() {
     let url;
     for (let i = 0; i < refresh_snapins.length; i++) {
         const name = refresh_snapins[i][0];
-        if (refresh_snapins[i][1] != "") {
+        if (refresh_snapins[i][1] !== "") {
             // Special handling for snapins like the nagvis maps snapin which request
             // to be updated from a special URL, use direct update of those snapins
             // from this url
@@ -720,6 +737,13 @@ export function execute_sidebar_scheduler() {
             }
         } else {
             // Internal update handling, use bulk update
+            to_be_updated.push(name);
+        }
+    }
+
+    if (g_sidebar_full_reload) {
+        g_sidebar_full_reload = false;
+        for (const name of static_snapins) {
             to_be_updated.push(name);
         }
     }

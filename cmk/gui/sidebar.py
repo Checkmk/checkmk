@@ -363,6 +363,7 @@ class SidebarRenderer(object):
             user_config = UserSidebarConfig(config.user, config.sidebar)
             refresh_snapins = []
             restart_snapins = []
+            static_snapins = []
 
             html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
                           id_="side_content")
@@ -375,19 +376,21 @@ class SidebarRenderer(object):
 
                 if snapin.snapin_type.refresh_regularly():
                     refresh_snapins.append([name, refresh_url])
-
                 elif snapin.snapin_type.refresh_on_restart():
                     refresh_snapins.append([name, refresh_url])
                     restart_snapins.append(name)
+                else:
+                    static_snapins.append(name)
 
             html.close_div()
             self._sidebar_foot(user_config)
             html.close_div()
 
-            html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s);\n" % (
+            html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n" % (
                 config.sidebar_update_interval,
                 json.dumps(refresh_snapins),
                 json.dumps(restart_snapins),
+                json.dumps(static_snapins),
             ))
 
         html.open_div(id_="content_area")

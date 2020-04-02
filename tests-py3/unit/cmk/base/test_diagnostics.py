@@ -87,5 +87,13 @@ def test_version_diagnostics_element(monkeypatch, tmp_path):
     filepath = version_diagnostics_element.add_or_get_file(tmppath)
     assert filepath == tmppath.joinpath("general")
 
-    info_keys = ["cmk_version"]
+    info_keys = [
+        "time",
+        "os",
+        "version",
+        "edition",
+        "core",
+        "python_version",
+        "python_paths",
+    ]
     assert sorted(json.loads(filepath.open().read()).keys()) == sorted(info_keys)

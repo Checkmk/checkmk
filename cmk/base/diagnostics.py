@@ -177,8 +177,5 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]
         filepath = tmp_dump_folder.joinpath(self.ident)
-        infos = {
-            "cmk_version": cmk_version.omd_version(),
-        }
-        store.save_text_to_file(filepath, json.dumps(infos))
+        store.save_text_to_file(filepath, json.dumps(cmk_version.get_general_version_infos()))
         return filepath

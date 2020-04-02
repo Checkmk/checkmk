@@ -12,19 +12,24 @@ __version__ = "1.7.0i1"
 
 import os
 import sys
-from typing import Text  # pylint: disable=unused-import
+import errno
+import time
+from typing import (  # pylint: disable=unused-import
+    Text, Dict, Any,
+)
 import six
 
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+import cmk.utils.cmk_subprocess as subprocess
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
 
 
 def omd_version():
@@ -72,3 +77,74 @@ def is_demo():
     # type: () -> bool
     parts = omd_version().split(".")
     return parts[-1] == "demo"
+
+
+#   .--general infos-------------------------------------------------------.
+#   |                                      _   _        __                 |
+#   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |
+#   |      / _` |/ _ \ '_ \ / _ \ '__/ _` | | | | '_ \| |_ / _ \/ __|      |
+#   |     | (_| |  __/ | | |  __/ | | (_| | | | | | | |  _| (_) \__ \      |
+#   |      \__, |\___|_| |_|\___|_|  \__,_|_| |_|_| |_|_|  \___/|___/      |
+#   |      |___/                                                           |
+#   '----------------------------------------------------------------------'
+
+# Collect general infos about CheckMk and OS which are used by crash reports
+# and diagnostics.
+
+
+def get_general_version_infos():
+    # type: () -> Dict[str, Any]
+    return {
+        "time": time.time(),
+        "os": _get_os_info(),
+        "version": __version__,
+        "edition": edition_short(),
+        "core": _current_monitoring_core(),
+        "python_version": sys.version,
+        "python_paths": sys.path,
+    }
+
+
+def _get_os_info():
+    # type: () -> Text
+    if "OMD_ROOT" in os.environ:
+        return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
+            "=", 1)[1].strip()
+    if os.path.exists("/etc/redhat-release"):
+        return open("/etc/redhat-release").readline().strip()
+    if os.path.exists("/etc/SuSE-release"):
+        return open("/etc/SuSE-release").readline().strip()
+
+    info = {}
+    for f in ["/etc/os-release", "/etc/lsb-release"]:
+        if os.path.exists(f):
+            for line in open(f).readlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    info[k.strip()] = v.strip().strip("\"")
+            break
+
+    if "PRETTY_NAME" in info:
+        return info["PRETTY_NAME"]
+    if info:
+        return "%s" % info
+    return "UNKNOWN"
+
+
+def _current_monitoring_core():
+    # type: () -> Text
+    try:
+        p = subprocess.Popen(
+            ["omd", "config", "show", "CORE"],
+            close_fds=True,
+            stdin=open(os.devnull),
+            stdout=subprocess.PIPE,
+            stderr=open(os.devnull, "w"),
+            encoding="utf-8",
+        )
+        return p.communicate()[0]
+    except OSError as e:
+        # Allow running unit tests on systems without omd installed (e.g. on travis)
+        if e.errno != errno.ENOENT:
+            raise
+        return "UNKNOWN"

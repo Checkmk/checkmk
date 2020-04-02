@@ -77,7 +77,7 @@ foreach ($myJob in $myBackupJobs)
 
 	foreach ($myTask in $myJobLastSessionTasks)
 	{
-		$myTaskName = $myTask.Name
+		$myTaskName = $myTask.Name -replace "[^ -x7e]" -replace " ","_"
 
 		$myTaskText = "$myTaskText" + "<<<<" + "$myTaskName" + ">>>>" + "`n"
 

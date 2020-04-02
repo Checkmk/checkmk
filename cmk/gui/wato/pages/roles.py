@@ -79,7 +79,7 @@ class RoleManagement(object):
     def _rename_user_role(self, uid, new_id):
         users = userdb.load_users(lock=True)
         for user in users.values():
-            if id in user["roles"]:
+            if uid in user["roles"]:
                 user["roles"].remove(uid)
                 if new_id:
                     user["roles"].append(new_id)

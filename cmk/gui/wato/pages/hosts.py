@@ -65,6 +65,31 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                     "nodes_%d" % nr,
                     _("The node <b>%s</b> does not exist "
                       " (must be a host that is configured with WATO)") % cluster_node)
+
+            attributes = watolib.collect_attributes("cluster", new=False)
+            cluster_agent_ds_type = attributes.get("tag_agent", "cmk-agent")
+            cluster_snmp_ds_type = attributes.get("tag_snmp_ds", "no-snmp")
+
+            node_agent_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "agent")
+            node_snmp_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "snmp_ds")
+
+            if node_agent_ds_type != cluster_agent_ds_type or \
+                    node_snmp_ds_type != cluster_snmp_ds_type:
+                raise MKUserError(
+                    "nodes_%d" % nr,
+                    _("Cluster and nodes must have the same "
+                      "datasource! The node <b>%s</b> has datasources "
+                      "<b>%s</b> and <b>%s</b> while the cluster has datasources "
+                      "<b>%s</b> and <b>%s</b>.") % (
+                          cluster_node,
+                          node_agent_ds_type,
+                          node_snmp_ds_type,
+                          cluster_agent_ds_type,
+                          cluster_snmp_ds_type,
+                      ))
+
         return cluster_nodes
 
     # TODO: Extract cluster specific parts from this method

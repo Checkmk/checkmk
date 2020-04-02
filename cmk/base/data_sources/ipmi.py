@@ -86,16 +86,22 @@ def _parse_sensor_reading(number, reading):
 
 
 class IPMIDataFetcher(object):
-    @staticmethod
-    def _fetch_raw_data(ipaddress, credentials, logger):
-        # type: (HostAddress, IPMICredentials, Logger) -> RawAgentData
-        connection = None
+    def __init__(self, ipaddress, username, password, logger):
+        super(IPMIDataFetcher, self).__init__()
+        self._ipaddress = ipaddress  # type: HostAddress
+        self._username = username  # type: str
+        self._password = password  # type: str
+        self._logger = logger  # type: Logger
+        self._command = None  # type: Optional[ipmi_cmd.Command]
+
+    def data(self):
+        # type: () -> RawAgentData
         try:
-            connection = IPMIDataFetcher._create_ipmi_connection(ipaddress, credentials, logger)
+            self.open()
 
             output = b""
-            output += IPMIDataFetcher._fetch_ipmi_sensors_section(connection, logger)
-            output += IPMIDataFetcher._fetch_ipmi_firmware_section(connection, logger)
+            output += self._sensors_section()
+            output += self._firmware_section()
 
             return output
         except Exception as e:
@@ -107,37 +113,43 @@ class IPMIDataFetcher(object):
                 raise MKAgentError("IPMI communication failed: %r" % e)
             raise
         finally:
-            if connection:
-                connection.ipmi_session.logout()
+            self.close()
 
-    @staticmethod
-    def _create_ipmi_connection(ipaddress, credentials, logger):
-        # type: (HostAddress, IPMICredentials, Logger) -> ipmi_cmd.Command
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
-        logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
-                     (ipaddress, credentials["username"]))
-        return ipmi_cmd.Command(bmc=ipaddress,
-                                userid=credentials["username"],
-                                password=credentials["password"],
-                                privlevel=2)
+    def open(self):
+        # type: () -> None
+        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._ipaddress,
+                           self._username)
+        self._command = ipmi_cmd.Command(bmc=self._ipaddress,
+                                         userid=self._username,
+                                         password=self._password,
+                                         privlevel=2)
 
-    @staticmethod
-    def _fetch_ipmi_sensors_section(connection, logger):
-        # type: (ipmi_cmd.Command, Logger) -> RawAgentData
-        logger.debug("Fetching sensor data via UDP from %s:623" % (connection.bmc))
+    def close(self):
+        # type: () -> None
+        if self._command is None:
+            return
+
+        self._logger.debug("Closing connection to %s:623", self._command.bmc)
+        self._command.ipmi_session.logout()
+
+    def _sensors_section(self):
+        # type: () -> RawAgentData
+        if self._command is None:
+            raise MKAgentError("Not connected")
+
+        self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
         try:
-            sdr = ipmi_sdr.SDR(connection)
+            sdr = ipmi_sdr.SDR(self._command)
         except NotImplementedError as e:
-            logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
-            logger.debug("Exception", exc_info=True)
+            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
+            self._logger.debug("Exception", exc_info=True)
             return b""
 
         sensors = []
-        has_no_gpu = not IPMIDataFetcher._has_gpu(connection, logger)
+        has_no_gpu = not self._has_gpu()
         for number in sdr.get_sensor_numbers():
-            rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
+            rsp = self._command.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
                 continue
 
@@ -152,15 +164,17 @@ class IPMIDataFetcher(object):
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
 
-    @staticmethod
-    def _fetch_ipmi_firmware_section(connection, logger):
-        # type: (ipmi_cmd.Command, Logger) -> RawAgentData
-        logger.debug("Fetching firmware information via UDP from %s:623" % (connection.bmc))
+    def _firmware_section(self):
+        # type: () -> RawAgentData
+        if self._command is None:
+            raise MKAgentError("Not connected")
+
+        self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:
-            firmware_entries = connection.get_firmware()
+            firmware_entries = self._command.get_firmware()
         except Exception as e:
-            logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
-            logger.debug("Exception", exc_info=True)
+            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
+            self._logger.debug("Exception", exc_info=True)
             return b""
 
         output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
@@ -171,16 +185,18 @@ class IPMIDataFetcher(object):
 
         return output
 
-    @staticmethod
-    def _has_gpu(connection, logger):
-        # type: (ipmi_cmd.Command, Logger) -> bool
+    def _has_gpu(self):
+        # type: () -> bool
+        if self._command is None:
+            return False
+
         # helper to sort out not installed GPU components
-        logger.debug("Fetching inventory information via UDP from %s:623" % (connection.bmc))
+        self._logger.debug("Fetching inventory information via UDP from %s:623", self._command.bmc)
         try:
-            inventory_entries = connection.get_inventory_descriptions()
+            inventory_entries = self._command.get_inventory_descriptions()
         except Exception as e:
-            logger.log(VERBOSE, "Failed to fetch inventory information: %r" % e)
-            logger.debug("Exception", exc_info=True)
+            self._logger.log(VERBOSE, "Failed to fetch inventory information: %r", e)
+            self._logger.debug("Exception", exc_info=True)
             # in case of connection problems, we don't want to ignore possible
             # GPU entries
             return True
@@ -228,7 +244,9 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         if self._ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        return IPMIDataFetcher._fetch_raw_data(self._ipaddress, self._credentials, self._logger)
+        fetcher = IPMIDataFetcher(self._ipaddress, self._credentials["username"],
+                                  self._credentials["password"], self._logger)
+        return fetcher.data()
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

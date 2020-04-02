@@ -16,5 +16,5 @@ item:
  The name of the cluster node
 
 inventory:
- Creates one check.
+ One service is created.
 

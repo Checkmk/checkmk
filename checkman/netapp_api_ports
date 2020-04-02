@@ -11,4 +11,4 @@ item:
  Name of the port
 
 inventory:
- One check is created for every port.
+ One service is created for each port.

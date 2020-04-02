@@ -15,4 +15,4 @@ item:
  The name of the cluster node
 
 inventory:
- One check per node
+ One service is created for each node.

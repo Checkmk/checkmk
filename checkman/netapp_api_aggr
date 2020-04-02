@@ -29,5 +29,5 @@ item:
  Name of the aggregation as defined in the system
 
 inventory:
- All {local} aggregations are automatically inventorized.
+ One service is created for each {local} aggregation.
 

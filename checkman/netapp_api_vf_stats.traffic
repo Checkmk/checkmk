@@ -12,5 +12,5 @@ item:
  Name of the CPU
 
 inventory:
- Creates one check for each vFiler.
+ One service is created for each vFiler.
 

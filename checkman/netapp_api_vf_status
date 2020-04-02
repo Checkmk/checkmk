@@ -13,5 +13,5 @@ item:
  Name of the virtual server
 
 inventory:
- One check is created per vFiler
+ One service is created for each vFiler.
 

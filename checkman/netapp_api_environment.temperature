@@ -19,4 +19,4 @@ item:
  Name of the temperature sensor
 
 inventory:
- One check is created for each sensor giving temperature information.
+ One service is created for each sensor reporting temperature information.

@@ -11,5 +11,5 @@ description:
  You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
 
 inventory:
- Configures one check on each filer running in 7Mode or one check if
- the filer is running in Cluster-Mode.
+ One service is created for each filer running in 7Mode or
+ one service if the filer is running in Cluster-Mode.

@@ -12,5 +12,5 @@ item:
  Name of the LUN as defined in the system
 
 inventory:
- All LUNs are automatically inventorized.
+ One service is created for each LUN.
 

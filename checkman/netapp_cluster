@@ -11,7 +11,7 @@ description:
 
 
 inventory:
- The check creates one service per Cluster which will be named "Cluster w(ith) Partner_Name".
+ One service is created for each Cluster.
 
 item:
  The cluster partner.

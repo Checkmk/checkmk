@@ -8,7 +8,7 @@ description:
  Right now there are no configurable limits and the check is always {OK}.
 
 inventory:
- Creates a check for each protocol (cifs, fcp, iscsi, nfs, nfsv4)
+ One service is created for each protocol (cifs, fcp, iscsi, nfs, nfsv4).
 
 item:
  The name of the protocol.

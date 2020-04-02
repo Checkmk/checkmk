@@ -9,7 +9,7 @@ description:
  Per default the check is {OK}.
 
 inventory:
- One check is created for each snapvault volume.
+ One service is created for each snapvault volume.
 
 item:
  The volume name, e.g. /vol/ipb_datas/

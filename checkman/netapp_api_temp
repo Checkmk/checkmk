@@ -14,5 +14,6 @@ item:
  Either {{Internal Shelf}} or {{Ambient Shelf}} followed by the name of the shelf
 
 inventory:
- Two summary checks are created for each shelf. {Temperature Internal Shelfes} and {Temperature Ambient Shelfs}
+ Two summary services are created for each shelf. One for {Temperature Internal Shelfes}
+ and one for {Temperature Ambient Shelfs}.
 

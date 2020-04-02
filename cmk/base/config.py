@@ -1934,7 +1934,7 @@ def _extract_agent_and_snmp_sections():
                     check_info_dict,
                 )
                 registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
-        except (NotImplementedError, KeyError):
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
             # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't
             # test otherwise.

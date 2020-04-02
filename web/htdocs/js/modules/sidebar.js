@@ -86,10 +86,10 @@ function stop_snapin_dragging(e) {
  * snapin drag/drop code
  *************************************************/
 
-var snapinDragging = false;
-var snapinOffset   = [ 0, 0 ];
-var snapinStartPos = [ 0, 0 ];
-var snapinScrollTop = 0;
+var g_snapin_dragging = false;
+var g_snapin_offset   = [ 0, 0 ];
+var g_snapin_start_pos = [ 0, 0 ];
+var g_snapin_scroll_top = 0;
 
 export function snapin_start_drag(event) {
     if (!event)
@@ -99,18 +99,18 @@ export function snapin_start_drag(event) {
     const button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
-    if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
+    if (g_snapin_dragging !== false || button != "LEFT" || target.tagName != "DIV")
         return true;
 
     event.cancelBubble = true;
 
-    snapinDragging = target.parentNode;
+    g_snapin_dragging = target.parentNode;
 
     // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
-    snapinOffset   = [ event.clientY - target.parentNode.offsetTop,
+    g_snapin_offset   = [ event.clientY - target.parentNode.offsetTop,
         event.clientX - target.parentNode.offsetLeft ];
-    snapinStartPos = [ event.clientY, event.clientX ];
-    snapinScrollTop = document.getElementById("side_content").scrollTop;
+    g_snapin_start_pos = [ event.clientY, event.clientX ];
+    g_snapin_scroll_top = document.getElementById("side_content").scrollTop;
 
     // Disable the default events for all the different browsers
     return utils.prevent_default_events(event);
@@ -120,19 +120,19 @@ function snapinDrag(event) {
     if (!event)
         event = window.event;
 
-    if (snapinDragging === false)
+    if (g_snapin_dragging === false)
         return true;
 
     // Is the mouse placed of the title bar of the snapin?
     // It can move e.g. if the scroll wheel is wheeled during dragging...
 
     // Drag the snapin
-    snapinDragging.style.position = "absolute";
-    let newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
+    g_snapin_dragging.style.position = "absolute";
+    let newTop = event.clientY  - g_snapin_offset[0] - g_snapin_scroll_top;
     newTop += document.getElementById("side_content").scrollTop;
-    snapinDragging.style.top      = newTop + "px";
-    snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + "px";
-    snapinDragging.style.zIndex   = 200;
+    g_snapin_dragging.style.top      = newTop + "px";
+    g_snapin_dragging.style.left     = (event.clientX - g_snapin_offset[1]) + "px";
+    g_snapin_dragging.style.zIndex   = 200;
 
     // Refresh the drop marker
     removeSnapinDragIndicator();
@@ -143,7 +143,7 @@ function snapinDrag(event) {
     if (o != null) {
         snapinAddBefore(o.parentNode, o, line);
     } else {
-        snapinAddBefore(snapinDragging.parentNode, null, line);
+        snapinAddBefore(g_snapin_dragging.parentNode, null, line);
     }
     return true;
 }
@@ -164,26 +164,26 @@ function removeSnapinDragIndicator() {
 }
 
 function snapinDrop(event, targetpos) {
-    if (snapinDragging == false)
+    if (g_snapin_dragging == false)
         return true;
 
     // Reset properties
-    snapinDragging.style.top      = "";
-    snapinDragging.style.left     = "";
-    snapinDragging.style.position = "";
+    g_snapin_dragging.style.top      = "";
+    g_snapin_dragging.style.left     = "";
+    g_snapin_dragging.style.position = "";
 
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
-    if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
+    if (g_snapin_start_pos[0] == event.clientY && g_snapin_start_pos[1] == event.clientX) {
         return utils.prevent_default_events(event);
     }
 
-    const par = snapinDragging.parentNode;
-    par.removeChild(snapinDragging);
-    snapinAddBefore(par, targetpos, snapinDragging);
+    const par = g_snapin_dragging.parentNode;
+    par.removeChild(g_snapin_dragging);
+    snapinAddBefore(par, targetpos, g_snapin_dragging);
 
     // Now send the new information to the backend
-    const thisId = snapinDragging.id.replace("snapin_container_", "");
+    const thisId = g_snapin_dragging.id.replace("snapin_container_", "");
 
     let before = "";
     if (targetpos != null)
@@ -192,14 +192,14 @@ function snapinDrop(event, targetpos) {
 }
 
 function snapinTerminateDrag() {
-    if (snapinDragging == false)
+    if (g_snapin_dragging == false)
         return true;
     removeSnapinDragIndicator();
     // Reset properties
-    snapinDragging.style.top      = "";
-    snapinDragging.style.left     = "";
-    snapinDragging.style.position = "";
-    snapinDragging = false;
+    g_snapin_dragging.style.top      = "";
+    g_snapin_dragging.style.left     = "";
+    g_snapin_dragging.style.position = "";
+    g_snapin_dragging = false;
 }
 
 export function snapin_stop_drag(event) {
@@ -208,7 +208,7 @@ export function snapin_stop_drag(event) {
 
     removeSnapinDragIndicator();
     snapinDrop(event, getSnapinTargetPos());
-    snapinDragging = false;
+    g_snapin_dragging = false;
 }
 
 function getDivChildNodes(node) {
@@ -221,17 +221,17 @@ function getDivChildNodes(node) {
 }
 
 function getSnapinList() {
-    if (snapinDragging === false)
+    if (g_snapin_dragging === false)
         return true;
 
     const l = [];
-    const childs = getDivChildNodes(snapinDragging.parentNode);
+    const childs = getDivChildNodes(g_snapin_dragging.parentNode);
     for(let i = 0; i < childs.length; i++) {
         const child = childs[i];
         // Skip
         // - non snapin objects
         // - currently dragged object
-        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != snapinDragging.id)
+        if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != g_snapin_dragging.id)
             l.push(child);
     }
 
@@ -239,7 +239,7 @@ function getSnapinList() {
 }
 
 function getSnapinCoords(obj) {
-    const snapinTop = snapinDragging.offsetTop;
+    const snapinTop = g_snapin_dragging.offsetTop;
     // + document.getElementById("side_content").scrollTop;
 
     let bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
@@ -270,7 +270,7 @@ function getSnapinTargetPos() {
     for(let i = 0; i < childs.length; i++) {
         const child = childs[i];
 
-        if (!child.id || child.id.substr(0, 7) != "snapin_" || child.id == snapinDragging.id)
+        if (!child.id || child.id.substr(0, 7) != "snapin_" || child.id == g_snapin_dragging.id)
             continue;
 
         // Initialize with the first snapin in the list
@@ -373,12 +373,12 @@ export function set_sidebar_size() {
     oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + "px";
 }
 
-var scrolling = true;
+var g_scrolling = true;
 
 export function scroll_window(speed){
     const c = document.getElementById("side_content");
 
-    if (scrolling) {
+    if (g_scrolling) {
         c.scrollTop += speed;
         setTimeout("cmk.sidebar.scroll_window("+speed+")", 10);
     }
@@ -388,8 +388,8 @@ export function scroll_window(speed){
  * drag/drop scrollen
  *************************************************/
 
-var dragging = false;
-var startY = 0;
+var g_dragging = false;
+var g_start_y = 0;
 
 function startDragScroll(event) {
     if (!event)
@@ -413,15 +413,15 @@ function startDragScroll(event) {
         return utils.prevent_default_events(event);
     }
 
-    if (dragging === false
+    if (g_dragging === false
         && target.tagName != "A"
         && target.tagName != "INPUT"
         && target.tagName != "SELECT"
         && target.tagName != "OPTION"
         && !(target.tagName == "DIV" && target.className == "heading")) {
 
-        dragging = event;
-        startY = event.clientY;
+        g_dragging = event;
+        g_start_y = event.clientY;
 
         return utils.prevent_default_events(event);
     }
@@ -430,20 +430,20 @@ function startDragScroll(event) {
 }
 
 function stopDragScroll(){
-    dragging = false;
+    g_dragging = false;
 }
 
 function dragScroll(event) {
     if (!event)
         event = window.event;
 
-    if (dragging === false)
+    if (g_dragging === false)
         return true;
 
     event.cancelBubble = true;
 
     const inhalt = document.getElementById("side_content");
-    const diff = startY - event.clientY;
+    const diff = g_start_y - event.clientY;
 
     inhalt.scrollTop += diff;
 
@@ -452,9 +452,9 @@ function dragScroll(event) {
     if (utils.browser.is_opera())
         store_scroll_position();
 
-    startY = event.clientY;
+    g_start_y = event.clientY;
 
-    dragging = event;
+    g_dragging = event;
     return utils.prevent_default_events(event);
 }
 
@@ -486,9 +486,9 @@ function unfold_sidebar()
  *************************************************/
 
 function handle_scroll(delta) {
-    scrolling = true;
+    g_scrolling = true;
     scroll_window(-delta*20);
-    scrolling = false;
+    g_scrolling = false;
 }
 
 /** Event handler for mouse wheel event.

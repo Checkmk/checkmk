@@ -8,13 +8,15 @@ description:
 
  The state of the service is given by the device itself:
 
- - Removed, Disabled, Normal, Obsoleted are OK
+ - {OK}: Removed, Disabled, Normal, Obsoleted
 
- - Reset in progress, Testing, Warning, Non fatal error, Not configured are WARNING
+ - {WARN}: Reset in progress, Testing, Warning, Non fatal error, Not configured
 
- - Fatal error is CRITICAL
+ - {CRIT}: Fatal error
 
- - Other, Not available are UNKNOWN
+ - {UNKNOWN}: Other, Not available
+
+ The check uses the S5-CHASSIS-MIB.
 
 item:
  The index of the fan.

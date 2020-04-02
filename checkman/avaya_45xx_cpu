@@ -4,8 +4,13 @@ catalog: hw/network/avaya
 license: GPL
 distribution: check_mk
 description:
- This check monitors the cpu utilization of Avaya 45xx devices.
- The levels can be configured (default 90, 95).
+ This check monitors the CPU Utilization of Avaya 45xx devices.
+
+ You can configure upper levels for {CRIT}/{WARN} (default 90.0, 95.0).
+
+ The service goes {WARN}/{CRIT} if the CPU Utilization exceeds these levels.
+
+ The check uses the S5-CHASSIS-MIB.
 
 item:
  The index of the CPU.

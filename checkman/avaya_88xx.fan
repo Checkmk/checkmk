@@ -5,7 +5,16 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the fan status of Avaya 88xx devices.
- Depending on the reported state it can go OK, UNKNOWN or DOWN.
+
+ The service is
+
+ - {OK} for state "running" (2)
+
+ - {CRIT} for state "down" (3)
+
+ - {UNKOWN} for state "Reported unknown" (1)
+
+ The check uses the RAPID-CITY-MIB.
 
 item:
  The index of the chassis fan.

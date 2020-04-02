@@ -4,102 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import json
 import os
 import random
 import string
+import typing
 import uuid
-from cookielib import CookieJar
-from urllib import urlencode
 
 import pytest
-import webtest
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import store
-from cmk.gui.wsgi import make_app
+
+if typing.TYPE_CHECKING:
+    import webtest  # pylint: disable=unused-import
 
 # pylint: disable=redefined-outer-name
-
-
-def get_link(resp, rel):
-    for link in resp.get('links', []):
-        if link['rel'].startswith(rel):
-            return link
-    for member in resp.get('members', {}).values():
-        if member['memberType'] == 'action':
-            for link in member['links']:
-                if link['rel'].startswith(rel):
-                    return link
-    raise KeyError("%r not found" % (rel,))
-
-
-class WebTestAppForCMK(webtest.TestApp):
-    """A webtest.TestApp class with helper functions for automation user APIs"""
-    def __init__(self, *args, **kw):
-        super(WebTestAppForCMK, self).__init__(*args, **kw)
-        self.username = None
-        self.password = None
-
-    def set_credentials(self, username, password):
-        self.username = username
-        self.password = password
-
-    def call_method(self, method, url, *args, **kw):
-        return getattr(self, method.lower())(url, *args, **kw)
-
-    def follow_link(self, resp, rel, base='', **kw):
-        """Follow a link description as defined in a restful-objects entity"""
-        link = get_link(resp.json, rel)
-        return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
-
-    def api_request(self, action, request, output_format='json', **kw):
-        if self.username is None or self.password is None:
-            raise RuntimeError("Not logged in.")
-        qs = urlencode([
-            ('_username', self.username),
-            ('_secret', self.password),
-            ('request_format', output_format),
-            ('action', action),
-        ])
-        if output_format == 'python':
-            request = repr(request)
-        elif output_format == 'json':
-            request = json.dumps(request)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
-
-        _resp = self.call_method('post',
-                                 '/NO_SITE/check_mk/webapi.py?' + qs,
-                                 params={
-                                     'request': request,
-                                     '_username': self.username,
-                                     '_secret': self.password
-                                 },
-                                 **kw)
-        assert "Invalid automation secret for user" not in _resp.body
-        assert "API is only available for automation users" not in _resp.body
-
-        if output_format == 'python':
-            return ast.literal_eval(_resp.body)
-        elif output_format == 'json':
-            return json.loads(_resp.body)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
-
-
-@pytest.fixture(scope='function')
-def wsgi_app(monkeypatch, recreate_openapi_spec):
-    monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/web')
-    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/php-api')
-    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/wato/php-api')
-    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
-    wsgi_callable = make_app()
-    cookies = CookieJar()
-    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
 
 
 def test_normal_auth(

@@ -59,60 +59,17 @@ def _handle_false_positive_warnings(reading):
     return b', '.join(states)
 
 
-# NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
-class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
-        self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
-
-    def id(self):
-        # type: () -> str
-        return "mgmt_ipmi"
-
-    def title(self):
-        # type: () -> str
-        return "Management board - IPMI"
-
-    def describe(self):
-        # type: () -> str
-        items = []
-        if self._ipaddress:
-            items.append("Address: %s" % self._ipaddress)
-        if self._credentials:
-            items.append("User: %s" % self._credentials["username"])
-        return "%s (%s)" % (self.title(), ", ".join(items))
-
-    def _cpu_tracking_id(self):
-        # type: () -> str
-        return self.id()
-
-    def _gather_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        return {"mgmt_ipmi_sensors"}
-
-    def _execute(self):
-        # type: () -> RawAgentData
-        if not self._credentials:
-            raise MKAgentError("Missing credentials")
-
-        if self._ipaddress is None:
-            raise MKAgentError("Missing IP address")
-
-        return IPMIManagementBoardDataSource._fetch_raw_data(self._ipaddress, self._credentials,
-                                                             self._logger)
-
+class IPMIDataFetcher(object):
     @staticmethod
     def _fetch_raw_data(ipaddress, credentials, logger):
         # type: (HostAddress, IPMICredentials, Logger) -> RawAgentData
         connection = None
         try:
-            connection = IPMIManagementBoardDataSource._create_ipmi_connection(
-                ipaddress, credentials, logger)
+            connection = IPMIDataFetcher._create_ipmi_connection(ipaddress, credentials, logger)
 
             output = b""
-            output += IPMIManagementBoardDataSource._fetch_ipmi_sensors_section(connection, logger)
-            output += IPMIManagementBoardDataSource._fetch_ipmi_firmware_section(connection, logger)
+            output += IPMIDataFetcher._fetch_ipmi_sensors_section(connection, logger)
+            output += IPMIDataFetcher._fetch_ipmi_firmware_section(connection, logger)
 
             return output
         except Exception as e:
@@ -152,7 +109,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             return b""
 
         sensors = []
-        has_no_gpu = not IPMIManagementBoardDataSource._has_gpu(connection, logger)
+        has_no_gpu = not IPMIDataFetcher._has_gpu(connection, logger)
         for number in sdr.get_sensor_numbers():
             rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
@@ -164,7 +121,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIManagementBoardDataSource._parse_sensor_reading(number, reading))
+                sensors.append(IPMIDataFetcher._parse_sensor_reading(number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
@@ -229,6 +186,49 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             return True
 
         return any("GPU" in line for line in inventory_entries)
+
+
+# NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
+class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
+    def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
+        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
+
+    def id(self):
+        # type: () -> str
+        return "mgmt_ipmi"
+
+    def title(self):
+        # type: () -> str
+        return "Management board - IPMI"
+
+    def describe(self):
+        # type: () -> str
+        items = []
+        if self._ipaddress:
+            items.append("Address: %s" % self._ipaddress)
+        if self._credentials:
+            items.append("User: %s" % self._credentials["username"])
+        return "%s (%s)" % (self.title(), ", ".join(items))
+
+    def _cpu_tracking_id(self):
+        # type: () -> str
+        return self.id()
+
+    def _gather_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
+        return {"mgmt_ipmi_sensors"}
+
+    def _execute(self):
+        # type: () -> RawAgentData
+        if not self._credentials:
+            raise MKAgentError("Missing credentials")
+
+        if self._ipaddress is None:
+            raise MKAgentError("Missing IP address")
+
+        return IPMIDataFetcher._fetch_raw_data(self._ipaddress, self._credentials, self._logger)
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

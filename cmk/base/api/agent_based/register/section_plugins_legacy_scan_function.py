@@ -65,6 +65,7 @@ def _explicit_conversions(function_name):
             contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
             contains(".1.3.6.1.2.1.1.1.0", "genugate"),
             contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
+            contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
             all_of(
                 equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072.3.2.10'),
                 contains(".1.3.6.1.2.1.1.1.0", "version"),

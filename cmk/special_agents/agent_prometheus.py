@@ -152,6 +152,70 @@ class NodeExporter:
                 device_dict[entity_name] = int(float(device_info["value"]))
         return result
 
+    def memory_summary(self):
+        memory_list = [
+            ("MemTotal", "node_memory_MemTotal_bytes/1024"),
+            ("MemFree", "node_memory_MemFree_bytes/1024"),
+            ("MemAvailable", "node_memory_MemAvailable_bytes/1024"),
+            ("Buffers", "node_memory_Buffers_bytes/1024"),
+            ("Cached", "node_memory_Cached_bytes/1024"),
+            ("SwapCached", "node_memory_SwapCached_bytes/1024"),
+            ("Active(anon)", "node_memory_Active_bytes/1024"),
+            ("Inactive(anon)", "node_memory_Inactive_bytes/1024"),
+            ("Active(file)", "node_memory_Active_file_bytes/1024"),
+            ("Inactive(file)", "node_memory_Inactive_bytes/1024"),
+            ("Unevctaible", "node_memory_Unevictable_bytes/1024"),
+            ("Mlocked", "node_memory_Mlocked_bytes/1024"),
+            ("SwapTotal", "node_memory_SwapTotal_bytes/1024"),
+            ("SwapFree", "node_memory_SwapFree_bytes/1024"),
+            ("Dirty", "node_memory_Dirty_bytes/1024"),
+            ("Writeback", "node_memory_Writeback_bytes/1024"),
+            ("AnonPages", "node_memory_AnonPages_bytes/1024"),
+            ("Mapped", "node_memory_AnonPages_bytes/1024"),
+            ("Shmem", "node_memory_Shmem_bytes/1024"),
+            ("KReclaimable", "node_memory_KReclaimable_bytes/1024"),
+            ("Slab", "node_memory_Slab_bytes/1024"),
+            ("SReclaimable", "node_memory_SReclaimable_bytes/1024"),
+            ("SUnreclaim", "node_memory_SUnreclaim_bytes/1024"),
+            ("KernelStack", "node_memory_KernelStack_bytes/1024"),
+            ("PageTables", "node_memory_PageTables_bytes/1024"),
+            ("NFS_Unstable", "node_memory_NFS_Unstable_bytes/1024"),
+            ("Bounce", "node_memory_Bounce_bytes/1024"),
+            ("WritebackTmp", "node_memory_WritebackTmp_bytes/1024"),
+            ("CommitLimit", "node_memory_CommitLimit_bytes/1024"),
+            ("Committed_AS", "node_memory_Committed_AS_bytes/1024"),
+            ("VmallocTotal", "node_memory_VmallocTotal_bytes/1024"),
+            ("VmallocUsed", "node_memory_VmallocUsed_bytes/1024"),
+            ("VmallocChunk", "node_memory_VmallocChunk_bytes/1024"),
+            ("Percpu", "node_memory_Percpu_bytes/1024"),
+            ("HardwareCorrupted", "node_memory_HardwareCorrupted_bytes/1024"),
+            ("AnonHugePages", "node_memory_AnonHugePages_bytes/1024"),
+            ("ShmemHugePages", "node_memory_ShmemHugePages_bytes/1024"),
+            ("ShmemPmdMapped", "node_memory_ShmemPmdMapped_bytes/1024"),
+            ("CmaTotal", "node_memory_CmaTotal_bytes/1024"),
+            ("CmaFree", "node_memory_CmaFree_bytes/1024"),
+            ("HugePages_Total", "node_memory_HugePages_Total/1024"),
+            ("HugePages_Free", "node_memory_HugePages_Free/1024"),
+            ("HugePages_Rsvd", "node_memory_HugePages_Rsvd/1024"),
+            ("HugePages_Surp", "node_memory_HugePages_Surp/1024"),
+            ("Hugepagesize", "node_memory_Hugepagesize_bytes/1024"),
+            ("Hugetlb", "node_memory_Hugetlb_bytes/1024"),
+            ("DirectMap4k", "node_memory_DirectMap4k_bytes/1024"),
+            ("DirectMap2M", "node_memory_DirectMap2M_bytes/1024"),
+            ("DirectMap1G", "node_memory_DirectMap1G_bytes/1024"),
+        ]
+
+        return self._generate_memory_stats(memory_list)
+
+    def _generate_memory_stats(self, promql_list):
+        result = []
+        for entity_name, promql_query in promql_list:
+            promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
+            if len(promql_result) != 1:
+                return []
+            result.append("{}: {} kb".format(entity_name, promql_result[0]["value"]))
+        return result
+
 
 class CAdvisorExporter:
     def __init__(self, api_client, options):
@@ -1384,6 +1448,10 @@ class ApiData:
             df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary())]
             yield "\n".join(df_section)
 
+        if "mem" in node_options:
+            mem_section = ["<<<mem>>>", '\n'.join(self.node_exporter.memory_summary())]
+            yield "\n".join(mem_section)
+
 
 def _extract_config_args(config):
     server_address = config["host_address"]
@@ -1419,7 +1487,6 @@ def main(argv=None):
         print(api_data.server_info_section())
         print(api_data.scrape_targets_section())
         print(api_data.promql_section(config_args["custom_services"]))
-
         if "cadvisor" in exporter_options:
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))
         if "kube_state" in exporter_options:
@@ -1427,6 +1494,7 @@ def main(argv=None):
         if "node_exporter" in exporter_options:
             print(*list(
                 api_data.node_exporter_section(exporter_options["node_exporter"]["entities"])))
+
     except Exception as e:
         if args.debug:
             raise

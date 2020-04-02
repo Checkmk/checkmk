@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger  # pylint: disable=unused-import
-from typing import cast, Optional, Set, List  # pylint: disable=unused-import
+from types import TracebackType  # pylint: disable=unused-import
+from typing import cast, Optional, Set, Type, List  # pylint: disable=unused-import
 
 import six
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
@@ -94,26 +95,30 @@ class IPMIDataFetcher(object):
         self._logger = logger  # type: Logger
         self._command = None  # type: Optional[ipmi_cmd.Command]
 
+    def __enter__(self):
+        # type: () -> IPMIDataFetcher
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> bool
+        self.close()
+        if isinstance(exc_type, IpmiException) and not exc_value:
+            # Raise a more specific exception
+            raise MKAgentError("IPMI communication failed: %r" % exc_type)
+        if not cmk.utils.debug.enabled():
+            return False
+        return True
+
     def data(self):
         # type: () -> RawAgentData
-        try:
-            self.open()
+        if self._command is None:
+            raise MKAgentError("Not connected")
 
-            output = b""
-            output += self._sensors_section()
-            output += self._firmware_section()
-
-            return output
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-
-            # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
-            if isinstance(e, IpmiException) and "%s" % e == "None":
-                raise MKAgentError("IPMI communication failed: %r" % e)
-            raise
-        finally:
-            self.close()
+        output = b""
+        output += self._sensors_section()
+        output += self._firmware_section()
+        return output
 
     def open(self):
         # type: () -> None
@@ -244,9 +249,10 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         if self._ipaddress is None:
             raise MKAgentError("Missing IP address")
 
-        fetcher = IPMIDataFetcher(self._ipaddress, self._credentials["username"],
-                                  self._credentials["password"], self._logger)
-        return fetcher.data()
+        with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
+                             self._credentials["password"], self._logger) as fetcher:
+            data = fetcher.data()
+        return data
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

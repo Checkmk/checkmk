@@ -13,7 +13,6 @@ item:
  The name reported as {sslCertKeyName} (OID: .1.3.6.1.4.1.5951.4.1.1.56.1.1.1).
 
 inventory:
- Per default one service is discovered for each found SSL certificate.
+ One service is created for each SSL certificate.
 
- Use {ignored_services} if you need a host-specific configuration of the
- inventory.
+ Use {ignored_services} if you need a host-specific configuration.

@@ -18,7 +18,7 @@ description:
  This check is also cluster aware, behaviour can be set in WATO.
 
 inventory:
- One service per VServer will be created.
+ One service is created for each VServer.
 
 item:
  The name of the VServer.

@@ -12,5 +12,5 @@ description:
  Warning and critical levels can be configured for the check.
 
 inventory:
- One service per appliance will be created.
+ One service is created for each appliance.
 

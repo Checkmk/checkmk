@@ -15,3 +15,6 @@ description:
 
 item:
  Name of the NFS mount
+
+inventory:
+ One service is created for each NFS mount.

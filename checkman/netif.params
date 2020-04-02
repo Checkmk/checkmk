@@ -8,3 +8,6 @@ description:
 
 item:
  Name of the interface
+
+inventory:
+ One service is created for each network interface.

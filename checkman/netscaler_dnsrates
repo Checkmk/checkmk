@@ -15,4 +15,4 @@ description:
  Warning and critical levels can be configured for each of the rates.
 
 inventory:
- One service per loadbalancer device will be created.
+ One service is created for each loadbalancer device.

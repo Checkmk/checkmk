@@ -18,7 +18,8 @@ item:
  The name or IP address of the peer (first column in output of {ntpq -p}.
 
 inventory:
- Checks are created for all peers which have been contacted at least once,
- if {ntp_inventory_mode} is set to {"detailed"} or {"both"}. In case
- of {"summary"} a check of type {ntp.time} is being created.
+ One service is created for each peer which has been contacted at least once
+ if {ntp_inventory_mode} is set to {"detailed"} or {"both"}.
+ One summary service of type {ntp.time} is created if the {ntp_inventory_mode} is
+ set to {"summary"}.
 

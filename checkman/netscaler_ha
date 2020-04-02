@@ -17,4 +17,4 @@ description:
  critical in other states {haCurState} can be.
 
 inventory:
- One service per host will be created.
+ One service is created for each host.

@@ -7,7 +7,6 @@
 import copy
 import traceback
 import json
-import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
@@ -385,22 +384,11 @@ class SidebarRenderer(object):
             self._sidebar_foot(user_config)
             html.close_div()
 
-            html.write("<script language=\"javascript\">\n")
-            if restart_snapins:
-                html.write("cmk.sidebar.set_sidebar_restart_time(%s);\n" % time.time())
-            html.write("cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" %
-                       config.sidebar_update_interval)
-            html.write("cmk.sidebar.register_edge_listeners();\n")
-            html.write("cmk.sidebar.set_sidebar_size();\n")
-            html.write("cmk.sidebar.set_refresh_snapins(%s);\n" % json.dumps(refresh_snapins))
-            html.write("cmk.sidebar.set_restart_snapins(%s);\n" % json.dumps(restart_snapins))
-            html.write("cmk.sidebar.execute_sidebar_scheduler();\n")
-            html.write("cmk.sidebar.register_event_handlers();\n")
-            html.write("window.onresize = function() { cmk.sidebar.set_sidebar_size(); };\n")
-            html.write(
-                "if (cmk.sidebar.is_content_frame_accessible()) { cmk.sidebar.update_content_location(); };\n"
-            )
-            html.write("</script>\n")
+            html.javascript("cmk.sidebar.initialize_sidebar(%0.2f, %s, %s);\n" % (
+                config.sidebar_update_interval,
+                json.dumps(refresh_snapins),
+                json.dumps(restart_snapins),
+            ))
 
         html.open_div(id_="content_area")
         if content is not None:

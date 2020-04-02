@@ -9,6 +9,27 @@ import * as quicksearch from "quicksearch";
 var g_content_loc   = null;
 var g_sidebar_folded = false;
 
+
+export function initialize_sidebar(update_interval, refresh, restart) {
+    if (restart) {
+        set_sidebar_restart_time(Math.floor(Date.parse(new Date()) / 1000));
+    }
+    set_sidebar_update_interval(update_interval);
+    register_edge_listeners();
+    set_sidebar_size();
+    set_refresh_snapins(refresh);
+    set_restart_snapins(restart);
+    execute_sidebar_scheduler();
+    register_event_handlers();
+    window.onresize = function() {
+        set_sidebar_size();
+    };
+    if (is_content_frame_accessible()) {
+        update_content_location();
+    }
+}
+
+
 export function register_event_handlers() {
     window.addEventListener("mousemove", function(e) {
         snapinDrag(e);

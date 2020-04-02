@@ -1,4 +1,4 @@
-title: Oracle: RMAN Backups
+title: Oracle: RMAN Backups (deprecated)
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -18,4 +18,4 @@ item:
  of the job separated by a single dot.
 
 inventory:
- One separate check for each configured backup job will be created.
+ No service is created.

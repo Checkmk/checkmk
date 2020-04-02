@@ -18,6 +18,6 @@ item:
  The name of the OpenVPN connection (first column in the status file).
 
 inventory:
- One service per active connection will be created. Please use
- {ignored_services} if you want to restrict this.
+ One service is created for each active connection.
+ Please use {ignored_services} if you want to restrict this.
 

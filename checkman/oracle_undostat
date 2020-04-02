@@ -33,3 +33,6 @@ item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
 
+inventory:
+ One service is created for each running database.
+

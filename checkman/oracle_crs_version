@@ -11,4 +11,4 @@ description:
  This check is always OK or stale when no data is found from agent.
 
 inventory:
- One service will be created for each host
+ One service is created for each host

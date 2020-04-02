@@ -10,3 +10,7 @@ description:
 
 item:
  The ORACLE_SID
+
+inventory:
+ One service is created for each running database if the database has no
+ invalid data or general error.

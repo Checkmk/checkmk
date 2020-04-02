@@ -10,3 +10,6 @@ item:
 description:
  Looks for the current number of long active sessions and warns if (per default) these
  exceed 500. Goes critical at 1000.
+
+inventory:
+ One service is created for each active database session.

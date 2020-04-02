@@ -18,13 +18,13 @@ description:
  device type:
 
  - CPU:     60, 70 degree celcius
- 
+
  - HDD:     40, 50 degree celcius
- 
+
  - others:  70, 80 degree celcius
 
 item:
  The name of the sensor as reported by OpenHardwareMonitor
 
 inventory:
- All available sensors are automatically inventorized.
+ One service is created for each available sensor with the sensor type ("Temperature").

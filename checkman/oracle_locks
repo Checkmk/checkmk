@@ -10,3 +10,6 @@ description:
 
 item:
  Name of the device
+
+inventory:
+ One service is created for each running database.

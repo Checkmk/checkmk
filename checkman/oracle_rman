@@ -32,3 +32,5 @@ item:
  The sid and the type of the backup seperated by a {{.}} and optionally
  the backup level seperated by an underscore
 
+inventory:
+ One service is created for each running database.

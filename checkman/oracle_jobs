@@ -23,5 +23,5 @@ item:
  The SID, the PDB name, the job owner and the job name (optional) each seperated by {{.}}
 
 inventory:
- One separate check for each enabled job will be created.
+ One service is created for each enabled job.
 

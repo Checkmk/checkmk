@@ -18,4 +18,4 @@ item:
  The name of the site.
 
 inventory:
- One check per site will be created for each site.
+ One service is created for each site.

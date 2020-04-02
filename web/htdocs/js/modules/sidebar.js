@@ -576,13 +576,16 @@ function remove_snapin(id)
     const myparent = container.parentNode;
     myparent.removeChild(container);
 
-    // remove this snapin from the refresh list, if it is contained
-    for (const i in refresh_snapins) {
-        const name = refresh_snapins[i][0];
-        if (id == "snapin_" + name) {
-            refresh_snapins.splice(i, 1);
-            break;
-        }
+    const name = id.replace("snapin_", "");
+
+    const refresh_index = refresh_snapins.indexOf(name);
+    if (refresh_index !== -1) {
+        refresh_snapins.splice(refresh_index, 1);
+    }
+
+    const restart_index = restart_snapins.indexOf(name);
+    if (restart_index !== -1) {
+        restart_snapins.splice(refresh_index, 1);
     }
 
     // reload main frame if it is currently displaying the "add snapin" page

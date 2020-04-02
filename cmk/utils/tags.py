@@ -320,6 +320,7 @@ class TagConfig(object):
         super(TagConfig, self).__init__()
         self._initialize()
 
+    # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
     def _initialize(self):
         self.tag_groups = []
         self.aux_tag_list = AuxTagList()
@@ -358,9 +359,11 @@ class TagConfig(object):
         return self.get_tag_group(tag_group_id) is not None
 
     def get_tag_group(self, tag_group_id):
+        # type: (str) -> Optional[TagGroup]
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
+        return None
 
     def remove_tag_group(self, tag_group_id):
         group = self.get_tag_group(tag_group_id)

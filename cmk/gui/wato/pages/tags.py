@@ -6,7 +6,7 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Set, Text, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
 import abc
 from enum import Enum
 import six
@@ -142,7 +142,7 @@ class ModeTags(ABCTagMode):
                     _("Do you really want to delete the tag group '%s'?") % del_id)
                 if c is False:
                     return ""
-                elif c is None:
+                if c is None:
                     return None
 
         if message:
@@ -200,7 +200,7 @@ class ModeTags(ABCTagMode):
                 _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
             if c is False:
                 return ""
-            elif c is None:
+            if c is None:
                 return None
 
         if message:
@@ -615,13 +615,14 @@ class ModeEditTagGroup(ABCEditTagMode):
         return "edit_tag"
 
     def __init__(self):
+        # type: () -> None
         super(ModeEditTagGroup, self).__init__()
 
-        self._untainted_tag_group = self._tag_config.get_tag_group(self._id)
-        if not self._untainted_tag_group:
-            self._untainted_tag_group = cmk.utils.tags.TagGroup()
+        tg = self._tag_config.get_tag_group(self._id)
+        self._untainted_tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
 
-        self._tag_group = self._tag_config.get_tag_group(self._id) or cmk.utils.tags.TagGroup()
+        tg = self._tag_config.get_tag_group(self._id)
+        self._tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
 
     def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -669,7 +670,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             raise MKUserError(None, "%s" % e)
 
         remove_tag_ids, replace_tag_ids = [], {}
-        new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
+        new_by_title = {tag.title: tag.id for tag in changed_tag_group.tags}
 
         for former_tag in self._untainted_tag_group.tags:
             # Detect renaming
@@ -686,7 +687,10 @@ class ModeEditTagGroup(ABCEditTagMode):
                 # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
                 remove_tag_ids.append(former_tag.id)
 
-        operation = OperationReplaceGroupedTags(self._tag_group.id, remove_tag_ids, replace_tag_ids)
+        tg_id = self._tag_group.id
+        if tg_id is None:
+            raise Exception("tag group ID not set")
+        operation = OperationReplaceGroupedTags(tg_id, remove_tag_ids, replace_tag_ids)
 
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(operation)
@@ -1046,7 +1050,7 @@ def _change_host_tags_in_hosts(operation, mode, folder):
 
 
 def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected = []
+    affected = []  # type: List[Union[watolib.CREHost, watolib.CREFolder]]
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()
@@ -1106,7 +1110,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets = set()
+    affected_rulesets = set()  # type: Set[watolib.FolderRulesets]
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 
@@ -1127,7 +1131,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map = operation.replace_tag_ids.items()
+    tag_map = list(operation.replace_tag_ids.items())  # type: List[_Tuple[str, Any]]
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices
@@ -1139,7 +1143,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             continue
 
         current_value = rule.conditions.host_tags[operation.tag_group_id]
-        if old_tag != current_value and {"$ne": old_tag} != current_value:
+        if current_value not in (old_tag, {'$ne': old_tag}):
             continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)

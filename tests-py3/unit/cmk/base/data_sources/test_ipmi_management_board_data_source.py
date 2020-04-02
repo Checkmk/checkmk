@@ -8,7 +8,7 @@ from collections import namedtuple
 
 import pytest  # type: ignore[import]
 
-from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource, IPMIDataFetcher
+from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource, _parse_sensor_reading
 from testlib.base import Scenario
 
 SensorReading = namedtuple(
@@ -19,14 +19,14 @@ SensorReading = namedtuple(
 def test_parse_sensor_reading_standard_case():
     reading = SensorReading(  #
         ['lower non-critical threshold'], 1, "Hugo", None, "", [42], "hugo-type", None, 0)
-    assert IPMIDataFetcher._parse_sensor_reading(
+    assert _parse_sensor_reading(  #
         0, reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"WARNING"]
 
 
 def test_parse_sensor_reading_false_positive():
     reading = SensorReading(  #
         ['Present'], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1)
-    assert IPMIDataFetcher._parse_sensor_reading(
+    assert _parse_sensor_reading(  #
         0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 

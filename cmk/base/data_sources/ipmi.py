@@ -59,6 +59,32 @@ def _handle_false_positive_warnings(reading):
     return b', '.join(states)
 
 
+def _parse_sensor_reading(number, reading):
+    # type: (int, ipmi_sdr.SensorReading) -> List[RawAgentData]
+    # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
+    #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
+    #  'value': 25.0, 'unavailable': 0}]]
+    health_txt = b"N/A"
+    if reading.health >= ipmi_const.Health.Failed:
+        health_txt = b"FAILED"
+    elif reading.health >= ipmi_const.Health.Critical:
+        health_txt = b"CRITICAL"
+    elif reading.health >= ipmi_const.Health.Warning:
+        # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
+        health_txt = _handle_false_positive_warnings(reading)
+    elif reading.health == ipmi_const.Health.Ok:
+        health_txt = b"OK"
+
+    return [
+        b"%d" % number,
+        six.ensure_binary(reading.name),
+        six.ensure_binary(reading.type),
+        (b"%0.2f" % reading.value) if reading.value else b"N/A",
+        six.ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
+        health_txt,
+    ]
+
+
 class IPMIDataFetcher(object):
     @staticmethod
     def _fetch_raw_data(ipaddress, credentials, logger):
@@ -121,36 +147,10 @@ class IPMIDataFetcher(object):
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIDataFetcher._parse_sensor_reading(number, reading))
+                sensors.append(_parse_sensor_reading(number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])
-
-    @staticmethod
-    def _parse_sensor_reading(number, reading):
-        # type: (int, ipmi_sdr.SensorReading) -> List[RawAgentData]
-        # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
-        #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
-        #  'value': 25.0, 'unavailable': 0}]]
-        health_txt = b"N/A"
-        if reading.health >= ipmi_const.Health.Failed:
-            health_txt = b"FAILED"
-        elif reading.health >= ipmi_const.Health.Critical:
-            health_txt = b"CRITICAL"
-        elif reading.health >= ipmi_const.Health.Warning:
-            # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-            health_txt = _handle_false_positive_warnings(reading)
-        elif reading.health == ipmi_const.Health.Ok:
-            health_txt = b"OK"
-
-        return [
-            b"%d" % number,
-            six.ensure_binary(reading.name),
-            six.ensure_binary(reading.type),
-            (b"%0.2f" % reading.value) if reading.value else b"N/A",
-            six.ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
-            health_txt,
-        ]
 
     @staticmethod
     def _fetch_ipmi_firmware_section(connection, logger):

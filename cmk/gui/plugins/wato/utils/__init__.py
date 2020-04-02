@@ -938,7 +938,7 @@ def Levels(**kwargs):
         return 0
 
     help_txt = kwargs.get("help")
-    unit = kwargs.get("unit")
+    unit = kwargs.get("unit", "")
     if not isinstance(unit, six.string_types):
         raise Exception("illegal unit for Levels: %r" % (unit,))
     title = kwargs.get("title")

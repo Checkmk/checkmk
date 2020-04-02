@@ -114,6 +114,12 @@ class ModeRoles(RoleManagement, WatoMode):
             if html.transaction_valid() and self._roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
+            users = userdb.load_users()
+            for user in users.values():
+                if delid in user["roles"]:
+                    raise MKUserError(
+                        None, _("You cannot delete roles, that are still in use (%s)!" % delid))
+
             c = wato_confirm(
                 _("Confirm deletion of role %s") % delid,
                 _("Do you really want to delete the role %s?") % delid)

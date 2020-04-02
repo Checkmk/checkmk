@@ -181,7 +181,6 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         elif reading.health >= ipmi_const.Health.Critical:
             health_txt = b"CRITICAL"
         elif reading.health >= ipmi_const.Health.Warning:
-            health_txt = b"WARNING"
             # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
             health_txt = _handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:

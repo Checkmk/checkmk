@@ -4,23 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-import collections
 import operator
 import os
 import time
 import re
 import shutil
 import uuid
-import types  # pylint: disable=unused-import
 
 try:
-    collections_abc = collections.abc  # type: types.ModuleType
-except AttributeError:
-    collections_abc = collections
+    from collections.abc import Mapping  # type: ignore[import]
+except ImportError:
+    from collections import Mapping
 
-from typing import (  # pylint: disable=unused-import
-    Type, Union, List, Text, Dict, Optional, Any, Set,
-)
+from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
 import six
 from livestatus import SiteId  # pylint: disable=unused-import
@@ -60,7 +56,7 @@ from cmk.gui.plugins.watolib.utils import wato_fileheader
 
 import cmk.utils.version as cmk_version
 
-from cmk.utils import store as store
+from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 
@@ -109,7 +105,11 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
     """
     def __init__(self, *args, **kw):
         self._id = None
-        super(WithUniqueIdentifier, self).__init__(*args, **kw)
+        # NOTE: Mixins with attributes are a bit questionable in general.
+        # Furthermore, mypy is currently too dumb to understand mixins the way
+        # we implement them, see e.g.
+        # https://github.com/python/mypy/issues/5887 and related issues.
+        super(WithUniqueIdentifier, self).__init__(*args, **kw)  # type: ignore[call-arg]
 
     def id(self):
         # type: () -> str
@@ -118,6 +118,9 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         Returns:
             The id.
         """
+        # TODO: Improve the API + the typing, this is horrible...
+        if self._id is None:
+            raise Exception("unique identifier not set")
         return self._id
 
     @classmethod
@@ -216,13 +219,18 @@ class WithAttributes(object):
 
     Used in the Host and Folder classes."""
     def __init__(self, *args, **kw):
-        super(WithAttributes, self).__init__(*args, **kw)
-        self._attributes = {'meta_data': {}}
+        # NOTE: Mixins with attributes are a bit questionable in general.
+        # Furthermore, mypy is currently too dumb to understand mixins the way
+        # we implement them, see e.g.
+        # https://github.com/python/mypy/issues/5887 and related issues.
+        super(WithAttributes, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        self._attributes = {'meta_data': {}}  # type: Dict[str, Any]
         self._effective_attributes = None
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
     # '--------------------------------------------------------------------'
+    # TODO: Returning a mutable private field is an absolute no-no... :-P
     def attributes(self):
         return self._attributes
 
@@ -257,8 +265,7 @@ class WithAttributes(object):
     def _get_cached_effective_attributes(self):
         if self._effective_attributes is None:
             raise KeyError("Not cached")
-        else:
-            return self._effective_attributes.copy()
+        return self._effective_attributes.copy()
 
 
 class BaseFolder(object):
@@ -307,11 +314,8 @@ class BaseFolder(object):
         return maybe_child.parent() == self
 
     def is_transitive_parent_of(self, maybe_child):
-        if self.is_same_as(maybe_child):
-            return True
-        elif maybe_child.has_parent():
-            return self.is_transitive_parent_of(maybe_child.parent())
-        return False
+        return (self.is_same_as(maybe_child) or
+                (maybe_child.has_parent() and self.is_transitive_parent_of(maybe_child.parent())))
 
     def is_root(self):
         return not self.has_parent()
@@ -326,22 +330,18 @@ class BaseFolder(object):
 
     def show_breadcrump(self, link_to_folder=False, keepvarnames=None):
         if keepvarnames is True:
-            uri_func = html.makeuri
             keepvars = []
         else:
-            uri_func = html.makeuri_contextless
-
             if keepvarnames is None:
                 keepvarnames = ["mode"]
-
             keepvars = [(name, html.request.var(name)) for name in keepvarnames]
             if link_to_folder:
                 keepvars.append(("mode", "folder"))
 
         def render_component(folder):
-            return '<a href="%s">%s</a>' % \
-                (uri_func([ ("folder", folder.path())] + keepvars),
-                 escaping.escape_attribute(folder.title()))
+            vs = [("folder", folder.path())] + keepvars
+            uri = html.makeuri(vs) if keepvarnames is True else html.makeuri_contextless(vs)
+            return '<a href="%s">%s</a>' % (uri, escaping.escape_attribute(folder.title()))
 
         def breadcrump_element_start(end='', z_index=0):
             html.open_li(style="z-index:%d;" % z_index)
@@ -471,7 +471,7 @@ def deep_update(original, update, overwrite=True):
     """
     # Adapted from https://stackoverflow.com/a/3233356
     for k, v in six.iteritems(update):
-        if isinstance(v, collections_abc.Mapping):
+        if isinstance(v, Mapping):
             original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
         else:
             if overwrite or k not in original or original[k] is None:
@@ -560,8 +560,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def folder(folder_path):
         if folder_path in Folder.all_folders():
             return Folder.all_folders()[folder_path]
-        else:
-            raise MKGeneralException("No WATO folder %s." % folder_path)
+        raise MKGeneralException("No WATO folder %s." % folder_path)
 
     @staticmethod
     def create_missing_folders(folder_path):
@@ -914,10 +913,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         all_hosts = []  # type: List[str]
         clusters = {}  # type: Dict[str, List[str]]
         hostnames = sorted(self.hosts().keys())
-        custom_macros = {}  # collect value for attributes that are to be present in Nagios
-
-        explicit_host_settings = {
-        }  # collect value for attributes that are explicitly set for one host
+        # collect value for attributes that are to be present in Nagios
+        custom_macros = {}  # type: Dict[str, Dict[str, str]]
+        # collect value for attributes that are explicitly set for one host
+        explicit_host_settings = {}  # type: Dict[str, Dict[str, str]]
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
@@ -932,7 +931,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ("management_ipmi_credentials", "management_ipmi_credentials", {},
              "Management board IPMI credentials"),
             ("management_protocol", "management_protocol", {}, "Management board protocol"),
-        ]
+        ]  # type: List[Tuple[str, str, Dict[str, Any], str]]
 
         for hostname in hostnames:
             host = self.hosts()[hostname]
@@ -1291,7 +1290,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return False
 
     def recursive_subfolder_choices(self, pretty=True):
-        result = []
+        result = []  # type: List[Tuple[str, HTML]]
         self._walk_tree(result, 0, pretty)
         result.reverse()
         return result
@@ -1349,7 +1348,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # type: () -> SiteId
         if "site" in self._attributes:
             return self._attributes["site"]
-        elif self.has_parent():
+        if self.has_parent():
             return self.parent().site_id()
         return default_site()
 
@@ -1845,14 +1844,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _get_parents_of_hosts(self, host_names):
         # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
-        hosts_with_children = {}
+        hosts_with_children = {}  # type: Dict[str, List[str]]
         for child_key, child in Folder.root_folder().all_hosts_recursively().items():
             for host_name in host_names:
                 if host_name in child.parents():
                     hosts_with_children.setdefault(host_name, [])
                     hosts_with_children[host_name].append(child_key)
 
-        result = {}
+        result = {}  # type: Dict[str, List[str]]
         for parent, children in hosts_with_children.items():
             if not set(children) < set(host_names):
                 result.setdefault(parent, children)
@@ -1860,7 +1859,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     # Group the given host names by their site and delete their files
     def _delete_host_files(self, host_names):
-        hosts_by_site = {}
+        hosts_by_site = {}  # type: Dict[SiteId, List[str]]
         for host_name in host_names:
             host = self.hosts()[host_name]
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
@@ -1966,14 +1965,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def show_locking_information(self):
         self._load_hosts_on_demand()
-        lock_messages = []
+        lock_messages = []  # type: List[Text]
 
         # Locked hosts
         if self._locked_hosts is True:
             lock_messages.append(
                 _("Host attributes are locked "
                   "(You cannot create, edit or delete hosts in this folder)"))
-        elif self._locked_hosts:
+        elif isinstance(self._locked_hosts, Text) and self._locked_hosts:
             lock_messages.append(self._locked_hosts)
 
         # Locked folder attributes
@@ -1981,7 +1980,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Folder attributes are locked "
                   "(You cannot edit the attributes of this folder)"))
-        elif self._locked:
+        elif isinstance(self._locked, Text) and self._locked:
             lock_messages.append(self._locked)
 
         # Also subfolders are locked
@@ -1989,7 +1988,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Subfolders are locked "
                   "(You cannot create or remove folders in this folder)"))
-        elif self._locked_subfolders:
+        elif isinstance(self._locked_subfolders, Text) and self._locked_subfolders:
             lock_messages.append(self._locked_subfolders)
 
         if lock_messages:
@@ -2154,7 +2153,7 @@ class SearchFolder(BaseFolder):
     # '--------------------------------------------------------------------'
 
     def _group_hostnames_by_folder(self, host_names):
-        by_folder = {}
+        by_folder = {}  # type: Dict[str, List[CREHost]]
         for host_name in host_names:
             host = self.host(host_name)
             by_folder.setdefault(host.folder().path(), []).append(host)
@@ -2592,8 +2591,9 @@ class CMEFolder(CREFolder):
     def edit(self, new_title, new_attributes):
         if "site" in new_attributes:
             site_id = new_attributes["site"]
-            if not self.is_root():
-                self.parent()._check_parent_customer_conflicts(site_id)
+            parent = self.parent()
+            if isinstance(parent, CMEFolder):
+                parent._check_parent_customer_conflicts(site_id)
             self._check_childs_customer_conflicts(site_id)
 
         super(CMEFolder, self).edit(new_title, new_attributes)
@@ -2630,7 +2630,7 @@ class CMEFolder(CREFolder):
         self._check_hosts_customer_conflicts(site_id)
 
         # Check subfolders
-        for subfolder in self.subfolders():
+        for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
             subfolder_explicit_site = subfolder.attributes().get("site")
             if subfolder_explicit_site:
                 subfolder_customer = subfolder._get_customer_id()
@@ -2670,7 +2670,7 @@ class CMEFolder(CREFolder):
                 "explicit_host_sites": {},  # May be used later on to
                 "explicit_folder_sites": {},  # improve error message
                 "involved_customers": set()
-            }
+            }  # type: Dict[str, Any]
             subfolder._determine_involved_customers(result_dict)
             other_customers = result_dict["involved_customers"] - {target_folder_customer}
             if other_customers:
@@ -2753,7 +2753,7 @@ class CMEFolder(CREFolder):
                 result_dict["explicit_host_sites"].setdefault(host_explicit_site,
                                                               []).append(host.name())
 
-        for subfolder in self.subfolders():
+        for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
             subfolder_explicit_site = subfolder.attributes().get("site")
             if subfolder_explicit_site:
                 result_dict["explicit_folder_sites"].setdefault(subfolder_explicit_site,
@@ -2765,7 +2765,9 @@ class CMEFolder(CREFolder):
 
 class CMEHost(CREHost):
     def edit(self, attributes, cluster_nodes):
-        self.folder().check_modify_host(self.name(), attributes)
+        f = self.folder()
+        if isinstance(f, CMEFolder):
+            f.check_modify_host(self.name(), attributes)
         super(CMEHost, self).edit(attributes, cluster_nodes)
 
 

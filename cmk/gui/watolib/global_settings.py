@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict  # pylint: disable=unused-import
+
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
@@ -22,7 +24,7 @@ def load_configuration_settings(site_specific=False):
 
 
 def save_global_settings(vars_, site_specific=False):
-    per_domain = {}
+    per_domain = {}  # type: Dict[str, Dict[Any, Any]]
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()

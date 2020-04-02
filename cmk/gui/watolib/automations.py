@@ -63,7 +63,7 @@ def check_mk_automation(siteid,
                         timeout=None,
                         sync=True,
                         non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], str, Optional[str], Optional[int], bool, bool) -> Any
+    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
     if args is None:
         args = []
 
@@ -83,10 +83,13 @@ def check_mk_automation(siteid,
 
 
 def check_mk_local_automation(command, args=None, indata="", stdin_data=None, timeout=None):
-    # type: (str, Optional[Sequence[Union[str, Text]]], str, Optional[str], Optional[int]) -> Any
+    # type: (str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int]) -> Any
     if args is None:
         args = []
     new_args = [six.ensure_str(a) for a in args]
+
+    if stdin_data is None:
+        stdin_data = repr(indata)
 
     if timeout:
         new_args = ["--timeout", "%d" % timeout] + new_args
@@ -115,12 +118,8 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     assert p.stdout is not None
     assert p.stderr is not None
 
-    if stdin_data is not None:
-        auto_logger.info("STDIN: %r" % stdin_data)
-        p.stdin.write(stdin_data)
-    else:
-        auto_logger.info("STDIN: %r" % indata)
-        p.stdin.write(repr(indata))
+    auto_logger.info("STDIN: %r" % stdin_data)
+    p.stdin.write(stdin_data)
     p.stdin.close()
 
     outdata = p.stdout.read()
@@ -175,7 +174,7 @@ def check_mk_remote_automation(site_id,
                                timeout=None,
                                sync=True,
                                non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], str, Optional[str], Optional[int], bool, bool) -> Any
+    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
     site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(
@@ -375,7 +374,7 @@ def do_site_login(site_id, name, password):
 CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("command", str),
     ("args", Optional[Sequence[Union[str, Text]]]),
-    ("indata", str),
+    ("indata", Any),
     ("stdin_data", Optional[str]),
     ("timeout", Optional[int]),
 ])

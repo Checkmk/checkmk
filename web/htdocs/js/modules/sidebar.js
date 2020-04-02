@@ -528,8 +528,13 @@ export function add_snapin(name) {
 
             var sidebar_content = document.getElementById("side_content");
             if (sidebar_content) {
-                sidebar_content.innerHTML += result.content;
-                utils.execute_javascript_by_object(sidebar_content);
+                var tmp = document.createElement("div");
+                tmp.innerHTML = result.content;
+                utils.execute_javascript_by_object(tmp);
+
+                while (tmp.childNodes.length) {
+                    sidebar_content.appendChild(tmp.childNodes[0]);
+                }
             }
 
             var add_snapin_page = window.frames[0] ? window.frames[0].document : document;

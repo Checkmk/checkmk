@@ -86,7 +86,7 @@ def _parse_sensor_reading(number, reading):
     ]
 
 
-class IPMIDataFetcher(object):
+class IPMIDataFetcher:
     def __init__(self, ipaddress, username, password, logger):
         super(IPMIDataFetcher, self).__init__()
         self._ipaddress = ipaddress  # type: HostAddress

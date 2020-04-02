@@ -1269,7 +1269,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _prefixed_title(self, current_depth, pretty):
         if pretty:
-            return HTML(escaping.escape_attribute("/".join(self.title_path_without_root())))
+            return HTML(
+                escaping.escape_attribute("/".join(str(p) for p in self.title_path_without_root())))
 
         title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 " if current_depth else ""
         return HTML(title_prefix + escaping.escape_attribute(self.title()))
@@ -1322,7 +1323,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _choices_for_moving(self, what):
         # type: (str) -> Choices
-        choices = []
+        choices = []  # type: Choices
 
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):
@@ -1338,7 +1339,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 if self.is_transitive_parent_of(folder):
                     continue  # we cannot be moved in our child folder
 
-            msg = "/".join(folder.title_path_without_root())
+            msg = "/".join(str(p) for p in folder.title_path_without_root())
             choices.append((folder_path, msg))
 
         choices.sort(key=lambda x: x[1].lower())
@@ -1377,9 +1378,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self.title_path()[1:]
 
     def alias_path(self, show_main=True):
-        if show_main:
-            return " / ".join(self.title_path())
-        return " / ".join(self.title_path_without_root())
+        tp = self.title_path() if show_main else self.title_path_without_root()
+        return " / ".join(str(p) for p in tp)
 
     def effective_attributes(self):
         try:
@@ -2854,8 +2854,7 @@ def validate_all_hosts(hostnames, force_all=False):
                     errors.append("%s" % e)
             hosts_errors[name] = errors
         return hosts_errors
-    else:
-        return {}
+    return {}
 
 
 def collect_all_hosts():

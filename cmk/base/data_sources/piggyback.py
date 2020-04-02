@@ -46,10 +46,20 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
     def _execute(self):
         # type: () -> RawAgentData
-        raw_data_from_sources = _raw_data(self._hostname, self._time_settings)
+        raw_data, self._summary = PiggyBackDataSource._fetch_raw_data(
+            self._hostname,
+            self._ipaddress,
+            self._time_settings,
+        )
+        return raw_data
 
-        if self._ipaddress is not None:
-            raw_data_from_sources += _raw_data(self._ipaddress, self._time_settings)
+    @staticmethod
+    def _fetch_raw_data(hostname, ipaddress, time_settings):
+        # type: (HostName, Optional[HostAddress], List[Tuple[Optional[str], str, int]]) -> Tuple[RawAgentData, ServiceCheckResult]
+        raw_data_from_sources = _raw_data(hostname, time_settings)
+
+        if ipaddress is not None:
+            raw_data_from_sources += _raw_data(ipaddress, time_settings)
 
         raw_data = b""
         states = [0]
@@ -67,12 +77,13 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
                 #     added; ie. if file_info is not successfully processed
                 raw_data += source_raw_data.raw_data
 
-        raw_data += self._get_source_labels_section(
+        raw_data += PiggyBackDataSource._get_source_labels_section(
             [source_raw_data.source_hostname for source_raw_data in raw_data_from_sources])
-        self._summary = max(states), ", ".join(infotexts), []
-        return raw_data
+        summary = max(states), ", ".join(infotexts), []  # type: ServiceCheckResult
+        return raw_data, summary
 
-    def _get_source_labels_section(self, source_hostnames):
+    @staticmethod
+    def _get_source_labels_section(source_hostnames):
         # type: (List[HostName]) -> RawAgentData
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""

@@ -520,9 +520,15 @@ export function add_snapin(name) {
 
             if (result.refresh) {
                 const entry = [result.name, result.url];
-                const index = refresh_snapins.indexOf(entry);
-                if (index === -1) {
+                if (refresh_snapins.indexOf(entry) === -1) {
                     refresh_snapins.push(entry);
+                }
+            }
+
+            if (result.restart) {
+                const entry = result.name;
+                if (restart_snapins.indexOf(entry) === -1) {
+                    restart_snapins.push(entry);
                 }
             }
 
@@ -572,7 +578,7 @@ function remove_snapin(id)
 
     // remove this snapin from the refresh list, if it is contained
     for (const i in refresh_snapins) {
-        const name    = refresh_snapins[i][0];
+        const name = refresh_snapins[i][0];
         if (id == "snapin_" + name) {
             refresh_snapins.splice(i, 1);
             break;
@@ -638,12 +644,12 @@ export function switch_site(url) {
 function bulk_update_contents(ids, codes)
 {
     codes = eval(codes);
-    for (let i = 0, len = ids.length; i < len; i++) {
+    for (let i = 0; i < ids.length; i++) {
         if (restart_snapins.indexOf(ids[i].replace("snapin_", "")) !== -1) {
             // Snapins which rely on the restart time of nagios receive
             // an empty code here when nagios has not been restarted
             // since sidebar rendering or last update, skip it
-            if(codes[i] != "") {
+            if(codes[i] !== "") {
                 utils.update_contents(ids[i], codes[i]);
                 sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
             }

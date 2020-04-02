@@ -878,8 +878,8 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
             'name': addname,
             'url': url,
             'content': snapin_code,
-            'refresh': (snapin.snapin_type.refresh_regularly() or
-                        snapin.snapin_type.refresh_on_restart()),
+            'refresh': snapin.snapin_type.refresh_regularly(),
+            'restart': snapin.snapin_type.refresh_on_restart(),
         }
 
 

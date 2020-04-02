@@ -152,7 +152,7 @@ node (NODE) {
             CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "",
             DIR: 'tests-py3',
             ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
-            COMMAND: "make test-pylint &> &> ${RESULTS}/pylint3.txt",
+            COMMAND: "make test-pylint &> ${RESULTS}/pylint3.txt",
             TEXT_ON_SKIP: 'Neither .pylintrc nor Python 3 files changed. Skipping.'
         )
 

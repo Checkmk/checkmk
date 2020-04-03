@@ -502,6 +502,7 @@ def test_registered_permissions():
         'wato.update_dns_cache',
         'wato.use',
         'wato.users',
+        'wato.diagnostics',
         'view.cmk_servers',
         'view.cmk_sites',
         'view.cmk_sites_of_host',

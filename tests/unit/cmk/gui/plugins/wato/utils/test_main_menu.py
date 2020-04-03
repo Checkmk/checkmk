@@ -34,6 +34,7 @@ def test_registered_modules():
         'background_jobs_overview',
         'pattern_editor',
         'icons',
+        'diagnostics',
     ]
 
     if cmk_version.is_raw_edition():

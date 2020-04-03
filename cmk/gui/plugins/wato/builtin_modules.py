@@ -454,6 +454,33 @@ class MainModuleAnalyzeConfig(MainModule):
 
 
 @main_module_registry.register
+class MainModuleDiagnostics(MainModule):
+    @property
+    def mode_or_url(self):
+        return "diagnostics"
+
+    @property
+    def title(self):
+        return _("Diagnostics")
+
+    @property
+    def icon(self):
+        return "diagnostics"
+
+    @property
+    def permission(self):
+        return "diagnostics"
+
+    @property
+    def description(self):
+        return _("Collect information of Checkmk sites for diagnostic analysis.")
+
+    @property
+    def sort_index(self):
+        return 91
+
+
+@main_module_registry.register
 class MainModulePatternEditor(MainModule):
     @property
     def mode_or_url(self):

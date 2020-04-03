@@ -20,7 +20,8 @@ discovery = {
     'uptime': [],
     'diskio': [],
     'cpu': [(None, {})],
-    'if': []
+    'if': [],
+    'swap': [(None, {})],
 }
 
 checks = {

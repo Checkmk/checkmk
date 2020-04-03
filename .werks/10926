@@ -1,0 +1,14 @@
+Title: Monitor VMKernel swap metrics on ESX Hosts
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1585896425
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+This check monitors swap metrics (refering to VMkernel swappin) on ESX Hosts.
+The following swap metrics are displayed: mem.swapin, mem.swapout, mem.swapused.
+The metrics are obtained via special agent agent_vsphere.
+

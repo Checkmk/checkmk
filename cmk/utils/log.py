@@ -192,11 +192,8 @@ def set_verbosity(verbosity):
     elif verbosity == 1:
         logger.setLevel(VERBOSE)
 
-    elif verbosity == 2:
+    elif verbosity >= 2:
         logger.setLevel(DEBUG)
-
-    else:
-        raise NotImplementedError()
 
 
 # TODO: Experiment. Not yet used.

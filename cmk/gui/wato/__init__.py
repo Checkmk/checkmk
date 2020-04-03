@@ -481,7 +481,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                 return
 
             # if newmode is not None, then the mode has been changed
-            elif newmode is not None:
+            if newmode is not None:
                 assert not isinstance(newmode, bool)
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:

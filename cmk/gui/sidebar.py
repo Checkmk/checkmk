@@ -10,6 +10,8 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
@@ -519,10 +521,8 @@ class SidebarRenderer(object):
             if cmk_version.is_demo():
                 return "Enterprise (Demo)"
             return "Enterprise"
-
-        elif cmk_version.is_managed_edition():
+        if cmk_version.is_managed_edition():
             return "Managed"
-
         return "Raw"
 
     def _sidebar_foot(self, user_config):
@@ -554,8 +554,9 @@ class SidebarRenderer(object):
         html.close_div()
 
         html.open_div(class_=["copyright"])
-        html.write("&copy; " +
-                   html.render_a("tribe29 GmbH", target="_blank", href="https://checkmk.com"))
+        html.write(
+            HTML("&copy; ") +
+            html.render_a("tribe29 GmbH", target="_blank", href="https://checkmk.com"))
         html.close_div()
         html.close_div()
 
@@ -574,8 +575,9 @@ class SidebarRenderer(object):
                 html.close_div()
             if 'gui_popup' in msg['methods']:
                 html.javascript(
-                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id']))
+                    six.ensure_str(
+                        'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
+                        (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
 
 
 @cmk.gui.pages.register("side")
@@ -588,14 +590,17 @@ def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     html.set_output_format("json")
     # Update online state of the user (if enabled)
+    if config.user.id is None:
+        raise Exception("no user ID")
     userdb.update_user_access_time(config.user.id)
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
     snapin_id = html.request.var("name")
-    snapin_ids = [snapin_id] if snapin_id else html.request.var("names", "").split(",")
+    snapin_ids = [snapin_id] if snapin_id else html.request.get_str_input_mandatory("names",
+                                                                                    "").split(",")
 
-    snapin_code = []
+    snapin_code = []  # type: List[Text]
     for snapin_id in snapin_ids:
         try:
             snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
@@ -609,7 +614,7 @@ def ajax_snapin():
         # them, when the core has been restarted after their initial
         # rendering
         if not snapin_instance.refresh_regularly() and snapin_instance.refresh_on_restart():
-            since = float(html.request.var('since', 0))
+            since = html.request.get_float_input_mandatory('since', 0)
             newest = since
             for site in sites.states().values():
                 prog_start = site.get("program_start", 0)
@@ -617,7 +622,7 @@ def ajax_snapin():
                     newest = prog_start
             if newest <= since:
                 # no restart
-                snapin_code.append('')
+                snapin_code.append(u'')
                 continue
 
         with html.plugged():

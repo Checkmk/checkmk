@@ -53,12 +53,14 @@ class ProgramDataSource(CheckMKAgentDataSource):
     def source_cmdline(self):
         # type: () -> str
         """Return the command line to the source."""
+        raise NotImplementedError()
 
     @property
     @abc.abstractmethod
     def source_stdin(self):
         # type: () -> Optional[str]
         """Return the standard in of the source, or None."""
+        raise NotImplementedError()
 
     def _cpu_tracking_id(self):
         # type: () -> str

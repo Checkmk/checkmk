@@ -684,8 +684,6 @@ def move_snapin():
     if snapin_id is None:
         return None
 
-    before_id = html.request.var("before")
-
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
     try:
@@ -693,12 +691,13 @@ def move_snapin():
     except KeyError:
         return None
 
-    before_snapin = None
-    if before_snapin:
+    before_id = html.request.var("before")
+    before_snapin = None  # type: Optional[UserSidebarSnapin]
+    if before_id:
         try:
             before_snapin = user_config.get_snapin(before_id)
         except KeyError:
-            before_snapin = None
+            pass
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()

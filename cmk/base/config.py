@@ -1935,12 +1935,13 @@ def _extract_agent_and_snmp_sections():
                 )
                 registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
         except (NotImplementedError, KeyError):
-            # TODO (mo): Uncomment this once we have a solution for the plugins currently
+            # TODO (mo): Clean this up once we have a solution for the plugins currently
             # failing here. For now we need too keep it commented out, because we can't
             # test otherwise.
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
-            console.warning(_AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            #console.warning(_AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            pass
 
 
 # This function validates the checks which are members of checkgroups to have either

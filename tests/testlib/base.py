@@ -44,9 +44,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'ucd_mem'),
 ]
 
-AUTO_MIGRATION_ERRORS = ''.join('WARNING: %s\n' % (config._AUTO_MIGRATION_ERR_MSG % known_fail)
-                                for known_fail in KNOWN_AUTO_MIGRATION_FAILURES)
-
 
 class Scenario(object):  # pylint: disable=useless-object-inheritance
     """Helper class to modify the Check_MK base configuration for unit tests"""

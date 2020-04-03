@@ -216,6 +216,49 @@ class NodeExporter:
             result.append("{}: {} kb".format(entity_name, promql_result[0]["value"]))
         return result
 
+    def kernel_summary(self):
+        # type: () -> List[str]
+
+        kernel_list = [("cpu", "sum by (mode)(node_cpu_seconds_total*100)"),
+                       ("cpu", "node_cpu_seconds_total*100"),
+                       ("guest", "sum by (mode)(node_cpu_guest_seconds_total)"),
+                       ("guest", "node_cpu_guest_seconds_total"),
+                       ("ctxt", "node_context_switches_total"), ("pswpin", "node_vmstat_pswpin"),
+                       ("pwpout", "node_vmstat_pswpout"), ("pgmajfault", "node_vmstat_pgmajfault")]
+        return self._process_kernel_info(self._retrieve_kernel_info(kernel_list))
+
+    @staticmethod
+    def _process_kernel_info(temp_result):
+        # type: (Dict[str, Dict[str, int]]) -> List[str]
+
+        result = ["%d" % time.time()]  # type: List[str]
+        for entity_name, entity_info in temp_result.items():
+            if entity_name.startswith("cpu"):
+                entity_parsed = "{cpu} {user} {nice} {system} {idle} {iowait} {irq} " \
+                                "{softirq} {steal} {guest_user} {guest_nice}".format(cpu=entity_name, **entity_info)
+                result.append(entity_parsed)
+            else:
+                result.append("{} {}".format(entity_name, entity_info["value"]))
+        return result
+
+    def _retrieve_kernel_info(self, kernel_list):
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, int]]
+        result = {}  # type: Dict[str, Dict[str, int]]
+
+        for entity_name, promql_query in kernel_list:
+            for device_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                metric_value = int(float(device_info["value"]))
+                if entity_name in ("cpu", "guest"):
+                    labels = device_info["labels"]
+                    cpu_name = "cpu{}".format(labels["cpu"]) if "cpu" in labels else "cpu"
+                    mode_name = "guest_{}".format(
+                        labels["mode"]) if entity_name == "guest" else labels["mode"]
+                    result.setdefault(cpu_name, {})[mode_name] = metric_value
+                else:
+                    result[entity_name] = {"value": metric_value}
+        return result
+
 
 class CAdvisorExporter:
     def __init__(self, api_client, options):
@@ -1445,12 +1488,16 @@ class ApiData:
             yield "\n".join(df_section)
 
         if "diskstat" in node_options:
-            df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary())]
+            df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary()), "\n"]
             yield "\n".join(df_section)
 
         if "mem" in node_options:
-            mem_section = ["<<<mem>>>", '\n'.join(self.node_exporter.memory_summary())]
+            mem_section = ["<<<mem>>>", '\n'.join(self.node_exporter.memory_summary()), "\n"]
             yield "\n".join(mem_section)
+
+        if "kernel" in node_options:
+            kernel_section = ["<<<kernel>>>", '\n'.join(self.node_exporter.kernel_summary()), "\n"]
+            yield "\n".join(kernel_section)
 
 
 def _extract_config_args(config):

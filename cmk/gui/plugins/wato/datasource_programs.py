@@ -240,6 +240,7 @@ def _valuespec_generic_metrics_prometheus():
                                              ("df", _("Filesystems")),
                                              ("diskstat", _("Disk IO")),
                                              ("mem", _("Memory")),
+                                             ("kernel", _("CPU utilization & Kernel Performance")),
                                          ],
                                          default_value=["df"],
                                          allow_empty=False,

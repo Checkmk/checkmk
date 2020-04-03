@@ -34,6 +34,7 @@ if [ -d "$REPO_PATH/enterprise" ]; then
     SEARCH+=" enterprise/alert_handlers"
     SEARCH+=" enterprise/bin"
     SEARCH+=" enterprise/cmk"
+    SEARCH+=" enterprise/core/src/test"
     PRUNE+=" -path $(realpath enterprise/agents/bakery) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/cee) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/gui/cee) -prune -o"

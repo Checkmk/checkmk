@@ -236,7 +236,7 @@ def test_get_ruleset(web):
                 }
             }]
         },
-        'configuration_hash': '7fc79d96f3692017cbf6b785a3b26fa1',
+        'configuration_hash': '05f56968020e43dadeb6672eb75eda41',
     }
 
 

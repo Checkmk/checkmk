@@ -2425,13 +2425,14 @@ class html(ABCHTMLGenerator):
             "toggle_switch",
             "on" if enabled else "off",
         ]
+        onclick = attrs.pop("onclick", None)
 
         self.open_div(class_=class_, **attrs)
         self.a(
             content=_("on") if enabled else _("off"),
             href=href,
             title=help_txt,
-            onclick=attrs.pop("onclick", None),
+            onclick=onclick,
         )
         self.close_div()
 

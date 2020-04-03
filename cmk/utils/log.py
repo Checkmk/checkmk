@@ -138,6 +138,6 @@ def verbosity_to_log_level(verbosity):
         return logging.INFO
     if verbosity == 1:
         return VERBOSE
-    if verbosity == 2:
+    if verbosity >= 2:
         return logging.DEBUG
-    raise ValueError()
+    raise NotImplementedError()

@@ -16,6 +16,8 @@ from __future__ import (
     print_function,
 )
 
+import re
+import os
 import sys
 
 # Explicitly check for Python 3 (which is understood by mypy)
@@ -24,6 +26,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
+import subprocess
 import errno
 from typing import List  # pylint: disable=unused-import
 import argparse
@@ -102,7 +105,31 @@ class UpdateConfig(object):
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
+            (self._update_fs_used_name, "Migrating fs_used name"),
         ]
+
+    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
+    def _update_fs_used_name(self):
+        # Test if User migrated during 1.6 to new name fs_used. If so delete marker flag file
+        old_config_flag = os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk')
+        if os.path.exists(old_config_flag):
+            self._logger.log(VERBOSE, 'remove flag %s' % old_config_flag)
+            os.remove(old_config_flag)
+
+        check_df_includes_use_new_metric()
+
+        # TODO: Inline update_rrd_fs_names once GUI and this script have been migrated to Python 3
+        ps = subprocess.Popen(
+            [
+                'python3',
+                os.path.join(cmk.utils.paths.lib_dir, 'python3/cmk/update_rrd_fs_names.py')
+            ],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        for line in iter(ps.stderr.readline, b''):
+            self._logger.log(VERBOSE, line.strip())
+        self._logger.log(VERBOSE, ps.stdout.read())
 
     def _rewrite_wato_tag_config(self):
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
@@ -194,3 +221,23 @@ def parse_arguments(args):
                    help='Verbose mode (use multiple times for more output)')
 
     return p.parse_args(args)
+
+
+# RRD migration cleaups
+
+
+def check_df_includes_use_new_metric():
+    "Check that df.include files can return fs_used metric name"
+    df_file = cmk.utils.paths.local_checks_dir / 'df.include'
+    if df_file.exists():
+        with df_file.open('r') as fid:
+            r = fid.read()
+            mat = re.search('fs_used', r, re.M)
+            if not mat:
+                msg = ('source: %s\n Returns the wrong perfdata\n' % df_file +
+                       'Checkmk 1.7 requires Filesystem check plugins to deliver '
+                       '"Used filesystem space" perfdata under the metric name fs_used. '
+                       'Your local extension pluging seems to be using the old convention '
+                       'of mountpoints as the metric name. Please update your include file '
+                       'to match our reference implementation.')
+                raise RuntimeError(msg)

@@ -12,9 +12,7 @@ import re
 import io
 import time
 import zipfile
-from typing import (  # pylint: disable=unused-import
-    Union, Dict, Text, Optional as _Optional, List,
-)
+from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -738,12 +736,12 @@ def vs_mkeventd_rule(customer=None):
              elements=[
                  DropdownChoice(
                      label=_("from:"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=4,
                  ),
                  DropdownChoice(
                      label=_(" to:"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=0,
                  ),
              ],
@@ -753,7 +751,7 @@ def vs_mkeventd_rule(customer=None):
              title=_("Match syslog facility"),
              help=_("Make the rule match only if the message has a certain syslog facility. "
                     "Messages not having a facility are classified as <tt>user</tt>."),
-             choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
+             choices=cmk.gui.mkeventd.syslog_facilities,
          )),
         ("match_sl",
          Tuple(
@@ -812,12 +810,12 @@ def vs_mkeventd_rule(customer=None):
              elements=[
                  DropdownChoice(
                      label=_("from:"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=7,
                  ),
                  DropdownChoice(
                      label=_(" to:"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=5,
                  ),
              ],
@@ -1166,13 +1164,13 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                 ("priority",
                  DropdownChoice(
                      title=_("Syslog Priority"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_priorities],
+                     choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=5,
                  )),
                 ("facility",
                  DropdownChoice(
                      title=_("Syslog Facility"),
-                     choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
+                     choices=cmk.gui.mkeventd.syslog_facilities,
                      default_value=1,
                  )),
                 ("sl",
@@ -1525,6 +1523,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return found_packs
 
 
+T = TypeVar('T')
+
+
+def _deref(x):
+    # type: (Union[T, Callable[[], T]]) -> T
+    return x() if callable(x) else x
+
+
 @mode_registry.register
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
@@ -1659,6 +1665,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if len(self._rule_packs) > 1:
             html.begin_form("move_to", method="POST")
 
+        # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
+        priorities = _deref(cmk.gui.mkeventd.syslog_priorities)
+        facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
+
         # Show content of the rule package
         with table_element(css="ruleset", limit=None, sortable=False) as table:
             have_match = False
@@ -1756,10 +1766,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 if "match_priority" in rule:
                     prio_from, prio_to = rule["match_priority"]
                     if prio_from == prio_to:
-                        prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1]
+                        prio_text = priorities[prio_from][1]
                     else:
-                        prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                                    cmk.gui.mkeventd.syslog_priorities[prio_to][1][:2]
+                        prio_text = priorities[prio_from][1][:2] + ".." + priorities[prio_to][1][:2]
                 else:
                     prio_text = ""
                 table.cell(_("Priority"), prio_text)
@@ -1768,7 +1777,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Facility"))
                 if "match_facility" in rule:
                     facnr = rule["match_facility"]
-                    html.write("%s" % dict(cmk.gui.mkeventd.syslog_facilities)[facnr])
+                    html.write("%s" % facilities[facnr])
 
                 table.cell(
                     _("Service Level"),
@@ -3746,7 +3755,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
             help=_("When sending notifications from the monitoring system to the event console "
                    "the following syslog facility will be set for these messages. Choosing "
                    "a unique facility makes creation of rules easier."),
-            choices=[(k, six.text_type(v)) for k, v in cmk.gui.mkeventd.syslog_facilities],
+            choices=cmk.gui.mkeventd.syslog_facilities,
         )
 
     def need_restart(self):

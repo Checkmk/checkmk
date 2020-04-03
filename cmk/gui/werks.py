@@ -11,7 +11,7 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict, Union  # pylint: disable=unused-import
 
 import six
 
@@ -346,20 +346,21 @@ def render_werks_table_row(table, translator, werk):
 
 
 def werk_matches_options(werk, werk_table_options):
+    # TODO: Fix this silly typing chaos below!
     # check if werk id is int because valuespec is TextAscii
     # else, set empty id to return all results beside input warning
     try:
-        werk_to_match = int(werk_table_options["id"])
+        werk_to_match = int(werk_table_options["id"])  # type: Union[int, str]
     except ValueError:
         werk_to_match = ""
 
-    if not ((not werk_to_match or werk["id"] == werk_to_match) and \
-           werk["level"] in werk_table_options["levels"] and \
-           werk["class"] in werk_table_options["classes"] and \
-           werk["compatible"] in werk_table_options["compatibility"] and \
-           werk_table_options["component"] in ( None, werk["component" ]) and \
-           werk["date"] >= werk_table_options["date_range"][0] and \
-           werk["date"] <= werk_table_options["date_range"][1]):
+    if not ((not werk_to_match or werk["id"] == werk_to_match) and
+            werk["level"] in werk_table_options["levels"] and
+            werk["class"] in werk_table_options["classes"] and
+            werk["compatible"] in werk_table_options["compatibility"] and
+            werk_table_options["component"] in (None, werk["component"]) and
+            werk["date"] >= werk_table_options["date_range"][0] and
+            werk["date"] <= werk_table_options["date_range"][1]):
         return False
 
     if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:

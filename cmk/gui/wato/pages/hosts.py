@@ -233,17 +233,16 @@ class ModeEditHost(HostMode):
 
     def action(self):
         if html.request.var("_update_dns_cache"):
-            if html.check_transaction():
-                config.user.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = watolib.check_mk_automation(
-                    self._host.site_id(), "update-dns-cache", [])
-                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
-                if failed_hosts:
-                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
-                              + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
-                return None, infotext
-            else:
+            if not html.check_transaction():
                 return None
+            config.user.need_permission("wato.update_dns_cache")
+            num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
+                                                                    "update-dns-cache", [])
+            infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
+            if failed_hosts:
+                infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
+                          + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
+            return None, infotext
 
         if html.request.var("delete"):  # Delete this host
             if not html.transaction_valid():
@@ -258,7 +257,7 @@ class ModeEditHost(HostMode):
 
         if html.request.var("services"):
             return "inventory"
-        elif html.request.var("diag_host"):
+        if html.request.var("diag_host"):
             html.request.set_var("_try", "1")
             return "diag_host"
         return "folder"
@@ -294,18 +293,15 @@ class CreateHostMode(HostMode):
 
     def _init_host(self):
         clonename = html.request.get_ascii_input("clone")
-        if clonename:
-            if not watolib.Folder.current().has_host(clonename):
-                raise MKUserError("host", _("You called this page with an invalid host name."))
-
-            if not config.user.may("wato.clone_hosts"):
-                raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
-
-            host = watolib.Folder.current().host(clonename)
-            self._verify_host_type(host)
-            return host
-        else:
+        if not clonename:
             return self._init_new_host_object()
+        if not watolib.Folder.current().has_host(clonename):
+            raise MKUserError("host", _("You called this page with an invalid host name."))
+        if not config.user.may("wato.clone_hosts"):
+            raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
+        host = watolib.Folder.current().host(clonename)
+        self._verify_host_type(host)
+        return host
 
     def action(self):
         if not html.transaction_valid():
@@ -328,12 +324,10 @@ class CreateHostMode(HostMode):
             ("_scan", "1"),
         ])
 
-        if not self._host.is_ping_host():
-            create_msg = _('Successfully created the host. Now you should do a '
-                           '<a href="%s">service discovery</a> in order to auto-configure '
-                           'all services to be checked on this host.') % inventory_url
-        else:
-            create_msg = None
+        create_msg = None if self._host.is_ping_host() else (
+            _('Successfully created the host. Now you should do a '
+              '<a href="%s">service discovery</a> in order to auto-configure '
+              'all services to be checked on this host.') % inventory_url)
 
         if html.request.var("services"):
             raise HTTPRedirect(inventory_url)

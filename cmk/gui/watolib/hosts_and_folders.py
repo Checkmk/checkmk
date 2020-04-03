@@ -1351,7 +1351,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return self._attributes["site"]
         if self.has_parent():
             return self.parent().site_id()
-        return default_site()
+        ds = default_site()
+        if isinstance(ds, SiteId):
+            return ds
+        raise Exception("unknown site ID")
 
     def all_site_ids(self):
         # type: () -> List[SiteId]

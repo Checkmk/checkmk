@@ -9,10 +9,11 @@ import re
 import pprint
 import base64
 import pickle
-from typing import (  # pylint: disable=unused-import
-    Any,)
+from typing import Any, Text, Union  # pylint: disable=unused-import
+
 import six
 
+from livestatus import SiteId  # pylint: disable=unused-import
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
@@ -94,8 +95,9 @@ def host_attribute_matches(crit, value):
 # slave sites, we don't know the site ID of the master site. We set this explicit
 # to false to configure that this host is monitored by another site (that we don't
 # know about).
-# TODO: Find a better place later
+# TODO: Find a better place later. Find a less depressing return type.
 def default_site():
+    # type: () -> Union[bool, None, SiteId]
     if config.is_wato_slave_site():
         return False
     return config.default_site()
@@ -103,23 +105,21 @@ def default_site():
 
 def format_config_value(value):
     # type: (Any) -> str
-    if config.wato_pprint_config:
-        return pprint.pformat(value)
-    return repr(value)
+    return pprint.pformat(value) if config.wato_pprint_config else repr(value)
 
 
-def mk_repr(s):
-    if not config.wato_legacy_eval:
-        return base64.b64encode(six.ensure_binary(repr(s)))
-    return base64.b64encode(pickle.dumps(s))
+def mk_repr(x):
+    # type: (Any) -> bytes
+    r = pickle.dumps(x) if config.wato_legacy_eval else six.ensure_binary(repr(x))
+    return base64.b64encode(r)
 
 
 # TODO: Deprecate this legacy format with 1.4.0 or later?!
 def mk_eval(s):
+    # type: (Union[bytes, Text]) -> Any
     try:
-        if not config.wato_legacy_eval:
-            return ast.literal_eval(base64.b64decode(s))
-        return pickle.loads(base64.b64decode(s))
+        d = base64.b64decode(s)
+        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(six.ensure_text(d))
     except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 

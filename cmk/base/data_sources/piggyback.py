@@ -23,8 +23,8 @@ from .abstract import CheckMKAgentDataSource
 
 
 def _raw_data(hostname, time_settings):
-    # type: (HostName, PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
-    return get_piggyback_raw_data(hostname, time_settings)
+    # type: (Optional[str], PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
+    return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 
 class PiggyBackDataSource(CheckMKAgentDataSource):
@@ -56,42 +56,51 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
     @staticmethod
     def _fetch_raw_data(hostname, ipaddress, time_settings):
         # type: (HostName, Optional[HostAddress], List[Tuple[Optional[str], str, int]]) -> Tuple[RawAgentData, ServiceCheckResult]
-        raw_data_from_sources = _raw_data(hostname, time_settings)
-
-        if ipaddress is not None:
-            raw_data_from_sources += _raw_data(ipaddress, time_settings)
+        sources = []
+        for origin in (hostname, ipaddress):
+            sources.extend(_raw_data(origin, time_settings))
 
         raw_data = b""
-        states = [0]
-        infotexts = set()
-        for source_raw_data in raw_data_from_sources:
-            states.append(source_raw_data.reason_status)
-            infotexts.add(source_raw_data.reason)
-            if source_raw_data.successfully_processed:
+        raw_data += PiggyBackDataSource._get_main_section(sources)
+        raw_data += PiggyBackDataSource._get_source_labels_section(sources)
+        return raw_data, PiggyBackDataSource._get_summary(sources)
+
+    @staticmethod
+    def _get_main_section(sources):
+        # type: (List[PiggybackRawDataInfo]) -> RawAgentData
+        raw_data = b""
+        for src in sources:
+            if src.successfully_processed:
                 # !! Important for Check_MK and Check_MK Discovery service !!
-                #   - raw_data_from_sources contains ALL file infos and is not filtered
+                #   - sources contains ALL file infos and is not filtered
                 #     in cmk/base/piggyback.py as in previous versions
                 #   - Check_MK gets the processed file info reasons and displays them in
                 #     it's service details
                 #   - Check_MK Discovery: Only shows vanished/new/... if raw data is not
                 #     added; ie. if file_info is not successfully processed
-                raw_data += source_raw_data.raw_data
-
-        raw_data += PiggyBackDataSource._get_source_labels_section(
-            [source_raw_data.source_hostname for source_raw_data in raw_data_from_sources])
-        summary = max(states), ", ".join(infotexts), []  # type: ServiceCheckResult
-        return raw_data, summary
+                raw_data += src.raw_data
+        return raw_data
 
     @staticmethod
-    def _get_source_labels_section(source_hostnames):
-        # type: (List[HostName]) -> RawAgentData
+    def _get_source_labels_section(sources):
+        # type: (List[PiggybackRawDataInfo]) -> RawAgentData
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
-        if not source_hostnames:
+        if not sources:
             return b""
 
-        labels = {"cmk/piggyback_source_%s" % name: "yes" for name in source_hostnames}
+        labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in sources}
         return b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8")
+
+    @staticmethod
+    def _get_summary(sources):
+        # type: (List[PiggybackRawDataInfo]) -> ServiceCheckResult
+        states = [0]
+        infotexts = set()
+        for src in sources:
+            states.append(src.reason_status)
+            infotexts.add(src.reason)
+        return max(states), ", ".join(infotexts), []
 
     def _get_raw_data(self):
         # type: () -> Tuple[RawAgentData, bool]

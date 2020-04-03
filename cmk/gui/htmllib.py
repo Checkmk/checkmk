@@ -44,7 +44,6 @@ import os
 import ast
 import re
 import json
-import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
@@ -80,15 +79,6 @@ def _default(self, obj):
 _default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore[assignment]
-
-# And here we go for another dirty JSON hack. We often use he JSON we produce for adding it to HTML
-# tags and the JSON produced by json.dumps() can not directly be added to <script> tags in a save way.
-# TODO: This is something which should be realized by using a custom JSONEncoder. The slash encoding
-# is not necessary when the resulting string is not added to HTML content, but there is no problem
-# to apply it to all encoded strings.
-json.encoder._orig_encode_basestring_ascii = json.encoder.encode_basestring_ascii  # type: ignore[attr-defined]
-json.encoder.encode_basestring_ascii = lambda s: json.encoder._orig_encode_basestring_ascii(  # type: ignore[attr-defined]
-    s).replace('/', '\\/')  # type: ignore[attr-defined]
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths

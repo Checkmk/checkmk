@@ -26,12 +26,15 @@ import cmk.base.check_api as check_api
 
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
-    with check_file_path.open() as handle:
-        return [
-            "%s:%d:%s" % (check_file_path.stem, line_no, repr(line.strip()))
-            for line_no, line in enumerate(handle, 1)
-            if re.search(deprecated_pattern, line.strip())
-        ]
+    try:
+        with check_file_path.open() as handle:
+            return [
+                "%s:%d:%s" % (check_file_path.name, line_no, repr(line.strip()))
+                for line_no, line in enumerate(handle, 1)
+                if re.search(deprecated_pattern, line.strip())
+            ]
+    except UnicodeDecodeError as exc:
+        return ["%s:-1:Unable to reade file: %s" % (check_file_path.name, exc)]
 
 
 @pytest.mark.parametrize("deprecated_pattern", [
@@ -54,6 +57,7 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
 ])
 def test_deprecated_api_features(deprecated_pattern):
     check_files = Path(cmk.utils.paths.checks_dir).glob("*")
+    check_files = (p for p in check_files if p.suffix not in (".swp",))
     with_deprecated_feature = [
         finding  #
         for check_file_path in check_files  #

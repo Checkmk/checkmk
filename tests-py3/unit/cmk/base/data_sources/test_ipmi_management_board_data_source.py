@@ -41,7 +41,7 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source._for_mgmt_board is True
     assert source._hostname == hostname
     # Address comes from management board.
-    assert source._ipaddress == None
+    assert source._ipaddress is None
     assert source.id() == "mgmt_ipmi"
     assert source.title() == "Management board - IPMI"
     assert source._cpu_tracking_id() == source.id()

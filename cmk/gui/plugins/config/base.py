@@ -391,7 +391,7 @@ user_downtime_timeranges = [
         'title': "This year",
         'end': 'next_year'
     },
-]
+]  # type: _List[_Dict[str, _Any]]
 
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility = {}  # type: _Dict

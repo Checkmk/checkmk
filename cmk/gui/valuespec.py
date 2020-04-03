@@ -3658,7 +3658,9 @@ class AbsoluteDate(ValueSpec):
     def value_from_json(self, json_value):
         return json_value
 
+    # TODO: allow_empty is a *very* bad idea typing-wise! We are poisoned by Optional... :-P
     def from_html_vars(self, varprefix):
+        # type: (str) -> _Optional[float]
         parts = []
         entries = [
             ("year", _("year"), 1970, 2038),

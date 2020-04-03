@@ -24,7 +24,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
 )
 
-from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
+from .abstract import CheckMKAgentDataSource, management_board_ipaddress
 
 
 def _handle_false_positive_warnings(reading):
@@ -210,10 +210,13 @@ class IPMIDataFetcher:
 
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
-class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
+class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
+    _for_mgmt_board = True
+
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
-        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        super(IPMIManagementBoardDataSource, self).__init__(hostname,
+                                                            management_board_ipaddress(hostname))
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
     def id(self):

@@ -8,6 +8,8 @@ from collections import namedtuple
 
 import pytest  # type: ignore[import]
 
+import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource, _parse_sensor_reading
 from testlib.base import Scenario
 
@@ -34,9 +36,12 @@ def test_parse_sensor_reading_false_positive():
 def test_attribute_defaults(monkeypatch, ipaddress):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    # NOTE: pylint is quite buggy when it comes to class hierarchies and abstract methods!
-    source = IPMIManagementBoardDataSource(hostname, ipaddress)  # pylint: disable=abstract-class-instantiated
+    source = IPMIManagementBoardDataSource(hostname, ipaddress)
 
+    assert source._for_mgmt_board is True
+    assert source._hostname == hostname
+    # Address comes from management board.
+    assert source._ipaddress == None
     assert source.id() == "mgmt_ipmi"
     assert source.title() == "Management board - IPMI"
     assert source._cpu_tracking_id() == source.id()
@@ -45,11 +50,26 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source._get_ipmi_version() == "unknown"
 
 
+def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
+    hostname = "testhost"
+    ipaddress = "127.0.0.1"
+    Scenario().add_host(hostname).apply(monkeypatch)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: ipaddress)
+    monkeypatch.setattr(config, "host_attributes", {
+        hostname: {
+            "management_address": ipaddress
+        },
+    })
+    source = IPMIManagementBoardDataSource(hostname, None)
+
+    assert source._host_config.management_address == ipaddress
+    assert source._ipaddress == ipaddress
+
+
 def test_describe_with_ipaddress(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    # NOTE: pylint is quite buggy when it comes to class hierarchies and abstract methods!
-    source = IPMIManagementBoardDataSource(hostname, None)  # pylint: disable=abstract-class-instantiated
+    source = IPMIManagementBoardDataSource(hostname, None)
     source._ipaddress = "127.0.0.1"  # The API is lying.
 
     assert source.describe() == "Management board - IPMI (Address: 127.0.0.1)"
@@ -58,8 +78,7 @@ def test_describe_with_ipaddress(monkeypatch):
 def test_describe_with_credentials(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    # NOTE: pylint is quite buggy when it comes to class hierarchies and abstract methods!
-    source = IPMIManagementBoardDataSource(hostname, None)  # pylint: disable=abstract-class-instantiated
+    source = IPMIManagementBoardDataSource(hostname, None)
     source._credentials = {"username": "Bobby"}
 
     assert source.describe() == "Management board - IPMI (User: Bobby)"
@@ -68,8 +87,7 @@ def test_describe_with_credentials(monkeypatch):
 def test_describe_with_ipaddress_and_credentials(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    # NOTE: pylint is quite buggy when it comes to class hierarchies and abstract methods!
-    source = IPMIManagementBoardDataSource(hostname, "127.0.0.1")  # pylint: disable=abstract-class-instantiated
+    source = IPMIManagementBoardDataSource(hostname, "127.0.0.1")
     source._ipaddress = "127.0.0.1"  # The API is lying.
     source._credentials = {"username": "Bobby"}
 

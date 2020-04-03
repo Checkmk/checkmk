@@ -30,7 +30,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPTree
 
-from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
+from .abstract import DataSource, management_board_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
@@ -348,10 +348,13 @@ class SNMPDataSource(ABCSNMPDataSource):
 # 2. snmpv3 context
 
 
-class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
+class SNMPManagementBoardDataSource(SNMPDataSource):
+    _for_mgmt_board = True
+
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        super(SNMPManagementBoardDataSource, self).__init__(hostname,
+                                                            management_board_ipaddress(hostname))
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

@@ -188,10 +188,20 @@ def _filter_by_exclude_rule(inv_rule_excludes, iterable):
 
 
 def _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints, iterable):
+
     for df_block in iterable:
-        if (df_block[0] in never_ignore_mountpoints or
-                volume_info[df_block[0]]["fs_type"] not in ignore_fs_types):
+        if volume_info[df_block[0]]["fs_type"] not in ignore_fs_types:
             yield df_block
+            continue
+
+        # Filesystem is not ignored, so check against mount point patterns
+        for p in never_ignore_mountpoints:
+            if p[0] == "~" and regex(p[1:]).match(df_block[0]):
+                yield df_block
+                continue
+
+            if df_block[0] == p:
+                yield df_block
 
 
 def _format_with_description(description, mountpoint):

@@ -516,7 +516,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
                 'value': {
                     'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                    'never_ignore_mountpoints': [cmk.utils.paths.tmpfs_mount_point]
+                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
                 }
             },],
         }

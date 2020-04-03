@@ -8,6 +8,7 @@
 # defined in a plugin because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
+import time
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
@@ -465,6 +466,9 @@ class MainModuleDiagnostics(MainModule):
 
     @property
     def icon(self):
+        loc_time = time.localtime()
+        if loc_time.tm_hour == 13 and loc_time.tm_min == 37:
+            return "d146n0571c5"
         return "diagnostics"
 
     @property

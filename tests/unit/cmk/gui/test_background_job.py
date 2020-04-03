@@ -43,6 +43,7 @@ def test_registered_background_jobs():
         'ServiceDiscoveryBackgroundJob',
         'ActivationCleanupBackgroundJob',
         'CheckmkAutomationBackgroundJob',
+        'DiagnosticsDumpBackgroundJob',
     ]
 
     if not cmk_version.is_raw_edition():

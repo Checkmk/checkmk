@@ -2026,18 +2026,12 @@ class Cell(object):
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
     def render_for_export(self, row):
-        txt = ''
         # type: (Row) -> CellContent
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""
-        elif isinstance(rendered_txt, (str, unicode)):
-            txt = rendered_txt.strip()  # type: Text
-        elif isinstance(rendered_txt, dict) and 'title' in rendered_txt:
-            txt = rendered_txt['title'] # type: Dictionary
 
-        if not txt:
-            txt = rendered_txt
+        txt = rendered_txt.strip()  # type: Text
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.

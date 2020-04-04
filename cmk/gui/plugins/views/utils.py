@@ -2034,7 +2034,7 @@ class Cell(object):
         elif isinstance(rendered_txt, (str, unicode)):
             txt = rendered_txt.strip()  # type: Text
         elif isinstance(rendered_txt, dict) and 'title' in rendered_txt:
-            txt = rendered_txt['title']  # type: Dictionary
+            txt = rendered_txt.get('title', '')  # type: Dictionary
 
         if not txt:
             txt = rendered_txt

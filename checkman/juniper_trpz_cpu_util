@@ -1,4 +1,4 @@
-title: Juniper/Trapeze CPU Utilization of the Last Few Seconds and 1/5 Minutes
+title: Juniper/Trapeze: CPU Utilization of the Last Few Seconds and 1/5 Minutes
 agents: snmp
 catalog: hw/network/juniper
 license: GPL
@@ -8,5 +8,5 @@ description:
  The current utilization is informational only and does not generate alarms.
 
 inventory:
- One service for the first CPU will be created
+ One service is created for the first CPU.
 

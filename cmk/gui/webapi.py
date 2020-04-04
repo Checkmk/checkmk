@@ -8,7 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
-from typing import Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Text, Tuple, Union  # pylint: disable=unused-import
 
 import dicttoxml  # type: ignore[import]
 
@@ -89,6 +89,8 @@ class PermissionWATOAllowedAPI(Permission):
         return config.builtin_role_ids
 
 
+Formatter = Callable[[Dict[str, Any]], Text]
+
 _FORMATTERS = {
     "json":
         (json.dumps,
@@ -97,7 +99,7 @@ _FORMATTERS = {
     "xml":
         (dicttoxml.dicttoxml,
          lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
-}
+}  # type: Dict[str, Tuple[Formatter, Formatter]]
 
 
 @cmk.gui.pages.register("webapi")
@@ -113,7 +115,7 @@ def page_api():
                 " and ".join('"%s"' % f for f in _FORMATTERS))
 
         # TODO: Add some kind of helper for boolean-valued variables?
-        pretty_print_var = html.request.var("pretty_print", "no").lower()
+        pretty_print_var = html.request.get_str_input_mandatory("pretty_print", "no").lower()
         if pretty_print_var not in ("yes", "no"):
             raise MKUserError(None, 'pretty_print must be "yes" or "no"')
         pretty_print = pretty_print_var == "yes"
@@ -172,7 +174,8 @@ def _check_permissions(api_call):
 
 def _get_request(api_call):
     if api_call.get("dont_eval_request"):
-        return html.request.var("request", {})
+        req = html.request.var("request")
+        return {} if req is None else req
     return html.get_request(exclude_vars=["action", "pretty_print"])
 
 

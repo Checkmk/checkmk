@@ -15,7 +15,7 @@ description:
  the state of the check is determined according to these levels.
 
 inventory:
- One check per database on the Mailbox Server is created.
+ One service is created for each database on the Mailbox Server.
 
 item:
  The database name on the Mailbox Server

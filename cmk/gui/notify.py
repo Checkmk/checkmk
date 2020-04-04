@@ -6,7 +6,7 @@
 
 import os
 import time
-from typing import Dict, Any  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
 import six
 
 import cmk.utils.store as store
@@ -26,14 +26,9 @@ from cmk.gui.permissions import (
     permission_registry,
 )
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAreaUnicode,
-    CascadingDropdown,
-    ListChoice,
-    Optional,
-    AbsoluteDate,
-    DualListChoice,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    AbsoluteDate, CascadingDropdown, CascadingDropdownChoice, Dictionary, DualListChoice,
+    ListChoice, Optional, TextAreaUnicode,
 )
 
 
@@ -162,7 +157,7 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
-    ]
+    ]  # type: List[CascadingDropdownChoice]
 
     if config.save_user_access_times:
         dest_choices.append(('online', _('All online users')))
@@ -227,22 +222,19 @@ def _process_notify_message(msg):
     msg['id'] = utils.gen_id()
     msg['time'] = time.time()
 
-    # construct the list of recipients
-    recipients = []
-
     if isinstance(msg['dest'], str):
         dest_what = msg['dest']
     else:
         dest_what = msg['dest'][0]
 
     if dest_what == 'broadcast':
-        recipients = config.multisite_users.keys()
-
+        recipients = list(config.multisite_users.keys())
     elif dest_what == 'online':
         recipients = userdb.get_online_user_ids()
-
     elif dest_what == 'list':
         recipients = msg['dest'][1]
+    else:
+        recipients = []
 
     num_recipients = len(recipients)
 
@@ -251,7 +243,7 @@ def _process_notify_message(msg):
         num_success[method] = 0
 
     # Now loop all notitification methods to send the notifications
-    errors = {}
+    errors = {}  # type: Dict[str, List[Tuple]]
     for user_id in recipients:
         for method in msg['methods']:
             try:
@@ -273,15 +265,15 @@ def _process_notify_message(msg):
     html.show_message(HTML(message))
 
     if errors:
-        error_message = ""
+        error_message = HTML()
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s notifications to the following users:") % method
-            table_rows = ''
+            table_rows = HTML()
             for user, exception in method_errors:
-                table_rows += html.render_tr(html.render_td(html.render_tt(user))\
-                                             + html.render_td(exception))
+                table_rows += html.render_tr(
+                    html.render_td(html.render_tt(user)) + html.render_td(exception))
             error_message += html.render_table(table_rows) + html.render_br()
-        html.show_error(HTML(error_message))
+        html.show_error(error_message)
 
 
 #   .--Notify Plugins------------------------------------------------------.
@@ -316,6 +308,8 @@ def notify_mail(user_id, msg):
     if not recipient_name:
         recipient_name = user_id
 
+    if config.user.id is None:
+        raise Exception("no user ID")
     sender_name = users[config.user.id].get('alias')
     if not sender_name:
         sender_name = user_id
@@ -379,5 +373,4 @@ def notify_mail(user_id, msg):
         raise MKInternalError(
             _('Mail could not be delivered. Exit code of command is %r. '
               'Output is: %s') % (exitcode, stdout))
-    else:
-        return True
+    return True

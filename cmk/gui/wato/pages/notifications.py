@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import NamedTuple  # pylint: disable=unused-import
+from typing import List, NamedTuple, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode
@@ -23,27 +23,10 @@ import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    TextUnicode,
-    Dictionary,
-    Alternative,
-    FixedValue,
-    Tuple,
-    Integer,
-    Transform,
-    ListOf,
-    EmailAddress,
-    ID,
-    DropdownChoice,
-    RegExp,
-    RegExpUnicode,
-    ListChoice,
-    Age,
-    CascadingDropdown,
-    TextAscii,
-    ListOfStrings,
-    Checkbox,
-    rule_option_elements,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Age, Alternative, CascadingDropdown, Checkbox, Dictionary, DictionaryEntry, DropdownChoice,
+    EmailAddress, FixedValue, ID, Integer, ListChoice, ListOf, ListOfStrings, RegExp, RegExpUnicode,
+    TextAscii, TextUnicode, Transform, Tuple, rule_option_elements,
 )
 
 from cmk.gui.plugins.wato import (
@@ -466,7 +449,7 @@ class ModeNotifications(NotificationsMode):
 
         elif html.request.has_var("_replay"):
             if html.check_transaction():
-                nr = int(html.request.var("_replay"))
+                nr = html.request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
@@ -601,18 +584,18 @@ class ModeNotifications(NotificationsMode):
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
                                  "replay")
 
-                if html.request.var("analyse") and nr == int(html.request.var("analyse")):
+                if (html.request.var("analyse") and
+                        nr == html.request.get_integer_input_mandatory("analyse")):
                     html.icon(_("You are analysing this notification"), "rulematch")
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
                     date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                         time.localtime(int(context["MICROTIME"]) / 1000000.0))
+                                         time.localtime(int(context["MICROTIME"]) /
+                                                        1000000.0))  # type: Text
                 else:
-                    date = context.get("SHORTDATETIME") or \
-                           context.get("LONGDATETIME") or \
-                           context.get("DATE") or \
-                           _("Unknown date")
+                    date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
+                            context.get("DATE") or _("Unknown date"))
 
                 table.cell(_("Date/Time"), date, css="nobr")
                 nottype = context.get("NOTIFICATIONTYPE", "")
@@ -676,7 +659,7 @@ class ModeNotifications(NotificationsMode):
     def _show_rules(self):
         # Do analysis
         if html.request.var("analyse"):
-            nr = int(html.request.var("analyse"))
+            nr = html.request.get_integer_input_mandatory("analyse")
             analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
         else:
             analyse = False
@@ -758,7 +741,7 @@ class UserNotificationsMode(NotificationsMode):
 
     def action(self):
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rule = self._rules[nr]
             c = wato_confirm(
                 _("Confirm notification rule deletion"),
@@ -903,9 +886,10 @@ class EditNotificationRuleMode(NotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers = []
+            contact_headers = [
+            ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
             section_contacts = []
-            section_override = []
+            section_override = []  # type: List[DictionaryEntry]
         else:
             contact_headers = [
                 (_("Contact Selection"), [
@@ -1055,7 +1039,55 @@ class EditNotificationRuleMode(NotificationsMode):
                  size=80,
                  default_value=
                  "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
-        ]
+        ]  # type: List[DictionaryEntry]
+
+        def make_interval_entry():
+            # type: () -> List[DictionaryEntry]
+            return [
+                ("interval",
+                 Age(
+                     title=_("Time horizon"),
+                     label=_("Bulk up to"),
+                     help=_("Notifications are kept back for bulking at most for this time."),
+                     default_value=60,
+                 )),
+            ]
+
+        timeperiod_entry = [
+            ("timeperiod",
+             watolib.timeperiods.TimeperiodSelection(
+                 title=_("Only bulk notifications during the following timeperiod"),)),
+        ]  # type: List[DictionaryEntry]
+
+        bulk_outside_entry = [
+            ("bulk_outside",
+             Dictionary(
+                 title=_("Also bulk outside of timeperiod"),
+                 help=_("By enabling this option notifications will be bulked "
+                        "outside of the defined timeperiod as well."),
+                 elements=make_interval_entry() + bulk_options,
+                 columns=1,
+                 optional_keys=["bulk_subject"],
+             )),
+        ]  # type: List[DictionaryEntry]
+
+        headers_part1 = [
+            (_("Rule Properties"),
+             ["description", "comment", "disabled", "docu_url", "allow_disable"]),
+            (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
+        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+
+        headers_part2 = [
+            (_("Conditions"), [
+                "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
+                "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
+                "match_servicegroups_regex", "match_exclude_servicegroups_regex", "match_services",
+                "match_exclude_services", "match_checktype", "match_contacts",
+                "match_contactgroups", "match_plugin_output", "match_timeperiod",
+                "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
+                "match_service_event", "match_ec", "match_notification_comment"
+            ]),
+        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
 
         return Dictionary(
             title=_("Rule Properties"),
@@ -1081,17 +1113,7 @@ class EditNotificationRuleMode(NotificationsMode):
                                 "actual problems, e.g. in a single email. This cuts down the number of notifications "
                                 "in cases where many (related) problems occur within a short time."
                                ),
-                              elements=[
-                                  ("interval",
-                                   Age(
-                                       title=_("Time horizon"),
-                                       label=_("Bulk up to"),
-                                       help=
-                                       _("Notifications are kept back for bulking at most for this time."
-                                        ),
-                                       default_value=60,
-                                   )),
-                              ] + bulk_options,
+                              elements=make_interval_entry() + bulk_options,
                               columns=1,
                               optional_keys=["bulk_subject"],
                           )),
@@ -1104,33 +1126,7 @@ class EditNotificationRuleMode(NotificationsMode):
                                   "will be sent. "
                                   "If bulking should be enabled outside of the timeperiod as well, "
                                   "the option \"Also Bulk outside of timeperiod\" can be used."),
-                              elements=[
-                                  ("timeperiod",
-                                   watolib.timeperiods.TimeperiodSelection(title=_(
-                                       "Only bulk notifications during the following timeperiod"),)
-                                  ),
-                              ] + bulk_options + [
-                                  ("bulk_outside",
-                                   Dictionary(
-                                       title=_("Also bulk outside of timeperiod"),
-                                       help=_(
-                                           "By enabling this option notifications will be bulked "
-                                           "outside of the defined timeperiod as well."),
-                                       elements=[
-                                           ("interval",
-                                            Age(
-                                                title=_("Time horizon"),
-                                                label=_("Bulk up to"),
-                                                help=
-                                                _("Notifications are kept back for bulking at most for this time."
-                                                 ),
-                                                default_value=60,
-                                            )),
-                                       ] + bulk_options,
-                                       columns=1,
-                                       optional_keys=["bulk_subject"],
-                                   )),
-                              ],
+                              elements=timeperiod_entry + bulk_options + bulk_outside_entry,
                               columns=1,
                               optional_keys=["bulk_subject", "bulk_outside"],
                           )),
@@ -1149,22 +1145,7 @@ class EditNotificationRuleMode(NotificationsMode):
                 "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
                 "contact_match_groups"
             ],
-            headers=[
-                (_("Rule Properties"),
-                 ["description", "comment", "disabled", "docu_url", "allow_disable"]),
-                (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-            ] + contact_headers + [
-                (_("Conditions"), [
-                    "match_site", "match_folder", "match_hosttags", "match_hostgroups",
-                    "match_hosts", "match_exclude_hosts", "match_servicegroups",
-                    "match_exclude_servicegroups", "match_servicegroups_regex",
-                    "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
-                    "match_checktype", "match_contacts", "match_contactgroups",
-                    "match_plugin_output", "match_timeperiod", "match_escalation",
-                    "match_escalation_throttle", "match_sl", "match_host_event",
-                    "match_service_event", "match_ec", "match_notification_comment"
-                ]),
-            ],
+            headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,
             validate=self._validate_notification_rule,

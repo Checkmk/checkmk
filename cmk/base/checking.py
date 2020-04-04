@@ -681,7 +681,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, six.ensure_str(service), now, now, state, six.ensure_str(output))))
+""" % (six.ensure_str(host), six.ensure_str(service), now, now, state, six.ensure_str(output))))
 
 
 def _open_checkresult_file():

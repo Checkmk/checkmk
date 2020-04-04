@@ -20,5 +20,4 @@ item:
  Index of the controller
 
 inventory:
- One check is automatically created for each raid controller which is
- provided in the SNMP output.
+ One service is created for each raid controller.

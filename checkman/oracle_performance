@@ -13,4 +13,4 @@ item:
  The SID identifier.
 
 inventory:
- One service per SID is created.
+ One service is created for each SID.

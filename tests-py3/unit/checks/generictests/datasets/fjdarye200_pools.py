@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -33,7 +33,11 @@ checks = {
                         (
                             'fs_used', 105269493, 93752467.2, 105471525.6, 0,
                             117190584
-                        ), ('fs_size', 117190584, None, None, None, None)
+                        ), ('fs_size', 117190584, None, None, None, None),
+                        (
+                            'fs_used_percent', 89.82760338492724, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

@@ -212,7 +212,8 @@ class PushUserProfilesToSite(AutomationCommand):
         return "push-profiles"
 
     def get_request(self):
-        return PushUserProfilesRequest(ast.literal_eval(html.request.var("profiles")))
+        return PushUserProfilesRequest(
+            ast.literal_eval(html.request.get_ascii_input_mandatory("profiles")))
 
     def execute(self, request):
         user_profiles = request.user_profiles

@@ -28,6 +28,6 @@ item:
   {{RAID Adapter/BBU}} followed by the ID of the adapter as reported by MegaCli.
 
 inventory:
-  One item is generated per adapter that has an attached BBU module.
+  One service is created for each adapter that has an attached BBU module.
 
 

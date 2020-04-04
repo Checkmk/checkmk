@@ -10,4 +10,4 @@ item:
  The item will be the data label of the OID
 
 inventory:
- One service for each item will be disovered
+ One service is created for each pump.

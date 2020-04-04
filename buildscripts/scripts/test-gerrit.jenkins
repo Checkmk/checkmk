@@ -46,6 +46,10 @@ node (NODE) {
        // Gather changes futurize files
         def CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
 
+        // this variable is needed as long as we have base plugins that are
+        // concantenated for pylint (See tests/pylint/test_pylint.py)
+        def WORKDIR="${WORKSPACE}/tmp"
+
         print "Changed python files: ${CHANGED_PYTHON_FILES}"
         print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
@@ -112,8 +116,7 @@ node (NODE) {
             TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
          )
 
-         def WORKDIR="${WORKSPACE}/tmp"
-         gerrit_stages.run(
+        gerrit_stages.run(
             NAME: 'Python Linting',
             CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
@@ -121,12 +124,12 @@ node (NODE) {
             COMMAND: """
                 if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi \
                 && mkdir "${WORKDIR}" \
-                && make -C .. --what-if Pipfile.lock .venv && make test-pylint &> ${RESULTS}/pylint.txt
+                && make -C .. --what-if Pipfile.lock .venv && make test-pylint &> ${RESULTS}/pylint2.txt
             """,
             TEXT_ON_SKIP: 'Neither .pylintrc nor Python 2 files changed. Skipping.'
-         )
+        )
 
-         gerrit_stages.run(
+        gerrit_stages.run(
             NAME: 'Python Unit Test',
             CONDITION: CHANGED_PYTHON_FILES != "",
             DIR: 'tests',
@@ -135,14 +138,23 @@ node (NODE) {
             TEXT_ON_SKIP: 'No Python 2 files changed. Skipping.'
          )
 
-         gerrit_stages.run(
+        gerrit_stages.run(
             NAME: 'Python3 Unit Test',
             CONDITION: CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "",
             DIR: 'tests-py3',
             ENV_VARS: ["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python3-unit-junit.xml\""],
             COMMAND: "make test-unit",
             TEXT_ON_SKIP: 'No Python 2/3 files changed. Skipping.'
-         )
+        )
+
+        gerrit_stages.run(
+            NAME: 'Python3 Linting',
+            CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "",
+            DIR: 'tests-py3',
+            ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
+            COMMAND: "make test-pylint &> ${RESULTS}/pylint3.txt",
+            TEXT_ON_SKIP: 'Neither .pylintrc nor Python 3 files changed. Skipping.'
+        )
 
          gerrit_stages.run(
             NAME: 'Shell Format',

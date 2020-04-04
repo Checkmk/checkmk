@@ -20,5 +20,5 @@ item:
  The name of the queue
 
 inventory:
- One service will be created for each queue
+ One service is created for each queue.
 

@@ -391,7 +391,7 @@ user_downtime_timeranges = [
         'title': "This year",
         'end': 'next_year'
     },
-]
+]  # type: _List[_Dict[str, _Any]]
 
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility = {}  # type: _Dict
@@ -470,9 +470,9 @@ wato_read_only = {}  # type: _Dict
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
 wato_icon_categories = [
-    ("logos", "Logos"),
-    ("parts", "Parts"),
-    ("misc", "Misc"),
+    ("logos", u"Logos"),
+    ("parts", u"Parts"),
+    ("misc", u"Misc"),
 ]
 
 #.

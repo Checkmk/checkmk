@@ -4,10 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import (  # pylint: disable=unused-import
+    List,)
+
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.valuespec import ValueSpec, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     FixedValue,
     PasswordSpec,
@@ -130,11 +134,11 @@ class ModeEditPassword(SimpleEditMode):
                     totext=_("Administrators (having the permission "
                              "\"Write access to all passwords\")"),
                 )
-            ]
+            ]  # type: List[ValueSpec]
         else:
             admin_element = []
 
-        return [
+        elements = [
             ("password", PasswordSpec(
                 title=_("Password"),
                 allow_empty=False,
@@ -168,12 +172,15 @@ class ModeEditPassword(SimpleEditMode):
                  choices=self._contact_group_choices,
                  autoheight=False,
              )),
-        ]
+        ]  # type: List[DictionaryEntry]
+
+        return elements
 
     def _contact_group_choices(self, only_own=False):
         contact_groups = load_contact_group_information()
 
         if only_own:
+            assert config.user.id is not None
             user_groups = userdb.contactgroups_of_user(config.user.id)
         else:
             user_groups = []

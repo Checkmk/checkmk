@@ -6,7 +6,11 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
+from typing import List, Tuple, Dict  # pylint: disable=unused-import
+
 import random
+
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -39,9 +43,9 @@ class ModeRandomHosts(WatoMode):
         if not html.check_transaction():
             return "folder"
 
-        count = int(html.request.var("count"))
-        folders = int(html.request.var("folders"))
-        levels = int(html.request.var("levels"))
+        count = html.request.get_integer_input_mandatory("count")
+        folders = html.request.get_integer_input_mandatory("folders")
+        levels = html.request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         return "folder", _("Created %d random hosts.") % created
 
@@ -66,7 +70,7 @@ class ModeRandomHosts(WatoMode):
 
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:
-            hosts_to_create = []
+            hosts_to_create = []  # type: List[Tuple[HostName, Dict, None]]
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((host_name, {"ipaddress": "127.0.0.1"}, None))

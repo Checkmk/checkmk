@@ -65,17 +65,17 @@ def contains(oidstr, value):
 
 def startswith(oidstr, value):
     # type: (str, str) -> SNMPDetectSpec
-    return [[(oidstr, '^%s.*' % re.escape(value), True)]]
+    return [[(oidstr, '%s.*' % re.escape(value), True)]]
 
 
 def endswith(oidstr, value):
     # type: (str, str) -> SNMPDetectSpec
-    return [[(oidstr, '.*%s$' % re.escape(value), True)]]
+    return [[(oidstr, '.*%s' % re.escape(value), True)]]
 
 
 def equals(oidstr, value):
     # type: (str, str) -> SNMPDetectSpec
-    return [[(oidstr, '^%s$' % re.escape(value), True)]]
+    return [[(oidstr, '%s' % re.escape(value), True)]]
 
 
 def exists(oidstr):

@@ -14,5 +14,5 @@ item:
  The item is the name of the project and workflow.
 
 inventory:
- One service for each project and workflow
- {"Jira Workflow My_project/My_workflow"} will be created.
+ One service is created  for each project and workflow
+ {"Jira Workflow My_project/My_workflow"}.

@@ -20,11 +20,13 @@ import cmk.gui.default_permissions
 from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
+from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.type_defs import PainterSpec
 
 @pytest.fixture()
 def view(register_builtin_html, load_plugins):
     view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
@@ -4073,7 +4075,7 @@ def test_legacy_register_painter(monkeypatch):
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), (painter.ident, None))
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), PainterSpec(painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -5733,10 +5735,6 @@ def test_register_sorter(monkeypatch):
 
 
 def test_get_needed_regular_columns(view):
-    view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
     assert sorted(columns) == sorted([
@@ -5778,7 +5776,7 @@ def test_get_needed_regular_columns(view):
 
 def test_get_needed_join_columns(view):
     view_spec = copy.deepcopy(view.spec)
-    view_spec["painters"].append(('service_description', None, None, u'CPU load'))
+    view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)

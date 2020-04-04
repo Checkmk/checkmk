@@ -46,6 +46,10 @@ this:
  3. **Commit** changes to your own feature branch
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
+ 
+ ⚠ Please reply when asked for more information or to update your PR
+in case in didn't meet the requirements (e.g. failed checks). 
+If there's no response from the author for at least 14 days, the PR will be closed.
 
 If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/). You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
 
@@ -212,7 +216,9 @@ The public repository of [Checkmk](https://github.com/tribe29/checkmk) is
 integrated with Travis CI. Each time a Pull request is submitted, Travis will
 have a look at the changes.
 
-**Important:** We only review PRs that are confirmed to be OK by Travis.
+**⚠ Important:** We only review PRs that are confirmed to be OK by Travis. 
+If a check failed, please fix it and update the PR. 
+PRs will be closed if the author didn't respond for at least 14 days.
 
 It is recommended to run all tests locally before submitting a PR. If you want
 to execute the full test suite, you can do this by executing these commands in

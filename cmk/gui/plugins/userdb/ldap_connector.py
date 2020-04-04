@@ -74,7 +74,7 @@ from cmk.gui.valuespec import (
     Password,
     rule_option_elements,
 )
-from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
@@ -1611,7 +1611,7 @@ class LDAPConnectionValuespec(Transform):
                  ],
                  optional_keys=["failover_servers"],
              )),
-        ]  # type: CascadingDropdownChoiceList
+        ]  # type: List[CascadingDropdownChoice]
 
         if ty == "ad":
             connect_to_choices.append((
@@ -1996,7 +1996,7 @@ def register_user_attribute_sync_plugins():
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
         plugin = plugin_class()
         if not plugin.is_builtin:
-            del ldap_attribute_plugin_registry[ident]
+            ldap_attribute_plugin_registry.unregister(ident)
 
     for name, attr in get_user_attributes():
         plugin_class = type(

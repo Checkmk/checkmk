@@ -23,6 +23,6 @@ description:
  want to use {ntp}, which creates one individual check per NTP peer.
 
 inventory:
- If at least one peer is present, exactly one check is created, if
- {ntp_inventory_mode} is set to {"summary"} or {"both"}.
+ One service is created if at least one peer is present
+ if {ntp_inventory_mode} is set to {"summary"} or {"both"}.
 

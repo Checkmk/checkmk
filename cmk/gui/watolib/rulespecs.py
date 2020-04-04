@@ -14,6 +14,7 @@ import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 from cmk.gui.globals import html
 from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -1053,13 +1054,16 @@ def register_rule(
         class_kwargs["valuespec"] = lambda: valuespec
 
     if varname.startswith("static_checks:"):
-        base_class = ManualCheckParameterRulespec
+        base_class = ManualCheckParameterRulespec  # type: Type[Rulespec]
     elif varname.startswith("checkgroup_parameters:"):
-        base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem
+        # Mypy does not understand this is in fact a Type[Rulespec] based class
+        base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem  # type: ignore[assignment]
     elif valuespec is None:
-        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
+        # Mypy does not understand this is in fact a Type[Rulespec] based class
+        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec  # type: ignore[assignment]
     else:
-        base_class = ServiceRulespec if itemtype is not None else HostRulespec
+        # Mypy does not understand this is in fact a Type[Rulespec] based class
+        base_class = ServiceRulespec if itemtype is not None else HostRulespec  # type: ignore[assignment]
 
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
@@ -1093,11 +1097,6 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
 
     def plugin_base_class(self):
         return Rulespec
-
-    def plugin_name(self, instance):
-        # type: (Any) -> str
-        # not-yet-a-type: (Rulespec) -> str
-        return instance.name
 
     def get_by_group(self, group_name):
         # type: (str) -> List[Rulespec]
@@ -1201,7 +1200,10 @@ class TimeperiodValuespec(ValueSpec):
         html.hidden_field(self.tp_current_mode, "%d" % is_active)
 
         vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
-        toggle_url = html.makeuri(vars_copy.items())
+
+        url_vars = []  # type: HTTPVariables
+        url_vars += vars_copy.items()
+        toggle_url = html.makeuri(url_vars)
 
         if is_active:
             value = self._get_timeperiod_value(value)

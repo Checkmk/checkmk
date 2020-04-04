@@ -1,4 +1,4 @@
-title: Check Apply and Transport Lag of Oracle Data-Guard
+title: Oracle Data-Guard: Apply and Transport Lag
 agents: linux, aix
 catalog: app/oracle
 license: GPL
@@ -35,3 +35,5 @@ item:
  The SID of the database in uppercase (as appearing in the process
  name of the pmon_... process).
 
+inventory:
+ One service is created for each running database.

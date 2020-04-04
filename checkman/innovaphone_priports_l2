@@ -13,5 +13,5 @@ item:
  Table of the Pri (primary rate interface)
 
 inventory:
- One service for each port in state UP will be created.
+ One service is created for each port in state {UP}.
 

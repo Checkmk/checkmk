@@ -14,4 +14,4 @@ item:
  The name of the DHCP pool as configured on the DHCP server.
 
 inventory:
- Each DHCP pool will result in one service on the DHCP server.
+ One service is created for each DHCP pool on the DHCP server.

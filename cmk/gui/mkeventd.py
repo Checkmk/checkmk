@@ -36,6 +36,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
+from cmk.gui.valuespec import DropdownChoices  # pylint: disable=unused-import
 
 
 def _socket_path():
@@ -67,7 +68,7 @@ syslog_priorities = [
     (5, "notice"),
     (6, "info"),
     (7, "debug"),
-]
+]  # type: DropdownChoices
 
 syslog_facilities = [
     (0, "kern"),
@@ -95,7 +96,7 @@ syslog_facilities = [
     (22, "local6"),
     (23, "local7"),
     (31, "snmptrap"),
-]
+]  # type: DropdownChoices
 
 phase_names = {
     'counting': _("counting"),

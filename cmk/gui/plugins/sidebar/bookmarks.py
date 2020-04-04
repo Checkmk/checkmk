@@ -243,14 +243,6 @@ class Bookmarks(SidebarSnapin):
                  "bookmarks to views and other content in the main frame")
 
     def show(self):
-        html.javascript("""
-function add_bookmark() {
-    url = parent.frames[1].location;
-    title = parent.frames[1].document.title;
-    cmk.ajax.get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&url=" + encodeURIComponent(url), cmk.utils.update_contents, "snapin_bookmarks");
-}""")
-
         for topic, bookmarks in self._get_bookmarks_by_topic():
             html.begin_foldable_container("bookmarks", topic, False, topic)
 
@@ -264,7 +256,7 @@ function add_bookmark() {
             html.end_foldable_container()
 
         begin_footnote_links()
-        link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()")
+        link(_("Add Bookmark"), "javascript:void(0)", onclick="cmk.sidebar.add_bookmark()")
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()
 

@@ -7,3 +7,5 @@ description:
  This check monitors the current state of a Liebert Chiller Device
  It will returns {CRIT} if device is in an not OK state
 
+inventory:
+ One service is created.

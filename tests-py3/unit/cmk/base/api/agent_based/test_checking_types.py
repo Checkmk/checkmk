@@ -3,13 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from ast import literal_eval
 
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.checking_types import (
+    IgnoreResults,
     Parameters,
     ServiceLabel,
     Service,
+    state,
+    MetricFloat,
+    Metric,
+    Result,
+    AdditionalDetails,
 )
 
 
@@ -85,3 +92,85 @@ def test_service_features():
 
     assert repr(service) == ("Service(item='thingy', parameters={'size': 42},"
                              " labels=[ServiceLabel('test-thing', 'true')])")
+
+
+def test_state():
+    assert state(0) is state.OK
+    assert state.OK == 0
+
+    assert state(1) is state.WARN
+    assert state.WARN == 1
+
+    assert state(2) is state.CRIT
+    assert state.CRIT == 2
+
+    assert state(3) is state.UNKNOWN
+    assert state.UNKNOWN == 3
+
+
+def test_metric_float():
+    inf = MetricFloat('inf')
+    assert literal_eval("%r" % inf) == float('inf')
+
+
+def test_metric_kwarg():
+    with pytest.raises(TypeError):
+        _ = Metric("universe", 42, (23, 23))  # py # lint: disable=too-many-function-args
+
+
+@pytest.mark.parametrize("name, value, levels, boundaries", [
+    ("name", "7", (None, None), (None, None)),
+    ("n me", "7", (None, None), (None, None)),
+    ("n=me", "7", (None, None), (None, None)),
+    ("name", 7, (23, 42), None),
+    ("name", 7, ("warn", "crit"), (None, None)),
+    ("name", 7, (23, 42), (None, "max")),
+])
+def test_metric_invalid(name, value, levels, boundaries):
+    with pytest.raises(TypeError):
+        _ = Metric(name, value, levels=levels, boundaries=boundaries)
+
+
+def test_metric():
+    metric = Metric('reproduction_rate', 2.0, levels=(2.4, 3.0), boundaries=(0, None))
+    assert metric.name == 'reproduction_rate'
+    assert metric.value == 2.0
+    assert metric.levels == (2.4, 3.0)
+    assert metric.boundaries == (0., None)
+
+
+@pytest.mark.parametrize("state_, details", [
+    (8, "foo"),
+    (0, b"foo"),
+    (0, "newline is a \no-no"),
+])
+def test_result_invalid(state_, details):
+    with pytest.raises((TypeError, ValueError)):
+        _ = Result(state_, details)
+
+
+def test_result():
+    result = Result(0, "moooo,")
+    assert result.state == state.OK
+    assert result.details == "moooo"
+
+
+@pytest.mark.parametrize("lines", ["_", (0, 1)])
+def test_additional_details_invalid(lines):
+    with pytest.raises(TypeError):
+        _ = AdditionalDetails(lines)
+
+
+def test_additional_details():
+    def lines():
+        yield "line one\n"
+        yield "line two"
+        yield "line three"
+
+    a_det = AdditionalDetails(lines())
+    assert str(a_det) == "line one\nline two\nline three"
+
+
+def test_ignore_results():
+    # This is just a plain object. Nothing to test, but it should exist.
+    assert isinstance(IgnoreResults(), object)

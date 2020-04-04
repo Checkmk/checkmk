@@ -11,4 +11,4 @@ item:
  The network interface that is monitored
 
 inventory:
- One service per network interface
+ One service is created for each network interface.

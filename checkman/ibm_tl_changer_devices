@@ -13,4 +13,4 @@ item:
  The name of the changer device
 
 inventory:
- One service for each device is created.
+ One service is created for each device.

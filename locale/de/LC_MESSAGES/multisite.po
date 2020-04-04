@@ -2233,6 +2233,12 @@ msgstr "Absolute Schwellen für freien Speicher"
 msgid "Absolute levels for free temp space"
 msgstr "Absolute Schwellen für freien %s"
 
+msgid "Absolute levels for free RAM"
+msgstr "Absolute Schwellen für freien RAM"
+
+msgid "Absolute levels for free swap"
+msgstr "Absolute Schwellen für freien Swap"
+
 #, fuzzy
 msgid "Absolute levels for input traffic"
 msgstr "Absolutschwellwerte für ungenutzte Lizenzen"
@@ -10631,6 +10637,9 @@ msgstr "CRIT bei Provisionierung von"
 
 msgid "Critical at a steal time of"
 msgstr "Kritisch bei einer Steal-Zeit von"
+
+msgid "Critical at a swap usage of"
+msgstr "Kritisch bei einer Swap-Nutzung von"
 
 msgid "Critical at a usage of"
 msgstr "CRIT bei einer Benutzung von"
@@ -24204,6 +24213,9 @@ msgstr "Schwellen für Prozessanzahl"
 msgid "Levels for provisioning count"
 msgstr "Schwellen für die Anzahl der Datenbereitstellungen"
 
+msgid "Levels for RAM usage"
+msgstr "Schwellwerte für RAM-Nutzung"
+
 msgid "Levels for queue length"
 msgstr "Schwellwerte für die Länge der Warteschlange"
 
@@ -24243,6 +24255,9 @@ msgstr "Schwellen für benutzte Sitzungen"
 
 msgid "Levels for signal/noise ratio"
 msgstr "Schwellwerte für Signal/Rauschen-Verhältnis"
+
+msgid "Levels for swap usage"
+msgstr "Schwellwerte für die Swap-Nutzung"
 
 #, fuzzy
 msgid "Levels for size on disk"
@@ -27384,6 +27399,9 @@ msgstr "Monitoring State falls der Service fehlgeschlagen ist"
 
 msgid "Monitoring state if service is inactive"
 msgstr "Monitoring State falls der Service inaktiv ist"
+
+msgid "Monitoring state in case of swap errors"
+msgstr "Monitoring State im Fall von Swap-Fehlern"
 
 msgid "Monitoring state requirement"
 msgstr "Überwachungszustandsanforderung"
@@ -31476,6 +31494,12 @@ msgstr "Prozentuale Schwellen für genutzten %s"
 msgid "Percentual levels for used memory"
 msgstr "Prozentuale Schwellen für benutzen Speicher"
 
+msgid "Percentual levels for used RAM"
+msgstr "Prozentuale Schwellen für benutzen RAM"
+
+msgid "Percentual levels for used swap"
+msgstr "Prozentuale Schwellen für benutzten Swap"
+
 #, python-format
 msgid "Percentual levels%s"
 msgstr "Prozentualle Schwellen%s"
@@ -33028,6 +33052,12 @@ msgstr "Anderen Benutzern freigeben"
 
 msgid "Publisher"
 msgstr "Publisher"
+
+msgid "Pulse Secure disk utilization"
+msgstr "Pulse Secure Festplattennutzung"
+
+msgid "Pulse Secure IVE memory utilization"
+msgstr "Pulse Secure IVE Speichernutzung"
 
 msgid "Pulse Secure users"
 msgstr "Pulse Secure Benutzer"
@@ -50222,6 +50252,9 @@ msgstr "Obere Schwellen für die Lizenzgröße"
 msgid "Upper levels for disk usage"
 msgstr "Obere Schwellen für die Festplattennutzung"
 
+msgid "Upper levels for disk utilization"
+msgstr "Obere Schwellen für die Festplattennutzung"
+
 msgid "Upper levels for encountered exceptions"
 msgstr "Obere Schwellen für aufgetretene Exceptions"
 
@@ -50239,6 +50272,12 @@ msgstr "Obere Schwellen für Indices"
 
 msgid "Upper levels for infections"
 msgstr "Obere Schwellen für Infizierungen"
+
+msgid "Upper levels for IVE RAM utilization"
+msgstr "Obere Schwellen für die IVE RAM-Nutzung"
+
+msgid "Upper levels for IVE swap utilization"
+msgstr "Obere Schwellen für die IVE Swap-Nutzung"
 
 msgid "Upper levels for latency"
 msgstr "Obere Schwellen für Latenzzeit"
@@ -52220,13 +52259,13 @@ msgid "Warning at a Co-Stop time of"
 msgstr "Warnung bei einer Steal-Zeit von"
 
 msgid "Warning at a RAM usage of"
-msgstr "Warnung bei einem RAM-Verbrauch von"
+msgstr "Warnung bei einer RAM-Nutzung von"
 
 msgid "Warning at a disk wait of"
 msgstr "Warning bei Platten Wartezyklen von"
 
 msgid "Warning at a memory usage of"
-msgstr "Warnung bei einem Speicherverbrauch von"
+msgstr "Warnung bei einer Speichernutzung von"
 
 msgid "Warning at a provisioning of"
 msgstr "Warnung bei Provisionierung von"
@@ -52239,6 +52278,9 @@ msgstr "Warnung bei Verwendung von"
 
 msgid "Warning at a utilization of"
 msgstr "Warnung bei Verwendung von"
+
+msgid "Warning at a swap usage of"
+msgstr "Warnung bei einer Swap-Nuztung von"
 
 msgid "Warning at or above"
 msgstr "Warnung bei oder über"

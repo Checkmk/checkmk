@@ -1,4 +1,4 @@
-title: Oracle Database Recovery Area
+title: Oracle Database: Recovery Area
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -10,3 +10,6 @@ description:
 
 item:
  The ORACLE_SID
+
+inventory:
+ One service is created for each database.

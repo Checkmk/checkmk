@@ -11,7 +11,7 @@ description:
  All states other than "up" raise CRIT.
 
 inventory:
- One service per power supply is created.
+ One service is created for each power supply.
 
 item:
  The index number of the power supply.

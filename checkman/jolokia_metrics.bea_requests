@@ -16,5 +16,5 @@ item:
  I.e. webservices webservices
 
 inventory:
- One check is created for each selvet running inside a weblogic
+ One service is created for each selvet running inside a weblogic
  instance sent by the agent.

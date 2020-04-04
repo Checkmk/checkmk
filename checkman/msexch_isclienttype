@@ -13,4 +13,4 @@ description:
  suggestions published on microsofts technet.
 
 inventory:
- One item per client type is discovered.
+ One service is created for each client type.

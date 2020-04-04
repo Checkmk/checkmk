@@ -23,4 +23,4 @@ item:
  The name of the instance and the MBean value
 
 inventory:
- One check is created for each numeric MBean rate value sent by the agent.
+ One service is created for each numeric MBean rate value sent by the agent.

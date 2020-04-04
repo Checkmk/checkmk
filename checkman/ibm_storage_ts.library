@@ -20,4 +20,4 @@ item:
  ID of the library
 
 inventory:
-  One item per connected library is created.
+ One service is created for each connected library.

@@ -24,5 +24,5 @@ item:
  as sent by the agent.
 
 inventory:
- One check is created per garbage collector sent by the Jolokia agent.
+ One service is created for each garbage collector sent by the Jolokia agent.
 

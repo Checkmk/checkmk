@@ -7,9 +7,15 @@
 
 import os
 import socket
+from typing import (  # pylint: disable=unused-import
+    List, Dict, Tuple as _Tuple,
+)
+
+from livestatus import SiteId  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -343,7 +349,7 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     def _from_vars(self):
-        host_name = html.request.get_ascii_input("host")
+        host_name = html.request.get_ascii_input_mandatory("host")
 
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -599,7 +605,8 @@ def rename_host_in_bi(oldname, newname):
 
 
 def rename_hosts_in_check_mk(renamings):
-    action_counts = {}
+    # type: (List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]
+    action_counts = {}  # type: Dict[str, int]
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
@@ -621,7 +628,7 @@ def merge_action_counts(action_counts, new_counts):
 
 
 def group_renamings_by_site(renamings):
-    renamings_per_site = {}
+    renamings_per_site = {}  # type: Dict[SiteId, List[_Tuple[HostName, HostName]]]
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()

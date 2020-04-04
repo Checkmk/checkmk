@@ -48,7 +48,7 @@ PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.8.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
-PYTHON3_MODULES_LIST += pyghmi-1.5.3.tar.gz # needed by base for IPMI
+PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
@@ -115,6 +115,7 @@ PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
 
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

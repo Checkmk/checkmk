@@ -1,4 +1,4 @@
-title: Oracle Database Locks
+title: Oracle Database: Locks
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -10,3 +10,6 @@ description:
 
 item:
  Name of the device
+
+inventory:
+ One service is created for each running database.

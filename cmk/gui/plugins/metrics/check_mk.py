@@ -926,12 +926,6 @@ metric_info["mem_lnx_unevictable"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_active"] = {
-    "title": _("Active"),
-    "color": "#dd2020",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_anon_pages"] = {
     "title": _("Anonymous pages"),
     "color": "#cc4040",
@@ -947,12 +941,6 @@ metric_info["mem_lnx_active_anon"] = {
 metric_info["mem_lnx_active_file"] = {
     "title": _("Active (files)"),
     "color": "#ff8080",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_inactive"] = {
-    "title": _("Inactive"),
-    "color": "#275c6b",
     "unit": "bytes",
 }
 
@@ -1460,6 +1448,12 @@ metric_info["reserved"] = {
 metric_info["fs_used"] = {
     "title": _("Used filesystem space"),
     "unit": "bytes",
+    "color": "#00ffc6",
+}
+
+metric_info["fs_used_percent"] = {
+    "title": _("Used filesystem space %"),
+    "unit": "%",
     "color": "#00ffc6",
 }
 
@@ -5759,84 +5753,6 @@ metric_info["elapsed_time"] = {
     "color": "11/a",
 }
 
-metric_info["active_primary_shards"] = {
-    "title": _("Active primary shards"),
-    "unit": "count",
-    "color": "25/b",
-}
-
-metric_info["active_shards"] = {
-    "title": _("Active shards"),
-    "unit": "count",
-    "color": "25/a",
-}
-
-metric_info["active_shards_percent_as_number"] = {
-    "title": _("Active shards in percent"),
-    "unit": "%",
-    "color": "25/b",
-}
-
-metric_info["number_of_data_nodes"] = {
-    "title": _("Data nodes"),
-    "unit": "count",
-    "color": "22/b",
-}
-
-metric_info["delayed_unassigned_shards"] = {
-    "title": _("Delayed unassigned shards"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["initializing_shards"] = {
-    "title": _("Initializing shards"),
-    "unit": "count",
-    "color": "14/b",
-}
-
-metric_info["number_of_nodes"] = {
-    "title": _("Nodes"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["relocating_shards"] = {
-    "title": _("Relocating shards"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["unassigned_shards"] = {
-    "title": _("Unassigned shards"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["number_of_pending_tasks"] = {
-    "title": _("Pending Tasks"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["number_of_in_flight_fetch"] = {
-    "title": _("Ongoing shard info requests"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["task_max_waiting_in_queue_millis"] = {
-    "title": _("Task max waiting in queue"),
-    "unit": "1/s",
-    "color": "14/a",
-}
-
-metric_info["open_file_descriptors"] = {
-    "title": _("Number of open file descriptors"),
-    "unit": "count",
-    "color": "14/a",
-}
-
 metric_info["available_file_descriptors"] = {
     "title": _("Number of available file descriptors"),
     "unit": "count",
@@ -6221,12 +6137,6 @@ metric_info["items_count"] = {
     "color": "23/a",
 }
 
-metric_info["num_extents"] = {
-    "title": _("Extents"),
-    "unit": "count",
-    "color": "23/a",
-}
-
 metric_info["num_collections"] = {
     "title": _("Collections"),
     "unit": "count",
@@ -6581,6 +6491,12 @@ metric_info['gc_bytes_rate'] = {
     "color": "42/a",
 }
 
+metric_info['log_file_utilization'] = {
+    "title": _("Percentage of log file used"),
+    "unit": "%",
+    "color": "42/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -6869,18 +6785,14 @@ check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
     }
 }
 
-check_metrics["check_mk-hp_procurve_mem"] = {
-    "memory_used": {
-        "name": "mem_used"
-    },
-}
-
 memory_simple_translation = {
     "memory_used": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True,
     },
 }
 
+check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
 check_metrics["check_mk-datapower_mem"] = memory_simple_translation
 check_metrics["check_mk-ucd_mem"] = memory_simple_translation
 check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
@@ -7074,7 +6986,8 @@ check_metrics["check_mk-mem.win"] = {
 
 check_metrics["check_mk-brocade_mlx.module_mem"] = {
     "memused": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True,
     },
 }
 
@@ -7319,10 +7232,14 @@ df_basic_perfvarnames = [
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
         "name": "fs_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
     "fs_size": {
         "scale": MB
@@ -7404,10 +7321,14 @@ for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
 check_metrics["check_mk-netapp_api_volumes"] = {
     "~(?!%s).*$" % "|".join(df_netapp_perfvarnames): {
         "name": "fs_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
     "fs_size": {
         "scale": MB
@@ -7942,23 +7863,18 @@ check_metrics["check_mk-ibm_svc_systemstats.cache"] = {
     }
 }
 
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = {
+mem_vsphere_hostsystem = {
     "usage": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True
     },
     "mem_total": {
         "auto_graph": False
     },
 }
 
-check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = {
-    "usage": {
-        "name": "mem_used"
-    },
-    "mem_total": {
-        "auto_graph": False
-    },
-}
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage"] = mem_vsphere_hostsystem
+check_metrics["check_mk-esx_vsphere_hostsystem.mem_usage_cluster"] = mem_vsphere_hostsystem
 
 check_metrics["check_mk-ibm_svc_host"] = {
     "active": {
@@ -7978,17 +7894,14 @@ check_metrics["check_mk-ibm_svc_host"] = {
     },
 }
 
-check_metrics["check_mk-juniper_screenos_mem"] = {
+juniper_mem = {
     "usage": {
-        "name": "mem_used"
+        "name": "mem_used",
+        "deprecated": True
     },
 }
-
-check_metrics["check_mk-juniper_trpz_mem"] = {
-    "usage": {
-        "name": "mem_used"
-    },
-}
+check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
+check_metrics["check_mk-juniper_trpz_mem"] = juniper_mem
 
 check_metrics["check_mk-ibm_svc_nodestats.iops"] = {
     "read": {
@@ -8373,7 +8286,14 @@ check_metrics["check_mk-oracle_performance"] = {
 check_metrics["check_mk-db2_logsize"] = {
     "~[_/]": {
         "name": "fs_used",
+        "scale": MB,
+        "deprecated": True
+    },
+    "fs_used": {
         "scale": MB
+    },
+    "fs_used_percent": {
+        "auto_graph": False,
     },
 }
 
@@ -10198,6 +10118,12 @@ perfometer_info.append({
     "exponent": 2,
 })
 
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["log_file_utilization"],
+    "total": 100.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -10931,6 +10857,10 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
 graph_info["disk_utilization"] = {
     "metrics": [("disk_utilization", "area"),],
     "range": (0, 100),
+    "scalars": [
+        "disk_utilization:warn",
+        "disk_utilization:crit",
+    ],
 }
 
 graph_info["disk_throughput"] = {

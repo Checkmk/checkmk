@@ -7,7 +7,7 @@
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name
-# - Consolidate ListOf and ListOfStrings/ListOfIntegers
+# - Consolidate ListOf and ListOfStrings
 # - Checkbox
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
@@ -30,11 +30,18 @@ import re
 import io
 import socket
 import sre_constants
+import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, List, Optional as _Optional, Pattern, Set, Text, Tuple as _Tuple, Type,
-    Union,
+    Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text,
+    Tuple as _Tuple, Type, TypeVar, Union, Sequence,
 )
+
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from typing_extensions import Protocol
+else:
+    from typing import Protocol  # pylint: disable=no-name-in-module
+
 import uuid
 from PIL import Image  # type: ignore[import]
 
@@ -79,6 +86,41 @@ DEF_VALUE = object()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[Text, HTML, Callable[[], Union[Text, HTML]]]
+
+C = TypeVar('C', bound='Comparable')
+
+
+# Look, mom, we finally have Haskell type classes! :-D Naive version requiring
+# only <, hopefully some similar class will make it into typing soon...
+class Comparable(Protocol):
+    @abc.abstractmethod
+    def __lt__(self, other):
+        # type: (C, C) -> bool
+        pass
+
+
+# NOTE: Bounds are inclusive!
+class Bounds(Generic[C]):
+    def __init__(self, lower, upper):
+        # type: (_Optional[C], _Optional[C]) -> None
+        super(Bounds, self).__init__()
+        self.__lower = lower
+        self.__upper = upper
+
+    def lower(self, default):
+        # type: (C) -> C
+        return default if self.__lower is None else self.__lower
+
+    def validate_value(self, value, varprefix):
+        # type: (C, str) -> None
+        if self.__lower is not None and value < self.__lower:
+            raise MKUserError(
+                varprefix,
+                _("%s is too low. The minimum allowed value is %s.") % (value, self.__lower))
+        if self.__upper is not None and self.__upper < value:
+            raise MKUserError(
+                varprefix,
+                _("%s is too high. The maximum allowed value is %s.") % (value, self.__upper))
 
 
 class ValueSpec(object):
@@ -285,17 +327,14 @@ class Age(ValueSpec):
                                   default_value=default_value,
                                   validate=validate)
         self._label = label
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
+        self._bounds = Bounds[Seconds](minvalue, maxvalue)
         self._display = display if display is not None else \
             ["days", "hours", "minutes", "seconds"]
         self._cssclass = cssclass
 
     def canonical_value(self):
         # type: () -> Seconds
-        if self._minvalue:
-            return self._minvalue
-        return 0
+        return self._bounds.lower(0)
 
     def render_input(self, varprefix, value):
         # type: (str, Seconds) -> None
@@ -366,14 +405,59 @@ class Age(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         # type: (Seconds, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
+
+
+class NumericRenderer(object):
+    def __init__(
+        self,
+        size,  # type: _Optional[int]
+        maxvalue,  # type: _Optional[SupportsFloat]
+        label,  # type: _Optional[Text]
+        unit,  # type: Text
+        thousand_sep,  # type: _Optional[Text]
+        align,  # type: str
+    ):
+        super(NumericRenderer, self).__init__()
+        if size is not None:
+            self._size = size
+        elif maxvalue is not None:
+            self._size = (4 if isinstance(maxvalue, float) else 1) + int(math.log10(maxvalue))
+        else:
+            self._size = 5
+        self._label = label
+        self._unit = unit
+        self._thousand_sep = thousand_sep
+        self._align = align
+
+    def text_input(self, varprefix, text):
+        # type: (str, Text) -> None
+        html.text_input(varprefix,
+                        default_value=text,
+                        cssclass="number",
+                        size=self._size,
+                        style="text-align: right;" if self._align == "right" else "")
+
+    def render_input(self, varprefix, text):
+        # type: (str, Text) -> None
+        if self._label:
+            html.write(self._label)
+            html.nbsp()
+        self.text_input(varprefix, text)
+        if self._unit:
+            html.nbsp()
+            html.write(self._unit)
+
+    def format_text(self, text):
+        # type: (Text) -> Text
+        if self._thousand_sep:
+            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
+            for pos in range(len(sepped), len(text), 3):
+                sepped += self._thousand_sep + text[pos:pos + 3]
+            text = sepped
+        if self._unit:
+            text += "&nbsp;" + self._unit
+        return text
 
 
 class Integer(ValueSpec):
@@ -398,50 +482,22 @@ class Integer(ValueSpec):
                                       help=help,
                                       default_value=default_value,
                                       validate=validate)
-        # TODO: inconsistency with default_value. All should be named with underscore
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
-        self._label = label
-        self._unit = unit
-        self._thousand_sep = thousand_sep
+        self._bounds = Bounds[int](minvalue, maxvalue)
+        self._renderer = NumericRenderer(size=size,
+                                         maxvalue=maxvalue,
+                                         label=label,
+                                         unit=unit,
+                                         thousand_sep=thousand_sep,
+                                         align=align)
         self._display_format = display_format
-        self._align = align
-
-        if size is not None:
-            self._size = size
-        elif maxvalue is not None:
-            self._size = 1 + int(math.log10(maxvalue))
-        else:
-            self._size = 5
 
     def canonical_value(self):
         # type: () -> int
-        return self._minvalue if self._minvalue else 0
+        return self._bounds.lower(0)
 
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-        if self._align == "right":
-            style = "text-align: right;"
-        else:
-            style = ""
-        if value == "":  # This is needed for ListOfIntegers
-            html.text_input(varprefix,
-                            default_value="",
-                            cssclass="number",
-                            size=self._size,
-                            style=style)
-        else:
-            html.text_input(varprefix,
-                            self._render_value(value),
-                            size=self._size,
-                            style=style,
-                            cssclass="number")
-        if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+        self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value):
         # type: (int) -> Text
@@ -453,35 +509,20 @@ class Integer(ValueSpec):
 
     def value_to_text(self, value):
         # type: (int) -> Text
-        text = self._display_format % value
-        if self._thousand_sep:
-            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
-            for pos in range(len(sepped), len(text), 3):
-                sepped += self._thousand_sep + text[pos:pos + 3]
-            text = sepped
-
-        if self._unit:
-            text += "&nbsp;" + self._unit
-        return text
+        return self._renderer.format_text(self._render_value(value))
 
     def validate_datatype(self, value, varprefix):
         # type: (int, str) -> None
-        if not isinstance(value, numbers.Integral):
-            raise MKUserError(
-                varprefix,
-                _("The value %r has the wrong type %s, but must be of type int") %
-                (value, _type_name(value)))
+        if isinstance(value, numbers.Integral):
+            return
+        raise MKUserError(
+            varprefix,
+            _("The value %r has the wrong type %s, but must be of type int") %
+            (value, _type_name(value)))
 
     def _validate_value(self, value, varprefix):
         # type: (int, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
 
 
 class Filesize(Integer):
@@ -500,10 +541,7 @@ class Filesize(Integer):
     def render_input(self, varprefix, value):
         # type: (str, int) -> None
         exp, count = self.get_exponent(value)
-        html.text_input(varprefix + '_size',
-                        default_value=str(count),
-                        size=self._size,
-                        cssclass="number")
+        self._renderer.text_input(varprefix + '_size', str(count))
         html.nbsp()
         choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]  # type: Choices
         html.dropdown(varprefix + '_unit', choices, deflt=str(exp))
@@ -2273,53 +2311,24 @@ class Float(ValueSpec):
                                     help=help,
                                     default_value=default_value,
                                     validate=validate)
-        # TODO: inconsistency with default_value. All should be named with underscore
-        self._minvalue = minvalue
-        self._maxvalue = maxvalue
-        self._label = label
-        self._unit = unit
-        self._thousand_sep = thousand_sep
+        self._bounds = Bounds[float](minvalue, maxvalue)
+        self._renderer = NumericRenderer(size=size,
+                                         maxvalue=maxvalue,
+                                         label=label,
+                                         unit=unit,
+                                         thousand_sep=thousand_sep,
+                                         align=align)
         self._display_format = display_format
-        self._align = align
-
-        if size is not None:
-            self._size = size
-        elif maxvalue is not None:
-            self._size = 4 + int(math.log10(maxvalue))
-        else:
-            self._size = 5
-
         self._decimal_separator = decimal_separator
         self._allow_int = allow_int
 
     def canonical_value(self):
         # type: () -> float
-        return self._minvalue if self._minvalue else 0.0
+        return self._bounds.lower(0.0)
 
     def render_input(self, varprefix, value):
         # type: (str, float) -> None
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-        if self._align == "right":
-            style = "text-align: right;"
-        else:
-            style = ""
-        if value == "":  # This is needed for ListOfIntegers
-            html.text_input(varprefix,
-                            default_value="",
-                            cssclass="number",
-                            size=self._size,
-                            style=style)
-        else:
-            html.text_input(varprefix,
-                            self._render_value(value),
-                            size=self._size,
-                            style=style,
-                            cssclass="number")
-        if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+        self._renderer.render_input(varprefix, self._render_value(value))
 
     def _render_value(self, value):
         # type: (float) -> Text
@@ -2331,25 +2340,15 @@ class Float(ValueSpec):
 
     def value_to_text(self, value):
         # type: (float) -> Text
-        text = self._display_format % value
-        if self._thousand_sep:
-            sepped = text[:((len(text) + 3 - 1) % 3) + 1]
-            for pos in range(len(sepped), len(text), 3):
-                sepped += self._thousand_sep + text[pos:pos + 3]
-            text = sepped
-
-        if self._unit:
-            text += "&nbsp;" + self._unit
-        return text.replace(".", self._decimal_separator)
+        txt = self._renderer.format_text(self._render_value(value))
+        return txt.replace(".", self._decimal_separator)
 
     def validate_datatype(self, value, varprefix):
         # type: (float, str) -> None
         if isinstance(value, float):
             return
-
         if isinstance(value, numbers.Integral) and self._allow_int:
             return
-
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but must be of type float%s") %
@@ -2357,14 +2356,7 @@ class Float(ValueSpec):
 
     def validate_value(self, value, varprefix):
         # type: (float, str) -> None
-        if self._minvalue is not None and value < self._minvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue is not None and value > self._maxvalue:
-            raise MKUserError(
-                varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
+        self._bounds.validate_value(value, varprefix)
 
 
 class Percentage(Float):
@@ -2465,18 +2457,18 @@ class Checkbox(ValueSpec):
                 (value, _type_name(value)))
 
 
-DropdownChoiceValue = Any
+DropdownChoiceValue = Any  # TODO: Can we be more specific?
+DropdownChoiceEntry = _Tuple[DropdownChoiceValue, Text]
+DropdownChoices = Union[List[DropdownChoiceEntry], Callable[[], List[DropdownChoiceEntry]]]
 
 
 class DropdownChoice(ValueSpec):
-    """A type-save dropdown choice
+    """A type-safe dropdown choice
 
     Parameters:
     help_separator: if you set this to a character, e.g. "-", then
     value_to_text will omit texts from the character up to the end of
     a choices name.
-    Note: The list of choices may contain 2-tuples or 3-tuples.
-    The format is (value, text {, icon} )
     choices may also be a function that returns - when called
     without arguments - such a tuple list. That way the choices
     can by dynamically computed"""
@@ -2485,7 +2477,7 @@ class DropdownChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # DropdownChoice
-        choices,  # type: Union[List[_Tuple[Any, Text]], Callable[[], List[_Tuple[Any, Text]]]]
+        choices,  # type: DropdownChoices
         sorted=False,  # type: bool
         label=None,  # type: _Optional[Text]
         help_separator=None,  # type: Text
@@ -2516,24 +2508,25 @@ class DropdownChoice(ValueSpec):
         self._label = label
         self._prefix_values = prefix_values
         self._sorted = sorted
-        self._empty_text = empty_text if empty_text is not None else \
-            _("There are no elements defined for this selection yet.")
+        self._empty_text = (empty_text if empty_text is not None else
+                            _("There are no elements defined for this selection yet."))
         self._invalid_choice = invalid_choice
-        self._invalid_choice_title = invalid_choice_title if invalid_choice_title is not None else \
-            _("Element '%r' does not exist anymore")
-        self._invalid_choice_error = invalid_choice_error if invalid_choice_error is not None else \
-            _("The selected element is not longer available. Please select something else.")
+        self._invalid_choice_title = (invalid_choice_title if invalid_choice_title is not None else
+                                      _("Element '%r' does not exist anymore"))
+        self._invalid_choice_error = (
+            invalid_choice_error if invalid_choice_error is not None else
+            _("The selected element is not longer available. Please select something else."))
         self._no_preselect = no_preselect
         self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title
-        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else \
-            _("Please make a selection")
+        self._no_preselect_error = (no_preselect_error if no_preselect_error is not None else
+                                    _("Please make a selection"))
         self._on_change = on_change
         self._read_only = read_only
         self._encode_value = encode_value
 
     def choices(self):
-        # type: () -> List[_Tuple[Any, Text]]
+        # type: () -> List[DropdownChoiceEntry]
         if callable(self._choices):
             result = self._choices()
         else:
@@ -2555,10 +2548,9 @@ class DropdownChoice(ValueSpec):
             html.write("%s " % self._label)
 
         choices = self.choices()
-
         defval = choices[0][0] if choices else None
         options = []
-        for entry in self.choices():
+        for entry in choices:
             if self._prefix_values:
                 entry = (entry[0], "%s - %s" % entry)
 
@@ -2595,8 +2587,7 @@ class DropdownChoice(ValueSpec):
 
     def value_to_text(self, value):
         # type: (DropdownChoiceValue) -> Text
-        for entry in self.choices():
-            val, title = entry[:2]
+        for val, title in self.choices():
             if value == val:
                 if self._help_separator:
                     return escaping.escape_attribute(
@@ -2614,8 +2605,7 @@ class DropdownChoice(ValueSpec):
         # type: (str) -> DropdownChoiceValue
         choices = self.choices()
 
-        for entry in choices:
-            val, _title = entry[:2]
+        for val, _title in choices:
             if self._is_selected_option_from_html(varprefix, val):
                 return val
 
@@ -2637,11 +2627,8 @@ class DropdownChoice(ValueSpec):
         return value
 
     def _options_for_html(self, orig_options):
-        # type: (List[_Tuple[Any, Text]]) -> List[_Tuple[DropdownChoiceValue, Text]]
-        options = []
-        for val, title in orig_options:
-            options.append((self._option_for_html(val), title))
-        return options
+        # type: (List[DropdownChoiceEntry]) -> List[_Tuple[DropdownChoiceValue, Text]]
+        return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
     def option_id(val):
@@ -2688,17 +2675,32 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
-CascadingDropdownChoiceElementValue = Union[None, Text, str, bool]
+CascadingDropdownChoiceElementValue = Union[None, Text, str, bool, int]
 CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
                                      _Tuple[CascadingDropdownChoiceElementValue, Any]]
 CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceElementValue, Text,
                                       _Optional[ValueSpec]]
-CascadingDropdownChoiceFunc = Callable[[], List[Union[_Tuple[CascadingDropdownChoiceElementValue,
-                                                             Text], CascadingDropdownCleanChoice]]]
-CascadingDropdownChoiceList = List[Union[_Tuple[CascadingDropdownChoiceElementValue, Text],
-                                         CascadingDropdownCleanChoice]]
-CascadingDropdownChoices = Union[CascadingDropdownChoiceList, CascadingDropdownChoiceFunc]
-CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
+CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceElementValue, Text]
+CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
+CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
+                                 Callable[[], List[CascadingDropdownChoice]]]
+
+
+def _normalize_choices(choices):
+    # type: (List[CascadingDropdownChoice]) -> List[CascadingDropdownCleanChoice]
+    return [(c[0], c[1], _sub_valuespec(c)) for c in choices]
+
+
+def _sub_valuespec(choice):
+    # type: (CascadingDropdownChoice) -> _Optional[ValueSpec]
+    if len(choice) == 2:
+        return None
+    if len(choice) == 3:
+        # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
+        vs = choice[2 + 0]
+        if vs is None or isinstance(vs, ValueSpec):
+            return vs
+    raise Exception("invalid CascadingDropdownChoice %r" % (choice,))
 
 
 class CascadingDropdown(ValueSpec):
@@ -2746,8 +2748,9 @@ class CascadingDropdown(ValueSpec):
                                                 validate=validate)
 
         if isinstance(choices, list):
-            self._choices = self.normalize_choices(
-                choices)  # type: Union[CascadingDropdownCleanChoices, CascadingDropdownChoiceFunc]
+            self._choices = _normalize_choices(
+                choices
+            )  # type: Union[List[CascadingDropdownCleanChoice], Callable[[], List[CascadingDropdownChoice]]]
         else:
             # function, store for later
             self._choices = choices
@@ -2772,22 +2775,12 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_page_name = render_sub_vs_page_name
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
-    def normalize_choices(self, choices):
-        # type: (CascadingDropdownChoiceList) -> CascadingDropdownCleanChoices
-        new_choices = []  # type: CascadingDropdownCleanChoices
-        for entry in choices:
-            if len(entry) == 2:  # plain entry with no sub-valuespec
-                entry = (entry[0], entry[1], None)  # normalize to three entries
-            # Mypy does not understand that we just erased the "tuple length of two" case
-            new_choices.append(entry)  # type: ignore[arg-type]
-        return new_choices
-
     def choices(self):
-        # type: () -> CascadingDropdownCleanChoices
+        # type: () -> List[CascadingDropdownCleanChoice]
         if isinstance(self._choices, list):
-            result = self._choices  # type: CascadingDropdownCleanChoices
+            result = self._choices  # type: List[CascadingDropdownCleanChoice]
         else:
-            result = self.normalize_choices(self._choices())
+            result = _normalize_choices(self._choices())
 
         if self._no_preselect:
             choice = (self._no_preselect_value, self._no_preselect_title, None
@@ -3040,6 +3033,12 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
 
+ListChoiceChoiceValue = Union[Text, str]
+ListChoiceChoiceList = Sequence[Union[_Tuple[Text, Text], _Tuple[str, Text]]]
+ListChoiceChoices = Union[None, ListChoiceChoiceList, Dict[ListChoiceChoiceValue, Text],
+                          Callable[[], ListChoiceChoiceList]]
+
+
 class ListChoice(ValueSpec):
     """A list of checkboxes representing a list of values"""
     @staticmethod
@@ -3050,7 +3049,7 @@ class ListChoice(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListChoice
-        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List[_Tuple[Text, Text]]]]
+        choices=None,  # type: ListChoiceChoices
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]
@@ -3196,7 +3195,7 @@ class DualListChoice(ListChoice):
         rows=None,  # type: _Optional[int]
         size=None,  # type: _Optional[int]
         # ListChoice
-        choices=None,  # type: Union[None, List[_Tuple[Text, Text]], Dict[Text, Text], Callable[[], List]]
+        choices=None,  # type: ListChoiceChoices
         columns=1,  # type: int
         allow_empty=True,  # type: bool
         empty_text=None,  # type: _Optional[Text]
@@ -3345,13 +3344,13 @@ class DualListChoice(ListChoice):
 
 
 class OptionalDropdownChoice(DropdownChoice):
-    """A type-save dropdown choice with one extra field that
+    """A type-safe dropdown choice with one extra field that
     opens a further value spec for entering an alternative
     Value."""
     def __init__(  # pylint: disable=redefined-builtin
         self,
         explicit,  # type: ValueSpec
-        choices,  # type: Union[List[_Tuple[Any, Text]], Callable[[], List[_Tuple[Any, Text]]]]
+        choices,  # type: DropdownChoices
         otherlabel=None,  # type: _Optional[Text]
         # DropdownChoice
         sorted=False,  # type: bool
@@ -3622,7 +3621,7 @@ class AbsoluteDate(ValueSpec):
                 else:
                     html.text_input(
                         varprefix + val[0],
-                        default_value=str(val[1]),
+                        default_value=str(val[1]) if val[1] else "",
                         size=val[2],
                         cssclass="number",
                         submit=self._submit_form_name,
@@ -3659,7 +3658,9 @@ class AbsoluteDate(ValueSpec):
     def value_from_json(self, json_value):
         return json_value
 
+    # TODO: allow_empty is a *very* bad idea typing-wise! We are poisoned by Optional... :-P
     def from_html_vars(self, varprefix):
+        # type: (str) -> _Optional[float]
         parts = []
         entries = [
             ("year", _("year"), 1970, 2038),
@@ -4007,7 +4008,7 @@ class Timerange(CascadingDropdown):
         self,
         allow_empty=False,  # type: bool
         include_time=False,  # type: bool
-        choices=None,  # type: Union[None, CascadingDropdownChoiceList, Callable[[], CascadingDropdownChoiceList]]
+        choices=None,  # type: Union[None, List[CascadingDropdownChoice], Callable[[], List[CascadingDropdownChoice]]]
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: _Optional[Text]
@@ -4053,10 +4054,10 @@ class Timerange(CascadingDropdown):
         self._fixed_choices = choices
 
     def _prepare_choices(self):
-        # type: () -> CascadingDropdownChoiceList
+        # type: () -> List[CascadingDropdownChoice]
         # TODO: We have dispatching code like this all over place...
         if self._fixed_choices is None:
-            choices = []  # type: CascadingDropdownChoiceList
+            choices = []  # type: List[CascadingDropdownChoice]
         elif isinstance(self._fixed_choices, list):
             choices = list(self._fixed_choices)
         elif callable(self._fixed_choices):
@@ -4661,13 +4662,14 @@ class Tuple(ValueSpec):
 
 
 DictionaryEntry = _Tuple[str, ValueSpec]
+DictionaryElements = Union[List[DictionaryEntry], Callable[[], List[DictionaryEntry]]]
 
 
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements,  # type: Union[List[_Tuple[str, ValueSpec]], Callable[[], List[_Tuple[str, ValueSpec]]]]
+        elements,  # type: DictionaryElements
         empty_text=None,  # type: _Optional[Text]
         default_text=None,  # type: _Optional[Text]
         optional_keys=True,  # type: Union[bool, List[str]]
@@ -6005,7 +6007,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         from_end_choice = [
             ("month_end", _("At the end of every month at day"),
              Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-        ]  # type: CascadingDropdownChoiceList
+        ]  # type: List[CascadingDropdownChoice]
     else:
         from_end_choice = []
 
@@ -6014,7 +6016,7 @@ def SchedulePeriod(from_end=True, **kwargs):
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         ("month_begin", _("At the beginning of every month at day"), Integer(minvalue=1,
                                                                              maxvalue=28)),
-    ]  # type:  CascadingDropdownChoiceList
+    ]  # type:  List[CascadingDropdownChoice]
     return CascadingDropdown(title=_("Period"),
                              orientation="horizontal",
                              choices=dwm + from_end_choice,

@@ -14,4 +14,4 @@ item:
  Name of the volume group
 
 inventory:
-  One item is generated per volume group
+ One service is created for each volume group.

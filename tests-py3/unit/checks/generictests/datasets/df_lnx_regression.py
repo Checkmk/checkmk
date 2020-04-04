@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -48,6 +48,10 @@ checks = {
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
                         (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ),
+                        (
                             'inodes_used', 1654272, 8228044.8, 8685158.4, 0.0,
                             9142272.0
                         )
@@ -73,6 +77,10 @@ checks = {
                             'fs_used', 106418.50390625, 112333.35625,
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
+                        (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ),
                         (
                             'inodes_used', 1654272, 8228044.8, 8685158.4, 0.0,
                             9142272.0
@@ -102,6 +110,10 @@ checks = {
                             'fs_used', 99263.20703125, 112333.35625,
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
+                        (
+                            'fs_used_percent', 70.69188376092876, None, None,
+                            None, None
+                        ),
                         (
                             'fs_free', 33998.19140625, None, None, 0,
                             140416.6953125
@@ -134,7 +146,10 @@ checks = {
                             'fs_used', 106418.50390625, 112333.35625,
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
-                        ('reserved', 7155.296875, None, None, None, None),
+                        (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ), ('reserved', 7155.296875, None, None, None, None),
                         (
                             'inodes_used', 1654272, 8228044.8, 8685158.4, 0.0,
                             9142272.0
@@ -163,7 +178,10 @@ checks = {
                             'fs_used', 106418.50390625, 112333.35625,
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
-                        ('reserved', 7155.296875, None, None, None, None),
+                        (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ), ('reserved', 7155.296875, None, None, None, None),
                         (
                             'inodes_used', 1654272, 8228044.8, 8685158.4, 0.0,
                             9142272.0
@@ -199,6 +217,10 @@ checks = {
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
                         (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ),
+                        (
                             'inodes_used', 1654272, 914227.2000000001,
                             8685158.4, 0.0, 9142272.0
                         )
@@ -220,6 +242,10 @@ checks = {
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
                         (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ),
+                        (
                             'inodes_used', 1654272, 600000.0, 1000000.0, 0.0,
                             9142272.0
                         )
@@ -237,6 +263,10 @@ checks = {
                             'fs_used', 106617.31640625, 112896.94375,
                             127009.06171875, 0, 141121.1796875
                         ), ('fs_size', 141121.1796875, None, None, None, None),
+                        (
+                            'fs_used_percent', 75.55018788982939, None, None,
+                            None, None
+                        ),
                         ('inodes_used', 1654576, None, None, 0.0, 9189120.0)
                     ]
                 )
@@ -252,6 +282,10 @@ checks = {
                             'fs_used', 106617.31640625, 112896.94375,
                             127009.06171875, 0, 141121.1796875
                         ), ('fs_size', 141121.1796875, None, None, None, None),
+                        (
+                            'fs_used_percent', 75.55018788982939, None, None,
+                            None, None
+                        ),
                         ('inodes_used', 1654576, None, None, 0.0, 9189120.0)
                     ]
                 )
@@ -275,6 +309,10 @@ checks = {
                             'fs_used', 198.8125, 563.5875, 634.0359375, 0,
                             704.484375
                         ), ('fs_size', 704.484375, None, None, None, None),
+                        (
+                            'fs_used_percent', 28.22099496528933, None, None,
+                            None, None
+                        ),
                         (
                             'inodes_used', 304, 42163.200000000004, 44505.6,
                             0.0, 46848.0
@@ -303,6 +341,10 @@ checks = {
                             126375.02578125, 0, 140416.6953125
                         ), ('fs_size', 140416.6953125, None, None, None, None),
                         (
+                            'fs_used_percent', 75.78764310712029, None, None,
+                            None, None
+                        ),
+                        (
                             'inodes_used', 1654272, 8228044.8, 8685158.4, 0.0,
                             9142272.0
                         )
@@ -329,6 +371,10 @@ checks = {
                             'fs_used', 198.8125, 563.5875, 634.0359375, 0,
                             704.484375
                         ), ('fs_size', 704.484375, None, None, None, None),
+                        (
+                            'fs_used_percent', 28.22099496528933, None, None,
+                            None, None
+                        ),
                         (
                             'inodes_used', 304, 42163.200000000004, 44505.6,
                             0.0, 46848.0

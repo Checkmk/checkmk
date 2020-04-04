@@ -16,4 +16,4 @@ item:
  Name of the volume
 
 inventory:
- One services for each volume will be created.
+ One service is created for each volume.

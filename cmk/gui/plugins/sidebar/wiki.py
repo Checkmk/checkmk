@@ -45,18 +45,14 @@ class Wiki(SidebarSnapin):
     def show(self):
         # type: () -> None
         filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
-        html.javascript("""
-        function wiki_search()
-        {
-            var oInput = document.getElementById('wiki_search_field');
-            top.frames["main"].location.href =
-               "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
-        }
-        """ % config.omd_site())
 
-        html.open_form(id_="wiki_search", onsubmit="wiki_search();")
+        html.open_form(id_="wiki_search",
+                       onsubmit="cmk.sidebar.wiki_search('%s');" % config.omd_site())
         html.input(id_="wiki_search_field", type_="text", name="wikisearch")
-        html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
+        html.icon_button("#",
+                         _("Search"),
+                         "wikisearch",
+                         onclick="cmk.sidebar.wiki_search('%s');" % config.omd_site())
         html.close_form()
         html.div('', id_="wiki_side_clear")
 

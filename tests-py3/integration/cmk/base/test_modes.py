@@ -14,7 +14,6 @@ import pytest  # type: ignore[import]
 
 from testlib import web  # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output
-from testlib.base import AUTO_MIGRATION_ERRORS
 
 
 @pytest.fixture(scope="module")
@@ -159,7 +158,7 @@ def test_list_tag_multiple_tags_2(execute):
     p = execute(["cmk", "--list-tag", "test", "cmk-agent"])
     assert p.returncode == 0
     assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
 
 
 #.
@@ -178,7 +177,7 @@ def test_list_checks(execute):
     for opt in ["--list-checks", "-L"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert "zypper" in p.stdout
         assert "Zypper: (Security) Updates" in p.stdout
         assert p.stdout.count(" snmp ") > 300
@@ -225,7 +224,7 @@ def test_dump_agent_test(execute):
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout == get_standard_linux_agent_output()
 
 
@@ -244,7 +243,7 @@ def test_dump_agent_dump_all_hosts(execute):
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout.count("Addresses: ") == 3
 
 
@@ -252,7 +251,7 @@ def test_dump_agent(execute):
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert "Addresses: " in p.stdout
         assert "Type of agent: " in p.stdout
         assert "Services:" in p.stdout
@@ -272,7 +271,7 @@ def test_dump_agent(execute):
 def test_paths(execute):
     p = execute(["cmk", "--paths"])
     assert p.returncode == 0
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert "Main components of check_mk" in p.stdout
     assert "Locally installed " in p.stdout
     assert len(p.stdout.split("\n")) > 40
@@ -292,7 +291,7 @@ def test_paths(execute):
 def _create_cmk_backup(site, execute):
     p = execute(["cmk", "--backup", "x.tgz"], cwd=site.root)
     assert p.returncode == 0, "Command failed: %r, %r" % (p.stdout, p.stderr)
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert p.stdout == ""
     assert site.file_exists("x.tgz")
 
@@ -326,7 +325,7 @@ def test_restore(request, site, execute):
     site.delete_file("etc/check_mk/final.mk")
     p = execute(["cmk", "--restore", "x.tgz"], cwd=site.root)
     assert p.returncode == 0
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert p.stdout == ""
 
     p = execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root)
@@ -437,14 +436,14 @@ def test_restore(request, site, execute):
 def test_flush_existing_host(execute):
     p = execute(["cmk", "--flush", "modes-test-host4"])
     assert p.returncode == 0
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert p.stdout == "modes-test-host4    : (nothing)\n"
 
 
 def test_flush_not_existing_host(execute):
     p = execute(["cmk", "--flush", "bums"])
     assert p.returncode == 0
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert p.stdout == "bums                : (nothing)\n"
 
 
@@ -540,7 +539,7 @@ def test_inventory_all_hosts(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout == ""
 
 
@@ -548,7 +547,7 @@ def test_inventory_single_host(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout == ""
 
 
@@ -556,7 +555,7 @@ def test_inventory_multiple_hosts(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host", "modes-test-host2"])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout == ""
 
 
@@ -564,7 +563,7 @@ def test_inventory_verbose(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", "-v", opt, "modes-test-host"])
         assert p.returncode == 0
-        assert p.stderr == AUTO_MIGRATION_ERRORS
+        assert p.stderr == ''
         assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
         stdout_words = p.stdout.split()
         assert "check_mk" in stdout_words
@@ -587,14 +586,14 @@ def test_inventory_as_check_unknown_host(execute):
     p = execute(["cmk", "--inventory-as-check", "xyz."])
     assert p.returncode == 2
     assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address of")
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
 
 
 def test_inventory_as_check(execute):
     p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
     assert p.returncode == 0
     assert re.match(r"OK - Found \d+ inventory entries", p.stdout)
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
 
 
 #.
@@ -645,14 +644,14 @@ def test_check_discovery_host(execute):
     p = execute(["cmk", "--check-discovery", "xyz."])
     assert p.returncode == 2
     assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address")
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
 
 
 def test_check_discovery(execute):
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
     assert p.returncode == 0
     assert p.stdout.startswith("OK - ")
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
 
 
 #.
@@ -741,6 +740,24 @@ def test_help(execute):
 def test_help_without_args(execute):
     p = execute(["cmk"])
     assert p.returncode == 0
-    assert p.stderr == AUTO_MIGRATION_ERRORS
+    assert p.stderr == ''
     assert p.stdout.startswith("WAYS TO CALL:")
     assert "--snmpwalk" in p.stdout
+
+
+#.
+#   .--diagnostics---------------------------------------------------------.
+#   |             _ _                             _   _                    |
+#   |          __| (_) __ _  __ _ _ __   ___  ___| |_(_) ___ ___           |
+#   |         / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|          |
+#   |        | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \          |
+#   |         \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/          |
+#   |                       |___/                                          |
+#   '----------------------------------------------------------------------'
+
+
+def test_create_diagnostics_dump(execute):
+    p = execute(["cmk", "--create-diagnostics-dump"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout.startswith("Created diagnostics dump:")

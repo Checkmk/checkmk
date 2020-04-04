@@ -18,4 +18,4 @@ description:
 
 
 inventory:
- One service is created named 'MongoDB Primary Election'
+ One service is created named 'MongoDB Primary Election'.

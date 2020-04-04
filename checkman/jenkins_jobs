@@ -17,4 +17,4 @@ item:
  the folder path followed by the job name, e.g. {"FOLDER1/FOLDER2/JOBNAME"}.
 
 inventory:
- One service per job will be created
+ One service is created for each job.

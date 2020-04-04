@@ -9,5 +9,5 @@ description:
  (more precisely the agent) needs access to the display {:0}.
 
 inventory:
- One check is created if the agent sends any output about {GPUErrors}.
+ One service is created if the agent sends any output about {GPUErrors}.
 

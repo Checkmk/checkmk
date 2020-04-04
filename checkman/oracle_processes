@@ -1,4 +1,4 @@
-title: Oracle Database Processes
+title: Oracle Database: Processes
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -10,3 +10,6 @@ description:
 
 item:
  Name of the process
+
+inventory:
+ One service is created for each running database.

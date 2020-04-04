@@ -11,4 +11,4 @@ description:
  The check always returns {OK} state.
 
 inventory:
- On each LPAR one check is generated.
+ One service is created on each LPAR.

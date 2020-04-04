@@ -86,26 +86,26 @@ def _git_command(args):
             raise MKGeneralException(
                 _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
                 (subprocess.list2cmdline(command), e))
-        else:
-            raise
+        raise
 
     status = p.wait()
     if status != 0:
+        out = u"" if p.stdout is None else six.ensure_text(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-            (subprocess.list2cmdline(command), p.stdout.read().replace("\n", "<br>\n")))
+            (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))
 
 
 def _git_has_pending_changes():
     try:
-        return subprocess.Popen(["git", "status", "--porcelain"],
-                                cwd=cmk.utils.paths.default_config_dir,
-                                stdout=subprocess.PIPE).stdout.read() != ""
+        p = subprocess.Popen(["git", "status", "--porcelain"],
+                             cwd=cmk.utils.paths.default_config_dir,
+                             stdout=subprocess.PIPE)
+        return p.stdout is not None and p.stdout.read() != ""
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False  # ignore missing git command
-        else:
-            raise
+        raise
 
 
 # TODO: Use cmk.store

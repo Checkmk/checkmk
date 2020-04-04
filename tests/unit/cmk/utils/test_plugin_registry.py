@@ -63,13 +63,13 @@ def test_contains(basic_registry):
 
 def test_delitem(basic_registry):
     with pytest.raises(KeyError):
-        del basic_registry["bla"]
+        basic_registry.unregister("bla")
 
     @basic_registry.register  # pylint: disable=unused-variable
     class DelPlugin(Plugin):
         pass
 
-    del basic_registry["DelPlugin"]
+    basic_registry.unregister("DelPlugin")
 
 
 def test_getitem(basic_registry):

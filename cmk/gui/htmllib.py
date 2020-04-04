@@ -44,12 +44,14 @@ import os
 import ast
 import re
 import json
+import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING,
-    TypeVar)
+    TypeVar,
+)
 
 import six
 
@@ -78,6 +80,15 @@ def _default(self, obj):
 _default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore[assignment]
+
+# And here we go for another dirty JSON hack. We often use he JSON we produce for adding it to HTML
+# tags and the JSON produced by json.dumps() can not directly be added to <script> tags in a save way.
+# TODO: This is something which should be realized by using a custom JSONEncoder. The slash encoding
+# is not necessary when the resulting string is not added to HTML content, but there is no problem
+# to apply it to all encoded strings.
+json.encoder._orig_encode_basestring_ascii = json.encoder.encode_basestring_ascii  # type: ignore[attr-defined]
+json.encoder.encode_basestring_ascii = lambda s: json.encoder._orig_encode_basestring_ascii(  # type: ignore[attr-defined]
+    s).replace('/', '\\/')  # type: ignore[attr-defined]
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -1644,13 +1655,14 @@ class html(ABCHTMLGenerator):
         self.response.delete_cookie("language")
 
     def set_language_cookie(self, lang):
-        # type: (str) -> None
+        # type: (Optional[str]) -> None
         cookie_lang = self.request.cookie("language")
-        if cookie_lang != lang:
-            if lang is not None:
-                self.response.set_http_cookie("language", lang)
-            else:
-                self.del_language_cookie()
+        if cookie_lang == lang:
+            return
+        if lang is None:
+            self.del_language_cookie()
+        else:
+            self.response.set_http_cookie("language", lang)
 
     def help(self, text):
         # type: (Union[None, HTML, Text]) -> None
@@ -2413,13 +2425,14 @@ class html(ABCHTMLGenerator):
             "toggle_switch",
             "on" if enabled else "off",
         ]
+        onclick = attrs.pop("onclick", None)
 
         self.open_div(class_=class_, **attrs)
         self.a(
             content=_("on") if enabled else _("off"),
             href=href,
             title=help_txt,
-            onclick=attrs.pop("onclick", None),
+            onclick=onclick,
         )
         self.close_div()
 
@@ -2504,7 +2517,7 @@ class html(ABCHTMLGenerator):
         if varname:
             self.form_vars.append(varname)
 
-        chs = choices[:]
+        chs = list(choices)
         if ordered:
             # Sort according to display texts, not keys
             chs.sort(key=lambda a: a[1].lower())

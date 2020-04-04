@@ -1209,7 +1209,7 @@ def get_graph_timerange_from_painter_options():
 
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
-    # type: (Timestamp, bool, bool, str, str) -> CellSpec
+    # type: (Timestamp, bool, int, str, str) -> CellSpec
     if not has_been_checked:
         return "age", "-"
 
@@ -1497,10 +1497,11 @@ class ViewStore(object):
         # type: () -> AllViewSpecs
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
-        return _transform_old_views(
-            visuals.load('views',
-                         multisite_builtin_views,
-                         skip_func=lambda v: v['datasource'] not in data_source_registry))
+        views = visuals.load('views',
+                             multisite_builtin_views,
+                             skip_func=lambda v: v['datasource'] not in data_source_registry)
+        views = _transform_old_views(views)
+        return {viewname: transform_painter_spec(view) for viewname, view in views.items()}
 
     def _load_permitted_views(self, all_views):
         # type: (AllViewSpecs) -> PermittedViewSpecs
@@ -1516,6 +1517,15 @@ def get_all_views():
 def get_permitted_views():
     # type: () -> PermittedViewSpecs
     return ViewStore.get_instance().permitted
+
+
+def transform_painter_spec(view):
+    # type: (ViewSpec) -> ViewSpec
+    if 'painters' in view:
+        view['painters'] = [PainterSpec(*v) for v in view['painters']]
+    if 'group_painters' in view:
+        view['group_painters'] = [PainterSpec(*v) for v in view['group_painters']]
+    return view
 
 
 # Convert views that are saved in the pre 1.2.6-style
@@ -1712,16 +1722,8 @@ def painter_exists(painter_spec):
 
 class Cell(object):
     """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
-
-    # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
-    # but this should be cleaned up more. TODO: Move this to another place
-    @staticmethod
-    def is_join_cell(painter_spec):
-        # type: (PainterSpec) -> bool
-        return len(painter_spec) >= 4
-
     def __init__(self, view, painter_spec=None):
-        # type: (View, PainterSpec) -> None
+        # type: (View, Optional[PainterSpec]) -> None
         self._view = view
         self._painter_name = None  # type: Optional[PainterName]
         self._painter_params = None  # type: Optional[PainterParameters]
@@ -1732,23 +1734,6 @@ class Cell(object):
         if painter_spec:
             self._from_view(painter_spec)
 
-    # In views the painters are saved as tuples of the following formats:
-    #
-    # Painter name, Link view name
-    # ('service_discovery_service', None),
-    #
-    # Painter name,  Link view name, Hover painter name
-    # ('host_plugin_output', None, None),
-    #
-    # Join column: Painter name, Link view name, hover painter name, Join service description
-    # ('service_description', None, None, u'CPU load')
-    #
-    # Join column: Painter name, Link view name, hover painter name, Join service description, custom title
-    # ('service_description', None, None, u'CPU load')
-    #
-    # Parameterized painters:
-    # Same as above but instead of the "Painter name" a two element tuple with the painter name as
-    # first element and a dictionary of parameters as second element is set.
     def _from_view(self, painter_spec):
         # type: (PainterSpec) -> None
         self._painter_name = extract_painter_name(painter_spec)
@@ -1756,16 +1741,11 @@ class Cell(object):
             self._painter_params = painter_spec[0][1]
             self._custom_title = self._painter_params.get('column_title', None)
 
-        if painter_spec[1] is not None:
-            self._link_view_name = painter_spec[1]
+        self._link_view_name = painter_spec.link_view
 
-        if len(painter_spec) >= 3:
-            # mypy does not understand this data structure correctly. Sure, we should cleanup that
-            # structure, but it's not that easy, because it is persisted in custom views.
-            # Ignore: [mypy:] Tuple index out of range  [misc]
-            tooltip_painter_name = painter_spec[2]  # type: ignore[misc]
-            if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
-                self._tooltip_painter_name = tooltip_painter_name
+        tooltip_painter_name = painter_spec.tooltip
+        if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
+            self._tooltip_painter_name = tooltip_painter_name
 
     def needed_columns(self):
         # type: () -> Set[ColumnName]
@@ -1990,7 +1970,7 @@ class Cell(object):
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
-            tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
+            tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
@@ -2154,17 +2134,10 @@ class JoinCell(Cell):
         # type: (PainterSpec) -> None
         super(JoinCell, self)._from_view(painter_spec)
 
-        if len(painter_spec) >= 4:
-            # mypy does not understand this data structure correctly. Sure, we should cleanup that
-            # structure, but it's not that easy, because it is persisted in custom views.
-            # Ignore: [mypy:] Tuple index out of range  [misc]
-            self._join_service_descr = painter_spec[3]  # type: ignore[misc]
+        self._join_service_descr = painter_spec.join_index
 
-        if len(painter_spec) == 5 and self._custom_title is None:
-            # mypy does not understand this data structure correctly. Sure, we should cleanup that
-            # structure, but it's not that easy, because it is persisted in custom views.
-            # Ignore: [mypy:] Tuple index out of range  [misc]
-            self._custom_title = painter_spec[4]  # type: ignore[misc]
+        if painter_spec.column_title and self._custom_title is None:
+            self._custom_title = painter_spec.column_title
 
     def is_joined(self):
         # type: () -> bool

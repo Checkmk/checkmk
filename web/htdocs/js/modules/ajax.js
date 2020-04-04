@@ -4,6 +4,7 @@
 
 import { merge_args } from "utils";
 
+// NOTE: This function is deprecated; use call_ajax instead.
 export function get_url(url, handler, data, errorHandler, addAjaxId)
 {
     var args = {
@@ -22,6 +23,7 @@ export function get_url(url, handler, data, errorHandler, addAjaxId)
     call_ajax(url, args);
 }
 
+// NOTE: This function is deprecated; use call_ajax instead.
 export function post_url(url, post_params, responseHandler, handler_data, errorHandler)
 {
     var args = {
@@ -95,12 +97,12 @@ export function call_ajax(url, optional_args)
                 else if (AJAX.status == 401) {
                     // This is reached when someone is not authenticated anymore
                     // but has some webservices running which are still fetching
-                    // infos via AJAX. Reload the whole frameset or only the
-                    // single page in that case.
-                    if(top)
+                    // infos via AJAX. Reload the whole page in that case.
+                    if (top) {
                         top.location.reload();
-                    else
+                    } else {
                         document.location.reload();
+                    }
                 }
                 else {
                     if (args.error_handler)

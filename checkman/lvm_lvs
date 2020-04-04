@@ -10,3 +10,4 @@ item:
  Name of the volume group assigned plus the size of the volume or the name of the volume seperated by a {{/}}
 
 inventory:
+ One service is created for each logical volume.

@@ -1612,8 +1612,7 @@ def ajax_popup_add():
             html.close_a()
             html.close_li()
 
-    # TODO: Find a good place for this special case. This needs to be modularized.
-    if add_type == "pnpgraph" and not cmk_version.is_enterprise_edition():
+    if add_type == "pnpgraph" and not cmk_version.is_raw_edition():
         html.open_li()
         html.open_span()
         html.write("%s:" % _("Export"))

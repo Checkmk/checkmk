@@ -20,4 +20,4 @@ item:
  The name or the description of the power supply.
 
 inventory:
- One service per power supply is created.
+ One service is created for each power supply.

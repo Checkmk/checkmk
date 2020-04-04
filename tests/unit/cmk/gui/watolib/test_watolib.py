@@ -63,6 +63,8 @@ def test_registered_automation_commands():
         'ping',
         'push-snapshot',
         'service-discovery-job',
+        'checkmk-remote-automation-start',
+        'checkmk-remote-automation-get-status',
     ]
 
     if not cmk_version.is_raw_edition():

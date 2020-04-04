@@ -16,6 +16,7 @@ sudo rsync \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
+    --exclude=diagnostics.py \
     -a * $ROOT/lib/python/cmk/base/
 sudo rsync \
     --exclude=cee \

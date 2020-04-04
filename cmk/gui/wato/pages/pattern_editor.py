@@ -44,8 +44,8 @@ class ModePatternEditor(WatoMode):
         self._vs_host().validate_value(self._hostname, "host")
 
         # TODO: validate all fields
-        self._item = html.request.var('file', '')
-        self._match_txt = html.request.var('match', '')
+        self._item = html.request.get_unicode_input_mandatory('file', u'')
+        self._match_txt = html.request.get_unicode_input_mandatory('match', u'')
 
         self._host = watolib.Folder.current().host(self._hostname)
 
@@ -163,7 +163,7 @@ class ModePatternEditor(WatoMode):
                 # Each rule can hold no, one or several patterns. Loop them all here
                 for state, pattern, comment in pattern_list:
                     match_class = ''
-                    disp_match_txt = ''
+                    disp_match_txt = HTML('')
                     match_img = ''
                     if rule_matches:
                         # Applies to the given host/service
@@ -232,5 +232,6 @@ class ModePatternEditor(WatoMode):
         # type: (HostName, CheckPluginName, Item) -> ServiceName
         # TODO: re-enable once the GUI is using Python3
         #return cmk.base.export.service_description(hostname, check_plugin_name, item)
+        assert item is not None
         return watolib.check_mk_local_automation("get-service-name",
                                                  [hostname, check_plugin_name, item])

@@ -16,5 +16,5 @@ item:
  Backend of the ingress
 
 inventory:
- One service is created per path.
+ One service is created for each path.
 

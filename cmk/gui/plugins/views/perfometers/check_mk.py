@@ -809,13 +809,11 @@ def perfometer_hpux_tunables(row, check_command, perf_data):
 
 
 perfometers["check_mk-hpux_tunables.nproc"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
 # this one still doesn't load. I need more test data to find out why.
 perfometers["check_mk-hpux_tunables.semmni"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 
 

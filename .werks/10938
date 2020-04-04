@@ -1,4 +1,4 @@
-Title: agent_rabbitmq, rabbitmq_cluster, rabbitmq_queues: New special agent and checks to monitor RabbitMQ
+Title: agent_rabbitmq, rabbitmq_cluster, rabbitmq_queues, rabbitmq_vhosts, rabbitmq_nodes: New special agent and checks to monitor RabbitMQ
 Class: feature
 Compatible: compat
 Component: checks

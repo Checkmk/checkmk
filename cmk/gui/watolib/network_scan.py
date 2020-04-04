@@ -10,7 +10,11 @@ import re
 import threading
 import socket
 import subprocess
-from typing import NamedTuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    NamedTuple, List, Tuple,
+)
+
+from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -74,7 +78,7 @@ def _ip_addresses_to_scan(folder):
 
 
 def _ip_addresses_of_ranges(ip_ranges):
-    addresses = set([])
+    addresses = set()
 
     for ty, spec in ip_ranges:
         if ty == "ip_range":
@@ -95,7 +99,7 @@ _FULL_IPV4 = (2**32) - 1
 def _ip_addresses_of_range(spec):
     first_int, last_int = map(_ip_int_from_string, spec)
 
-    addresses = []
+    addresses = []  # type: List[HostAddress]
 
     if first_int > last_int:
         return addresses  # skip wrong config
@@ -110,6 +114,7 @@ def _ip_addresses_of_range(spec):
 
 
 def _ip_int_from_string(ip_str):
+    # type: (str) -> int
     packed_ip = 0
     octets = ip_str.split(".")
     for oc in octets:
@@ -118,8 +123,9 @@ def _ip_int_from_string(ip_str):
 
 
 def _string_from_ip_int(ip_int):
-    octets = []
-    for _ in range(4):
+    # type: (int) -> HostAddress
+    octets = []  # type: List[str]
+    for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
     return ".".join(octets)
@@ -187,7 +193,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # Initalize all workers
     threads = []
-    found_hosts = []
+    found_hosts = []  # type: List[Tuple[HostName, HostAddress]]
     for _t_num in range(parallel_pings):
         t = threading.Thread(target=_ping_worker, args=[ip_addresses, found_hosts])
         t.daemon = True
@@ -202,6 +208,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
 
 def _ping_worker(addresses, hosts):
+    # type: (List[HostAddress], List[Tuple[HostName, HostAddress]]) -> None
     while True:
         try:
             ipaddress = addresses.pop()
@@ -209,6 +216,7 @@ def _ping_worker(addresses, hosts):
             break
 
         if _ping(ipaddress):
+            # type: (HostAddress) -> None
             try:
                 host_name = socket.gethostbyaddr(ipaddress)[0]
             except socket.error:
@@ -218,6 +226,7 @@ def _ping_worker(addresses, hosts):
 
 
 def _ping(address):
+    # type: (HostAddress) -> bool
     return subprocess.Popen(['ping', '-c2', '-w2', address],
                             stdout=open(os.devnull, "a"),
                             stderr=subprocess.STDOUT,

@@ -29,6 +29,6 @@ check_info['couchbase_nodes_uptime'] = {
     'check_function': check_couchbase_nodes_uptime,
     'service_description': 'Couchbase %s Uptime',
     'includes': ['uptime.include'],
-    'group': 'couchbase_uptime',
+    'group': 'uptime_multiitem',
     'has_perfdata': True,
 }

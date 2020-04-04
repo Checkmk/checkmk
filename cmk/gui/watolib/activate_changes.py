@@ -9,8 +9,9 @@ import ast
 import os
 import shutil
 import time
-from typing import List, Tuple, Union  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -22,7 +23,9 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
-import cmk.gui.sites
+from cmk.gui.sites import (  # pylint: disable=unused-import
+    SiteConfiguration, SiteStatus, states as sites_states, disconnect as sites_disconnect,
+)
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
@@ -73,8 +76,26 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
+# TODO: Always use quadruples (last entry can be an empty list). Null pattern FTW!!!1!11!!!
+ReplicationPath = Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]
+
+
+# This ugly dispatching is the price one has to pay for the even uglier union above...
+def _replace_omd_root(new_root, rp):
+    # type: (str, ReplicationPath) -> ReplicationPath
+    new_dir = rp[2].replace(cmk.utils.paths.omd_root, new_root)
+    if len(rp) == 3:
+        return rp[0], rp[1], new_dir
+    if len(rp) == 4:
+        # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
+        components = rp[3 + 0]
+        if isinstance(components, list):
+            return rp[0], rp[1], new_dir, components
+    raise Exception("invalid replication path %r" % (rp,))
+
+
 # Directories and files to synchronize during replication
-_replication_paths = []  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
+_replication_paths = []  # type: List[ReplicationPath]
 
 
 def add_replication_paths(paths):
@@ -95,7 +116,7 @@ def get_replication_paths():
         ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
         ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
         ("dir", "local", cmk.utils.paths.omd_root + "/local"),
-    ]
+    ]  # type: List[ReplicationPath]
 
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
@@ -231,7 +252,7 @@ class ActivateChanges(object):
                 return _("10+ changes")
         if changes_counter == 1:
             return _("1 change")
-        elif changes_counter > 1:
+        if changes_counter > 1:
             return _("%d changes") % changes_counter
 
     def grouped_changes(self):
@@ -240,9 +261,9 @@ class ActivateChanges(object):
     def _changes_of_site(self, site_id):
         return self._changes_by_site[site_id]
 
-    # Returns the list of sites that should be used when activating all
-    # affected sites.
     def dirty_and_active_activation_sites(self):
+        # type: () -> List[SiteId]
+        """Returns the list of sites that should be used when activating all affected sites"""
         dirty = []
         for site_id, site in activation_sites().items():
             status = self._get_site_status(site_id, site)[1]
@@ -257,14 +278,16 @@ class ActivateChanges(object):
         return config.site_is_local(site_id) or "secret" in site
 
     def _site_is_online(self, status):
+        # type: (str) -> bool
         return status in ["online", "disabled"]
 
     def _get_site_status(self, site_id, site):
+        # type: (SiteId, SiteConfiguration) -> Tuple[SiteStatus, str]
         if site.get("disabled"):
-            site_status = {}
+            site_status = SiteStatus({})
             status = "disabled"
         else:
-            site_status = cmk.gui.sites.states().get(site_id, {})
+            site_status = sites_states().get(site_id, SiteStatus({}))
             status = site_status.get("state", "unknown")
 
         return site_status, status
@@ -290,6 +313,7 @@ class ActivateChanges(object):
         return store.load_object_from_file(site_state_path, {})
 
     def _get_last_change_id(self):
+        # type: () -> str
         return self._changes[-1][1]["id"]
 
     def has_changes(self):
@@ -335,12 +359,12 @@ class ActivateChangesManager(ActivateChanges):
     activation_persisted_dir = cmk.utils.paths.var_dir + "/wato/activation"
 
     def __init__(self):
-        self._sites = []
-        self._activate_until = None
-        self._comment = None
+        self._sites = []  # type: List[SiteId]
+        self._activate_until = None  # type: Optional[str]
+        self._comment = None  # type: Optional[str]
         self._activate_foreign = False
-        self._activation_id = None
-        self._snapshot_id = None
+        self._activation_id = None  # type: Optional[str]
+        self._snapshot_id = None  # TODO: Never set?!
         if not os.path.exists(self.activation_persisted_dir):
             os.makedirs(self.activation_persisted_dir)
         super(ActivateChangesManager, self).__init__()
@@ -365,19 +389,17 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    def start(self,
-              sites,
-              activate_until=None,
-              comment=None,
-              activate_foreign=False,
-              prevent_activate=False):
+    def start(
+        self,
+        sites,  # type: List[SiteId]
+        activate_until=None,  # type: Optional[str]
+        comment=None,  # type: Optional[str]
+        activate_foreign=False,  # type: bool
+        prevent_activate=False  # type: bool
+    ):
         self._sites = self._get_sites(sites)
-
-        if activate_until is None:
-            self._activate_until = self._get_last_change_id()
-        else:
-            self._activate_until = activate_until
-
+        self._activate_until = (self._get_last_change_id()
+                                if activate_until is None else activate_until)
         self._comment = comment
         self._activate_foreign = activate_foreign
         self._activation_id = self._new_activation_id()
@@ -526,6 +548,8 @@ class ActivateChangesManager(ActivateChanges):
             snapshot_name = cmk.gui.watolib.snapshots.create_snapshot(self._comment)
             log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
+            if self._activation_id is None:
+                raise Exception("activation ID is not set")
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
             if cmk_version.is_managed_edition():
                 import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
@@ -548,11 +572,10 @@ class ActivateChangesManager(ActivateChanges):
 
             # Change all default replication paths to be in the site specific temporary directory
             # These paths are then packed into the sync snapshot
-            replication_components = []
-            for entry in map(list, self._get_replication_components(site_id)):
-                entry[2] = entry[2].replace(cmk.utils.paths.omd_root,
-                                            site_configuration["work_dir"])
-                replication_components.append(tuple(entry))
+            replication_components = [
+                _replace_omd_root(site_configuration["work_dir"], repl_comp)
+                for repl_comp in self._get_replication_components(site_id)
+            ]
 
             # Add site-specific global settings
             replication_components.append(("file", "sitespecific",
@@ -595,6 +618,8 @@ class ActivateChangesManager(ActivateChanges):
         shutil.rmtree(site_tmp_dir)
 
     def _get_site_tmp_dir(self, site_id):
+        if self._activation_id is None:
+            raise Exception("activation ID is not set")
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
                             "sync-%s-specific-%.4f" % (site_id, time.time()))
 
@@ -618,6 +643,7 @@ class ActivateChangesManager(ActivateChanges):
                   "these changes in their own."))
 
     def _get_replication_components(self, site_id):
+        # type: (SiteId) -> List[ReplicationPath]
         paths = get_replication_paths()[:]
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
@@ -664,7 +690,7 @@ class ActivateChangesManager(ActivateChanges):
 
         # This is doing the first fork and the ActivateChangesSite() is doing the second
         # (to avoid zombie processes when sync processes exit)
-        p = multiprocessing.Process(target=self._do_start_site_activation, args=[site_id])
+        p = multiprocessing.Process(target=self._do_start_site_activation, args=(site_id,))
         p.start()
         p.join()
 
@@ -690,14 +716,12 @@ class ActivateChangesManager(ActivateChanges):
         log_audit(None, "activate-changes", _("Started activation of site %s") % site_id)
 
     def get_state(self):
-        state = {
-            "sites": {},
+        return {
+            "sites": {
+                site_id: self._load_site_state(site_id)  #
+                for site_id in self._sites
+            }
         }
-
-        for site_id in self._sites:
-            state["sites"][site_id] = self._load_site_state(site_id)
-
-        return state
 
     def get_site_state(self, site_id):
         return self._load_site_state(site_id)
@@ -706,6 +730,8 @@ class ActivateChangesManager(ActivateChanges):
         return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
+        if self._activation_id is None:
+            raise Exception("activation ID is not set")
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
                             self.site_filename(site_id))
 
@@ -735,6 +761,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("Activation cleanup finished"))
 
     def _do_housekeeping(self):
+        # type: () -> None
         """Cleanup stale activations in case it is needed"""
         with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
@@ -770,7 +797,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                                               activation_id)
                 try:
                     shutil.rmtree(activation_dir)
-                except Exception as e:
+                except Exception:
                     self._logger.error("  Failed to delete the activation directory '%s'" %
                                        activation_dir,
                                        exc_info=True)
@@ -815,7 +842,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self.daemon = True
         self._prevent_activate = prevent_activate
 
-        self._time_started = None
+        self._time_started = None  # type: Optional[float]
         self._time_updated = None
         self._time_ended = None
         self._phase = None
@@ -850,14 +877,14 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def run(self):
         # Ensure this process is not detected as apache process by the apache init script
-        daemon.set_procname("cmk-activate-changes")
+        daemon.set_procname(b"cmk-activate-changes")
 
         # Detach from parent (apache) -> Remain running when apache is restarted
         os.setsid()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
         if g:
-            cmk.gui.sites.disconnect()
+            sites_disconnect()
 
         # Cleanup resources of the apache
         for x in range(3, 256):
@@ -924,7 +951,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
     def _render_warnings(self, configuration_warnings):
-        html_code = "<div class=warning>"
+        html_code = u"<div class=warning>"
         html_code += "<b>%s</b>" % _("Warnings:")
         html_code += "<ul>"
         for domain, warnings in sorted(configuration_warnings.items()):
@@ -1069,8 +1096,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             if "Invalid automation command: activate-changes" in "%s" % e:
                 raise MKGeneralException(
                     "Activate changes failed (%s). The version of this site may be too old.")
-            else:
-                raise
+            raise
 
         return response
 
@@ -1114,6 +1140,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._save_state()
 
     def _set_status_details(self, phase, status_details):
+        if self._time_started is None:
+            raise Exception("start time not set")
         self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
 
         if phase != PHASE_DONE:

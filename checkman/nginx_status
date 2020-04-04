@@ -46,7 +46,7 @@ description:
  You find an example of that file in your agent directory ({share/check_mk/agents}).
 
 inventory:
- One service per web server will be created.
+ One service is created for each web server.
 
 item:
  The servername and the port seperated by a colon, e.g. {127.0.0.1:80}.

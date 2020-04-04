@@ -12,4 +12,4 @@ item:
  The name of the Checkmk site.
 
 inventory:
- One check per running Checkmk site is being created.
+ One service is created for each running Checkmk site.

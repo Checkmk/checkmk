@@ -30,4 +30,4 @@ item:
  Name of Resource
 
 inventory:
- One service will be created for each resource.
+ One service is created for each resource.

@@ -18,4 +18,4 @@ item:
  Empty string
 
 inventory:
- On each system which provides the {nullmailer-send} command one service is created.
+ One service is created on each system which provides the {nullmailer-send} command.

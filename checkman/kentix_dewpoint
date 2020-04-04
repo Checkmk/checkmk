@@ -10,5 +10,8 @@ description:
  The device allows to configure an upper and lower
  level. There are no default levels set.
 
- item:
-  One of the two statement {{LAN}} or {{Rack}}
+item:
+ One of the two statement {{LAN}} or {{Rack}}
+
+inventory:
+ One service is created.

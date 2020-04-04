@@ -31,5 +31,5 @@ item:
  The identifier of the job defined by the first argument to {mk-job}.
 
 inventory:
- One check per job will be created.
+ One service is created for each job.
 

@@ -16,4 +16,4 @@ item:
  The channel dio index
 
 inventory:
- A check will be created for all registers found on the device.
+ One service is created for each register found on the device.

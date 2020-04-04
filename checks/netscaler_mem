@@ -27,7 +27,7 @@ def check_netscaler_mem(_no_item, params, info):
         used_mem,
         total_mem,
         ('perc_used', params),
-        metric_name="mem",
+        metric_name="mem_used",
     )
 
 

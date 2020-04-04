@@ -1,4 +1,4 @@
-title: Couchbase active vBuckets
+title: Couchbase vBuckets: Memory, Item Ratio and Count of Active Buckets
 agents: special
 catalog: app/couchbase
 license: GPL

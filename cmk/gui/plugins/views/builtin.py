@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional as _Optional, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
@@ -22,9 +22,9 @@ service_view_painters = [
     ('svc_state_age', None),
     ('svc_check_age', None),
     ('perfometer', None),
-]
+]  # type: List[Tuple[Optional[str], ...]]
 
-_host_host_painter = ('host', 'host')  # type: _Tuple[str, _Optional[str]]
+_host_host_painter = ('host', 'host')  # type: Tuple[Optional[str], ...]
 
 # Same as list of services, but extended by the hostname
 host_service_view_painters = service_view_painters[:]
@@ -4804,10 +4804,10 @@ multisite_builtin_views["vpshere_vms"] = _simple_host_view(
         'description': _('Overall state of all vSphere based virtual machines.'),
         'add_context_to_title': False,
         'painters': host_view_painters + [
-            ('svc_plugin_output', None, None, u'ESX Hostsystem', u'Server'),
+            ('svc_plugin_output', None, None, 'ESX Hostsystem', 'Server'),
             ('perfometer', None, '', 'CPU utilization'),
             ('perfometer', None, '', 'ESX Memory'),
-            ('svc_plugin_output', None, None, u'ESX Guest Tools', u'Guest tools'),
+            ('svc_plugin_output', None, None, 'ESX Guest Tools', 'Guest tools'),
         ],
     },
     add_context={

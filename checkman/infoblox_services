@@ -17,4 +17,4 @@ item:
  The service name.
 
 inventory:
- One service for each service is created.
+ One service is created for each device service.

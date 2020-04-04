@@ -52,8 +52,9 @@ class ModeSearch(WatoMode):
         """
         keep_vars = {}
 
-        if html.request.var("host_search_host"):
-            keep_vars["host_search_host"] = html.request.var("host_search_host")
+        if html.request.has_var("host_search_host"):
+            keep_vars["host_search_host"] = html.request.get_ascii_input_mandatory(
+                "host_search_host")
 
         for varname, value in html.request.itervars(prefix="host_search_change_"):
             if html.get_checkbox(varname) is False:

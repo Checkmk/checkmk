@@ -6,7 +6,9 @@
 
 import time
 import itertools
-from typing import List, Text, TYPE_CHECKING, Set  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    List, Text, TYPE_CHECKING, Set, Tuple, Union,
+)
 import six
 
 import cmk.utils.version as cmk_version
@@ -28,15 +30,9 @@ from cmk.gui.htmllib import HTML
 
 from cmk.gui.exceptions import MKUserError
 
-from cmk.gui.valuespec import (
-    Checkbox,
-    TextAreaUnicode,
-    TextAscii,
-    Dictionary,
-    TextUnicode,
-    Optional,
-    AbsoluteDate,
-    DropdownChoice,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    ValueSpec, Checkbox, TextAreaUnicode, TextAscii, Dictionary, TextUnicode, Optional,
+    AbsoluteDate, DropdownChoice,
 )
 
 from cmk.gui.plugins.views import (
@@ -45,7 +41,9 @@ from cmk.gui.plugins.views import (
 )
 
 if TYPE_CHECKING:
-    from cmk.gui.type_defs import FilterHeaders, Rows  # pylint: disable=unused-import
+    from cmk.gui.type_defs import (  # pylint: disable=unused-import
+        FilterHeaders, Rows, HTTPVariables,
+    )
     from cmk.gui.views import View  # pylint: disable=unused-import
 
 # Variable name conventions
@@ -823,7 +821,8 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             ]
             edit_url = html.makeuri(anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
-            delete_url = html.makeactionuri([("_delete_annotation", "1")] + anno_vars)
+            del_anno = [("_delete_annotation", "1")]  # type: HTTPVariables
+            delete_url = html.makeactionuri(del_anno + anno_vars)
             html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
             if not omit_service:
@@ -864,24 +863,24 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
 def edit_annotation():
     site_id = html.request.var("anno_site") or ""
-    hostname = html.request.var("anno_host")
+    hostname = html.request.get_str_input_mandatory("anno_host")
     service = html.request.var("anno_service") or None
-    fromtime = float(html.request.var("anno_from"))
-    untiltime = float(html.request.var("anno_until"))
+    fromtime = html.request.get_float_input_mandatory("anno_from")
+    untiltime = html.request.get_float_input_mandatory("anno_until")
     site_host_svc = (site_id, hostname, service)
 
     # Find existing annotation with this specification
     annotations = availability.load_annotations()
     annotation = availability.find_annotation(annotations, site_host_svc, fromtime, untiltime)
 
-    if not annotation:
+    if annotation:
+        value = annotation.copy()
+    else:
         value = {
             "from": fromtime,
             "until": untiltime,
             "text": "",
         }
-    else:
-        value = annotation.copy()
 
     value["host"] = hostname
     value["service"] = service
@@ -893,7 +892,7 @@ def edit_annotation():
             value = vs.from_html_vars("_editanno")
             vs.validate_value(value, "_editanno")
 
-            site_host_svc = value["site"], value["host"], value["service"]
+            site_host_svc = (value["site"], value["host"], value["service"])
             del value["site"]
             del value["host"]
             value["date"] = time.time()
@@ -929,7 +928,7 @@ def edit_annotation():
 
 
 def _vs_annotation():
-    extra_elements = []
+    extra_elements = []  # type: List[Tuple[str, ValueSpec]]
     if not cmk_version.is_raw_edition():
         extra_elements.append(("hide_from_report", Checkbox(title=_("Hide annotation in report"))))
 
@@ -961,10 +960,11 @@ def _vs_annotation():
 def handle_delete_annotations():
     if html.request.var("_delete_annotation"):
         site_id = html.request.var("anno_site") or ""
-        hostname = html.request.var("anno_host")
+        hostname = html.request.get_str_input_mandatory("anno_host")
         service = html.request.var("anno_service") or None
-        fromtime = float(html.request.var("anno_from"))
-        untiltime = float(html.request.var("anno_until"))
+        fromtime = html.request.get_float_input_mandatory("anno_from")
+        untiltime = html.request.get_float_input_mandatory("anno_until")
+
         site_host_svc = (site_id, hostname, service)
 
         annotations = availability.load_annotations()

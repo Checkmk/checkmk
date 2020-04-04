@@ -15,6 +15,12 @@ plugins as possible on the fly, for some plugins this may fail.
 
 These are the anticipated reasons why auto-migration may fail:
 
+<h4>A cluster aware SNMP checkplugin</h4>
+
+Checkmk refuses to auto-migrate cluster aware (those with node_info
+set to True) SNMP check plugins. Auto converting the data layout
+is too error prone.
+
 <h4>A complex SNMP scan function</h4>
 
 If Checkmk fails to auto-migrate a legacy SNMP plugin to a section

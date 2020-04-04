@@ -19,5 +19,5 @@ item:
  The name of the sensor as provided via IPMI.
 
 inventory:
- All sensors that are reported by the management board of a host via IPMI
- are automatically inventorized.
+ One service is created for each sensor that are reported
+ by the management board of a host via IPMI.

@@ -138,6 +138,7 @@ from cmk.gui.wato.pages.activate_changes import (
     ModeAjaxActivationState,
 )
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
+from cmk.gui.wato.pages.diagnostics import ModeDiagnostics
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
 from cmk.gui.wato.pages.automation import ModeAutomationLogin, ModeAutomation
 import cmk.gui.wato.pages.fetch_agent_output
@@ -481,7 +482,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                 return
 
             # if newmode is not None, then the mode has been changed
-            elif newmode is not None:
+            if newmode is not None:
                 assert not isinstance(newmode, bool)
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
@@ -1792,6 +1793,29 @@ class PermissionWATOAnalyzeConfig(Permission):
     def description(self):
         return _(
             "WATO has a module that gives you hints on how to tune your Check_MK installation.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATODiagnostics(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "diagnostics"
+
+    @property
+    def title(self):
+        return _("Access the diagnostics mode")
+
+    @property
+    def description(self):
+        return _("Collect information of Checkmk sites for diagnostic analysis.")
 
     @property
     def defaults(self):

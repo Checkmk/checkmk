@@ -16,5 +16,4 @@ item:
  The unit index of the CPU
 
 inventory:
- One check is automatically created if each CPU entry which is provided
- in the SNMP output.
+ One service is created for each CPU.

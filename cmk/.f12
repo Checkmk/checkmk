@@ -69,6 +69,7 @@ PYTHON3_PATHS=(
     special_agents/agent_kubernetes.py
     special_agents/agent_prometheus.py
     special_agents/agent_proxmox.py
+    special_agents/agent_rabbitmq.py
     special_agents/agent_splunk.py
     special_agents/agent_vsphere.py
     special_agents/__init__.py
@@ -102,7 +103,7 @@ sudo rm -f \
 
 # Temporary fix until integration tests have been migrated to python3: remove
 # python3 only files that are installed to python 2 paths (by our packaging mechanism).
-for PY3_SA in special_agents/agent_aws.py special_agents/agent_elasticsearch.py special_agents/agent_graylog.py special_agents/agent_jenkins.py special_agents/agent_jira.py special_agents/agent_kubernetes.py special_agents/agent_prometheus.py special_agents/agent_proxmox.py special_agents/agent_splunk.py special_agents/agent_vsphere.py; do
+for PY3_SA in special_agents/agent_{aws,couchbase,elasticsearch,graylog,jenkins,jira,kubernetes,prometheus,proxmox,rabbitmq,splunk,vsphere}.py; do
     sudo rm -f $ROOT/lib/python/cmk/$PY3_SA
 done
 

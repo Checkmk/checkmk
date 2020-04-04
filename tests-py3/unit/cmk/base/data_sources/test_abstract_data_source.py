@@ -8,7 +8,7 @@ import cmk.base.data_sources.abstract as _abstract
 
 
 def test_mgmt_board_data_source_is_ip_address():
-    _is_ipaddress = _abstract.ManagementBoardDataSource._is_ipaddress
+    _is_ipaddress = _abstract._is_ipaddress
     assert _is_ipaddress(None) is False
     assert _is_ipaddress("localhost") is False
     assert _is_ipaddress("abc 123") is False

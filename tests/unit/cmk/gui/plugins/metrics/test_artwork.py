@@ -11,7 +11,7 @@ from cmk.gui.plugins.metrics import artwork
 
 
 @pytest.mark.parametrize("args, result", [
-    ((10, 5, 1565481600, 1565481620), [(1565481600.0, 2, True), (1565481605.0, 1, False),
+    ((1565481600, 1565481620, 10, 5), [(1565481600.0, 2, True), (1565481605.0, 1, False),
                                        (1565481610.0, 2, True), (1565481615.0, 1, False),
                                        (1565481620.0, 2, True)]),
 ])

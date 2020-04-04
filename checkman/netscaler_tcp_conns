@@ -15,5 +15,5 @@ description:
  Warning and critical levels can be configured for these values.
 
 inventory:
- One service per loadbalancer device will be created.
+ One service is created for each loadbalancer device.
 

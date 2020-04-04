@@ -46,6 +46,7 @@ from cmk.utils.exceptions import MKException
 from .defaults import default_config, default_rule_pack
 from .settings import Settings, settings as create_settings
 
+ECRuleSpec = Dict[str, Any]
 ECRulePackSpec = Dict[str, Any]  # TODO: improve this type
 ECRulePack = Union[ECRulePackSpec, "MkpRulePackProxy"]
 ECRulePacks = List[ECRulePack]

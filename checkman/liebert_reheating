@@ -7,4 +7,4 @@ description:
  This check monitors the capacity of reheating utilization in percent.
 
 inventory:
- One service will be created
+ One service is created.

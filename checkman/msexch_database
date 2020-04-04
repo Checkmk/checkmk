@@ -16,4 +16,4 @@ item:
  Name of the database instance
 
 inventory:
- One item per database instance.
+ One service is created for each database instance.

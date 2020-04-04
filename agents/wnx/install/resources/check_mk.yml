@@ -243,6 +243,7 @@ mrpe:
     # entries and cfg have  the same format as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
+        # - check = Checker (100:yes) 'c:\windows\system32\mode.com' # Description (max_age:add_info) command line
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 

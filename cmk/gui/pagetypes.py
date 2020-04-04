@@ -44,7 +44,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     Optional,
 )
-from cmk.gui.valuespec import CascadingDropdownChoiceList, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
@@ -1202,7 +1202,7 @@ def PublishTo(title=None, type_title=None, with_foreign_groups=True):
              rows=5,
              size=80,
          )),
-    ]  # type: CascadingDropdownChoiceList
+    ]  # type: List[CascadingDropdownChoice]
 
     return CascadingDropdown(title=title, choices=choices)
 

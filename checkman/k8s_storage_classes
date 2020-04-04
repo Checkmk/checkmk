@@ -8,7 +8,7 @@ description:
  The check returns always returns {OK}.
 
 inventory:
- One service per storage class is created.
+ One service is created for each storage class.
 
 item:
  The name of the storage class.

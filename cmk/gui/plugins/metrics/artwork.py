@@ -6,6 +6,10 @@
 
 import math
 import time
+from typing import (  # pylint: disable=unused-import
+    List, Tuple, Union, Optional, Callable, Iterable, Text,
+)
+from functools import partial
 
 import six
 from six.moves import zip_longest
@@ -19,6 +23,8 @@ from cmk.gui.plugins.metrics import unit_info
 
 from cmk.gui.plugins.metrics import timeseries
 from cmk.gui.plugins.metrics import rrd_fetch
+
+Label = Tuple[int, Optional[str], int]
 
 #   .--Default Render Options----------------------------------------------.
 #   |                   ____                _                              |
@@ -175,7 +181,7 @@ def layout_graph_curves(curves):
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks = [None, None]
+    stacks = [None, None]  # type: List[Optional[List]]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
@@ -203,9 +209,9 @@ def layout_graph_curves(curves):
         raw_points = halfstep_interpolation(curve["rrddata"])
         if line_type[0] == '-':
             raw_points = list(map(mirror_point, raw_points))
-            stack_nr = 0
             line_type = line_type[1:]
             mirrored = True
+            stack_nr = 0
         else:
             stack_nr = 1
 
@@ -218,11 +224,8 @@ def layout_graph_curves(curves):
             # Handle area and stack.
             layouted_curve["type"] = "area"
             # Handle area and stack.
-            if line_type == "area" or stacks[stack_nr] is None:
-                base = []
-            else:
-                base = stacks[stack_nr]
-
+            this_stack = stacks[stack_nr]
+            base = [] if this_stack is None or line_type == "area" else this_stack
             layouted_curve["points"] = areastack(raw_points, base)
             stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
@@ -234,11 +237,7 @@ def areastack(raw_points, base):
         a, b = pair
         if a is None and b is None:
             return None
-        elif a is None:
-            return b
-        elif b is None:
-            return a
-        return a + b
+        return denull(a) + denull(b)
 
     def denull(value):
         return value if value is not None else 0.0
@@ -371,7 +370,7 @@ def _render_scalar_value(value, unit):
 
 def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
     nth_value = (pin_time - start_time) / step
-    if nth_value >= 0 and nth_value < len(rrddata):
+    if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
 
 
@@ -430,7 +429,12 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     if stepping == "binary":
         base = 16
-        steps = [(2, 0.5), (4, 1), (8, 2), (16, 4)]
+        steps = [
+            (2, 0.5),
+            (4, 1),
+            (8, 2),
+            (16, 4),
+        ]  # type: List[Tuple[float, float]]
 
     elif stepping == "time":
         if max_value > 3600 * 24:
@@ -447,6 +451,7 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
     elif stepping == "integer":
         base = 10
         steps = [(2, 0.5), (5, 1), (10, 2)]
+
     else:  # "decimal"
         base = 10
         steps = [(2, 0.5), (2.5, 0.5), (5, 1), (10, 2)]
@@ -487,48 +492,7 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
 
 def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curves, mirrored):
-    min_value, max_value = None, None
-
-    # Now make sure that all points are within the range.
-    # Enlarge a given range if neccessary.
-    for curve in layouted_curves:
-        for point in curve["points"]:
-
-            # Line points
-            if isinstance(point, (float, int)):
-                max_value = max(max_value, point)
-                if min_value is None:
-                    min_value = point
-                elif point is not None:
-                    min_value = min(min_value, point)
-
-            # Area points
-            elif isinstance(point, tuple):
-                lower, higher = point
-                max_value = max(max_value, higher)
-                if min_value is None:
-                    min_value = lower
-                elif lower is not None:
-                    min_value = min(min_value, lower)
-
-    # If all of our data points are None, then we have no
-    # min/max values. In this case we assume 0 as a minimum
-    # value and 1 as a maximum. Otherwise we will run into
-    # an exception
-    if min_value is None and max_value is None:
-        min_value = -1.0 if mirrored else 0.0
-        max_value = 1.0
-    elif min_value is None and max_value > 0:
-        min_value = -max_value if mirrored else 0.0  # pylint: disable=invalid-unary-operand-type
-    elif max_value is None and min_value < 0:
-        max_value = 1.0
-    elif min_value is None:
-        if mirrored:
-            min_value = -max_value  # pylint: disable=invalid-unary-operand-type
-        else:
-            min_value = max_value - 1.0
-    elif max_value is None:
-        max_value = min_value + 1.0
+    min_value, max_value = _get_min_max_values_from_curves(layouted_curves, mirrored)
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = graph_recipe["explicit_vertical_range"]
@@ -574,6 +538,62 @@ def compute_v_axis_min_max(graph_recipe, graph_data_range, height, layouted_curv
             max_value += 0.5 * vrange_per_ex
 
     return real_range, vrange, min_value, max_value
+
+
+def _get_min_max_values_from_curves(layouted_curves, mirrored):
+    dflt_min_value, dflt_max_value = _get_default_min_max_values(layouted_curves)
+    # If all of our data points are None, then we have no
+    # min/max values. In this case we assume 0 as a minimum
+    # value and 1 as a maximum. Otherwise we will run into
+    # an exception
+    if dflt_min_value is None and dflt_max_value is not None and dflt_max_value > 0:
+        min_value = -1 * dflt_max_value if mirrored else 0.0
+
+    elif dflt_max_value is None and dflt_min_value is not None and dflt_min_value < 0:
+        max_value = 1.0
+
+    elif dflt_min_value is None and dflt_max_value is not None:
+        if mirrored:
+            min_value = -1 * dflt_max_value
+        else:
+            min_value = dflt_max_value - 1.0
+
+    elif dflt_max_value is None and dflt_min_value is not None:
+        max_value = dflt_min_value + 1.0
+
+    else:
+        min_value = -1.0 if mirrored else 0.0
+        max_value = 1.0
+
+    return min_value, max_value
+
+
+def _get_default_min_max_values(layouted_curves):
+    dflt_min_value, dflt_max_value = None, None
+
+    # Now make sure that all points are within the range.
+    # Enlarge a given range if neccessary.
+    for curve in layouted_curves:
+        for point in curve["points"]:
+
+            # Line points
+            if isinstance(point, (float, int)):
+                dflt_max_value = max(dflt_max_value, point)
+                if dflt_min_value is None:
+                    dflt_min_value = point
+                elif point is not None:
+                    dflt_min_value = min(dflt_min_value, point)
+
+            # Area points
+            elif isinstance(point, tuple):
+                lower, higher = point
+                dflt_max_value = max(dflt_max_value, higher)
+                if dflt_min_value is None:
+                    dflt_min_value = lower
+                elif lower is not None:
+                    dflt_min_value = min(dflt_min_value, lower)
+
+    return dflt_min_value, dflt_max_value
 
 
 # Create labels for the neccessary range
@@ -648,7 +668,8 @@ def render_labels_with_graph_unit(label_specs, unit):
 
 
 def render_labels(label_specs, render_func=None):
-    max_label_length, rendered_labels = 0, []
+    max_label_length = 0
+    rendered_labels = []  # type: List[Label]
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -664,10 +685,10 @@ def render_labels(label_specs, render_func=None):
                 # This is a bit hacky. Got no idea how to make this better...
                 label = remove_useless_zeroes(label)
             max_label_length = max(max_label_length, len(label))
-        else:
-            label = None
+            rendered_labels.append((pos, label, line_width))
 
-        rendered_labels.append((pos, label, line_width))
+        else:
+            rendered_labels.append((pos, None, line_width))
 
     return {
         "labels": rendered_labels,
@@ -699,6 +720,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # Depending on which time range is being shown we have different
     # steps of granularity
 
+    # Labeling does not include bounds
     start_time += step  # RRD start has no data
     end_time -= step  # this closes the interval
 
@@ -715,14 +737,18 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     label_shift = 0  # shift seconds to future in order to center it
     label_distance_at_least = 0
-    title_label = cmk.utils.render.date(start_time)
-    if start_date != end_date:
-        title_label += u" \u2014 " + cmk.utils.render.date(end_time)
+    if start_date == end_date:
+        title_label = six.text_type(cmk.utils.render.date(start_time))
+    else:
+        title_label = u"%s \u2014 %s" % (
+            six.text_type(cmk.utils.render.date(start_time)),
+            six.text_type(cmk.utils.render.date(end_time)),
+        )
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling = "%H:%M"
-        label_size = 5
+        labelling = "%H:%M"  # type: Union[str, Text, Callable]
+        label_size = 5  # type: Union[int, float]
 
     # Less than one week
     elif time_range_days < 7:
@@ -760,8 +786,9 @@ def compute_graph_t_axis(start_time, end_time, width, step):
                                       (720, 120), (1440, 360), (2880, 480), (4320, 720),
                                       (5760, 720)]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function = lambda start_time, end_time, dm=dist_minutes, subd=subdivision: \
-                            dist_equal(dm * 60, subd * 60, start_time, end_time)
+            dist_function = partial(
+                dist_equal, distance=dist_minutes * 60, subdivision=subdivision *
+                60)  # type: Callable[[int, int], Iterable[Tuple[int, int, bool]]]
             break
 
     else:
@@ -773,21 +800,20 @@ def compute_graph_t_axis(start_time, end_time, width, step):
             # Label distance less that two years?
             for months in 1, 2, 3, 4, 6, 12, 18, 24, 36, 48:
                 if label_distance_at_least <= 86400 * 31 * months:
-                    dist_function = lambda start_time, end_time, m=months: dist_month(
-                        m, start_time, end_time)
+                    dist_function = partial(dist_month, months=months)
                     break
             else:
                 # Label distance is more than 8 years. Bogus, but we must not crash
-                dist_function = lambda start_time, end_time: dist_month(96, start_time, end_time)
+                dist_function = partial(dist_month, months=96)
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels = []
-    seconds_per_char = (end_time - start_time) / (width - 7)
+    labels = []  # type: List[Label]
+    seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
             if isinstance(labelling, six.string_types):
-                label = time.strftime(labelling, time.localtime(pos))
+                label = time.strftime(str(labelling), time.localtime(pos))  # type: Optional[str]
             else:
                 label = labelling(pos)
         else:
@@ -801,13 +827,13 @@ def compute_graph_t_axis(start_time, end_time, width, step):
             pos += label_shift
 
         # Do not display label if it would not fit onto the page
-        if has_label and len(label) / 3.5 * seconds_per_char > end_time - pos:
+        if has_label and label is not None and len(label) / 3.5 * seconds_per_char > end_time - pos:
             label = None
         labels.append((pos, label, line_width))
 
     return {
         "labels": labels,
-        "range": (start_time, end_time),
+        "range": (start_time - step, end_time + step),
         "title": add_step_to_title(title_label, step),
     }
 
@@ -822,7 +848,7 @@ def add_step_to_title(title_label, step):
 def get_step_label(step):
     if step < 3600:
         return "%dm" % (step / 60)
-    elif step < 86400:
+    if step < 86400:
         return "%dh" % (step / 3600)
     return "%dd" % (step / 86400)
 
@@ -833,32 +859,60 @@ def dist_week(start_time, end_time):
     monday_week = start_time - 86400 * wday_of_start_time
 
     # Now we have an equal distance of 7 days
-    for pos, line_width, has_label in dist_equal(7 * 86400, 86400, monday_week, end_time):
+    for pos, line_width, has_label in dist_equal(monday_week, end_time, 7 * 86400, 86400):
         if pos >= start_time:
             yield (pos, line_width, has_label)
 
 
-def dist_month(months, start_time, end_time):
+def dist_month(start_time, end_time, months):
     # Jump to beginning of month
     broken = list(time.localtime(start_time))
-    broken[2:6] = (1, 0, 0, 0)
-    broken[-1] = 0  # isdsts
+    broken_tm_year = broken[0]
+    broken_tm_mon = broken[1]
+    broken_tm_mday = 1
+    broken_tm_hour = 0
+    broken_tm_min = 0
+    broken_tm_sec = 0
+    broken_tm_wday = broken[6]
+    broken_tm_yday = broken[7]
+    broken_tm_isdst = 0
 
     while True:
-        pos = time.mktime(broken)
+        pos = time.mktime((
+            broken_tm_year,
+            broken_tm_mon,
+            broken_tm_mday,
+            broken_tm_hour,
+            broken_tm_min,
+            broken_tm_sec,
+            broken_tm_wday,
+            broken_tm_yday,
+            broken_tm_isdst,
+        ))
         if pos > end_time:
             break
 
-        elif pos >= start_time:
+        if pos >= start_time:
             yield pos, 2, True
 
         for _m in range(months):
-            broken[1] += 1
-            if broken[1] > 12:
-                broken[1] -= 12
-                broken[0] += 1
+            broken_tm_mon += 1
+            if broken_tm_mon > 12:
+                broken_tm_year += 1
+                broken_tm_mon -= 12
+
             if months > 2:
-                pos = time.mktime(broken)
+                pos = time.mktime((
+                    broken_tm_year,
+                    broken_tm_mon,
+                    broken_tm_mday,
+                    broken_tm_hour,
+                    broken_tm_min,
+                    broken_tm_sec,
+                    broken_tm_wday,
+                    broken_tm_yday,
+                    broken_tm_isdst,
+                ))
                 yield pos, 1, False
 
     # Add weeks if months are low
@@ -873,12 +927,21 @@ def dist_month(months, start_time, end_time):
 # labels. These points have the label (None). The function
 # returns tuples of the form (time, line), where
 # line is one of 0, 1, 2 (none, thin, thick)
-def dist_equal(distance, subdivision, start_time, end_time):
+def dist_equal(start_time, end_time, distance, subdivision):
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
     align_broken = list(time.localtime(start_time))
-    align_broken[3:6] = (0, 0, 0)
-    align = time.mktime(align_broken)
+    align = time.mktime((
+        align_broken[0],
+        align_broken[1],
+        align_broken[2],
+        0,
+        0,
+        0,
+        align_broken[6],
+        align_broken[7],
+        align_broken[8],
+    ))
     fract, wholes = math.modf((start_time - align) / subdivision)
 
     pos = align + wholes * subdivision
@@ -913,10 +976,9 @@ def load_graph_pin():
 
 
 def save_graph_pin():
+    # type: () -> None
     try:
-        pin_timestamp = int(html.request.var("pin"))
-        if pin_timestamp == -1:
-            pin_timestamp = None
+        pin_timestamp = html.request.get_integer_input("pin")
     except ValueError:
         pin_timestamp = None
-    config.user.save_file("graph_pin", pin_timestamp)
+    config.user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)

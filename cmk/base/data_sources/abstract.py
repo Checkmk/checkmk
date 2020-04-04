@@ -974,71 +974,40 @@ class CheckMKAgentDataSource(
                 (agent_version, expected_version, e))
 
 
-# Abstract methods:
-#
-# def _execute(self):
-# def _empty_raw_data(self):
-# def _empty_host_sections(self):
-# def _from_cache_file(self, raw_data):
-# def _to_cache_file(self, raw_data):
-# def _convert_to_sections(self, raw_data):
-# def _gather_check_plugin_names(self):
-# def _cpu_tracking_id(self):
-# def id(self):
-# def describe(self):
-class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
-    """Abstract base class for all data sources that work with the management board configuration"""
+def management_board_ipaddress(hostname):
+    # type: (HostName) -> Optional[HostAddress]
+    mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
 
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
+    if mgmt_ipaddress is None:
+        return None
 
-    # pylint: disable=abstract-method
-
-    _for_mgmt_board = True
-
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
-        self._ipaddress = self._management_board_ipaddress(hostname)
-
-    def _management_board_ipaddress(self, hostname):
-        # type: (HostName) -> Optional[HostAddress]
-        mgmt_ipaddress = self._host_config.management_address
-
-        if mgmt_ipaddress is None:
+    if not _is_ipaddress(mgmt_ipaddress):
+        try:
+            return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+        except MKIPAddressLookupError:
             return None
+    else:
+        return mgmt_ipaddress
 
-        if not self._is_ipaddress(mgmt_ipaddress):
-            try:
-                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
-            except MKIPAddressLookupError:
-                return None
-        else:
-            return mgmt_ipaddress
 
-    # TODO: Why is it used only here?
-    @staticmethod
-    def _is_ipaddress(address):
-        # type: (HostAddress) -> bool
-        if address is None:
-            return False
+def _is_ipaddress(address):
+    # type: (HostAddress) -> bool
+    if address is None:
+        return False
 
-        try:
-            socket.inet_pton(socket.AF_INET, address)
-            return True
-        except socket.error:
-            # not a ipv4 address
-            pass
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+        return True
+    except socket.error:
+        # not a ipv4 address
+        pass
 
-        try:
-            socket.inet_pton(socket.AF_INET6, address)
-            return True
-        except socket.error:
-            # no ipv6 address either
-            return False
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except socket.error:
+        # no ipv6 address either
+        return False
 
 
 def _normalize_ip_addresses(ip_addresses):

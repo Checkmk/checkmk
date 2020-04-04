@@ -8,19 +8,18 @@ to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
 import abc
-import errno
 import base64
 import contextlib
 import inspect
-import os
 import pprint
 import sys
-import time
 import traceback
 import json
 import uuid
 from itertools import islice
-from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Iterator, Optional, Text, Tuple, Type,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -33,7 +32,6 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-import cmk.utils.cmk_subprocess as subprocess
 from cmk.utils.encoding import ensure_unicode
 
 
@@ -259,69 +257,18 @@ def _get_generic_crash_info(type_name, details):
     else:
         exc_txt = six.text_type(exc_value.args)
 
-    return {
+    infos = cmk_version.get_general_version_infos()
+    infos.update({
         "id": str(uuid.uuid1()),
         "crash_type": type_name,
-        "time": time.time(),
-        "os": _get_os_info(),
-        "version": cmk_version.__version__,
-        "edition": cmk_version.edition_short(),
-        "core": _current_monitoring_core(),
-        "python_version": sys.version,
-        "python_paths": sys.path,
         "exc_type": exc_type.__name__ if exc_type else None,
         "exc_value": exc_txt,
         # Py3: Make traceback.FrameSummary serializable
         "exc_traceback": [tuple(e) for e in tb_list],
         "local_vars": _get_local_vars_of_last_exception(),
         "details": details,
-    }
-
-
-def _get_os_info():
-    # type: () -> Text
-    if "OMD_ROOT" in os.environ:
-        return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
-            "=", 1)[1].strip()
-    elif os.path.exists("/etc/redhat-release"):
-        return open("/etc/redhat-release").readline().strip()
-    elif os.path.exists("/etc/SuSE-release"):
-        return open("/etc/SuSE-release").readline().strip()
-
-    info = {}
-    for f in ["/etc/os-release", "/etc/lsb-release"]:
-        if os.path.exists(f):
-            for line in open(f).readlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip("\"")
-            break
-
-    if "PRETTY_NAME" in info:
-        return info["PRETTY_NAME"]
-    elif info:
-        return "%s" % info
-
-    return "UNKNOWN"
-
-
-def _current_monitoring_core():
-    # type: () -> Text
-    try:
-        p = subprocess.Popen(
-            ["omd", "config", "show", "CORE"],
-            close_fds=True,
-            stdin=open(os.devnull),
-            stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),
-            encoding="utf-8",
-        )
-        return p.communicate()[0]
-    except OSError as e:
-        # Allow running unit tests on systems without omd installed (e.g. on travis)
-        if e.errno != errno.ENOENT:
-            raise
-        return "UNKNOWN"
+    })
+    return infos
 
 
 def _get_local_vars_of_last_exception():

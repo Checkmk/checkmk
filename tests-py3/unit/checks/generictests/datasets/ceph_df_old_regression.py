@@ -82,7 +82,8 @@ checks = {
                         (
                             'fs_used', 14680064.0, 167772160.0, 188743680.0, 0,
                             209715200.0
-                        ), ('fs_size', 209715200.0, None, None, None, None)
+                        ), ('fs_size', 209715200.0, None, None, None, None),
+                        ('fs_used_percent', 7.0, None, None, None, None)
                     ]
                 )
             ]
@@ -104,7 +105,11 @@ checks = {
                         (
                             'fs_used', 4754432.0, 103627980.8, 116581478.4, 0,
                             129534976.0
-                        ), ('fs_size', 129534976.0, None, None, None, None)
+                        ), ('fs_size', 129534976.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 3.6703847461244754, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -124,7 +129,11 @@ checks = {
                 (
                     0, '9.68% used (79.77 of 823.77 GB)', [
                         ('fs_used', 81681.0, 674829.6, 759183.3, 0, 843537.0),
-                        ('fs_size', 843537.0, None, None, None, None)
+                        ('fs_size', 843537.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 9.683155569939434, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -144,7 +153,11 @@ checks = {
                 (
                     0, '0.02% used (131.00 MB of 744.13 GB)', [
                         ('fs_used', 131.0, 609589.6, 685788.3, 0, 761987.0),
-                        ('fs_size', 761987.0, None, None, None, None)
+                        ('fs_size', 761987.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 0.01719189434990361, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -166,7 +179,11 @@ checks = {
                         (
                             'fs_used', 3180544.0, 102368870.4, 115164979.2, 0,
                             127961088.0
-                        ), ('fs_size', 127961088.0, None, None, None, None)
+                        ), ('fs_size', 127961088.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 2.485555608905107, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -186,7 +203,11 @@ checks = {
                 (
                     0, '5.07% used (39.70 of 783.70 GB)', [
                         ('fs_used', 40652.0, 642006.4, 722257.2, 0, 802508.0),
-                        ('fs_size', 802508.0, None, None, None, None)
+                        ('fs_size', 802508.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 5.065619283546083, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -208,7 +229,11 @@ checks = {
                         (
                             'fs_used', 701440.0, 100385587.2, 112933785.6, 0,
                             125481984.0
-                        ), ('fs_size', 125481984.0, None, None, None, None)
+                        ), ('fs_size', 125481984.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 0.5589965807362434, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -228,7 +253,11 @@ checks = {
                 (
                     0, '16.69% used (149.00 of 893.00 GB)', [
                         ('fs_used', 152576.0, 731545.6, 822988.8, 0, 914432.0),
-                        ('fs_size', 914432.0, None, None, None, None)
+                        ('fs_size', 914432.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 16.685330347144458, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -248,7 +277,11 @@ checks = {
                 (
                     0, '0.04% used (276.00 MB of 744.27 GB)', [
                         ('fs_used', 276.0, 609705.6, 685918.8, 0, 762132.0),
-                        ('fs_size', 762132.0, None, None, None, None)
+                        ('fs_size', 762132.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 0.036214199115113914, None,
+                            None, None, None
+                        )
                     ]
                 )
             ]
@@ -268,7 +301,11 @@ checks = {
                 (
                     0, '1.48% used (11.14 of 755.14 GB)', [
                         ('fs_used', 11412.0, 618614.4, 695941.2, 0, 773268.0),
-                        ('fs_size', 773268.0, None, None, None, None)
+                        ('fs_size', 773268.0, None, None, None, None),
+                        (
+                            'fs_used_percent', 1.4758143360387344, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

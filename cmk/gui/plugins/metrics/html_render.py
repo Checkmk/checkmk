@@ -8,7 +8,9 @@ import copy
 import time
 import json
 import traceback
-import typing
+from typing import (  # pylint: disable=unused-import
+    NamedTuple, Optional, Tuple, List, Text, Union,
+)
 
 import livestatus
 
@@ -29,7 +31,8 @@ from cmk.gui.plugins.metrics.utils import render_color_icon
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
-#.
+RenderOutput = Union[HTML, Text]
+
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
 #   |                     | | | |_   _|  \/  | |                           |
@@ -103,8 +106,7 @@ def render_graph_error_html(msg_or_exc, title=None):
     elif isinstance(msg_or_exc, Exception):
         if config.debug:
             raise msg_or_exc
-        else:
-            msg = traceback.format_exc()
+        msg = traceback.format_exc()
     else:
         msg = msg_or_exc
 
@@ -153,7 +155,7 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
     if "title" in graph_render_options:
         return [(graph_render_options["title"], None)]
 
-    title_elements = [(graph_artwork["title"], None)]
+    title_elements = [(graph_artwork["title"], None)]  # type: List[Tuple[str, Optional[str]]]
 
     if isinstance(graph_render_options["title_format"], (tuple, list)):
         title_format, title_format_params = graph_render_options["title_format"]
@@ -236,8 +238,9 @@ def render_graph_html_content(graph_artwork, graph_data_range, graph_render_opti
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
     css = " preview" if graph_render_options["preview"] else ""
-    output = '<div class="graph%s" style="font-size: %.1fpt;%s">' % \
-                            (css, graph_render_options["font_size"], _graph_padding_styles(graph_render_options))
+    output = '<div class="graph%s" style="font-size: %.1fpt;%s">' % (
+        css, graph_render_options["font_size"], _graph_padding_styles(graph_render_options)
+    )  # type: RenderOutput
 
     if graph_render_options["show_controls"]:
         output += render_graph_add_to_icon_for_popup(graph_artwork, graph_data_range,
@@ -307,8 +310,8 @@ def show_pin_time(graph_artwork, graph_render_options):
         return False
 
     timestamp = graph_artwork["pin_time"]
-    return timestamp is not None and timestamp >= graph_artwork["start_time"] \
-           and timestamp <= graph_artwork["end_time"]
+    return timestamp is not None and graph_artwork["start_time"] <= timestamp <= graph_artwork[
+        "end_time"]
 
 
 def render_pin_time_label(graph_artwork):
@@ -371,7 +374,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
     if legend_margin_left:
         style.append("margin-left:%dpx" % legend_margin_left)
 
-    output = '<table class=legend style="%s">' % ";".join(style)
+    output = '<table class=legend style="%s">' % ";".join(style)  # type: RenderOutput
 
     # Render the title row
     output += '<tr><th></th>'
@@ -440,8 +443,8 @@ def render_graph_legend(graph_artwork, graph_render_options):
     return output
 
 
-Bounds = typing.NamedTuple("Bounds", [("top", float), ("right", float), ("bottom", float),
-                                      ("left", float)])
+Bounds = NamedTuple("Bounds", [("top", float), ("right", float), ("bottom", float),
+                               ("left", float)])
 
 
 def _graph_padding_styles(graph_render_options):
@@ -461,7 +464,8 @@ def _graph_margin_ex(graph_render_options, defaults=(8, 16, 4, 8)):
 def ajax_graph():
     html.set_output_format("json")
     try:
-        context = json.loads(html.request.var("context"))
+        context_var = html.request.get_str_input_mandatory("context")
+        context = json.loads(context_var)
         response_data = render_ajax_graph(context)
         html.write(json.dumps(response_data))
     except Exception as e:
@@ -476,32 +480,32 @@ def render_ajax_graph(context):
     graph_render_options = context["render_options"]
     graph_recipe = context["definition"]
 
-    if html.request.has_var("start_time"):
-        start_time = float(html.request.var("start_time"))
-        end_time = float(html.request.var("end_time"))
-        step = float(html.request.var("step"))
+    start_time_var = html.request.var("start_time")
+    end_time_var = html.request.var("end_time")
+    step_var = html.request.var("step")
+    if start_time_var is not None and end_time_var is not None and step_var is not None:
+        start_time = float(start_time_var)
+        end_time = float(end_time_var)
+        step = float(step_var)
     else:
         start_time, end_time = graph_data_range["time_range"]
         step = graph_data_range["step"]
 
-    if html.request.has_var("resize_x"):  # then has always also resize_y
-        size_x = max(
-            min_resize_width,
-            float(html.request.var("resize_x")) / html_size_per_ex +
-            context["render_options"]["size"][0])
-        size_y = max(
-            min_resize_height,
-            float(html.request.var("resize_y")) / html_size_per_ex +
-            context["render_options"]["size"][1])
-        size = size_x, size_y
-        config.user.save_file("graph_size", size)
+    resize_x_var = html.request.var("resize_x")
+    resize_y_var = html.request.var("resize_y")
+    if resize_x_var is not None and resize_y_var is not None:
+        render_opt_x, render_opt_y = context["render_options"]["size"]
+        size_x = max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x)
+        size_y = max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y)
+        config.user.save_file("graph_size", (size_x, size_y))
     else:
         size = context["render_options"]["size"]
 
-    if html.request.has_var("range_from"):
-        range_from = float(html.request.var("range_from"))
-        range_to = float(html.request.var("range_to"))
-        vertical_range = (range_from, range_to)
+    range_from_var = html.request.var("range_from")
+    range_to_var = html.request.var("range_to")
+    if range_from_var is not None and range_to_var is not None:
+        vertical_range = (float(range_from_var), float(range_to_var)
+                         )  # type: Optional[Tuple[float, float]]
     else:
         vertical_range = None
 
@@ -581,7 +585,7 @@ def render_graphs_from_definitions(graph_recipes,
     graph_data_range.setdefault(
         "step", estimate_graph_step_for_html(graph_data_range["time_range"], graph_render_options))
 
-    output = ""
+    output = ""  # type: RenderOutput
     for graph_recipe in graph_recipes:
         if render_async:
             output += render_graph_container_html(graph_recipe, graph_data_range,
@@ -675,13 +679,15 @@ def render_graph_content_html(graph_recipe, graph_data_range, graph_render_optio
 
 def render_time_range_selection(graph_recipe, graph_render_options):
     now = int(time.time())
-    output = "<table class=timeranges>"
+    output = "<table class=timeranges>"  # type: RenderOutput
     graph_render_options = copy.deepcopy(graph_render_options)
     for timerange_attrs in config.graph_timeranges:
+        duration = timerange_attrs["duration"]
+        assert isinstance(duration, int)
         graph_render_options.update({
             "size": (20, 4),
             "font_size": 6.0,  # pt
-            "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % timerange_attrs["duration"],
+            "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
             "fixed_timerange": True,  # Do not follow timerange changes of other graphs
             "title": timerange_attrs["title"],
             "show_legend": False,
@@ -691,7 +697,7 @@ def render_time_range_selection(graph_recipe, graph_render_options):
             "interaction": False,
         })
 
-        timerange = now - timerange_attrs["duration"], now
+        timerange = now - duration, now
         graph_data_range = {
             "time_range": timerange,
             "step": 2 * estimate_graph_step_for_html(timerange, graph_render_options),
@@ -734,9 +740,9 @@ def estimate_graph_step_for_html(time_range, graph_render_options):
 def ajax_graph_hover():
     html.set_output_format("json")
     try:
-        context = json.loads(html.request.var("context"))
+        context_var = html.request.get_str_input_mandatory("context")
+        context = json.loads(context_var)
         hover_time = html.request.get_integer_input_mandatory("hover_time")
-
         response_data = render_ajax_graph_hover(context, hover_time)
         html.write(json.dumps(response_data))
     except Exception as e:
@@ -768,13 +774,9 @@ def render_ajax_graph_hover(context, hover_time):
 # of relying on the font as it should.
 def graph_legend_height_ex(graph_render_options, graph_artwork):
     if not show_graph_legend(graph_render_options, graph_artwork):
-        return 0
-
-    num_lines = 3  # header line + spacing
-
-    num_lines += (len(graph_curves(graph_artwork)) + len(graph_artwork["horizontal_rules"])) * 1.3
-
-    return num_lines
+        return 0.0
+    # Add header line + spacing: '3.0'
+    return 3.0 + (len(graph_curves(graph_artwork)) + len(graph_artwork["horizontal_rules"])) * 1.3
 
 
 #.
@@ -827,8 +829,11 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 
-    width, height = (int((float(html.request.var("width")) / html_size_per_ex)),
-                     int(float(html.request.var("height")) / html_size_per_ex))
+    width_var = html.request.get_float_input_mandatory("width", 0.0)
+    width = int((width_var / html_size_per_ex))
+
+    height_var = html.request.get_float_input_mandatory("height", 0.0)
+    height = int((height_var / html_size_per_ex))
 
     bounds = _graph_margin_ex(graph_render_options)
     height -= _graph_title_height_ex(graph_render_options)
@@ -846,7 +851,11 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         "4": 366 * 86400,
     }
 
-    secs = range_secs.get(html.request.var("timerange"), 4 * 3600)
+    secs_var = html.request.var("timerange")
+    if secs_var not in range_secs:
+        secs = 4 * 3600
+    else:
+        secs = range_secs[secs_var]
     end_time = time.time()
     start_time = end_time - secs
     graph_data_range = {
@@ -874,9 +883,9 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
                                                       graph_render_options)
         if graph_artwork["curves"]:
-            graph_render_options["size"] = (
-                graph_render_options["size"][0], graph_render_options["size"][1] -
-                graph_legend_height_ex(graph_render_options, graph_artwork))
+            legend_width, legend_height = graph_legend_height_ex(graph_render_options,
+                                                                 graph_artwork)
+            graph_render_options["size"] = (width - legend_width, height - legend_height)
 
     html_code = render_graphs_from_definitions([graph_recipe],
                                                graph_data_range,

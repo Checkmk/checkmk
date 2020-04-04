@@ -25,7 +25,7 @@ def _test_atomic_relation(relation_name, value, testcases):
     assert inv_spec[0][0] == (spec[0][0][0], spec[0][0][1], not spec[0][0][2])
 
     for test, result in testcases:
-        assert result is bool(re.match(expr, test))
+        assert result is bool(re.fullmatch(expr, test))
 
 
 @pytest.mark.parametrize("value, testcases", [

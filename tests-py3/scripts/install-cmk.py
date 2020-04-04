@@ -207,6 +207,9 @@ class PackageManagerDEB(ABCPackageManager):
         return "check-mk-%s-%s_0.%s_amd64.deb" % (edition, version, self.distro_name)
 
     def _install_package(self, package_path):
+        # As long as we do not have all dependencies preinstalled, we need to ensure that the
+        # package mirror information are up-to-date
+        self._execute(["apt-get", "update"])
         self._execute(["/usr/bin/gdebi", "--non-interactive", package_path])
 
 

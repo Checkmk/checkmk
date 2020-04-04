@@ -10,4 +10,4 @@ description:
  from the oplog to the secondary.
 
 inventory:
- One service is created named 'MongoDB Replication Lag'
+ One service is created named 'MongoDB Replication Lag'.

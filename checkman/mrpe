@@ -29,5 +29,5 @@ item:
  on the target host.
 
 inventory:
- All plugins configured in {mrpe.cfg} are automatically inventorized.
+ One service is created for each plugins configured in {mrpe.cfg}.
 

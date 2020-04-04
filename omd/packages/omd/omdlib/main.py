@@ -2548,6 +2548,8 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
                                      close_fds=True,
                                      shell=False)
                 p.communicate(source_content)
+                if p.stdin is None:
+                    raise Exception("Huh? stdin vanished...")
                 p.stdin.close()
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))

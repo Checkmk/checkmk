@@ -18,5 +18,4 @@ item:
  Index of the temperature sensor followed by a label (e.g. {{system}}, {{cpu}}, etc.) in brackets
 
 inventory:
- One check is automatically created for each temperature sensor which is
- provided in the SNMP output.
+ One service is created for each temperature sensor.

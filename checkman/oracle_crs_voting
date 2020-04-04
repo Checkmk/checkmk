@@ -14,4 +14,4 @@ description:
  Services goues stale when cssd is not running.
 
 inventory:
- One service will be created for each host
+ One service is created for each host

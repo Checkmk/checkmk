@@ -22,7 +22,7 @@ description:
  "GPS antenna short circuit" and "MRS GPS sync".
 
 inventory:
- One service per GPS refclock is created.
+ One service is created for eachr GPS refclock.
 
 item:
  The index number of the refclock.

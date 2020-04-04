@@ -31,7 +31,7 @@ item:
  supports only one instance per host.
 
 inventory:
- One check is created for each JMX instance sent by the agent.
+ One service is created for each JMX instance sent by the agent.
  The agent currently supports only one instance, but that might
  be changed in future.
 

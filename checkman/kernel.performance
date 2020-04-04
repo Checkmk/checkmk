@@ -19,7 +19,5 @@ description:
  both upper and lower levels can be set.
 
 inventory:
- One check for all of {"Major Page Faults"},
- {"Context Switches"}, {"Process Creations"},
- {"Page Swap In"} and {"Page Swap Out"}
- will be created on each host providing that data.
+ One service is created for {"Major Page Faults"}, {"Context Switches"},
+ {"Process Creations"}, {"Page Swap In"} and {"Page Swap Out"} on each host.

@@ -99,6 +99,7 @@ def test_registered_pages():
         'search_open',
         'side',
         'sidebar_add_snapin',
+        'sidebar_ajax_add_snapin',
         'sidebar_ajax_set_snapin_site',
         'sidebar_ajax_speedometer',
         'sidebar_ajax_tag_tree',

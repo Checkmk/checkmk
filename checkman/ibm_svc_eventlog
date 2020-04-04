@@ -14,5 +14,4 @@ description:
  can be configured by WATO.
 
 inventory:
- Creates exactly one check on every IBM SVC / Storwize V3700 / V7000 device named
- IBM SVC Eventlog.
+ One service is created on every device named IBM SVC Eventlog.

@@ -7,6 +7,9 @@
 from __future__ import division
 import time
 import abc
+from typing import (  # pylint: disable=unused-import
+    Dict, Tuple,
+)
 import six
 
 from cmk.utils.regex import regex
@@ -64,12 +67,12 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        tree_renderer = AttributeRenderer(
-            row["site"],
-            row["host_name"],
-            "",
-            invpath,
-            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
+        tree_renderer = AttributeRenderer(row["site"],
+                                          row["host_name"],
+                                          "",
+                                          invpath,
+                                          show_internal_tree_paths=painter_options.get(
+                                              'show_internal_tree_paths'))  # type: NodeRenderer
     else:
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
@@ -269,6 +272,10 @@ class PainterInventoryTree(Painter):
 
 
 class ABCRowTable(RowTable):
+    def __init__(self, info_names, add_host_columns):
+        self._info_names = info_names
+        self._add_host_columns = add_host_columns
+
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         self._add_declaration_errors()
 
@@ -776,9 +783,8 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
 
 class RowTableInventory(ABCRowTable):
     def __init__(self, info_name, inventory_path):
-        self._info_names = [info_name]
+        super(RowTableInventory, self).__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
-        self._add_host_columns = ["host_structured_status"]
 
     def _get_inv_data(self, hostrow):
         try:
@@ -845,10 +851,10 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
 
 class RowMultiTableInventory(ABCRowTable):
     def __init__(self, sources, match_by, errors):
+        super(RowMultiTableInventory, self).__init__([infoname for infoname, _path in sources],
+                                                     ["host_structured_status"])
         self._sources = sources
-        self._info_names = [infoname for infoname, _path in sources]
         self._match_by = match_by
-        self._add_host_columns = ["host_structured_status"]
         self._errors = errors
 
     def _get_inv_data(self, hostrow):
@@ -873,7 +879,7 @@ class RowMultiTableInventory(ABCRowTable):
         return multi_inv_data
 
     def _prepare_rows(self, inv_data):
-        joined_rows = {}
+        joined_rows = {}  # type: Dict[Tuple[str, ...], Dict]
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
                 inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
@@ -1332,9 +1338,8 @@ multisite_builtin_views["inv_hosts_ports"] = {
 
 class RowTableInventoryHistory(ABCRowTable):
     def __init__(self):
-        self._info_names = ["invhist"]
+        super(RowTableInventoryHistory, self).__init__(["invhist"], [])
         self._inventory_path = None
-        self._add_host_columns = []
 
     def _get_inv_data(self, hostrow):
         hostname = hostrow.get("host_name")
@@ -1836,7 +1841,7 @@ def ajax_inv_render_tree():
                 _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                  ) % ", ".join(corrupted_history_files))
             return
-        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
+        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)  # type: NodeRenderer
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)

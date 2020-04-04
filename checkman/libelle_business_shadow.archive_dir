@@ -16,5 +16,5 @@ item:
  The fixed statement {{Archive Dir}}
 
 inventory:
- Finds exactly one check on every node.
+ One service is created on every node.
 

@@ -176,13 +176,12 @@ def _handle_not_authenticated():
     if html.myfile != 'login':
         raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
                            (config.url_prefix(), html.urlencode(html.makeuri([]))))
-    else:
-        # This either displays the login page or validates the information submitted
-        # to the login form. After successful login a http redirect to the originally
-        # requested page is performed.
-        login_page = login.LoginPage()
-        login_page.set_no_html_output(_plain_error())
-        login_page.handle_page()
+    # This either displays the login page or validates the information submitted
+    # to the login form. After successful login a http redirect to the originally
+    # requested page is performed.
+    login_page = login.LoginPage()
+    login_page.set_no_html_output(_plain_error())
+    login_page.handle_page()
 
 
 def _load_all_plugins():
@@ -237,8 +236,8 @@ def profiling_middleware(func):
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
-        self.wsgi_app = self.wsgi_app
-        self.wsgi_app = profiling_middleware(self.wsgi_app)
+        # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.
+        self.wsgi_app = profiling_middleware(self._wsgi_app)
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
@@ -248,7 +247,7 @@ class CheckmkApp(object):
             html.init_modes()
             return self.wsgi_app(environ, start_response)
 
-    def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
+    def _wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks():
             _process_request()

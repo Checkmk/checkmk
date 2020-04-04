@@ -15,5 +15,4 @@ item:
  Name of the mailinglist
 
 inventory:
- Each mailinglist results in one service. The service is named by
- the internal name of the mailinglist
+ One service is created for each mailinglist.

@@ -8,6 +8,9 @@ import sys
 import os
 import glob
 import traceback
+from typing import (  # pylint: disable=unused-import
+    Dict, Any,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -237,7 +240,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return ""  # unused, we override load and save below
 
     def load(self, site_specific=False):
-        cleanup_settings = {}
+        cleanup_settings = {}  # type: Dict[str, Any]
         exec(open(self.diskspace_config).read(), {}, cleanup_settings)
 
         if not cleanup_settings:
@@ -283,7 +286,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         pass
 
     def default_globals(self):
-        diskspace_context = {}
+        diskspace_context = {}  # type: Dict[str, Any]
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
         with (open(str(filename))) as f:
             code = compile(f.read(), str(filename), 'exec')

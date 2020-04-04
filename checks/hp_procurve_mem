@@ -37,7 +37,7 @@ def check_hp_procurve_mem(item, params, info):
         mem_used,
         mem_total,
         params.get("levels"),
-        metric_name="memory_used",
+        metric_name="mem_used",
     )
 
 

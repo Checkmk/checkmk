@@ -10,5 +10,5 @@ description:
  or in absolute levels.
 
 inventory:
- Returns 1 service with used and total flash memory.
+ One service is created for used and total flash memory.
 

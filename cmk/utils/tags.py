@@ -7,7 +7,7 @@
 
 import re
 import abc
-from typing import Any, Dict, List, Set  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text  # pylint: disable=unused-import
 import six
 
 from cmk.utils.i18n import _
@@ -48,8 +48,18 @@ def _validate_tag_id(tag_id):
 class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(ABCTag, self).__init__()
-        self._initialize()
+        # TODO: See below, this was self._initialize()
+        # NOTE: All the Optionals below are probably just plain wrong and just
+        # an artifact of our broken 2-stage initialization.
+        self.id = None  # type: Optional[str]
+        self.title = None  # type: Optional[Text]
+        self.topic = None  # type: Optional[Text]
 
+    # TODO: We *really* have to nuke these _initialize methods everywhere, they
+    # either effectively blocking sane typing or lead to code duplication. The
+    # solution is actually quite easy and standard: The parse_config method
+    # should *not* be an instance method at all, it should just be a factory
+    # method/function.
     def _initialize(self):
         self.id = None
         self.title = None
@@ -310,6 +320,7 @@ class TagConfig(object):
         super(TagConfig, self).__init__()
         self._initialize()
 
+    # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
     def _initialize(self):
         self.tag_groups = []
         self.aux_tag_list = AuxTagList()
@@ -348,9 +359,11 @@ class TagConfig(object):
         return self.get_tag_group(tag_group_id) is not None
 
     def get_tag_group(self, tag_group_id):
+        # type: (str) -> Optional[TagGroup]
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
+        return None
 
     def remove_tag_group(self, tag_group_id):
         group = self.get_tag_group(tag_group_id)

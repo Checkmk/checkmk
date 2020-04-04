@@ -8,7 +8,7 @@ description:
  new MBG-LANTIME-NG-MIB.
 
 inventory:
- One check per device is created.
+ One service is created for each device.
 
 item:
  The fixed statement {{System}}

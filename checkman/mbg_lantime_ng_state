@@ -16,4 +16,4 @@ description:
 
 
 inventory:
- One check per device is created automatically.
+ One service is created for each device.

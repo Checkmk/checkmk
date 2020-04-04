@@ -8,4 +8,4 @@ description:
   via a IBM Integrated Management Module (IMM).
 
 inventory:
-  The inventory will find one check per IMM board.
+ One service is created for each IMM board.

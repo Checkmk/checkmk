@@ -8,3 +8,6 @@ description:
 
 item:
  The name of the instance and the name of the application and the server name
+
+inventory:
+ One service is created for each application.

@@ -13,4 +13,4 @@ description:
   a system level problem.
 
 inventory:
-  Returns one check per RSA.
+ One service is created for each RSA.

@@ -55,42 +55,37 @@ def test_disable_data_source_cache_no_write(mocker, monkeypatch):
     disabled_checker.assert_called_once()
 
 
-@pytest.mark.parametrize("address, result", [
-    (None, None),
-    ("127.0.0.1", "127.0.0.1"),
-    ("lolo", "127.0.1.1"),
-])
-def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, address, result):
-    Scenario().add_host("hostname").apply(monkeypatch)
-    # TODO: Extremely obscure code below: The class seems to be abstract??!!
-    source = SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
-
-    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")
+def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
+    hostname = "testhost"
+    ipaddress = "1.2.3.4"
+    Scenario().add_host(hostname).apply(monkeypatch)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: ipaddress)
     monkeypatch.setattr(config, "host_attributes", {
-        "hostname": {
-            "management_address": address
+        hostname: {
+            "management_address": ipaddress
         },
     })
 
-    assert source._management_board_ipaddress("hostname") == result
+    source = SNMPManagementBoardDataSource(hostname, "unused")
+
+    assert source._host_config.management_address == ipaddress
+    assert source._ipaddress == ipaddress
 
 
-def test_mgmt_board_data_source_address_unresolvable(monkeypatch):
-    Scenario().add_host("hostname").apply(monkeypatch)
-    # TODO: Extremely obscure code below: The class seems to be abstract??!!
-    source = SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
-
+def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
     def failed_ip_lookup(h):
         raise MKIPAddressLookupError("Failed to ...")
 
+    Scenario().add_host("hostname").apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", failed_ip_lookup)
     monkeypatch.setattr(config, "host_attributes", {
         "hostname": {
             "management_address": "lolo"
         },
     })
+    source = SNMPManagementBoardDataSource("hostname", "ipaddress")
 
-    assert source._management_board_ipaddress("hostname") is None
+    assert source._ipaddress is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

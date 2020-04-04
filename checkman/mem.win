@@ -35,8 +35,7 @@ description:
  structure as returned by the windows API function 'GlobalMemoryStatusEx'.
 
 inventory:
- {mem.win} creates one check for each host that provides
- data about the page file. If that information is missing,
- a Unix-like system is assumed and the check {mem.used} is
- being used instead.
+ One service is created for each host that provides data about the page file.
+ If that information is missing, a Unix-like system is assumed and
+ the check {mem.used} is creating one service instead.
 

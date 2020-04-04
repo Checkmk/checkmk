@@ -26,9 +26,8 @@ item:
  in detailed mode.
 
 inventory:
- In summary mode, one check is created if at least one
- sensor is found by the agent. In detailed mode one
- item is created for each sensor found.
+ One summary service is created in summary mode if at least one sensor is found.
+ One service is created for each sensor in detailed mode.
 
  Note: Some obscure hardware lists sensors in the state
  {nr} which do not produce usable output. If you set

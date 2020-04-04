@@ -11,5 +11,5 @@ item:
  Name of the VPN tunnel
 
 inventory:
- One service for each VPN tunnel will be create
+ One service is created for each VPN tunnel.
 

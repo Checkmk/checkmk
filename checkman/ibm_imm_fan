@@ -12,7 +12,7 @@ description:
  Upper and lower levels are configurable.
 
 inventory:
- The service discovery will find one service per fan
+ One service is created for each fan.
 
 item:
  The name of the fan as extracted from the OID {fanDescr}

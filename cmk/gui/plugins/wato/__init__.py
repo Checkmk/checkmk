@@ -134,6 +134,7 @@ from cmk.gui.plugins.wato.utils import (
     wato_fileheader,
     register_hook,
     WatoMode,
+    ActionResult,
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,

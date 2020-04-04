@@ -19,4 +19,4 @@ item:
  The filename of the JAR file.
 
 inventory:
- Creates one Check for every JAR file found in the agent's output.
+ One service is created for each JAR file.

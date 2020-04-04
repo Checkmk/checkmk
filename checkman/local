@@ -16,5 +16,4 @@ item:
  the line output by the agent.
 
 inventory:
- All local checks are automatically inventorized. There
- are no specific configuration variables.
+ One service is created for each line in agent output.

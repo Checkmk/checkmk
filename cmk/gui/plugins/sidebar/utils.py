@@ -94,12 +94,6 @@ class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
         return False
 
     @classmethod
-    def is_customizable(cls):
-        # type: () -> bool
-        """Whether or not a snapin type can be used for custom snapins"""
-        return False
-
-    @classmethod
     def is_custom_snapin(cls):
         # type: () -> bool
         """Whether or not a snapin type is a customized snapin"""
@@ -129,12 +123,6 @@ class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
 
     Subclass this class in case you want to implement a sidebar snapin type that can
     be customized by the user"""
-    @classmethod
-    def is_customizable(cls):
-        # type: () -> bool
-        """Whether or not a snapin type can be used for custom snapins"""
-        return True
-
     @classmethod
     @abc.abstractmethod
     def vs_parameters(cls):
@@ -171,10 +159,11 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             cmk.gui.pages.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self):
-        # type: () -> List[Tuple[str, SidebarSnapin]]
+        # type: () -> List[Tuple[str, CustomizableSidebarSnapin]]
         return [(snapin_type_id, snapin_type)
                 for snapin_type_id, snapin_type in self.items()
-                if snapin_type.is_customizable() and not snapin_type.is_custom_snapin()]
+                if (issubclass(snapin_type, CustomizableSidebarSnapin) and
+                    not snapin_type.is_custom_snapin())]
 
     def register_custom_snapins(self, custom_snapins):
         # type: (List[CustomSnapins]) -> None
@@ -186,7 +175,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         # type: () -> None
         for snapin_type_id, snapin_type in self.items():
             if snapin_type.is_custom_snapin():
-                del self[snapin_type_id]
+                self.unregister(snapin_type_id)
 
     def _add_custom_snapins(self, custom_snapins):
         # type: (List[CustomSnapins]) -> None
@@ -204,7 +193,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
             if not issubclass(base_snapin_type, SidebarSnapin):
                 raise ValueError("invalid snapin type %r" % base_snapin_type)
 
-            if not base_snapin_type.is_customizable():
+            if not issubclass(base_snapin_type, CustomizableSidebarSnapin):
                 continue
 
             # TODO: The stuff below is completely untypeable... :-P * * *
@@ -232,7 +221,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
                 def parameters(cls):
                     return cls._custom_snapin._["custom_snapin"][1]
 
-            _it_is_really_used = CustomSnapin  # help pylint (unused-variable)
+            _it_is_really_used = CustomSnapin  # noqa: F841
 
 
 snapin_registry = SnapinRegistry()
@@ -257,9 +246,12 @@ def render_link(text, url, target="main", onclick=None):
     # [3] relative.py
     if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
         url = config.url_prefix() + "check_mk/" + url
-    return html.render_a(text, href=url, class_="link", target=target or '',\
-                         onfocus = "if (this.blur) this.blur();",\
-                         onclick = onclick or None)
+    return html.render_a(text,
+                         href=url,
+                         class_="link",
+                         target=target or '',
+                         onfocus="if (this.blur) this.blur();",
+                         onclick=onclick or None)
 
 
 def link(text, url, target="main", onclick=None):

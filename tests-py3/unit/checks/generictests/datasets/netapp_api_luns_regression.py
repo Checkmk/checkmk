@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
 # type: ignore
-
 checkname = 'netapp_api_luns'
 
 info = [
@@ -54,7 +53,11 @@ checks = {
                             'fs_used', 513958.37890625, 491551.34765625,
                             552995.2661132812, 0, 614439.1845703125
                         ),
-                        ('fs_size', 614439.1845703125, None, None, None, None)
+                        ('fs_size', 614439.1845703125, None, None, None, None),
+                        (
+                            'fs_used_percent', 83.64674516415641, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -75,6 +78,10 @@ checks = {
                         (
                             'fs_size', 2516635.5908203125, None, None, None,
                             None
+                        ),
+                        (
+                            'fs_used_percent', 89.52527500651625, None, None,
+                            None, None
                         )
                     ]
                 )
@@ -93,7 +100,11 @@ checks = {
                             'fs_used', 555052.578125, 532529.6484375,
                             599095.8544921875, 0, 665662.060546875
                         ),
-                        ('fs_size', 665662.060546875, None, None, None, None)
+                        ('fs_size', 665662.060546875, None, None, None, None),
+                        (
+                            'fs_used_percent', 83.38353813780468, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
@@ -111,7 +122,11 @@ checks = {
                             'fs_used', 415366.30859375, 491551.34765625,
                             552995.2661132812, 0, 614439.1845703125
                         ),
-                        ('fs_size', 614439.1845703125, None, None, None, None)
+                        ('fs_size', 614439.1845703125, None, None, None, None),
+                        (
+                            'fs_used_percent', 67.60088207659193, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

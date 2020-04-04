@@ -11,5 +11,5 @@ item:
  Name of the power supply
 
 inventory:
- One item for each psu will be created
+ One service is created for each PSU.
 

@@ -106,9 +106,7 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
 
 
 def test_snmp_info_snmp_scan_functions_equal(snmp_info, snmp_scan_functions):
-    # TODO: these don't have scan functions. Fix that! (CMK-4046)
-    known_offenders = {'emc_ecs_cpu_util', 'emc_ecs_diskio', 'emc_ecs_mem'}
-    assert set(snmp_scan_functions) | known_offenders == set(snmp_info)
+    assert set(snmp_scan_functions) == set(snmp_info)
 
 
 def test_snmp_tree_tranlation(snmp_info):
@@ -124,8 +122,8 @@ def test_scan_function_translation(snmp_scan_functions):
         assert scan_func is not None
 
         # make sure we can convert the scan function
-        with known_exceptions(name):
-            _ = create_detect_spec(name, scan_func)
+        if name not in KNOWN_FAILURES:
+            _ = create_detect_spec(name, scan_func, [])
 
 
 @pytest.mark.parametrize("check_name, func_name", [
@@ -141,7 +139,9 @@ def test_scan_function_translation(snmp_scan_functions):
 ])
 def test_explicit_conversion(check_manager, check_name, func_name):
     scan_func = check_manager.get_check(check_name).context[func_name]
-    assert create_detect_spec("unit-test", scan_func) == _explicit_conversions(scan_func.__name__)
+    created = create_detect_spec("unit-test", scan_func, [])
+    explicit = _explicit_conversions(scan_func.__name__)
+    assert created == explicit
 
 
 def test_no_subcheck_with_snmp_keywords(snmp_info):

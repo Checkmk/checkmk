@@ -18,7 +18,7 @@ item:
  followed by the name of the application. I.e. tomcat7 /examples
 
 inventory:
- One check is created for each application running inside an Jolokia
+ One service is created for each application running inside an Jolokia
  instance sent by the agent.
 
 

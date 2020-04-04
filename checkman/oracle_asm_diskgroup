@@ -1,4 +1,4 @@
-title: Oracle ASM Disk Groups
+title: Oracle: ASM Disk Groups
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -39,5 +39,5 @@ item:
  Disk Groups as well.
 
 inventory:
- Creates one check for every Disk Group in the agent's output.
+ One service is created for each Disk Group.
 

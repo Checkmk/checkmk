@@ -181,7 +181,6 @@ def page_clear():
     prev_url = html.get_url_input('prev_url', '')
     if html.request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
-        html.reload_sidebar()
 
         if config.user.authorized_login_sites():
             # This local import is needed for the moment
@@ -191,3 +190,5 @@ def page_clear():
 
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
     render_page_confirm(acktime, prev_url, failed_notifications)
+    if html.request.var('_confirm'):
+        html.reload_sidebar()

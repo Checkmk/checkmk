@@ -18,4 +18,4 @@ item:
  {instance}.
 
 inventory:
- One check is created for each JMX instance sent by the agent.
+ One service is created for each JMX instance sent by the agent.

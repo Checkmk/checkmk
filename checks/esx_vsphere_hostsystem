@@ -122,7 +122,7 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
                 total_memory_usage,
                 total_memory_size,
                 ('perc_used', (warn, crit)),
-                metric_name="usage",
+                metric_name="mem_used",
             )
             perf.append(("mem_total", total_memory_size))
 
@@ -244,7 +244,7 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
         memory_usage,
         memory_size,
         ('perc_used', params),
-        metric_name="usage",
+        metric_name="mem_used",
     )
     perf.append(("mem_total", memory_size))
     return state, text, perf

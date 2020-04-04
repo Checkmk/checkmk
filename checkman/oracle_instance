@@ -1,4 +1,4 @@
-title: Oracle Database Instance
+title: Oracle Instance: Status of Database
 agents: linux, aix, hpux, solaris, windows
 distribution: check_mk
 catalog: app/oracle
@@ -112,3 +112,5 @@ description:
 item:
  The ORACLE_SID
 
+inventory:
+ One service is created for each running database.

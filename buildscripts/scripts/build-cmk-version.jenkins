@@ -36,6 +36,7 @@ currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LI
 def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
+def BRANCH_VERSION
 
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
@@ -58,6 +59,8 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
+def DOCKER_REGISTRY_NO_HTTP
+
 //
 // MAIN
 //
@@ -72,6 +75,7 @@ node(NODE) {
                     // Load libraries
                     versioning = load 'buildscripts/scripts/lib/versioning.groovy'
                     windows = load 'buildscripts/scripts/lib/windows.groovy'
+                    str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
                     withFolderProperties{
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
                     }
@@ -79,6 +83,9 @@ node(NODE) {
                     patch_themes(EDITION)
                     patch_demo(DEMO)
                     set_version(CMK_VERS)
+                    BRANCH_VERSION = versioning.get_branch_version()
+
+                    DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
 
                     // Remember files needed for building the windows agent on the windows node later
                     stash(
@@ -112,8 +119,9 @@ if (!params.FAKE_WINDOWS_ARTIFACTS) {
             else {
                 node(NODE) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                        docker.image('agent-builder-' + AGENT).inside(DOCKER_ARGS + " --privileged") {
-                            build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION)
+
+                        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
+                            build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
                         }
                     }
                 }
@@ -285,7 +293,7 @@ def set_version(CMK_VERS) {
 //   b) linux32 agent updater
 //   c) linux64 agent updater
 // - Split agent logic from agent updater
-def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
+def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP) {
     stage('Build agent ' + AGENT) {
         if (AGENT == 'linux-64bit') {
             AGENT = ''
@@ -296,30 +304,39 @@ def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
         }
 
         sh 'rm -rf *'
-        mount_overlay("${DAILY_DATA}/git","${WORKSPACE}/agent${AGENT}-dest")
+        sh """
+            cp -r ${DAILY_DATA}/git/.git ${WORKSPACE}/agent${AGENT}-dest/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/windows/plugins
+            cp -r ${DAILY_DATA}/git/enterprise/agents/windows/plugins/* ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/windows/plugins/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins
+            cp -r ${DAILY_DATA}/git/enterprise/agents/plugins/* ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
+            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/build_lib.sh ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
+        """
         if (AGENT == '-windows') {
             // Windows agent updater
             if(EDITION != 'raw') {
-                sh script: """
-                    cd agent${AGENT}-dest/enterprise/agents/windows/plugins
-                    CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                        make
-                    mkdir -p ${DAILY_DATA}/agents/
-                    cp cmk-update-agent.exe ${DAILY_DATA}/agents/
-                """
+                withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                    sh script: """
+                        cd agent${AGENT}-dest/enterprise/agents/windows/plugins
+                        BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-win-agent-updater
+                        mkdir -p ${DAILY_DATA}/agents/
+                        cp cmk-update-agent.exe ${DAILY_DATA}/agents/
+                    """
+                }
             }
         } else { // Linux agent updater (64 and 32 bit)
-            sh script: """cd agent${AGENT}-dest/enterprise/agents/plugins \
-                && CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                    BITNESS_SUFFIX='${AGENT}' \
-                    make
-            """
+            withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                sh script: """
+                    cd agent${AGENT}-dest/enterprise/agents/plugins
+                    BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-agent-updater${AGENT}
+                """
+            }
             sh """
                 mkdir -p ${DAILY_DATA}/agents
                 cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
             """
         }
-        unmount_overlay("${WORKSPACE}/agent${AGENT}-dest")
     }
 }
 

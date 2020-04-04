@@ -13,5 +13,5 @@ item:
  by the cache
 
 inventory:
- One service per cache is created.
+ One service is created for each cache.
 

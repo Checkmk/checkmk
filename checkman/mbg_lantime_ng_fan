@@ -12,7 +12,7 @@ description:
  or having an error flag set, are reported as being {CRITICAL}.
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.
 
 item:
  The index number of the fan.

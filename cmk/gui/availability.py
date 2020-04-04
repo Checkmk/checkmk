@@ -1218,7 +1218,7 @@ def load_annotations(lock=False):
 
 
 def update_annotations(site_host_svc, annotation, replace_existing):
-    # type: (AVAnnotationKey, AVAnnotationEntry, AVAnnotationEntry) -> None
+    # type: (AVAnnotationKey, AVAnnotationEntry, _Optional[AVAnnotationEntry]) -> None
     annotations = load_annotations(lock=True)
     entries = annotations.get(site_host_svc, [])
     new_entries = []

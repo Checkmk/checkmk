@@ -19,7 +19,7 @@ description:
  otherwise.
 
 inventory:
- One service per health check item.
+ One service is created for each health check.
 
 item:
  The name of the health check item as in the output Test-ReplicationHealth cmdlet Check.

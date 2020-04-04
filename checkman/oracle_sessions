@@ -1,4 +1,4 @@
-title: Number of Active Sessions in Oracle Database
+title: Oracle Database: Number of Active Sessions
 agents: linux, hpux, solaris
 catalog: app/oracle
 license: GPL
@@ -16,6 +16,5 @@ item:
  name of the pmon_... process).
 
 inventory:
- One separate check for each database found running will
- be created.
+ One service is created for each running database.
 

@@ -1,0 +1,10 @@
+Title: Validate datasource of cluster and its nodes
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586005597
+Class: fix
+
+If a cluster host has different datasources as its nodes, you would see the clustered services within the service discovery page but not on the cluster host after activating the changes. The core config generation will now {WARN} if cluster and node datasources differ.

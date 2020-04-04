@@ -484,12 +484,13 @@ def get_cluster_attributes(config_cache, host_config, nodes):
 
 def get_cluster_nodes_for_config(config_cache, host_config):
     # type: (config.ConfigCache, config.HostConfig) -> List[str]
-    _verify_cluster_address_family(config_cache, host_config)
 
     if host_config.nodes is None:
         return []
 
     nodes = host_config.nodes[:]
+    _verify_cluster_address_family(nodes, config_cache, host_config)
+    _verify_cluster_datasource(nodes, config_cache, host_config)
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
             warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
@@ -498,20 +499,17 @@ def get_cluster_nodes_for_config(config_cache, host_config):
     return nodes
 
 
-def _verify_cluster_address_family(config_cache, host_config):
-    # type: (config.ConfigCache, config.HostConfig) -> None
+def _verify_cluster_address_family(nodes, config_cache, host_config):
+    # type: (List[str], config.ConfigCache, config.HostConfig) -> None
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
 
     address_families = [
         "%s: %s" % (host_config.hostname, cluster_host_family),
     ]
 
-    if host_config.nodes is None:
-        return None
-
     address_family = cluster_host_family
     mixed = False
-    for nodename in host_config.nodes:
+    for nodename in nodes:
         node_config = config_cache.get_host_config(nodename)
         family = "IPv6" if node_config.is_ipv6_primary else "IPv4"
         address_families.append("%s: %s" % (nodename, family))
@@ -523,6 +521,23 @@ def _verify_cluster_address_family(config_cache, host_config):
     if mixed:
         warning("Cluster '%s' has different primary address families: %s" %
                 (host_config.hostname, ", ".join(address_families)))
+
+
+def _verify_cluster_datasource(nodes, config_cache, host_config):
+    # type: (List[str], config.ConfigCache, config.HostConfig) -> None
+    cluster_tg = host_config.tag_groups
+    cluster_agent_ds = cluster_tg.get("agent")
+    cluster_snmp_ds = cluster_tg.get("snmp_ds")
+
+    for nodename in nodes:
+        node_tg = config_cache.get_host_config(nodename).tag_groups
+        node_agent_ds = node_tg.get("agent")
+        node_snmp_ds = node_tg.get("snmp_ds")
+        warn_text = "Cluster '%s' has different datasources as its node" % host_config.hostname
+        if node_agent_ds != cluster_agent_ds:
+            warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_agent_ds, node_agent_ds))
+        if node_snmp_ds != cluster_snmp_ds:
+            warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
 def _ip_address_of(host_config, family=None):

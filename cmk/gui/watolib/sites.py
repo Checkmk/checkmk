@@ -10,7 +10,7 @@ import time
 import shutil
 import traceback
 from typing import (  # pylint: disable=unused-import
-    NamedTuple, Type, Dict, Any,
+    NamedTuple, Type,
 )
 import six
 
@@ -286,13 +286,11 @@ class SiteManagement(object):
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
-        config_vars = {"sites": {}}  # type: Dict[str, Dict[str, Any]]
-        exec(open(cls._sites_mk()).read(), config_vars, config_vars)
-
-        if not config_vars["sites"]:
+        raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
+        if not raw_sites:
             return config.default_single_site_configuration()
 
-        sites = config.migrate_old_site_config(config_vars["sites"])
+        sites = config.migrate_old_site_config(raw_sites)
         for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])

@@ -582,7 +582,8 @@ class JobStatus(object):
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
             if field_path.exists():
-                data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
+                with field_path.open(encoding="utf-8") as f:
+                    data["loginfo"][field_id] = f.read().splitlines()
             else:
                 data["loginfo"][field_id] = []
 

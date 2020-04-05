@@ -24,7 +24,7 @@ from cmk.gui.permissions import (
 )
 
 g_acknowledgement_time = {}
-g_modified_time = 0
+g_modified_time = 0.0
 g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
 
 
@@ -114,14 +114,14 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
             horizon = 86400
         query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
-    query = "\n".join(query)
+    query_txt = "\n".join(query)
 
     if extra_headers is not None:
-        query += extra_headers
+        query_txt += extra_headers
 
     if stat_only:
         try:
-            result = sites.live().query_summed_stats(query)
+            result = sites.live().query_summed_stats(query_txt)
         except MKLivestatusNotFoundError:
             result = [0]  # Normalize the result when no site answered
 
@@ -133,7 +133,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         return result
 
     else:
-        return sites.live().query(query)
+        return sites.live().query(query_txt)
 
 
 def render_notification_table(failed_notifications):
@@ -157,8 +157,9 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
     if failed_notifications:
         html.open_div(class_="really")
-        html.write_text(_("Do you really want to acknowledge all failed notifications up to %s?") %\
-                   cmk.utils.render.date_and_time(acktime))
+        html.write_text(
+            _("Do you really want to acknowledge all failed notifications up to %s?") %
+            cmk.utils.render.date_and_time(acktime))
         html.begin_form("confirm", method="GET", action=prev_url)
         html.hidden_field('acktime', acktime)
         html.button('_confirm', _("Yes"))
@@ -172,12 +173,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
 @cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
-    acktime = html.request.var('acktime')
-    if acktime is None:
-        acktime = time.time()
-    else:
-        acktime = float(acktime)
-
+    acktime = html.request.get_float_input_mandatory('acktime', time.time())
     prev_url = html.get_url_input('prev_url', '')
     if html.request.var('_confirm'):
         acknowledge_failed_notifications(acktime)

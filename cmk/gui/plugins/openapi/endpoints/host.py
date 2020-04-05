@@ -50,7 +50,7 @@ def update(params):
     hostname = params['hostname']
     body = params['body']
     attributes = body['attributes']
-    host = watolib.Host.host(hostname)  # type: watolib.Host
+    host = watolib.Host.host(hostname)  # type: watolib.CREHost
     constructors.require_etag(constructors.etag_of_obj(host))
     host.update_attributes(attributes)
     return _serve_host(host)

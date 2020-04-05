@@ -1383,7 +1383,7 @@ class html(ABCHTMLGenerator):
         return url
 
     def get_request(self, exclude_vars=None):
-        # type: (Optional[List[str]]) -> Dict[Text, Text]
+        # type: (Optional[List[str]]) -> Dict[Text, Any]
         """Returns a dictionary containing all parameters the user handed over to this request.
 
         The concept is that the user can either provide the data in a single "request" variable,

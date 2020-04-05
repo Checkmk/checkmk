@@ -99,7 +99,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
                         style="float:left")
 
         table_entries = []  # type: List[Tuple]
-        table.entries += pies
+        table_entries += pies
         while len(table_entries) < 6:
             table_entries = table_entries + [(("", None, [], ""), HTML("&nbsp;"))]
         table_entries.append(((_("Total"), "", [], ""), total))

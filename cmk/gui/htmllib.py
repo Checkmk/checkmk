@@ -2292,7 +2292,7 @@ class html(ABCHTMLGenerator):
     # and the default value must be of type None, str or unicode.
     def dropdown(self,
                  varname: str,
-                 choices: Choices,
+                 choices: Union[Choices, GroupedChoices],
                  deflt: DefaultChoice = '',
                  ordered: bool = False,
                  label: Optional[str] = None,
@@ -2306,7 +2306,7 @@ class html(ABCHTMLGenerator):
             self.form_vars.append(varname)
 
         # Normalize all choices to grouped choice structure
-        grouped = []  # type: GroupedChoices
+        grouped: GroupedChoices = []
         ungrouped_group = ChoiceGroup(title="", choices=[])
         grouped.append(ungrouped_group)
         for e in choices:

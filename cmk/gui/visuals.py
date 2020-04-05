@@ -48,7 +48,10 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     DropdownChoice,
     Integer,
+    ListOfMultipleChoiceGroup,
+    GroupedListOfMultipleChoices,
 )
+
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
@@ -1357,8 +1360,8 @@ class VisualFilterList(ListOfMultiple):
     filter is rendered and the user can provide a default value.
     """
     @classmethod
-    def get_choices(cls, infos, ignore):
-        return sorted(cls._get_filter_specs(infos, ignore).items(),
+    def get_choices(cls, info, ignore):
+        return sorted(cls._get_filter_specs([info], ignore).items(),
                       key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
     @classmethod
@@ -1385,7 +1388,11 @@ class VisualFilterList(ListOfMultiple):
         kwargs.setdefault('del_label', _('Remove filter'))
         kwargs["delete_style"] = "filter"
 
-        super(VisualFilterList, self).__init__(self.get_choices(info_list, ignore),
+        grouped: GroupedListOfMultipleChoices = [
+            ListOfMultipleChoiceGroup(title=visual_info_registry[info]().title,
+                                      choices=self.get_choices(info, ignore)) for info in info_list
+        ]
+        super(VisualFilterList, self).__init__(grouped,
                                                "ajax_visual_filter_list_get_choice",
                                                page_request_vars={
                                                    "infos": info_list,

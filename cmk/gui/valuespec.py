@@ -33,7 +33,7 @@ import socket
 import time
 import uuid
 import urllib.parse
-from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, Protocol
+from typing import Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple, Protocol
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -57,7 +57,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.htmllib import Choices
+from cmk.gui.htmllib import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.view_utils import render_labels
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
@@ -2010,13 +2010,23 @@ class ListOf(ValueSpec):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n + 1))
 
 
+ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
+
+ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
+    ("title", Text),
+    ("choices", ListOfMultipleChoices),
+])
+
+GroupedListOfMultipleChoices = List[ListOfMultipleChoiceGroup]
+
+
 class ListOfMultiple(ValueSpec):
     """A generic valuespec where the user can choose from a list of sub-valuespecs.
     Each sub-valuespec can be added only once
     """
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        choices: List[_Tuple[str, ValueSpec]],
+        choices: Union[GroupedListOfMultipleChoices, ListOfMultipleChoices],
         choice_page_name: str,
         page_request_vars: Dict[str, Any] = None,
         size: _Optional[int] = None,
@@ -2032,8 +2042,18 @@ class ListOfMultiple(ValueSpec):
                                              help=help,
                                              default_value=default_value,
                                              validate=validate)
-        self._choices = choices
-        self._choice_dict = dict(choices)
+        # Normalize all to grouped choice structure
+        grouped: GroupedListOfMultipleChoices = []
+        ungrouped_group = ListOfMultipleChoiceGroup(title="", choices=[])
+        grouped.append(ungrouped_group)
+        for e in choices:
+            if not isinstance(e, ListOfMultipleChoiceGroup):
+                ungrouped_group.choices.append(e)
+            else:
+                grouped.append(e)
+
+        self._grouped_choices = grouped
+        self._choice_dict = {choice[0]: choice[1] for group in grouped for choice in group.choices}
         self._choice_page_name = choice_page_name
         self._page_request_vars = page_request_vars or {}
         self._size = size
@@ -2073,15 +2093,20 @@ class ListOfMultiple(ValueSpec):
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
         html.open_tbody()
 
-        for ident, _vs in self._choices:
-            if ident in value:
-                self.show_choice_row(varprefix, ident, value)
+        for group in self._grouped_choices:
+            for ident, _vs in group.choices:
+                if ident in value:
+                    self.show_choice_row(varprefix, ident, value)
 
         html.close_tbody()
         html.close_table()
 
-        choices: Choices = [('', u'')]
-        choices += [(ident, vs.title() or u"") for ident, vs in self._choices]
+        choices: GroupedChoices = [ChoiceGroup(title="", choices=[("", "")])]
+        for group in self._grouped_choices:
+            choices.append(
+                ChoiceGroup(title=group.title,
+                            choices=[(ident, vs.title() or "") for ident, vs in group.choices]))
+
         html.dropdown(varprefix + '_choice',
                       choices,
                       style="width: %dex" % self._size if self._size is not None else None,

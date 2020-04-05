@@ -848,10 +848,10 @@ class ModeEditUser(WatoMode):
             user_np = self._user.get("notification_period")
             if not isinstance(user_np, str):
                 raise Exception("invalid notification period %r" % (user_np,))
-            html.dropdown("notification_period",
-                          [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()],
-                          deflt=user_np,
-                          ordered=True)
+            choices: Choices = [
+                (id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()
+            ]
+            html.dropdown("notification_period", choices, deflt=user_np, ordered=True)
             html.help(
                 _("Only during this time period the "
                   "user will get notifications about host or service alerts."))

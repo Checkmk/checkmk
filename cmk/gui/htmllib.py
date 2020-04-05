@@ -47,7 +47,7 @@ import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
-from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar
+from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar, NamedTuple, Text
 from pathlib import Path
 import urllib.parse
 
@@ -136,6 +136,12 @@ HTMLMessageInput = Union[HTML, str]
 Choices = List[Tuple[Optional[str], str]]
 DefaultChoice = str
 FoldingIndent = Union[str, None, bool]
+
+ChoiceGroup = NamedTuple("ChoiceGroup", [
+    ("title", Text),
+    ("choices", Choices),
+])
+GroupedChoices = List[ChoiceGroup]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -759,6 +765,14 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
     def render_fieldset(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return self._render_element("fieldset", content, **kwargs)
+
+    def open_optgroup(self, **kwargs):
+        # type: (**HTMLTagAttributeValue) -> None
+        self.write_html(self._render_start_tag("optgroup", close_tag=False, **kwargs))
+
+    def close_optgroup(self):
+        # type: () -> None
+        self.write_html(self._render_end_tag("optgroup"))
 
     def open_option(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(self._render_start_tag("option", close_tag=False, **kwargs))
@@ -2291,10 +2305,15 @@ class html(ABCHTMLGenerator):
         if varname:
             self.form_vars.append(varname)
 
-        chs = list(choices)
-        if ordered:
-            # Sort according to display texts, not keys
-            chs.sort(key=lambda a: a[1].lower())
+        # Normalize all choices to grouped choice structure
+        grouped = []  # type: GroupedChoices
+        ungrouped_group = ChoiceGroup(title="", choices=[])
+        grouped.append(ungrouped_group)
+        for e in choices:
+            if not isinstance(e, ChoiceGroup):
+                ungrouped_group.choices.append(e)
+            else:
+                grouped.append(e)
 
         if error:
             self.open_x(class_="inputerror")
@@ -2324,10 +2343,20 @@ class html(ABCHTMLGenerator):
                          class_=css_classes,
                          size=str(size),
                          **attrs)
-        for value, text in chs:
-            # if both the default in choices and current was '' then selected depended on the order in choices
-            selected = (value == current) or (not value and not current)
-            self.option(text, value=value if value else "", selected="" if selected else None)
+
+        for group in grouped:
+            if group.title:
+                self.open_optgroup(label=group.title)
+
+            for value, text in (group.choices if not ordered else sorted(
+                    group.choices, key=lambda a: a[1].lower())):
+                # if both the default in choices and current was '' then selected depended on the order in choices
+                selected = (value == current) or (not value and not current)
+                self.option(text, value=value if value else "", selected="" if selected else None)
+
+            if group.title:
+                self.close_optgroup()
+
         self.close_select()
         if error:
             self.close_x()

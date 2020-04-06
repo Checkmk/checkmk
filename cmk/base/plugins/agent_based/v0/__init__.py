@@ -7,14 +7,27 @@
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.base.api.agent_based.utils import (  # pylint: disable=cmk-module-layer-violation
-    parse_string_table, all_of, any_of, contains, startswith, endswith, matches, equals, exists,
-    not_contains, not_startswith, not_endswith, not_matches, not_equals, not_exists,
+from cmk.base.api.agent_based.utils import (
+    parse_string_table,
+    all_of,
+    any_of,
+    contains,
+    startswith,
+    endswith,
+    matches,
+    equals,
+    exists,
+    not_contains,
+    not_startswith,
+    not_endswith,
+    not_matches,
+    not_equals,
+    not_exists,
 )
 
-from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd  # pylint: disable=cmk-module-layer-violation
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
-from cmk.base.snmp_utils import OIDCached, OIDBytes  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
+from cmk.base.discovered_labels import HostLabel
+from cmk.base.snmp_utils import OIDCached, OIDBytes
 
 from . import register
 

@@ -90,14 +90,21 @@ class CMKModuleLayerChecker(BaseChecker):
                              args=(import_modname, mod_name))
 
     def _get_module_name_of_file(self, node, file_path):
-        """Fixup managed and enterprise module names
-
-        astroid does not produce correct module names, because it does not know
-        that we link/copy our CEE/CME parts to the cmk.* module in the site.
-        Fake the final module name here.
+        """Fixup module names
         """
         module_name = node.root().name
 
+        for segments in [
+            ("cmk", "base", "plugins", "agent_based", "utils", ""),
+            ("cmk", "base", "plugins", "agent_based", ""),
+        ]:
+            if file_path.startswith('/'.join(segments)):
+                return '.'.join(segments) + module_name
+
+        # Fixup managed and enterprise module names
+        # astroid does not produce correct module names, because it does not know
+        # that we link/copy our CEE/CME parts to the cmk.* module in the site.
+        # Fake the final module name here.
         for component in ["base", "gui"]:
             for prefix in [
                     "cmk/%s/cee/" % component,

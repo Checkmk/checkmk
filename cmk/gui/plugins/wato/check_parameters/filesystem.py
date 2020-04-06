@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DropdownChoice,
     TextAscii,
-    TextUnicode,
+    TextOrRegExpUnicode,
     Tuple,
 )
 
@@ -63,12 +63,11 @@ def _valuespec_inventory_df_rules():
                         default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
             ("never_ignore_mountpoints",
              ListOf(
-                 TextUnicode(),
-                 title=_(u"Mountpoints to never ignore"),
+                 TextOrRegExpUnicode(),
+                 title=_("Mountpoints to never ignore"),
                  help=_(
                      u"Regardless of filesystem type, these mountpoints will always be discovered."
-                     u"Globbing or regular expressions are currently not supported."),
-             )),
+                     u"Regular expressions are supported."))),
         ],
     )
 

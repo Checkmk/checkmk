@@ -29,11 +29,6 @@ def _omd_path(path):
     return _path(omd_root, path)
 
 
-def _opt_path(path):
-    # type: (str) -> str
-    return _path(opt_root, path)
-
-
 def _local_path(global_path):
     # type: (Union[str, Path]) -> Path
     return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
@@ -44,10 +39,6 @@ def _local_path(global_path):
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
 opt_root = _path("/opt" + omd_root)
 
-# /opt Paths, e.g. for tmpfs mounting point
-tmpfs_mount_point = _opt_path("tmp")
-
-# /omd Paths
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
 final_config_file = _omd_path("etc/check_mk/final.mk")

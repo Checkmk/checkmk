@@ -45,9 +45,6 @@ pathlib_paths = [
     "diagnostics_dir",
 ]
 
-_omd_root = '/omd/sites/dingeling'
-_opt_root = '/opt/omd'
-
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
@@ -57,11 +54,14 @@ def _check_paths(root, module):
                 assert str(value).startswith(root)
             else:
                 assert isinstance(value, str)
-                assert value.startswith(root) or value.startswith(_opt_root)
+                # TODO: Differentiate in a more clever way between /omd and /opt paths
+                assert value.startswith(root) or value.startswith("/opt")
 
 
 def test_paths_in_omd_and_opt_root(monkeypatch):
+
+    omd_root = '/omd/sites/dingeling'
     with monkeypatch.context() as m:
-        m.setitem(os.environ, 'OMD_ROOT', _omd_root)
+        m.setitem(os.environ, 'OMD_ROOT', omd_root)
         test_paths = import_module("%s/cmk/utils/paths.py" % repo_path())
-        _check_paths(_omd_root, test_paths)
+        _check_paths(omd_root, test_paths)

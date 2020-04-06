@@ -221,6 +221,7 @@ def test_get_ruleset(web):
         'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
     }
 
+    # TODO: Move testing of initial wato rules to unit tests
     response = web.get_ruleset("inventory_df_rules")
     assert response == {
         'ruleset': {
@@ -232,11 +233,11 @@ def test_get_ruleset(web):
                 },
                 'value': {
                     'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                    'never_ignore_mountpoints': ["/opt/omd/sites/int_test/tmp"]
+                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
                 }
             }]
         },
-        'configuration_hash': '05f56968020e43dadeb6672eb75eda41',
+        'configuration_hash': '0ef816195d483f9ed828a4dc84bdf706',
     }
 
 

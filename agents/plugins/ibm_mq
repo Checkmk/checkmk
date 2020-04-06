@@ -72,16 +72,17 @@ check_tool runmqsc
 
 dspmq -n | while read -r dspmqline
 do
+    now=$(date +'%Y-%m-%dT%H:%M:%S%z')
     QM=$(echo "$dspmqline" | sed 's,QMNAME(\([^)]*\).*,\1,')
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'
-        echo "$dspmqline"
+        echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
 display channel(*) xmitq
 display chstatus(*)
 EOF
         echo '<<<ibm_mq_queues:sep(10)>>>'
-        echo "$dspmqline"
+        echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
 display qlocal(*) maxdepth maxmsgl
 display qstatus(*) all

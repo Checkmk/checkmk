@@ -28,7 +28,7 @@ def parse_info(lines, separator=None):
 class TestRunmqscParser:
     def test_normal(self):
         lines = """\
-QMNAME(FOO.BAR)                                           STATUS(ENDED UNEXPECTEDLY)
+QMNAME(FOO.BAR)                                           STATUS(ENDED UNEXPECTEDLY) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager FOO.BAR.
 
@@ -38,7 +38,7 @@ AMQ8146: WebSphere MQ queue manager not available.
 No MQSC commands read.
 No commands have a syntax error.
 All valid MQSC commands were processed.
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2019-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 
@@ -83,6 +83,8 @@ All valid MQSC commands were processed.
 
         assert parsed['FOO.BAR']['STATUS'] == 'ENDED UNEXPECTEDLY'
         assert parsed['MY.TEST']['STATUS'] == 'RUNNING'
+        assert parsed['FOO.BAR']['NOW'] == '2020-04-03T17:27:02+0200'
+        assert parsed['MY.TEST']['NOW'] == '2019-04-03T17:27:02+0200'
 
         attrs = parsed['MY.TEST:OTHER.LARGE.INPUT.TEST.FOR.CHECKMK']
         assert attrs['CURDEPTH'] == '1400'
@@ -94,7 +96,7 @@ All valid MQSC commands were processed.
 
     def test_multiple_queue_managers(self):
         lines = """\
-QMNAME(QM.ONE)                                            STATUS(RUNNING)
+QMNAME(QM.ONE)                                            STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
 Starting MQSC for queue manager QM.ONE.
 
@@ -115,7 +117,7 @@ AMQ8450: Display queue status details.
 2 MQSC commands read.
 No commands have a syntax error.
 All valid MQSC commands were processed.
-QMNAME(QM.TWO)                                            STATUS(RUNNING)
+QMNAME(QM.TWO)                                            STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
 Starting MQSC for queue manager QM.TWO.
 
@@ -146,7 +148,7 @@ All valid MQSC commands were processed.
 
     def test_empty_value_for_msgage(self):
         lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 
@@ -174,7 +176,7 @@ All valid MQSC commands were processed.
 
     def test_no_channel_status_of_inactive_channels(self):
         lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 
@@ -193,7 +195,7 @@ One valid MQSC command could not be processed.
 
     def test_mq9_includes_severity_in_message_code(self):
         lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2018.
 Starting MQSC for queue manager MY.TEST.
 

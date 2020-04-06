@@ -6,7 +6,7 @@
 
 
 def parse_runmqsc_display_output(info, group_by_object):
-    re_qminfo_from_dspmq = regex(r"^QMNAME\((.*)\)[\s]*STATUS\((.*)\)")
+    re_intro = regex(r"^QMNAME\((.*)\)[\s]*STATUS\((.*?)\)[\s]*NOW\((.*)\)")
     re_group = regex(r"^AMQ\d+\w?: [^.]*.")
     re_key = regex(r"[\s]*[A-Z0-9]+\(")
     re_second_column = regex(r" [A-Z0-9]+\(")
@@ -18,31 +18,45 @@ def parse_runmqsc_display_output(info, group_by_object):
         value = pair.group(2).strip()
         attributes[key] = value
 
-    def record_group(attributes, parsed):
-        if not attributes:
-            return
+    def record_group(qmname, attributes, parsed):
         obj = attributes.get(group_by_object)
         if obj is not None and not obj.startswith(("SYSTEM", "AMQ.MQEXPLORER")):
             obj = "%s:%s" % (qmname, obj)
             parsed.setdefault(obj, {})
             parsed[obj].update(attributes)
-        attributes.clear()
 
-    attributes = {}
+    def lookahead(iterable):
+        """
+        Pass through all values from the given iterable, augmented by the
+        information if there are more values to come after the current one
+        (True), or if it is the last value (False).
+        """
+        it = iter(iterable)
+        last = next(it)
+        for val in it:
+            yield last, True
+            last = val
+        yield last, False
+
     parsed = {}
-    qmname = None
-    qmstatus = None
-    for line in info:
-        line = line[0]
-        intro_line = re_qminfo_from_dspmq.match(line)
+    attributes = {}
+    for (line,), has_more in lookahead(info):
+        intro_line = re_intro.match(line)
         if intro_line:
-            record_group(attributes, parsed)
+            if attributes:
+                record_group(qmname, attributes, parsed)
+                attributes.clear()
             qmname = intro_line.group(1)
             qmstatus = intro_line.group(2)
-            parsed.setdefault(qmname, {'STATUS': qmstatus})
-        elif re_group.match(line):
-            record_group(attributes, parsed)
-        elif re_key.match(line):
+            now = intro_line.group(3)
+            parsed[qmname] = {'STATUS': qmstatus, 'NOW': now}
+            continue
+        if re_group.match(line) or not has_more:
+            if attributes:
+                record_group(qmname, attributes, parsed)
+                attributes.clear()
+            continue
+        if re_key.match(line):
             if re_second_column.match(line[39:]):
                 first_half = line[:40]
                 second_half = line[40:]
@@ -50,7 +64,6 @@ def parse_runmqsc_display_output(info, group_by_object):
                 record_attribute(second_half, attributes, parsed)
             else:
                 record_attribute(line, attributes, parsed)
-    record_group(attributes, parsed)
     return parsed
 
 

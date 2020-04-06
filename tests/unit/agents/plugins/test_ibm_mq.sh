@@ -75,17 +75,17 @@ test_is_qm_monitored_full_config() {
 test_monitored_qm() {
     ONLY_QM="BAR TEE"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH")
+    actual=$(. "$IBM_PLUGIN_PATH" | sed 's/NOW([^)]*)/NOW(timestamp)/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
 version: 1.6.0
 dspmq: OK
 runmqsc: OK
 <<<ibm_mq_channels:sep(10)>>>
-QMNAME(TEE)                                           STATUS(RUNNING)
+QMNAME(TEE)                                           STATUS(RUNNING) NOW(timestamp)
 
 <<<ibm_mq_queues:sep(10)>>>
-QMNAME(TEE)                                           STATUS(RUNNING)
+QMNAME(TEE)                                           STATUS(RUNNING) NOW(timestamp)
 
 <<<ibm_mq_managers:sep(10)>>>
 QMNAME(TEE)                                           STATUS(RUNNING)"

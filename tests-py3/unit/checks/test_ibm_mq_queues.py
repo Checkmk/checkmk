@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-
 import pytest  # type: ignore[import]
 
 from cmk.base.check_api import MKCounterWrapped
 from test_ibm_mq_include import parse_info
-
-from testlib import on_time
 
 pytestmark = pytest.mark.checks
 
@@ -20,7 +16,7 @@ CHECK_NAME = "ibm_mq_queues"
 
 def test_parse(check_manager):
     lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 
@@ -57,6 +53,7 @@ All valid MQSC commands were processed.
 
     attrs = parsed['MY.TEST']
     assert attrs['STATUS'] == 'RUNNING'
+    assert attrs['NOW'] is not None
 
     attrs = parsed['MY.TEST:MY.QUEUE.TWO']
     assert attrs['CURDEPTH'] == '1400'
@@ -335,7 +332,7 @@ def test_lget_ok_no_params(check_manager):
 
 def test_lget_ok_no_info(check_manager):
     lget = ("", "")
-    now = None
+    now = ("2018-04-19", "11.19.05")
     params = {}
     expected = (0, 'Last get: n/a', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
@@ -359,7 +356,7 @@ def test_lget_warn(check_manager):
 
 def test_lget_no_info_with_params(check_manager):
     lget = ("", "")
-    now = None
+    now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
     expected = (0, 'Last get: n/a', [])
     assert_last_get_age(check_manager, lget, now, params, expected)
@@ -376,9 +373,11 @@ def test_lget_crit(check_manager):
 def assert_last_get_age(check_manager, lget, now, params, expected):
     check = check_manager.get_check(CHECK_NAME)
     lgetdate, lgettime = lget
+    reference_iso_time = "%sT%s+0200" % (now[0], now[1].replace('.', ':'))
     parsed = {
         'QM1': {
-            'STATUS': 'RUNNING'
+            'STATUS': 'RUNNING',
+            'NOW': reference_iso_time,
         },
         'QM1:MY.QUEUE': {
             'CURDEPTH': 0,
@@ -388,9 +387,7 @@ def assert_last_get_age(check_manager, lget, now, params, expected):
         }
     }
 
-    reference_time = "%s %s" % (now[0], now[1].replace('.', ':')) if now else time.time()
-    with on_time(reference_time, 'UTC'):
-        actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
+    actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     assert expected == actual[1]
 
 

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable, Optional, TypeVar, Union  # pylint: disable=unused-import
+
 import six
 
 from cmk.utils.defines import short_service_state_name
@@ -11,6 +13,7 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
@@ -598,6 +601,15 @@ class PainterEventPid(Painter):
         return ("", "%s" % row["event_pid"])
 
 
+# TODO: Rethink the typing of syslog_facilites/syslog_priorities.
+T = TypeVar('T')
+
+
+def _deref(x):
+    # type: (Union[T, Callable[[], T]]) -> T
+    return x() if callable(x) else x
+
+
 @painter_registry.register
 class PainterEventPriority(Painter):
     @property
@@ -615,7 +627,7 @@ class PainterEventPriority(Painter):
         return ['event_priority']
 
     def render(self, row, cell):
-        return ("", dict(mkeventd.syslog_priorities)[row["event_priority"]])
+        return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
 
 
 @painter_registry.register
@@ -635,7 +647,7 @@ class PainterEventFacility(Painter):
         return ['event_facility']
 
     def render(self, row, cell):
-        return ("", dict(mkeventd.syslog_facilities)[row["event_facility"]])
+        return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
 
 
 @painter_registry.register
@@ -734,43 +746,40 @@ def render_event_phase_icons(row):
 
 
 def render_delete_event_icons(row):
-    if config.user.may("mkeventd.delete"):
-        urlvars = []
-
-        # Found no cleaner way to get the view. Sorry.
-        # TODO: This needs to be cleaned up with the new view implementation.
-        if html.request.has_var("name") and html.request.has_var("id"):
-            ident = int(html.request.var("id"))
-
-            import cmk.gui.dashboard as dashboard
-            view = dashboard.get_dashlet(html.request.var("name"), ident)
-
-            # These actions are not performed within the dashlet. Assume the title url still
-            # links to the source view where the action can be performed.
-            title_url = view.get("title_url")
-            if title_url:
-                url = six.moves.urllib.parse.urlparse(title_url)
-                filename = url.path
-                urlvars += six.moves.urllib.parse.parse_qsl(url.query)
-        else:
-            # Regular view
-            view = get_permitted_views()[(html.request.var("view_name"))]
-            filename = None
-
-        urlvars += [
-            ("filled_in", "actions"),
-            ("actions", "yes"),
-            ("_do_actions", "yes"),
-            ("_row_id", row_id(view, row)),
-            ("_delete_event", _("Archive Event")),
-            ("_show_result", "0"),
-        ]
-        url = html.makeactionuri(urlvars,
-                                 filename=filename,
-                                 delvars=["selection", "show_checkboxes"])
-        return html.render_icon_button(url, _("Archive this event"), "archive_event")
-    else:
+    if not config.user.may("mkeventd.delete"):
         return ''
+    urlvars = []  # type: HTTPVariables
+
+    # Found no cleaner way to get the view. Sorry.
+    # TODO: This needs to be cleaned up with the new view implementation.
+    if html.request.has_var("name") and html.request.has_var("id"):
+        ident = html.request.get_integer_input_mandatory("id")
+
+        import cmk.gui.dashboard as dashboard
+        view = dashboard.get_dashlet(html.request.get_str_input_mandatory("name"), ident)
+
+        # These actions are not performed within the dashlet. Assume the title url still
+        # links to the source view where the action can be performed.
+        title_url = view.get("title_url")
+        if title_url:
+            parsed_url = six.moves.urllib.parse.urlparse(title_url)
+            filename = parsed_url.path  # type: Optional[str]
+            urlvars += six.moves.urllib.parse.parse_qsl(parsed_url.query)
+    else:
+        # Regular view
+        view = get_permitted_views()[(html.request.get_str_input_mandatory("view_name"))]
+        filename = None
+
+    urlvars += [
+        ("filled_in", "actions"),
+        ("actions", "yes"),
+        ("_do_actions", "yes"),
+        ("_row_id", row_id(view, row)),
+        ("_delete_event", _("Archive Event")),
+        ("_show_result", "0"),
+    ]
+    url = html.makeactionuri(urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+    return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 
 @painter_registry.register
@@ -841,7 +850,7 @@ class PainterEventContactGroups(Painter):
         cgs = row.get("event_contact_groups")
         if cgs is None:
             return "", ""
-        elif cgs:
+        if cgs:
             return "", ", ".join(cgs)
         return "", "<i>" + _("none") + "</i>"
 
@@ -874,7 +883,7 @@ class PainterEventEffectiveContactGroups(Painter):
 
         if cgs is None:
             return "", ""
-        elif cgs:
+        if cgs:
             return "", ", ".join(sorted(cgs))
         return "", "<i>" + _("none") + "</i>"
 
@@ -1111,7 +1120,7 @@ class CommandECUpdateEvent(ECCommand):
         return PermissionECUpdateEvent
 
     def render(self, what):
-        html.open_table(border=0, cellpadding=0, cellspacing=3)
+        html.open_table(border="0", cellpadding="0", cellspacing="3")
         if config.user.may("mkeventd.update_comment"):
             html.open_tr()
             html.open_td()
@@ -1142,13 +1151,13 @@ class CommandECUpdateEvent(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
-                comment = html.request.get_unicode_input("_mkeventd_comment").strip().replace(
-                    ";", ",")
+                comment = html.request.get_unicode_input_mandatory(
+                    "_mkeventd_comment").strip().replace(";", ",")
             else:
                 comment = ""
             if config.user.may("mkeventd.update_contact"):
-                contact = html.request.get_unicode_input("_mkeventd_contact").strip().replace(
-                    ":", ",")
+                contact = html.request.get_unicode_input_mandatory(
+                    "_mkeventd_contact").strip().replace(":", ",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
@@ -1350,7 +1359,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
-                tag = "host"
+                tag = "host"  # type: Optional[str]
             elif cmdtag == "SVC":
                 tag = "service"
             else:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, List, Optional, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
@@ -4902,7 +4902,7 @@ multisite_builtin_views['cmk_servers'] = {
 
 
 def cmk_sites_painters():
-    service_painters = []
+    service_painters = []  # type: List[Any]
     if not cmk_version.is_raw_edition():
         service_painters += [
             ('invcmksites_cmc', None, None),

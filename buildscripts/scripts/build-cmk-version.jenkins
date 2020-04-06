@@ -64,123 +64,126 @@ def DOCKER_REGISTRY_NO_HTTP
 //
 // MAIN
 //
+try {
+    node(NODE) {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
+                stage('Checkout sources') {
+                    cleanup_work_directories(DAILY_DATA)
+                    dir("${DAILY_DATA}/git") {
+                        checkout_git(scm, VERSION)
+                        // Load libraries
+                        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                        windows = load 'buildscripts/scripts/lib/windows.groovy'
+                        str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+                        notify = load 'buildscripts/scripts/lib/notify.groovy'
+                        withFolderProperties{
+                            DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                        }
 
-node(NODE) {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
-            stage('Checkout sources') {
-                cleanup_work_directories(DAILY_DATA)
-                dir("${DAILY_DATA}/git") {
-                    checkout_git(scm, VERSION)
-                    // Load libraries
-                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-                    windows = load 'buildscripts/scripts/lib/windows.groovy'
-                    str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-                    withFolderProperties{
-                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                        patch_themes(EDITION)
+                        patch_demo(DEMO)
+                        set_version(CMK_VERS)
+                        BRANCH_VERSION = versioning.get_branch_version()
+
+                        DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+
+                        // Remember files needed for building the windows agent on the windows node later
+                        stash(
+                            name: 'WinDep',
+                            includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
+                        )
                     }
-
-                    patch_themes(EDITION)
-                    patch_demo(DEMO)
-                    set_version(CMK_VERS)
-                    BRANCH_VERSION = versioning.get_branch_version()
-
-                    DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-
-                    // Remember files needed for building the windows agent on the windows node later
-                    stash(
-                        name: 'WinDep',
-                        includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
-                    )
                 }
             }
         }
     }
-}
 
-if (!params.FAKE_WINDOWS_ARTIFACTS) {
-    AGENT_LIST.each { AGENT ->
-        AGENT_BUILDS['build agent ' + AGENT] = {
-            if (AGENT == 'windows') {
-                node('windows') {
-                    bat 'powershell Remove-Item .\\* -Recurse -Force'
-                    // Receive files needed for building the agent
-                    unstash(name: 'WinDep')
-                    windows.build(
-                        TARGET: 'agent',
-                        STASH_NAME: 'WinMSI'
-                    )
-                    windows.build(
-                        TARGET: 'module',
-                        STASH_NAME: 'WinPython'
-                    )
+    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+        AGENT_LIST.each { AGENT ->
+            AGENT_BUILDS['build agent ' + AGENT] = {
+                if (AGENT == 'windows') {
+                    node('windows') {
+                        bat 'powershell Remove-Item .\\* -Recurse -Force'
+                        // Receive files needed for building the agent
+                        unstash(name: 'WinDep')
+                        windows.build(
+                            TARGET: 'agent',
+                            STASH_NAME: 'WinMSI'
+                        )
+                        windows.build(
+                            TARGET: 'module',
+                            STASH_NAME: 'WinPython'
+                        )
+                    }
                 }
-            }
-            else {
-                node(NODE) {
-                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                else {
+                    node(NODE) {
+                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
 
-                        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
-                            build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
+                            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
+                                build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
+                            }
                         }
                     }
                 }
             }
         }
+        parallel AGENT_BUILDS
     }
-    parallel AGENT_BUILDS
-}
 
-node(NODE) {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-            prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
-            create_source_package(DAILY_DATA)
+    node(NODE) {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+                prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
+                create_source_package(DAILY_DATA)
 
-            def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
-            def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
-            def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
+                def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
+                def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
+                def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
 
-            copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
+                copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
 
-            cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
-            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+                cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
+                test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
+                upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+            }
         }
     }
-}
 
 
-DISTRO_LIST.each { DISTRO ->
-    PACKAGE_BUILDS[DISTRO] = {
-        node(NODE) {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
-                    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        versioning.print_image_tag()
-                        build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
+    DISTRO_LIST.each { DISTRO ->
+        PACKAGE_BUILDS[DISTRO] = {
+            node(NODE) {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                            versioning.print_image_tag()
+                            build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
+                        }
+                    }
+                }
+            }
+            node(NODE) {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                        def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
+                        def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
+                        def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
+
+                        sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
+                        test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
+                        copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                        upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
                     }
                 }
             }
         }
-        node(NODE) {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                    def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
-                    def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
-                    def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
-
-                    sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
-                    test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
-                    copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                    upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
-                }
-            }
-        }
     }
+    parallel PACKAGE_BUILDS
+}catch(Exception e) {
+    notify.notify_error(e)
 }
-parallel PACKAGE_BUILDS
-
 //
 // FUNCTIONS
 //

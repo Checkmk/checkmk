@@ -17,6 +17,5 @@ description:
  directory {/usr/lib/check_mk_agent/plugins}.
 
 inventory:
- One check per system is created if the {plesk_domains} agent plugin
- is installed and working (it outputs the {<<<plesk_domains>>>} section).
+ One service is created for each system.
 

@@ -10,5 +10,5 @@ item:
  ID of the phase, an integer beginning with {1} for the first phase.
 
 inventory:
- One service per Phase
+ One service is created for each phase.
 

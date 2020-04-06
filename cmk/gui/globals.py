@@ -19,7 +19,7 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from typing import Any, Union  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
     from cmk.gui import htmllib, http, config  # pylint: disable=unused-import
 
 _sentinel = object()

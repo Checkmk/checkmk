@@ -85,7 +85,8 @@ def _serve_host(host):
     response.set_data(json.dumps(serialize_host(host)))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
-    return response._get_current_object()
+    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def serialize_host(host):

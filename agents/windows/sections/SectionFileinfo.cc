@@ -53,25 +53,47 @@ enum class GlobType { None, Simple, Recursive };
 std::pair<fs::path, PathDiffT> buildPathBeginning(const fs::path &filePath) {
     fs::path beginning;
     PathDiffT diff = 0;
-    const std::wregex drive{L"^[A-Za-z]:$"};
-    auto it = filePath.begin(), end = filePath.end();
-    std::wsmatch match;
+    try {
+        const std::wregex drive{
+            LR"((^[A-Za-z]:$)|(^\\\\[a-z|A-Z|0-9|\-|_]*$))"};
 
-    // If path starts with drive letter, just add it to the beginning.
-    if (const auto str = it->wstring();
-        it != end && std::regex_match(str, match, drive)) {
-        beginning += *it++;
-        ++diff;
+        auto it = filePath.begin(), end = filePath.end();
+        std::wsmatch match;
+
+        // If path starts with drive letter, just add it to the beginning.
+        if (const auto str = it->wstring();
+            it != end && std::regex_match(str, match, drive)) {
+            beginning += *it++;
+            ++diff;
+        }
+
+        if (beginning.u8string()[0] == '\\') {
+            // UNC path. We are parsing "\\server\share\logs\my_log.txt"
+            // We want "\\server\share" as *beginning*
+            // Now: "\\server"
+
+            beginning += *it++;
+            ++diff;
+            // 1. "\\server\\"
+
+            beginning += *it++;
+            ++diff;
+            // 2. "\\server\\share"
+        }
+
+        // Append possible root directory.
+        if (const auto str = it->wstring();
+            it != end && (str == L"/" || str == L"\\")) {
+            beginning /= *it;
+            ++diff;
+        }
+
+        return {beginning, diff};
+    } catch (const std::exception &) {
+        // we do not need exception here(possible with bad file names)
+        // we do not need log(in output you will find that bad entry is missing)
+        return {filePath, 0};
     }
-
-    // Append possible root directory.
-    if (const auto str = it->wstring();
-        it != end && (str == L"/" || str == L"\\")) {
-        beginning /= *it;
-        ++diff;
-    }
-
-    return {beginning, diff};
 }
 
 // Traits class for switching between recursive and non-recursive versions of

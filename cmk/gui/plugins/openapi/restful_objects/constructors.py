@@ -19,7 +19,7 @@ DomainObject = Dict[str, str]
 LocationType = Optional[Union[Literal['path'], Literal['query'], Literal['header'],
                               Literal['cookie']]]
 ResultType = Literal["object", "list", "scalar", "void"]
-LinkType = Dict[str, str]
+LinkType = Dict[str, Text]
 RestfulLinkRel = Literal[
     ".../action",
     ".../action-param",
@@ -74,11 +74,11 @@ DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, L
 
 def link_rel(
     rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
-    href,  # type: str
+    href,  # type: Text
     method='GET',  # type: HTTPMethod
     content_type='application/json',  # type: str
     profile=None,  # type: Optional[str]
-    title=None,  # type: Optional[str]
+    title=None,  # type: Optional[Text]
     parameters=None,  # type: Optional[Dict[str, str]]
 ):
     # type: (...) -> LinkType
@@ -143,8 +143,11 @@ def link_rel(
     return link_obj
 
 
-def expand_rel(rel, parameters=None):
-    # type: (str, Optional[Dict[str, str]]) -> str
+def expand_rel(
+    rel,  # type: str
+    parameters=None,  # type: Optional[Dict[str, str]]
+):
+    # type: (...) -> str
     """Expand abbreviations in the rel field
 
     `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces. The
@@ -158,7 +161,7 @@ def expand_rel(rel, parameters=None):
     Examples:
 
         >>> expand_rel('.../value', {'collection': 'items'})
-       'urn:org.restfulobjects:rels/value;collection="items"'
+        'urn:org.restfulobjects:rels/value;collection="items"'
 
     """
     if rel.startswith(".../"):
@@ -301,7 +304,7 @@ def action_result(
 
 
 def object_property(name, value, prop_format, base, title=None, linkable=True):
-    # type: (str, Any, PropertyFormat, str, Optional[str], bool) -> Dict[str, Any]
+    # type: (str, Any, PropertyFormat, Text, Optional[Text], bool) -> Dict[str, Any]
     """Render an object-property
 
     Args:

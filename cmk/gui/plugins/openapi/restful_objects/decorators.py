@@ -50,7 +50,7 @@ ETagBehaviour = Union[Literal["input"], Literal["output"], Literal["both"]]
 # Only these methods are supported.
 HTTPMethod = Union[Literal["get"], Literal["post"], Literal["put"], Literal["delete"]]
 
-Parameter = str
+Parameter = Union[str, dict]
 
 ResponseSchema = Optional[Schema]
 RequestSchema = Optional[Schema]
@@ -67,7 +67,6 @@ def endpoint_schema(
     request_body_required=True,  # type: bool
     error_schema=ApiError,  # type: Schema
     etag=None,  # type: ETagBehaviour
-    tag=None,  # type: Optional[str]
     **options  # type: dict
 ):
     """Mark the function as a REST-API endpoint.
@@ -118,10 +117,6 @@ def endpoint_schema(
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
-        tag (str):
-            Under which tag to file this endpoint. This has no functional consequences, just the
-            documentation will be affected.
-
         **options (dict):
             Various keys which will be directly applied to the OpenAPI operation object.
 
@@ -159,13 +154,6 @@ def endpoint_schema(
             raise ValueError("Param %r, which is used in the HTTP path, was not specified." %
                              (path_param,))
 
-    for param in parameters:
-        if isinstance(param, dict):
-            # If a parameter gets specified twice, adding it here will throw an exception.
-            # This is desired behaviour as it prevents unintentional naming clashes, which can be
-            # dangerous because parameters can be specified in different locations.
-            SPEC.components.parameter(param['name'], param['in'], param)
-
     global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
     for param in parameters:
         if isinstance(param, six.string_types) and param not in global_param_names:
@@ -186,8 +174,6 @@ def endpoint_schema(
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
         if response_schema is not None:
-            # _add_tag(_tag_from_schema(response_schema), tag_group='Response Schemas')
-
             path_item = {
                 '200': {
                     'content': {

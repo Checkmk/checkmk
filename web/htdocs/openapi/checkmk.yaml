@@ -37,6 +37,67 @@ components:
         pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
         type: string
   schemas:
+    ActionResult:
+      discriminator:
+        mapping:
+          object: '#/components/schemas/ActionResultObject'
+        propertyName: resultType
+      oneOf:
+      - $ref: '#/components/schemas/ActionResultObject'
+      properties: {}
+      type: object
+    ActionResultObject:
+      properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        result:
+          type: object
+        resultType:
+          default: object
+          type: string
+        value:
+          description: The return value of this action.
+          example:
+            foo: bar
+          nullable: true
+          type: object
+      required:
+      - links
+      - value
+      type: object
+    ActionResultScalar:
+      properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        result:
+          type: object
+        resultType:
+          default: scalar
+          type: string
+        value:
+          description: The return value of this action.
+          example: Done.
+          nullable: true
+          type: string
+      required:
+      - links
+      - value
+      type: object
+    AgentSign:
+      properties:
+        key_id:
+          example: asdf
+          type: string
+        passphrase:
+          example: sw0rdfish
+          type: string
+      type: object
     ApiError:
       properties:
         code:
@@ -555,6 +616,181 @@ info:
   version: 1.0.0
 openapi: 3.0.2
 paths:
+  /collections/contact_group:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.list_group
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List contact-groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a new contact group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /collections/contact_group"
+      - lang: httpie
+        source: "http POST /collections/contact_group \\\n    'Authorization: Bearer\
+          \ username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/contact_group\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
+  /objects/contact_group/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.show
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /objects/contact_group/pathname"
+      - lang: httpie
+        source: "http PUT /objects/contact_group/pathname \\\n    'Authorization:\
+          \ Bearer username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/contact_group/pathname\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
   /collections/folder:
     get:
       description: ''
@@ -1085,200 +1321,6 @@ paths:
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
           \        \"alias\": \"Windows Servers\", \n        \"name\": \"windows\"\
           \n    },\n)\nresp.raise_for_status()"
-  /version:
-    get:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.version.search
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InstalledVersions'
-          description: ''
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.version
-  /collections/contact_group:
-    get:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.list_group
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DomainObjectCollection'
-          description: ''
-      summary: List contact-groups
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.contact_group
-    post:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.create
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InputContactGroup'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DomainObject'
-          description: ''
-          headers:
-            ETag:
-              description: The HTTP ETag header for this resource. It identifies the
-                current state of the object and needs to be sent along in the "If-Match"
-                request-header for subsequent modifications.
-              schema:
-                pattern: '[0-9a-fA-F]{32}'
-                type: string
-      summary: Create a new contact group
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
-          \n        }' \\\n    /collections/contact_group"
-      - lang: httpie
-        source: "http POST /collections/contact_group \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
-      - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/contact_group\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
-          \    },\n)\nresp.raise_for_status()"
-  /objects/contact_group/{name}:
-    delete:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
-      parameters:
-      - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
-        in: header
-        name: If-Match
-        required: true
-        schema:
-          type: string
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '204':
-          description: Operation done successfully. No further output.
-      summary: Delete a contact-group
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.contact_group
-    get:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.show
-      parameters:
-      - $ref: '#/components/parameters/name'
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContactGroup'
-          description: ''
-          headers:
-            ETag:
-              description: The HTTP ETag header for this resource. It identifies the
-                current state of the object and needs to be sent along in the "If-Match"
-                request-header for subsequent modifications.
-              schema:
-                pattern: '[0-9a-fA-F]{32}'
-                type: string
-      summary: Show a contact-group
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.contact_group
-    put:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
-      parameters:
-      - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
-        in: header
-        name: If-Match
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InputContactGroup'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContactGroup'
-          description: ''
-          headers:
-            ETag:
-              description: The HTTP ETag header for this resource. It identifies the
-                current state of the object and needs to be sent along in the "If-Match"
-                request-header for subsequent modifications.
-              schema:
-                pattern: '[0-9a-fA-F]{32}'
-                type: string
-      summary: Update a contact-group
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.contact_group
-      x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
-          \n        }' \\\n    /objects/contact_group/pathname"
-      - lang: httpie
-        source: "http PUT /objects/contact_group/pathname \\\n    'Authorization:\
-          \ Bearer username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
-      - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/contact_group/pathname\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
-          \    },\n)\nresp.raise_for_status()"
   /collections/service_group:
     get:
       description: ''
@@ -1455,9 +1497,225 @@ paths:
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
           \        \"alias\": \"Environment Sensors\", \n        \"name\": \"environment\"\
           \n    },\n)\nresp.raise_for_status()"
+  /version:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.version.search
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstalledVersions'
+          description: ''
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.version
+  /domain-types/agent/actions/sign:
+    post:
+      description: "Args:\n    params:"
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.sign_agents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSign'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+          description: ''
+      summary: Sign all agents.
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"key_id\": \"asdf\", \n          \"passphrase\": \"sw0rdfish\"\
+          \n        }' \\\n    /domain-types/agent/actions/sign"
+      - lang: httpie
+        source: "http POST /domain-types/agent/actions/sign \\\n    'Authorization:\
+          \ Bearer username password' \\\n    key_id='asdf' \\\n    passphrase='sw0rdfish'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/domain-types/agent/actions/sign\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"key_id\": \"asdf\", \n        \"passphrase\": \"sw0rdfish\"\n\
+          \    },\n)\nresp.raise_for_status()"
+  /collections/agent:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.list_agents
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+  /objects/host/{hostname}/objects/agent:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.get_agent_of_host
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List agents for a specific host
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+  /domain-types/agent/actions/bake:
+    post:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.bake_all_agents
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultScalar'
+          description: ''
+      summary: Bake all agents
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+  /domain-types/agent/actions/automatic-deployment:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.automatic_deployment_status
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultObject'
+          description: ''
+      summary: Show the status of the automatic deployment system
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+  /domain-types/agent/actions/baking_status:
+    get:
+      description: ''
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.baking_status
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultObject'
+          description: ''
+      summary: Show the baking status
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
+  /objects/agent/{agent_hash}:
+    get:
+      description: "Args:\n    params:"
+      operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.download_agent
+      parameters:
+      - allowEmptyValue: false
+        description: The configuration hash representing an agent.
+        example: 80e99ba3a66d4880
+        in: path
+        name: agent_hash
+        required: true
+        schema:
+          pattern: '[a-fA-F0-9]{16}'
+          type: string
+      - allowEmptyValue: false
+        description: The type of the operating system. May be one of aix_tgz, linux_deb,
+          linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi
+        example: linux_tgz
+        in: query
+        name: os_type
+        required: true
+        schema:
+          pattern: aix_tgz|linux_deb|linux_rpm|linux_tgz|solaris_pkg|solaris_tgz|windows_msi
+          type: string
+      - allowEmptyValue: false
+        description: Optionally the hostname for which a certain agent has been configured.
+          If omitted you may only download this agent if you have the rights for all
+          agents.
+        example: example.com
+        in: query
+        name: host
+        required: false
+        schema:
+          pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: A single agent
+      tags:
+      - cmk.gui.cee.plugins.openapi.endpoints.agents
 security:
 - BearerAuth: []
 tags:
+- name: cmk.gui.plugins.openapi.endpoints.contact_group
+- description: 'Schema for submitting Contact Group information.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup" showReadOnly={true}
+    showWriteOnly={true} />'
+  name: InputContactGroup
+  x-displayName: InputContactGroup
 - name: cmk.gui.plugins.openapi.endpoints.folder
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputFolder" showReadOnly={true}
     showWriteOnly={true} />
@@ -1477,19 +1735,27 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputHostGroup" showReadOnly={true}
     showWriteOnly={true} />
   name: InputHostGroup
-- name: cmk.gui.plugins.openapi.endpoints.version
-- name: cmk.gui.plugins.openapi.endpoints.contact_group
-- description: 'Schema for submitting Contact Group information.
-
-
-    <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup" showReadOnly={true}
-    showWriteOnly={true} />'
-  name: InputContactGroup
-  x-displayName: InputContactGroup
 - name: cmk.gui.plugins.openapi.endpoints.service_group
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"
     showReadOnly={true} showWriteOnly={true} />
   name: InputServiceGroup
+- name: cmk.gui.plugins.openapi.endpoints.version
+- description: "TODO:\n    Expose an \"Action\" according to the \"Restful Objects\"\
+    \ specification which bakes all bakable agents.\n    Expose an \"Object\" which\
+    \ shows the \"Baking Status\" of the baking-process. If a progress estimate is\
+    \ possible, expose this via \"format=progress\" via OpenAPI.\n    Provide an endpoint\
+    \ representing an Agent and it's configuration:\n        on \"Accept: application/json\"\
+    \ return information about the agent\n        on \"Accept: application/octet-stream\"\
+    \ return the Agent binary itself\n    Expose an \"Action\" which signs all baked\
+    \ (unsigned) agents.\n    Expose an GET-Endpoint which shows the current configuration\
+    \ of the baking system\n        e.g. keys available, signed, etc.\n    Expose\
+    \ an GET-PUT-POST Endpoint for handling certificates and credentials."
+  name: cmk.gui.cee.plugins.openapi.endpoints.agents
+  x-displayName: Agent related endpoints
+- description: <SchemaDefinition schemaRef="#/components/schemas/AgentSign" showReadOnly={true}
+    showWriteOnly={true} />
+  name: AgentSign
+  x-displayName: Foo
 x-ignoredHeaderParameters:
 - User-Agent
 - X-Test-Header
@@ -1499,20 +1765,22 @@ x-logo:
 x-tagGroups:
 - name: Endpoints
   tags:
+  - cmk.gui.plugins.openapi.endpoints.contact_group
   - cmk.gui.plugins.openapi.endpoints.folder
   - cmk.gui.plugins.openapi.endpoints.host
   - cmk.gui.plugins.openapi.endpoints.host_group
-  - cmk.gui.plugins.openapi.endpoints.version
-  - cmk.gui.plugins.openapi.endpoints.contact_group
   - cmk.gui.plugins.openapi.endpoints.service_group
+  - cmk.gui.plugins.openapi.endpoints.version
+  - cmk.gui.cee.plugins.openapi.endpoints.agents
 - name: Response Schemas
   tags: []
 - name: Request Schemas
   tags:
+  - InputContactGroup
   - InputFolder
   - UpdateFolder
   - CreateHost
   - UpdateHost
   - InputHostGroup
-  - InputContactGroup
   - InputServiceGroup
+  - AgentSign

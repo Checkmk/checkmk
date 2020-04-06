@@ -114,7 +114,7 @@ def with_user(register_builtin_html, load_config):
 # noinspection PyDefaultArgument
 @pytest.fixture(scope='function')
 def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.plugins.openapi.specgen import generate
+    from cmk.gui.openapi import generate
     spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
     openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
     openapi_spec_dir.return_value = spec_path
@@ -134,11 +134,11 @@ def suppress_automation_calls(mocker):
 
     This is needed because in order for automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
-    mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
-    automation = mocker.patch("cmk.gui.watolib.check_mk_automation")
+    automation = mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
+    mocker.patch("cmk.gui.watolib.check_mk_automation", new=automation)
 
-    mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
-    local_automation = mocker.patch("cmk.gui.watolib.check_mk_local_automation")
+    local_automation = mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
+    mocker.patch("cmk.gui.watolib.check_mk_local_automation", new=local_automation)
 
     yield automation, local_automation
 
@@ -165,6 +165,7 @@ def inline_background_jobs(mocker):
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
+    mocker.patch("os.setsid")
     mocker.patch("os._exit")
     mocker.patch("sys.stdout.close")
     mocker.patch("sys.stdin.close")

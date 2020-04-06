@@ -2029,7 +2029,6 @@ class Cell(object):
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
     def render_for_export(self, row):
-        # type: (Row) -> CellContent
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""

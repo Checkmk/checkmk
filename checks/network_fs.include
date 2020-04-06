@@ -68,7 +68,9 @@ def check_network_fs_mounts(item, params, parsed):
         return 0, "Mount seems OK"
     size_blocks, _, free_blocks, blocksize = map(int, data)
 
-    if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024 * 1024:
+    # According to the mount.cifs manpage th maximum blocksize is not allowed
+    # to be greater than 16MB.
+    if size_blocks <= 0 or free_blocks < 0 or blocksize > 16 * 1024 * 1024:
         return 2, "Stale fs handle"
 
     size_bytes = size_blocks * blocksize

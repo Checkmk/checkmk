@@ -1048,13 +1048,13 @@ def process_clustermode(args, server, netapp_mode, licenses):
         print(
             format_config(snapmirror_info,
                           "snapvault",
-                          "destination-volume",
+                          "destination-location",
                           config_report=[
-                              "destination-volume-node", "policy", "mirror-state", "source-vserver",
-                              "lag-time", "relationship-status"
+                              "destination-vserver", "policy", "mirror-state", "source-vserver",
+                              "lag-time", "relationship-status", "is-healthy"
                           ],
                           config_rename={
-                              "destination-volume-node": "destination-system",
+                              "destination-vserver": "destination-system",
                               "mirror-state": "state",
                               "source-vserver": "source-system",
                               "relationship-status": "status"

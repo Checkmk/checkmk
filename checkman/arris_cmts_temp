@@ -10,7 +10,7 @@ description:
 
  The service goes {WARN}/{CRIT} if the temperature exceeds these levels.
 
-The check uses the CADANT-CMTS-EQUIPMENT-MIB.
+ The check uses the CADANT-CMTS-EQUIPMENT-MIB.
 
 item:
  The Cardname

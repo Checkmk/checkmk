@@ -165,7 +165,10 @@ def serve_json(data, profile=None):
     response.set_data(json.dumps(data))
     # HACK: See wrap_with_validation.
     response.original_data = data  # type: ignore[attr-defined]
-    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    # TODO: We have to break the abstraction and access a private method of
+    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
+    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
+    # proxy for the response, probably we shouldn't either.
     return response._get_current_object()  # type: ignore[attr-defined]
 
 
@@ -181,7 +184,10 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
 
 def sucess(status=200):
     response.status_code = status
-    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    # TODO: We have to break the abstraction and access a private method of
+    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
+    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
+    # proxy for the response, probably we shouldn't either.
     return response._get_current_object()  # type: ignore[attr-defined]
 
 

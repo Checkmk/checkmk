@@ -21,7 +21,10 @@ def serve_group(group, serializer):
     if response.status_code != 204:
         response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_dict(group).to_header())
-    # TODO: Why don't we just return response? We access a private method of LocalProxy here...
+    # TODO: We have to break the abstraction and access a private method of
+    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
+    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
+    # proxy for the response, probably we shouldn't either.
     return response._get_current_object()  # type: ignore[attr-defined]
 
 

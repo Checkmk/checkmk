@@ -85,12 +85,12 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
             logger.info("|   Execute all integration tests")
             logger.info("| ")
             logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests/integration/livestatus/test_livestatus.py")
+                        "tests-py3/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info("| tests-py3/scripts/run-integration-test.py "
-                        "tests/integration/livestatus/test_livestatus.py "
+                        "tests-py3/integration/livestatus/test_livestatus.py "
                         "-k test_service_custom_variables ")
             logger.info("| ")
             logger.info("|   Execute a single test")

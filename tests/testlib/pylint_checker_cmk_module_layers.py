@@ -119,12 +119,6 @@ class CMKModuleLayerChecker(BaseChecker):
             return "cmk.%s" % module_name
         return module_name
 
-    # Only works for our enterprise / managed directories
-    def _get_module_path_from_shadowed_file_path(self, file_path):
-        without_ext = file_path[:-3]
-        parts = without_ext.split("/")[1:]
-        return ".".join(parts)
-
     def _is_import_allowed(self, file_path, mod_name, import_modname):
         for component in _COMPONENTS:
             if not self._is_part_of_component(mod_name, file_path, component):

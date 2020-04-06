@@ -12,20 +12,17 @@ if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
 else:
     from typing import Literal  # pylint: disable=no-name-in-module
 
-from cmk.gui.globals import response
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
 
 def serve_group(group, serializer):
+    response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
         response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_dict(group).to_header())
-    # TODO: We have to break the abstraction and access a private method of
-    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
-    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
-    # proxy for the response, probably we shouldn't either.
-    return response._get_current_object()  # type: ignore[attr-defined]
+    return response
 
 
 GroupName = Union[Literal['host_group'], Literal['contact_group'], Literal['service_group'],]

@@ -232,7 +232,7 @@ def test_get_ruleset(web):
                 },
                 'value': {
                     'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
+                    'never_ignore_mountpoints': ["/opt/omd/sites/int_test/tmp"]
                 }
             }]
         },

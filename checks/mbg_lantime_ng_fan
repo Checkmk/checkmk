@@ -27,6 +27,9 @@
 
 def inventory_mbg_lantime_ng_fan(info):
     for line in info:
+        #do not discover fan state "not available" (0)
+        if line[1] == "0":
+            continue
         yield line[0], None
 
 

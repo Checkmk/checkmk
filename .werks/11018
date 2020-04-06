@@ -1,0 +1,11 @@
+Title: mbg_lantime_ng_fan: Do not discover fans in state "not available"
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p12
+Date: 1586172212
+Class: fix
+
+Fans in state "not available" are not discovered any more. If you already
+discovered such services, rediscovery is needed.

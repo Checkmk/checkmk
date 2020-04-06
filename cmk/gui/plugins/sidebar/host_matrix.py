@@ -81,7 +81,7 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         style = 'width:%spx' % (snapin_width - n * cell_size_rest)
 
         html.open_table(class_=["content_center", "hostmatrix"],
-                        cellspacing=0,
+                        cellspacing="0",
                         style=["border-collapse:collapse;", style])
         col = 1
         row = 1
@@ -93,13 +93,13 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
             elif not has_been_checked:
                 s = "p"
             elif worstsvc == 2 or state == 1:
-                s = 2
+                s = "2"
             elif worstsvc == 3 or state == 2:
-                s = 3
+                s = "3"
             elif worstsvc == 1:
-                s = 1
+                s = "1"
             else:
-                s = 0
+                s = "0"
             url = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(site),
                                                               html.urlencode(host))
             html.open_td(class_=["state", "state%s" % s])

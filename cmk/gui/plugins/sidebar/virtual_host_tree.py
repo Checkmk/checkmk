@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict, List  # pylint: disable=unused-import
+
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
@@ -27,9 +29,10 @@ class VirtualHostTree(SidebarSnapin):
         self._load_user_settings()
 
     def _load_trees(self):
-        self._trees = dict([
-            (tree["id"], tree) for tree in transform_virtual_host_trees(config.virtual_host_trees)
-        ])
+        self._trees = {
+            tree["id"]: tree  #
+            for tree in transform_virtual_host_trees(config.virtual_host_trees)
+        }
 
     def _load_user_settings(self):
         tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
@@ -107,7 +110,8 @@ class VirtualHostTree(SidebarSnapin):
                       key=lambda x: x[1])
 
     def _render_tag_tree_level(self, tree_spec, path, cwd, title, tree):
-        if not self._is_tag_subdir(path, cwd) and not self._is_tag_subdir(cwd, path):
+        if (not self._is_tag_subdir(path=path, cwd=cwd) and
+                not self._is_tag_subdir(path=cwd, cwd=path)):
             return
 
         if path != cwd and self._is_tag_subdir(path, cwd):
@@ -152,18 +156,18 @@ class VirtualHostTree(SidebarSnapin):
     def _is_tag_subdir(self, path, cwd):
         if not cwd:
             return True
-        elif not path:
+        if not path:
             return False
-        elif path[0] != cwd[0]:
+        if path[0] != cwd[0]:
             return False
         return self._is_tag_subdir(path[1:], cwd[1:])
 
     def _tag_tree_bullet(self, state, path, leaf):
-        code = '<div class="tagtree %sstatebullet state%d">&nbsp;</div>' % (
-            (leaf and "leaf " or ""), state)
+        code = (u'<div class="tagtree %sstatebullet state%d">&nbsp;</div>' %
+                ((leaf and "leaf " or ""), state))
         if not leaf:
-            code = '<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' % \
-               (_("Display the tree only below this node"), "|".join(path), code)
+            code = ('<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' %
+                    (_("Display the tree only below this node"), "|".join(path), code))
         return code + " "
 
     def _tag_tree_url(self, tree_spec, node_values, viewname):
@@ -270,11 +274,9 @@ function virtual_host_tree_enter(path)
 
     def _compute_tag_tree(self, tree_spec):
         tag_groups, topics = self._get_tag_config()
-
-        tree = {}
+        tree = {}  # type: Dict[Any, Any]
         for host_row in self._get_all_hosts():
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
-
         return tree
 
     def _add_host_to_tree(self, tree_spec, tree, host_row, tag_groups, topics):
@@ -387,7 +389,7 @@ function virtual_host_tree_enter(path)
     # Prepare list of host tag groups and topics
     def _get_tag_config(self):
         tag_groups = {}
-        topics = {}
+        topics = {}  # type: Dict[str, List[Any]]
         for tag_group in config.tags.tag_groups:
             if tag_group.topic:
                 topics.setdefault(tag_group.topic, []).append(tag_group)
@@ -464,7 +466,8 @@ function virtual_host_tree_enter(path)
     def _ajax_tag_tree_enter(self):
         html.set_output_format("json")
         self._load()
-        path = html.request.var("path").split("|") if html.request.var("path") else []
+        path = (html.request.get_str_input_mandatory("path").split("|")
+                if html.request.var("path") else [])
         self._cwds[self._current_tree_id] = path
         self._save_user_settings()
         html.write("OK")

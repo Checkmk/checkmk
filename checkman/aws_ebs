@@ -5,6 +5,19 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors disk IO of AWS EBS.
+
+ It monitors the following metrics:
+
+ - Read IO
+
+ - Write IO
+
+ - Read troughput
+
+ - Write throughput
+
+ - Queue length
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 

@@ -7,11 +7,13 @@ description:
  This check monitors the number of CPU credits spent by the instance for CPU
  utilization and the number of earned CPU credits that an instance has accrued
  since it was launched or started.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- Lower default levels for balance are set to 10, 5.
- These are configurable.
+ You can configure lower levels for {WARN}/{CRIT} (default: 10, 5).
+
+ The service goes {WARN}/{CRIT} if the credit usage drops below these levels.
 
 inventory:
  One service is created if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.

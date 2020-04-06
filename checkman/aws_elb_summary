@@ -5,6 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors all AWS ELB and reports a summary of their states.
+
  To make this check work you have to configure the related special agent
  {Amazon Web Services (AWS)}.
 

@@ -6,8 +6,13 @@ distribution: check_mk
 description:
  This check monitors the percentage of allocated EC2 compute units that are
  currently in use on the AWS EC2 instance.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
+
+ You can configure upper levels for {WARN}/{CRIT} (default: 90.0, 95.0).
+
+ The service goes {WARN}/{CRIT} if the CPU utilization exceeds these levels.
 
 inventory:
  One service is created if all required metrics (CPUUtilization) are given.

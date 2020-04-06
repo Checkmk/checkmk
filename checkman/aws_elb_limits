@@ -7,6 +7,7 @@ description:
  This check monitors the AWS/ELB limits, ie. the number of
  allowed load balancers and the registered instances and
  listeners per load balancer.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 

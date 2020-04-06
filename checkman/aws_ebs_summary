@@ -4,8 +4,18 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors all AWS EBS and reports
- a summary of their states.
+ This check monitors all AWS EBS and reports a summary of their states.
+
+ It monitors:
+
+ - The amount of stores
+
+ - The amount of stores for each state
+
+ - The amount of stores for each type
+
+ - Name of volume, status, type, encryption and creation time for each store
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 

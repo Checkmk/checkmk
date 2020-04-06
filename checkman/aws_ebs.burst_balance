@@ -8,7 +8,9 @@ description:
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set. Lower levels can be configured.
+ You can configure upper levels for {WARN}/{CRIT} (no default levels are set).
+
+ The service goes {WARN}/{CRIT} if the burst balance exceed these levels.
 
 item:
  Name of the instance

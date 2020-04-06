@@ -6,9 +6,13 @@ distribution: check_mk
 description:
  This check gives an overview over the unblended costs of each service
  configured in AWS accounts and shows the costs of the last day.
+
  To make this check work you have to configure the related special agent
  {Amazon Web Services (AWS)}.
- Upper levels are configurable; no default levels are set.
+
+ You can configure upper levels for {WARN}/{CRIT} (no default levels are set).
+
+ The service goes {WARN}/{CRIT} if the costs exceed these levels.
 
 item:
  Service name

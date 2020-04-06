@@ -4,7 +4,8 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors the AWS/EBS limits
+ This check monitors the AWS/EBS limits.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
@@ -28,8 +29,13 @@ description:
  up the related values from API method {{describe_volumes}}.
 
  With both values we calculate the usage of each limit type
- in percent. Default levels are set to 80, 90 percent per type.
+ in percent.
+
+ The default {WARN}/{CRIT} levels are set to 80, 90 percent per type.
+
  For each limit type the limit and usage levels are configurable.
+
+ The service goes {WARN}/{CRIT} if one or more of these levels are exceeded.
 
  If limits are enabled all volumes are fetched regardless of
  possibly configured restriction to names or tags.

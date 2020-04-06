@@ -11,6 +11,7 @@ import six
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.views import (
     layout_registry,
     Layout,
@@ -68,7 +69,14 @@ class LayoutPython(Layout):
             for cell in cells:
                 joined_row = join_row(row, cell)
                 content = cell.render_for_export(joined_row)
-                html.write(repr(escaping.strip_tags(content)))
+
+                # The aggr_treestate painters are returning a dictionary data structure (see
+                # paint_aggregated_tree_state()) in case the output_format is not HTML. Only
+                # remove the HTML tags from the top level strings produced by painters.
+                if isinstance(content, (HTML, six.string_types)):
+                    content = escaping.strip_tags(content)
+
+                html.write(repr(content))
                 html.write_text(",")
             html.write_text("],")
         html.write_text("\n]\n")

@@ -235,6 +235,15 @@ class AdditionalDetails:
         # type: (Iterable[str]) -> None
         self._lines = [s.strip('\n') for s in self._validate(iter_lines)]
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" %
+                            (self.__class__.__name__, other.__class__.__name__))
+        return self._lines == other._lines
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__.__name__, self._lines)
+
     def __str__(self):
         return '\n'.join(self._lines)
 

@@ -423,15 +423,6 @@ class DataSource(
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
-    def _verify_ipaddress(self):
-        # type: () -> None
-        if not self._ipaddress:
-            raise MKIPAddressLookupError("Host as no IP address configured.")
-
-        if self._ipaddress in ["0.0.0.0", "::"]:
-            raise MKIPAddressLookupError(
-                "Failed to lookup IP address and no explicit IP address configured")
-
     def set_max_cachefile_age(self, max_cachefile_age):
         # type: (int) -> None
         self._max_cachefile_age = max_cachefile_age
@@ -987,6 +978,16 @@ def management_board_ipaddress(hostname):
             return None
     else:
         return mgmt_ipaddress
+
+
+def verify_ipaddress(address):
+    # type: (Optional[HostAddress]) -> None
+    if not address:
+        raise MKIPAddressLookupError("Host as no IP address configured.")
+
+    if address in ["0.0.0.0", "::"]:
+        raise MKIPAddressLookupError(
+            "Failed to lookup IP address and no explicit IP address configured")
 
 
 def _is_ipaddress(address):

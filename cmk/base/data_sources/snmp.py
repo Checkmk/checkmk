@@ -30,7 +30,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPTree
 
-from .abstract import DataSource, management_board_ipaddress
+from .abstract import DataSource, management_board_ipaddress, verify_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
@@ -227,7 +227,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: () -> RawSNMPData
         import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
 
-        self._verify_ipaddress()
+        verify_ipaddress(self._ipaddress)
 
         check_plugin_names = self.get_check_plugin_names()
 

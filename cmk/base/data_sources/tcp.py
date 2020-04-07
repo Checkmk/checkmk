@@ -19,7 +19,7 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
 )
 from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
 
-from .abstract import CheckMKAgentDataSource
+from .abstract import CheckMKAgentDataSource, verify_ipaddress
 
 #.
 #   .--Agent---------------------------------------------------------------.
@@ -77,7 +77,7 @@ class TCPDataSource(CheckMKAgentDataSource):
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
 
-        self._verify_ipaddress()
+        verify_ipaddress(self._ipaddress)
 
         output = self._fetch_raw_data(
             socket.socket(socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET,

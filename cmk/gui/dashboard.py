@@ -1146,8 +1146,15 @@ def choose_view(name, title, create_dashlet_spec_func):
             dashlet = create_dashlet_spec_func(dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%s' %
-                               (html.urlencode(name), html.urlencode(str(dashlet_id))))
+            raise HTTPRedirect(
+                html.makeuri_contextless(
+                    [
+                        ("name", name),
+                        ("id", str(dashlet_id)),
+                        ("back", back_url),
+                    ],
+                    filename="edit_dashlet.py",
+                ))
         except MKUserError as e:
             html.user_error(e)
 

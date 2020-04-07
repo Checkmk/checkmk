@@ -172,7 +172,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
         decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
         # Strip of fill bytes of openssl
-        return decrypted_pkg[0:-ord(str(decrypted_pkg[-1]))]
+        return decrypted_pkg[0:-decrypted_pkg[-1]]
 
     def describe(self):
         # type: () -> str

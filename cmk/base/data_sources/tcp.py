@@ -85,14 +85,11 @@ class TCPDataSource(CheckMKAgentDataSource):
                               self._ipaddress,
                               self.port,
                           ), self.timeout, self._logger)
-
-        if not output:  # may be caused by xinetd not allowing our address
-            raise MKEmptyAgentData("Empty output from agent at TCP port %s" % self.port)
+        output = self._decrypt(output, self._host_config.agent_encryption)
 
         if len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
 
-        output = self._decrypt(output, self._host_config.agent_encryption)
         return output
 
     @staticmethod
@@ -116,7 +113,10 @@ class TCPDataSource(CheckMKAgentDataSource):
             sock.settimeout(None)
 
             logger.debug("Reading data from agent")
-            return recvall(sock)
+            output = recvall(sock)
+            if not output:  # may be caused by xinetd not allowing our address
+                raise MKEmptyAgentData("Empty output from agent at %s:%d" % address)
+            return output
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise

@@ -64,13 +64,13 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/check_mk_agent
 /var/lib/check_mk_agent
 
-%define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
+%define reload_xinetd if which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
 
 %define activate_xinetd if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
 
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
-%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
+%define systemd_enable if which systemctl >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; sed -i 's/\(disable[^=]*= \).*/\1yes/g' /etc/xinetd.d/check_mk ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
 
 %pre
 if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then

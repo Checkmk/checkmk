@@ -483,7 +483,7 @@ class AjaxFetchTopology(AjaxPage):
         # growth_forbidden: block further traversal at the given nodes
         # growth_continue_nodes: expand these nodes, event if the depth has been reached
 
-        topology_config_var = html.request.get_text_input_mandatory("topology_config")
+        topology_config_var = html.request.get_ascii_input_mandatory("topology_config")
         try:
             topology_config = json.loads(topology_config_var)
         except (TypeError, ValueError):

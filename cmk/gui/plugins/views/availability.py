@@ -7,7 +7,7 @@
 import time
 import itertools
 from typing import (  # pylint: disable=unused-import
-    List, Text, TYPE_CHECKING, Set, Tuple, Union,
+    List, Text, TYPE_CHECKING, Set, Tuple,
 )
 import six
 
@@ -196,12 +196,12 @@ def render_availability_page(view, filterheaders):
     if html.request.var("av_host"):
         av_object = (html.request.get_str_input_mandatory("av_site"),
                      html.request.get_str_input_mandatory("av_host"),
-                     html.request.get_text_input_mandatory("av_service"))
+                     html.request.get_unicode_input_mandatory("av_service"))
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]
     elif html.request.var("av_aggr"):
-        av_object = (None, None, html.request.get_text_input_mandatory("av_aggr"))
+        av_object = (None, None, html.request.get_unicode_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
         title += view_title(view.spec)

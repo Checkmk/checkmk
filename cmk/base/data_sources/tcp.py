@@ -138,13 +138,9 @@ class TCPDataSource(CheckMKAgentDataSource):
             return output
 
         try:
-            # simply check if the protocol is an actual number
-            protocol = int(output[0:2])
-
-            output = TCPDataSource._decrypt_package(output[2:], encryption_settings["passphrase"],
-                                                    protocol)
-        except ValueError:
-            raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
+            output = TCPDataSource._real_decrypt(output, encryption_settings)
+        except MKAgentError:
+            raise
         except Exception as e:
             if encryption_settings["use_regular"] == "enforce":
                 raise MKAgentError("Failed to decrypt agent output: %s" % e)
@@ -157,8 +153,16 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     # TODO: Sync with real_type_checks._decrypt_rtc_package
     @staticmethod
-    def _decrypt_package(encrypted_pkg, encryption_key, protocol):
-        # type: (bytes, str, int) -> RawAgentData
+    def _real_decrypt(output, encryption_settings):
+        # type: (RawAgentData, Dict[str, str]) -> RawAgentData
+        # simply check if the protocol is an actual number
+        try:
+            protocol = int(output[:2])
+        except ValueError:
+            raise MKAgentError("Unsupported protocol version: %r" % output[:2])
+        encrypted_pkg = output[2:]
+        encryption_key = encryption_settings["passphrase"]
+
         encrypt_digest = sha256 if protocol == 2 else md5
 
         # Adapt OpenSSL handling of key and iv

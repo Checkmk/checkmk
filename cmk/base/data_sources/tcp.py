@@ -98,29 +98,31 @@ class TCPDataSource(CheckMKAgentDataSource):
     @staticmethod
     def _fetch_raw_data(sock, address, timeout, logger):
         # type: (socket.socket, Tuple[Optional[str], int], float, logging.Logger) -> RawAgentData
-        output_lines = []  # type: List[bytes]
         logger.debug("Connecting via TCP to %s:%d (%ss timeout)", address[0], address[1], timeout)
+
+        def recvall(sock):
+            # type: (socket.socket) -> bytes
+            buffer = []  # type: List[bytes]
+            while True:
+                data = sock.recv(4096, socket.MSG_WAITALL)
+                if not data:
+                    break
+                buffer.append(data)
+            return b"".join(buffer)
+
         try:
             sock.settimeout(timeout)
             sock.connect(address)
             sock.settimeout(None)
 
             logger.debug("Reading data from agent")
-
-            while True:
-                data = sock.recv(4096, socket.MSG_WAITALL)
-                if not data:
-                    break
-                output_lines.append(data)
-
+            return recvall(sock)
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKAgentError("Communication failed: %s" % e)
         finally:
             sock.close()
-
-        return b''.join(output_lines)
 
     @staticmethod
     def _decrypt(output, encryption_settings):

@@ -39,9 +39,9 @@ def number_human_readable(n, precision=1, unit="B"):
     f = "%." + str(precision) + "f"
     if abs(n) > base * base * base:
         return (f + "G%s") % (n / (base * base * base), unit)  # fixed: true-division
-    elif abs(n) > base * base:
+    if abs(n) > base * base:
         return (f + "M%s") % (n / (base * base), unit)  # fixed: true-division
-    elif abs(n) > base:
+    if abs(n) > base:
         return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
 
@@ -530,7 +530,7 @@ perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
 def perfometer_ps_perf(row, check_command, perf_data):
-    perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
+    perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
@@ -672,7 +672,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
         return "", ""  # Printer does not supply a max value
 
     # If there is no 100% given, calculate the percentage
-    if maxi != 100.0 and maxi != 0.0:
+    if maxi not in (0.0, 100.0):
         left = left * 100.0 / maxi
 
     s = row['service_description'].lower()
@@ -764,8 +764,9 @@ def perfometer_mssql_tablespaces(row, check_command, perf_data):
     indexes_perc = indexes / reserved * 100  # fixed: true-division
     unused_perc = unused / reserved * 100  # fixed: true-division
 
-    data = [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
-    return "%.1f%%" % (data_perc + indexes_perc), render_perfometer(data)
+    return ("%.1f%%" % (data_perc + indexes_perc),
+            render_perfometer([(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"),
+                               (unused_perc, "#f0b000")]))
 
 
 perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
@@ -1032,7 +1033,7 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
     used = float(perf_data[1][1])
     if used == 0 and licensed == 0:
         return "0 of 0 used", perfometer_linear(100, get_themed_perfometer_bg_color())
-    elif licensed == 0:
+    if licensed == 0:
         return "completely unlicensed", perfometer_linear(100, "silver")
 
     perc_used = used * 100.0 / licensed
@@ -1119,24 +1120,22 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     value = float(perf_data[0][1])
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
-
     if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    elif cap.startswith("unbalancedCurrent"):
+    if cap.startswith("unbalancedCurrent"):
         return display_str, perfometer_linear(value, display_color)
-    elif cap.startswith("rmsVoltage"):
+    if cap.startswith("rmsVoltage"):
         return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    elif cap.startswith("activePower"):
+    if cap.startswith("activePower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("apparentPower"):
+    if cap.startswith("apparentPower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("powerFactor"):
+    if cap.startswith("powerFactor"):
         return display_str, perfometer_linear(value * 100, display_color)
-    elif cap.startswith("activeEnergy"):
+    if cap.startswith("activeEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    elif cap.startswith("apparentEnergy"):
+    if cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-
     return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
 
 

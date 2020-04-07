@@ -44,7 +44,7 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.metrics.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
     unit_info, metric_info, check_metrics, perfometer_info, graph_info, scalar_colors, KB, MB, GB,
     TB, PB, m, K, M, G, T, P, evaluate, get_graph_range, replace_expressions,
     generic_graph_template, scale_symbols, hsv_to_hexrgb, render_color, parse_color,

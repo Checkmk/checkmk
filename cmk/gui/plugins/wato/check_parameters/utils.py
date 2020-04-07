@@ -8,22 +8,9 @@
 from typing import List, Tuple as _Tuple  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    Filesize,
-    FixedValue,
-    Float,
-    Integer,
-    ListOf,
-    Optional,
-    Percentage,
-    Transform,
-    Tuple,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Alternative, CascadingDropdown, Checkbox, Dictionary, DropdownChoice, Filesize, FixedValue,
+    Float, Integer, ListOf, Optional, Percentage, Transform, Tuple, ValueSpec,
 )
 from cmk.gui.plugins.wato import PredictiveLevels
 
@@ -64,7 +51,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
                   Integer(title=_("Warning if %s") % course, unit=_("MB"), minvalue=0),
                   Integer(title=_("Critical if %s") % course, unit=_("MB"), minvalue=0),
               ])
-    ]
+    ]  # type: List[ValueSpec]
 
     def validate_dynamic_levels(value, varprefix):
         if [v for v in value if v[0] < 0]:

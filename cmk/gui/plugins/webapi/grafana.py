@@ -191,10 +191,7 @@ class APICallGrafanaConnector(APICallCollection):
             for filt in get_matching_filters(datasource.infos):
                 filter_headers += filt.filter(datasource.table)
 
-            if html.request.var("site"):
-                only_sites = [html.request.var("site")]
-            else:
-                only_sites = None
+            only_sites = [html.request.var("site")] if html.request.var("site") else None
 
             return filter_headers, only_sites
 

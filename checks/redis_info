@@ -200,7 +200,7 @@ def check_redis_info_persistence(item, params, item_data):
     if rdb_changes is not None:
         yield check_levels(
             rdb_changes,
-            "redis_rdb_changes",
+            "changes_sld",
             params.get("rdb_changes_count"),
             human_readable_func=int,
             infoname="Number of changes since last dump",
@@ -262,7 +262,7 @@ def check_redis_info_clients(item, params, item_data):
 
         yield check_levels(
             clients_value,
-            "redis_clients_%s" % param_key,
+            "clients_%s" % param_key,
             upper_level + lower_level,
             human_readable_func=int,
             infoname=infotext,

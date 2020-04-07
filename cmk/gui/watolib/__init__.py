@@ -354,6 +354,10 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     def generate(self):
         save_global_settings(self._initial_global_settings())
 
+        content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
+        store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
+                        content)
+
         # A contact group for all hosts and services
         groups = {
             "contact": {

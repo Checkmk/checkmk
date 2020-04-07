@@ -68,18 +68,12 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     SectionName, CheckParameters, DiscoveredService,
 )
-try:
-    from cmk.base.api import PluginName
-    from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
-    from cmk.base.api.agent_based.register.section_plugins_legacy import (
-        create_agent_section_plugin_from_legacy,
-        create_snmp_section_plugin_from_legacy,
-    )
-except ImportError:
-    # API is only Python3. This script is still called by python2 modules,
-    # which for the moment don't require the API and for the time being we
-    # just let this import fail.
-    pass
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
+)
 
 # TODO: Prefix helper functions with "_".
 

@@ -14,6 +14,7 @@ from werkzeug.utils import get_content_type
 
 from cmk.utils.encoding import ensure_unicode
 
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 
@@ -381,16 +382,10 @@ class Response(werkzeug.wrappers.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
-    def __init__(self, is_secure, *args, **kwargs):
-        # type: (bool, *Any, **Any) -> None
-        super(Response, self).__init__(*args, **kwargs)
-        self._is_secure = is_secure
-
     def set_http_cookie(self, key, value, secure=None):
         # type: (str, str, Optional[bool]) -> None
         if secure is None:
-            # TODO: Use the request-self proxy for this, so the callers don't have to supply this.
-            secure = self._is_secure
+            secure = request.is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
 
     def set_content_type(self, mime_type):

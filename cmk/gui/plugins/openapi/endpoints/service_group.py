@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui import watolib
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
 from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas
 from cmk.gui.watolib.groups import edit_group, add_group, load_service_group_information
@@ -59,7 +60,7 @@ def delete(params):
     group = _fetch_service_group(name)
     constructors.require_etag(constructors.etag_of_dict(group))
     watolib.delete_group(name, 'service')
-    return constructors.sucess(status=204)
+    return Response(status=204)
 
 
 @endpoint_schema('/objects/service_group/{name}',

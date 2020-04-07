@@ -53,7 +53,7 @@ import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.http import Request, Response  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Better make our application available?
@@ -82,7 +82,7 @@ class UpdateConfig(object):
         self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
 
-        this_html = htmllib.html(Request(environ), Response(is_secure=False))
+        this_html = htmllib.html(Request(environ))
         # Currently the htmllib.html constructor enables the timeout by default. This side effect
         # should really be cleaned up.
         this_html.disable_request_timeout()

@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib  # pylint: disable=unused-import
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.htmllib as htmllib
 
-from cmk.gui.http import Request, Response
+from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
 
 from testlib.utils import DummyApplication
@@ -125,7 +125,7 @@ def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
 
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            RequestContext(htmllib.html(Request(environ))):
         # Write data
         # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
         write_data_folder.create_hosts([("testhost", attributes, [])])

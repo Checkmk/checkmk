@@ -8,7 +8,7 @@ from werkzeug.test import create_environ
 
 from cmk.gui import htmllib
 from cmk.gui.globals import html, request, RequestContext, AppContext
-from cmk.gui.http import Request, Response
+from cmk.gui.http import Request
 from cmk.update_config import DummyApplication
 
 
@@ -17,7 +17,7 @@ def test_del_vars():
                    REQUEST_URI='',
                    QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            RequestContext(htmllib.html(Request(environ))):
         # First we hit the cached property so we can see that the underlying Request object
         # actually got replaced later.
         _ = request.args

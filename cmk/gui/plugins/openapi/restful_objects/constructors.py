@@ -10,8 +10,7 @@ from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
 
-from cmk.gui.globals import request
-from cmk.gui.http import Response
+from cmk.gui.globals import request, response
 
 
 def _action(name):
@@ -162,12 +161,15 @@ def serve_json(data, profile=None):
     content_type = 'application/json'
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)
-    response = Response()
     response.set_content_type(content_type)
     response.set_data(json.dumps(data))
     # HACK: See wrap_with_validation.
     response.original_data = data  # type: ignore[attr-defined]
-    return response
+    # TODO: We have to break the abstraction and access a private method of
+    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
+    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
+    # proxy for the response, probably we shouldn't either.
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def action_parameter(action, parameter, friendly_name, optional, pattern):
@@ -178,6 +180,15 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
         'optional': optional,
         'pattern': pattern,
     })
+
+
+def sucess(status=200):
+    response.status_code = status
+    # TODO: We have to break the abstraction and access a private method of
+    # LocalProxy here to avoid a "TypeError: Object of type LocalProxy is not
+    # JSON serializable" from simplejson's encoder. Flask itself doesn't use a
+    # proxy for the response, probably we shouldn't either.
+    return response._get_current_object()  # type: ignore[attr-defined]
 
 
 def etag_of_dict(dict_):

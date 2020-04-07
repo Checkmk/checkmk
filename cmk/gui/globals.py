@@ -164,4 +164,11 @@ local = request_local_attr()  # None as name will get the whole object.
 user = request_local_attr('user')  # type: config.LoggedInUser
 request = request_local_attr('request')  # type: http.Request
 
+# TODO: Using a proxy for the response will cause us trouble later: We have to
+# break the abstraction at several places and access a private method of
+# LocalProxy to avoid a "TypeError: Object of type LocalProxy is not JSON
+# serializable" from simplejson's encoder. Flask itself doesn't use a proxy for
+# the response, probably we shouldn't either.
+response = request_local_attr('response')  # type: http.Response
+
 html = request_local_attr('html')  # type: htmllib.html

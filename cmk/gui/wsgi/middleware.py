@@ -18,7 +18,8 @@ def with_context_middleware(app):
     @functools.wraps(app)
     def with_context(environ, start_response):
         req = http.Request(environ)
-        with AppContext(app), RequestContext(req=req):
+        resp = http.Response(is_secure=req.is_secure)
+        with AppContext(app), RequestContext(req=req, resp=resp):
             return app(environ, start_response)
 
     return with_context

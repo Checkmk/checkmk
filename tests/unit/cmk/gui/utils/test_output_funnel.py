@@ -23,7 +23,7 @@ class OutputFunnelTester(OutputFunnel):
 
 @pytest.fixture()
 def html():
-    response = Response()
+    response = Response(is_secure=False)
     return OutputFunnelTester(response)
 
 

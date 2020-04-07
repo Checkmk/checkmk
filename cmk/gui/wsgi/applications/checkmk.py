@@ -26,7 +26,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, request, RequestContext, AppContext
+from cmk.gui.globals import html, request, response, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
@@ -41,7 +41,8 @@ def _auth(func):
     @functools.wraps(func)
     def _call_auth():
         if not login.authenticate(request):
-            return _handle_not_authenticated()
+            _handle_not_authenticated()
+            return
 
         # This may raise an exception with error messages, which will then be displayed to the user.
         _ensure_general_access()
@@ -55,8 +56,6 @@ def _auth(func):
         html.set_theme(config.user.get_attribute("ui_theme"))
 
         func()
-
-        return html.response
 
     return _call_auth
 
@@ -80,8 +79,6 @@ def _noauth(func):
             html.write_text("%s" % e)
             if config.debug:
                 html.write_text(traceback.format_exc())
-
-        return html.response
 
     return _call_noauth
 
@@ -140,8 +137,6 @@ def _page_not_found():
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
-    return html.response
-
 
 def _ensure_general_access():
     if config.user.may("general.use"):
@@ -188,8 +183,6 @@ def _handle_not_authenticated():
     login_page.set_no_html_output(_plain_error())
     login_page.handle_page()
 
-    return html.response
-
 
 def _load_all_plugins():
     # Optimization: in case of the graph ajax call only check the metrics module. This
@@ -227,8 +220,6 @@ def _render_exception(e, title=""):
         html.show_error(e)
         html.footer()
 
-    return html.response
-
 
 def profiling_middleware(func):
     """Wrap an WSGI app in a profiling context manager"""
@@ -250,7 +241,8 @@ class CheckmkApp(object):
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
-        with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
+        resp = http.Response(is_secure=req.is_secure)
+        with AppContext(self), RequestContext(req=req, resp=resp, html_obj=htmllib.html(req, resp)):
             config.initialize()
             html.init_modes()
             return self.wsgi_app(environ, start_response)
@@ -258,11 +250,11 @@ class CheckmkApp(object):
     def _wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks():
-            return _process_request(environ, start_response)
+            _process_request()
+            return response(environ, start_response)
 
 
-def _process_request(environ, start_response):  # pylint: disable=too-many-branches
-    # The hacky nature of the underlying code makes this hack the least troublesome at the moment.
+def _process_request():  # pylint: disable=too-many-branches
     try:
         config.initialize()
         html.init_modes()
@@ -273,44 +265,41 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         _load_all_plugins()
 
         page_handler = get_and_wrap_page(html.myfile)
-        response = page_handler()
+        page_handler()
         # If page_handler didn't raise we assume everything is OK.
         response.status_code = six.moves.http_client.OK
+
     except HTTPRedirect as e:
-        response = http.Response(status=e.status)
+        response.status_code = e.status
         response.headers["Location"] = e.url
 
     except FinalizeRequest as e:
-        response = http.Response(status=e.status)
+        response.status_code = e.status
 
     except livestatus.MKLivestatusNotFoundError as e:
-        response = _render_exception(e, title=_("Data not found"))
+        _render_exception(e, title=_("Data not found"))
 
     except MKUserError as e:
-        response = _render_exception(e, title=_("Invalid user Input"))
+        _render_exception(e, title=_("Invalid user Input"))
 
     except MKAuthException as e:
-        response = _render_exception(e, title=_("Permission denied"))
+        _render_exception(e, title=_("Permission denied"))
 
     except livestatus.MKLivestatusException as e:
-        response = _render_exception(e, title=_("Livestatus problem"))
+        _render_exception(e, title=_("Livestatus problem"))
         response.status_code = six.moves.http_client.BAD_GATEWAY
 
     except MKUnauthenticatedException as e:
-        response = _render_exception(e, title=_("Not authenticated"))
+        _render_exception(e, title=_("Not authenticated"))
         response.status_code = six.moves.http_client.UNAUTHORIZED
 
     except MKConfigError as e:
-        response = _render_exception(e, title=_("Configuration error"))
+        _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
     except MKGeneralException as e:
-        response = _render_exception(e, title=_("General error"))
+        _render_exception(e, title=_("General error"))
         logger.error("MKGeneralException: %s", e)
 
     except Exception:
         crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())
-        # This needs to be cleaned up.
-        response = html.response
-
-    return response(environ, start_response)

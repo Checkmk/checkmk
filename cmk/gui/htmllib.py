@@ -37,7 +37,7 @@
 #   the different tasks clearer. For ABCHTMLGenerator() or similar.
 #
 # - Unify CSS classes attribute to "class_"
-import functools
+
 import sys
 import time
 import os
@@ -86,21 +86,9 @@ json.JSONEncoder.default = _default  # type: ignore[assignment]
 # TODO: This is something which should be realized by using a custom JSONEncoder. The slash encoding
 # is not necessary when the resulting string is not added to HTML content, but there is no problem
 # to apply it to all encoded strings.
-
-
-def _patch_json(json_module):
-    # We make this a function which is called on import-time because mypy fell into an endless-loop
-    # due to changes outside this scope.
-    orig_func = json_module.encoder.encode_basestring_ascii
-
-    @functools.wraps(orig_func)
-    def _escaping_wrapper(s):
-        return orig_func(s).replace('/', '\\/')
-
-    json_module.encoder.encode_basestring_ascii = _escaping_wrapper
-
-
-_patch_json(json)
+json.encoder._orig_encode_basestring_ascii = json.encoder.encode_basestring_ascii  # type: ignore[attr-defined]
+json.encoder.encode_basestring_ascii = lambda s: json.encoder._orig_encode_basestring_ascii(  # type: ignore[attr-defined]
+    s).replace('/', '\\/')  # type: ignore[attr-defined]
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -113,18 +101,16 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.url_encoder import URLEncoder  # pylint: disable=unused-import
 from cmk.gui.i18n import _
-from cmk.gui.http import Response
+from cmk.gui.http import Request, Response  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
-    from cmk.gui.http import Request  # pylint: disable=unused-import
-    from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
     from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
-    from cmk.gui.utils.output_funnel import OutputFunnelInput  # pylint: disable=unused-import
 
 # TODO: Cleanup this mess.
 CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
@@ -1134,8 +1120,8 @@ OUTPUT_FORMAT_MIME_TYPES = {
 
 
 class html(ABCHTMLGenerator):
-    def __init__(self, request):
-        # type: (Request) -> None
+    def __init__(self, request, response):
+        # type: (Request, Response) -> None
         super(html, self).__init__()
 
         self._logger = log.logger.getChild("html")
@@ -1186,9 +1172,9 @@ class html(ABCHTMLGenerator):
         self.encoder = URLEncoder()
         self.timeout_manager = TimeoutManager()
         self.transaction_manager = TransactionManager(request)
-        self.response = Response()
-        self.output_funnel = OutputFunnel(self.response)
+        self.output_funnel = OutputFunnel(response)
         self.request = request
+        self.response = response
 
         # TODO: Cleanup this side effect (then remove disable_request_timeout() e.g. from update_config.py)
         self.enable_request_timeout()

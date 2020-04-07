@@ -144,13 +144,17 @@ class BaseRequest:
     is_multiprocess: bool
     is_run_once: bool
 
+    # Checkmk: We disable this because it breaks the whole "attr-defined" check of mypy
+    # for all derived classes. Hope we can fix the upstream soon
+    # (https://github.com/python/typeshed/issues/3913)
+    #
     # These are not preset at runtime but we add them since monkeypatching this
     # class is quite common.
-    def __setattr__(self, name: str, value: Any):
-        ...
+    #def __setattr__(self, name: str, value: Any):
+    #    ...
 
-    def __getattr__(self, name: str):
-        ...
+    #def __getattr__(self, name: str):
+    #    ...
 
 
 _OnCloseT = TypeVar('_OnCloseT', bound=Callable[[], Any])

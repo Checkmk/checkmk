@@ -251,8 +251,7 @@ def get_current_sitestats():
         filename = os.path.basename(entry[0])
         if "multisite.d/wato/" in entry[0] and not filename == "bi.mk":
             continue
-        else:
-            relevant_configuration_timestamps.append(entry)
+        relevant_configuration_timestamps.append(entry)
 
     current_world = {
         "timestamps": relevant_configuration_timestamps,
@@ -263,7 +262,7 @@ def get_current_sitestats():
     # This request here is mandatory, since the sites.states() info might be outdated
     sites.live().set_prepend_site(True)
     result = sites.live().query("GET status\nColumns: program_start\nCache: reload")
-    program_start_times = {site: program_start for site, program_start in result}
+    program_start_times = {row[0]: row[1] for row in result}
     sites.live().set_prepend_site(False)
 
     for site, values in sites.states().items():
@@ -414,7 +413,7 @@ class JobWorker(multiprocessing.Process):
                 if key in hostnames:
                     g_services_by_hostname[key] = values
 
-        g_services_items = g_services.items()
+        g_services_items = list(g_services.items())
 
         log("Compiling aggregation %d/%d: %r with %d hosts" % (
             aggr_type,
@@ -466,7 +465,7 @@ class JobWorker(multiprocessing.Process):
         def get_hash(entry):
             return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
 
-        for group in {g for g in groups}:  # Flattened groups
+        for group in set(groups):  # Flattened groups
             new_entries_hash = list(map(get_hash, new_entries))
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
@@ -611,7 +610,7 @@ class BICacheFile(object):
         # type: (str) -> None
         self._filepath = filepath
         self._cached_data = None
-        self._filetime = None
+        self._filetime = None  # type: Optional[float]
 
         try:
             open(self._filepath, "a")
@@ -718,7 +717,7 @@ class BISitedataManager(object):
 
     def _cleanup_orphaned_files(self):
         current_sitestats = get_current_sitestats()
-        known_sites = {k: v for k, v in current_sitestats.get("known_sites", set())}
+        known_sites = {kv[0]: kv[1] for kv in current_sitestats.get("known_sites", set())}
 
         # Cleanup obsolete files
         for filename in os.listdir(get_cache_dir()):
@@ -1709,7 +1708,7 @@ def get_services_filtered_by_host_name(host_re):
         if g_services_items:
             entries = g_services_items
         else:
-            entries = g_services.items()
+            entries = list(g_services.items())
 
     return host_re, honor_site, entries
 
@@ -1726,8 +1725,7 @@ def render_forest():
     for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
-            ascii = render_tree(tree)
-            html.write("<pre>\n" + ascii + "<pre>\n")
+            html.write("<pre>\n" + render_tree(tree) + "<pre>\n")
 
 
 # Debugging function
@@ -1794,15 +1792,14 @@ def remove_empty_nodes(node):
     if node["type"] != NT_RULE:
         # simply return leaf nodes without action
         return node
-    else:
-        subnodes = node["nodes"]
-        # loop all subnodes recursing down to the lowest level
-        for subnode in subnodes:
-            remove_empty_nodes(subnode)
-        # remove all subnode rules which have no subnodes
-        for i in range(0, len(subnodes))[::-1]:
-            if node_is_empty(subnodes[i]):
-                del subnodes[i]
+    subnodes = node["nodes"]
+    # loop all subnodes recursing down to the lowest level
+    for subnode in subnodes:
+        remove_empty_nodes(subnode)
+    # remove all subnode rules which have no subnodes
+    for i in range(0, len(subnodes))[::-1]:
+        if node_is_empty(subnodes[i]):
+            del subnodes[i]
 
 
 # Checks whether or not a rule node has no subnodes
@@ -2004,7 +2001,7 @@ def find_variables(pattern, varname):
 def subst_vars(pattern, arginfo):
     if isinstance(pattern, list):
         return [subst_vars(x, arginfo) for x in pattern]
-    elif isinstance(pattern, tuple):
+    if isinstance(pattern, tuple):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
     for name, value in arginfo.items():
@@ -2014,7 +2011,7 @@ def subst_vars(pattern, arginfo):
 
 
 def substitute_matches(arg, hostname, hostalias, matchgroups):
-    arginfo = dict([(str(n + 1), x) for (n, x) in enumerate(matchgroups)])
+    arginfo = {str(n): x for n, x in enumerate(matchgroups, 1)}
     arginfo["HOSTNAME"] = hostname
     arginfo["HOSTALIAS"] = hostalias
 
@@ -2047,22 +2044,21 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
 
     if pattern == '(.*)':
         return (to_match,)
+    # For regex to have '$' anchor for end. Users might be surprised
+    # to get a prefix match on host names. This is almost never what
+    # they want. For services this is useful, however.
+    if pattern[-1] == "$":
+        anchored = pattern
     else:
-        # For regex to have '$' anchor for end. Users might be surprised
-        # to get a prefix match on host names. This is almost never what
-        # they want. For services this is useful, however.
-        if pattern[-1] == "$":
-            anchored = pattern
-        else:
-            anchored = pattern + "$"
+        anchored = pattern + "$"
 
-        # In order to distinguish hosts with the same name on different
-        # sites we prepend the site to the host name. If the host specification
-        # does not contain the site separator - though - we ignore the site
-        # an match the rule for all sites.
-        if honor_site:
-            return do_match(anchored, "%s%s%s" % (site, SITE_SEP, to_match))
-        return do_match(anchored, to_match)
+    # In order to distinguish hosts with the same name on different
+    # sites we prepend the site to the host name. If the host specification
+    # does not contain the site separator - though - we ignore the site
+    # an match the rule for all sites.
+    if honor_site:
+        return do_match(anchored, "%s%s%s" % (site, SITE_SEP, to_match))
+    return do_match(anchored, to_match)
 
 
 def compile_leaf_node(host_re, service_re=config.HOST_STATE):
@@ -2080,7 +2076,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
         if g_services_items:
             entries = g_services_items
         else:
-            entries = g_services.items()
+            entries = list(g_services.items())
 
     # TODO: If we already know the host we deal with, we could avoid this loop
     for (site, hostname), (_tags, services, _childs, _parents, _alias) in entries:
@@ -2270,30 +2266,29 @@ def execute_leaf_node(node, status_info, aggregation_options):
             "in_service_period": True,
         }, None, node)
 
+    if aggregation_options["use_hard_states"]:
+        st = host_hard_state
     else:
-        if aggregation_options["use_hard_states"]:
-            st = host_hard_state
-        else:
-            st = host_state
-        aggr_state = {0: OK, 1: CRIT, 2: UNKNOWN, -1: PENDING, None: None}[st]
-        state = {
-            "state": aggr_state,
-            "output": host_output,
-            "in_downtime": host_in_downtime,
+        st = host_state
+    aggr_state = {0: OK, 1: CRIT, 2: UNKNOWN, -1: PENDING, None: None}[st]
+    state = {
+        "state": aggr_state,
+        "output": host_output,
+        "in_downtime": host_in_downtime,
+        "acknowledged": host_acknowledged,
+        "in_service_period": host_in_service_period,
+    }
+    if state_assumption is not None:
+        assumed_state = {
+            "state": state_assumption,
+            "output": _("Assumed to be %s") % host_state_name(state_assumption),
+            "in_downtime": host_in_downtime != 0,
             "acknowledged": host_acknowledged,
             "in_service_period": host_in_service_period,
         }
-        if state_assumption is not None:
-            assumed_state = {
-                "state": state_assumption,
-                "output": _("Assumed to be %s") % host_state_name(state_assumption),
-                "in_downtime": host_in_downtime != 0,
-                "acknowledged": host_acknowledged,
-                "in_service_period": host_in_service_period,
-            }
-        else:
-            assumed_state = None
-        return (state, assumed_state, node)
+    else:
+        assumed_state = None
+    return (state, assumed_state, node)
 
 
 def execute_rule_node(node, status_info, aggregation_options):
@@ -2509,7 +2504,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, host_columns, pre
 def state_weight(s):
     if s == CRIT:
         return 10.0
-    elif s == PENDING:
+    if s == PENDING:
         return 0.5
     return float(s)
 
@@ -2584,7 +2579,7 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
         return {"state": 0, "output": ""}
 
     # Enough nodes OK in order to trigger warn level -> WARN
-    elif num_ok >= warn_count:
+    if num_ok >= warn_count:
         return {"state": 1, "output": ""}
 
     return {"state": 2, "output": ""}
@@ -3432,7 +3427,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 
     # rows by site/host - needed for later cluster state gathering
     if config.bi_precompile_on_demand and not joinbyname:
-        row_dict = dict([((r['site'], r['name']), r) for r in hostrows])
+        row_dict = {(r['site'], r['name']): r for r in hostrows}
 
     rows = []
     # Now compute aggregations of these hosts
@@ -3466,19 +3461,18 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
                         # This one is missing. Darn. Cancel it.
                         status_info = None
                         break
-                    else:
-                        row = rows_by_host[sitehost]
-                        if status_info is None:
-                            raise Exception("impossible")
-                        status_info[sitehost] = [
-                            row["state"],
-                            row["hard_state"],
-                            row["plugin_output"],
-                            hostrow["scheduled_downtime_depth"] > 0,
-                            bool(hostrow["acknowledged"]),
-                            hostrow["host_in_service_period"],
-                            row["services_with_fullstate"],
-                        ]
+                    row = rows_by_host[sitehost]
+                    if status_info is None:
+                        raise Exception("impossible")
+                    status_info[sitehost] = [
+                        row["state"],
+                        row["hard_state"],
+                        row["plugin_output"],
+                        hostrow["scheduled_downtime_depth"] > 0,
+                        bool(hostrow["acknowledged"]),
+                        hostrow["host_in_service_period"],
+                        row["services_with_fullstate"],
+                    ]
                 if status_info is None:
                     break
         else:

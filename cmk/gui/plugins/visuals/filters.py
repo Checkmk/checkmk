@@ -1100,7 +1100,7 @@ class FilterServiceState(Filter):
         # type: () -> None
         html.begin_checkbox_group()
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
-        for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
+        for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")),
                           (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKN")),
                           (self.prefix + "stp", _("PEND"))]:
             html.checkbox(var, bool(not self._filter_used()), label=text)
@@ -2557,7 +2557,8 @@ class ABCTagFilter(six.with_metaclass(abc.ABCMeta, Filter)):
             num += 1
 
             op = html.request.var(prefix + '_op')
-            tag_group = config.tags.get_tag_group(html.request.var(prefix + '_grp'))
+            tag_group = config.tags.get_tag_group(
+                html.request.get_str_input_mandatory(prefix + '_grp'))
             tag = html.request.var(prefix + '_val')
 
             if not tag_group or not op:
@@ -2894,8 +2895,8 @@ class FilterECServiceLevelRange(Filter):
         filterline_values = []
         for value, _readable in config.mkeventd_service_levels:
             if match_lower(value) and match_upper(value):
-                filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
-                                          (self.info, livestatus.lqencode(str(value))) )
+                filterline_values.append("Filter: %s_custom_variable_values >= %s" %
+                                         (self.info, livestatus.lqencode(str(value))))
 
         filterline += "%s\n" % "\n".join(filterline_values)
 
@@ -3175,7 +3176,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
 
         def _build_selection(selection, tree, index):
             index += 1
-            for _, sub_tree in tree.items():
+            for _unused, sub_tree in tree.items():
                 selection.append(_get_selection_entry(sub_tree, index, True))
                 _build_selection(selection, sub_tree.get("__children__", {}), index)
 
@@ -3193,7 +3194,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
 
         selection = []
         index = 0
-        for _, sub_tree in tree.items():
+        for _unused, sub_tree in tree.items():
             selection.append(_get_selection_entry(sub_tree, index))
             _build_selection(selection, sub_tree.get("__children__", {}), index)
 

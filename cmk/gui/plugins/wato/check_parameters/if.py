@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, List, Tuple as _Tuple, Union  # pylint: disable=unused-import
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -37,7 +39,8 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
-    new_traffic = []
+    new_traffic = [
+    ]  # type: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]]
 
     if 'traffic' in v and not isinstance(v['traffic'], list):
         warn, crit = v['traffic']

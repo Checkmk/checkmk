@@ -41,7 +41,7 @@ def _parameter_valuespec_mysql_slave():
              ],
          )),
     ],
-                      optional_keys=None)
+                      optional_keys=False)
 
 
 rulespec_registry.register(

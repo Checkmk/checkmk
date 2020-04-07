@@ -5,29 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Any, Dict  # pylint: disable=unused-import
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Alternative,
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    Filesize,
-    FixedValue,
-    Integer,
-    Percentage,
-    RegExp,
-    TextAscii,
-    TextUnicode,
-    Transform,
-    Tuple,
-    ListOf,
-    ListChoice,
-    MonitoringState,
-    CascadingDropdown,
-    Labels,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Age, Alternative, CascadingDropdown, Checkbox, Dictionary, DropdownChoice, DropdownChoices,
+    Filesize, FixedValue, Integer, Labels, ListChoice, ListOf, MonitoringState, Percentage, RegExp,
+    TextAscii, TextUnicode, Transform, Tuple,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,
@@ -43,6 +28,10 @@ from cmk.gui.htmllib import HTML
 
 
 def process_level_elements():
+    cpu_rescale_max_choices = [
+        (True, _("100% is all cores at full load")),
+        (False, HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
+    ]  # type: DropdownChoices
     return [
         ("cpu_rescale_max",
          DropdownChoice(
@@ -54,11 +43,7 @@ def process_level_elements():
                     "can be rescaled down, making 100% the maximum and thinking "
                     "in terms of total CPU utilization."),
              default_value=True,
-             choices=[
-                 (True, _("100% is all cores at full load")),
-                 (False,
-                  HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
-             ],
+             choices=cpu_rescale_max_choices,
              invalid_choice_title=_("Unspecified.") + " " +
              _("Starting from version 1.6.0 this value must be configured. "
                "Read Werk #6646 for further information."),
@@ -487,7 +472,7 @@ rulespec_registry.register(
 # configuration we allow reading old discovery rules and ship these
 # settings in an optional sub-dictionary.
 def convert_inventory_processes(old_dict):
-    new_dict = {"default_params": {}}
+    new_dict = {"default_params": {}}  # type: Dict[str, Dict[str, Any]]
     for key in old_dict:
         if key in [
                 'levels',

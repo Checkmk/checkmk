@@ -66,8 +66,8 @@ def _valuespec_inventory_df_rules():
                  TextOrRegExpUnicode(),
                  title=_("Mountpoints to never ignore"),
                  help=_(
-                     u"Regardless of filesystem type, these mountpoints will always be discovered."
-                     u"Regular expressions are supported."))),
+                     "Regardless of filesystem type, these mountpoints will always be discovered."
+                     "Regular expressions are supported."))),
         ],
     )
 

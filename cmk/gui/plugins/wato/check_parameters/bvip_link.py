@@ -49,7 +49,7 @@ def _parameter_valuespec_bvip_link():
                  default_value=[1, 2, 3],
              )),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 

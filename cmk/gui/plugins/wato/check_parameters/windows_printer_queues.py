@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict  # pylint: disable=unused-import
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -25,7 +27,7 @@ def windows_printer_queues_forth(old):
     default = {
         "warn_states": [8, 11],
         "crit_states": [9, 10],
-    }
+    }  # type: Dict[str, Any]
     if isinstance(old, tuple):
         default['levels'] = old
     if isinstance(old, dict):

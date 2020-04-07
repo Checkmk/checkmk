@@ -15,6 +15,12 @@ from cmk.base.api import PluginName
 from cmk.base.discovered_labels import ServiceLabel
 
 
+@enum.unique
+class management_board(enum.Enum):
+    DISABLED = "disabled"
+    EXCLUSIVE = "exclusive"
+
+
 class Parameters(collections.abc.Mapping):
     """Parameter objects are used to pass parameters to discover and check functions"""
     def __init__(self, data):
@@ -266,6 +272,7 @@ CheckPlugin = NamedTuple("CheckPlugin", [
     ("name", PluginName),
     ("sections", List[PluginName]),
     ("service_name", str),
+    ("management_board", Optional[management_board]),
     ("discovery_function", Callable),
     ("discovery_default_parameters", Optional[Dict]),
     ("discovery_ruleset_name", Optional[PluginName]),

@@ -75,6 +75,9 @@ try:
         create_agent_section_plugin_from_legacy,
         create_snmp_section_plugin_from_legacy,
     )
+    from cmk.base.api.agent_based.checking_types import CheckPlugin
+    from cmk.base.api.agent_based.register.check_plugins_legacy import (
+        create_check_plugin_from_legacy,)
 except ImportError:
     # API is only Python3. This script is still called by python2 modules,
     # which for the moment don't require the API and for the time being we
@@ -1339,6 +1342,7 @@ special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 # with the correspondig name, e.g. register.agent_section -> registered_agent_sections
 registered_agent_sections = {}  # type: Dict[PluginName, AgentSectionPlugin]
 registered_snmp_sections = {}  # type: Dict[PluginName, SNMPSectionPlugin]
+registered_check_plugins = {}  # type: Dict[PluginName, CheckPlugin]
 
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
@@ -1521,6 +1525,7 @@ def load_checks(get_check_api_context, filelist):
     # Now convert check_info to new format.
     convert_check_info()
     _extract_agent_and_snmp_sections()
+    _extract_check_plugins()
     verify_checkgroup_members()
     initialize_check_type_caches()
 
@@ -1912,7 +1917,7 @@ def _extract_agent_and_snmp_sections():
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info, snmp_scan_functions and snmp_info to create API compliant plugin objects.
+    in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
     """
     for check_plugin_name in sorted(check_info):
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
@@ -1944,6 +1949,34 @@ def _extract_agent_and_snmp_sections():
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
             #console.warning(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            pass
+
+
+def _extract_check_plugins():
+    # type: () -> None
+    """Here comes the next layer of converting-to-"new"-api.
+
+    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    in check_info to create API compliant check plugins.
+    """
+    for check_plugin_name, check_info_dict in sorted(check_info.items()):
+        # skip pure section declarations:
+        if check_info_dict.get("service_description") is None:
+            continue
+        if check_plugin_name == "apc_symmetra_temp":
+            # this exception will be removed once the plugin is obsolete (per unit-test)
+            continue
+        try:
+            check_plugin = create_check_plugin_from_legacy(check_plugin_name, check_info_dict,
+                                                           list(registered_check_plugins))
+            registered_check_plugins[check_plugin.name] = check_plugin
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
+            # TODO (mo): Clean this up once we have a solution for the plugins currently
+            # failing here. For now we need too keep it commented out, because we can't
+            # test otherwise.
+            #if cmk.utils.debug.enabled():
+            #    raise MKGeneralException(exc)
+            #console.warning(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
             pass
 
 

@@ -9,7 +9,7 @@ import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
 KNOWN_AUTO_MIGRATION_FAILURES = [
-    # this is a sorted (!) list of auto conversions currently
+    # this is a list of auto conversions currently
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
@@ -63,6 +63,19 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'tsm_stagingpools'),
     ('section', 'veritas_vcs'),
     ('section', 'winperf_phydisk'),
+    ('check', 'chrony'),
+    ('check', 'diskstat'),
+    ('check', 'docker_container_status'),
+    ('check', 'ipmi'),
+    ('check', 'liebert_humidity_air'),
+    ('check', 'liebert_temp_air'),
+    ('check', 'livestatus_status'),
+    ('check', 'mssql_datafiles'),
+    ('check', 'mssql_transactionlogs'),
+    ('check', 'netapp_api_vf_stats'),
+    ('check', 'omd_status'),
+    ('check', 'ps'),
+    ('check', 'ps_perf'),
 ]
 
 KNOWN_AUTO_MIGRATION_FAILURES_INV = [

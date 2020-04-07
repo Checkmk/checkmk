@@ -31,12 +31,10 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (  # pylint
 
 pytestmark = pytest.mark.checks
 
-KNOWN_FAILURES = set(plugin_name for _, plugin_name in KNOWN_AUTO_MIGRATION_FAILURES)
-
 
 @contextmanager
-def known_exceptions(name):
-    if name not in KNOWN_FAILURES:
+def known_exceptions(type_, name):
+    if (type_, name) not in KNOWN_AUTO_MIGRATION_FAILURES:
         yield
         return
 
@@ -49,25 +47,25 @@ def load_all_checks():
     config.load_all_checks(check_api.get_check_api_context)
 
 
-@pytest.fixture(scope="module", name="snmp_scan_functions")
+@pytest.fixture(scope="module", name="snmp_scan_functions", autouse=True)
 def _get_snmp_scan_functions(_load_all_checks):
     assert len(config.snmp_scan_functions) > 400  # sanity check
     return config.snmp_scan_functions.copy()
 
 
-@pytest.fixture(scope="module", name="snmp_info")
+@pytest.fixture(scope="module", name="snmp_info", autouse=True)
 def _get_snmp_info(_load_all_checks):
     assert len(config.snmp_info) > 400  # sanity check
     return config.snmp_info.copy()
 
 
-@pytest.fixture(scope="module", name="check_info")
+@pytest.fixture(scope="module", name="check_info", autouse=True)
 def _get_check_info(_load_all_checks):
     assert len(config.check_info) > 400  # sanity check
     return config.check_info.copy()
 
 
-@pytest.fixture(scope="module", name="migrated_agent_sections")
+@pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
 def _get_migrated_agent_sections(_load_all_checks):
     return config.registered_agent_sections.copy()
 
@@ -75,6 +73,11 @@ def _get_migrated_agent_sections(_load_all_checks):
 @pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
 def _get_migrated_snmp_sections(_load_all_checks):
     return config.registered_snmp_sections.copy()
+
+
+@pytest.fixture(scope="module", name="migrated_checks", autouse=True)
+def _get_migrated_checks(_load_all_checks):
+    return config.registered_check_plugins.copy()
 
 
 def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent_sections,
@@ -86,7 +89,7 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
 
         section_name = PluginName(name)
 
-        with known_exceptions(name):
+        with known_exceptions('section', name):
             section = migrated_agent_sections.get(section_name)
             if section is not None:
                 assert isinstance(section, AgentSectionPlugin)
@@ -128,7 +131,7 @@ def test_scan_function_translation(snmp_scan_functions):
         assert scan_func is not None
 
         # make sure we can convert the scan function
-        if name not in KNOWN_FAILURES:
+        if ('section', name) not in KNOWN_AUTO_MIGRATION_FAILURES:
             _ = create_detect_spec(name, scan_func, [])
 
 
@@ -153,3 +156,21 @@ def test_explicit_conversion(check_manager, check_name, func_name):
 def test_no_subcheck_with_snmp_keywords(snmp_info):
     for name in snmp_info:
         assert name == check_utils.section_name_of(name)
+
+
+def test_exception_required(check_info):
+    assert "apc_symmetra_temp" in check_info, (
+        "In cmk.base.config is an extra condition for 'apc_symmetra_temp'. "
+        "If this test fails, you can remove those two lines along with this test.")
+
+
+def test_all_checks_migrated(check_info, migrated_checks):
+    migrated = set(str(c.name) for c in migrated_checks.values())
+    # we don't expect pure section declarations anymore
+    true_checks = set(n.replace('.', '_') for n, i in check_info.items() if i['check_function'])
+    # we know these fail:
+    known_fails = set(name for type_, name in KNOWN_AUTO_MIGRATION_FAILURES if type_ == "check")
+    unexpected = migrated & known_fails
+    assert not unexpected, "these have been migrated unexpectedly: %r" % (unexpected,)
+    failures = true_checks - (migrated | known_fails)
+    assert not failures, "failed to migrate: %r" % (failures,)

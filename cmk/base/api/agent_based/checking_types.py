@@ -180,6 +180,21 @@ class Metric:
         # () -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
         return self._boundaries
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" %
+                            (self.__class__.__name__, other.__class__.__name))
+        return all((
+            self.name == other.name,
+            self.value == other.value,
+            self.levels == other.levels,
+            self.boundaries == other.boundaries,
+        ))
+
+    def __repr__(self):
+        return "%s(%r, %r, levels=%r, boundaries=%r)" % (self.__class__.__name__, self.name,
+                                                         self.value, self.levels, self.boundaries)
+
 
 class Result(NamedTuple("ResultTuple", [
     ("state", state),

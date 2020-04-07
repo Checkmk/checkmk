@@ -132,11 +132,15 @@ def test_metric_invalid(name, value, levels, boundaries):
 
 
 def test_metric():
-    metric = Metric('reproduction_rate', 2.0, levels=(2.4, 3.0), boundaries=(0, None))
-    assert metric.name == 'reproduction_rate'
-    assert metric.value == 2.0
-    assert metric.levels == (2.4, 3.0)
-    assert metric.boundaries == (0., None)
+    metric1 = Metric('reproduction_rate', 1.0, levels=(2.4, 3.0), boundaries=(0, None))
+    metric2 = Metric('reproduction_rate', 2.0, levels=(2.4, 3.0), boundaries=(0, None))
+    assert metric1.name == 'reproduction_rate'
+    assert metric1.value == 1.0
+    assert metric1.levels == (2.4, 3.0)
+    assert metric1.boundaries == (0., None)
+
+    assert metric1 == metric1  # pylint: disable=comparison-with-itself
+    assert metric1 != metric2
 
 
 @pytest.mark.parametrize("state_, details", [

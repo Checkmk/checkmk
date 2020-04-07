@@ -93,6 +93,12 @@ def test_service_features():
     assert repr(service) == ("Service(item='thingy', parameters={'size': 42},"
                              " labels=[ServiceLabel('test-thing', 'true')])")
 
+    service = Service()
+    assert service.item is None
+    assert service.parameters == {}
+    assert service.labels == []
+    assert repr(service) == "Service(item=None, parameters={}, labels=[])"
+
 
 def test_state():
     assert state(0) is state.OK

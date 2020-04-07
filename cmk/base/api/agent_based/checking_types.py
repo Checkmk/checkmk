@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple  # pylint: disable=unused-import
 import sys
 import collections
 import enum
@@ -45,9 +45,9 @@ class Service:
     )
     """
     def __init__(self, *, item=None, parameters=None, labels=None):
-        # type: (Optional[str], Optional[Parameters], Optional[List[ServiceLabel]]) -> None
+        # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
         self._item = item
-        self._parameters = parameters
+        self._parameters = parameters or {}  # type: Dict[str, Any]
         self._labels = labels or []
 
         self._validate_item(item)
@@ -86,6 +86,16 @@ class Service:
     @property
     def labels(self):
         return self._labels
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" %
+                            (self.__class__.__name__, other.__class__.__name))
+        return all((
+            self.item == other.item,
+            self.parameters == other.parameters,
+            self.labels == other.labels,
+        ))
 
     def __repr__(self):
         return "%s(item=%r, parameters=%r, labels=%r)" % (self.__class__.__name__, self.item,

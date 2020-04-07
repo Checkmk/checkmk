@@ -2647,10 +2647,7 @@ class DropdownChoice(ValueSpec):
 
     def _value_is_invalid(self, value):
         # type: (DropdownChoiceValue) -> bool
-        for entry in self.choices():
-            if entry[0] == value:
-                return False
-        return True
+        return all(value != val for val, _title in self.choices())
 
 
 # TODO: Rename to ServiceState() or something like this
@@ -3033,10 +3030,10 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
 
-ListChoiceChoiceValue = Union[Text, str]
-ListChoiceChoiceList = Sequence[Union[_Tuple[Text, Text], _Tuple[str, Text]]]
-ListChoiceChoices = Union[None, ListChoiceChoiceList, Dict[ListChoiceChoiceValue, Text],
-                          Callable[[], ListChoiceChoiceList]]
+ListChoiceChoiceValue = Union[Text, str, int]
+ListChoiceChoicePairs = Sequence[_Tuple[ListChoiceChoiceValue, Text]]
+ListChoiceChoices = Union[None, ListChoiceChoicePairs, Callable[[], ListChoiceChoicePairs],
+                          Dict[ListChoiceChoiceValue, Text]]
 
 
 class ListChoice(ValueSpec):
@@ -3086,10 +3083,10 @@ class ListChoice(ValueSpec):
             if self._loaded_at != id(html):
                 self._elements = self.get_elements()
                 self._loaded_at = id(html)  # unique for each query!
-        elif isinstance(self._choices, list):
+        elif isinstance(self._choices, Sequence):
             self._elements = self._choices
         elif isinstance(self._choices, dict):
-            self._elements = ListChoice.dict_choices(self._choices)
+            self._elements = self.dict_choices(self._choices)
         elif callable(self._choices):
             self._elements = self._choices()
         else:
@@ -3147,12 +3144,11 @@ class ListChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         self.load_elements()
-        value = []
-
-        for nr, (key, _title) in enumerate(self._elements):
-            if html.get_checkbox("%s_%d" % (varprefix, nr)):
-                value.append(key)
-        return value
+        return [
+            key  #
+            for nr, (key, _title) in enumerate(self._elements)
+            if html.get_checkbox("%s_%d" % (varprefix, nr))
+        ]
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, list):
@@ -3168,8 +3164,8 @@ class ListChoice(ValueSpec):
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
 
     def _value_is_invalid(self, value):
-        d = dict(self._elements)
-        return value not in d
+        # type: (ListChoiceChoiceValue) -> bool
+        return all(value != val for val, _title in self._elements)
 
 
 class DualListChoice(ListChoice):

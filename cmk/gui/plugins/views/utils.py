@@ -1256,11 +1256,9 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
 
 def paint_nagiosflag(row, field, bold_if_nonzero):
     # type: (Row, ColumnName, bool) -> CellSpec
-    value = row[field]
-    yesno = {True: _("yes"), False: _("no")}[value != 0]
-    if (value != 0) == bold_if_nonzero:
-        return "badflag", yesno
-    return "goodflag", yesno
+    nonzero = row[field] != 0
+    return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
+            _("yes") if nonzero else _("no"))
 
 
 def declare_simple_sorter(name, title, column, func):

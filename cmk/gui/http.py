@@ -9,7 +9,7 @@ import sys
 from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple  # pylint: disable=unused-import
 import six
 import werkzeug.wrappers
-import werkzeug.wrappers.json as json  # type: ignore[import]
+import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
 
 from cmk.utils.encoding import ensure_unicode

@@ -186,7 +186,7 @@ class LayoutJSONP(JSONLayout):
 
 class CSVLayout(Layout):
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
-        csv_separator = html.request.var("csv_separator", ";")
+        csv_separator = html.request.get_str_input_mandatory("csv_separator", ";")
         first = True
         for cell in group_cells + cells:
             if first:

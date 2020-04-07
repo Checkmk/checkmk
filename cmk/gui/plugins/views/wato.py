@@ -16,6 +16,7 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
 )
+from cmk.gui.type_defs import Row  # pylint: disable=unused-import
 
 
 @painter_registry.register
@@ -38,6 +39,8 @@ class PainterHostFilename(Painter):
         return ("tt", row["host_filename"])
 
 
+# TODO: Extremely bad idea ahead! The return type depends on a combination of
+# the values of how and with_links. :-P
 def get_wato_folder(row, how, with_links=True):
     # type: (Dict, Text, bool) -> Union[Text, HTML]
     filename = row["host_filename"]
@@ -57,18 +60,16 @@ def get_wato_folder(row, how, with_links=True):
 
     if how == "plain":
         return title_path[-1]
-    elif how == "abs":
+    if how == "abs":
         return HTML(" / ").join(title_path)
-    else:
-        # We assume that only hosts are show, that are below the
-        # current WATO path. If not then better output absolute
-        # path then wrong path.
-        current_path = html.request.var("wato_folder")
-        if not current_path or not wato_path.startswith(current_path):
-            return HTML(" / ").join(title_path)
+    # We assume that only hosts are show, that are below the current WATO path.
+    # If not then better output absolute path then wrong path.
+    current_path = html.request.var("wato_folder")
+    if not current_path or not wato_path.startswith(current_path):
+        return HTML(" / ").join(title_path)
 
-        depth = current_path.count('/') + 1
-        return HTML(" / ").join(title_path[depth:])
+    depth = current_path.count('/') + 1
+    return HTML(" / ").join(title_path[depth:])
 
 
 def paint_wato_folder(row, how):
@@ -148,8 +149,16 @@ class PainterWatoFolderPlain(Painter):
 
 
 def cmp_wato_folder(r1, r2, how):
-    return (get_wato_folder(r1, how, False) > get_wato_folder(r2, how, False)) - (get_wato_folder(
-        r1, how, False) < get_wato_folder(r2, how, False))
+    # type: (Row, Row, str) -> int
+    return ((_get_wato_folder_text(r1, how) > _get_wato_folder_text(r2, how)) -
+            (_get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)))
+
+
+# NOTE: The funny Text() call is only necessary because of the broken typing of
+# get_wato_folder().
+def _get_wato_folder_text(r, how):
+    # type: (Row, str) -> Text
+    return Text(get_wato_folder(r, how, False))
 
 
 @sorter_registry.register

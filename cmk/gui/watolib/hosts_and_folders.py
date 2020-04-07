@@ -321,6 +321,7 @@ class BaseFolder(object):
         return not self.has_parent()
 
     def parent_folder_chain(self):
+        # type: () -> List[CREFolder]
         folders = []
         folder = self.parent()
         while folder:
@@ -403,6 +404,7 @@ class BaseFolder(object):
         raise NotImplementedError()
 
     def title(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     def subfolders(self, only_visible=False):
@@ -1362,18 +1364,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._add_all_sites_to_set(site_ids)
         return list(site_ids)
 
+    # TODO: Horrible typing depending on optional parameter, which poisons all
+    # call sites. Split this method!
     def title_path(self, withlinks=False):
         # type: (bool) -> List[Union[HTML, Text]]
-        titles = []
-        for folder in self.parent_folder_chain() + [self]:
-            title = folder.title()
-            if withlinks:
-                url = html.makeuri_contextless([("mode", "folder"), ("folder", folder.path())],
-                                               filename="wato.py")
-                title = html.render_a(title, href=url)
-            titles.append(title)
-        return titles
+        if withlinks:
+            # In this case, we return a List[HTML]
+            return [
+                html.render_a(folder.title(),
+                              href=html.makeuri_contextless([("mode", "folder"),
+                                                             ("folder", folder.path())],
+                                                            filename="wato.py"))
+                for folder in self.parent_folder_chain() + [self]
+            ]
+        # In this case, we return a List[Text]
+        return [folder.title() for folder in self.parent_folder_chain() + [self]]
 
+    # TODO: Actually, we return a List[Text], but title_path()'s typing is broken.
     def title_path_without_root(self):
         # type: () -> List[Union[HTML, Text]]
         if self.is_root():
@@ -2374,8 +2381,9 @@ class CREHost(WithPermissions, WithAttributes):
         The labels of all parent folders and the host are added together. When multiple
         objects define the same tag group, the nearest to the host wins."""
         labels = {}
-        for obj in self.folder().parent_folder_chain() + [self.folder(), self]:
+        for obj in self.folder().parent_folder_chain() + [self.folder()]:
             labels.update(obj.attributes().get("labels", {}).items())
+        labels.update(self.attributes().get("labels", {}).items())
         return labels
 
     def groups(self):

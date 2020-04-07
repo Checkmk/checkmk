@@ -82,8 +82,8 @@ def perfometer_linear(perc, color):
 # displayed at 50% of the width
 def perfometer_logarithmic(value, half_value, base, color):
     return render_metricometer([
-        metrics.MetricometerRendererLogarithmic(None, None).get_stack_from_values(
-            value, half_value, base, color)
+        metrics.MetricometerRendererLogarithmic.get_stack_from_values(value, half_value, base,
+                                                                      color)
     ])
 
 
@@ -92,7 +92,7 @@ def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base
     value = float(value)
 
     if value == 0.0:
-        pos = 0
+        pos = 0.0
     else:
         half_value = float(half_value)
         h = math.log(half_value, base)  # value to be displayed at 50%

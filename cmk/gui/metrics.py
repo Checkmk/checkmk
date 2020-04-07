@@ -460,7 +460,8 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return value
 
-    def get_stack_from_values(self, value, half_value, base, color):
+    @staticmethod
+    def get_stack_from_values(value, half_value, base, color):
         # type: (Union[str, int, float], Union[int, float], Union[int, float], str) -> List[Tuple[Union[int, float], str]]
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))

@@ -1,4 +1,4 @@
-title: SAP: State of hosts
+title: SAP: State of Hosts
 agents: linux
 catalog: app/sap
 license: GPL

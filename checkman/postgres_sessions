@@ -1,4 +1,4 @@
-title: PostgreSQL: sessions
+title: PostgreSQL: Sessions
 agents: linux
 catalog: app/postgresql
 license: GPL

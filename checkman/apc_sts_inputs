@@ -4,7 +4,11 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This Check monitors the input measurements of a APC Static Transfer Switch.
+ This check monitors the input measurements of a APC Static Transfer Switch.
+
+ You need to configure upper and lower levels for {WARN} and {CRIT}.
+
+ This check uses the MG-SNMP-STS-MIB.
 
 item:
  The identifier of the phase (usually {"Source 1 Phase 1"}, {"Source 1 Phase 2"}, {"Source 1Phase 3"}).

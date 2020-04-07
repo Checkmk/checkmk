@@ -48,6 +48,7 @@ PYTHON2_PATHS=(
     special_agents/__init__.py
     special_agents/utils.py
     update_config.py
+    update_rrd_fs_names.py
     utils
     ec/__init__.py
     ec/export.py

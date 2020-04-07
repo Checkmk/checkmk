@@ -18,8 +18,7 @@ def with_context_middleware(app):
     @functools.wraps(app)
     def with_context(environ, start_response):
         req = http.Request(environ)
-        resp = http.Response(is_secure=req.is_secure)
-        with AppContext(app), RequestContext(req=req, resp=resp):
+        with AppContext(app), RequestContext(req=req):
             return app(environ, start_response)
 
     return with_context
@@ -58,5 +57,6 @@ class OverrideRequestMethod(object):
     def wsgi_app(self, environ, start_response):
         override = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE')
         if override:
-            environ['REQUEST_METHOD'] = override
+            if environ['REQUEST_METHOD'].lower() == 'post':
+                environ['REQUEST_METHOD'] = override
         return self.app(environ, start_response)

@@ -4,7 +4,13 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- Monitors the chassis temperature.
+ Monitors the chassis temperature of Atto Fibrebridge 6500N Controllers.
+
+ You can configure upper levels for {WARN}/{CRIT} (no defaults are set).
+
+ The service goes {WARN}/{CRIT} if the temperature exceeds these levels.
+
+ This check uses the ATTO6500N-MIB.
 
 item:
  Chassis

@@ -1,4 +1,4 @@
-title: Pulse Secure: Number of signed-in users
+title: Pulse Secure: Number of Signed-in Users
 agents: snmp
 catalog: app/pulse_secure
 license: GPL

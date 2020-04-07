@@ -4,10 +4,14 @@ catalog: hw/network/arbor
 license: GPL
 distribution: check_mk
 description:
- Monitors the packet drop rate of incoming packets on Arbor Pravail
- devices. This check can be configured using the "Generic rate"
- rule and will turn warn/crit if the drop rate is below or above
- the configured lower or upper limits, respectively.
+ Monitors the packet drop rate of incoming packets on Arbor Pravail devices.
+
+ This check can be configured using the "Generic rate" rule.
+
+ The service goes {WARN}/{CRIT} if the drop rate is below or above
+ the configured lower or upper limits.
+
+ This check uses the PRAVAIL-MIB.
 
 item:
  The fixed name {{Overrun}}.

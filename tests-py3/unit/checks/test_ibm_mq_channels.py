@@ -29,7 +29,7 @@ factory_settings["ibm_mq_channels_default_levels"] = {
 
 def test_parse(check_manager):
     lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 
@@ -65,6 +65,7 @@ All valid MQSC commands were processed.
 
     attrs = parsed['MY.TEST']
     assert attrs['STATUS'] == 'RUNNING'
+    assert attrs['NOW'] is not None
 
     attrs = parsed['MY.TEST:HERE.TO.THERE.TWO']
     assert attrs['CHLTYPE'] == 'SDR'
@@ -79,7 +80,7 @@ All valid MQSC commands were processed.
 
 def test_parse_svrconn_with_multiple_instances(check_manager):
     lines = """\
-QMNAME(MY.TEST)                                           STATUS(RUNNING)
+QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
 Starting MQSC for queue manager MY.TEST.
 

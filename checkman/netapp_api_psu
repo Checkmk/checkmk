@@ -8,7 +8,7 @@ description:
  If the power supply fails the check reports {CRIT}.
 
 inventory:
- One check is created for each power supply
+ One service is created for each power supply.
 
 item:
  The location of the power supply, eg. "11 / 1" (Shelf 11 Sensor 1)

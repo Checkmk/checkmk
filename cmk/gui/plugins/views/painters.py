@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from fnmatch import fnmatch
 import os
 import time
 import io
@@ -22,15 +23,11 @@ import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.valuespec import (
-    DateFormat,
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    ListChoice,
-    TextAscii,
-    Timerange,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    DateFormat, Dictionary, DictionaryElements, DropdownChoice, Integer, ListChoice,
+    ListChoiceChoices, TextAscii, Timerange,
 )
+from cmk.gui.view_utils import CellContent  # pylint: disable=unused-import
 
 from cmk.gui.plugins.views.icons import (
     get_icons,
@@ -207,7 +204,7 @@ def paint_icons(what, row):
     if html.output_format != 'html':
         return 'icons', ' '.join([i[1] for i in toplevel_icons])
 
-    output = ''
+    output = HTML()
     for icon in toplevel_icons:
         if len(icon) == 4:
             icon_name, title, url_spec = icon[1:]
@@ -496,7 +493,7 @@ class PainterSvcLongPluginOutput(Painter):
         max_len = params.get('max_len', 0)
         long_output = row["service_long_plugin_output"]
 
-        if max_len > 0 and len(long_output) > max_len:
+        if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
         return paint_stalified(
@@ -1277,7 +1274,7 @@ class PainterSvcIsActive(Painter):
         return ['service_active_checks_enabled']
 
     def render(self, row, cell):
-        return paint_nagiosflag(row, "service_active_checks_enabled", None)
+        return paint_nagiosflag(row, "service_active_checks_enabled", False)
 
 
 @painter_registry.register
@@ -1431,15 +1428,12 @@ class PainterSvcAcknowledged(Painter):
 
 
 def notes_matching_pattern_entries(dirs, item):
-    from fnmatch import fnmatch
     matching = []
     for directory in dirs:
         if os.path.isdir(directory):
             entries = sorted([d for d in os.listdir(directory) if d[0] != '.'], reverse=True)
             for pattern in entries:
-                if pattern[0] == '.':
-                    continue
-                if fnmatch(item, pattern):
+                if pattern[0] != '.' and fnmatch(item, pattern):
                     matching.append(directory + "/" + pattern)
     return matching
 
@@ -2215,7 +2209,7 @@ class PainterHostIsActive(Painter):
         return ['host_active_checks_enabled']
 
     def render(self, row, cell):
-        return paint_nagiosflag(row, "host_active_checks_enabled", None)
+        return paint_nagiosflag(row, "host_active_checks_enabled", False)
 
 
 @painter_registry.register
@@ -2361,7 +2355,7 @@ class PainterHost(Painter):
                         title=_("Coloring"),
                         help=_("Here you can configure the background color for specific states. "
                                "The coloring for host in dowtime overrules all other coloring.")))
-        ]
+        ]  # type: DictionaryElements
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
@@ -2753,7 +2747,7 @@ def paint_service_list(row, columnname):
             return entry[0].lower(), entry[1].lower()
         return entry[0].lower()
 
-    h = ""
+    h = HTML()
     for entry in sorted(row[columnname], key=sort_key):
         if columnname.startswith("servicegroup"):
             host, svc, state, checked = entry
@@ -2792,21 +2786,22 @@ class PainterHostServices(Painter):
 
     @property
     def parameters(self):
+        choices = [
+            (0, _("OK")),
+            (1, _("WARN")),
+            (2, _("CRIT")),
+            (3, _("UNKN")),
+            ("p", _("PEND")),
+        ]  # type: ListChoiceChoices
         elements = [
             ("render_states",
-             ListChoice(choices=[
-                 (0, _("OK")),
-                 (1, _("WARN")),
-                 (2, _("CRIT")),
-                 (3, _("UNKN")),
-                 ("p", _("PEND")),
-             ],
+             ListChoice(choices=choices,
                         toggle_all=True,
                         default_value=[0, 1, 2, 3, 'p'],
                         title=_("Only show services in this states"),
                         help=_("Here you can configure which services are displayed depending on "
                                "their state. This is a filter at display level not query level.")))
-        ]
+        ]  # type: DictionaryElements
 
         return Dictionary(elements=elements, title=_("Options"))
 
@@ -3129,7 +3124,7 @@ def paint_discovery_output(field, row):
             "unmonitored": html.render_icon_button(discovery_url, 'Available (missing)', 'services')
                            + "Available (missing)"
         }.get(value, value)
-    elif field == "discovery_service" and row["discovery_state"] == "vanished":
+    if field == "discovery_service" and row["discovery_state"] == "vanished":
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (html.urlencode(
             row["site"]), html.urlencode(row["host_name"]), html.urlencode(value))
         return None, html.render_div(html.render_a(value, link))
@@ -3220,7 +3215,7 @@ class PainterHostgroupHosts(Painter):
         return ['hostgroup_members_with_state']
 
     def render(self, row, cell):
-        h = ""
+        h = HTML()
         for host, state, checked in row["hostgroup_members_with_state"]:
             link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(
                 row["site"]), html.urlencode(host))
@@ -3834,7 +3829,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code = html.render_icon(icon, help_txt)
+        code = html.render_icon(icon, help_txt)  # type: CellContent
         if linkview:
             code = link_to_view(code, row, linkview)
         return "icons", code
@@ -4157,29 +4152,20 @@ class PainterLogPluginOutput(Painter):
     def render(self, row, cell):
         output = row["log_plugin_output"]
         comment = row["log_comment"]
-
         if output:
             return "", format_plugin_output(output, row)
-
-        elif comment:
+        if comment:
             return "", escaping.escape_attribute(comment)
-
-        else:
-            log_type = row["log_type"]
-            lst = row["log_state_type"]
-            if "FLAPPING" in log_type:
-                if "HOST" in log_type:
-                    what = _("host")
-                else:
-                    what = _("service")
-                if lst == "STOPPED":
-                    return "", _("The %s stopped flapping") % what
-                return "", _("The %s started flapping") % what
-
-            elif lst:
-                return "", (lst + " - " + log_type)
-            else:
-                return "", ""
+        log_type = row["log_type"]
+        lst = row["log_state_type"]
+        if "FLAPPING" in log_type:
+            what = _("host") if "HOST" in log_type else _("service")
+            if lst == "STOPPED":
+                return "", _("The %s stopped flapping") % what
+            return "", _("The %s started flapping") % what
+        if lst:
+            return "", (lst + " - " + log_type)
+        return "", ""
 
 
 @painter_registry.register
@@ -4202,7 +4188,7 @@ class PainterLogWhat(Painter):
         lt = row["log_type"]
         if "HOST" in lt:
             return "", _("Host")
-        elif "SERVICE" in lt or "SVC" in lt:
+        if "SERVICE" in lt or "SVC" in lt:
             return "", _("Service")
         return "", _("Program")
 
@@ -4920,10 +4906,8 @@ def _get_host_labels():
     """
     if 'host_labels' in g:
         return g.host_labels
-
     query = "GET hosts\nColumns: name labels\nCache: reload\n"
-    host_labels = {name: labels for name, labels in sites.live().query(query)}
-
+    host_labels = {row[0]: row[1] for row in sites.live().query(query)}
     g.host_labels = host_labels
     return host_labels
 

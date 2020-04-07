@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: mounted Devices
+title: Virtual Machine under ESX: Mounted Devices
 agents: vsphere
 catalog: os/kernel
 license: GPL

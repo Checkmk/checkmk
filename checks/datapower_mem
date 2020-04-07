@@ -41,9 +41,8 @@ check_info['datapower_mem'] = {
             "2",  # dpStatusMemoryStatusTotalMemory
             "3",  # dpStatusMemoryStatusUsedMemory
         ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
-                          [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
-    "includes": ["mem.include"],
+    "snmp_scan_function": scan_datapower,
+    "includes": ["mem.include", "datapower_scan.include"],
     "group": "memory_simple",
     "default_levels_variable": "datapower_mem_default_levels",
     "has_perfdata": True,

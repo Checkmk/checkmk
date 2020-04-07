@@ -13,7 +13,7 @@ from connexion import ProblemException  # type: ignore
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import response
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import response_schemas, constructors, endpoint_schema
 from cmk.gui.watolib import CREFolder  # pylint: disable=unused-import
 from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
@@ -87,7 +87,7 @@ def delete(params):
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
 
-    return constructors.sucess(status=204)
+    return Response(status=204)
 
 
 @endpoint_schema('/objects/folder/{ident}/actions/move/invoke',
@@ -139,9 +139,10 @@ def show_folder(params):
 
 
 def _serve_folder(folder, profile=None):
-    response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
     folder_json = _serialize_folder(folder)
-    return constructors.serve_json(folder_json, profile=profile)
+    response = constructors.serve_json(folder_json, profile=profile)
+    response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
+    return response
 
 
 def _serialize_folder(folder):

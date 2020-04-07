@@ -6,14 +6,17 @@ distribution: check_mk
 description:
  This check checks for available normal and security updates by trying
  {apt-get update} or {apt-get dist-upgrade} without actually installing
- packets. It works on Debian and Ubuntu. You need to deploy the plugin
+ packets.
+
+ It works on Debian and Ubuntu. You need to deploy the plugin
  {mk_apt} in order for the check to work. It is recommended to install
  this plugin with asynchronous execution and at an interval with at
  least one hour.
 
- The check gets {CRIT} if there are security updates available.
- It gets {WARN}, if there are other updates available. These two
- states can be overriden via a WATO rule.
+ The service goes {CRIT} if there are security updates available.
+ It goes {WARN}, if there are other updates available.
+
+ These two states can be configured via a WATO rule.
 
  If updates are performed on a host the {WARN} and {CRIT} state will
  remain until the next check interval. To invalidate the cached data

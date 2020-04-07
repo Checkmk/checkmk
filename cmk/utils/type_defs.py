@@ -43,8 +43,8 @@ TimeRange = Tuple[int, int]
 UserId = NewType("UserId", Text)
 EventRule = Dict[str, Any]  # TODO Improve this
 
-AgentHash = str
-BakeryOpSys = str
+AgentHash = NewType("AgentHash", str)
+BakeryOpSys = NewType("BakeryOpSys", str)
 AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
 BakeryHostName = Union[bool, None, HostName]
 

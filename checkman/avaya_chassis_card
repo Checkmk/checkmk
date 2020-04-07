@@ -4,9 +4,21 @@ catalog: hw/network/avaya
 license: GPL
 distribution: check_mk
 description:
- This check monitors the operational status of passport
- modules on avaya devices. A down state is interpreted as
- critical, whereas up, down and dormant are treated as OK.
+ This check monitors the operational status of passport modules on Avaya devices.
+
+ Depending on the reported state the service goes {OK}, {WARN}, {CRIT} or {UNKNOWN}.
+
+ Per default the service is
+
+ - {OK} for "up", "testing", "dormant"
+
+ - {CRIT} for "down"
+
+ - {UNKNOWN} for "unknown"
+
+ The outcome of the states is configureable.
+
+ The check uses the RAPID-CITY-MIB.
 
 item:
  The index of the card.

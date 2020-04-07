@@ -20,4 +20,4 @@ item:
  Name of the sensor
 
 inventory:
- One check is created for each sensor giving current information.
+ One service is created for each sensor reporting current information.

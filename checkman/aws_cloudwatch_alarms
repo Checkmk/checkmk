@@ -4,13 +4,20 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors alarms collected via AWS/Cloudwatch
+ This check monitors alarms collected via AWS/Cloudwatch.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- The check goes CRIT if the AWS agent reports ALARM, it is
- WARN in case of INSUFFICIENT_DATA, it is OK if the alarm state
- is OK or NO_ALARMS, otherwise UNKNOWN.
+ The service goes
+
+ - {CRIT} if the AWS agent reports ALARM,
+
+ - {WARN} in case of INSUFFICIENT_DATA,
+
+ - {OK} if the alarm state is OK or NO_ALARMS,
+
+ - {UNKNOWN} in all other cases
 
 inventory:
  One service is created.

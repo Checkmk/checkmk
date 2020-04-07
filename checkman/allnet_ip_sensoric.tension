@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  Checks Electric Tension Sensors in ALLNET IP Sensoric devices.
 
- Returns {CRIT} if the reported value is 0 and {OK} otherwise.
+ The service goes {CRIT} if the reported sensor ID is 0 and {OK} otherwise.
 
 item:
  If a name is reported for the sensor by the device: The name and the

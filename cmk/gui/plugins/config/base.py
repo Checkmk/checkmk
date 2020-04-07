@@ -283,7 +283,7 @@ graph_timeranges = [
         'title': "The last 400 days",
         "duration": 400 * 24 * 60 * 60
     },
-]
+]  # type: _List[_Dict[str, _Any]]
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )

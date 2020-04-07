@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: CPU load average
+title: UCD SNMP Daemon: CPU Load Average
 agents: snmp
 catalog: os/kernel
 license: GPL

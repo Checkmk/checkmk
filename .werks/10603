@@ -1,0 +1,11 @@
+Title: datapower plugins: now support new revision of IBM Datapower Gateway
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1585904874
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

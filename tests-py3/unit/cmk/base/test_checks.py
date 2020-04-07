@@ -26,12 +26,15 @@ import cmk.base.check_api as check_api
 
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
-    with check_file_path.open() as handle:
-        return [
-            "%s:%d:%s" % (check_file_path.stem, line_no, repr(line.strip()))
-            for line_no, line in enumerate(handle, 1)
-            if re.search(deprecated_pattern, line.strip())
-        ]
+    try:
+        with check_file_path.open() as handle:
+            return [
+                "%s:%d:%s" % (check_file_path.name, line_no, repr(line.strip()))
+                for line_no, line in enumerate(handle, 1)
+                if re.search(deprecated_pattern, line.strip())
+            ]
+    except UnicodeDecodeError as exc:
+        return ["%s:-1:Unable to reade file: %s" % (check_file_path.name, exc)]
 
 
 @pytest.mark.parametrize("deprecated_pattern", [
@@ -54,6 +57,7 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
 ])
 def test_deprecated_api_features(deprecated_pattern):
     check_files = Path(cmk.utils.paths.checks_dir).glob("*")
+    check_files = (p for p in check_files if p.suffix not in (".swp",))
     with_deprecated_feature = [
         finding  #
         for check_file_path in check_files  #
@@ -354,20 +358,20 @@ def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, 
                                              for_discovery=for_discovery) == set(mgmt_board_result)
 
 
-def test_check_tests_symlinks():
-    # TODO After complete Python 3 migration we can remove this
-    pattern = 'test_*.py'
+def test_py2_check_tests():
+    check_tests = Path(testlib.repo_path()).joinpath(Path('tests/unit/checks'))
+    generic_check_tests = Path(testlib.repo_path()).joinpath(
+        Path('tests/unit/checks/generictests/datasets'))
 
-    py2_check_tests = set(
-        p.name for p in Path(testlib.repo_path()).joinpath(Path('tests/unit/checks')).glob(pattern))
+    if check_tests.exists():
+        py2_check_tests = set(p.name for p in check_tests.glob('test_*.py'))
+        assert py2_check_tests == set(
+        ), "Found deprecated Python 2 check tests: %s" % ", ".join(py2_check_tests)
 
-    py3_check_tests = set(
-        p.name
-        for p in Path(testlib.repo_path()).joinpath(Path('tests-py3/unit/checks')).glob(pattern))
-
-    assert py2_check_tests.issubset(
-        py3_check_tests), "Forget to implement/symlink related Python 3 check test: %s" % ", ".join(
-            py2_check_tests - py3_check_tests)
+    if generic_check_tests.exists():
+        py2_generic_check_tests = set(p.name for p in generic_check_tests.glob('*.py'))
+        assert py2_generic_check_tests == set(
+        ), "Found deprecated Python 2 generic check tests: %s" % ", ".join(py2_generic_check_tests)
 
 
 def test_check_plugin_header():
@@ -385,22 +389,13 @@ def test_check_plugin_header():
             checkfile.name, encoding_header)
 
 
-def test_inventory_tests_symlinks():
-    # TODO After complete Python 3 migration we can remove this
-    pattern = 'test_*.py'
+def test_py2_inv_plugins_tests():
+    inv_plugin_tests = Path(testlib.repo_path()).joinpath(Path('tests/unit/inventory'))
+    py2_inv_plugin_tests = set(p.name for p in inv_plugin_tests.glob('test_*.py'))
 
-    py2_inventory_plugin_tests = set(
-        p.name
-        for p in Path(testlib.repo_path()).joinpath(Path('tests/unit/inventory')).glob(pattern))
-
-    py3_inventory_plugin_tests = set(
-        p.name
-        for p in Path(testlib.repo_path()).joinpath(Path('tests-py3/unit/inventory')).glob(pattern))
-
-    assert py2_inventory_plugin_tests.issubset(
-        py3_inventory_plugin_tests
-    ), "Forget to implement/symlink related Python 3 inventory plugin test: %s" % ", ".join(
-        py2_inventory_plugin_tests - py3_inventory_plugin_tests)
+    if inv_plugin_tests.exists():
+        assert py2_inv_plugin_tests == set(
+        ), "Found deprecated Python 2 inventory plugin tests: %s" % ", ".join(py2_inv_plugin_tests)
 
 
 def test_inventory_plugin_header():

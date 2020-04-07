@@ -5,8 +5,13 @@ license: GPL
 distribution: check_mk
 description:
  Monitors memory and swap space on Arbor Peakflow TMS devices.
- Warn/Crit levels can be configured through the rule
+
+ {WARN}/{CRIT} levels can be configured through the rule
  "Memory and Swap usage on Arbor devices".
+
+ The service goes {WARN}/{CRIT} if the space exceeds these levels.
+
+ This check uses the PEAKFLOW-TMS-MIB.
 
 inventory:
  One service is created.

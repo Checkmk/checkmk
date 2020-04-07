@@ -15,5 +15,5 @@ item:
  Name of the powersupply
 
 inventory:
- One check is created for each PSU found
+ One service is created for each PSU.
 

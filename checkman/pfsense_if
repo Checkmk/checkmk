@@ -1,4 +1,4 @@
-title: pfSense: Blocked packets
+title: pfSense: Blocked Packets
 agents: snmp
 catalog: app/pfsense
 license: GPL

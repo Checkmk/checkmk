@@ -435,6 +435,15 @@ def test_automation_get_service_configurations(test_cfg, site):
     assert ('cpu.loads', u'CPU load', (5.0, 10.0)) in data["hosts"]["modes-test-host"]["checks"]
 
 
+def test_automation_create_diagnostics_dump(test_cfg, site):
+    data = _execute_automation(site, "create-diagnostics-dump")
+    tarfile_path = data["tarfile_path"]
+    assert isinstance(data, dict)
+    assert "Created diagnostics dump" in data["output"]
+    assert tarfile_path.endswith(".tar.gz")
+    assert "var/check_mk/diagnostics" in tarfile_path
+
+
 # TODO: rename-hosts
 # TODO: delete-hosts
 # TODO: scan-parents

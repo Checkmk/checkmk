@@ -1,4 +1,4 @@
-title: UCD SNMP Daemon: Disk space of mounted disks
+title: UCD SNMP Daemon: Disk Space of Mounted Disks
 agents: snmp
 catalog: os/storage
 license: GPL

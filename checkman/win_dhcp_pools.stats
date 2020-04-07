@@ -1,4 +1,4 @@
-title: Windows DHCP: Number of transactions since startup of the Windows DHCP
+title: Windows DHCP: Number of Transactions since Startup of the Windows DHCP
 agents: windows
 catalog: os/services
 license: GPL

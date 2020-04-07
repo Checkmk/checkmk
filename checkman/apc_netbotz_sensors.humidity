@@ -7,8 +7,14 @@ description:
  This check monitors the humidity sensors of APC Netbotz devices
  which support the NETBOTZV2 MIB, e.g. Netbotz 450 series.
 
- Default levels are set to 30, 35, 60, 65 percent.
- These levels are configurable.
+ You can configure lower and upper levels for {CRIT} and {WARN}
+ (default: {WARN}: 35, 60 {CRIT}: 30, 65)
+
+ The service goes {WARN} or {CRIT} if the temperature is higher
+ than given upper levels or lower than the given lower levels.
+ Otherwise it returns {OK}.
+
+ This check uses the NETBOTZV2-MIB.
 
 item:
  The humidity sensor identifier.

@@ -6,7 +6,7 @@
 import json
 
 from cmk.gui import watolib
-from cmk.gui.globals import response
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.folder import load_folder
 from cmk.gui.plugins.openapi.restful_objects import constructors, response_schemas, endpoint_schema
 from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
@@ -50,7 +50,7 @@ def update(params):
     hostname = params['hostname']
     body = params['body']
     attributes = body['attributes']
-    host = watolib.Host.host(hostname)  # type: watolib.Host
+    host = watolib.Host.host(hostname)  # type: watolib.CREHost
     constructors.require_etag(constructors.etag_of_obj(host))
     host.update_attributes(attributes)
     return _serve_host(host)
@@ -68,7 +68,7 @@ def delete(params):
     host = watolib.Host.host(hostname)
     constructors.require_etag(constructors.etag_of_obj(host))
     host.folder().delete_hosts([host.name()])
-    return constructors.sucess(status=204)
+    return Response(status=204)
 
 
 @endpoint_schema('/objects/host/{hostname}',
@@ -82,10 +82,11 @@ def get(params):
 
 
 def _serve_host(host):
+    response = Response()
     response.set_data(json.dumps(serialize_host(host)))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
-    return response._get_current_object()
+    return response
 
 
 def serialize_host(host):

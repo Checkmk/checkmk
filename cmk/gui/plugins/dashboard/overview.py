@@ -47,8 +47,9 @@ class OverviewDashlet(Dashlet):
 
         html.open_td()
         html.h2("CheckMK")
-        html.write_html('Welcome to CheckMK. If you want to learn more about CheckMK, please visit '
-                        'our <a href="https://checkmk.com/" target="_blank">user manual</a>.')
+        html.write_text(
+            _('Welcome to Checkmk. If you want to learn more about Checkmk, please visit '
+              'our <a href="https://checkmk.com/" target="_blank">user manual</a>.'))
         html.close_td()
 
         html.close_tr()

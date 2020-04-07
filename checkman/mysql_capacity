@@ -25,6 +25,6 @@ item:
  Name of the instance and name of the database seperated by a colon ({{:}})
 
 inventory:
- The check generates one item per Database found.
+ One service is created for each database.
  Internal MySQL databases are ignored.
 

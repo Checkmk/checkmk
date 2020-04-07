@@ -5,7 +5,10 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the amount of access points per WLAN controller.
- The service is always OK.
+
+ The service is always {OK}.
+
+ The check uses the WLSX-SYSTEMEXT-MIB
 
 inventory:
  One service is created.

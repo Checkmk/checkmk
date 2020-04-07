@@ -14,6 +14,6 @@ item:
  Name of the volume as defined in the system
 
 inventory:
- All {local} volumes are automatically inventorized.
+ One service is created for each {local} volumes.
 
 

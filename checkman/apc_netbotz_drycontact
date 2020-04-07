@@ -6,10 +6,17 @@ distribution: check_mk
 description:
  This check monitors the status of dry contact sensors which are integrated in APC NetBotz Rack Monitor 200.
 
- The service state is OK if the contact sensor is in state {OPEN}
- The service state is CRIT if the contact sensor is in state {CLOSED}
- The service state is WARNING if the contact sensor is in state {DISABLED}
- The service state is UNKNOWN if the contact sensor is in state {NOT APPLICABLE}
+ The service state is
+
+ - {OK} if the contact sensor is in state {OPEN}
+
+ - {CRIT} if the contact sensor is in state {CLOSED}
+
+ - {WARN} if the contact sensor is in state {DISABLED}
+
+ - {UNKNOWN} if the contact sensor is in state {NOT APPLICABLE}
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service per sensor is created. The location is added to

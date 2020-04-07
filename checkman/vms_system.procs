@@ -1,4 +1,4 @@
-title: OpenVMS: Number of processes
+title: OpenVMS: Number of Processes
 agents: openvms
 catalog: os/ps
 license: GPL

@@ -1,4 +1,4 @@
-title: MS SQL Server: Page activity
+title: MS SQL Server: Page Activity
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -15,4 +15,4 @@ item:
  The MSSQL instance name and the tablespace name separated by a space.
 
 inventory:
- One check per instance is created.
+ One service is created for each instance.

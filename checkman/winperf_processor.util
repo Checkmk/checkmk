@@ -1,4 +1,4 @@
-title: Windows: CPU utilization
+title: Windows: CPU Utilization
 agents: windows
 catalog: os/kernel
 license: GPL

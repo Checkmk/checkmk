@@ -4,14 +4,24 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors the request count, surge queue length
- and spill over count of AWS/ELB services.
+ This check monitors the
+
+ - request count
+
+ - surge queue length
+
+ - spill over count
+
+ of AWS/ELB services.
+
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
  When the surge queue length reaches the maximum of 1,024 queued
  request, the spillover is incremented and new requests are dropped.
- In this case the check goes WARN; Otherwise OK
+ The service goes {WARN} in this case
+
+ Otherwise the service is {OK}.
 
  Levels are configurable for surge queue length and spillover.
 

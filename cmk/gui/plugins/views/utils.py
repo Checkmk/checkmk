@@ -1117,6 +1117,7 @@ def format_plugin_output(output, row):
 
 def link_to_view(content, row, view_name):
     # type: (CellContent, Row, ViewName) -> CellContent
+    assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
 
@@ -1255,11 +1256,9 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
 
 def paint_nagiosflag(row, field, bold_if_nonzero):
     # type: (Row, ColumnName, bool) -> CellSpec
-    value = row[field]
-    yesno = {True: _("yes"), False: _("no")}[value != 0]
-    if (value != 0) == bold_if_nonzero:
-        return "badflag", yesno
-    return "goodflag", yesno
+    nonzero = row[field] != 0
+    return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
+            _("yes") if nonzero else _("no"))
 
 
 def declare_simple_sorter(name, title, column, func):
@@ -1972,6 +1971,7 @@ class Cell(object):
         if content and self.has_tooltip():
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
+            assert not isinstance(tooltip_content, dict)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
                 content = '<span title="%s">%s</span>' % (tooltip_text, content)
@@ -1996,6 +1996,7 @@ class Cell(object):
             css_classes, rendered_txt = self.render_content(row)
             if rendered_txt is None:
                 return css_classes, ""
+            assert not isinstance(rendered_txt, dict)
 
             txt = rendered_txt.strip()  # type: PDFCellContent
 
@@ -2026,10 +2027,16 @@ class Cell(object):
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
     def render_for_export(self, row):
-        # type: (Row) -> CellContent
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""
+
+        # The aggr_treestate painters are returning a dictionary data structure
+        # (see paint_aggregated_tree_state()) in case the output_format is not
+        # HTML. Hand over the whole data structure to the caller. It will be
+        # converted to str during rendering.
+        if isinstance(rendered_txt, dict):
+            return rendered_txt
 
         txt = rendered_txt.strip()  # type: Text
 
@@ -2056,6 +2063,7 @@ class Cell(object):
         # type: (Row, str, bool) -> bool
         tdclass, content = self.render(row)
         has_content = content != ""
+        assert not isinstance(content, dict)
 
         if is_last_cell:
             if tdclass is None:

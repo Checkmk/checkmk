@@ -1,4 +1,4 @@
-title: MS SQL: General state
+title: MS SQL: General State
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -21,4 +21,4 @@ item:
  The instance ID of the MSSQL server process instance.
 
 inventory:
- One separate check for each server process will be created.
+ One service is created for each server process.

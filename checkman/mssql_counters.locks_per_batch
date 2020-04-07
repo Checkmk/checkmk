@@ -1,4 +1,4 @@
-title: MS SQL Server: Locks per batch
+title: MS SQL Server: Locks per Batch
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -15,4 +15,4 @@ item:
  Name of the database
 
 inventory:
- One check per instance is created.
+ One service is created for each instance.

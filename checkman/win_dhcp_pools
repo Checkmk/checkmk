@@ -1,4 +1,4 @@
-title: Windows DHCP: Number of free addresses in DHCP pools
+title: Windows DHCP: Number of Free Addresses in DHCP Pools
 agents: windows
 catalog: os/services
 license: GPL

@@ -5,6 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the AWS/EC2 limits.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
@@ -34,7 +35,9 @@ description:
  instances/space per limit type.
 
  With both values we calculate the usage of each limit type
- in percent. Default levels are set to 80, 90 percent per type.
+ in percent.
+
+ The upper levels for {WARN}/{CRIT} are set to 80, 90 percent per type.
  For each limit type the limit and usage levels are configurable.
 
  If limits are enabled account attributes of EC2 resource are

@@ -6,6 +6,12 @@ distribution:
 description:
  This check monitors the Temperature information for several equipment parts in the Arris device.
 
+ You configure upper levels for {WARN}/{CRIT} (default: 40/46)
+
+ The service goes {WARN}/{CRIT} if the temperature exceeds these levels.
+
+ The check uses the CADANT-CMTS-EQUIPMENT-MIB.
+
 item:
  The Cardname
 

@@ -10,18 +10,22 @@
 # Replica_Health None
 
 
-def inventory_hyperv_vmstatus(info):
-    return [(None, None)]
+def parse_hyperv_vmstatus(info):
+    return {line[0]: ' '.join(line[1:]) for line in info}
 
 
-def check_hyperv_vmstatus(_no_item, _no_params, info):
-    if info[0][1] != 'Ok':
-        return 2, "Integration Service State: " + info[0][1]
-    return 0, "Integration Services without errors"
+def check_hyperv_vmstatus(_no_item, _no_params, parsed):
+    int_state = parsed.get("Integration_Services")
+    # According to microsoft 'Protocol_Mismatch' is OK:
+    #   The secondary status [...] includes an error string that sounds alarming
+    #   but that you can safely ignore. [...] This behavior is by design.
+    state = 0 if int_state in ('Ok', 'Protocol_Mismatch') else 2
+    return state, "Integration Service State: %s" % int_state
 
 
 check_info["hyperv_vmstatus"] = {
+    "parse_function": parse_hyperv_vmstatus,
     "check_function": check_hyperv_vmstatus,
-    "inventory_function": inventory_hyperv_vmstatus,
+    "inventory_function": discover_single,
     "service_description": "HyperV Status",
 }

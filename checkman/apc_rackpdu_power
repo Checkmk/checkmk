@@ -6,9 +6,12 @@ distribution: check_mk
 description:
  This check monitors the electrical current of APC PDU units.
 
- The device sends thresholds WARN and CRIT itself. If one of these
- will be excedeed then the check goes WARN or CRIT. Otherwise it is OK.
- There are no default levels. Upper levels can be configured.
+ The device sends thresholds {WARN} and {CRIT} itself.
+
+ If one of these is excedeed the service goes {WARN} or {CRIT}.
+ Otherwise it is {OK}.
+
+ This check uses the PowerNet-MIB.
 
 item:
  The name of the PDU as set in the PDU

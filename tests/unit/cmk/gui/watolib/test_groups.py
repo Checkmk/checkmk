@@ -10,7 +10,7 @@ from werkzeug.test import create_environ
 import cmk.utils.paths
 import cmk.gui.watolib.groups as groups
 import cmk.gui.htmllib as htmllib
-from cmk.gui.http import Request, Response
+from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
 from testlib.utils import DummyApplication
 
@@ -29,7 +29,7 @@ def patch_config_paths(monkeypatch, tmp_path):
 def test_load_group_information_empty(tmp_path):
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+         RequestContext(htmllib.html(Request(environ))):
         assert groups.load_contact_group_information() == {}
         assert groups.load_host_group_information() == {}
         assert groups.load_service_group_information() == {}
@@ -76,7 +76,7 @@ multisite_contactgroups = {
 
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            RequestContext(htmllib.html(Request(environ))):
         assert groups.load_group_information() == {
             'contact': {
                 'all': {

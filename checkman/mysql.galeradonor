@@ -16,6 +16,6 @@ item:
  The name of the instance
 
 inventory:
- On each host where the agent plugin {mk_mysql} is being installed
- and the MySQL daemon is running one service per instance is being generated
- if the instance has Galera enabled.
+ One service is created for each instance on each host where the agent plugin
+ {mk_mysql} is installed and the MySQL daemon is running if the instance
+ has Galera enabled.

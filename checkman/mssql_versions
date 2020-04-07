@@ -17,4 +17,4 @@ item:
  The name of the MSSQL server process instance.
 
 inventory:
- One separate check for each server process will be created.
+ One service is created for each server process.

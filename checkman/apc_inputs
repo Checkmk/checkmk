@@ -4,9 +4,21 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This Check monitors the input contacts of a APC UPS.
- It returns {WARN} in case of a state change, and also represents
- the current alarm status. The Check has no configuration.
+ This check monitors the input contacts of a APC UPS.
+
+ The service goes {WARN}
+
+ - in case of a state change
+
+ - for alarm status "2" or "4"
+
+ The service goes {CRIT} for alarm status "3"
+
+ Otherwise the service is {OK}.
+
+ The check has no configuration.
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created for each contact

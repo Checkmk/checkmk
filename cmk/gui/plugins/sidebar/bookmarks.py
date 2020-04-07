@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict, List  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.store as store
@@ -198,6 +200,8 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def _do_load_legacy_bookmarks(cls):
+        if config.user.confdir is None:
+            raise Exception("user confdir is None")
         path = config.user.confdir + "/bookmarks.mk"
         return store.load_object_from_file(path, default=[])
 
@@ -214,7 +218,7 @@ class BookmarkList(pagetypes.Overridable):
         return self._["default_topic"]
 
     def bookmarks_by_topic(self):
-        topics = {}
+        topics = {}  # type: Dict[str, List[Dict[str, Any]]]
         for bookmark in self._["bookmarks"]:
             topic = topics.setdefault(bookmark["topic"], [])
             topic.append(bookmark)
@@ -261,7 +265,7 @@ class Bookmarks(SidebarSnapin):
         end_footnote_links()
 
     def _get_bookmarks_by_topic(self):
-        topics = {}
+        topics = {}  # type: Dict[Any, List[Any]]
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \

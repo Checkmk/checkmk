@@ -15,4 +15,4 @@ item:
  Name of the sensor
 
 inventory:
- One check is created for each fan found
+ One service is created for each fan.

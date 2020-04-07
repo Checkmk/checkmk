@@ -39,7 +39,7 @@ item:
  Checkmk does not check for uniqueness.
 
 inventory:
- The inventory creates one service for each port that fulfills configurable conditions.
+ One service is created for each port that fulfills configurable conditions.
 
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.

@@ -5,7 +5,12 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the cpu utilization of Avaya 88xx devices.
- The levels can be configured (default 90, 95).
+
+ You can configure upper levels for {WARN}/{CRIT} (default 90, 95).
+
+ The service goes {WARN}/{CRIT} if the CPU Utilization exceeds these levels.
+
+ The check uses the RAPID-CITY-MIB.
 
 inventory:
  One service is created for each CPU.

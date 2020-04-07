@@ -4,17 +4,23 @@ catalog: os/services
 license: GPL
 distribution: check_mk
 description:
- Checks if Backup Jobs did finish successfully on an Arcserve Backup
- System. Therefor it queries the database on the backup server. It needs
+ Checks if Backup Jobs did finish successfully on an Arcserve Backup System.
+
+ Therefore it queries the database on the backup server. It needs
  the arcserve_backup.ps1 agent plugin to be installed there.
 
  Please note: On the Arcserve database TCP/IP and named pipes need to
  be activated for the plugin to work.
 
- The check returns {OK} if the backup job did finish with an OK message,
- {WARN} if the job reported warnings and {CRIT} if the job did report
- errors. {UNKN} is returned if the job did finish with an unidentified
- message.
+ The check returns
+
+ - {OK} if the backup job did finish with an OK message
+
+ - {WARN} if the job reported warnings
+
+ - {CRIT} if the job did report errors
+
+ - {UNKN} if the job did finish with an unidentified message
 
  Number of directories, number of files and size are only reported but
  do never trigger any non-OK state.

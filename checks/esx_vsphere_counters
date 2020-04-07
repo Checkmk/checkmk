@@ -519,3 +519,47 @@ check_info['esx_vsphere_counters.ramdisk'] = {
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }
+
+#   .--swap----------------------------------------------------------------.
+#   |                                                                      |
+#   |                       _____      ____ _ _ __                         |
+#   |                      / __\ \ /\ / / _` | '_ \                        |
+#   |                      \__ \\ V  V / (_| | |_) |                       |
+#   |                      |___/ \_/\_/ \__,_| .__/                        |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+
+
+def _parse_esx_vsphere_counters_swap(parsed):
+
+    swap_values = {}
+
+    for agent_key, key in (('mem.swapin', 'in'), ('mem.swapout', 'out'), ('mem.swapused', 'used')):
+        try:
+            swap_values[key] = parsed[agent_key][''][0][0][0]
+        except (KeyError, IndexError, TypeError, ValueError):
+            swap_values[key] = "n.a."
+
+    return swap_values
+
+
+def inventory_esx_vsphere_counters_swap(parsed):
+    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+
+    if any([elem for elem in SWAP.values()]):
+        return [(None, {})]
+
+
+def check_esx_vsphere_counters_swap(item, params, parsed):
+    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+
+    for key in ('in', 'out', 'used'):
+        yield 0, "Swap %s: %s" % (key, get_bytes_human_readable(float(SWAP[key]), unit="KB"))
+
+
+check_info['esx_vsphere_counters.swap'] = {
+    'inventory_function': inventory_esx_vsphere_counters_swap,
+    'check_function': check_esx_vsphere_counters_swap,
+    'service_description': 'VMKernel Swap',
+    'has_perfdata': False,
+}

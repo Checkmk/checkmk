@@ -1228,6 +1228,12 @@ def get_event_console_site_choices():
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 
 
+def get_wato_site_choices():
+    # type: () -> List[Tuple[SiteId, Text]]
+    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
+        "replication") is not None)
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

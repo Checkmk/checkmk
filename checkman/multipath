@@ -20,10 +20,10 @@ description:
 
 item:
  The UUID of the multipath device, e.g. {"360a980004334644d654a364469555a76"}.
- If the multipath device has an alias you can alternatively specify the
- alias as item.
+ Via {inventory_multipath_rules} you can specify wether an alias should be used
+ as item instead of the UUID. If the multipath device has an alias the alias will
+ be used as item.
 
 inventory:
- One check for each multipath device is created. Via {iventory_multipath_rules}
- you can specify whether an alias should be used as item instead of the UUID.
+ One service is created for each multipath device.
 

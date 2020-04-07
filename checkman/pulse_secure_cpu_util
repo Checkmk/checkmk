@@ -1,4 +1,4 @@
-title: Pulse Secure: IVE CPU utilization
+title: Pulse Secure: IVE CPU Utilization
 agents: snmp
 catalog: app/pulse_secure
 license: GPL

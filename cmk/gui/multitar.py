@@ -297,12 +297,15 @@ class SnapshotCreationBase(object):
 class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
     def __init__(self, work_dir, args, kwargs):
         # type: (str, Tuple, Dict) -> None
-        multiprocessing.Process.__init__(self,
-                                         target=self._generate_snapshot,
-                                         args=args,
-                                         kwargs=kwargs)
+        multiprocessing.Process.__init__(
+            self,
+            #                                         target=self._generate_snapshot,
+            args=args,
+            kwargs=kwargs)
         SnapshotCreationBase.__init__(self, work_dir)
 
+        self._args = args
+        self._kwargs = kwargs
         self.daemon = True
         self._logger = logger.getChild("SnapshotWorker(%d)" % os.getpid())
 
@@ -310,6 +313,7 @@ class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
         # type: () -> None
         try:
             super(SnapshotWorkerSubprocess, self).run()
+            self._generate_snapshot(*self._args, **self._kwargs)
         except Exception:
             self._logger.error("Error in subprocess")
             self._logger.error(traceback.format_exc())

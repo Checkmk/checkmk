@@ -72,6 +72,6 @@ check_info['datapower_pdrive'] = {
             "15",  # dpStatusRaidPhysicaldrivetatusProductID
             "18",  # dpStatusRaidPhysicaldrivetatusFailure
         ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
-                          [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
+    "snmp_scan_function": scan_datapower,
+    "includes": ["datapower_scan.include"],
 }

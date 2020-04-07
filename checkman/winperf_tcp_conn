@@ -1,4 +1,4 @@
-title: Windows: Number of TCP connections
+title: Windows: Number of TCP Connections
 agents: windows
 catalog: os/networking
 license: GPL

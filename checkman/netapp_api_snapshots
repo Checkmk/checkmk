@@ -10,3 +10,6 @@ description:
 
 item:
  The name of the volume
+
+inventory:
+ One service is created for each volume snapshot.

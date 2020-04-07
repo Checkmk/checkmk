@@ -17,6 +17,7 @@ def test_registered_automations():
         'active-check',
         'analyse-host',
         'analyse-service',
+        'create-diagnostics-dump',
         'delete-hosts',
         'diag-host',
         'get-agent-output',

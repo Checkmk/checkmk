@@ -117,13 +117,8 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.request.get_unicode_input("crash_id")
-        if not self._crash_id:
-            raise MKUserError("crash_id", _("The parameter \"%s\" is missing.") % "crash_id")
-
-        self._site_id = html.request.get_unicode_input("site")
-        if not self._site_id:
-            raise MKUserError("site", _("The parameter \"%s\" is missing.") % "site")
+        self._crash_id = html.request.get_unicode_input_mandatory("crash_id")
+        self._site_id = html.request.get_unicode_input_mandatory("site")
 
     def _get_crash_info(self, row):
         return json.loads(row["crash_info"])
@@ -262,11 +257,11 @@ class PageCrash(ABCCrashReportPage):
         return details
 
     def _get_version(self):
-        # type: () -> Text
+        # type: () -> str
         return cmk_version.__version__
 
     def _get_crash_report_target(self):
-        # type: () -> Text
+        # type: () -> str
         return config.crash_report_target
 
     def _vs_crash_report(self):
@@ -294,9 +289,9 @@ class PageCrash(ABCCrashReportPage):
                     files.append(filepath)
 
             if files:
-                warn_text = _(
-                    "The following files located in the local hierarchy of your site are involved in this exception:"
-                )
+                warn_text = HTML(
+                    _("The following files located in the local hierarchy of your site are involved in this exception:"
+                     ))
                 warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
                 warn_text += _("Maybe these files are not compatible with your current Checkmk "
                                "version. Please verify and only report this crash when you think "
@@ -319,6 +314,9 @@ class PageCrash(ABCCrashReportPage):
 
     def _add_gui_user_infos_to_details(self, details):
         users = userdb.load_users()
+        if config.user.id is None:
+            details.update({"name": None, "mail": None})
+            return
         user = users.get(config.user.id, {})
         details.setdefault("name", user.get("alias"))
         details.setdefault("mail", user.get("mail"))

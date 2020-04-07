@@ -12,5 +12,5 @@ item:
  The interface description
 
 inventory:
- The inventory creates one service for each fibrechannel interface
+ One service is created for each fibrechannel interface.
 

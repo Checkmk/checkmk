@@ -1,4 +1,4 @@
-title: MS SQL Tablespaces: Transactions per second
+title: MS SQL Tablespaces: Transactions per Second
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -18,4 +18,4 @@ item:
  The MSSQL instance name and the tablespace name separated by a space.
 
 inventory:
- One separate check for each tablespace will be created.
+ One service is created for each tablespace.

@@ -6,8 +6,11 @@ distribution: check_mk
 description:
  This check monitors the temperature of the ARTEC Mail Archive Appliance.
 
- Upper default levels are set to 36, 40 Celsius.
- Upper and lower levels are configurable.
+ You can configure upper level for {WARN}/{CRIT} (default: 36, 40).
+
+ The service goes {WARN}/{CRIT} if the temperature exceeds the upper levels.
+
+ The check uses the ARTEC-MIB.
 
 item:
  The fixed name {{Disk}}.

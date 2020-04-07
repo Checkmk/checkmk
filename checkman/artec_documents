@@ -4,11 +4,19 @@ catalog: hw/mail/artec
 license: GPL
 distribution: check_mk
 description:
- This check monitors the types and related number of documents
- of the ARTEC Mail Archive Appliance.
- Furthermore the check reports the rate per document typ.
+ This check monitors the
+
+ - types
+
+ - related number
+
+ - rate for each document type
+
+ of documents of the ARTEC Mail Archive Appliance.
 
  No default levels are set, no configuration is possible.
+
+ This check uses the ARTEC-MIB.
 
 inventory:
  One service is created.

@@ -6,10 +6,14 @@ distribution: check_mk
 description:
  This check monitors the temperature sensors of an Arista Networks DCS-7280 switch.
 
- Upper and lower temperature levels are supported.
+ You can manually configure upper and lower temperature levels.
 
  There are no default temperature levels in the check plugin nor does the
  device provides their own thershold levels.
+
+ The service goes {WARN}/{CRIT} if temperature exceeds these levels.
+
+ This check uses the ENTITY-MIB.
 
 item:
  One service is created for each recognized temperature sensor

@@ -4,13 +4,25 @@ catalog: hw/network/aruba
 license: GPL
 distribution: check_mk
 description:
- This check automatically detects all provisioned accesspoints of an
- Aruba Networks WLAN Controller which are up.
- Moreover the check reports the accesspoint group and system location if available.
- If an accesspoint goes down, the checks triggers a CRITICAL state.
- If the accespoint is inactive, the check reports a WARN state.
- If both cases appear then the worst case will be reported.
- Otherwise the check is OK.
+ This check monitors
+
+ - the state
+
+ - the accespoint group
+
+ - the system location
+
+ of an Aruba Networks WLAN Controller Accesspoint.
+
+ The service goes
+
+ - {CRIT} if an accesspoint goes down
+
+ - {WARN} if the accespoint is inactive
+
+ - {OK} in all other cases
+
+ The check uses the WLSX-SYSTEMEXT-MIB
 
 item:
  The WLAN accesspoint name.

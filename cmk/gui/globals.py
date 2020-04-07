@@ -19,7 +19,7 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from typing import Any, Union  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
     from cmk.gui import htmllib, http, config  # pylint: disable=unused-import
 
 _sentinel = object()
@@ -163,5 +163,5 @@ local = request_local_attr()  # None as name will get the whole object.
 # tools in general.
 user = request_local_attr('user')  # type: config.LoggedInUser
 request = request_local_attr('request')  # type: http.Request
-response = request_local_attr('response')  # type: http.Response
+
 html = request_local_attr('html')  # type: htmllib.html

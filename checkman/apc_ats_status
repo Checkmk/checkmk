@@ -5,12 +5,21 @@ license: GPL
 distribution: check_mk
 description:
  Checks the status of a APC Automatic Transfer Switch.
- This means it throws {CRIT} if:
- The power source has changed since last inventory,
- the communication status gets lost,
- the redundancy is lost,
- the current ouput power exceeded the maximum limit for swiching to the alternate power source
- or the 5V or 24V supply fails
+
+ The service goes {CRIT} if:
+
+ - the power source has changed since last inventory
+
+ - the communication status gets lost
+
+ - the redundancy is lost
+
+ - the current ouput power exceeded the maximum limit for swiching
+ to the alternate power source
+
+ - the 5V or 24V supply fails
+
+ This check uses the PowerNet-MIB.
 
 inventory:
  One service is created if the info is just one argument

@@ -33,6 +33,8 @@
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
 
+import dateutil
+
 factory_settings["ibm_mq_queues_default_levels"] = {}
 
 
@@ -65,12 +67,14 @@ def check_ibm_mq_queues(item, params, parsed):
     if "LGETDATE" in data:
         mq_date = data.get("LGETDATE")
         mq_time = data.get("LGETTIME")
-        yield ibm_mq_last_age(mq_date, mq_time, 'Last get', 'lgetage', params)
+        agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
+        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, 'Last get', 'lgetage', params)
 
     if "LPUTDATE" in data:
         mq_date = data.get("LPUTDATE")
         mq_time = data.get("LPUTTIME")
-        yield ibm_mq_last_age(mq_date, mq_time, 'Last put', 'lputage', params)
+        agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
+        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, 'Last put', 'lputage', params)
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
@@ -132,17 +136,18 @@ def ibm_mq_msg_age(msg_age, params):
                         infoname=label)
 
 
-def ibm_mq_last_age(mq_date, mq_time, label, key, params):
+def ibm_mq_agent_timestamp(item, parsed):
+    qmgr_name = item.split(':', 1)[0]
+    now = dateutil.parser.isoparse(parsed[qmgr_name]['NOW'])
+    return now
+
+
+def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     if not (mq_date and mq_time):
         return (0, label + ": n/a", [])
-    mq_datetime = "%s %s" % (mq_date, mq_time)
-    struct = time.strptime(mq_datetime, "%Y-%m-%d %H.%M.%S")
-
-    # FIXME: The use of the local time will fail if the IBM MQ server
-    # and the Checkmk server are in different time zones.
-    input_time = time.mktime(struct)
-    reference_time = time.time()
-    age = int(reference_time - input_time)
+    mq_datetime = "%s %s" % (mq_date, mq_time.replace('.', ':'))
+    input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
+    age = (agent_timestamp - input_time).total_seconds()
     return check_levels(age,
                         None,
                         params.get(key),

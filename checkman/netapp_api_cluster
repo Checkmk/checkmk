@@ -10,7 +10,7 @@ description:
  has immediate impact (e.g. being in takeover already)
 
 inventory:
- The check creates one service per Cluster which will be named "Cluster with Partner_Name".
+ One service is created for each Cluster.
 
 item:
  The cluster partner

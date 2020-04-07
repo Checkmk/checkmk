@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional  # pylint: disable=unused-import
+
 import cmk.gui.config as config
 import cmk.gui.wato as wato
 import cmk.gui.views as views
@@ -27,7 +29,7 @@ def render_wato(mini):
     if not config.wato_enabled:
         html.write_text(_("WATO is disabled."))
         return False
-    elif not config.user.may("wato.use"):
+    if not config.user.may("wato.use"):
         html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
 
@@ -237,8 +239,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         selected_topic, selected_target = config.user.load_file("foldertree",
                                                                 (_('Hosts'), 'allhosts'))
 
-        topic_views = visuals_by_topic(views.get_permitted_views().items() +
-                                       dashboard.get_permitted_dashboards().items())
+        topic_views = visuals_by_topic(
+            list(views.get_permitted_views().items()) +
+            list(dashboard.get_permitted_dashboards().items()))
         topics = [(t, t) for t, _s in topic_views]
 
         html.open_table()
@@ -269,9 +272,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
                     targets.append((name, title))
 
             if topic != selected_topic:
-                default, style = '', 'display:none'
+                default = ''
+                style = 'display:none'  # type: Optional[str]
             else:
-                default, style = selected_target, None
+                default = selected_target
+                style = None
             html.dropdown("target_%s" % topic,
                           targets,
                           deflt=default,

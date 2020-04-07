@@ -1,4 +1,4 @@
-title: MS SQL: SQL Statistics values
+title: MS SQL: SQL Statistics Values
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -10,4 +10,4 @@ item:
  The MSSQL object, instance and counter names separated by spaces.
 
 inventory:
- One separate check for each counter will be created.
+ One service is created for each counter.

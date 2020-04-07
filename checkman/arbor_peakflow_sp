@@ -5,14 +5,17 @@ license: GPL
 distribution: check_mk
 description:
  Monitors memory and swap space on Arbor Peakflow SP devices.
- This is based around a percentage reported in a device specific
- mib.
+
+ {WARN}/{CRIT} levels can be configured through the rule
+ "Memory and Swap usage on Arbor devices".
+
+ The service goes {WARN}/{CRIT} if the space exceeds these levels.
+
  The device reports more detailed memory statistics in a generic
- mib handled by hr_mem but that info is not officially supported
+ MIB handled by hr_mem but that info is not officially supported
  and seems to report wrong data.
 
- Warn/Crit levels can be configured through the rule
- "Memory and Swap usage on Arbor devices"
+ This check uses the PEAKFLOW-SP-MIB.
 
 inventory:
  One service is created.

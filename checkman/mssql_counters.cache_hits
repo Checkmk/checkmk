@@ -1,4 +1,4 @@
-title: MS SQL Server: Cache Hit ratio
+title: MS SQL Server: Cache Hit Ratio
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -19,7 +19,7 @@ item:
  name) are used for the item.
 
 inventory:
- One separate check for each available cache hit counter will be created.
+ One service is created for each available cache hit counter.
  This might be dedicated to tablespaces but also MSSQL server internal parts
  like the "Buffer Manager".
 

@@ -4,9 +4,16 @@ catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
- This check monitors the health and current Status of a areca raid controller.
- The check returns a {CRIT} for Degarde and Incompleted, {WARN} in case of Rebuilding.
- Also {CRIT} is returned is an case that the number of disks in the array Changes.
+ This check monitors the health and current status of a areca raid controller.
+
+ The check goes
+
+ - {CRIT} for Degarde and Incompleted
+
+ - {CRIT} in case that the number of disks in the array changes.
+
+ - {WARN} in case of Rebuilding
+
  The cli64 has be installed for the agent plugin to work. It can be downloaded here:
  ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
 

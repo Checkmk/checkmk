@@ -114,7 +114,7 @@ def _get_scan_function_ast(name, snmp_scan_function, fallback_files):
             continue
         with open(file_name) as src_file:
             source = "%s\n%s" % (source, src_file.read())
-    assert source != ""
+    assert source != "", "Files: %r" % ((read_files, src_file_name),)
 
     tree = ast.parse(source, filename=str(read_files[0]))
 
@@ -138,7 +138,7 @@ def _get_scan_function_ast(name, snmp_scan_function, fallback_files):
         if target.value.id == "snmp_scan_functions":
             return statement.value
 
-        if target.value.id == "check_info" and isinstance(statement.value, ast.Dict):
+        if target.value.id in ("check_info", "inv_info") and isinstance(statement.value, ast.Dict):
             try:
                 idx = [k.s for k in statement.value.keys if isinstance(k, ast.Str)
                       ].index("snmp_scan_function")

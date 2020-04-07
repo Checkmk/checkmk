@@ -18,5 +18,4 @@ def test_attribute_defaults(monkeypatch, ipaddress):
 
     assert source.id() == "piggyback"
     assert source.describe().startswith("Process piggyback data from")
-    assert source._get_source_labels_section([]) == b""
     assert source._summary_result(False) == (0, "", [])

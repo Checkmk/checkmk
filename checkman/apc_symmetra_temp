@@ -6,6 +6,12 @@ distribution: check_mk
 description:
  This checks queries a APC Symmetra Web/SNMP management card for attached temperature
  sensors.
+ You can configure upper levels for {WARN}/{CRIT} (default: 25, 30).
+
+ The service goes {WARN}/{CRIT} if the temperature is higher than these levels.
+
+
+ This check uses the PowerNet-MIB.
 
 item:
  The name of the sensor as configured in your management card.

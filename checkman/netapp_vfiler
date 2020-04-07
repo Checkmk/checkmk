@@ -8,7 +8,7 @@ description:
  It alerts the user if one of them is not in status "running" (will be in critical state)
 
 inventory:
- The check creates one service per vFiler found.
+ One service is created for each vFiler.
 
 item:
  Name of the vFiler as defined on the Filer.

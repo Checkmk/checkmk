@@ -14,6 +14,8 @@ import tarfile
 import json
 from pathlib import Path  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -52,6 +54,7 @@ class DiagnosticsDump:
         # TODO use context manager for temporary folders
         self.dump_folder = dump_folder
         self.tmp_dump_folder = dump_folder.joinpath("tmp")
+        self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
 
     def _get_fixed_elements(self):
         # type: () -> List[ABCDiagnosticsElement]
@@ -83,25 +86,23 @@ class DiagnosticsDump:
         filepaths = self._get_filepaths()
 
         console.verbose("Pack temporary files:\n")
-        tarfile_filepath = self.dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
-        with tarfile.open(name=tarfile_filepath, mode='w:gz') as tar:
+        with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar:
             for filepath in filepaths:
                 console.verbose("  '%s'\n" % self._get_short_filepath(filepath))
                 tar.add(str(filepath))
 
         console.output("Created diagnostics dump:\n")
-        console.output("  '%s'\n" % self._get_short_filepath(tarfile_filepath))
+        console.output("  '%s'\n" % self._get_short_filepath(self.tarfile_path))
 
     def _get_filepaths(self):
         # type: () -> List[Path]
-        console.verbose("Collect diagnostics files.\n")
+        console.output("Collect diagnostics files:\n")
         filepaths = []
         for element in self.elements:
             filepath = element.add_or_get_file(self.tmp_dump_folder)
             if filepath is None:
-                console.verbose("  %s: No informations\n" % element.ident)
+                console.output("  %s: No informations\n" % element.ident)
                 continue
-            console.verbose("  '%s'\n" % self._get_short_filepath(filepath))
             filepaths.append(filepath)
         return filepaths
 
@@ -156,7 +157,7 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------'
 
 
-class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
+class ABCDiagnosticsElement(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -176,6 +177,8 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
 
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]
+        console.output(
+            "  General: OS, Checkmk version and edition, Time, Core, Python version and paths\n")
         filepath = tmp_dump_folder.joinpath(self.ident)
         store.save_text_to_file(filepath, json.dumps(cmk_version.get_general_version_infos()))
         return filepath

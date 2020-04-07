@@ -1,25 +1,25 @@
-title: MySQL: IO statistics of InnoDB Engine
+title: MySQL: IO Statistics of InnoDB Engine
 agents: linux
 catalog: app/mysql
 license: GPL
 distribution: check_mk
 description:
-  This check tracks the IO rate of the InnoDB database
-  engine for MySQL.
-  The data is gathered from the {show global status} query.
+ This check tracks the IO rate of the InnoDB database
+ engine for MySQL.
+ The data is gathered from the {show global status} query.
 
-  It allows you plan IO device capacity by seeing how much
-  is read and written by InnoDB, or to proactively generate alerts if
-  something is generating far too much write IO.
-  The configuration of this check is internally done as a "disk check" but
-  presented in as an application monitoring in WATO.
+ It allows you plan IO device capacity by seeing how much
+ is read and written by InnoDB, or to proactively generate alerts if
+ something is generating far too much write IO.
+ The configuration of this check is internally done as a "disk check" but
+ presented in as an application monitoring in WATO.
 
-  The check is configured like the {diskstat} check for block devices.
+ The check is configured like the {diskstat} check for block devices.
 
 item:
  The name of the instance
 
 inventory:
-  The check generates one item per instance, representing the InnoDB writers for a MySQL
-  Daemon.
+ One service is created for each instance
+ representing the InnoDB writers for a MySQL Daemon.
 

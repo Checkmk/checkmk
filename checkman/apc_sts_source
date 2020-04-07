@@ -4,8 +4,13 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This check triggers a {WARNING} if the input soource of the device changes.
- You can reset the state by doing a "tabula rasa" for the services of the device
+ This check monitors the source of STS devices.
+
+ The service goes {WARN} if the input source of the device changes.
+
+ You can reset the state by doing a "tabula rasa" for the services of the device.
+
+ This check uses the MG-SNMP-STS-MIB.
 
 inventory:
  One service is created

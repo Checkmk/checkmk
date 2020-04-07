@@ -57,6 +57,7 @@ from cmk.base.discovered_labels import (  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails,
 )
+from cmk.base.diagnostics import DiagnosticsDump
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -1786,3 +1787,24 @@ class AutomationGetRuleMismatchReason(Automation):
 
 
 automations.register(AutomationGetRuleMismatchReason())
+
+
+class AutomationCreateDiagnosticsDump(Automation):
+    cmd = "create-diagnostics-dump"
+    needs_config = False
+    needs_checks = False
+
+    def execute(self, args):
+        # type: (List[str]) -> Dict[str, Any]
+        with redirect_output(StrIO()) as buf:
+            log.setup_console_logging()
+            log.logger.setLevel(log.VERBOSE)
+            dump = DiagnosticsDump()
+            dump.create()
+            return {
+                "output": buf.getvalue(),
+                "tarfile_path": str(dump.tarfile_path),
+            }
+
+
+automations.register(AutomationCreateDiagnosticsDump())

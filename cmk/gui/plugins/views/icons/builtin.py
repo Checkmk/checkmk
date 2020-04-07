@@ -589,7 +589,7 @@ class DowntimesIcon(Icon):
 
             return icon, title, url_to_view(row, 'downtimes_of_' + what)
 
-        elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
+        if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
             title += detail_txt(row["host_downtimes_with_extra_info"])
 
@@ -624,7 +624,7 @@ class CommentsIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         comments = row[what + "_comments_with_extra_info"]
         if len(comments) > 0:
-            text = ""
+            text = u""
             for c in sorted(comments, key=lambda x: x[4]):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
@@ -664,9 +664,9 @@ class NotificationsIcon(Icon):
         modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
         if modified and enabled:
             return 'notif_enabled', _('Notifications are manually enabled for this %s') % what
-        elif modified and not enabled:
+        if modified and not enabled:
             return 'notif_man_disabled', _('Notifications are manually disabled for this %s') % what
-        elif not enabled:
+        if not enabled:
             return 'notif_disabled', _('Notifications are disabled for this %s') % what
 
 

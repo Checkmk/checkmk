@@ -12,42 +12,39 @@ Migrate RRDs metadata which are based on mountpoint names to static name 'fs_use
 - Update the metric names from a mountpoint to fs_used in info files
 - For Nagios, correspondingly rename rrd files and update journal
 - Activate a config flag that fs_used is the new metric name
+
+WARN: DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
 """
 
 from __future__ import division, absolute_import, print_function
 
-import argparse
-import re
-import sys
 import os
 import logging
-import time
-import subprocess
-from shlex import split
 import xml.etree.ElementTree as ET
 
-from pathlib import Path
-import six
+from pathlib import Path  # pylint: disable=import-error
 
-import cmk.base.autochecks
+import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
+import cmk.base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
+
+import cmk.base.rrd  # pylint: disable=cmk-module-layer-violation
 try:
-    import cmk.base.cee.rrd
+    import cmk.base.cee.rrd  # pylint: disable=cmk-module-layer-violation
 except ImportError:
-    raise RuntimeError("Can only be used with the Checkmk Enterprise Editions")
-import cmk.base.config as config
-import cmk.base.check_api as check_api
+    pass
 
 import cmk.utils
-import cmk.utils.store as store
 import cmk.utils.debug
-cmk.utils.debug.enable()
 
-config.load_all_checks(check_api.get_check_api_context)
-config.load()
+cmk.utils.debug.enable()
 
 logger = logging.getLogger("RRD INFO Metric Migration")
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
+
+config.load_all_checks(check_api.get_check_api_context)
+config.load()
 
 CHECKS_USING_DF_INCLUDE = [
     "3par_capacity", "3par_cpgs", "3par_cpgs.usage", "3par_system", "3par_volumes", "ceph_df",
@@ -65,22 +62,6 @@ CHECKS_USING_DF_INCLUDE = [
 ]
 
 
-def check_df_sources_include_flag():
-    """Verify that df.include files are can return fs_used metric name"""
-    checks_dirs = (cmk.utils.paths.local_checks_dir, Path(cmk.utils.paths.checks_dir))
-    logger.info("Looking for df.include files...")
-    for path_dir in checks_dirs:
-        df_file = path_dir / 'df.include'
-        if df_file.exists():
-            logger.info("Inspecting %s", df_file)
-            with df_file.open('r') as fid:
-                r = fid.read()
-                mat = re.search('fs_used', r, re.M)
-                if not mat:
-                    raise RuntimeError('df.include sources not yet ready to for new setup')
-            logger.info("  Include file implements new fs_used as perfvalue")
-
-
 def get_hostnames(config_cache):
     return config_cache.all_active_hosts()
 
@@ -90,7 +71,7 @@ def get_info_file(hostname, servicedesc, source):
         host_dir = cmk.base.cee.rrd.rrd_cmc_host_dir(hostname)
         servicefile = cmk.utils.pnp_cleanup(servicedesc)
         return os.path.join(host_dir, servicefile + '.info')
-    return cmk.base.cee.rrd.xml_path_for(hostname, servicedesc)
+    return cmk.base.rrd.xml_path_for(hostname, servicedesc)
 
 
 def get_metrics(filepath, source):
@@ -101,7 +82,7 @@ def get_metrics(filepath, source):
     return [x.text for x in root.findall('.//NAME')]
 
 
-def update_files(args, hostname, servicedesc, item, source):
+def update_files(hostname, servicedesc, item, source):
 
     filepath = get_info_file(hostname, servicedesc, source)
     if not os.path.exists(filepath):
@@ -111,10 +92,6 @@ def update_files(args, hostname, servicedesc, item, source):
     perfvar = cmk.utils.pnp_cleanup(item)
 
     update_condition = perfvar in metrics and 'fs_used' not in metrics
-    if args.dry_run and update_condition:
-        logger.info(filepath)
-        return True
-
     logger.info('Analyzing %s', filepath)
     if update_condition:
         if source == 'cmc':
@@ -169,97 +146,27 @@ def update_pnp_info_files(perfvar, newvar, filepath):
     - Rename matching rrdfile to use newvar
     - For all journal files, replace rrdfile with new file"""
 
-    rrdfile, rrdfilenew = cmk.base.cee.rrd.update_metric_pnp_xml_info_file(
-        perfvar, newvar, filepath)
+    rrdfile, rrdfilenew = cmk.base.rrd.update_metric_pnp_xml_info_file(perfvar, newvar, filepath)
     os.rename(rrdfile, rrdfilenew)
     logger.info("Renamed %s -> %s", rrdfile, rrdfilenew)
     update_journal(rrdfile, rrdfilenew)
 
 
-def update_service_info(config_cache, hostnames, args):
+def update_service_info(config_cache, hostnames):
     pnp_files_present = False
-    if args.dry_run:
-        logger.info("Files to be updated:")
 
     for hostname in hostnames:
         for service in config_cache.get_autochecks_of(hostname):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
                 servicedesc = config.service_description(hostname, service.check_plugin_name,
                                                          service.item)
-                update_files(args, hostname, servicedesc, service.item, 'cmc')
-                pnp_files_present |= update_files(args, hostname, servicedesc, service.item,
-                                                  'pnp4nagios')
-
-    if args.dry_run and pnp_files_present:
-        logger.info("Journal files will be updated")
-        return
-
-
-def _ask_for_confirmation_backup(args):
-    sys.stdout.write("This migration script will update the metric names of:\n"
-                     " - RRD info files (CMC) in path %s\n"
-                     " - RRD filenames (Nagios format) in path %s\n"
-                     " - RRD Journal Cache in path %s\n\n" %
-                     (Path(cmk.utils.paths.omd_root, "var/check_mk/rrd/"),
-                      Path(cmk.utils.paths.omd_root, "var/pnp4nagios/perfdata/"),
-                      Path(cmk.utils.paths.omd_root, "var/rrdcached/")))
-    if args.dry_run:
-        return True
-
-    sys.stdout.write("For an explicit List of files to be modified "
-                     "run this script with the dry run option -n\n")
-
-    while "Invalid answer":
-        reply = str(
-            six.moves.input("Do you have a Backup and want to proceed? [y/N]: ")).lower().strip()
-        if not reply or reply[0] == 'n':
-            return False
-        if reply[0] == 'y':
-            return True
-
-
-def save_new_config():
-    content = "# Written by RRD migration script (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
-    content += "df_use_fs_used_as_metric_name = True\n"
-
-    store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
-                    content)
-
-    logger.info(subprocess.check_output(split('cmk -U')))
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-n', '--dry-run', action='store_true', help='Show Files to be updated')
-    return parser.parse_args()
-
-
-def site_is_running():
-    return subprocess.call(["omd", "status"],
-                           stdout=open(os.devnull),
-                           stderr=subprocess.STDOUT,
-                           close_fds=True,
-                           shell=False) != 1
+                update_files(hostname, servicedesc, service.item, 'cmc')
+                pnp_files_present |= update_files(hostname, servicedesc, service.item, 'pnp4nagios')
 
 
 def main():
-
-    args = parse_arguments()
-
-    check_df_sources_include_flag()
-
-    if not args.dry_run and site_is_running():
-        raise RuntimeError('The site needs to be stopped to run this script')
-
-    if not _ask_for_confirmation_backup(args):
-        sys.exit(1)
-
     config_cache = config.get_config_cache()
-    update_service_info(config_cache, get_hostnames(config_cache), args)
-
-    if not args.dry_run:
-        save_new_config()
+    update_service_info(config_cache, get_hostnames(config_cache))
 
 
 if __name__ == '__main__':

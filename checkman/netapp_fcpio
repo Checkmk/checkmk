@@ -11,5 +11,5 @@ description:
  status.
 
 inventory:
- Configures one check on each filer.
+ One service is created on each filer.
 

@@ -12,5 +12,5 @@ item:
  The hostname
 
 inventory:
- All sections defined in mtr.cfg will come back in the inventory as hosts.
+ One service is created for each section defined in mtr.cfg.
 

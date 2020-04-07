@@ -9,5 +9,5 @@ description:
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
 inventory:
- Configures one check on each filer.
+ One service is created on each filer.
 

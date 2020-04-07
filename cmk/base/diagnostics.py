@@ -14,6 +14,8 @@ import tarfile
 import json
 from pathlib import Path  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -156,7 +158,7 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------'
 
 
-class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
+class ABCDiagnosticsElement(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

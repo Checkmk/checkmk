@@ -9,6 +9,9 @@
 # 1.3.6.1.4.1.9.9.392.1.3.35.0 crasSVCNumSessions
 # The number of currently active SVC sessions.
 
+# we need to keep these default levels for backwards compatibility reasons
+factory_settings["cisco_asa_svc_default_levels"] = {}
+
 check_info["cisco_asa_svcsessions"] = {
     "parse_function": parse_cisco_asa_sessions,
     "check_function": get_cisco_asa_sessions_checker("svc"),
@@ -19,4 +22,5 @@ check_info["cisco_asa_svcsessions"] = {
     "snmp_info": (".1.3.6.1.4.1.9.9.392.1.3", [35]),
     "group": "asa_svc_sessions",
     "includes": ["cisco_asa_sessions.include"],
+    "default_levels_variable": "cisco_asa_svc_default_levels",
 }

@@ -294,38 +294,13 @@ class SnapshotCreationBase(object):
             open(parsed_custom_components.components[0].configured_path, "rb").read()).hexdigest()
 
 
-class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
-    def __init__(self, work_dir, args, kwargs):
-        # type: (str, Tuple, Dict) -> None
-        multiprocessing.Process.__init__(
-            self,
-            #                                         target=self._generate_snapshot,
-            args=args,
-            kwargs=kwargs)
-        SnapshotCreationBase.__init__(self, work_dir)
-
-        self._args = args
-        self._kwargs = kwargs
-        self.daemon = True
-        self._logger = logger.getChild("SnapshotWorker(%d)" % os.getpid())
-
-    def run(self):
-        # type: () -> None
-        try:
-            super(SnapshotWorkerSubprocess, self).run()
-            self._generate_snapshot(*self._args, **self._kwargs)
-        except Exception:
-            self._logger.error("Error in subprocess")
-            self._logger.error(traceback.format_exc())
-
-
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, work_dir, all_generic_components):
         # type: (str, List[ComponentSpec]) -> None
         super(SnapshotCreator, self).__init__(work_dir)
         self._setup_directories()
         self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
-        self._worker_subprocesses = []  # type: List[SnapshotWorkerSubprocess]
+        self._worker_subprocesses = []  # type: List[multiprocessing.Process]
 
     def generate_snapshot(self,
                           target_filepath,
@@ -339,9 +314,19 @@ class SnapshotCreator(SnapshotCreationBase):
                                 reuse_identical_snapshots=False)
 
     def generate_snapshot_in_subprocess(self, *args, **kwargs):
-        new_worker = SnapshotWorkerSubprocess(self._work_dir, args, kwargs)
-        new_worker.start()
-        self._worker_subprocesses.append(new_worker)
+        def worker():
+            # type: () -> None
+            log = logger.getChild("SnapshotWorker(%d)" % os.getpid())
+            try:
+                self._generate_snapshot(*args, **kwargs)
+            except Exception:
+                log.error("Error in subprocess")
+                log.error(traceback.format_exc())
+
+        worker = multiprocessing.Process(target=worker)
+        worker.daemon = True
+        worker.start()
+        self._worker_subprocesses.append(worker)
 
     def _setup_directories(self):
         # type: () -> None

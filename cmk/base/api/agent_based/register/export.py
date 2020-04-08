@@ -101,7 +101,7 @@ def snmp_section(
     """
     # TODO (mo): unhack this CMK-3983
     if name is None or parse_function is None or detect is None or trees is None:
-        raise TypeError()
+        raise TypeError("missing argument: name, parse_function, detect or trees")
 
     forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
 

@@ -6,6 +6,7 @@
 """This module contains some helper functions dealing with the creation
 of multi-tier tar files (tar files containing tar files)"""
 
+import ast
 import errno
 import hashlib
 import os
@@ -23,6 +24,7 @@ from typing import Optional, Type, Union, Tuple, Dict, Text, List  # pylint: dis
 
 import cmk.utils.paths
 import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.store as store
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -670,17 +672,24 @@ def extract(tar, components):
             else:
                 target_dir = os.path.dirname(path)
 
+            # Extract without use of temporary files
+            subtar = tarfile.open(fileobj=subtarstream)
+
             # Remove old stuff
             if os.path.exists(path):
-                if what == "dir":
+                if name == "usersettings":
+                    _update_usersettings(path, subtar)
+                    continue
+                if name == "check_mk":
+                    _update_check_mk(target_dir, subtar)
+                    continue
+                elif what == "dir":
                     wipe_directory(path)
                 else:
                     os.remove(path)
             elif what == "dir":
                 os.makedirs(path)
 
-            # Extract without use of temporary files
-            subtar = tarfile.open(fileobj=subtarstream)
             subtar.extractall(target_dir)
         except Exception:
             raise MKGeneralException('Failed to extract subtar %s: %s' %
@@ -724,13 +733,111 @@ def cleanup_dir(root_path, exclude_files=None):
 def wipe_directory(path):
     # type: (str) -> None
     for entry in os.listdir(path):
-        if entry not in ['.', '..']:
-            p = path + "/" + entry
-            if os.path.isdir(p):
-                shutil.rmtree(p, ignore_errors=True)
-            else:
-                try:
-                    os.remove(p)
-                except OSError as e:
-                    if e.errno != errno.ENOENT:
-                        raise
+        p = path + "/" + entry
+        if os.path.isdir(p):
+            shutil.rmtree(p, ignore_errors=True)
+        else:
+            try:
+                os.remove(p)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+
+
+def _get_local_users(tar_file):
+    """The tar_file should contain var/check_mk/web/
+
+From there on inspect every user's cached_profile.mk to recognize if they are a users
+belonging to a certain customer in the CME."""
+    return {
+        os.path.normpath(os.path.dirname(entry)):
+        ast.literal_eval(tar_file.extractfile(entry).read()).get('customer', None)
+        for entry in tar_file.getnames()
+        if os.path.basename(entry) == "cached_profile.mk"
+    }
+
+
+def _update_usersettings(path, tar_file):
+    """Recursively traverse the usersettings dir and update files
+
+    User can be split in two tiers.
+
+    Customer-Users belong to a customer when working on the CME. They only
+    work on the GUI of their corresponding remote site. They are allowed to
+    customize their bookmarks, views, dashboards, reports, etc. These user
+    local configurations are retained when receiving files from master as
+    changes are activated.
+
+        This meas all "user_*" files are retained during sync.
+
+    Non-customer-users (e.g. GLOBAL users) normally work on the central
+    site and thus they should be able to use their customizations when they
+    log into remote sites. Thus all files are synced in their case.
+
+
+    No backup of the remote site dir happens during sync, data is removed,
+    added, skipped in place to avoid collisions."""
+    def is_user_file(filepath):
+        entry = os.path.basename(filepath)
+        return entry.startswith('user_') or entry in [
+            'tableoptions.mk', 'treestates.mk', 'sidebar.mk'
+        ]
+
+    user_p = _get_local_users(tar_file)
+    user = os.path.basename(path)
+
+    for entry in os.listdir(path):
+        p = path + "/" + entry
+        if os.path.isdir(p):
+            _update_usersettings(p, tar_file)
+        elif (user_p.get(user, False) and is_user_file(entry)):
+            continue
+        else:
+            os.remove(p)
+
+    # This verifies the function is at a user level path to extract tar_file
+    if user in user_p:
+        members = (m for m in tar_file.getmembers() if m.name.startswith('./' + user + '/'))
+        if user_p[user] is not None:
+            members = (m for m in members if not is_user_file(m.name))
+
+        tar_file.extractall(os.path.dirname(path), members=members)
+
+
+def _update_check_mk(path, tar_file):
+    "extract check_mk/conf.d/wato folder but skip overwriting user notification_rules"
+
+    members = [m for m in tar_file.getmembers() if m.name != "./contacts.mk"]
+    for entry in members:
+        filepath = os.path.join(path, entry.name)
+        if os.path.isfile(filepath):
+            os.remove(filepath)
+
+    tar_file.extractall(path, members=members)
+
+    master_vars = {"contacts": {}}
+    eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
+
+    site_vars = {"contacts": {}}
+    with open(os.path.join(path, "contacts.mk")) as f:
+        eval(f.read(), {}, site_vars)
+
+    site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])
+
+    store.save_to_mk_file(os.path.join(path, "contacts.mk"), "contacts", site_contacts)
+
+
+def _update_contacts_dict(master, site):
+    # type: (Dict, Dict) -> Dict
+
+    site_contacts = {}
+
+    for user_id, settings in master.items():
+        user_notifications = site.get(user_id, {}).get("notification_rules")
+
+        if user_notifications and settings.get("customer") is not None:
+            settings["notification_rules"] = user_notifications
+
+        site_contacts.update({user_id: settings})
+
+    return site_contacts

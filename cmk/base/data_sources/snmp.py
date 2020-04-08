@@ -287,7 +287,8 @@ class SNMPDataSource(ABCSNMPDataSource):
 
         return info
 
-    def _sort_check_plugin_names(self, check_plugin_names):
+    @staticmethod
+    def _sort_check_plugin_names(check_plugin_names):
         # type: (Set[CheckPluginName]) -> List[CheckPluginName]
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.

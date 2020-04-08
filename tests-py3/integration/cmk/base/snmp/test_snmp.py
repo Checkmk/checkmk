@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # SNMP device and back.
 
 
-# Found no other way to archieve this
+# Found no other way to achieve this
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):

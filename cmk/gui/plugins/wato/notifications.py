@@ -67,7 +67,7 @@ def transform_forth_html_mail_url_prefix(p):
 
 
 def local_site_url():
-    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
+    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/"
 
 
 def _vs_add_common_mail_elements(elements):
@@ -936,7 +936,7 @@ class NotificationParameterSpectrum(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=None,
+            optional_keys=False,
             elements=[
                 ("destination",
                  IPv4Address(title=_("Destination IP"),

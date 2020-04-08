@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
@@ -87,12 +89,12 @@ rulespec_registry.register(
 def _valuespec_special_agents_ddn_s2a():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", Password(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8008)),
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", Password(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8008)),
         ],
         optional_keys=["port"],
-        title=_(u"DDN S2A"),
+        title=_("DDN S2A"),
     )
 
 
@@ -107,12 +109,12 @@ rulespec_registry.register(
 def _valuespec_special_agents_proxmox():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8006)),
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8006)),
         ],
         optional_keys=["port"],
-        title=_(u"Proxmox"),
+        title=_("Proxmox"),
     )
 
 
@@ -169,7 +171,7 @@ def _valuespec_special_agents_kubernetes():
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
                 ("port",
-                 Integer(title=_(u"Port"),
+                 Integer(title=_("Port"),
                          help=_("If no port is given a default value of 443 will be used."),
                          default_value=443)),
                 ("url-prefix",
@@ -189,7 +191,7 @@ def _valuespec_special_agents_kubernetes():
                      allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
-            title=_(u"Kubernetes"),
+            title=_("Kubernetes"),
             help=_(
                 "This rule selects the Kubenetes special agent for an existing Checkmk host. "
                 "If you want to monitor multiple Kubernetes clusters "
@@ -438,8 +440,7 @@ def _validate_prometheus_service_metrics(value, _varprefix):
         metric_name = metric_details["metric_name"]
         if metric_name in used_metric_names:
             raise MKUserError(metric_name, "Each metric name must be unique for a service")
-        else:
-            used_metric_names.append(metric_name)
+        used_metric_names.append(metric_name)
 
 
 rulespec_registry.register((HostRulespec(
@@ -1138,7 +1139,7 @@ def _valuespec_special_agents_hivemanager_ng():
                 allow_empty=False,
             )),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 
@@ -1220,7 +1221,7 @@ rulespec_registry.register(
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
-    valuetypes = {}
+    valuetypes = {}  # type: Dict[Any, Any]
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:

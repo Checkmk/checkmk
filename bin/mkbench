@@ -8,6 +8,8 @@ from __future__ import division
 __version__ = "1.7.0i1"
 
 # TODO:
+# - Do not create half-initialized objects, poisoning all use sites with dynamic
+#   checks against None.
 # - Create a more detailed report out of the test results. For example
 #   graph the different values together with the timeline of the different
 #   test cases.
@@ -51,6 +53,7 @@ import threading
 import traceback
 import collections
 import multiprocessing
+from typing import List  # pylint: disable=unused-import
 import six
 
 import psutil  # type: ignore[import]
@@ -83,7 +86,10 @@ import cmk.utils.cmk_subprocess as subprocess
 def set_cmdline(cmdline):
     import ctypes
     import ctypes.util
-    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
+    libc_path = ctypes.util.find_library('c')
+    if libc_path is None:
+        raise MKGeneralException("Huh? libc not found???")
+    libc = ctypes.cdll.LoadLibrary(libc_path)
 
     argv = ctypes.POINTER(ctypes.c_char_p)()
     argc = ctypes.c_int()
@@ -191,7 +197,7 @@ def ip_int_from_string(ip_str):
 
 
 def string_from_ip_int(ip_int):
-    octets = []
+    octets = []  # type: List[str]
     for _ in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -353,12 +359,9 @@ class Test(object):
             self.add_measurement(m)
 
     def _get_test_id(self):
-        parts = [
-            self.system_info.omd_version,
-            self.system_info.core,
-            "%d" % time.time(),
-        ]
-        return "_".join(parts)
+        omd_version = "unknownVersion" if self.system_info.omd_version is None else self.system_info.omd_version
+        core = "unknownCore" if self.system_info.core is None else self.system_info.core
+        return "_".join([omd_version, core, "%d" % time.time()])
 
     def set_state(self, state, result=None, result_msg=None):
         self.state = state
@@ -1303,7 +1306,7 @@ processes %(kernel_processes)d
 procs_running 1
 procs_blocked 0
 softirq 3526225 0 845354 2 177933 55525 0 6372 577174 0 1863865
-""" % counters
+""" % counters  # noqa: E501
 
         return section + cpu_output
 
@@ -2399,7 +2402,7 @@ thermal_zone1 - BAT0 35000
 [[[/var/log/kern.log]]]
 [[[/var/log/auth.log]]]
 [[[/var/log/syslog]]]
-"""
+"""  # noqa: E101,W191
 
 #.
 #   .--Test Cases----------------------------------------------------------.
@@ -2415,7 +2418,7 @@ thermal_zone1 - BAT0 35000
 
 
 class TestCase(object):
-    STATE_INITIALIZING = "initializing"
+    STATE_INITIALIZING = "initializing"  # noqa: E101
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
 
@@ -2842,7 +2845,7 @@ class TestAgentBasedStandardHosts(TestCase):
     # to tell us the state of the helpers, we need to detect this somehow.
     # -> Find all helper processes and check the open file descriptors.
     def _wait_for_cmk_helpers_ready(self):
-        num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]
+        num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]  # noqa: F841
         while num_not_ready is None or num_not_ready > 0:
             if self._runner.shall_stop():
                 break

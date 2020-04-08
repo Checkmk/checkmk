@@ -14,6 +14,7 @@ from html import escape as html_escape  # type: ignore[import]
 from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
+import six
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
@@ -295,7 +296,7 @@ def post_request(message_constructor, success_code=200):
     try:
         r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
     except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
+        sys.stderr.write(six.ensure_str("Cannot connect to proxy: %s\n" % proxy_url))
         sys.exit(2)
 
     if r.status_code == success_code:

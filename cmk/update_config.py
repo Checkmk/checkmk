@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,27 +10,15 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.",
 """
 
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-)
-
 import re
 import os
-import sys
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
-
+from pathlib import Path
 import subprocess
 import errno
 from typing import List  # pylint: disable=unused-import
 import argparse
 import logging
+
 from werkzeug.test import create_environ
 
 # This special script needs persistence and conversion code from different
@@ -57,13 +45,13 @@ from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Better make our application available?
-class DummyApplication(object):
+class DummyApplication:
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response
 
 
-class UpdateConfig(object):
+class UpdateConfig:
     def __init__(self, logger, arguments):
         # type: (logging.Logger, argparse.Namespace) -> None
         super(UpdateConfig, self).__init__()
@@ -127,6 +115,8 @@ class UpdateConfig(object):
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
+        if ps.stderr is None or ps.stdout is None:
+            raise Exception("Huh? Missing stderr/stdout.")
         for line in iter(ps.stderr.readline, b''):
             self._logger.log(VERBOSE, line.strip())
         self._logger.log(VERBOSE, ps.stdout.read())

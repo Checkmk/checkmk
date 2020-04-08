@@ -64,8 +64,8 @@ def parse_rabbitmq_vhosts(info):
                     "message_publish_rate": vhost.get("message_stats", {}).get(
                         "publish_details", {}).get("rate"),
                     "message_deliver": vhost.get("message_stats", {}).get("deliver_get"),
-                    "message_deliver_rate": vhost.get("message_stats", {}).get("deliver_get",
-                                                                               {}).get("rate"),
+                    "message_deliver_rate": vhost.get("message_stats", {}).get(
+                        "deliver_get_details", {}).get("rate"),
                 })
 
     return parsed

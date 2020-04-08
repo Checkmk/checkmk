@@ -338,7 +338,6 @@ class SnapshotCreator(SnapshotCreationBase):
                                 custom_components,
                                 reuse_identical_snapshots=False)
 
-    # TODO: Dead code?
     def generate_snapshot_in_subprocess(self, *args, **kwargs):
         new_worker = SnapshotWorkerSubprocess(self._work_dir, args, kwargs)
         new_worker.start()

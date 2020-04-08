@@ -263,7 +263,7 @@ class NodeExporter:
 class CAdvisorExporter:
     def __init__(self, api_client, options):
         self.api_client = api_client
-        self.container_name_option = options["container_id"]
+        self.container_name_option = options.get("container_id", "short")
         self.pod_containers = {}
         self.container_ids = {}
 
@@ -277,9 +277,13 @@ class CAdvisorExporter:
             result.setdefault(labels["pod"], []).append(labels["name"])
 
             id_long = labels["id"].split("/")[-1]
-            container_ids[labels["name"]] = {"short": id_long[0:12], "long": id_long}
-        self.container_ids.update(container_ids)
+            container_ids[labels["name"]] = {
+                "short": id_long[0:12],
+                "long": id_long,
+                "name": labels["name"]
+            }
         self.pod_containers.update(result)
+        self.container_ids.update(container_ids)
 
     def diskstat_summary(self, group_element):
         # type: (str) -> List[Dict[str, Dict[str, Any]]]
@@ -435,8 +439,10 @@ class KubeStateExporter:
                     cluster_info["value"])
                 result.setdefault(self.cluster_name,
                                   {}).setdefault(resource_family, {})[resource_type] = cluster_value
+
         # Adding the limits seperately
-        result[self.cluster_name].update(self._cluster_limits())
+        if self.cluster_name in result:
+            result[self.cluster_name].update(self._cluster_limits())
         return [result]
 
     def _cluster_limits(self):
@@ -1098,6 +1104,7 @@ class PrometheusAPI:
             for metric in service["metric_components"]:
                 metric_info = {
                     "name": metric["metric_name"],
+                    "label": metric["metric_label"],
                     "promql_query": metric["promql_query"]
                 }
                 try:
@@ -1328,7 +1335,9 @@ class ApiData:
         return '\n'.join(e.output())
 
     def cadvisor_section(self, cadvisor_options):
-        # type: (Dict[str, List[str]]) -> Iterator[str]
+        # type: (Dict[str, Any]) -> Iterator[str]
+
+        grouping_option = {"both": ["container", "pod"], "container": ["container"], "pod": ["pod"]}
 
         self.cadvisor_exporter.update_pod_containers()
 
@@ -1341,27 +1350,30 @@ class ApiData:
             "memory_container": self.cadvisor_exporter.memory_container_summary,
         }
 
+        cadvisor_grouping = cadvisor_options["grouping_option"]
+        entities = cadvisor_options["entities"]
+
         if "diskio" in cadvisor_options:
             yield from self._output_cadvisor_summary("cadvisor_diskstat",
                                                      cadvisor_summaries["diskio"],
-                                                     cadvisor_options["diskio"])
+                                                     grouping_option[cadvisor_grouping])
 
-        if "cpu" in cadvisor_options:
+        if "cpu" in entities:
             yield from self._output_cadvisor_summary("cadvisor_cpu", cadvisor_summaries["cpu"],
-                                                     cadvisor_options["cpu"])
-        if "df" in cadvisor_options:
+                                                     grouping_option[cadvisor_grouping])
+        if "df" in entities:
             yield from self._output_cadvisor_summary("cadvisor_df", cadvisor_summaries["df"],
-                                                     cadvisor_options["df"])
-        if "if" in cadvisor_options:
+                                                     grouping_option[cadvisor_grouping])
+        if "if" in entities:
             yield from self._output_cadvisor_summary("cadvisor_if", cadvisor_summaries["if"],
-                                                     cadvisor_options["if"])
+                                                     grouping_option[cadvisor_grouping])
 
-        if "memory" in cadvisor_options:
-            if "pod" in cadvisor_options["memory"]:
+        if "memory" in entities:
+            if "pod" in grouping_option[cadvisor_grouping]:
                 yield from self._output_cadvisor_summary("cadvisor_memory",
                                                          cadvisor_summaries["memory_pod"], ["pod"])
 
-            if "container" in cadvisor_options["memory"]:
+            if "container" in grouping_option[cadvisor_grouping]:
                 yield from self._output_cadvisor_summary("cadvisor_memory",
                                                          cadvisor_summaries["memory_container"],
                                                          ["container"])
@@ -1372,12 +1384,15 @@ class ApiData:
         # type: (str, Callable, List[str]) -> Iterator[str]
 
         for group_option in summary_group_options:
-            e = PiggybackGroup()
+            group = PiggybackGroup()
             promql_result = retrieve_cadvisor_summary(group_option)
             piggyback_prefix = "pod_" if group_option == "pod" else ""
             for diskio_element in promql_result:
-                e.join(cadvisor_service_name, diskio_element)
-            yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
+                if diskio_element:
+                    group.join(cadvisor_service_name, diskio_element)
+            result = group.output(piggyback_prefix=piggyback_prefix)
+            if result:
+                yield '\n'.join(group.output(piggyback_prefix=piggyback_prefix))
 
     def kube_state_section(self, kube_state_options):
         # type: (Dict[str, List[str]]) -> Iterator[str]
@@ -1412,6 +1427,7 @@ class ApiData:
                 "service_name": "k8s_namespaces",
                 "summary": kube_state_summaries["storage_classes"]
             }
+
             yield from self._output_kube_state_summary(
                 [cluster_resources, namespaces, storage_classes])
 
@@ -1469,45 +1485,68 @@ class ApiData:
     @staticmethod
     def _output_kube_state_summary(kube_state_services, piggyback_prefix=""):
         # type: (List[Dict[str, Any]], str) -> Iterator[str]
-        e = PiggybackGroup()
+        group = PiggybackGroup()
         for kube_state_service_info in kube_state_services:
             promql_result = kube_state_service_info["summary"]()
             for element in promql_result:
-                e.join(kube_state_service_info["service_name"], element)
-        yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
+                group.join(kube_state_service_info["service_name"], element)
+        yield '\n'.join(group.output(piggyback_prefix=piggyback_prefix))
 
     def node_exporter_section(self, node_options):
         # type: (Dict[str, List[str]]) -> Iterator[str]
 
         if "df" in node_options:
-            df_section = [
-                "<<<df>>>", '\n'.join(self.node_exporter.df_summary()), "<<<df>>>",
-                "[df_inodes_start]", '\n'.join(self.node_exporter.df_inodes_summary()),
-                "[df_inodes_end]\n"
-            ]
-            yield "\n".join(df_section)
+            df_result = self.node_exporter.df_summary()
+            df_inodes_result = self.node_exporter.df_inodes_summary()
+
+            if df_result and df_inodes_result:
+                df_section = [
+                    "<<<df>>>", '\n'.join(df_result), "<<<df>>>", "[df_inodes_start]",
+                    '\n'.join(df_inodes_result), "[df_inodes_end]\n"
+                ]
+                yield "\n".join(df_section)
 
         if "diskstat" in node_options:
-            df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary()), "\n"]
-            yield "\n".join(df_section)
+            diskstat_result = self.node_exporter.diskstat_summary()
+            if diskstat_result:
+                df_section = ["<<<diskstat>>>", '\n'.join(diskstat_result), "\n"]
+                yield "\n".join(df_section)
 
         if "mem" in node_options:
-            mem_section = ["<<<mem>>>", '\n'.join(self.node_exporter.memory_summary()), "\n"]
-            yield "\n".join(mem_section)
+            mem_result = self.node_exporter.memory_summary()
+            if mem_result:
+                mem_section = ["<<<mem>>>", '\n'.join(mem_result), "\n"]
+                yield "\n".join(mem_section)
 
         if "kernel" in node_options:
-            kernel_section = ["<<<kernel>>>", '\n'.join(self.node_exporter.kernel_summary()), "\n"]
-            yield "\n".join(kernel_section)
+            kernel_result = self.node_exporter.kernel_summary()
+            if kernel_result:
+                kernel_section = ["<<<kernel>>>", '\n'.join(kernel_result), "\n"]
+                yield "\n".join(kernel_section)
 
 
 def _extract_config_args(config):
     server_address = config["host_address"]
     if "port" in config:
         server_address += ":%s" % config["port"]
+
+    exporter_options = {}
+    for exporter in config["exporter"]:
+        exporter_name, exporter_info = exporter
+        if exporter_name == "cadvisor":
+
+            exporter_options[exporter_name] = {
+                "grouping_option": exporter_info["entity_level"][0],
+                "container_id": exporter_info["entity_level"][1].get("container_id", "short"),
+                "entities": exporter_info["entities"]
+            }
+        else:
+            exporter_options[exporter_name] = exporter_info
+
     return {
         "server_address": server_address,
         "custom_services": config.get("promql_checks", []),
-        "exporter_options": config.get("exporter", {})
+        "exporter_options": exporter_options
     }
 
 

@@ -32,20 +32,6 @@ omd_apache_patterns = [
 ]
 
 
-# Parses the agent data to a dictionary, using the site name as keys
-#  which holds
-def parse_omd_apache(info):
-    parsed = {}
-    site = None
-    for line in info:
-        if line[0][0] == '[':
-            site = line[0][1:-1]
-            parsed[site] = []
-        elif site:
-            parsed[site].append(line)
-    return parsed
-
-
 def inventory_omd_apache(parsed):
     return [(k, None) for k in parsed]
 
@@ -109,10 +95,10 @@ def check_omd_apache(item, _no_params, parsed):
         yield 0, '%s %s' % (total, title)
 
 
+# This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!
 check_info['omd_apache'] = {
-    'parse_function': parse_omd_apache,
-    'check_function': check_omd_apache,
     'inventory_function': inventory_omd_apache,
+    'check_function': check_omd_apache,
     'service_description': 'OMD %s apache',
     'has_perfdata': True,
 }

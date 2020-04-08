@@ -1,0 +1,17 @@
+title: Checkpoint VSID: Traffic
+agents: snmp
+catalog: hw/network/checkpoint
+license: GPL
+distribution: check_mk
+
+description:
+ This check monitors byte rates of Checkpoint virtual system IDs.
+ The output gives information about the total number of accepted, dropped and
+ rejected bytes.
+
+item:
+ Number of VSID.
+
+inventory:
+ One service {Checkpoint VSID VSID-NR Traffic} is created for each VSID.
+

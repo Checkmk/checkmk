@@ -1424,6 +1424,48 @@ metric_info['channels'] = {
     "color": "11/a",
 }
 
+metric_info['bytes_accepted'] = {
+    "title": _("Bytes accepted"),
+    "unit": "bytes/s",
+    "color": "21/a",
+}
+
+metric_info['bytes_dropped'] = {
+    "title": _("Bytes dropped"),
+    "unit": "bytes/s",
+    "color": "32/a",
+}
+
+metric_info['bytes_rejected'] = {
+    "title": _("Bytes rejected"),
+    "unit": "bytes/s",
+    "color": "42/a",
+}
+
+metric_info['packets'] = {
+    "title": _("Total number of packets"),
+    "unit": "1/s",
+    "color": "11/a",
+}
+
+metric_info['packets_accepted'] = {
+    "title": _("Packets accepted"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+
+metric_info['packets_dropped'] = {
+    "title": _("Packets dropped"),
+    "unit": "1/s",
+    "color": "32/a",
+}
+
+metric_info['packets_rejected'] = {
+    "title": _("Packets rejected"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

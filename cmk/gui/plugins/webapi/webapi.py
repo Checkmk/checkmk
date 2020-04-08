@@ -875,10 +875,16 @@ class APICallHosttags(APICallCollection):
                     if isinstance(tag_spec, dict):
                         if "$ne" in tag_spec:
                             used_tags.add((tag_group_id, tag_spec["$ne"]))
-                            continue
-                        raise NotImplementedError()
-
-                    used_tags.add((tag_group_id, tag_spec))
+                        else:
+                            for _oper in ('$or', '$nor'):
+                                if _oper in tag_spec:
+                                    for _tag in tag_spec[_oper]:
+                                        used_tags.add((tag_group_id, _tag))
+                                    break
+                            else:
+                                raise NotImplementedError()
+                    else:
+                        used_tags.add((tag_group_id, tag_spec))
 
         return used_tags
 

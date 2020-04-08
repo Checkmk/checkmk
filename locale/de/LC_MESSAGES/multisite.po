@@ -947,8 +947,8 @@ msgstr ""
 "<b>Ungültige Regelverwendung</b>Die Regel '%s' benötigt %d Argumente: <tt>%s</"
 "tt>. Sie haben %d Argumente definiert: <tt>%s</tt>"
 
-msgid "<b>N</b> * 100% as each core contributes with 100% at full load"
-msgstr "<b>N</b> * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
+msgid "N * 100% as each core contributes with 100% at full load"
+msgstr "N * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""

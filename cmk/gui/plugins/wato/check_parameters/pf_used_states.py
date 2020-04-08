@@ -32,7 +32,7 @@ def _parameter_valuespec_pf_used_states():
                 ),
             ),
         ],
-        optional_keys=[None],
+        optional_keys=[],
     )
 
 

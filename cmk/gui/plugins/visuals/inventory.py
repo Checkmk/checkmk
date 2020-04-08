@@ -200,6 +200,8 @@ class FilterInvtableOperStatus(six.with_metaclass(abc.ABCMeta, Filter)):
         # type: () -> None
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
+            if not isinstance(state, int):  # needed because of silly types
+                continue
             if state >= 8:
                 continue  # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.ident + "_" + str(state)

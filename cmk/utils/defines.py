@@ -129,8 +129,10 @@ def interface_oper_state_name(state_num, deflt=u""):
     return interface_oper_states().get(state_num, deflt)
 
 
+# TODO: Slightly funny return type to match ListChoiceChoices. We should
+# perhaps move the function to cmk.gui, so we can use the real type.
 def interface_oper_states():
-    # type: () -> Dict[int, Text]
+    # type: () -> Dict[Union[Text, str, int], Text]
     return {
         1: _("up"),
         2: _("down"),

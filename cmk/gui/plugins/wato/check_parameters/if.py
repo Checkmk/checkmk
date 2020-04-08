@@ -7,25 +7,10 @@
 from typing import Any, List, Tuple as _Tuple, Union  # pylint: disable=unused-import
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
-    defines,
-    Dictionary,
-    DropdownChoice,
-    DualListChoice,
-    Integer,
-    ListChoice,
-    ListOf,
-    ListOfStrings,
-    MonitoringState,
-    Optional,
-    OptionalDropdownChoice,
-    Percentage,
-    RegExp,
-    TextAscii,
-    Transform,
-    Tuple,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Alternative, CascadingDropdown, Dictionary, DictionaryEntry, DropdownChoice, DualListChoice,
+    Integer, ListChoice, ListOf, ListOfStrings, MonitoringState, Optional, OptionalDropdownChoice,
+    Percentage, RegExp, TextAscii, Transform, Tuple, defines,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -235,7 +220,7 @@ vs_elements_if_groups_matches = [
          title=_("Restrict interface items"),
          help=_("Only interface with these item names are put into this group."),
      )),
-]
+]  # type: List[DictionaryEntry]
 
 vs_elements_if_groups_group = [
     ("group_name",
@@ -260,6 +245,8 @@ vs_elements_if_groups_group = [
 
 
 def _valuespec_if_groups():
+    node_name_elements = [("node_name", TextAscii(title=_("Node name")))
+                         ]  # type: List[DictionaryEntry]
     return Transform(Alternative(
         title=_('Network interface groups'),
         help=
@@ -286,9 +273,8 @@ def _valuespec_if_groups():
                                           ListOf(
                                               title=_("Patterns for each node"),
                                               add_label=_("Add pattern"),
-                                              valuespec=Dictionary(elements=[
-                                                  ("node_name", TextAscii(title=_("Node name")))
-                                              ] + vs_elements_if_groups_matches,
+                                              valuespec=Dictionary(elements=node_name_elements +
+                                                                   vs_elements_if_groups_matches,
                                                                    required_keys=["node_name"]),
                                               allow_empty=False,
                                           ))],

@@ -24,13 +24,12 @@ from cmk.gui.plugins.wato import (
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
-from cmk.gui.htmllib import HTML
 
 
 def process_level_elements():
     cpu_rescale_max_choices = [
         (True, _("100% is all cores at full load")),
-        (False, HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
+        (False, _("N * 100% as each core contributes with 100% at full load")),
     ]  # type: DropdownChoices
     return [
         ("cpu_rescale_max",

@@ -358,38 +358,38 @@ def _handle_output(params, value, total, info_text, perf_key):
     else:
         warn, crit = levels[1]
 
-    label_total = "available"
     perc_value = 100.0 * value / total
-
-    infotext = "%s: %s" % (
-        info_text,
-        get_percent_human_readable(perc_value),
-    )
 
     if isinstance(warn, float):
         value_check = perc_value
+        warn_abs = int((warn / 100.0) * total)
+        crit_abs = int((crit / 100.0) * total)
         level_msg = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
                                                get_percent_human_readable(crit))
     else:
         value_check = value
+        warn_abs = warn
+        crit_abs = crit
         level_msg = " (warn/crit at %s/%s)" % (warn, crit)
 
-    state, _info, perf = check_levels(
+    state, _info, _perf = check_levels(
         value_check,
-        perf_key,
+        None,
         (warn, crit),
     )
 
-    infotext += " - %s of %s%s" % (
+    infotext = "%s: %s of %s, %s" % (
+        info_text,
         value,
         total,
-        (" %s" % label_total).rstrip(),
+        get_percent_human_readable(perc_value),
     )
 
-    if state != 0:
+    if state:
         infotext += level_msg
 
-    return state, infotext, perf
+    # construct perfdata for absolut values even perc levels are set
+    return state, infotext, [(perf_key, value, warn_abs, crit_abs, 0, total)]
 
 
 check_info["rabbitmq_nodes.gc"] = {

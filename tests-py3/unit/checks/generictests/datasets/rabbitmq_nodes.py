@@ -40,9 +40,9 @@ checks = {
         (
             'rabbit@my-rabbit', {}, [
                 (
-                    0,
-                    'File descriptors used: 0.003% - 34 of 1048576 available',
-                    [('open_file_descriptors', 34, None, None, None, None)]
+                    0, 'File descriptors used: 34 of 1048576, 0.003%', [
+                        ('open_file_descriptors', 34, None, None, 0, 1048576)
+                    ]
                 ),
                 (
                     0, 'File descriptor open attempts: 11', [
@@ -59,8 +59,8 @@ checks = {
         (
             'rabbit@my-rabbit', {}, [
                 (
-                    0, 'Sockets used: 0% - 0 of 943629 available', [
-                        ('sockets', 0, None, None, None, None)
+                    0, 'Sockets used: 0 of 943629, 0%', [
+                        ('sockets', 0, None, None, 0, 943629)
                     ]
                 )
             ]
@@ -70,9 +70,9 @@ checks = {
         (
             'rabbit@my-rabbit', {}, [
                 (
-                    0,
-                    'Erlang processes used: 0.04% - 431 of 1048576 available',
-                    [('processes', 431, None, None, None, None)]
+                    0, 'Erlang processes used: 431 of 1048576, 0.04%', [
+                        ('processes', 431, None, None, 0, 1048576)
+                    ]
                 )
             ]
         )

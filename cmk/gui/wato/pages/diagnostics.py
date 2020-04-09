@@ -161,4 +161,5 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         #job_interface.send_result_message(
         #    _("Diagnostics dump file: %s %s") % (tarfile_path, button))
-        job_interface.send_result_message(_("Diagnostics dump file: %s") % tarfile_path)
+        job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
+        job_interface.send_result_message(_("Creating dump file successfully"))

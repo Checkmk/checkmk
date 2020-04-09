@@ -7,7 +7,7 @@
 import errno
 import abc
 from typing import (  # pylint: disable=unused-import
-    List, Optional,
+    List, Optional, Text,
 )
 import uuid
 import tarfile
@@ -27,7 +27,15 @@ SUFFIX = ".tar.gz"
 
 def create_diagnostics_dump():
     # type: () -> None
-    DiagnosticsDump().create()
+    dump = DiagnosticsDump()
+    dump.create()
+    console.output("Created diagnostics dump:\n")
+    console.output("  '%s'\n" % _get_short_filepath(dump.tarfile_path))
+
+
+def _get_short_filepath(filepath):
+    # type: (Path) -> Path
+    return filepath.relative_to(cmk.utils.paths.omd_root)
 
 
 #   .--dump----------------------------------------------------------------.
@@ -77,9 +85,9 @@ class DiagnosticsDump:
         # type: () -> None
         console.verbose("Create dump folders:\n")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
-        console.verbose("  '%s'\n" % self._get_short_filepath(self.dump_folder))
+        console.verbose("  '%s'\n" % _get_short_filepath(self.dump_folder))
         self.tmp_dump_folder.mkdir(parents=True, exist_ok=True)
-        console.verbose("  '%s'\n" % self._get_short_filepath(self.tmp_dump_folder))
+        console.verbose("  '%s'\n" % _get_short_filepath(self.tmp_dump_folder))
 
     def _create_tarfile(self):
         # type: () -> None
@@ -88,21 +96,19 @@ class DiagnosticsDump:
         console.verbose("Pack temporary files:\n")
         with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar:
             for filepath in filepaths:
-                console.verbose("  '%s'\n" % self._get_short_filepath(filepath))
+                console.verbose("  '%s'\n" % _get_short_filepath(filepath))
                 tar.add(str(filepath))
-
-        console.output("Created diagnostics dump:\n")
-        console.output("  '%s'\n" % self._get_short_filepath(self.tarfile_path))
 
     def _get_filepaths(self):
         # type: () -> List[Path]
-        console.output("Collect diagnostics files:\n")
+        console.output("Collect diagnostics information:\n")
         filepaths = []
         for element in self.elements:
             filepath = element.add_or_get_file(self.tmp_dump_folder)
             if filepath is None:
-                console.output("  %s: No informations\n" % element.ident)
+                console.verbose("  %s: No informations\n" % element.ident)
                 continue
+            console.output("  %s\n" % element.description)
             filepaths.append(filepath)
         return filepaths
 
@@ -110,11 +116,11 @@ class DiagnosticsDump:
         # type: () -> None
         console.verbose("Remove temporary files:\n")
         for filepath in self.tmp_dump_folder.iterdir():
-            console.verbose("  '%s'\n" % self._get_short_filepath(filepath))
+            console.verbose("  '%s'\n" % _get_short_filepath(filepath))
             self._remove_file(filepath)
 
         console.verbose("Remove temporary dump folder:\n")
-        console.verbose("  '%s'\n" % self._get_short_filepath(self.tmp_dump_folder))
+        console.verbose("  '%s'\n" % _get_short_filepath(self.tmp_dump_folder))
         try:
             self.tmp_dump_folder.rmdir()
         except OSError as e:
@@ -130,7 +136,7 @@ class DiagnosticsDump:
         console.verbose("Cleanup dump folder (remove old dumps, keep the last %s dumps):\n" %
                         self._keep_num_dumps)
         for _mtime, filepath in dumps:
-            console.verbose("  '%s'\n" % self._get_short_filepath(filepath))
+            console.verbose("  '%s'\n" % _get_short_filepath(filepath))
             self._remove_file(filepath)
 
     def _remove_file(self, filepath):
@@ -140,10 +146,6 @@ class DiagnosticsDump:
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
-
-    def _get_short_filepath(self, filepath):
-        # type: (Path) -> Path
-        return filepath.relative_to(cmk.utils.paths.omd_root)
 
 
 #.
@@ -163,6 +165,11 @@ class ABCDiagnosticsElement(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> str
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def description(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]
@@ -175,10 +182,13 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
         # type: () -> str
         return "general"
 
+    @property
+    def description(self):
+        # type: () -> Text
+        return "General: OS, Checkmk version and edition, Time, Core, Python version and paths"
+
     def add_or_get_file(self, tmp_dump_folder):
         # type: (Path) -> Optional[Path]
-        console.output(
-            "  General: OS, Checkmk version and edition, Time, Core, Python version and paths\n")
-        filepath = tmp_dump_folder.joinpath(self.ident)
+        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
         store.save_text_to_file(filepath, json.dumps(cmk_version.get_general_version_infos()))
         return filepath

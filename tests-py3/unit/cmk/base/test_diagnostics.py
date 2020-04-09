@@ -85,7 +85,8 @@ def test_version_diagnostics_element(monkeypatch, tmp_path):
     assert version_diagnostics_element.ident == "general"
 
     filepath = version_diagnostics_element.add_or_get_file(tmppath)
-    assert filepath == tmppath.joinpath("general")
+    assert filepath == tmppath.joinpath("general.json")
+    assert version_diagnostics_element.description == "General: OS, Checkmk version and edition, Time, Core, Python version and paths"
 
     info_keys = [
         "time",

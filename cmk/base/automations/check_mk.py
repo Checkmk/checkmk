@@ -1798,7 +1798,6 @@ class AutomationCreateDiagnosticsDump(Automation):
         # type: (List[str]) -> Dict[str, Any]
         with redirect_output(StrIO()) as buf:
             log.setup_console_logging()
-            log.logger.setLevel(log.VERBOSE)
             dump = DiagnosticsDump()
             dump.create()
             return {

@@ -18,6 +18,25 @@ else:
 
 def load_plugins_with_exceptions(package_name, *init_file_paths):
     # type: (str, *Path) -> Generator[Tuple[str, Exception], None, None]
+    """Load all specified packages
+
+    This function accepts two parameters, a package name in Python's dotted syntax (e.g.
+    requests.exceptions) and optionally multiple filesystem paths.
+
+    Args:
+        package_name:
+            A valid module path in Python's dotted syntax.
+
+        *init_file_paths:
+            Zero or more `Path` instances of packages.
+
+    Returns:
+        A generator of 2-tuples of plugin-name and exception, when a plugin failed to
+        import. An empty generator if everything succeeded.
+
+    Raises:
+        Nothing explicit. Possibly ImportErrors.
+    """
     __import__(package_name)
     package = sys.modules[package_name]
     module_path = getattr(package, '__path__')  # type: Optional[List[str]]
@@ -26,14 +45,14 @@ def load_plugins_with_exceptions(package_name, *init_file_paths):
             try:
                 importlib.import_module("%s.%s" % (package_name, plugin_name))
             except Exception as exc:
-                yield package_name, exc
+                yield plugin_name, exc
 
     for file_path in init_file_paths:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages([str(file_path)]):
             try:
                 importlib.import_module("%s.%s" % (package_name, plugin_name))
             except Exception as exc:
-                yield package_name, exc
+                yield plugin_name, exc
 
 
 def load_plugins(init_file_path, package_name):
@@ -48,6 +67,7 @@ def load_plugins(init_file_path, package_name):
 
     Returns:
         Nothing.
+
     """
     for _name, exc in load_plugins_with_exceptions(package_name, Path(init_file_path).parent):
         raise exc

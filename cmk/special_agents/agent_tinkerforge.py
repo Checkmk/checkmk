@@ -41,7 +41,7 @@ from __future__ import print_function
 import os
 import socket
 import sys
-
+from typing import List  # pylint: disable=unused-import
 from optparse import OptionParser
 import time
 
@@ -71,39 +71,39 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import] # pylint: disable=import-error
     br = BrickletAmbientLight(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import] # pylint: disable=import-error
     br = BrickletAmbientLightV2(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import]
+    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import] # pylint: disable=import-error
     br = BrickletTemperature(uid, conn)
     print_generic(settings, "temperature", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_temperature_ext(conn, settings, uid):
-    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import]
+    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import] # pylint: disable=import-error
     br = BrickletPTC(uid, conn)
     print_generic(settings, "temperature.ext", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_humidity(conn, settings, uid):
-    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import]
+    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import] # pylint: disable=import-error
     br = BrickletHumidity(uid, conn)
     print_generic(settings, "humidity", br.get_identity(), 0.1, "RH", br.get_humidity())
 
 
 def print_master(conn, settings, uid):
-    from tinkerforge.brick_master import BrickMaster  # type: ignore[import]
+    from tinkerforge.brick_master import BrickMaster  # type: ignore[import] # pylint: disable=import-error
     br = BrickMaster(uid, conn)
     print_generic(
         settings,
@@ -118,7 +118,7 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import]
+    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import] # pylint: disable=import-error
     br = BrickletMotionDetector(uid, conn)
     print_generic(settings, "motion", br.get_identity(), 1.0, "", br.get_motion_detected())
 
@@ -152,9 +152,9 @@ def display_on_segment(conn, settings, text):
         u"\N{DEGREE SIGN}": 0x63,
     }
 
-    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import]
+    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import] # pylint: disable=import-error
     br = BrickletSegmentDisplay4x7(segment_display, conn)
-    segments = []
+    segments = []  # type: List[int]
     for letter in text:
         if len(segments) >= 4:
             break

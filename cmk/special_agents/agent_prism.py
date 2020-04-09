@@ -4,14 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import urllib2
-from httplib import HTTPConnection, HTTPSConnection
 import base64
 import ssl
 import csv
 import sys
 import os
 import json
+from optparse import OptionParser
+
+if sys.version_info[0] >= 3:
+    from urllib.request import HTTPSHandler, Request, build_opener  # pylint: disable=import-error,no-name-in-module
+    from http.client import HTTPConnection, HTTPSConnection
+else:
+    from urllib2 import HTTPSHandler, Request, build_opener  # pylint: disable=import-error
+    from httplib import HTTPConnection, HTTPSConnection  # pylint: disable=import-error
+
+import six
 
 field_separator = "\t"
 # set once parameters have been parsed
@@ -39,9 +47,13 @@ class HTTPSConfigurableConnection(HTTPSConnection):
                                             cert_reqs=ssl.CERT_REQUIRED)
 
 
-class HTTPSAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, ca_file):
-        urllib2.HTTPSHandler.__init__(self)
+class HTTPSAuthHandler(HTTPSHandler):
+    def __init__(self, ca_file):  # pylint: disable=super-on-old-class
+        if sys.version_info[0] >= 3:
+            super(HTTPSAuthHandler, self).__init__()
+        else:
+            # NOTE: WTF? HTTPSHandler's super-superclass BaseHandler is an old-style class! o_O
+            HTTPSHandler.__init__(self)
         self.__ca_file = ca_file
 
     def https_open(self, req):
@@ -73,7 +85,7 @@ def flatten(d, separator="."):
 
                 counter += 1
         elif isinstance(d, dict):
-            for k, v in d.iteritems():
+            for k, v in d.items():
                 for sub_k, sub_v in flatten_int(v):
                     if sub_k is not None:
                         sub_k = "%s%s%s" % (k, separator, sub_k)
@@ -88,9 +100,8 @@ def flatten(d, separator="."):
 
 
 def gen_headers(username, password):
-    auth = base64.encodestring("%s:%s" % (username, password)).strip()
-
-    return {'Authorization': "Basic " + auth}
+    auth = base64.encodebytes(six.ensure_binary("%s:%s" % (username, password))).strip()
+    return {'Authorization': "Basic " + six.ensure_str(auth)}
 
 
 def gen_csv_writer():
@@ -105,7 +116,7 @@ def send_request(opener, path, headers, parameters=None):
     url = "%s/PrismGateway/services/rest/v1/%s/" % (base_url, path)
     if parameters is not None:
         url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.iteritems()]))
-    req = urllib2.Request(url, headers=headers)
+    req = Request(url, headers=headers)
     response = opener.open(req)
     res = response.read()
     # TODO: error handling
@@ -186,7 +197,6 @@ def main():
         if os.path.isfile(cfg_path):
             exec(open(cfg_path).read(), settings, settings)
     else:
-        from optparse import OptionParser
         parser = OptionParser()
         parser.add_option("--server", help="host to connect to")
         parser.add_option("--port", default=9440, type="int", help="tcp port")
@@ -207,7 +217,7 @@ def main():
     global base_url
     base_url = "https://%s:%d" % (settings['server'], settings['port'])
 
-    opener = urllib2.build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
+    opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
     output_containers(opener, req_headers)
     output_alerts(opener, req_headers)
     output_cluster(opener, req_headers)

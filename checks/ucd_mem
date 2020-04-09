@@ -142,5 +142,5 @@ check_info['ucd_mem'] = {
     'snmp_scan_function': is_ucd_mem,
     'default_levels_variable': 'ucd_mem_default_levels',
     'group': 'memory_simple',
-    'includes': ["ucd_hr.include", "mem", "mem.include"],
+    'includes': ["ucd_hr.include", "mem.include"],
 }

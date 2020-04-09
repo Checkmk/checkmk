@@ -26,12 +26,27 @@ if [ ! -f "$VENV_MYPY_PATH" ]; then
     fi
 fi
 
+PYTHON_VERSION_TO_TEST=$("$REPO_PATH/scripts/detect-python-version" "$@")
+case $PYTHON_VERSION_TO_TEST in
+    2.*)
+        ADDITIONAL_MYPY_OPTIONS="--check-untyped-defs"
+        ;;
+    3.*)
+        ADDITIONAL_MYPY_OPTIONS=""
+        ;;
+    *)
+        echo "Huh??? Invalid Python version $PYTHON_VERSION_TO_TEST detected" >&2
+        exit 1
+        ;;
+esac
+
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
     exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
-    --python-version $("$REPO_PATH/scripts/detect-python-version" "$@") \
+    --python-version ${PYTHON_VERSION_TO_TEST} \
     --scripts-are-modules \
     --show-error-codes \
+    ${ADDITIONAL_MYPY_OPTIONS} \
     ${JUNIT_XML} \
     "$@"

@@ -41,7 +41,9 @@ from cmk.gui.plugins.metrics.utils import (
     scale_symbols,
     parse_color_into_hexrgb,
     MAX_CORES,
+    MAX_NUMBER_HOPS,
     indexed_color,
+    skype_mobile_devices,
 )
 
 #.

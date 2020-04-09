@@ -99,8 +99,6 @@ scale_symbols = {
     P: "P",
 }
 
-MAX_CORES = 128
-
 # Colors:
 #
 #                   red
@@ -937,3 +935,25 @@ def MetricName():
         validate=_require_metric,
         choices=choices,
     )
+
+
+#.
+#   .--Definitions---------------------------------------------------------.
+#   |            ____        __ _       _ _   _                            |
+#   |           |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___            |
+#   |           | | | |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|           |
+#   |           | |_| |  __/  _| | | | | | |_| | (_) | | | \__ \           |
+#   |           |____/ \___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+MAX_CORES = 128
+
+MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
+
+skype_mobile_devices = [
+    ("android", "Android", "33/a"),
+    ("iphone", "iPhone", "42/a"),
+    ("ipad", "iPad", "45/a"),
+    ("mac", "Mac", "23/a"),
+]

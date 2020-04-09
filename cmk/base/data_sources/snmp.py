@@ -14,6 +14,7 @@ from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
 
+import cmk.base.check_utils as check_utils
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
@@ -225,31 +226,17 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def _execute(self):
         # type: () -> RawSNMPData
-        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
-
         verify_ipaddress(self._ipaddress)
-
         check_plugin_names = self.get_check_plugin_names()
 
         snmp_config = self._snmp_config
         info = {}  # type: RawSNMPData
-        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
-            has_snmp_info = False
-            section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-            snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-            if snmp_section_plugin:
-                oid_info = snmp_section_plugin.trees
-            elif section_name in cmk.base.inventory_plugins.inv_info:
-                # TODO: merge this into config.registered_snmp_sections!
-                oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
-                if oid_info:
-                    has_snmp_info = True
-            else:
-                oid_info = None
+            section_name = check_utils.section_name_of(check_plugin_name)
+            oid_info, has_snmp_info = SNMPDataSource._oid_info_from_section_name(section_name)
 
             if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
                 continue
@@ -286,6 +273,24 @@ class SNMPDataSource(ABCSNMPDataSource):
                                                          self._use_snmpwalk_cache)
 
         return info
+
+    @staticmethod
+    def _oid_info_from_section_name(section_name):
+        # type: (str) -> Tuple[Optional[Union[OIDInfo, List[SNMPTree]]], bool]
+        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
+        has_snmp_info = False
+        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
+        snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
+        if snmp_section_plugin:
+            oid_info = snmp_section_plugin.trees
+        elif section_name in cmk.base.inventory_plugins.inv_info:
+            # TODO: merge this into config.registered_snmp_sections!
+            oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
+            if oid_info:
+                has_snmp_info = True
+        else:
+            oid_info = None
+        return oid_info, has_snmp_info
 
     @staticmethod
     def _sort_check_plugin_names(check_plugin_names):

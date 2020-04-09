@@ -97,7 +97,7 @@ class DiagnosticsDump:
         with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar:
             for filepath in filepaths:
                 console.verbose("  '%s'\n" % _get_short_filepath(filepath))
-                tar.add(str(filepath))
+                tar.add(str(filepath), arcname=filepath.name)
 
     def _get_filepaths(self):
         # type: () -> List[Path]

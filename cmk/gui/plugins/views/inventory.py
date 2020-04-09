@@ -1173,6 +1173,12 @@ declare_invtable_view(
     _("Oracle PGA performance"),
     _("Oracle PGA performance"),
 )
+declare_invtable_view(
+    "invorasystemparameter",
+    ".software.applications.oracle.systemparameter:",
+    _("Oracle system parameter"),
+    _("Oracle system parameters"),
+)
 declare_invtable_view("invibmmqmanagers", ".software.applications.ibm_mq.managers:", _("Manager"),
                       _("IBM MQ Managers"))
 declare_invtable_view("invibmmqchannels", ".software.applications.ibm_mq.channels:", _("Channel"),

@@ -592,6 +592,20 @@ inventory_displayhints.update({
     ".software.applications.citrix.vm.catalog": {"title": _("Catalog")},
     ".software.applications.citrix.vm.agent_version": {"title": _("Agent Version")},
     ".software.applications.oracle.": {"title": _("Oracle DB")},
+    ".software.applications.oracle.systemparameter:": {
+        "title": _("V$SYSTEM_PARAMETER"),
+        "keyorder": [
+            "sid",
+            "name",
+            "value",
+            "isdefault",
+        ],
+        "view": "invorasystemparameter_of_host",
+    },
+    ".software.applications.oracle.systemparameter:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.systemparameter:*.name": {"title": _("Name")},
+    ".software.applications.oracle.systemparameter:*.value": {"title": _("Value")},
+    ".software.applications.oracle.systemparameter:*.isdefault": {"title": _("Is default")},
     ".software.applications.oracle.instance:": {
         "title": _("Instances"),
         "keyorder": [

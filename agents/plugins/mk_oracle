@@ -26,7 +26,7 @@
 #   '----------------------------------------------------------------------'
 
 load_default_config () {
-    SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
+    SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks systemparameter"
     ASYNC_SECTIONS="tablespaces rman jobs resumable"
     SYNC_ASM_SECTIONS="instance processes"
     ASYNC_ASM_SECTIONS="asm_diskgroup"
@@ -1655,6 +1655,18 @@ sql_version () {
 	  || ' ' || banner
 	  from v\$version, v\$instance i
 	  where banner like 'Oracle%';"
+}
+
+sql_systemparameter () {
+# TODO In the future, all data needed for HW/SW inventory, should
+# implement a "persist:$UNTIL" to reduce amount of data transmission
+    echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
+    echo "select upper(i.instance_name)
+	  || '|' || NAME
+	  || '|' || DISPLAY_VALUE
+	  || '|' || ISDEFAULT
+	  from v\$system_parameter, v\$instance i
+	  where name not like '!_%' ESCAPE '!';"
 }
 
 

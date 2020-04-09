@@ -1,0 +1,39 @@
+Title: Feature pack 2: RabbitMQ, Couchbase, Pulse Secure, Redis, Cisco Webex Teams, Cisco ASA
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586444823
+Class: feature
+
+With this release we publish the second feature pack of Checkmk. The idea behind
+the feature packs is that we can make selected features of the next stable
+release available to users of the current stable release much earlier. This
+allows features to be used and improved earlier.
+
+These features are delivered as optional features. They are included in our software
+as MKP packages which can be installed manually.
+
+This feature pack contains these features:
+
+<ul>
+  <li>RabbitMQ special agent and checks (#10938)</li>
+  <li>Couchbase special agent and checks (#10158, #10159, #10160, ...)</li>
+  <li>Pulse Secure Appliance health monitoring (#10956)</li>
+  <li>Redis database agent plugin and checks (#10574, #10643, #10758, #10761)</li>
+  <li>New notification plugin for Cisco Webex Teams (#10909)</li>
+  <li>Cisco ASA WebVPN and IPsec sessions (#10355)</li>
+  <li>Fortigate SSL VPN GUI configurable thresholds (#10951)</li>
+</ul>
+
+To install these features, you first need to install 1.6.0p12 or newer. Users of the
+Enterprise Edition can then open "Configuration > Extension Packages" and select
+the package of your choice to be installed. From this point it behaves just like
+any other MKP you have installed.
+
+Users of the Raw Edition need to use the command line interface to install these
+packages. For example: <tt>mkp install share/check_mk/optional_packages/cisco_asa_sessions-1.0.mkp</tt>.
+
+For details on how to use the new checks, please have a look at the manpages of
+the checks.

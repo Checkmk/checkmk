@@ -5,20 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from opsgenie.swagger_client import AlertApi  # type: ignore[import]
-from opsgenie.swagger_client import configuration
-from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import]
-from opsgenie.swagger_client.rest import ApiException  # type: ignore[import]
-from opsgenie.swagger_client.models import CloseAlertRequest
-from opsgenie.swagger_client.models import CreateAlertRequest
-from opsgenie.swagger_client.models import TeamRecipient
+from typing import Optional, Text  # pylint: disable=unused-import
+import six
+from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
+from opsgenie.swagger_client import configuration  # pylint: disable=import-error
+from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import] # pylint: disable=import-error
+from opsgenie.swagger_client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
+from opsgenie.swagger_client.models import CloseAlertRequest  # pylint: disable=import-error
+from opsgenie.swagger_client.models import CreateAlertRequest  # pylint: disable=import-error
+from opsgenie.swagger_client.models import TeamRecipient  # pylint: disable=import-error
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 
 def main():
     context = utils.collect_context()
-    priority = 'P3'
+    priority = u'P3'  # type: Optional[Text]
     teams_list = []
     tags_list = None
     action_list = None
@@ -37,10 +39,10 @@ def main():
     host_url = context.get("PARAMETER_URL")
 
     if context.get('PARAMETER_TAGSS'):
-        tags_list = None or context.get('PARAMETER_TAGSS').split(" ")
+        tags_list = None or context.get('PARAMETER_TAGSS', u'').split(" ")
 
     if context.get('PARAMETER_ACTIONSS'):
-        action_list = None or context.get('PARAMETER_ACTIONSS').split(" ")
+        action_list = None or context.get('PARAMETER_ACTIONSS', u'').split(" ")
 
     if context.get('PARAMETER_TEAMSS'):
         for team in context['PARAMETER_TEAMSS'].split(" "):
@@ -98,7 +100,8 @@ $LONGSERVICEOUTPUT$
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
         handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url)
     else:
-        sys.stdout.write('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE']))
+        sys.stdout.write(
+            six.ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
         return 0
 
 

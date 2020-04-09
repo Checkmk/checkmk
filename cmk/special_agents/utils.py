@@ -17,6 +17,8 @@ import logging
 import pprint
 import sys
 import time
+from typing import Dict, List  # pylint: disable=unused-import
+
 import requests
 
 if sys.version_info[0] >= 3:
@@ -76,7 +78,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             self.usage()
             sys.exit(0)
 
-        content = {}
+        content = {}  # type: Dict[str, List[str]]
         for section_name, url in sections:
             content.setdefault(section_name, [])
             content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
@@ -243,8 +245,12 @@ def vcrtrace(**vcr_init_kwargs):
     class VcrTraceAction(argparse.Action):
         def __init__(self, *args, **kwargs):
             kwargs.setdefault("metavar", "TRACEFILE")
-            kwargs["help"] = "%s %s" % (vcrtrace.__doc__.split('\n\n')[3], kwargs.get("help", ""))
-            super(VcrTraceAction, self).__init__(*args, nargs=None, default=False, **kwargs)
+            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split('\n\n')[3]
+            kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
+            # NOTE: There are various mypy issues around the kwargs Kung Fu
+            # below, see e.g. https://github.com/python/mypy/issues/6799.
+            super(VcrTraceAction, self).__init__(  # type: ignore[misc]
+                *args, nargs=None, default=False, **kwargs)
 
         def __call__(self, _parser, namespace, filename, option_string=None):
             if not filename:

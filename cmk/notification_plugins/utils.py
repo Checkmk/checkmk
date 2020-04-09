@@ -25,7 +25,7 @@ import cmk.utils.cmk_subprocess as subprocess
 def collect_context():
     # type: () -> Dict[str, Text]
     return {
-        var[7:]: value.decode("utf-8")
+        var[7:]: six.ensure_text(value)
         for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_")
     }

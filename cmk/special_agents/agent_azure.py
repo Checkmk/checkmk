@@ -15,11 +15,16 @@ import sys
 import argparse
 import logging
 from multiprocessing import Process, Lock, Queue
-from Queue import Empty as QueueEmpty
-import adal  # type: ignore[import]
+from typing import Any, List, Tuple  # pylint: disable=unused-import
+import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path
+    from queue import Empty as QueueEmpty
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+    from Queue import Empty as QueueEmpty  # pylint: disable=import-error
 
 from cmk.utils.paths import tmp_dir
 
@@ -543,7 +548,8 @@ class AzureResource(object):
         self.metrics = []
 
     def dumpinfo(self):
-        lines = [("Resource",), (json.dumps(self.info),)]
+        # TODO: Hmmm, should the variable-length tuples actually be lists?
+        lines = [("Resource",), (json.dumps(self.info),)]  # type: List[Tuple]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -656,7 +662,7 @@ class UsageClient(DataCache):
             # (mo) I am unable to get the filter for usage_end working :-(
             unfiltered_usages = self._client.usagedetails()
         except ApiError as exc:
-            if self.offerid_has_no_consuption_api(exc.message):
+            if self.offerid_has_no_consuption_api(exc.args[0]):
                 return []
             raise
         LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
@@ -721,7 +727,9 @@ def gather_metrics(mgmt_client, resource, debug=False):
                                                resource.info['id'],
                                                err,
                                                use_cache=cache.cache_interval > 60)
-        except () if debug else ApiError as exc:
+        except ApiError as exc:
+            if debug:
+                raise
             err.add("exception", resource.info['id'], str(exc))
             LOGGER.exception(exc)
     return err
@@ -792,8 +800,9 @@ def get_mapper(debug, sequential, timeout):
             for args in args_iter:
                 try:
                     yield func(args)
-                except () if debug else Exception:
-                    pass
+                except Exception:
+                    if debug:
+                        raise
 
         return sequential_mapper
 
@@ -810,7 +819,7 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()
+        queue = Queue()  # type: Queue[Tuple[Any, bool, Any]]
         jobs = {}
 
         def produce(id_, args):
@@ -847,7 +856,9 @@ def main_graph_client(args):
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
@@ -861,7 +872,9 @@ def main_subscription(args, selector, subscription):
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
         monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Management client")
         return
 

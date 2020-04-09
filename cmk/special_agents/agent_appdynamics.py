@@ -5,12 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import getopt
-import httplib
 import json
 import socket
 import sys
-
+from typing import Any, Dict  # pylint: disable=unused-import
 from base64 import b64encode
+
+if sys.version_info[0] >= 3:
+    from http.client import HTTPConnection
+else:
+    from httplib import HTTPConnection  # pylint: disable=import-error
+
+import six
 
 
 def usage():
@@ -113,14 +119,14 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
         # Initialize server connection
         try:
-            connection = httplib.HTTPConnection(arg_host, opt_port)
+            connection = HTTPConnection(arg_host, opt_port)
 
             if opt_verbose:
                 sys.stdout.write('Connecting to %s:%s...\n' % (arg_host, opt_port))
             connection.connect()
 
-            auth = b64encode('%s:%s' % (opt_username, opt_password))
-            headers = {'Authorization': 'Basic ' + auth}
+            auth = b64encode(six.ensure_binary('%s:%s' % (opt_username, opt_password)))
+            headers = {'Authorization': 'Basic ' + six.ensure_str(auth)}
             for obj in ['Agent', '*|*']:
                 connection.request('GET',
                                    url % {
@@ -143,7 +149,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 raise
             return 1
 
-    grouped_data = {}
+    grouped_data = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
     for metric in data:
         path_parts = metric['metricPath'].split('|')
         if len(path_parts) == 7:  # Unit missing
@@ -164,10 +170,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                     .setdefault(typename, {})\
                     .setdefault(item, {})[unit] = value
 
-    for node, applications in grouped_data.iteritems():
+    for node, applications in grouped_data.items():
         sys.stdout.write('<<<<%s>>>>\n' % node)
-        for application, types in applications.iteritems():
-            for typename, items in types.iteritems():
+        for application, types in applications.items():
+            for typename, items in types.items():
                 typename = typename.lower().replace(' ', '_')
                 if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
                     sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %

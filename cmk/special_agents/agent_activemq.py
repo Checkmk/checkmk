@@ -62,7 +62,6 @@ def main(sys_argv=None):
     if opt_username:
         auth = HTTPBasicAuth(opt_username, opt_password)
 
-    data = []
     try:
         response = requests.get(url, auth=auth)
         if response.status_code == 401:

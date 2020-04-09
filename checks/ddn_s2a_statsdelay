@@ -52,7 +52,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
                 return interval
 
     def histogram_max(time_intervals, values):
-        for interval, value in zip(time_intervals, values)[::-1]:
+        for interval, value in list(zip(time_intervals, values))[::-1]:
             if value != 0:
                 return interval
 
@@ -101,7 +101,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
     if old_intervals is None:
         raise MKCounterWrapped("Initializing")
-    elif old_intervals != time_intervals:
+    if old_intervals != time_intervals:
         raise MKCounterWrapped(
             "Histograms not comparable - Time intervals have changed. Reinitializing.")
 

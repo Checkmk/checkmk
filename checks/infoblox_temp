@@ -35,8 +35,7 @@ def parse_infoblox_temp(info):
 
     parsed = {}
     # Just for a better handling
-    for index, state, descr in \
-        zip(["", "1", "2", ""], info[0], info[1])[1:]:
+    for index, state, descr in list(zip(["", "1", "2", ""], info[0], info[1]))[1:]:
         if ":" in descr:
             name, val_str = descr.split(":", 1)
             val, unit = val_str.split()

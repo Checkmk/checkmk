@@ -8,7 +8,7 @@ from __future__ import print_function
 import os
 import stat
 import sys
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple  # pylint: disable=unused-import
 
 opt_debug = "-d" in sys.argv or "--debug" in sys.argv
 
@@ -87,13 +87,10 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     # Search in running processes for Apache
     for line in os.popen("ps ax -o pid,user,command").readlines():
         parts = line.split()
-        if len(parts) >= 3 and \
-               (parts[2].endswith("/apache2") or \
-                parts[2].endswith("/httpd") or \
-                parts[2].endswith("/httpd2-prefork") or \
-                parts[2].endswith("/httpd2-worker")
-                ) and \
-                parts[1] != 'root':
+        if (len(parts) >= 3 and
+            (parts[2].endswith("/apache2") or parts[2].endswith("/httpd") or
+             parts[2].endswith("/httpd2-prefork") or parts[2].endswith("/httpd2-worker")) and
+                parts[1] != 'root'):
             wwwuser = parts[1]
             apache_pid = int(parts[0])
             break
@@ -101,7 +98,6 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         raise Exception("Cannot find Apache process. Is it running?")
 
     def scan_apacheconf(apache_conffile):
-        confdirs = []
         if apache_conffile[0] != '/':
             apache_conffile = httpd_root + "/" + apache_conffile
         confdirs = []
@@ -224,7 +220,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     common_groups = [g for g in www_groups if g in nagios_groups]
     if len(common_groups) > 1:
         if 'nagios' in common_groups:
-            common_group = 'nagios'
+            common_group = 'nagios'  # type: Optional[str]
         elif 'icinga' in common_groups:
             common_group = 'icinga'
         else:
@@ -489,7 +485,7 @@ try:
                         if sline.startswith("Status File:"):
                             nagios_status_file = sline.split()[-1]
                             break
-                        elif sline.startswith("Error reading status file"):
+                        if sline.startswith("Error reading status file"):
                             nagios_status_file = sline.split()[-1][1:-1]
                             break
                 except Exception:
@@ -624,8 +620,7 @@ except Sorry as e:
 except Exception as e:
     if opt_debug:
         raise
-    else:
-        sys.stderr.write("* Sorry, something unexpected happened: %s\n\n" % e)
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    sys.stderr.write("* Sorry, something unexpected happened: %s\n\n" % e)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)

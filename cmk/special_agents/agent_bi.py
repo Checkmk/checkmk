@@ -7,8 +7,13 @@
 import ast
 from multiprocessing.pool import ThreadPool
 import sys
+from typing import Dict, Set  # pylint: disable=unused-import
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import requests
 import urllib3  # type: ignore[import]
 
@@ -66,7 +71,7 @@ class AggregationData(object):
             self._process_assignments(aggr_tree)
 
         # Output result
-        for target_host, aggregations in self._aggregation_targets.iteritems():
+        for target_host, aggregations in self._aggregation_targets.items():
             if target_host is None:
                 self._output.append("<<<<>>>>")
             else:
@@ -164,8 +169,7 @@ class AggregationRawdataGenerator(object):
                 raise RawdataException(
                     "Error: Unable to parse data from monitoring instance. Please check the login credentials"
                 )
-            else:
-                raise RawdataException("Error: Unable to parse data from monitoring instance")
+            raise RawdataException("Error: Unable to parse data from monitoring instance")
 
         if not isinstance(rawdata, dict):
             raise RawdataException("Error: Unable to process parsed data from monitoring instance")
@@ -183,9 +187,10 @@ class AggregationRawdataGenerator(object):
 class AggregationOutputRenderer(object):
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info = {}
-        for field in connection_info_fields:
-            connection_info[field] = set()
+        connection_info = {
+            field: set()  #
+            for field in connection_info_fields
+        }  # type: Dict[str, Set[str]]
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -201,9 +206,8 @@ class AggregationOutputRenderer(object):
             sys.exit(1)
 
         sys.stdout.write("<<<bi_aggregation_connection:sep(0)>>>\n")
-        for field in connection_info_fields:
-            connection_info[field] = list(connection_info[field])
-        sys.stdout.write(repr(connection_info) + "\n")
+        result = {field: list(connection_info[field]) for field in connection_info_fields}
+        sys.stdout.write(repr(result) + "\n")
 
         output.append("<<<<>>>>\n")
         sys.stdout.write("\n".join(output))

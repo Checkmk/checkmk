@@ -20,9 +20,11 @@
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
 from __future__ import print_function
+import cProfile
 import getopt
 import os
 import sys
+from typing import Any, Dict  # pylint: disable=unused-import
 
 
 def usage():
@@ -132,13 +134,12 @@ def main(sys_argv=None):
             "active": False,
             "sep": 58
         },
-    }
+    }  # type: Dict[str, Dict[str, Any]]
 
     for o, a in opts:
         if o in ['--debug']:
             opt_debug = True
         elif o in ['--profile']:
-            import cProfile
             g_profile = cProfile.Profile()
             g_profile.enable()
         elif o in ['-u', '--user']:
@@ -148,7 +149,7 @@ def main(sys_argv=None):
         elif o in ['-i', '--modules']:
             mortypes = a.split(',')
         elif o in ['-t', '--timeout']:
-            _opt_timeout = int(a)
+            _opt_timeout = int(a)  # noqa: F841
         elif o in ['-h', '--help']:
             usage()
             sys.exit(0)

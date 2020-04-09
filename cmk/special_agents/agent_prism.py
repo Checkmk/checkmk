@@ -45,8 +45,10 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
         self.__ca_file = ca_file
 
     def https_open(self, req):
-        return self.do_open(self.get_connection, req)
+        # TODO: Slightly interesting things in the typeshed here, investigate...
+        return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
 
+    # Hmmm, this should be a HTTPConnectionProtocol...
     def get_connection(self, host, timeout):
         return HTTPSConfigurableConnection(host, ca_file=self.__ca_file)
 

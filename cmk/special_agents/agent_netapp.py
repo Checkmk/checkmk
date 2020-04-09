@@ -60,9 +60,10 @@ import sys
 import time
 import warnings
 
-from typing import List
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import requests
+import six
 import urllib3  # type: ignore[import]
 
 from cmk.special_agents.utils import vcrtrace
@@ -332,7 +333,7 @@ class NetAppNode(object):
     def __getitem__(self, what):
         if what == "name":
             return self.node.tag.split("}")[-1]
-        elif what == "content":
+        if what == "content":
             return self.node.text or ""
 
     def __getattr__(self, what):
@@ -429,6 +430,8 @@ class NetAppResponse(object):
         return self.reason
 
     def get_results(self):
+        if self.content is None:
+            raise Exception("no content")
         return self.content.child_get("results")
 
 
@@ -508,10 +511,10 @@ def format_config(instances,
 
         line = []
         if isinstance(config_key, list):
-            instance_key = []
+            instance_key_list = []
             for entry in config_key:
-                instance_key.append(values.get(entry))
-            instance_key = ".".join(instance_key)
+                instance_key_list.append(values.get(entry, ""))
+            instance_key = ".".join(instance_key_list)
         else:
             if skip_missing_config_key and config_key not in values:
                 # The config_key is not available in the xml node
@@ -534,7 +537,7 @@ def format_config(instances,
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(x.encode("utf-8") for x in line))
+        result.append(("%s" % delimeter).join(six.ensure_str(x) for x in line))
     return "\n".join(result)
 
 
@@ -565,9 +568,8 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
         for key, value in values.items():
             line.append("%s %s" % (key, value))
         return ("%s" % delimeter).join(line)
-    else:
-        for key, value in values.items():
-            result.append("%s%s%s%s" % (prefix, key, delimeter, value))
+    for key, value in values.items():
+        result.append("%s%s%s%s" % (prefix, key, delimeter, value))
     return "\n".join(result)
 
 
@@ -673,10 +675,9 @@ def query(args, server, what, return_toplevel_node=False):
 
     if return_toplevel_node:
         return results
-    else:
-        data = results.children_get()
-        if data:
-            return data[0]
+    data = results.children_get()
+    if data:
+        return data[0]
 
 
 def query_counters(args, server, netapp_mode, what):
@@ -763,7 +764,8 @@ def query_counters(args, server, netapp_mode, what):
                     if idx >= max_instances_per_request:
                         break
                     instances_to_query[1].append(["instance-uuid", uuid])
-                    perfobject_node = ["perf-object-get-instances", [["objectname", what]]]
+                    perfobject_node = ["perf-object-get-instances", [["objectname",
+                                                                      what]]]  # type: List[Any]
                     perfobject_node[1].append(instances_to_query)
                 response = server.get_response(perfobject_node)
 
@@ -778,36 +780,36 @@ def query_counters(args, server, netapp_mode, what):
                 the_instances = response.get_results().child_get("instances")
                 initial_results.extend_instances_list(the_instances)
             return initial_results.child_get("instances")
-        else:  # 7 Mode
-            perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+        # 7 Mode
+        perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+        response = server.get_response(perfobject_node)
+        results = response.get_results()
+        records = results.child_get_string("records")
+        tag = results.child_get_string("tag")
+
+        if not records or records == "0":
+            return
+
+        responses = []
+        while records != "0":
+            perfobject_node = [
+                "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
+            ]
             response = server.get_response(perfobject_node)
             results = response.get_results()
             records = results.child_get_string("records")
-            tag = results.child_get_string("tag")
-
+            responses.append(response)
             if not records or records == "0":
-                return
+                perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
+                server.get_response(perfobject_node)
+                break
 
-            responses = []
-            while records != "0":
-                perfobject_node = [
-                    "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
-                ]
-                response = server.get_response(perfobject_node)
-                results = response.get_results()
-                records = results.child_get_string("records")
-                responses.append(response)
-                if not records or records == "0":
-                    perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
-                    server.get_response(perfobject_node)
-                    break
-
-            initial_results = responses[0].get_results()
-            for response in responses[1:]:
-                the_instances = response.get_results().child_get("instances")
-                if the_instances:
-                    initial_results.extend_instances_list(the_instances)
-            return initial_results.child_get("instances")
+        initial_results = responses[0].get_results()
+        for response in responses[1:]:
+            the_instances = response.get_results().child_get("instances")
+            if the_instances:
+                initial_results.extend_instances_list(the_instances)
+        return initial_results.child_get("instances")
 
 
 def fetch_netapp_mode(args, server):
@@ -839,7 +841,12 @@ def fetch_license_information(args, server):
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
-        licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
+        licenses = {
+            "v1": {},
+            "v1_disabled": {},
+            "v2": {},
+            "v2_disabled": {}
+        }  # type: Dict[str, Dict[str, Dict[str, str]]]
         license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)

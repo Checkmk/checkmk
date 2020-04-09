@@ -69,5 +69,15 @@ def load_plugins(init_file_path, package_name):
         Nothing.
 
     """
-    for _name, exc in load_plugins_with_exceptions(package_name, Path(init_file_path).parent):
-        raise exc
+    # This is duplicated because it somehow obscures the exceptions being raised by
+    # errors while compiling modules. This implemention explicitly doesn't catch any exceptions
+    # occurring while compiling.
+    __import__(package_name)
+    package = sys.modules[package_name]
+    module_path = getattr(package, '__path__')  # type: Optional[List[str]]
+    if module_path:
+        for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
+            importlib.import_module("%s.%s" % (package_name, plugin_name))
+
+    for _loader, plugin_name, _is_pkg in pkgutil.walk_packages([init_file_path]):
+        importlib.import_module("%s.%s" % (package_name, plugin_name))

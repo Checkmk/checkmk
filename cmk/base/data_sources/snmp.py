@@ -276,7 +276,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     @staticmethod
     def _oid_info_from_section_name(section_name):
-        # type: (str) -> Tuple[Optional[Union[OIDInfo, List[SNMPTree]]], bool]
+        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[SNMPTree]], bool]
         import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
         has_snmp_info = False
         oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]

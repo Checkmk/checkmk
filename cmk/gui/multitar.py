@@ -20,7 +20,7 @@ import traceback
 import itertools
 import multiprocessing
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Optional, Type, Union, Tuple, Dict, Text, List  # pylint: disable=unused-import
+from typing import Any, Optional, Type, Union, Tuple, Dict, Text, List  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.cmk_subprocess as subprocess
@@ -316,7 +316,7 @@ class SnapshotCreator(SnapshotCreationBase):
                                 reuse_identical_snapshots=False)
 
     def generate_snapshot_in_subprocess(self, *args, **kwargs):
-        def worker():
+        def myworker():
             # type: () -> None
             log = logger.getChild("SnapshotWorker(%d)" % os.getpid())
             try:
@@ -325,7 +325,7 @@ class SnapshotCreator(SnapshotCreationBase):
                 log.error("Error in subprocess")
                 log.error(traceback.format_exc())
 
-        worker = multiprocessing.Process(target=worker)
+        worker = multiprocessing.Process(target=myworker)
         worker.daemon = True
         worker.start()
         self._worker_subprocesses.append(worker)
@@ -683,7 +683,7 @@ def extract(tar, components):
                 if name == "check_mk":
                     _update_check_mk(target_dir, subtar)
                     continue
-                elif what == "dir":
+                if what == "dir":
                     wipe_directory(path)
                 else:
                     os.remove(path)
@@ -815,10 +815,10 @@ def _update_check_mk(path, tar_file):
 
     tar_file.extractall(path, members=members)
 
-    master_vars = {"contacts": {}}
+    master_vars = {"contacts": {}}  # type: Dict[str, Any]
     eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
-    site_vars = {"contacts": {}}
+    site_vars = {"contacts": {}}  # type: Dict[str, Any]
     with open(os.path.join(path, "contacts.mk")) as f:
         eval(f.read(), {}, site_vars)
 

@@ -2038,3 +2038,19 @@ check_metrics["check_mk-cisco_asa_svcsessions"] = {
         "name": "active_sessions"
     },
 }
+
+for check_name in ["aws_elb.http_elb", "aws_elb.http_backend", "aws_elbv2_application.http_elb"]:
+    check_metrics["check_mk-%s" % check_name] = {
+        "http_4xx_rate": {
+            "name": "aws_http_4xx_rate"
+        },
+        "http_5xx_rate": {
+            "name": "aws_http_5xx_rate"
+        },
+        "http_4xx_perc": {
+            "name": "aws_http_4xx_perc"
+        },
+        "http_5xx_perc": {
+            "name": "aws_http_5xx_perc"
+        },
+    }

@@ -19,6 +19,7 @@ from cmk.gui.valuespec import (
     Filesize,
     ListOf,
     CascadingDropdown,
+    Transform,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -106,27 +107,18 @@ def _vs_cpu_credits_balance():
                         ]))
 
 
-def _vs_elements_http_errors():
-    return [
-        ('levels_http_4xx_perc',
-         Tuple(
-             title=_("Upper percentual levels for HTTP 400 errors"),
-             help=_("Specify levels for HTTP 400 errors in percentage "
-                    "which refer to the total number of requests"),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ],
-         )),
-        ('levels_http_5xx_perc',
-         Tuple(title=_("Upper percentual levels for HTTP 500 errors"),
-               help=_("Specify levels for HTTP 500 errors in percentage "
-                      "which refer to the total number of requests"),
-               elements=[
-                   Percentage(title=_("Warning at")),
-                   Percentage(title=_("Critical at")),
-               ])),
-    ]
+def _vs_elements_http_errors(http_err_codes, title_add=lambda http_err_code: ""):
+    return [('levels_http_%s_perc' % http_err_code,
+             Tuple(
+                 title=_("Upper percentual levels for HTTP %s errors" % http_err_code.upper() +
+                         title_add(http_err_code)),
+                 help=_("Specify levels for HTTP %s errors in percent "
+                        "which refer to the total number of requests." % http_err_code.upper()),
+                 elements=[
+                     Percentage(title=_("Warning at")),
+                     Percentage(title=_("Critical at")),
+                 ],
+             )) for http_err_code in http_err_codes]
 
 
 def _vs_latency():
@@ -599,8 +591,36 @@ rulespec_registry.register(
     ))
 
 
+def _transform_aws_elb_http(p):
+
+    if "levels_load_balancers" in p:
+        return p
+    else:
+        p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
+
+    for http_err_code in ['4xx', '5xx']:
+        levels_key = "levels_http_%s_perc" % http_err_code
+        if levels_key in p:
+            p_trans["levels_backend_targets"][levels_key] = p[levels_key]
+
+    return p_trans
+
+
 def _parameter_valuespec_aws_elb_http():
-    return Dictionary(elements=_vs_elements_http_errors())
+    return Transform(Dictionary(
+        title=_("Upper levels for HTTP errors"),
+        elements=[(
+            "levels_load_balancers",
+            Dictionary(
+                title=_("Upper levels for Load Balancers"),
+                elements=_vs_elements_http_errors(
+                    ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                    title_add=lambda http_err_code: ""
+                    if http_err_code in ['4xx', '5xx'] else " (Application Load Balancers only)"))),
+                  ("levels_backend_targets",
+                   Dictionary(title=_("Upper levels for Backend"),
+                              elements=_vs_elements_http_errors(['2xx', '3xx', '4xx', '5xx'])))]),
+                     forth=_transform_aws_elb_http)
 
 
 rulespec_registry.register(

@@ -10,9 +10,7 @@ description:
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
- No default levels are set.
- Levels for HTTP error codes 4XX and 5XX are configurable.
+ No default levels are set, but upper levels can be configured.
 
 inventory:
- One service is created if all required metrics (HTTPCode_Backend_2XX, HTTPCode_Backend_3XX,
- HTTPCode_Backend_4XX, HTTPCode_Backend_5XX) are given.
+ One service is created if the required metric RequestCount is given.

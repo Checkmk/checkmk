@@ -38426,17 +38426,59 @@ msgid "Specify levels"
 msgstr "Level einstellen"
 
 msgid ""
-"Specify levels for HTTP 400 errors in percentage which refer to the total "
-"number of requests"
+"Specify levels for HTTP 2XX errors in percentage which refer to the total "
+"number of requests."
 msgstr ""
-"Geben Sie die Stufen für HTTP 400-Fehler in Prozent an, die sich auf die "
+"Geben Sie die Stufen für HTTP 2XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 3XX errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 3XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 4XX errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 4XX-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 5XX errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 5XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
 "Specify levels for HTTP 500 errors in percentage which refer to the total "
-"number of requests"
+"number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 500-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 502 errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 502-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 503 errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 503-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for HTTP 504 errors in percentage which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für HTTP 504-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
@@ -50096,6 +50138,15 @@ msgstr "Obere"
 msgid "Upper Levels for CopyQueue Length"
 msgstr "Schwellwerte für die CopyQueue Length"
 
+msgid "Upper levels for HTTP errors"
+msgstr "Obere Schwellwerte für HTTP-Fehler"
+
+msgid "Upper levels for Load Balancers"
+msgstr "Obere Schwellwerte für Load Balancers"
+
+msgid "Upper levels for Backend"
+msgstr "Obere Schwellwerte Backend"
+
 msgid "Upper Levels for Total Number of DNS queries"
 msgstr "Obere Schwellen für die Gesamtzahl von DNS-Anfragen"
 
@@ -50407,11 +50458,32 @@ msgstr "Obere, prozentuale Schwellen für GET-Anfragen"
 msgid "Upper percentual levels for HEAD requests"
 msgstr "Obere, prozentuale Schwellen für HEAD-Anfragen"
 
-msgid "Upper percentual levels for HTTP 400 errors"
-msgstr "Obere, prozentuale Schwellen HTTP 400-Fehler"
+msgid "Upper percentual levels for HTTP 2XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 2XX-Fehler"
 
-msgid "Upper percentual levels for HTTP 500 errors"
-msgstr "Obere, prozentuale Schwellen für HTTP 500-Fehler"
+msgid "Upper percentual levels for HTTP 3XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 3XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 3XX errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen HTTP 3XX-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 4XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 4XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 5XX errors"
+msgstr "Obere prozentuale Schwellen HTTP 5XX-Fehler"
+
+msgid "Upper percentual levels for HTTP 500 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 500-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 502 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 502-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 503 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 503-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for HTTP 504 errors (Application Load Balancers only)"
+msgstr "Obere prozentuale Schwellen für HTTP 504-Fehler (nur Appplication Load Balancers)"
 
 msgid "Upper percentual levels for LIST requests"
 msgstr "Obere, prozentuale Schwellen für LIST-Anfragen"

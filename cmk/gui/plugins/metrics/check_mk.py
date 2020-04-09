@@ -4957,29 +4957,26 @@ metric_info["aws_load_balancer_latency"] = {
     "color": "21/a",
 }
 
-metric_info["aws_http_4xx_rate"] = {
-    "title": _("HTTP 400 errors"),
-    "unit": "1/s",
-    "color": "32/a",
-}
 
-metric_info["aws_http_5xx_rate"] = {
-    "title": _("HTTP 500 errors"),
-    "unit": "1/s",
-    "color": "42/a",
-}
+def register_aws_http_metrics():
+    for http_err_code, color in zip(
+        ['2xx', '3xx', '4xx', '5xx', '500', '502', '503', '504'],
+        ['53/a', '11/a', '32/a', '42/a', '13/a', '14/a', '16/b', '34/a']):
 
-metric_info["aws_http_4xx_perc"] = {
-    "title": _("Percentage of HTTP 400 errors"),
-    "unit": "%",
-    "color": "32/a",
-}
+        metric_info["aws_http_%s_rate" % http_err_code] = {
+            "title": _("HTTP %s errors" % http_err_code.upper()),
+            "unit": "1/s",
+            "color": color,
+        }
 
-metric_info["aws_http_5xx_perc"] = {
-    "title": _("Percentage of HTTP 500 errors"),
-    "unit": "%",
-    "color": "42/a",
-}
+        metric_info["aws_http_%s_perc" % http_err_code] = {
+            "title": _("Percentage of HTTP %s errors" % http_err_code.upper()),
+            "unit": "%",
+            "color": color,
+        }
+
+
+register_aws_http_metrics()
 
 metric_info["aws_overall_hosts_health_perc"] = {
     "title": _("Proportion of healthy host"),
@@ -9872,5 +9869,47 @@ graph_info["current_users"] = {
     "scalars": [
         "current_users:warn",
         "current_users:crit",
+    ],
+}
+
+graph_info['aws_http_nxx_errors_rate'] = {
+    'title': _('HTTP 3/4/5XX Errors'),
+    'metrics': [
+        ('aws_http_2xx_rate', 'stack'),
+        ('aws_http_3xx_rate', 'stack'),
+        ('aws_http_4xx_rate', 'stack'),
+        ('aws_http_5xx_rate', 'stack'),
+    ],
+    'optional_metrics': ['aws_http_2xx_rate', 'aws_http_3xx_rate'],
+}
+
+graph_info['aws_http_50x_errors_rate'] = {
+    'title': _('HTTP 500/2/3/4 Errors'),
+    'metrics': [
+        ('aws_http_500_rate', 'stack'),
+        ('aws_http_502_rate', 'stack'),
+        ('aws_http_503_rate', 'stack'),
+        ('aws_http_504_rate', 'stack'),
+    ],
+}
+
+graph_info['aws_http_nxx_errors_perc'] = {
+    'title': _('Percentage of HTTP 3/4/5XX Errors'),
+    'metrics': [
+        ('aws_http_2xx_perc', 'stack'),
+        ('aws_http_3xx_perc', 'stack'),
+        ('aws_http_4xx_perc', 'stack'),
+        ('aws_http_5xx_perc', 'stack'),
+    ],
+    'optional_metrics': ['aws_http_2xx_perc', 'aws_http_3xx_perc'],
+}
+
+graph_info['aws_http_50x_errors_perc'] = {
+    'title': _('Percentage of HTTP 500/2/3/4 Errors'),
+    'metrics': [
+        ('aws_http_500_perc', 'stack'),
+        ('aws_http_502_perc', 'stack'),
+        ('aws_http_503_perc', 'stack'),
+        ('aws_http_504_perc', 'stack'),
     ],
 }

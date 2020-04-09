@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO: Remove the suppression below! It's just a temporary measure...
+# type: ignore[arg-type,assignment,index,operator,str-format,type-var,union-attr,var-annotated]
+
 from __future__ import division
 __version__ = "1.7.0i1"
 

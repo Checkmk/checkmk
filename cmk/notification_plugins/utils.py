@@ -211,6 +211,8 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
+# TODO: Why do we return Dict[str, str] below while collect_context() returns a
+# Dict[str, Text]???
 def read_bulk_contexts():
     # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}

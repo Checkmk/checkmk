@@ -247,6 +247,10 @@ class Result(
         )
 
 
+class IgnoreResultsError(RuntimeError):
+    pass
+
+
 class IgnoreResults:
     pass
 

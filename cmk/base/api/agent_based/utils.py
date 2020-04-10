@@ -7,11 +7,12 @@
 
 These are meant to be exposed in the API
 """
-from typing import List, TypeVar
+from typing import List, MutableMapping, TypeVar
 import re
 import itertools
 from cmk.base.snmp_utils import SNMPTable
 from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
+from cmk.base.api.agent_based.checking_types import IgnoreResultsError
 
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
@@ -111,3 +112,95 @@ def not_equals(oidstr, value):
 def not_exists(oidstr):
     # type: (str) -> SNMPDetectSpec
     return _negate(exists(oidstr))
+
+
+#    __     __    _            ____  _                   _   _ _   _ _
+#    \ \   / /_ _| |_   _  ___/ ___|| |_ ___  _ __ ___  | | | | |_(_) |___
+#     \ \ / / _` | | | | |/ _ \___ \| __/ _ \| '__/ _ \ | | | | __| | / __|
+#      \ V / (_| | | |_| |  __/___) | || (_) | | |  __/ | |_| | |_| | \__ \
+#       \_/ \__,_|_|\__,_|\___|____/ \__\___/|_|  \___|  \___/ \__|_|_|___/
+#
+
+
+class GetRateError(IgnoreResultsError):
+    pass
+
+
+def get_rate(value_store, key, time, value, *, raise_overflow=False):
+    # type: (MutableMapping, str, float, float, bool) -> float
+    last_state = value_store.get(key)
+    value_store[key] = (time, value)
+
+    if last_state is None:
+        raise GetRateError('Initialized: %r' % key)
+    last_time, last_value = last_state
+
+    if time <= last_time:
+        raise GetRateError('No time difference')
+
+    rate = float(value - last_value) / (time - last_time)
+    if raise_overflow and rate < 0:
+        # Do not try to handle wrapper counters. We do not know
+        # wether they are 32 or 64 bit. It also could happen counter
+        # reset (reboot, etc.). Better is to leave this value undefined
+        # and wait for the next check interval.
+        raise GetRateError('Value overflow')
+
+    return rate
+
+
+def get_average(value_store, key, time, value, backlog_minutes):
+    # type: (MutableMapping, str, float, float, float) -> float
+    """Return new average based on current value and last average
+
+    value_store : the Mapping that holds the last value. Usually this will
+                  be the value store provided by the API.
+    key         : unique ID for storing this average until the next check
+    time        : timestamp of new value
+    backlog     : averaging horizon in minutes
+
+    This function returns the new average value aₙ as the weighted sum of the
+    current value xₙ and the last average:
+
+        aₙ = (1 - w)xₙ + waₙ₋₁
+
+           = (1-w) ∑ᵢ₌₀ⁿ wⁱxₙ₋ᵢ
+
+    This results in a so called "exponential moving average".
+
+    The weight is chosen such that for long running timeseries the "backlog"
+    (all recorded values in the last n minutes) will make up 50% of the
+    weighted average.
+
+    Assuming k values in the backlog, compute their combined weight such that
+    they sum up to the backlog weight b (0.5 in our case):
+
+       b = (1-w) ∑ᵢ₌₀ᵏ⁻¹  wⁱ  =>  w = (1 - b) ** (1/k)    ("geometric sum")
+
+    For shorter timeseries we give the backlog more than those 50% weight
+    with the advantages that
+      a) the initial value becomes irrelevant, and
+      b) for beginning timeseries we reach a meaningful value more quickly.
+
+    """
+    stored_value = value_store.get(key, ())
+    if len(stored_value) != 3:
+        value_store[key] = (time, time, value)
+        return value
+    start_time, last_time, last_average = stored_value
+
+    # at the current rate, how many values are in the backlog?
+    time_diff = time - last_time
+    if time_diff <= 0:
+        # Gracefully handle time-anomaly of target systems
+        return last_average
+    backlog_count = (backlog_minutes * 60.) / time_diff
+
+    # go back to regular EMA once the timeseries is twice ↓ the backlog.
+    backlog_weight = 0.5**min(1, (time - start_time) / (2 * backlog_minutes * 60.))
+
+    weight = (1 - backlog_weight)**(1.0 / backlog_count)
+
+    average = (1.0 - weight) * value + weight * last_average
+    value_store[key] = (start_time, time, average)
+    return average

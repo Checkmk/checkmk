@@ -4,9 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: Remove the suppression below! It's just a temporary measure...
-# type: ignore[arg-type,assignment,attr-defined,index,misc,operator,union-attr,var-annotated]
-
 import ast
 import errno
 import fcntl
@@ -30,7 +27,9 @@ import traceback
 import json
 from tarfile import TarFile, ReadError
 from hashlib import md5
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Optional, IO, NamedTuple, List,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -62,10 +61,10 @@ class Log(object):
 
         if self.fd == 1:
             self.orig = sys.stdout
-            sys.stdout = self
+            sys.stdout = self  # type: ignore[assignment]
         else:
             self.orig = sys.stderr
-            sys.stderr = self
+            sys.stderr = self  # type: ignore[assignment]
 
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 
@@ -145,7 +144,7 @@ def site_config_path():
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
-g_backup_lock_f = None
+g_backup_lock_f = None  # type: Optional[IO[bytes]]
 
 
 # Es gibt ein globales Backup-Lock, das bei modifizierenden Aktionen
@@ -156,13 +155,13 @@ def acquire_backup_lock():
     lock_file_path = "/tmp/mkbackup.lock"
     if not os.path.exists(lock_file_path):
         try:
-            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
+            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="ab+", dir="/tmp", delete=False)
             set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
             os.rename(g_backup_lock_f.name, lock_file_path)
         except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
-        g_backup_lock_f = open(lock_file_path, "a")
+        g_backup_lock_f = open(lock_file_path, "ab")
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -370,7 +369,8 @@ def file_checksum(path):
 class MKTarFile(TarFile):
     def _extract_member(self, tarinfo, targetpath):
         verbose("Extracting %s" % targetpath)
-        super(MKTarFile, self)._extract_member(tarinfo, targetpath)
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self)._extract_member(tarinfo, targetpath)  # type: ignore[misc]
 
     def makedir(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -380,7 +380,8 @@ class MKTarFile(TarFile):
             elif not os.path.isdir(targetpath):
                 os.remove(targetpath)
 
-        super(MKTarFile, self).makedir(tarinfo, targetpath)
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makedir(tarinfo, targetpath)  # type: ignore[misc]
 
     def makelink(self, tarinfo, targetpath):
         if os.path.lexists(targetpath) and not os.path.islink(targetpath):
@@ -389,7 +390,8 @@ class MKTarFile(TarFile):
             else:
                 os.remove(targetpath)
 
-        super(MKTarFile, self).makelink(tarinfo, targetpath)
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makelink(tarinfo, targetpath)  # type: ignore[misc]
 
     def makefile(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -401,7 +403,8 @@ class MKTarFile(TarFile):
                 shutil.rmtree(targetpath)
 
         try:
-            super(MKTarFile, self).makefile(tarinfo, targetpath)
+            # Mypy does not understand that the method exists
+            super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
         except IOError as e:
             if e.errno == errno.EISDIR:
                 # Handle "IOError: [Errno 21] Is a directory"
@@ -410,12 +413,14 @@ class MKTarFile(TarFile):
                     os.remove(targetpath)
                 else:
                     shutil.rmtree(targetpath)
-                super(MKTarFile, self).makefile(tarinfo, targetpath)
+                # Mypy does not understand that the method exists
+                super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
 
             elif e.errno == errno.ETXTBSY:
                 # Fix "IOError: [Errno 26] Text file busy" when replacing a file
                 os.remove(targetpath)
-                super(MKTarFile, self).makefile(tarinfo, targetpath)
+                # Mypy does not understand that the method exists
+                super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
             else:
                 raise
 
@@ -424,7 +429,8 @@ class MKTarFile(TarFile):
             verbose("Cleaning up %s" % targetpath)
             os.remove(targetpath)
 
-        super(MKTarFile, self).makefifo(tarinfo, targetpath)
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makefifo(tarinfo, targetpath)  # type: ignore[misc]
 
 
 #   List: Alle Backups auflisten
@@ -455,75 +461,95 @@ class MKTarFile(TarFile):
 #   Beispielbefehle:
 #     mkbackup show nfs backup-id-20
 
+Arg = NamedTuple("Arg", [
+    ("id", str),
+    ("description", str),
+])
+
+Opt = NamedTuple("Opt", [
+    ("description", str),
+])
+
+Mode = NamedTuple("Mode", [
+    ("description", str),
+    ("args", List[Arg]),
+    ("opts", Dict[str, Opt]),
+    ("root_opts", Dict[str, Opt]),
+])
+
 modes = {
-    "backup": {
-        "description":
+    "backup": Mode(
+        description=(
             "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
             "current site is executed to the target of the given backup job. When executed as "
-            "root user on the Check_MK Appliance, a backup of the whole system is created.",
-        "args": [{
-            "id": "Job-ID",
-            "description": "The ID of the backup job to work with",
-        },],
-        "opts": {
-            "background": {
-                "description": "Fork and execute the program in the background.",
-            },
+            "root user on the Check_MK Appliance, a backup of the whole system is created."),
+        args=[
+            Arg(
+                id="Job-ID",
+                description="The ID of the backup job to work with",
+            ),
+        ],
+        opts={
+            "background": Opt(description="Fork and execute the program in the background."),
         },
-        "root_opts": {
-            "without-sites": {
-                "description": "Exclude the Check_MK site files during backup.",
-            },
+        root_opts={
+            "without-sites": Opt(description="Exclude the Check_MK site files during backup."),
         },
-    },
-    "restore": {
-        "description":
+    ),
+    "restore": Mode(
+        description=(
             "Starts the restore of a backup. In case you want to restore an encrypted backup, "
             "you have to provide the passphrase of the used backup key via the environment "
             "variable 'MKBACKUP_PASSPHRASE'. For example: MKBACKUP_PASSPHRASE='secret' mkbackup "
-            "restore ARGS.",
-        "args": [
-            {
-                "id": "Target-ID",
-                "description": "The ID of the backup target to work with",
-            },
-            {
-                "id": "Backup-ID",
-                "description": "The ID of the backup to restore",
-            },
+            "restore ARGS."),
+        args=[
+            Arg(
+                id="Target-ID",
+                description="The ID of the backup target to work with",
+            ),
+            Arg(
+                id="Backup-ID",
+                description="The ID of the backup to restore",
+            ),
         ],
-        "opts": {
-            "background": {
-                "description": "Fork and execute the program in the background.",
-            },
-            "no-verify": {
-                "description": "Disable verification of the backup files to restore from.",
-            },
-            "no-reboot": {
-                "description": "Don't trigger a system reboot after succeeded restore.",
-            }
+        opts={
+            "background": Opt(description="Fork and execute the program in the background."),
+            "no-verify": Opt(description="Disable verification of the backup files to restore from."
+                            ),
+            "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
         },
-    },
-    "jobs": {
-        "description": "Lists all configured backup jobs of the current user context.",
-    },
-    "targets": {
-        "description": "Lists all configured backup targets of the current user context.",
-    },
-    "list": {
-        "description": "Output the list of all backups found on the given backup target",
-        "args": [{
-            "id": "Target-ID",
-            "description": "The ID of the backup target to work with",
-        },],
-    },
+        root_opts={},
+    ),
+    "jobs": Mode(
+        description="Lists all configured backup jobs of the current user context.",
+        args=[],
+        opts={},
+        root_opts={},
+    ),
+    "targets": Mode(
+        description="Lists all configured backup targets of the current user context.",
+        args=[],
+        opts={},
+        root_opts={},
+    ),
+    "list": Mode(
+        description="Output the list of all backups found on the given backup target",
+        args=[
+            Arg(
+                id="Target-ID",
+                description="The ID of the backup target to work with",
+            ),
+        ],
+        opts={},
+        root_opts={},
+    ),
 }
 
-g_job_id = None
-g_local_job_id = None
-g_job_config = None
-g_target_id = None
-g_backup_id = None
+g_job_id = None  # type: Optional[str]
+g_local_job_id = None  # type: Optional[str]
+g_job_config = {}  # type: Dict[str, Any]
+g_target_id = None  # type: Optional[str]
+g_backup_id = None  # type: Optional[str]
 
 
 def mode_backup(local_job_id, opts):
@@ -621,6 +647,8 @@ def do_site_backup(opts, site=None, try_stop=True):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
                          stdin=open(os.devnull))
+    assert p.stdout is not None
+    assert p.stderr is not None
 
     with open(backup_path, "w") as backup_file:
         s = BackupStream(stream=p.stdout,
@@ -799,7 +827,7 @@ class MKBackupStream(object):
         else:
             path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
 
-        variables = {"keys": {}}
+        variables = {"keys": {}}  # type: Dict[str, Dict[str, Any]]
         if os.path.exists(path):
             exec(open(path).read(), variables, variables)
         return variables["keys"]
@@ -839,6 +867,7 @@ class BackupStream(MKBackupStream):
 
     def _process_chunk(self, chunk):
         if self._encrypt():
+            assert self._cipher is not None
             return self._cipher.encrypt(chunk)
         return chunk
 
@@ -880,6 +909,7 @@ class RestoreStream(MKBackupStream):
             chunk = self._read_from_stream(1024 * 1024)
             return chunk, chunk == ""
 
+        assert self._cipher is not None
         this_chunk = self._cipher.decrypt(self._read_from_stream(1024 * AES.block_size))
 
         if self._next_chunk is None:
@@ -1501,6 +1531,8 @@ def do_site_restore(opts, info, site=None):
     backup_path = site_backup_archive_path(site)
 
     p = subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert p.stdin is not None
+    assert p.stderr is not None
 
     with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file,
@@ -1850,17 +1882,17 @@ def usage(error=None):
 
     for mode_name, mode in sorted(modes.items()):
         mode_indent = " " * 18
-        wrapped_descr = textwrap.fill(mode["description"],
+        wrapped_descr = textwrap.fill(mode.description,
                                       width=82,
                                       initial_indent="    %-13s " % mode_name,
                                       subsequent_indent=mode_indent)
         sys.stdout.write(wrapped_descr + "\n")
         sys.stdout.write("\n")
-        if "args" in mode:
+        if mode.args:
             sys.stdout.write("%sMODE ARGUMENTS:\n" % mode_indent)
             sys.stdout.write("\n")
-            for arg in mode["args"]:
-                sys.stdout.write("%s  %-10s %s\n" % (mode_indent, arg["id"], arg["description"]))
+            for arg in mode.args:
+                sys.stdout.write("%s  %-10s %s\n" % (mode_indent, arg.id, arg.description))
             sys.stdout.write("\n")
 
         opts = mode_options(mode)
@@ -1869,7 +1901,7 @@ def usage(error=None):
             sys.stdout.write("\n")
 
             for opt_id, opt in sorted(opts.items(), key=lambda k_v: k_v[0]):
-                sys.stdout.write("%s  --%-13s %s\n" % (mode_indent, opt_id, opt["description"]))
+                sys.stdout.write("%s  --%-13s %s\n" % (mode_indent, opt_id, opt.description))
             sys.stdout.write("\n")
 
     sys.stdout.write("\n")
@@ -1878,9 +1910,9 @@ def usage(error=None):
 
 def mode_options(mode):
     opts = {}
-    opts.update(mode.get("opts", {}))
+    opts.update(mode.opts)
     if is_root():
-        opts.update(mode.get("root_opts", {}))
+        opts.update(mode.root_opts)
     return opts
 
 
@@ -1946,12 +1978,12 @@ def main():
 
     # Load the mode specific options
     try:
-        mode_opts, mode_args = getopt.getopt(args, [], mode_options(mode).keys())
+        mode_opts, mode_args = getopt.getopt(args, "", mode_options(mode).keys())
     except getopt.GetoptError as e:
         usage("%s" % e)
 
     # Validate arguments
-    if len(mode_args) != len(mode.get("args", [])):
+    if len(mode_args) != len(mode.args):
         usage("Invalid number of arguments for this mode")
 
     opt_dict = dict([(k.lstrip("-"), v) for k, v in opts + mode_opts])

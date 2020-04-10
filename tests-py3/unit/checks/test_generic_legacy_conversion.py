@@ -121,7 +121,9 @@ def test_scan_function_translation(snmp_scan_functions):
     for name, scan_func in snmp_scan_functions.items():
         if name in (
                 # these are already migrated manually:
-                "ucd_mem",):
+                "ucd_mem",
+                "hr_mem",
+        ):
             continue
 
         assert scan_func is not None

@@ -6,10 +6,12 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.hr_mem import parse_hr_mem  # type: ignore[import]
+
 
 checkname = 'hr_mem'
 
-info = [
+parsed = parse_hr_mem([[
     [
         u'.1.3.6.1.2.1.25.2.1.2', u'Physical memory', u'1024', u'16282864',
         u'15982800'
@@ -42,7 +44,7 @@ info = [
     [u'.1.3.6.1.2.1.25.2.1.4', u'/data', u'4096', u'93683381', u'64137121'],
     [u'.1.3.6.1.2.1.25.2.1.4', u'/run', u'4096', u'2035358', u'6'],
     [u'.1.3.6.1.2.1.25.2.1.4', u'/vtmp', u'4096', u'16384', u'2163']
-]
+]])
 
 discovery = {'': [(None, 'memused_default_levels')]}
 

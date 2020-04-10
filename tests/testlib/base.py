@@ -15,17 +15,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     # be empty. If that is the case, please remove it entirely.
     ('section', 'bluecat_dhcp'),
     ('section', 'bluecat_dns'),
-    ('section', 'checkpoint_fan'),
-    ('section', 'checkpoint_firewall'),
-    ('section', 'checkpoint_ha_problems'),
-    ('section', 'checkpoint_ha_status'),
-    ('section', 'checkpoint_memory'),
-    ('section', 'checkpoint_packets'),
-    ('section', 'checkpoint_powersupply'),
-    ('section', 'checkpoint_svn_status'),
-    ('section', 'checkpoint_temp'),
-    ('section', 'checkpoint_tunnels'),
-    ('section', 'checkpoint_voltage'),
     ('section', 'cisco_mem_asa'),
     ('section', 'cisco_mem_asa64'),
     ('section', 'cisco_wlc'),
@@ -60,7 +49,6 @@ KNOWN_AUTO_MIGRATION_FAILURES_INV = [
     # failing. These are used in various tests, to predict the
     # expected console output. In an ideal world, this list will (!)
     # be empty. If that is the case, please remove it entirely.
-    ('section', 'checkpoint_inv_tunnels'),
     ('section', 'inv_if'),
 ]
 

@@ -23,6 +23,11 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
+from cmk.base.plugins.agent_based.utils import checkpoint  # type: ignore[import]
+
+MIGRATED_SCAN_FUNCTIONS = {
+    "scan_checkpoint": checkpoint.DETECT,
+}
 
 if sys.version_info[0] >= 3:
 
@@ -354,6 +359,8 @@ def create_detect_spec(name, snmp_scan_function, fallback_files):
     # type: (str, Callable, List[str]) -> SNMPDetectSpec
     if name in ("if", "if64"):
         raise NotImplementedError(name)
+    if snmp_scan_function.__name__ in MIGRATED_SCAN_FUNCTIONS:
+        return MIGRATED_SCAN_FUNCTIONS[snmp_scan_function.__name__]
 
     scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
 

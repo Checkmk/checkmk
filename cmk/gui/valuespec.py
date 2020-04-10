@@ -60,6 +60,7 @@ except ImportError:
 
 import six
 from Cryptodome.PublicKey import RSA
+from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -70,12 +71,15 @@ from cmk.utils.type_defs import Seconds  # pylint: disable=unused-import
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 import cmk.gui.escaping as escaping
+import cmk.gui.sites as sites
+import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.view_utils import render_labels
 
 import livestatus
 
@@ -1152,8 +1156,6 @@ class MonitoredHostname(TextAsciiAutocomplete):
         # type: (str, Dict) -> Choices
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        import cmk.gui.sites as sites
-
         query = ("GET hosts\n"
                  "Columns: host_name\n"
                  "Filter: host_name ~~ %s" % livestatus.lqencode(value))
@@ -4101,7 +4103,6 @@ class Timerange(CascadingDropdown):
 
     def _get_graph_timeranges(self):
         try:
-            import cmk.gui.config as config  # FIXME
             return [(('age', timerange_attrs["duration"]), timerange_attrs['title'])
                     for timerange_attrs in config.graph_timeranges]
 
@@ -5606,7 +5607,6 @@ class Labels(ValueSpec):
                     (k, type(v), six.text_type))
 
     def value_to_text(self, value):
-        from cmk.gui.view_utils import render_labels
         label_sources = {k: self._label_source.value for k in value.keys()
                         } if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
@@ -5653,7 +5653,6 @@ class PageAutocompleteLabels(AjaxPage):
     # Would be better to optimize this kind of query somehow. The best we can
     # do without extending livestatus is to use the Cache header for liveproxyd
     def _get_labels_from_core(self, search_label):
-        import cmk.gui.sites as sites
         query = (
             "GET services\n"  #
             "Cache: reload\n"  #
@@ -5684,7 +5683,6 @@ class IconSelector(ValueSpec):
 
     @classmethod
     def categories(cls):
-        import cmk.gui.config as config  # FIXME: Clean this up. But how?
         return config.wato_icon_categories
 
     @classmethod
@@ -5842,7 +5840,6 @@ class IconSelector(ValueSpec):
                       onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" %
                       json.dumps(varprefix))
 
-        import cmk.gui.config as config  # FIXME: Clean this up. But how?
         if config.user.may('wato.icons'):
             back_param = '&back=' + html.urlencode(
                 html.get_url_input('back')) if html.request.has_var('back') else ''
@@ -6038,7 +6035,6 @@ class CAorCAChain(UploadOrPasteTextFile):
             raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def analyse_cert(self, value):
-        from OpenSSL import crypto  # type: ignore[import]
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, value)
         titles = {
             "C": _("Country"),
@@ -6108,7 +6104,6 @@ class SiteChoice(DropdownChoice):
         super(SiteChoice, self).__init__(**kwargs)
 
     def _site_default_value(self):
-        import cmk.gui.config as config
         if config.is_wato_slave_site():
             return False
 
@@ -6118,7 +6113,6 @@ class SiteChoice(DropdownChoice):
         return self.canonical_value()
 
     def _site_choices(self):
-        import cmk.gui.config as config  # FIXME
         return config.site_attribute_choices()
 
 
@@ -6179,7 +6173,6 @@ class RuleComment(TextAreaUnicode):
 
         super(RuleComment, self).render_input(varprefix, value)
 
-        import cmk.gui.config as config  # FIXME
         date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
 
         html.nbsp()

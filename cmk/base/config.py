@@ -1410,9 +1410,6 @@ def _initialize_data_structures():
     active_check_info.clear()
     special_agent_info.clear()
 
-    registered_agent_sections.clear()
-    registered_snmp_sections.clear()
-
 
 def get_plugin_paths(*dirs):
     # type: (str) -> List[str]

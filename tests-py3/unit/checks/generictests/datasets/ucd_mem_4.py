@@ -6,11 +6,12 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
+
 
 checkname = 'ucd_mem'
 
-
-info = [['10', '9', '', '', '', '', '', '', '', '', '', '']]
+parsed = parse_ucd_mem([[['10', '9', '', '', '', '', '', '', '', '', '', '']]])
 
 discovery = {'': [('', {})]}
 

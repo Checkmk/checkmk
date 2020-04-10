@@ -41,7 +41,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'netscaler_vserver'),
     ('section', 'printer_pages'),
     ('section', 'pulse_secure_users'),
-    ('section', 'ucd_mem'),
 ]
 
 KNOWN_AUTO_MIGRATION_FAILURES_INV = [

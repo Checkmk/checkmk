@@ -221,8 +221,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
-	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
-	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)

@@ -125,6 +125,6 @@ def test_create_snmp_section_plugin_from_legacy():
     assert plugin.parsed_section_name == ParsedSectionName("norris")
     assert plugin.parse_function.__name__ == "old_school_parse_function"
     assert plugin.host_label_function.__name__ == "host_label_function"
-    assert plugin.supersedes == []
+    assert plugin.supersedes == set()
     assert plugin.detect_spec == [[(".1.2.3.4.5", "norris.*", True)]]
     assert plugin.trees == [SNMPTree(base=".1.2.3.4.5", oids=["2", "3"])]

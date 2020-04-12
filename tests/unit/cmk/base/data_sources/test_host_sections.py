@@ -33,7 +33,7 @@ from cmk.base.data_sources.tcp import TCPConfigurator, TCPDataSource
 
 _TestSection = collections.namedtuple(
     "TestSection",
-    "name, parsed_section_name, parse_function, supercedes",
+    "name, parsed_section_name, parse_function, supersedes",
 )
 
 SECTION_ONE = _TestSection(
@@ -43,7 +43,7 @@ SECTION_ONE = _TestSection(
         "parsed_by": "one",
         "node": x[0][0]
     },
-    [],
+    set(),
 )
 
 SECTION_TWO = _TestSection(
@@ -53,7 +53,7 @@ SECTION_TWO = _TestSection(
         "parsed_by": "two",
         "node": x[0][0]
     },
-    [ParsedSectionName("one")],
+    {ParsedSectionName("one")},
 )
 
 SECTION_THREE = _TestSection(
@@ -63,7 +63,7 @@ SECTION_THREE = _TestSection(
         "parsed_by": "three",
         "node": x[0][0]
     },
-    [],
+    set(),
 )
 
 MOCK_SECTIONS = {

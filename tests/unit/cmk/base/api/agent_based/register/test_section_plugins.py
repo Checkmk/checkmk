@@ -90,7 +90,7 @@ def test_validate_host_label_function_value(host_label_function, exception_type)
         section_plugins._validate_host_label_function(host_label_function)
 
 
-def test_validate_supersedings():
+def test_validate_supersedings_raise_duplicate():
     supersedes = [
         SectionName("foo"),
         SectionName("bar"),
@@ -98,7 +98,12 @@ def test_validate_supersedings():
     ]
 
     with pytest.raises(ValueError, match="duplicate"):
-        section_plugins._validate_supersedings(supersedes)
+        section_plugins._validate_supersedings(SectionName("jim"), supersedes)
+
+
+def test_validate_supersedings_raise_self_superseding():
+    with pytest.raises(ValueError, match="cannot supersede myself"):
+        section_plugins._validate_supersedings(SectionName("foo"), [SectionName("foo")])
 
 
 def test_create_agent_section_plugin():
@@ -122,7 +127,7 @@ def test_create_agent_section_plugin():
         name="norris",
         parsed_section_name=None,  # "chuck"
         parse_function=_parse_dummy,
-        supersedes=None,  # ["Foo", "Bar"],
+        supersedes=None,  # ["foo", "bar"],
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
@@ -131,7 +136,7 @@ def test_create_agent_section_plugin():
     assert plugin.parsed_section_name == ParsedSectionName("norris")  # "chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
-    assert plugin.supersedes == []  # [SectionName("Bar"), SectionName("Foo")]
+    assert plugin.supersedes == set()  # {SectionName("bar"), SectionName("foo")}
 
 
 def test_create_snmp_section_plugin():
@@ -173,7 +178,7 @@ def test_create_snmp_section_plugin():
         parse_function=_parse_dummy,
         trees=trees,
         detect_spec=detect,
-        supersedes=None,  # ["Foo", "Bar"],
+        supersedes=None,  # ["foo", "bar"],
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
@@ -184,4 +189,36 @@ def test_create_snmp_section_plugin():
     assert plugin.host_label_function is section_plugins._noop_host_label_function
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
-    assert plugin.supersedes == []  # [SectionName("Bar"), SectionName("Foo")]
+    assert plugin.supersedes == set()  # {SectionName("far"), SectionName("foo")}
+
+
+def test_validate_supersedings_raise_implicit():
+    all_supersedes_invalid = {
+        SectionName("foo"): {SectionName("bar")},
+        SectionName("bar"): {SectionName("gee")},
+    }
+
+    with pytest.raises(
+            ValueError,
+            match="implicitly supersedes section.*You must add those to the supersedes keyword",
+    ):
+        section_plugins.validate_section_supersedes(all_supersedes_invalid)
+
+    # add the implicid superseding, then it should be OK:
+    all_supersedes_valid = all_supersedes_invalid.copy()
+    all_supersedes_valid[SectionName("foo")].add(SectionName("gee"))
+
+    section_plugins.validate_section_supersedes(all_supersedes_valid)
+
+
+def test_validate_supersedings_raise_cyclic():
+    all_supersedes_cyclic = {
+        SectionName("foo"): {SectionName("bar")},
+        SectionName("bar"): {SectionName("foo")},
+    }
+
+    with pytest.raises(
+            ValueError,
+            match="implicitly supersedes section.*This leads to a cyclic superseding",
+    ):
+        section_plugins.validate_section_supersedes(all_supersedes_cyclic)

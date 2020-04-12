@@ -16,6 +16,7 @@ from typing import (
     Literal,
     NamedTuple,
     Optional,
+    Set,
     Union,
 )
 
@@ -76,7 +77,7 @@ AgentSectionPlugin = NamedTuple(
         ("parsed_section_name", ParsedSectionName),
         ("parse_function", AgentParseFunction),
         ("host_label_function", HostLabelFunction),
-        ("supersedes", List[SectionName]),
+        ("supersedes", Set[SectionName]),
         ("module", Optional[str]),  # not available for auto migrated plugins.
     ],
 )
@@ -88,7 +89,7 @@ SNMPSectionPlugin = NamedTuple(
         ("parsed_section_name", ParsedSectionName),
         ("parse_function", SNMPParseFunction),
         ("host_label_function", HostLabelFunction),
-        ("supersedes", List[SectionName]),
+        ("supersedes", Set[SectionName]),
         ("detect_spec", SNMPDetectSpec),
         ("trees", List[SNMPTree]),
         ("module", Optional[str]),  # not available for auto migrated plugins.

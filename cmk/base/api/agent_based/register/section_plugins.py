@@ -8,7 +8,7 @@
 import functools
 import inspect
 import itertools
-from typing import Any, Generator, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
@@ -64,8 +64,11 @@ def _validate_host_label_function(host_label_function: HostLabelFunction) -> Non
         raise ValueError("host label function must accept exactly one argument 'section'")
 
 
-def _validate_supersedings(supersedes: List[SectionName]) -> None:
-    if not len(supersedes) == len(set(supersedes)):
+def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName]) -> None:
+    set_supersedes = set(supersedes)
+    if own_name in set_supersedes:
+        raise ValueError("cannot supersede myself: '%s'" % own_name)
+    if len(supersedes) != len(set_supersedes):
         raise ValueError("duplicate supersedes entry")
 
 
@@ -134,14 +137,17 @@ def _create_host_label_function(
     return filtered_generator
 
 
-def _create_supersedes(supersedes: Optional[List[str]]) -> List[SectionName]:
+def _create_supersedes(
+    section_name: SectionName,
+    supersedes: Optional[List[str]],
+) -> Set[SectionName]:
     if supersedes is None:
-        return []
+        return set()
 
-    supersedes_plugins = [SectionName(n) for n in supersedes]
-    _validate_supersedings(supersedes_plugins)
+    superseded_plugins = [SectionName(n) for n in supersedes]
+    _validate_supersedings(section_name, superseded_plugins)
 
-    return sorted(supersedes_plugins)
+    return set(superseded_plugins)
 
 
 def create_agent_section_plugin(
@@ -176,7 +182,7 @@ def create_agent_section_plugin(
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
-        _create_supersedes(supersedes),
+        _create_supersedes(section_name, supersedes),
         module,
     )
 
@@ -219,8 +225,30 @@ def create_snmp_section_plugin(
         ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
         parse_function,
         _create_host_label_function(host_label_function),
-        _create_supersedes(supersedes),
+        _create_supersedes(section_name, supersedes),
         detect_spec,
         trees,
         module,
     )
+
+
+def validate_section_supersedes(all_supersedes: Dict[SectionName, Set[SectionName]]) -> None:
+    """Make sure that no sections are superseded implicitly.
+
+    This validation makes a little extra work required for complex sepersedes,
+    however it makes resolving of supersedes way more straight forward (and more explicit).
+    """
+
+    for name, explicitly in all_supersedes.items():
+        transitivly = {
+            n for section_name in explicitly for n in all_supersedes.get(section_name, ())
+        }
+        implicitly = transitivly - explicitly
+        if name in implicitly:
+            raise ValueError("Section plugin '%s' implicitly supersedes section(s) %s. "
+                             "This leads to a cyclic superseding!" %
+                             (name, ', '.join("'%s'" % n for n in sorted(implicitly))))
+        if implicitly:
+            raise ValueError("Section plugin '%s' implicitly supersedes section(s) %s. "
+                             "You must add those to the supersedes keyword argument." %
+                             (name, ', '.join("'%s'" % n for n in sorted(implicitly))))

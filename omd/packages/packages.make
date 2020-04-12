@@ -43,6 +43,10 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
 	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    if [ ! -d "$$PACKAGE_PATH" ]; then \
+		echo "ERROR: Package directory does not exist" ; \
+		exit 1; \
+	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
 		tar cf - -C "$$PACKAGE_PATH/skel" \
 		    --exclude="*~" \
@@ -53,6 +57,10 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
+	if [ ! -d "$(PACKAGE_DIR)/$$DIR" ]; then \
+	    echo "ERROR: Package directory does not exist" ; \
+	    exit 1; \
+	fi ; \
 	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
 	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \

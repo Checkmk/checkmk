@@ -17,7 +17,8 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin  # pylint: disable=unused-import
+from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.api.agent_based.section_types import AgentParseFunction, AgentSectionPlugin, SNMPParseFunction, SNMPSectionPlugin  # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, SectionCacheInfo, PiggybackRawData, AbstractSectionContent, SectionName,
@@ -95,6 +96,11 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         self._config_cache = config.get_config_cache()
         self._multi_host_sections = {}  # type: MultiHostSectionsData
         self._section_content_cache = caching.DictCache()
+        # This is not quite the same as section_content_cache.
+        # It is introduced for the changed data handling with the migration
+        # to 'agent_based' plugins.
+        # It holy holds the result of individual calls of the parse_function.
+        self._parsed_renamed_sections = caching.DictCache()
 
     def add_or_get_host_sections(self, hostname, ipaddress, deflt):
         # type: (HostName, Optional[HostAddress], AbstractHostSections) -> AbstractHostSections
@@ -103,6 +109,45 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
     def get_host_sections(self):
         # type: () -> MultiHostSectionsData
         return self._multi_host_sections
+
+    def get_parsed_section(
+        self,
+        section_name,  # type: PluginName
+        host_key,  # type:  Tuple[HostName, Optional[HostAddress]]
+    ):
+        # type: (...) -> Optional[ParsedSectionContent]
+        cache_key = host_key + (section_name,)
+        if cache_key in self._parsed_renamed_sections:
+            return self._parsed_renamed_sections[cache_key]
+
+        try:
+            hosts_raw_sections = self._multi_host_sections[host_key].sections
+        except KeyError:
+            return self._parsed_renamed_sections.setdefault(cache_key, None)
+
+        available_raw_sections = [PluginName(n) for n in hosts_raw_sections]
+        section_def = config.get_parsed_section_creator(section_name, available_raw_sections)
+        if section_def is None:
+            # no section creating the desired one was found, assume a 'default' section:
+            raw_section_name = section_name
+            parse_function = parse_string_table  # type: Union[SNMPParseFunction, AgentParseFunction]
+        else:
+            raw_section_name = section_def.name
+            parse_function = section_def.parse_function
+
+        try:
+            string_table = hosts_raw_sections[raw_section_name]
+        except KeyError:
+            return self._parsed_renamed_sections.setdefault(cache_key, None)
+
+        try:
+            parsed = parse_function(string_table)
+        except Exception:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKParseFunctionError(*sys.exc_info())
+
+        return self._parsed_renamed_sections.setdefault(cache_key, parsed)
 
     def get_section_content(self,
                             hostname,

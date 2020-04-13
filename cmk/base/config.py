@@ -1260,6 +1260,32 @@ def get_registered_section_plugin(plugin_name):
     return None
 
 
+def get_parsed_section_creator(parsed_section_name, available_raw_sections):
+    # type: (PluginName, List[PluginName]) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
+    """return the section definition required to create the enquired parsed section"""
+    def is_candidate(plugin):
+        return (plugin.parsed_section_name == parsed_section_name and
+                plugin.name in available_raw_sections)
+
+    candidates = {
+        plugin for plugin in registered_snmp_sections.values() if is_candidate(plugin)
+    } & {plugin for plugin in registered_agent_sections.values() if is_candidate(plugin)}
+
+    if not candidates:
+        return None
+
+    # We may still have more than one. The 'supersedes' feature should deal with that:
+    # TODO (mo): CMK-4232 remove superseded ones
+    # plugins = candidates - set.union(*(set(c.supersedes) for c in candidates))
+    plugins = candidates
+
+    # validation should have enforced that this is exactly one.
+    if not len(plugins) == 1:
+        raise MKGeneralException("conflicting section definitions: %s" %
+                                 ','.join(str(p) for p in plugins))
+    return plugins.pop()
+
+
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |

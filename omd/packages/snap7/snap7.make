@@ -1,7 +1,7 @@
 # This package contains the SNAP 7 library (http://snap7.sourceforge.net/)
 SNAP7 := snap7
 SNAP7_VERS := 1.4.2
-SNAP7_DIR := $(SNAP7)-full-$(SNAP7_VERS)
+SNAP7_DIR := $(SNAP7)-$(SNAP7_VERS)
 SNAP7_ARCH := $(shell uname -m)
 
 SNAP7_UNPACK := $(BUILD_HELPER_DIR)/$(SNAP7_DIR)-unpack

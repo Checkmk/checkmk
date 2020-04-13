@@ -85,16 +85,15 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
             continue
 
         section_name = PluginName(name)
-        section = None
 
-        if name not in snmp_info:
-            section = migrated_agent_sections[section_name]
-            assert isinstance(section, AgentSectionPlugin)
-        else:
-            with known_exceptions(name):
-                if section_name not in migrated_snmp_sections:
+        with known_exceptions(name):
+            section = migrated_agent_sections.get(section_name)
+            if section is not None:
+                assert isinstance(section, AgentSectionPlugin)
+            else:
+                section = migrated_snmp_sections.get(section_name)
+                if section is None:
                     raise NotImplementedError(name)
-                section = migrated_snmp_sections[section_name]
                 assert isinstance(section, SNMPSectionPlugin)
 
         if section is None:

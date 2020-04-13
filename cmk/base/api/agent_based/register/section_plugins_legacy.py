@@ -225,6 +225,11 @@ def _create_host_label_function(discover_function, extra_sections):
 
 def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict):
     # type: (str, Dict[str, Any]) -> AgentSectionPlugin
+    if check_info_dict.get("node_info"):
+        # We refuse to tranform these. The requirement of adding the node info
+        # makes rewriting of the base code too difficult.
+        # Affected Plugins must be migrated manually after CMK-4240 is done.
+        raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
     parse_function = _create_agent_parse_function(check_info_dict.get('parse_function'),)
 
@@ -250,7 +255,7 @@ def create_snmp_section_plugin_from_legacy(check_plugin_name,
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
         # This would add 19 plugins to list of failures, but some are on the list anyway.
-        raise NotImplementedError("cannot auto-migrate cluster aware SNMP plugins")
+        raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
     trees, recover_layout_function = _create_snmp_trees(snmp_info)
 

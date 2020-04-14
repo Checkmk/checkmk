@@ -38,6 +38,7 @@ PYTHON3_FILES=$(python_files 3 "$files")
 if [ ! -z "$PYTHON2_FILES" ]; then
     $PIPENV 3 run mypy \
         --config-file "$REPO_PATH/mypy-raw.ini" \
+        --check-untyped-defs \
         --python-version 2.7 \
         --scripts-are-modules \
         --show-error-codes \

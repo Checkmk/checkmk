@@ -34,24 +34,30 @@ class Link(Schema):
         description=("Indicates the nature of the relationship of the related resource to the "
                      "resource that generated this representation"),
         required=True,
+        example="self",
     )
     href = fields.Str(
         description=("The (absolute) address of the related resource. Any characters that are "
                      "invalid in URLs must be URL encoded."),
         required=True,
+        example="https://.../api_resource",
     )
     method = fields.String(
-        description="The HTTP method to use to traverse the link (GET, POST, PUT or DELETE)",
+        description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
+        pattern="get|put|post|delete",
+        example="get",
     )
     type = fields.String(
         description="The media type that the linked resource will return",
         required=True,
+        example="application/json",
     )
     title = fields.String(
         description=("string that the consuming application may use to render the link without "
                      "having to traverse the link in advance"),
         allow_none=True,
+        example="The object itself",
     )
     arguments = fields.Dict(
         description=("map that may be used as the basis for any data (arguments or properties) "
@@ -73,26 +79,27 @@ class Parameter(Linkable):
         description=("the Id of this action parameter (typically a concatenation of the parent "
                      "action Id with the parameter name)"),
         required=True,
+        example='folder-move',
     )
-    number = fields.Int(
-        description="the number of the parameter (starting from 0)",
-        required=True,
-    )
-    name = fields.String(
-        description="the name of the parameter",
-        required=True,
-    )
+    number = fields.Int(description="the number of the parameter (starting from 0)",
+                        required=True,
+                        example=0)
+    name = fields.String(description="the name of the parameter",
+                         required=True,
+                         example='destination')
     friendlyName = fields.String(
         description="the action parameter name, formatted for rendering in a UI.",
         required=True,
+        example='The destination folder id',
     )
     description = fields.String(
         description="a description of the action parameter, e.g. to render as a tooltip.",
         required=False,
-    )
+        example='The destination')
     optional = fields.Bool(
         description="indicates whether the action parameter is optional",
         required=False,
+        example=False,
     )
 
     # for string only
@@ -126,6 +133,7 @@ class ObjectMemberBase(Linkable):
         description=('Provides the reason (or the literal "invalid") why a proposed value for a '
                      'property, collection or action argument is invalid. Appears within an '
                      'argument representation 2.9 returned as a response.'),
+        example="invalid",
         allow_none=True,
     )
     x_ro_invalidReason = fields.String(
@@ -138,7 +146,7 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
-    value = fields.List(fields.String())
+    value = fields.List(fields.Nested(Link()))
 
 
 class ObjectPropertyMember(ObjectMemberBase):
@@ -209,35 +217,43 @@ class InputAttribute(Schema):
 
 
 class InputHost(Schema):
-    hostname = fields.String()
-    folder_id = fields.String()
-    attributes = fields.Dict()
+    hostname = fields.String(example="host01")
+    folder_id = fields.String(example="root", pattern="[a-fA-F0-9]{32}|root")
+    attributes = fields.Dict(example={})
 
 
 class InputHostGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+    name = fields.String(required=True, example="windows")
+    alias = fields.String(example="Windows Servers")
 
 
 class InputContactGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+    name = fields.String(required=True, example="admins")
+    alias = fields.String(example="")
 
 
 class InputServiceGroup(Schema):
-    name = fields.String(required=True)
-    alias = fields.String()
+    name = fields.String(required=True, example="environment")
+    alias = fields.String(example="Environment Sensors")
 
 
 class InputFolder(Schema):
-    name = fields.String(required=True)
-    title = fields.String(required=True)
-    attributes = fields.List(fields.Nested(InputAttribute))
+    name = fields.String(required=True, example="Servers")
+    title = fields.String(required=True, example="Servers: The most important folder.")
+    attributes = fields.List(fields.Nested(InputAttribute),
+                             example=[{
+                                 'key': 'foo',
+                                 'value': 'bar'
+                             }])
 
 
 class UpdateFolder(Schema):
-    title = fields.String(required=True)
-    attributes = fields.List(fields.Nested(InputAttribute))
+    title = fields.String(required=True, example="Virtual Servers.")
+    attributes = fields.List(fields.Nested(InputAttribute),
+                             example=[{
+                                 'key': 'foo',
+                                 'value': 'bar'
+                             }])
 
 
 class ObjectAction(Linkable):

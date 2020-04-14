@@ -3,6 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Hosts"""
 import json
 
 from cmk.gui import watolib
@@ -18,7 +19,8 @@ from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
                  request_body_required=True,
                  request_schema=response_schemas.InputHost,
                  response_schema=response_schemas.Host)
-def create(params):
+def create_host(params):
+    """Create a host"""
     body = params['body']
     hostname = body['hostname']
     folder_id = body['folder']
@@ -46,7 +48,8 @@ def create(params):
                  request_body_required=True,
                  request_schema=response_schemas.InputHost,
                  response_schema=response_schemas.Host)
-def update(params):
+def update_host(params):
+    """Update a host"""
     hostname = params['hostname']
     body = params['body']
     attributes = body['attributes']
@@ -63,6 +66,7 @@ def update(params):
                  request_body_required=False,
                  output_empty=True)
 def delete(params):
+    """Delete a host"""
     hostname = params['hostname']
     check_hostname(hostname, should_exist=True)
     host = watolib.Host.host(hostname)
@@ -75,7 +79,8 @@ def delete(params):
                  method='get',
                  parameters=['hostname'],
                  response_schema=response_schemas.Host)
-def get(params):
+def show_host(params):
+    """Show a host"""
     hostname = params['hostname']
     host = watolib.Host.host(hostname)
     return _serve_host(host)

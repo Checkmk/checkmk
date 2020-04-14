@@ -13,19 +13,22 @@ connexion is disabled.
 
 """
 import functools
+
 from typing import (  # pylint: disable=unused-import
-    Any, Set, Dict, Optional, List, Union, Literal, Tuple,
-)
+    Any, Set, Dict, Optional, List, Union, Literal, Tuple, Type)
 
 import apispec  # type: ignore
 import apispec.utils  # type: ignore
 from connexion import problem  # type: ignore
 import six
 from marshmallow import Schema  # type: ignore[import]
+from werkzeug.utils import import_string
 
+from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import (
     add_operation,
+    ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
     PARAM_RE,
     SPEC,
@@ -36,7 +39,7 @@ def _constantly(arg):
     return lambda *args, **kw: arg
 
 
-_SEEN_PATHS = set()  # type: Set[Tuple[str, str]]
+_SEEN_PATHS = set()  # type: Set[Tuple[str, str, str]]
 
 ETagBehaviour = Union[Literal["input"], Literal["output"], Literal["both"]]
 
@@ -53,12 +56,14 @@ def endpoint_schema(
     path,  # type: str
     method='get',  # type: HTTPMethod
     parameters=None,  # type: List[Parameter]
+    content_type='application/json',  # type: str
     output_empty=False,  # type: bool
     response_schema=None,  # type: ResponseSchema
     request_schema=None,  # type: RequestSchema
     request_body_required=True,  # type: bool
     error_schema=ApiError,  # type: Schema
     etag=None,  # type: ETagBehaviour
+    tag=None,  # type: Optional[str]
     **options  # type: dict
 ):
     """Mark the function as a REST-API endpoint.
@@ -77,6 +82,10 @@ def endpoint_schema(
             The HTTP method under which the endpoint should be accessible. Methods are written
             lowercase in the OpenAPI YAML-file, though both upper and lower-cased method-names
             are supported here.
+
+        content_type (str):
+            The content-type under which this endpoint shall be executed. Multiple endpoints may
+            be defined for any one URL, but only one endpoint per url-content-type combination.
 
         parameters (list):
             A list of parameter-names which are required by this endpoint. These parameters have
@@ -105,6 +114,10 @@ def endpoint_schema(
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
+        tag (str):
+            Under which tag to file this endpoint. This has no functional consequences, just the
+            documentation will be affected.
+
         **options (dict):
             Various keys which will be directly applied to the OpenAPI operation object.
 
@@ -124,10 +137,10 @@ def endpoint_schema(
     # Everything inside of it needs the decorated function for filling out the spec.
     #
 
-    path_and_method = (path, method)
-    if path_and_method in _SEEN_PATHS:
-        raise ValueError("%s [%s] must be unique. Already defined." % path_and_method)
-    _SEEN_PATHS.add(path_and_method)
+    endpoint_identifier = (path, method, content_type)
+    if endpoint_identifier in _SEEN_PATHS:
+        raise ValueError("%s [%s, %s] must be unique. Already defined." % endpoint_identifier)
+    _SEEN_PATHS.add(endpoint_identifier)
 
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
@@ -162,11 +175,13 @@ def endpoint_schema(
 
     # We don't(!) support any endpoint without an output schema.
     # Just define one!
-    if response_schema:
+    if response_schema is not None:
+        # _add_tag(_tag_from_schema(response_schema), tag_group='Response Schemas')
+
         path_item = {
             '200': {
                 'content': {
-                    'application/json': {
+                    content_type: {
                         'schema': response_schema
                     },
                 },
@@ -179,13 +194,23 @@ def endpoint_schema(
         path_item = {'204': {'description': 'Operation done successfully. No further output.'}}
 
     def _add_api_spec(func):
+        module_obj = import_string(func.__module__)
+        module_name = module_obj.__name__
+        operation_id = func.__module__ + "." + func.__name__
+
+        tag_obj = {'name': module_name}
+        tag_obj.update(_docstring_keys(module_obj.__doc__, 'x-displayName', 'description'))
+        _add_tag(tag_obj, tag_group='Endpoints')
+
         operation_spec = {
-            'operationId': func.__module__ + "." + func.__name__,
+            'operationId': operation_id,
+            'tags': [module_name],
+            'description': '',
             'responses': {
                 'default': {
                     'description': 'Any unsuccessful or unexpected result.',
                     'content': {
-                        'application/json': {
+                        'application/problem+json': {
                             'schema': error_schema,
                         }
                     }
@@ -207,21 +232,16 @@ def endpoint_schema(
             # NOTE: Be aware that this block only works under the assumption that only one(!)
             # http_status defined `operation_spec`. If this assumption no longer holds this block
             # needs to be refactored.
-            path_item[path_item.keys()[0]]['headers'] = {
-                'ETag': {
-                    'schema': {
-                        'type': 'string',
-                        'pattern': '[0-9a-fA-F]{32}',
-                    },
-                    'description': ('The HTTP ETag header for this resource. It identifies the '
-                                    'current state of the object and needs to be sent along for '
-                                    'subsequent modifications.')
-                }
-            }
+            only_key = path_item.keys()[0]
+            path_item[only_key].setdefault('headers', {})
+            path_item[only_key]['headers'].update(ETAG_HEADER_PARAM)
 
         operation_spec['responses'].update(path_item)
 
         if request_schema is not None:
+            tag = _tag_from_schema(request_schema)
+            _add_tag(tag, tag_group='Request Schemas')
+
             operation_spec['requestBody'] = {
                 'required': request_body_required,
                 'content': {
@@ -230,12 +250,13 @@ def endpoint_schema(
                     }
                 }
             }
+            operation_spec['x-code-samples'] = code_samples(path, method, request_schema)
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:
             del operation_spec['parameters']
 
-        operation_spec.update(_docstring_keys(func))
+        operation_spec.update(_docstring_keys(func.__doc__, 'summary', 'description'))
         apispec.utils.deepupdate(operation_spec, options)
 
         add_operation(path, method, operation_spec)
@@ -246,6 +267,28 @@ def endpoint_schema(
         return wrap_with_validation(func, request_schema, response_schema)
 
     return _add_api_spec
+
+
+def _assign_to_tag_group(tag_group, name):
+    # type: (str, str) -> None
+    for group in SPEC.options.setdefault('x-tagGroups', []):
+        if group['name'] == tag_group:
+            group['tags'].append(name)
+            break
+    else:
+        raise ValueError("x-tagGroup %s not found. Please add it to specification.py" %
+                         (tag_group,))
+
+
+def _add_tag(tag, tag_group=None):
+    # type: (dict, Optional[str]) -> None
+    name = tag['name']
+    if name in [t['name'] for t in SPEC._tags]:
+        return
+
+    SPEC.tag(tag)
+    if tag_group is not None:
+        _assign_to_tag_group(tag_group, name)
 
 
 def wrap_with_validation(func, _request_schema, response_schema):
@@ -280,33 +323,119 @@ def wrap_with_validation(func, _request_schema, response_schema):
     return _validating_wrapper
 
 
-def _docstring_keys(func):
-    # type: (Any) -> Dict[str, str]
-    if not func.__doc__:
+def _schema_name(schema):
+    return schema.__name__.rstrip("Schema")
+
+
+def _schema_definition(schema):
+    ref = '#/components/schemas/%s' % (_schema_name(schema),)
+    definition = '<SchemaDefinition schemaRef="%s" showReadOnly={true} showWriteOnly={true} />' % (
+        ref,)
+    return definition
+
+
+def _tag_from_schema(schema):
+    # type: (Union[Schema, Type[Schema]]) -> dict
+    """Construct a Tag-Dict from a Schema instance or class
+
+    Examples:
+
+        >>> from marshmallow import Schema, fields
+
+        >>> class TestSchema(Schema):
+        ...      '''My docstring title.\\n\\nMore docstring.'''
+        ...      field = fields.String()
+
+        >>> expected = {
+        ...    'x-displayName': 'My docstring title.',
+        ...    'description': ('More docstring.\\n\\n'
+        ...                    '<SchemaDefinition schemaRef="#/components/schemas/Test" '
+        ...                    'showReadOnly={true} showWriteOnly={true} />'),
+        ...    'name': 'Test'
+        ... }
+
+        >>> tag = _tag_from_schema(TestSchema)
+        >>> assert tag == expected, tag
+
+        >>> tag = _tag_from_schema(TestSchema())
+        >>> assert tag == expected, tag
+
+    Args:
+        schema (marshmallow.Schema):
+            A marshmallow Schema class or instance.
+
+    Returns:
+        A dict containing the tag name and the description, which is taken from
+
+    """
+    if getattr(schema, '__name__', None) is None:
+        return _tag_from_schema(schema.__class__)
+
+    tag = {'name': _schema_name(schema)}
+    tag.update(_docstring_keys(schema.__doc__, 'x-displayName', 'description'))
+
+    tag['description'] = tag.get('description', '')
+    if tag['description']:
+        tag['description'] += '\n\n'
+    tag['description'] += _schema_definition(schema)
+
+    return tag
+
+
+def _docstring_keys(docstring, title, description):
+    # type: (Union[Any, str, None], str, str) -> Dict[str, str]
+    """Split the docstring by title and rest.
+
+    This is part of the rest.
+
+    Examples:
+        >>> _docstring_keys(_docstring_keys.__doc__, 'summary', 'desc')['summary']
+        'Split the docstring by title and rest.'
+
+    Args:
+        docstring:
+        title:
+        description:
+
+    Returns:
+
+    """
+    if not docstring:
         return {}
 
-    parts = apispec.utils.dedent(func.__doc__).split("\n\n", 1)
+    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
     if len(parts) == 1:
         return {
-            'summary': func.__doc__.strip(),
+            title: docstring.strip(),
         }
     elif len(parts) == 2:
         summary, long_desc = parts
         return {
-            'summary': summary.strip(),
-            'description': long_desc.strip(),
+            title: summary.strip(),
+            description: long_desc.strip(),
         }
 
     return {}
 
 
 def _names_of(params):
-    """
+    """Give a list of parameter names
+
+    Both dictionary and string form are supported. See examples.
 
     Args:
-        params:
+        params: A list of params (dict or string).
 
     Returns:
+        A list of parameter names.
+
+    Examples:
+        >>> _names_of(['a', 'b', 'c'])
+        ['a', 'b', 'c']
+
+        >>> _names_of(['a', {'name': 'b'}, 'c'])
+        ['a', 'b', 'c']
+
 
     Examples:
 

@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Folders"""
 import sys
 if sys.version_info[0] > 2:
     import http.client as http_client
@@ -61,7 +62,7 @@ def create(params):
                  request_body_required=True,
                  request_schema=response_schemas.UpdateFolder)
 def update(params):
-    """Update a folder.
+    """Update a folder
 
     Title and attributes can be updated, but there is no checking of the attributes done."""
     ident = params['ident']
@@ -82,6 +83,7 @@ def update(params):
                  output_empty=True,
                  etag='input')
 def delete(params):
+    """Delete a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
     parent = folder.parent()
@@ -96,6 +98,7 @@ def delete(params):
                  response_schema=response_schemas.Folder,
                  etag='both')
 def move(params):
+    """Move a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
 
@@ -117,6 +120,7 @@ def move(params):
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_folders(_params):
+    """List folders"""
     return constructors.serve_json({
         'id': 'folders',
         'value': [
@@ -133,6 +137,7 @@ def list_folders(_params):
                  etag='output',
                  parameters=['ident'])
 def show_folder(params):
+    """Show a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
     return _serve_folder(folder)

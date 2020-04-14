@@ -26,9 +26,12 @@ def create_host(params):
     hostname = body['hostname']
     folder_id = body['folder']
     attributes = body.get('attributes', {})
-    cluster_nodes = None
+    cluster_nodes = body.get('nodes', [])
 
     check_hostname(hostname, should_exist=False)
+    for node in cluster_nodes:
+        check_hostname(node, should_exist=True)
+
     validate_host_attributes(attributes, new=True)
 
     if folder_id == 'root':
@@ -56,6 +59,7 @@ def update_host(params):
     attributes = body['attributes']
     host = watolib.Host.host(hostname)  # type: watolib.CREHost
     constructors.require_etag(constructors.etag_of_obj(host))
+    validate_host_attributes(attributes, new=False)
     host.update_attributes(attributes)
     return _serve_host(host)
 

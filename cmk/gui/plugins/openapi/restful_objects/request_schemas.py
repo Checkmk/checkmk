@@ -27,10 +27,16 @@ class CreateHost(Schema):
         required=True,
     )
     attributes = fields.Dict(example={})
+    nodes = fields.List(fields.String(),
+                        description="Nodes where the newly created host should be the "
+                        "cluster-container of.",
+                        required=False,
+                        example=["host1", "host2", "host3"])
 
 
 class UpdateHost(Schema):
     attributes = fields.Dict(example={})
+    nodes = fields.List(fields.String(), example=["host1", "host2", "host3"])
 
 
 class InputHostGroup(Schema):

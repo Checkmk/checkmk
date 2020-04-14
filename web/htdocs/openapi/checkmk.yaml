@@ -98,6 +98,16 @@ components:
           example: example.com
           pattern: '[a-zA-Z][a-zA-Z-]+'
           type: string
+        nodes:
+          description: Nodes where the newly created host should be the cluster-container
+            of.
+          example:
+          - host1
+          - host2
+          - host3
+          items:
+            type: string
+          type: array
       required:
       - folder
       - hostname
@@ -482,6 +492,14 @@ components:
         attributes:
           example: {}
           type: object
+        nodes:
+          example:
+          - host1
+          - host2
+          - host3
+          items:
+            type: string
+          type: array
       type: object
   securitySchemes:
     BearerAuth:
@@ -794,15 +812,20 @@ paths:
         source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
           \          \"attributes\": {}, \n          \"folder\": \"root\", \n    \
-          \      \"hostname\": \"example.com\"\n        }' \\\n    /collections/host"
+          \      \"hostname\": \"example.com\", \n          \"nodes\": [\n       \
+          \     \"host1\", \n            \"host2\", \n            \"host3\"\n    \
+          \      ]\n        }' \\\n    /collections/host"
       - lang: httpie
         source: "http POST /collections/host \\\n    'Authorization: Bearer username\
-          \ password' \\\n    attributes='{}' \\\n    folder='root' \\\n    hostname='example.com'"
+          \ password' \\\n    attributes='{}' \\\n    folder='root' \\\n    hostname='example.com'\
+          \ \\\n    nodes='['host1', 'host2', 'host3']'"
       - lang: requests
         source: "import requests\n\nresp = requests.post(\"/collections/host\",\n\
           \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
           \        \"attributes\": {}, \n        \"folder\": \"root\", \n        \"\
-          hostname\": \"example.com\"\n    },\n)\nresp.raise_for_status()"
+          hostname\": \"example.com\", \n        \"nodes\": [\n            \"host1\"\
+          , \n            \"host2\", \n            \"host3\"\n        ]\n    },\n\
+          )\nresp.raise_for_status()"
   /objects/host/{hostname}:
     delete:
       description: ''
@@ -893,14 +916,19 @@ paths:
       - lang: curl
         source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {}\n        }' \\\n    /objects/host/example.com"
+          \          \"attributes\": {}, \n          \"nodes\": [\n            \"\
+          host1\", \n            \"host2\", \n            \"host3\"\n          ]\n\
+          \        }' \\\n    /objects/host/example.com"
       - lang: httpie
         source: "http PUT /objects/host/example.com \\\n    'Authorization: Bearer\
-          \ username password' \\\n    attributes='{}'"
+          \ username password' \\\n    attributes='{}' \\\n    nodes='['host1', 'host2',\
+          \ 'host3']'"
       - lang: requests
         source: "import requests\n\nresp = requests.put(\"/objects/host/example.com\"\
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {}\n    },\n)\nresp.raise_for_status()"
+          \        \"attributes\": {}, \n        \"nodes\": [\n            \"host1\"\
+          , \n            \"host2\", \n            \"host3\"\n        ]\n    },\n\
+          )\nresp.raise_for_status()"
   /collections/host_group:
     post:
       description: ''

@@ -212,56 +212,39 @@ class Metric:
                                                          self.value, self.levels, self.boundaries)
 
 
-class Result(NamedTuple("ResultTuple", [
-    ("state", state),
-    ("details", str),
-])):
-    def __new__(cls, state_arg, details):
-        # type: (state, str) -> Result
-        if not isinstance(details, str):
-            raise TypeError("details must be str, got %r" % (details,))
-        if '\n' in details:
-            raise ValueError("newline not allowed in details")
+class Result(
+        NamedTuple("ResultTuple", [
+            ("state", Optional[state]),
+            ("summary", Optional[str]),
+            ("details", Optional[str]),
+        ])):
+
+    _state_class = state  # avoid shadowing by keyword called "state"
+
+    def __new__(cls, *, summary=None, details=None, state=None):  # pylint: disable=redefined-outer-name
+        # type: (Optional[str], Optional[str], Optional[state]) -> Result
+
+        for var, name, type_ in (
+            (summary, "summary", str),
+            (details, "details", str),
+            (state, "state", cls._state_class),
+        ):
+            if var is not None and not isinstance(var, type_):
+                raise TypeError("%r must be %s or None, got %r" % (name, type_, var))
+        if summary and '\n' in summary:
+            raise ValueError("'\n' not allowed in 'summary'")
+        if not (details or summary):
+            raise ValueError("at least 'details' or 'summary' is required")
+        if details and summary:
+            if not len(details) > len(summary):
+                raise ValueError("'summary' should be shorter than 'details'")
+
         return super(Result, cls).__new__(
             cls,
-            state=state(state_arg),
-            details=details.strip(','),
+            state=state,
+            summary=summary or None,
+            details=details or None,
         )
-
-
-class AdditionalDetails:
-    """Additional details for a check result"""
-    @staticmethod
-    def _validate(value):
-        # type: (Iterable[str]) -> List[str]
-        if isinstance(value, str):
-            raise TypeError("AdditionalDetails expected iterable of str, got %r" % (value,))
-
-        try:
-            consumed = list(value)
-        except TypeError:
-            raise TypeError("AdditionalDetails expected iterable of str, got %r" % (value,))
-
-        if any(not isinstance(s, str) for s in consumed):
-            raise TypeError("AdditionalDetails expected iterable of str, got %r" % (value,))
-
-        return consumed
-
-    def __init__(self, iter_lines):
-        # type: (Iterable[str]) -> None
-        self._lines = [s.strip('\n') for s in self._validate(iter_lines)]
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return self._lines == other._lines
-
-    def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__, self._lines)
-
-    def __str__(self):
-        return '\n'.join(self._lines)
 
 
 class IgnoreResults:

@@ -12,16 +12,15 @@
 # TODO: The refactoring is mandatory.
 
 import os
+from pathlib import Path  # pylint: disable=import-error
 import re
 import shutil
 import sys
 import tempfile
 import uuid
 
-# Explicitly check for Python 3 (which is understood by mypy)
-from pathlib import Path  # pylint: disable=import-error
-
 import six
+
 from cmk.utils import msi_patch
 
 opt_verbose = True
@@ -183,7 +182,7 @@ def copy_or_create(src_file, dst_file, text):
 
 # tested
 def generate_product_version(version, revision_text):
-    major, minor, build = 1, 0, 0
+    major, minor, build = '1', '0', '0'
     try:
         major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
         build = '0' if build == '' else build

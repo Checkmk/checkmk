@@ -31,9 +31,8 @@ class OIDEnd(int):
     instead, the parse function will be given the tailing portion of the
     OID (the part that you not already know).
     """
-    def __new__(cls):
-        return super(OIDEnd, cls).__new__(cls, 0)
 
+    # NOTE: The default constructor already does the right thing for our "glorified 0".
     def __repr__(self):
         return "OIDEnd()"
 

@@ -12,10 +12,11 @@ import time
 import multiprocessing
 import traceback
 import ast
-from typing import (  # pylint: disable=unused-import
-    Dict, Any,
-)
+from typing import Any, Dict, Tuple  # pylint: disable=unused-import
+
 import six
+
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -245,9 +246,11 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.JoinableQueue()
+        result_queue = multiprocessing.JoinableQueue(
+        )  # type: multiprocessing.Queue[Tuple[SiteId, str]]
 
         processes = []
+        site_id = SiteId("unknown_site")
         for site_id in test_sites:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
@@ -255,7 +258,7 @@ class ModeAnalyzeConfig(WatoMode):
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any([p.is_alive() for site_id, p in processes]):
+        while any(p.is_alive() for site_id, p in processes):
             try:
                 site_id, results_data = result_queue.get_nowait()
                 result_queue.task_done()
@@ -264,7 +267,7 @@ class ModeAnalyzeConfig(WatoMode):
                 if result["state"] == 1:
                     raise MKGeneralException(result["response"])
 
-                elif result["state"] == 0:
+                if result["state"] == 0:
                     test_results = []
                     for result_data in result["response"]:
                         result = ACResult.from_repr(result_data)
@@ -317,6 +320,7 @@ class ModeAnalyzeConfig(WatoMode):
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
     def _perform_tests_for_site(self, site_id, result_queue):
+        # type: (SiteId, multiprocessing.Queue[Tuple[SiteId, str]]) -> None
         self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't

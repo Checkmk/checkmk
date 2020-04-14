@@ -7,6 +7,7 @@
 
 import re
 import time
+from typing import List, Text, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.render as render
 
@@ -138,8 +139,8 @@ class ModeAuditLog(WatoMode):
             log_today, times = self._paged_log_from(log, start)
             if len(log) == 0 or len(log_today) > 0:
                 return log_today, times
-            else:  # No entries today, but log not empty -> go back in time
-                start -= 24 * 3600
+            # No entries today, but log not empty -> go back in time
+            start -= 24 * 3600
 
     def _get_start_date(self):
         if self._options["start"] == "now":
@@ -172,9 +173,7 @@ class ModeAuditLog(WatoMode):
             if t >= end_time:
                 # This log is too new
                 continue
-            elif first_log_index is None \
-                  and t < end_time \
-                  and t >= start_time:
+            if first_log_index is None and start_time <= t < end_time:
                 # This is a log for this day. Save the first index
                 if first_log_index is None:
                     first_log_index = index
@@ -290,7 +289,7 @@ class ModeAuditLog(WatoMode):
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -359,7 +358,7 @@ class ModeAuditLog(WatoMode):
             if linkinfo == '-':
                 linkinfo = ''
 
-            if self._filter_entry(user, action, text):
+            if self._filter_entry(user, action, text):  # TODO: Already filtered?!
                 continue
 
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
@@ -367,6 +366,7 @@ class ModeAuditLog(WatoMode):
         return False
 
     def _parse_audit_log(self):
+        # type: () -> List[Tuple[int, Text, Text, Text, Text]]
         if not self.log_path.exists():
             return []
 
@@ -374,18 +374,11 @@ class ModeAuditLog(WatoMode):
         with self.log_path.open(encoding="utf-8") as fp:
             for line in fp:
                 splitted = line.rstrip().split(None, 4)
-
                 if len(splitted) == 5 and splitted[0].isdigit():
-                    splitted[0] = int(splitted[0])
-
-                    user, action, text = splitted[2:]
-                    if self._filter_entry(user, action, text):
-                        continue
-
-                    entries.append(splitted)
-
+                    t, linkinfo, user, action, text = splitted
+                    if not self._filter_entry(user, action, text):
+                        entries.append((int(t), linkinfo, user, action, text))
         entries.reverse()
-
         return entries
 
     def _filter_entry(self, user, action, text):

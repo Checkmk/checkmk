@@ -2085,6 +2085,9 @@ msgstr "AWS/EC2 CPU Guthaben"
 msgid "AWS/EC2 Limits"
 msgstr "AWS/EC2-Grenzwerte"
 
+msgid "AWS/ELBApplication target errors"
+msgstr "AWS/ELBApplication Zielfehler"
+
 msgid "AWS/ELB Backend Connection Errors"
 msgstr "AWS/ELB Backend Verbindungsfehler"
 
@@ -38426,60 +38429,67 @@ msgid "Specify levels"
 msgstr "Level einstellen"
 
 msgid ""
-"Specify levels for HTTP 2XX errors in percentage which refer to the total "
+"Specify levels for HTTP 2XX errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 2XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 3XX errors in percentage which refer to the total "
+"Specify levels for HTTP 3XX errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 3XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 4XX errors in percentage which refer to the total "
+"Specify levels for HTTP 4XX errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 4XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 5XX errors in percentage which refer to the total "
+"Specify levels for HTTP 5XX errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 5XX-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 500 errors in percentage which refer to the total "
+"Specify levels for HTTP 500 errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 500-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 502 errors in percentage which refer to the total "
+"Specify levels for HTTP 502 errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 502-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 503 errors in percentage which refer to the total "
+"Specify levels for HTTP 503 errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 503-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
 
 msgid ""
-"Specify levels for HTTP 504 errors in percentage which refer to the total "
+"Specify levels for HTTP 504 errors in percent which refer to the total "
 "number of requests."
 msgstr ""
 "Geben Sie die Stufen für HTTP 504-Fehler in Prozent an, die sich auf die "
 "Gesamtzahl der Anfragen beziehen."
+
+msgid ""
+"Specify levels for Lambda user errors in percent which refer to the total "
+"number of requests."
+msgstr ""
+"Geben Sie die Stufen für Lambda-Benutzerfehler in Prozent an, die sich auf "
+"die Gesamtzahl der Anfragen beziehen."
 
 msgid ""
 "Specify levels for datafiles of a database. Please note that relative levels "
@@ -40185,6 +40195,9 @@ msgstr "Erkennung von Systemd Services"
 
 msgid "Systemd Services"
 msgstr "Systemd Services"
+
+msgid "Target group name"
+msgstr "Name der Zielgruppe"
 
 msgid "TCP"
 msgstr "TCP"
@@ -50141,6 +50154,9 @@ msgstr "Schwellwerte für die CopyQueue Length"
 msgid "Upper levels for HTTP errors"
 msgstr "Obere Schwellwerte für HTTP-Fehler"
 
+msgid "Upper levels for HTTP & Lambda user errors"
+msgstr "Obere Schwellwerte für HTTP-Fehler & Lambda-Benutzerfehler"
+
 msgid "Upper levels for Load Balancers"
 msgstr "Obere Schwellwerte für Load Balancers"
 
@@ -50484,6 +50500,9 @@ msgstr "Obere prozentuale Schwellen für HTTP 503-Fehler (nur Appplication Load 
 
 msgid "Upper percentual levels for HTTP 504 errors (Application Load Balancers only)"
 msgstr "Obere prozentuale Schwellen für HTTP 504-Fehler (nur Appplication Load Balancers)"
+
+msgid "Upper percentual levels for Lambda user errors"
+msgstr "Obere prozentuale Schwellen für Lambda-Benutzerfehler"
 
 msgid "Upper percentual levels for LIST requests"
 msgstr "Obere, prozentuale Schwellen für LIST-Anfragen"

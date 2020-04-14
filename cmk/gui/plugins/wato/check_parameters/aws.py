@@ -759,6 +759,39 @@ rulespec_registry.register(
         title=lambda: _("AWS/ELBv2 LCU"),
     ))
 
+
+def _parameter_valuespec_aws_elbv2_application_target_errors():
+    return Dictionary(title=_("Upper levels for HTTP & Lambda user errors"),
+                      elements=[("levels_http",
+                                 Dictionary(title=_("Upper levels for HTTP errors"),
+                                            elements=_vs_elements_http_errors(
+                                                ['2xx', '3xx', '4xx', '5xx']))),
+                                ("levels_lambda",
+                                 Tuple(
+                                     title=_("Upper percentual levels for Lambda user errors"),
+                                     help=_("Specify levels for Lambda user errors in percent "
+                                            "which refer to the total number of requests."),
+                                     elements=[
+                                         Percentage(title=_("Warning at")),
+                                         Percentage(title=_("Critical at")),
+                                     ],
+                                 ))])
+
+
+def _item_spec_aws_elbv2_target_errors():
+    return TextAscii(title=_("Target group name"))
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_elbv2_target_errors",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_elbv2_target_errors,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_elbv2_application_target_errors,
+        title=lambda: _("AWS/ELBApplication Target Errors"),
+    ))
+
 #.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |

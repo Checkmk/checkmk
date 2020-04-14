@@ -4978,6 +4978,18 @@ def register_aws_http_metrics():
 
 register_aws_http_metrics()
 
+metric_info["aws_lambda_users_errors_rate"] = {
+    "title": _("Lambda user errors"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["aws_lambda_users_errors_perc"] = {
+    "title": _("Percentage of Lambda user errors"),
+    "unit": "%",
+    "color": "42/a",
+}
+
 metric_info["aws_overall_hosts_health_perc"] = {
     "title": _("Proportion of healthy host"),
     "unit": "%",

@@ -2295,6 +2295,16 @@ class ELBv2TargetGroups(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
+def _load_balancer_arn_to_dim(arn):
+    # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
+    # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
+    return "/".join(arn.split("/")[-3:])
+
+
+def _target_group_arn_to_dim(arn):
+    return arn.split(':')[-1]
+
+
 class ELBv2Application(AWSSectionCloudwatch):
     @property
     def name(self):
@@ -2314,9 +2324,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         metrics = []
         for idx, (load_balancer_dns_name,
                   load_balancer) in enumerate(colleague_contents.content.items()):
-            # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
-            # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
-            load_balancer_dim = "/".join(load_balancer['LoadBalancerArn'].split("/")[-3:])
+            load_balancer_dim = _load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
             for metric_name, stat in [
                 ('ActiveConnectionCount', 'Sum'),
                 ('ClientTLSNegotiationErrorCount', 'Sum'),
@@ -2368,6 +2376,115 @@ class ELBv2Application(AWSSectionCloudwatch):
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.items()
         ]
+
+
+class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
+    """
+    Additional monitoring for target groups of application load balancers.
+    """
+    def __init__(self, client, region, config, distributor=None):
+        super(ELBv2ApplicationTargetGroupsResponses, self).__init__(client,
+                                                                    region,
+                                                                    config,
+                                                                    distributor=distributor)
+        self._separator = " "
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('elbv2_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics_with_specs(self, colleague_contents, target_types, metrics_to_get):
+
+        metrics = []
+
+        for idx, (load_balancer_dns_name,
+                  load_balancer) in enumerate(colleague_contents.content.items()):
+
+            # these metrics only apply to application load balancers
+            load_balancer_type = load_balancer.get('Type')
+            if load_balancer_type != 'application':
+                continue
+
+            load_balancer_dim = _load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
+
+            for target_group in load_balancer['TargetGroups']:
+
+                # only add metrics if the target group is of the right type, for example, we do not
+                # want to discover the service aws_elbv2_target_groups_http for target groups of
+                # type 'lambda' or the service aws_elbv2_target_groups_lambda for target groups of
+                # type 'instance'
+                if target_group['TargetType'] not in target_types:
+                    continue
+
+                target_group_dim = _target_group_arn_to_dim(target_group["TargetGroupArn"])
+
+                for metric_name in metrics_to_get:
+                    metrics.append({
+                        'Id': self._create_id_for_metric_data_query(
+                            idx, metric_name,
+                            target_group["TargetGroupName"].lower().replace('-', "_")),
+                        'Label': load_balancer_dns_name + self._separator +
+                                 target_group["TargetGroupName"],
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': 'AWS/ApplicationELB',
+                                'MetricName': metric_name,
+                                'Dimensions': [{
+                                    'Name': "LoadBalancer",
+                                    'Value': load_balancer_dim,
+                                }, {
+                                    'Name': "TargetGroup",
+                                    'Value': target_group_dim
+                                }]
+                            },
+                            'Period': self.period,
+                            'Stat': 'Sum',
+                        },
+                    })
+
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content.content:
+            load_bal_dns, target_group_name = row['Label'].split(self._separator)
+            row['Label'] = target_group_name
+            content_by_piggyback_hosts.setdefault(load_bal_dns, []).append(row)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.items()
+        ]
+
+
+class ELBv2ApplicationTargetGroupsHTTP(ELBv2ApplicationTargetGroupsResponses):
+    @property
+    def name(self):
+        return "elbv2_application_target_groups_http"
+
+    def _get_metrics(self, colleague_contents):
+        return self._get_metrics_with_specs(colleague_contents, ['instance', 'ip'], [
+            'RequestCount', 'HTTPCode_Target_2XX_Count', 'HTTPCode_Target_3XX_Count',
+            'HTTPCode_Target_4XX_Count', 'HTTPCode_Target_5XX_Count'
+        ])
+
+
+class ELBv2ApplicationTargetGroupsLambda(ELBv2ApplicationTargetGroupsResponses):
+    @property
+    def name(self):
+        return "elbv2_application_target_groups_lambda"
+
+    def _get_metrics(self, colleague_contents):
+        return self._get_metrics_with_specs(colleague_contents, ['lambda'],
+                                            ['RequestCount', 'LambdaUserError'])
 
 
 #.
@@ -2945,6 +3062,10 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource='elbv2')
         elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
         elbv2_application = ELBv2Application(cloudwatch_client, region, config)
+        elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
+            cloudwatch_client, region, config)
+        elbv2_application_target_groups_lambda = ELBv2ApplicationTargetGroupsLambda(
+            cloudwatch_client, region, config)
         elbv2_network = ELBv2Network(cloudwatch_client, region, config)
 
         rds_limits = RDSLimits(rds_client, region, config)
@@ -2973,6 +3094,8 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_summary_distributor.add(elbv2_labels)
         elbv2_summary_distributor.add(elbv2_target_groups)
         elbv2_summary_distributor.add(elbv2_application)
+        elbv2_summary_distributor.add(elbv2_application_target_groups_http)
+        elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
         elbv2_summary_distributor.add(elbv2_network)
 
         glacier_limits_distributor.add(glacier_summary)
@@ -3012,6 +3135,8 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_labels)
             self._sections.append(elbv2_target_groups)
             self._sections.append(elbv2_application)
+            self._sections.append(elbv2_application_target_groups_http)
+            self._sections.append(elbv2_application_target_groups_lambda)
             self._sections.append(elbv2_network)
 
         if 'glacier' in services:

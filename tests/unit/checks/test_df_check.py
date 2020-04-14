@@ -199,6 +199,17 @@ info_empty_inodes = [
                 "include_volume_name": True
             },
         ),
+        # Including only check mk tmpfs via regex
+        (
+            info_df_lnx_tmpfs,
+            [
+                (u'/opt/omd/sites/heute/tmp', {}),
+            ],
+            {
+                "never_ignore_mountpoints": [u'~.*/omd/sites/[^/]+/tmp$'],
+                "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+            },
+        ),
         # btrfs:
         (info_df_btrfs, [(u'btrfs /dev/sda1', {})], {}),
         # btrfs w/ volume name option:

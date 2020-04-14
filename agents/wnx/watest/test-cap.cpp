@@ -681,27 +681,26 @@ TEST(CapTest, Names) {
 
 // This is complicated test, rather Functional/Business
 // We are checking three situation
-// Legacy check_mk.install.yml is absent
 // Build  check_mk.install.yml is present, but not installed
 // Build  check_mk.install.yml is present and installed
 TEST(CapTest, ReInstallRestore) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
-    enum class Mode { legacy, build, wato };
-    for (auto mode : {Mode::legacy, Mode::build, Mode::wato}) {
+    enum class Mode { build, wato };
+    for (auto mode : {Mode::build, Mode::wato}) {
         XLOG::SendStringToStdio("*\n", XLOG::Colors::yellow);
 
         cma::OnStartTest();
         tst::SafeCleanTempDir();
-        auto [r, u] = tst::CreateInOut();
+        fs::path r;
+        fs::path u;
+        std::tie(r, u) = tst::CreateInOut();
         auto root = r.wstring();
         auto user = u.wstring();
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
         auto old_user = cma::cfg::GetUserDir();
 
-        fs::path ini_base = old_user;
-        ini_base /= "check_mk.ps.test.ini";
         fs::path cap_base = old_user;
         cap_base /= "plugins.test.cap";
         fs::path yml_b_base = old_user;
@@ -713,7 +712,6 @@ TEST(CapTest, ReInstallRestore) {
         try {
             // Prepare installed files
             fs::create_directory(r / dirs::kInstall);
-            fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
             fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
             tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
 
@@ -742,22 +740,18 @@ TEST(CapTest, ReInstallRestore) {
         };
 
         // Main Function
-        cma::cfg::cap::ReInstall();
+        EXPECT_TRUE(cma::cfg::cap::ReInstall());
 
-        auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
-        auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
         auto bakery = cma::tools::ReadFileInString(
             (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
         auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
         auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
         auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
         auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
-        ASSERT_TRUE(user_ini);
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
-        ASSERT_TRUE(bakery);
+        ASSERT_TRUE(bakery.has_value() == (mode == Mode::wato));
         EXPECT_TRUE(user_dat == root_dat);
-        EXPECT_TRUE(user_ini == root_ini);
 
         // bakery check
         auto y = YAML::Load(*bakery);
@@ -765,7 +759,7 @@ TEST(CapTest, ReInstallRestore) {
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_NO_THROW(y["ps"].IsMap());
+            EXPECT_TRUE(y.IsNull());
         }
 
         // now damage files
@@ -777,25 +771,21 @@ TEST(CapTest, ReInstallRestore) {
             }
         };
 
-        destroy_file(user_gen(L"check_mk.ini"));
         destroy_file(user_gen(files::kInstallYmlFileW));
         destroy_file(user_gen(L"plugins.cap"));
         destroy_file(user_gen(L"checkmk.dat"));
         destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
 
         // main Function again
-        cma::cfg::cap::ReInstall();
+        EXPECT_TRUE(cma::cfg::cap::ReInstall());
 
-        user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
         bakery = cma::tools::ReadFileInString(
             (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
         user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
         user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
-        ASSERT_TRUE(user_ini);
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
         EXPECT_TRUE(user_dat == root_dat);
-        EXPECT_TRUE(user_ini == root_ini);
 
         // bakery check
         y = YAML::Load(*bakery);
@@ -803,7 +793,7 @@ TEST(CapTest, ReInstallRestore) {
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_NO_THROW(y["ps"].IsMap());
+            EXPECT_TRUE(y.IsNull());
         }
     }
 }

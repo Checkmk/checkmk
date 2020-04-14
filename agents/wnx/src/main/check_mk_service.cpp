@@ -210,7 +210,7 @@ void PrintCap() {
     using namespace xlog::internal;
 
     PrintBlock(
-        "Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
+        "Install Bakery Files and plugins.cap in install folder:\n",
         Colors::pink, []() {
             return fmt::format(
                 "\t{0} {1}\n",

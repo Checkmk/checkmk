@@ -587,20 +587,6 @@ static void InstallCapFile() {
     XLOG::l.t("Installing of CAP file is not required");
 }
 
-static void InstallIniFile() {
-    auto [target_ini, source_ini] = GetInstallPair(files::kIniFile);
-
-    XLOG::l.t("Installing ini file '{}'", source_ini.u8string());
-    if (NeedReinstall(target_ini, source_ini)) {
-        XLOG::l.i("Reinstalling '{}' with '{}'", target_ini.u8string(),
-                  source_ini.u8string());
-        ReinstallIni(target_ini, source_ini);
-        return;
-    }
-
-    XLOG::l.t("Installing of INI file is not required");
-}
-
 static void InstallYmlFile() {
     auto [target_yml, source_yml] = GetInstallPair(files::kInstallYmlFileW);
 
@@ -725,7 +711,6 @@ void Install() {
 
     try {
         InstallCapFile();
-        InstallIniFile();
         InstallYmlFile();
     } catch (const std::exception &e) {
         XLOG::l.crit("Exception '{}'", e.what());
@@ -757,7 +742,7 @@ void Install() {
 }
 
 // Re-install all files as is from the root-install
-void ReInstall() {
+bool ReInstall() {
     using namespace cma::cfg;
 
     namespace fs = std::filesystem;
@@ -767,7 +752,6 @@ void ReInstall() {
 
     std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
         {files::kCapFile, ReinstallCaps},
-        {files::kIniFile, ReinstallIni},
     };
 
     try {
@@ -785,13 +769,13 @@ void ReInstall() {
                       root_dir / files::kInstallYmlFileA);
     } catch (const std::exception &e) {
         XLOG::l.crit("Exception '{}'", e.what());
-        return;
+        return false;
     }
 
     auto source = GetRootInstallDir();
 
-    InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
-                      Mode::forced);
+    return InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
+                             Mode::forced);
 }
 
 }  // namespace cma::cfg::cap

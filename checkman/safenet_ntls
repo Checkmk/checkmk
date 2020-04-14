@@ -8,4 +8,4 @@ description:
  Running is treated as OK, Down as critical.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

@@ -17,4 +17,4 @@ item:
  The sid instance name
 
 inventory:
- One service is created per instance.
+ One service is created for each instance.

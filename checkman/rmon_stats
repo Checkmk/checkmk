@@ -17,5 +17,5 @@ item:
  The ID of the network interface within RMON (etherStatsIndex)
 
 inventory:
- The inventory creates one service for each network port for which RMON is activated.
+ One service is created for each network port for which RMON is activated.
 

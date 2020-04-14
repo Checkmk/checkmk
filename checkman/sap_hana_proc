@@ -18,4 +18,4 @@ item:
  The sid instance name and the process name seperated by a {{-}}
 
 inventory:
- One service is created per instance and process.
+ One service is created for each instance and process.

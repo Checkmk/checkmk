@@ -17,4 +17,4 @@ item:
  Name of the client
 
 inventory:
- One service {"Redis Clients"} will be created.
+ One service {"Redis Clients"} is created.

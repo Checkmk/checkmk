@@ -11,5 +11,5 @@ item:
  One of the two statements: {{successful}}, {{failed}}
 
 inventory:
- Two checks per device are created - one for the successful connections and one
- for the failed ones.
+ Two services are created for each device.
+ One service for the successful connections and one for the failed ones.

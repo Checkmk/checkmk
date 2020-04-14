@@ -18,5 +18,5 @@ Performance data:
 item:
  Name of the pool
 
-Inventory:
- One service will be created
+inventory:
+ One service is created.

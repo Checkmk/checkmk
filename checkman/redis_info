@@ -17,4 +17,4 @@ item:
  The item is the name of the Redis instance.
 
 inventory:
- One service for each instance {"Redis MY_REDIS Server Info"} will be created.
+ One service is created for each instance {"Redis MY_REDIS Server Info"}.

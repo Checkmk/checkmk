@@ -22,4 +22,4 @@ item:
  The sid instance name and backup type seperated by a {{-}}
 
 inventory:
- One service is created per instance and backup type.
+ One service is created for each instance and backup type.

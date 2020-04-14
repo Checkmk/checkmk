@@ -19,4 +19,4 @@ item:
  The sid instance name and the disk type seperated by a {{-}}
 
 inventory:
- One service is created per instance and disk type.
+ One service is created for each instance and disk type.

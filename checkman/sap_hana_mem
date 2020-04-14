@@ -10,4 +10,4 @@ description:
  See werk 7100 for detailed information.
 
 inventory:
- One service per instance is created.
+ One service is created for each instance.

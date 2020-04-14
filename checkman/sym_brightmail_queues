@@ -15,5 +15,5 @@ item:
 
 
 inventory:
- The check creates one item per queue found.
+ One service is created for each queue.
 

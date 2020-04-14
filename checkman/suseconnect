@@ -16,5 +16,5 @@ description:
  The check can be configured via the corresponding WATO rule {SLES License}.
 
 inventory:
- The service {SLES license} is created.
+ One service named {SLES license} is created.
 

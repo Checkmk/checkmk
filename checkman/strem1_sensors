@@ -11,5 +11,5 @@ item:
  The name of the group.
 
 inventory:
- All available sensors are automatically inventorized.
+ One service is created for each available sensor.
 

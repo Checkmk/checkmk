@@ -11,5 +11,5 @@ item:
  The name of the service
 
 inventory:
- Each service which is up will be inventorized.
- The services can be {0} (down) or {1} (up)
+ One service is created for each Stormshield Service if it is up.
+ The Stormshield Services can be {0} (down) or {1} (up).

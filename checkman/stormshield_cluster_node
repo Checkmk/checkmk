@@ -14,4 +14,4 @@ item:
  The index of the cluster node
 
 inventory:
- One check is created which holds information about the other member
+ One service is created which holds information about the other member.

@@ -14,5 +14,5 @@ item:
  The name of the subsystem
 
 inventory:
- One check for each service is created by the inventory, if the
- sensor is not in state (not available).
+ One service is created for each subsystem
+ if it is not in state (not available).

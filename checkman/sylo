@@ -15,4 +15,4 @@ description:
  logs as rates.
 
 inventory:
- Each host which provides the section in the check_mk agent gets one Sylo service.
+ One service is created on each host which provides the section in the check_mk agent.

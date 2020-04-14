@@ -9,6 +9,8 @@ modified via rules."""
 
 from typing import List, Tuple, Optional, Text  # pylint: disable=unused-import
 
+import six
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -350,8 +352,9 @@ class ModeObjectParameters(WatoMode):
                 ('rule_folder', rule.folder.path()),
                 ('rulenr', rule.index()),
                 ('host', self._hostname),
-                ('item', watolib.mk_repr(svc_desc_or_item) if svc_desc_or_item else ''),
-                ('service', watolib.mk_repr(svc_desc) if svc_desc else ''),
+                ('item',
+                 six.ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
+                ('service', six.ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
             ])
 
         varname = rulespec.name
@@ -361,8 +364,8 @@ class ModeObjectParameters(WatoMode):
             ('mode', 'edit_ruleset'),
             ('varname', varname),
             ('host', self._hostname),
-            ('item', watolib.mk_repr(svc_desc_or_item)),
-            ('service', watolib.mk_repr(svc_desc)),
+            ('item', six.ensure_str(watolib.mk_repr(svc_desc_or_item))),
+            ('service', six.ensure_str(watolib.mk_repr(svc_desc))),
         ])
 
         forms.section(html.render_a(rulespec.title, url))

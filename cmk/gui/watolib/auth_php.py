@@ -63,10 +63,8 @@ def _format_php(data, lvl=1):
             s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
                                                                                  lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, str):
-        s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, six.text_type):
-        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
+    elif isinstance(data, six.string_types):
+        s += '\'%s\'' % six.ensure_str(data).replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
     elif data is None:

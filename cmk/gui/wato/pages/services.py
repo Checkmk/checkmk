@@ -17,6 +17,8 @@ import re
 from hashlib import sha256
 from typing import Any, Tuple, Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -921,7 +923,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if self._options.action == DiscoveryAction.FIX_ALL:
             if table_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
-            elif table_source == DiscoveryState.IGNORED:
+            if table_source == DiscoveryState.IGNORED:
                 return DiscoveryState.IGNORED
             #table_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
@@ -1545,8 +1547,8 @@ class DiscoveryPageRenderer(object):
                 ("mode", "edit_ruleset"),
                 ("varname", ruleset_name),
                 ("host", self._host.name()),
-                ("item", watolib.mk_repr(item)),
-                ("service", watolib.mk_repr(descr)),
+                ("item", six.ensure_str(watolib.mk_repr(item))),
+                ("service", six.ensure_str(watolib.mk_repr(descr))),
             ])
 
         html.icon_button(url, _("Edit and analyze the check parameters of this service"),
@@ -1558,15 +1560,15 @@ class DiscoveryPageRenderer(object):
                 ("mode", "edit_ruleset"),
                 ("varname", "ignored_services"),
                 ("host", self._host.name()),
-                ("item", watolib.mk_repr(descr)),
+                ("item", six.ensure_str(watolib.mk_repr(descr))),
             ]), _("Edit and analyze the disabled services rules"), "rulesets")
 
     def _get_ruleset_name(self, table_source, check_type, checkgroup):
         if checkgroup == "logwatch":
             return "logwatch_rules"
-        elif checkgroup:
+        if checkgroup:
             return "checkgroup_parameters:" + checkgroup
-        elif table_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
+        if table_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
             return "active_checks:" + check_type
         return None
 

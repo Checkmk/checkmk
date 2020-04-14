@@ -50,6 +50,7 @@ from cmk.gui.watolib.groups import load_contact_group_information
 _auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
 
 
+# TODO: Fix copy-n-paste with cmk.gui.watolib.tags.
 def _format_php(data, lvl=1):
     s = ''
     if isinstance(data, (list, tuple)):

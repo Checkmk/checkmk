@@ -14,5 +14,5 @@ item:
  The name of the instance (optional) and the name of the staging pool seperated by a {{/}}
 
 inventory:
- The check inventorizes all storage pools on the server, independent of their type.
+ One service is created for each storage pool on the server independent of their type.
 

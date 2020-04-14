@@ -13,5 +13,5 @@ item:
  The chassis number combined with the module number, e.g. Chassis 1 Module 1
 
 inventory:
- Creates on server per chassis module
+ One service is created for each chassis module on every server.
 

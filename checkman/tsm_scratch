@@ -11,6 +11,5 @@ item:
  The name of the instance (optional) and the library name seperated by a {{/}}
 
 inventory:
- Per library one check is created
-
+ One service is created for each library.
 

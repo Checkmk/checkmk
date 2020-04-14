@@ -12,4 +12,4 @@ item:
  The bricks position inside the stack.
 
 inventory:
- All ambient light bricklets are automatically inventorized.
+ One service is created for each ambient light bricklet.

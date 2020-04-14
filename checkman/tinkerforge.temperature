@@ -13,4 +13,4 @@ item:
  The bricks position inside the stack.
 
 inventory:
- All temperature bricklets are automatically inventorized.
+ One service is created for each temperature bricklet.

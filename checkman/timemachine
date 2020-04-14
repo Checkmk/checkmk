@@ -11,5 +11,5 @@ description:
  Returns {CRIT} if the tmutil command returns an error.
 
 inventory:
- Finds exactly one service on every MAC OS machine having tmutil installed.
+ One service is created on every MAC OS machine having tmutil installed.
 

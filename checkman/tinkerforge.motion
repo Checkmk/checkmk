@@ -18,4 +18,4 @@ item:
  The bricks position inside the stack.
 
 inventory:
- All motion detector bricklets are automatically inventorized.
+ One service is created for each motion detector bricklet.

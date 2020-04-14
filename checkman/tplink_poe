@@ -11,4 +11,4 @@ item:
  Index of the interface
 
 inventory:
- One service for every PoE-capable ethernet port will be created.
+ One service is created for each PoE-capable ethernet port.

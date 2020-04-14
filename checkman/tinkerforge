@@ -14,4 +14,4 @@ item:
  The bricks position inside the stack.
 
 inventory:
- All master bricks are automatically inventorized.
+ One service is created for each master brick.

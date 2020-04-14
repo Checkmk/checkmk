@@ -35,6 +35,8 @@ item:
  The interface description, e.g. Interconnect-Group 1025
 
 inventory:
+ One service is created for each port that fulfills configurable conditions.
+
  Per default the check autodetects portchannels and group the interfaces
  accordingly. Automatically grouped interfaces don't show up as single interface.
 

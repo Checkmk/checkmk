@@ -7,4 +7,4 @@ description:
  This check goes to WARN if any of the found nodes subscription status is not 'active'
 
 inventory:
- One service per system is created.
+ One service is created for each system.

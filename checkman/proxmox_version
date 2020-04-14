@@ -9,4 +9,4 @@ description:
  version at the time of discovery.
 
 inventory:
- One service per system is created.
+ One service is created for each system.

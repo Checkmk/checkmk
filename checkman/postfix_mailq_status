@@ -12,4 +12,4 @@ item:
  The name of the queue if multi instance is configured.
 
 inventory:
- One service per instance is created.
+ One service is created for each instance.

@@ -12,4 +12,4 @@ item:
  Index of the device
 
 inventory:
- One service for every PSE will be created.
+ One service is created for each PSE.

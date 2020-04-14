@@ -15,7 +15,7 @@ item:
  Name of the process
 
 inventory:
- {ps.perf} supports inventory in exactly the same way as {ps}, just
- that the variable {inventory_processes_perf} is used instead of
- {inventory_processes}.
-
+ One service is created for each configured process on the monitored system.
+ Since Checkmk cannot know which processes are of relevance to you,
+ some configuration is needed. The configuration is done via the ruleset
+ {inventory_processes_perf}.

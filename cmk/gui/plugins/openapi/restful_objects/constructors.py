@@ -3,15 +3,27 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import collections
 import hashlib
 import json
-from typing import Text, Dict, Tuple, Any, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Text, Dict, Tuple, Any, List, Literal, Optional, Union, Callable)
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
 from cmk.gui.http import Response
+
+LocationType = Optional[Union[Literal['path'], Literal['query'], Literal['header'],
+                              Literal['cookie']]]
+ResultType = Literal["object", "list", "scalar", "void"]
+LinkType = Dict
+
+# We need to have a registry to allow plugins from other contexts (cee, cme, etc.) to be linked to
+# from here (raw). The key is the domain-type (folder, host, etc.) the values are link-factories
+# which take a base-url.
+DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, List[Callable]]
 
 
 def _action(name):
@@ -22,17 +34,92 @@ def _invoke(name):
     return _action(name) + '/invoke'
 
 
-def link_rel(rel, href, method='GET', content_type='application/json', profile=None):
+RestfulLinkRel = Literal[
+    ".../action",
+    ".../action-param",
+    ".../add-to;",
+    ".../attachment;",
+    ".../choice;",
+    ".../clear",
+    ".../collection",
+    ".../default",
+    ".../delete",
+    ".../details;",
+    ".../domain-type",
+    ".../domain-types",
+    ".../element",
+    ".../element-type",
+    ".../invoke",
+    ".../modify",
+    ".../persist",
+    ".../property",
+    ".../remove-from;",
+    ".../return-type",
+    ".../service;",
+    ".../services",
+    ".../update",
+    ".../user",
+    ".../value;",
+    ".../version",
+]  # yapf: disable
+
+
+def link_rel(
+    rel,  # type: Union[RestfulLinkRel, str]
+    href,
+    method='GET',
+    content_type='application/json',
+    profile=None,
+):
+    """Link to a separate entity
+
+    TODO:
+        This should be 2 functions, one for spec-compliant rel-types, and one for check-mk
+        internal rel-types.
+
+    Args:
+        rel:
+            The rel value.
+
+        href:
+            The destination HTTP URL
+
+        method:
+            The HTTP method to user for this URL
+
+        content_type:
+            The content-type that needs to be sent for this URL to return the desired result
+
+        profile:
+            Additional profile data to change the behaviour of the URL response.
+
+    Returns:
+        A dict representing the link
+
+    """
     method = method.upper()
     if profile is not None:
         content_type += ";profile=" + profile
 
     return {
-        'rel': rel,
+        'rel': expand_rel(rel),
         'href': href,
         'method': method,
         'type': content_type,
     }
+
+
+def expand_rel(rel):
+    """Expand abbreviations in the rel field
+
+    `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces.
+    """
+    if rel.startswith(".../"):
+        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+    elif rel.startswith("cmk/"):
+        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+
+    return rel
 
 
 def require_etag(etag):
@@ -45,8 +132,13 @@ def require_etag(etag):
         )
 
 
-def rel_name(param, **kw):
-    """Generate a relationship name.
+def rel_name(rel, **kw):
+    """Generate a relationship name including it's parameters.
+
+    Notes:
+        No checking is done for the validity of the parameters in relation to the
+        rel-value name. Please consult the Spec 2.7.1.2 for detailed information about
+        the allowed parameters.
 
     Examples:
 
@@ -56,17 +148,24 @@ def rel_name(param, **kw):
         >>> rel_name('.../update', action="move")
         '.../update;action="move"'
 
+        >>> rel_name('.../update;', action="move")
+        '.../update;action="move"'
+
     Args:
-        param:
+        rel:
+            The rel-name.
+
         **kw:
+            Additional parameters.
 
     Returns:
+        The rel-name with it's parameters concatenated.
 
     """
     if len(kw) == 1:
         for key, value in kw.items():
-            param += ';%s="%s"' % (key, value)
-    return param
+            rel = rel.rstrip(";") + ';%s="%s"' % (key, value)
+    return rel
 
 
 def object_action_member(name, base, parameters):
@@ -99,6 +198,26 @@ def object_collection_member(name, base, entries):
     })
 
 
+def action_result(
+    action_links,  # type: List[LinkType]
+    result_type,  # type: ResultType
+    result_links,  # type: List[LinkType]
+    result_value,  # type: Optional[Any]
+):
+    # type: (...) -> Dict
+    """Construct an Action Result resource
+
+    Described in Restful Objects, chapter 19.1-4 """
+    return {
+        'links': action_links,
+        'resultType': result_type,
+        'result': {
+            'links': result_links,
+            'value': result_value,
+        }
+    }
+
+
 def object_property_member(name, value, base):
     # type: (str, str, str) -> Tuple[str, Dict[str, Any]]
     return (name, {
@@ -120,14 +239,17 @@ def object_href(domain_type, obj):
 
 def domain_object(domain_type, identifier, title, members, extensions):
     uri = "/objects/%s/%s" % (domain_type, identifier)
+    links = [
+        link_rel('self', uri, method='GET'),
+        link_rel('.../update', uri, method='PUT'),
+        link_rel('.../delete', uri, method='DELETE'),
+    ]
+    for link_factory in DOMAIN_OBJECT_LINK_REGISTRY.get(domain_type, []):
+        links.append(link_factory(uri))
     return {
         'domainType': domain_type,
         'title': title,
-        'links': [
-            link_rel('self', uri, method='GET'),
-            link_rel('.../update', uri, method='PUT'),
-            link_rel('.../delete', uri, method='DELETE'),
-        ],
+        'links': links,
         'members': members,
         'extensions': extensions,
     }
@@ -215,3 +337,65 @@ def etag_of_obj(obj):
                                "Can't create ETag.")
 
     return ETags(strong_etags=[str(updated_at)])
+
+
+def param(
+    param_name,  # type: str
+    description=None,  # type: Optional[str]
+    location=None,  # type: LocationType
+    required=True,  # type: bool
+    allow_emtpy=False,  # type: bool
+    schema_type='string',  # type: str
+    schema_pattern=None,  # type: str
+    **kw):
+    # type: (...) -> Union[str, dict]
+    """Specify an OpenAPI parameter to be used on a particular endpoint.
+
+    Args:
+        param_name:
+            The name of the parameter.
+
+        description:
+            Optionally the description of the parameter. Markdown may be used.
+
+        location:
+            One of 'query', 'path', 'cookie', 'header'.
+
+        required:
+            If `location` is `path` this needs to be set and True. Otherwise it can even be absent.
+
+        allow_emtpy:
+            If None as a value is allowed.
+
+        schema_type:
+            May be 'string', 'bool', etc.
+
+        schema_pattern:
+            A regex which is used to filter invalid values.
+
+    Returns:
+        The parameter dict.
+
+    """
+    if location is None:
+        return param_name
+
+    if location == 'path' and not required:
+        raise ValueError("path parameters' `required` field always needs to be True!")
+
+    schema = {'type': schema_type}
+    if schema_pattern is not None:
+        schema['pattern'] = schema_pattern
+    _param = {
+        'name': param_name,
+        'in': location,
+        'required': required,
+        'description': description,
+        'allowEmptyValue': allow_emtpy,
+        'schema': schema
+    }
+    for key, value in kw.items():
+        if key in _param:
+            raise ValueError("Please specify %s through the normal parameters." % key)
+        _param[key] = value
+    return _param

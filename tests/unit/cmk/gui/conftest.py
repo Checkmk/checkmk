@@ -211,10 +211,10 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def follow_link(self, resp, rel, base='', **kw):
         """Follow a link description as defined in a restful-objects entity"""
-        # if rel.startswith(".../"):
-        #     rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
-        # if rel.startswith("cmk/"):
-        #     rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+        if rel.startswith(".../"):
+            rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+        if rel.startswith("cmk/"):
+            rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
         link = get_link(resp.json, rel)
         return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
 

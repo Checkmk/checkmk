@@ -11,4 +11,4 @@ item:
  The name of the messagetype (i.e. {{Legit}}, {{Blocked}}, etc.).
 
 inventory:
- One service per type is created.
+ One service is created for each messagetype.

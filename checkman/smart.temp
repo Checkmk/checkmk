@@ -15,8 +15,8 @@ description:
  improved, integrated and documented by Lars Michelsen.
 
 inventory:
- All devices reported by smartctl which support the temperature value are
- automatically inventorized. One service is being created for each HDD.
+ One service is created for each HDD on all devices reported by smartctl
+ which support the temperature value.
 
 item:
  The name of the disk. Example: {/dev/sda}

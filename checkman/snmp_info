@@ -8,4 +8,4 @@ description:
  {sysLocation} and displays them. It is alwas OK.
 
 inventory:
- One check per SNMP host will be created.
+ One service is created for each SNMP host.

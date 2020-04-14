@@ -9,4 +9,4 @@ description:
  be treated as {OK}.
 
 inventory:
- Only one service will be created
+ One service is created.

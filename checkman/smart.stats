@@ -20,6 +20,6 @@ item:
  Name of the disk
 
 inventory:
- If there is at least one supported value available for a HDD one service is
- inventorized.
+ One service is created if there is at least one supported value
+ available for a HDD.
 

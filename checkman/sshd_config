@@ -14,6 +14,6 @@ description:
  installed.
 
 inventory:
- One check per system is created if the agent has a section
- {<<<sshd_config>>>}.
+ One service is created for each system is created
+ if the agent output has a section {<<<sshd_config>>>}.
 

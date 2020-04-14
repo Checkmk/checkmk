@@ -12,4 +12,4 @@ item:
  The ID of the service set
 
 inventory:
- One service for each service set is created
+ One service is created for each service set.

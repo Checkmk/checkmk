@@ -12,3 +12,6 @@ description:
  The extend of the hardware that is considered in the prtdiag command varies from
  solaris platform to platform (i.e. huge differences between e.g. M series and T
  series systems). Please have a look at the documentation of prtdiag for your system.
+
+inventory:
+ One service is created.

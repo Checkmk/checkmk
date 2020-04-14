@@ -11,3 +11,6 @@ description:
  other ones.
  The check state is configurable.
 
+inventory:
+ One summary service is created.
+

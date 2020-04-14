@@ -12,4 +12,4 @@ item:
  The name of the fan
 
 inventory:
- One check is created for each System Fan
+ One service is created for each System Fan.

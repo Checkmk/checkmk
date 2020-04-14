@@ -13,5 +13,4 @@ item:
  sensor.
 
 inventory:
- One service for each sensor that delivers voltage
- data.
+ One service is created for each sensor that delivers voltage data.

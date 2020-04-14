@@ -12,5 +12,5 @@ item:
  The fixed statement {{Rack}} followed by the Rack ID, the sensor type and the name of the sensor
 
 inventory:
- One service per sensor will be created
+ One service is created for each sensor.
 

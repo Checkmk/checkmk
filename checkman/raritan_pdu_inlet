@@ -12,5 +12,5 @@ item:
  The fixed statement {{Phase}} plus the ID of the phase.
 
 inventory:
- One check per phase is created.
+ One service is created for each phase.
 

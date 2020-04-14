@@ -14,4 +14,4 @@ item:
  The ID of the overcurrent protector, eg. C1.
 
 inventory:
- One check per overcurrent protector is created.
+ One service is created for each overcurrent protector.

@@ -14,5 +14,4 @@ item:
  sensor.
 
 inventory:
- One service for each sensor that delivers power
- status data.
+ One service is created for each sensor that delivers power status data.

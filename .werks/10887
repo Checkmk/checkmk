@@ -1,0 +1,14 @@
+Title: Availability timeline: Escape service details equal to status views
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1586868567
+
+The service details (aka plugin output) was not escaped correctly on the
+availability timeline page. Now the escaping is done the same way as in the
+status views.

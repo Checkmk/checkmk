@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.views import (
     view_title,
     display_options,
+    format_plugin_output,
 )
 
 # Variable name conventions
@@ -428,10 +429,12 @@ def render_availability_timeline(what, av_entry, avoptions, timeline_nr):
             table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
-                table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
+                table.cell(_("Last Known Plugin Output"),
+                           format_plugin_output(row.get("log_output", ""), row))
 
             if "timeline_long_output" in avoptions["labelling"]:
-                table.cell(_("Last Known Long Output"), row.get("long_log_output", ""))
+                table.cell(_("Last Known Long Output"),
+                           format_plugin_output(row.get("long_log_output", ""), row))
 
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"]:

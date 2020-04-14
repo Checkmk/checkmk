@@ -288,6 +288,8 @@ headers:
 	doc/helpers/headrify
 
 
+openapi: $(OPENAPI_SPEC)
+
 $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $@

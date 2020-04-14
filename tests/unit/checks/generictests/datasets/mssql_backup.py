@@ -127,4 +127,4 @@ checks = {'': [('MSSQL_Parrot Polly',
                  'partial': (None, None),
                  'partial_diff': (None, None),
                  'unspecific': (None, None)},
-                [(0, 'No backup found', [])])]}
+                [(1, 'No backup found', [])])]}

@@ -7,7 +7,7 @@
 import os
 import json
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Tuple, Type, Optional, List, Set  # pylint: disable=unused-import
+from typing import Tuple, Type, Optional, List  # pylint: disable=unused-import
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
@@ -28,12 +28,12 @@ def _raw_data(hostname, time_settings):
     return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 
-class PiggyBackDataFetcher(object):  # pylint: disable=useless-object-inheritance
+class PiggyBackDataFetcher:
     def __init__(self, hostname, ipaddress, time_settings):
         super(PiggyBackDataFetcher, self).__init__()
         self._hostname = hostname  # type: HostName
         self._ipaddress = ipaddress  # type: Optional[HostAddress]
-        self._time_settings = time_settings  # type: List[Tuple[Optional[str], std, int]]
+        self._time_settings = time_settings  # type: List[Tuple[Optional[str], str, int]]
         self._sources = []  # type: List[PiggybackRawDataInfo]
 
     def __enter__(self):

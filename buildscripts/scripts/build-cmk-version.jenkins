@@ -138,9 +138,9 @@ try {
 
     node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                 prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
-                create_source_package(DAILY_DATA)
+                create_source_package(DAILY_DATA, CMK_VERS)
 
                 def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
                 def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
@@ -356,7 +356,16 @@ def prepare_archive_dir(ARCHIVE_DIR, CMK_VERS) {
     """)
 }
 
-def create_source_package(DAILY_DATA) {
+def create_source_package(DAILY_DATA, CMK_VERS) {
+    // The vanilla agent RPM would normally be created by "make dist", which is
+    // called in the next stage, but we need to create and sign it. For this
+    // reason we explicitly execute the RPM build in this separate step. The
+    // "make dist" will then use the signed RPM.
+    dir(DAILY_DATA + "/git/agents") {
+        sh("make rpm")
+    }
+    sign_package(DAILY_DATA + "/git/agents/check-mk-agent-" + CMK_VERS + "-1.noarch.rpm", "Vanilla agent", DAILY_DATA)
+
     stage('Create source package') {
         sh 'rm -rf *'
         if (!params.FAKE_WINDOWS_ARTIFACTS) {

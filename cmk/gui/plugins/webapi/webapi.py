@@ -1018,7 +1018,7 @@ class APICallSites(APICallCollection):
                                          request["password"])
 
         if isinstance(response, dict):
-            if cmk.is_managed_edition() and response["edition_short"] != "cme":
+            if cmk_version.is_managed_edition() and response["edition_short"] != "cme":
                 raise MKUserError(
                     None,
                     _("The Check_MK Managed Services Edition can only "

@@ -28,7 +28,7 @@ item:
  as a further information.
 
 inventory:
- The inventory function of this check helps you to auto-detect then services
+ The inventory function of this check helps you to auto-detect the services
  that should be monitored on your hosts. Because Checkmk cannot know, which
  services are important for you, you have to configure some rules.
 

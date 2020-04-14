@@ -12,5 +12,5 @@ description:
  set on the number of requests in processing.
 
 inventory:
- Exactly one item is discovered.
+ One service is created.
 

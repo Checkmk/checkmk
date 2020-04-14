@@ -11,4 +11,4 @@ item:
  The volume id
 
 inventory:
- One service for each volume is created
+ One service is created for each volume.

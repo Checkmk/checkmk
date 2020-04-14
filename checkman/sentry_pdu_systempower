@@ -13,4 +13,4 @@ item:
  The fixed statement {{Power Supply System}}
 
 inventory:
- One service per device.
+ One service is created for each device.

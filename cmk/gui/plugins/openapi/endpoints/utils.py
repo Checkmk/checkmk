@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import sys
-from typing import Any, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Union  # pylint: disable=unused-import
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Literal
@@ -14,6 +14,8 @@ else:
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
+
+GroupName = Union[Literal['host_group'], Literal['contact_group'], Literal['service_group'],]
 
 
 def serve_group(group, serializer):
@@ -25,12 +27,10 @@ def serve_group(group, serializer):
     return response
 
 
-GroupName = Union[Literal['host_group'], Literal['contact_group'], Literal['service_group'],]
-
-
 def serialize_group(name):
     # type: (GroupName) -> Any
     def _serializer(group):
+        # type: (Dict[str, str]) -> Any
         ident = group['id']
         uri = '/object/%s/%s' % (
             name,
@@ -40,13 +40,14 @@ def serialize_group(name):
             domain_type=name,
             identifier=ident,
             title=group['alias'],
-            members=dict([
-                constructors.object_property_member(
+            members={
+                'title': constructors.object_property(
                     name='title',
-                    value=group['alias'],  # type: ignore[attr-defined]
+                    value=group['alias'],
+                    prop_format='string',
                     base=uri,
                 ),
-            ]),
+            },
             extensions={},
         )
 

@@ -158,15 +158,18 @@ def _serialize_folder(folder):
         domain_type='folder',
         identifier=folder.id(),
         title=folder.title(),
-        members=dict([
-            constructors.object_collection_member(
+        members={
+            'hosts': constructors.object_collection(
                 name='hosts',
-                base=uri,
                 entries=[
-                    constructors.object_href('host', host) for host in folder.hosts().values()
+                    constructors.link_rel(
+                        rel='.../value;collection="items"',
+                        href=constructors.object_href('host', host),
+                    ) for host in folder.hosts().values()
                 ],
+                base=uri,
             ),
-            constructors.object_action_member(
+            'move': constructors.object_action(
                 name='move',
                 base=uri,
                 parameters=dict([
@@ -179,12 +182,13 @@ def _serialize_folder(folder):
                     ),
                 ]),
             ),
-            constructors.object_property_member(
+            'title': constructors.object_property(
                 name='title',
                 value=folder.title(),
+                prop_format='string',
                 base=uri,
             ),
-        ]),
+        },
         extensions={
             'attributes': folder.attributes(),
         },

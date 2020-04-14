@@ -105,12 +105,13 @@ def serialize_host(host):
         domain_type='host',
         identifier=host.id(),
         title=host.alias(),
-        members=dict([
-            constructors.object_property_member(
-                'folder',
-                constructors.object_href('folder', host.folder()),
-                base,
+        members={
+            'folder': constructors.object_property(
+                name='folder',
+                value=constructors.object_href('folder', host.folder()),
+                prop_format='string',
+                base=base,
             ),
-        ]),
+        },
         extensions={},
     )

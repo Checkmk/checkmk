@@ -15,25 +15,11 @@ from werkzeug.datastructures import ETags
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 
+DomainObject = Dict[str, str]
 LocationType = Optional[Union[Literal['path'], Literal['query'], Literal['header'],
                               Literal['cookie']]]
 ResultType = Literal["object", "list", "scalar", "void"]
-LinkType = Dict
-
-# We need to have a registry to allow plugins from other contexts (cee, cme, etc.) to be linked to
-# from here (raw). The key is the domain-type (folder, host, etc.) the values are link-factories
-# which take a base-url.
-DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, List[Callable]]
-
-
-def _action(name):
-    return '/actions/%s' % (name,)
-
-
-def _invoke(name):
-    return _action(name) + '/invoke'
-
-
+LinkType = Dict[str, str]
 RestfulLinkRel = Literal[
     ".../action",
     ".../action-param",
@@ -62,15 +48,40 @@ RestfulLinkRel = Literal[
     ".../value;",
     ".../version",
 ]  # yapf: disable
+HTTPMethod = Literal["GET", "PUT", "POST", "DELETE"]
+PropertyFormat = Literal[
+    # String values
+    'string', 'date-time', 'date',  # A date in the format of YYYY-MM-DD.
+    'time',  # A time in the format of hh:mm:ss.
+    'utc-millisec',  # The difference, measured in milliseconds, between the
+    # specified time and midnight, 00:00 of January 1, 1970 UTC.
+    'big-integer(n)',  # The value should be parsed as an integer, scale n.
+    'big-integer(s,p)',  # The value should be parsed as a big decimal, scale n,
+    # precicion p.
+    'blob',  # base-64 encoded byte-sequence
+    'clob',  # character large object: the string is a large array of
+    # characters, for example an HTML resource
+    # Non-string values
+    'decimal',  # the number should be interpreted as a float-point decimal.
+    'int',  # the number should be interpreted as an integer.
+]
+
+# We need to have a registry to allow plugins from other contexts (cee, cme, etc.) to be linked to
+# from here (raw). The key is the domain-type (folder, host, etc.) the values are link-factories
+# which take a base-url.
+DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, List[Callable]]
 
 
 def link_rel(
-    rel,  # type: Union[RestfulLinkRel, str]
-    href,
-    method='GET',
-    content_type='application/json',
-    profile=None,
+    rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
+    href,  # type: str
+    method='GET',  # type: HTTPMethod
+    content_type='application/json',  # type: str
+    profile=None,  # type: Optional[str]
+    title=None,  # type: Optional[str]
+    parameters=None,  # type: Optional[Dict[str, str]]
 ):
+    # type: (...) -> LinkType
     """Link to a separate entity
 
     TODO:
@@ -91,39 +102,87 @@ def link_rel(
             The content-type that needs to be sent for this URL to return the desired result
 
         profile:
-            Additional profile data to change the behaviour of the URL response.
+            (Optional) Additional profile data to change the behaviour of the URL response.
+
+        title:
+            (Optional) A pretty printed string for UIs to render.
+
+        parameters:
+            (Optional) Parameters for the rel-value. e.g. rel='foo', parameters={'baz': 'bar'}
+            will result in a rel-value of 'foo;baz="bar"'
+
+    Examples:
+
+        >>> link = link_rel('.../update', 'update',
+        ...                 method='GET', profile='.../object', title='Update the object')
+        >>> expected = {
+        ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
+        ...     'method': 'GET',
+        ...     'rel': 'urn:org.restfulobjects:rels/update',
+        ...     'title': 'Update the object',
+        ...     'href': 'update'
+        ... }
+        >>> assert link == expected, link
 
     Returns:
         A dict representing the link
 
     """
-    method = method.upper()
+    content_type_params = {}
     if profile is not None:
-        content_type += ";profile=" + profile
+        content_type_params['profile'] = expand_rel(profile)
 
-    return {
-        'rel': expand_rel(rel),
+    link_obj = {
+        'rel': expand_rel(rel, parameters),
         'href': href,
-        'method': method,
-        'type': content_type,
+        'method': method.upper(),
+        'type': expand_rel(content_type, content_type_params)
     }
+    if title is not None:
+        link_obj['title'] = title
+    return link_obj
 
 
-def expand_rel(rel):
+def expand_rel(rel, parameters=None):
+    # type: (str, Optional[Dict[str, str]]) -> str
     """Expand abbreviations in the rel field
 
-    `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces.
+    `.../` and `cmk/` are shorthands for the restful-objects and CheckMK namespaces. The
+    restful-objects one is required by the spec.
+
+    Args:
+        rel: The rel-value.
+
+        parameters: A dict of additional parameters to be appended to the rel-value.
+
+    Examples:
+
+        >>> expand_rel('.../value', {'collection': 'items'})
+       'urn:org.restfulobjects:rels/value;collection="items"'
+
     """
     if rel.startswith(".../"):
         rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
     elif rel.startswith("cmk/"):
         rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
 
+    if parameters:
+        for param_name, value in parameters.items():
+            rel += ';%s="%s"' % (param_name, expand_rel(value))
+
     return rel
 
 
 def require_etag(etag):
     # type: (ETags) -> None
+    """Ensure the current request matches the given ETag.
+
+    Args:
+        etag: An Werkzeug ETag instance to compare the global request instance to.
+
+    Raises:
+        ProblemException: When ETag doesn't match.
+    """
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
             412,
@@ -168,26 +227,49 @@ def rel_name(rel, **kw):
     return rel
 
 
-def object_action_member(name, base, parameters):
-    # type: (str, str, dict) -> Tuple[str, Dict[str, Any]]
-    return (
-        name,
-        {
-            'id': name,
-            'memberType': "action",
-            'links': [
-                link_rel('up', base),
-                link_rel(rel_name('.../details', action=name), base + _action(name)),
-                link_rel(rel_name('.../invoke', action=name), base + _invoke(name), method='POST'),
-                #               arguments={'destination': 'root'},
-            ],
-            #       'parameters': parameters,
-        })
+def object_action(name, parameters, base):
+    # type: (str, dict, str) -> Dict[str, Any]
+    """A action description to be used as an object member.
+
+    Args:
+        name:
+        parameters:
+        base:
+
+    Returns:
+
+    """
+    def _action(_name):
+        return '/actions/%s' % (_name,)
+
+    def _invoke(_name):
+        return _action(_name) + '/invoke'
+
+    return {
+        'id': name,
+        'memberType': "action",
+        'links': [
+            link_rel('up', base),
+            link_rel(rel_name('.../details', action=name), base + _action(name)),
+            link_rel(rel_name('.../invoke', action=name), base + _invoke(name), method='POST'),
+        ],
+        'parameters': parameters,
+    }
 
 
-def object_collection_member(name, base, entries):
-    # type: (str, str, List[str]) -> Tuple[str, Dict[str, Any]]
-    return (name, {
+def object_collection(name, entries, base):
+    # type: (str, List[Union[LinkType, DomainObject]], str) -> Dict[str, Any]
+    """A collection description to be used as an object member.
+
+    Args:
+        name:
+        entries:
+        base:
+
+    Returns:
+
+    """
+    return {
         'id': name,
         'memberType': "collection",
         'value': entries,
@@ -195,7 +277,7 @@ def object_collection_member(name, base, entries):
             link_rel('self', base + "/collections/%s" % (name,)),
             link_rel('up', base),
         ]
-    })
+    }
 
 
 def action_result(
@@ -218,15 +300,46 @@ def action_result(
     }
 
 
-def object_property_member(name, value, base):
-    # type: (str, str, str) -> Tuple[str, Dict[str, Any]]
-    return (name, {
+def object_property(name, value, prop_format, base, title=None, linkable=True):
+    # type: (str, Any, PropertyFormat, str, Optional[str], bool) -> Dict[str, Any]
+    """Render an object-property
+
+    Args:
+        name:
+            The name of the property.
+
+        value:
+            The value of the property. Needs to conform the the selected prop_format type. No
+            validation is done though.
+
+        prop_format:
+            The formal name of the property's type.
+
+        base:
+            The base-url which to prefix all generated links.
+
+        title:
+            (Optional) A pretty-printed string which a UI can use to render.
+
+        linkable:
+            If this property has it's own URL to be queried directly. Defaults to True.
+
+    Returns:
+
+    """
+    property_obj = {
         'id': name,
         'memberType': "property",
         'value': value,
-        'links': [link_rel('self', base + '/properties/' + name, profile='".../object_property"')],
+        'format': prop_format,
+        'title': title,
         'choices': [],
-    })
+    }
+    if linkable:
+        property_obj['links'] = [
+            link_rel('self', base + '/properties/' + name, profile='.../object_property')
+        ]
+    return property_obj
 
 
 def object_href(domain_type, obj):

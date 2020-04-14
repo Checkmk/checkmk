@@ -41,11 +41,28 @@ components:
       properties:
         code:
           description: The HTTP status code.
-          type: string
+          example: 404
+          format: int32
+          type: integer
+        errors:
+          description: Optionally a list of errors used for debugging.
+          example: null
+          items:
+            type: string
+          nullable: true
+          type: array
         message:
+          description: Detailed information on what exactly went wrong.
+          example: The resource could not be found.
           type: string
         title:
+          description: A summary of the problem.
+          example: Not found
           type: string
+      required:
+      - code
+      - message
+      - title
       type: object
     ContactGroup:
       properties:
@@ -64,6 +81,26 @@ components:
       required:
       - domainType
       - links
+      type: object
+    CreateHost:
+      properties:
+        attributes:
+          example: {}
+          type: object
+        folder:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+        hostname:
+          description: The hostname itself. Only characters valid in FQDNs are allowed.
+          example: example.com
+          pattern: '[a-zA-Z][a-zA-Z-]+'
+          type: string
+      required:
+      - folder
+      - hostname
       type: object
     DomainObject:
       properties:
@@ -163,10 +200,10 @@ components:
     InputContactGroup:
       properties:
         alias:
-          example: ''
+          example: Not on Sundays.
           type: string
         name:
-          example: admins
+          example: OnCall
           type: string
       required:
       - name
@@ -175,33 +212,25 @@ components:
       properties:
         attributes:
           example:
-          - key: foo
-            value: bar
-          items:
-            $ref: '#/components/schemas/InputAttribute'
-          type: array
-        name:
-          example: Servers
-          type: string
-        title:
-          example: 'Servers: The most important folder.'
-          type: string
-      required:
-      - name
-      - title
-      type: object
-    InputHost:
-      properties:
-        attributes:
-          example: {}
+            foo: bar
           type: object
-        folder_id:
+        name:
+          description: The name of the folder.
+          example: production
+          type: string
+        parent:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
           example: root
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
-        hostname:
-          example: host01
+        title:
+          example: Production Hosts
           type: string
+      required:
+      - name
+      - parent
+      - title
       type: object
     InputHostGroup:
       properties:
@@ -226,7 +255,28 @@ components:
       - name
       type: object
     InstalledVersions:
-      properties: {}
+      properties:
+        demo:
+          description: Whether this is a demo version or not.
+          example: false
+          type: boolean
+        edition:
+          description: The Checkmk edition.
+          example: raw
+          type: string
+        group:
+          description: The Apache WSGI application group this call was made on.
+          example: de
+          type: string
+        site:
+          description: The site where this API call was made on.
+          example: production
+          type: string
+        versions:
+          description: Some version numbers
+          example:
+            checkmk: 1.8.0p1
+          type: object
       type: object
     Link:
       properties:
@@ -427,6 +477,12 @@ components:
       required:
       - title
       type: object
+    UpdateHost:
+      properties:
+        attributes:
+          example: {}
+          type: object
+      type: object
   securitySchemes:
     BearerAuth:
       bearerFormat: username password
@@ -538,21 +594,19 @@ paths:
       - lang: curl
         source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": [\n            {\n              \"value\": \"\
-          bar\", \n              \"key\": \"foo\"\n            }\n          ], \n\
-          \          \"name\": \"Servers\", \n          \"title\": \"Servers: The\
-          \ most important folder.\"\n        }' \\\n    /collections/folder"
+          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\
+          \ \n          \"name\": \"production\", \n          \"parent\": \"root\"\
+          , \n          \"title\": \"Production Hosts\"\n        }' \\\n    /collections/folder"
       - lang: httpie
         source: "http POST /collections/folder \\\n    'Authorization: Bearer username\
-          \ password' \\\n    attributes='[{'value': 'bar', 'key': 'foo'}]' \\\n \
-          \   name='Servers' \\\n    title='Servers: The most important folder.'"
+          \ password' \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
+          \ \\\n    parent='root' \\\n    title='Production Hosts'"
       - lang: requests
         source: "import requests\n\nresp = requests.post(\"/collections/folder\",\n\
           \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": [\n            {\n                \"key\": \"foo\"\
-          , \n                \"value\": \"bar\"\n            }\n        ], \n   \
-          \     \"name\": \"Servers\", \n        \"title\": \"Servers: The most important\
-          \ folder.\"\n    },\n)\nresp.raise_for_status()"
+          \        \"attributes\": {\n            \"foo\": \"bar\"\n        }, \n\
+          \        \"name\": \"production\", \n        \"parent\": \"root\", \n  \
+          \      \"title\": \"Production Hosts\"\n    },\n)\nresp.raise_for_status()"
   /objects/folder/{ident}:
     delete:
       description: ''
@@ -709,7 +763,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InputHost'
+              $ref: '#/components/schemas/CreateHost'
         required: true
       responses:
         default:
@@ -739,16 +793,16 @@ paths:
       - lang: curl
         source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {}, \n          \"hostname\": \"host01\", \n\
-          \          \"folder_id\": \"root\"\n        }' \\\n    /collections/host"
+          \          \"attributes\": {}, \n          \"folder\": \"root\", \n    \
+          \      \"hostname\": \"example.com\"\n        }' \\\n    /collections/host"
       - lang: httpie
         source: "http POST /collections/host \\\n    'Authorization: Bearer username\
-          \ password' \\\n    attributes='{}' \\\n    hostname='host01' \\\n    folder_id='root'"
+          \ password' \\\n    attributes='{}' \\\n    folder='root' \\\n    hostname='example.com'"
       - lang: requests
         source: "import requests\n\nresp = requests.post(\"/collections/host\",\n\
           \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {}, \n        \"folder_id\": \"root\", \n     \
-          \   \"hostname\": \"host01\"\n    },\n)\nresp.raise_for_status()"
+          \        \"attributes\": {}, \n        \"folder\": \"root\", \n        \"\
+          hostname\": \"example.com\"\n    },\n)\nresp.raise_for_status()"
   /objects/host/{hostname}:
     delete:
       description: ''
@@ -809,7 +863,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InputHost'
+              $ref: '#/components/schemas/UpdateHost'
         required: true
       responses:
         default:
@@ -839,17 +893,14 @@ paths:
       - lang: curl
         source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {}, \n          \"hostname\": \"host01\", \n\
-          \          \"folder_id\": \"root\"\n        }' \\\n    /objects/host/example.com"
+          \          \"attributes\": {}\n        }' \\\n    /objects/host/example.com"
       - lang: httpie
         source: "http PUT /objects/host/example.com \\\n    'Authorization: Bearer\
-          \ username password' \\\n    attributes='{}' \\\n    hostname='host01' \\\
-          \n    folder_id='root'"
+          \ username password' \\\n    attributes='{}'"
       - lang: requests
         source: "import requests\n\nresp = requests.put(\"/objects/host/example.com\"\
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {}, \n        \"folder_id\": \"root\", \n     \
-          \   \"hostname\": \"host01\"\n    },\n)\nresp.raise_for_status()"
+          \        \"attributes\": {}\n    },\n)\nresp.raise_for_status()"
   /collections/host_group:
     post:
       description: ''
@@ -1082,15 +1133,16 @@ paths:
       - lang: curl
         source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"\", \n          \"name\": \"admins\"\n        }'\
-          \ \\\n    /collections/contact_group"
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /collections/contact_group"
       - lang: httpie
         source: "http POST /collections/contact_group \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='' \\\n    name='admins'"
+          \ username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
       - lang: requests
         source: "import requests\n\nresp = requests.post(\"/collections/contact_group\"\
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"\", \n        \"name\": \"admins\"\n    },\n)\nresp.raise_for_status()"
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
   /objects/contact_group/{name}:
     delete:
       description: ''
@@ -1189,15 +1241,16 @@ paths:
       - lang: curl
         source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
           \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"\", \n          \"name\": \"admins\"\n        }'\
-          \ \\\n    /objects/contact_group/pathname"
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /objects/contact_group/pathname"
       - lang: httpie
         source: "http PUT /objects/contact_group/pathname \\\n    'Authorization:\
-          \ Bearer username password' \\\n    alias='' \\\n    name='admins'"
+          \ Bearer username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
       - lang: requests
         source: "import requests\n\nresp = requests.put(\"/objects/contact_group/pathname\"\
           ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"\", \n        \"name\": \"admins\"\n    },\n)\nresp.raise_for_status()"
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
   /collections/service_group:
     get:
       description: ''
@@ -1385,18 +1438,26 @@ tags:
     showWriteOnly={true} />
   name: UpdateFolder
 - name: cmk.gui.plugins.openapi.endpoints.host
-- description: <SchemaDefinition schemaRef="#/components/schemas/InputHost" showReadOnly={true}
+- description: <SchemaDefinition schemaRef="#/components/schemas/CreateHost" showReadOnly={true}
     showWriteOnly={true} />
-  name: InputHost
+  name: CreateHost
+  x-displayName: Schema for creating a new host
+- description: <SchemaDefinition schemaRef="#/components/schemas/UpdateHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: UpdateHost
 - name: cmk.gui.plugins.openapi.endpoints.host_group
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputHostGroup" showReadOnly={true}
     showWriteOnly={true} />
   name: InputHostGroup
 - name: cmk.gui.plugins.openapi.endpoints.version
 - name: cmk.gui.plugins.openapi.endpoints.contact_group
-- description: <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup"
-    showReadOnly={true} showWriteOnly={true} />
+- description: 'Schema for submitting Contact Group information.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup" showReadOnly={true}
+    showWriteOnly={true} />'
   name: InputContactGroup
+  x-displayName: InputContactGroup
 - name: cmk.gui.plugins.openapi.endpoints.service_group
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"
     showReadOnly={true} showWriteOnly={true} />
@@ -1422,7 +1483,8 @@ x-tagGroups:
   tags:
   - InputFolder
   - UpdateFolder
-  - InputHost
+  - CreateHost
+  - UpdateHost
   - InputHostGroup
   - InputContactGroup
   - InputServiceGroup

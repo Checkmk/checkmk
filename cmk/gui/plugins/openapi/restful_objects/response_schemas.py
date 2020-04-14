@@ -6,16 +6,37 @@
 
 import datetime as dt
 
-from marshmallow import Schema, fields  # type: ignore
-from marshmallow_oneofschema import OneOfSchema  # type: ignore
+from marshmallow import Schema, fields  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
 
+# TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
+#       distinct values
+
 
 class ApiError(Schema):
-    code = fields.Str(description="The HTTP status code.")
-    message = fields.Str()
-    title = fields.Str()
+    code = fields.Integer(
+        description="The HTTP status code.",
+        required=True,
+        example=404,
+    )
+    message = fields.Str(
+        description="Detailed information on what exactly went wrong.",
+        required=True,
+        example="The resource could not be found.",
+    )
+    title = fields.Str(
+        description="A summary of the problem.",
+        required=True,
+        example="Not found",
+    )
+    errors = fields.List(
+        fields.String(),
+        allow_none=True,
+        description="Optionally a list of errors used for debugging.",
+        example=None,
+    )
 
 
 class UserSchema(Schema):
@@ -170,6 +191,38 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
     value_type = ObjectMember  # type: ignore[assignment]
 
 
+class ActionResultBase(Linkable):
+    resultType = fields.String(required=True, example='object')
+    result = fields.Dict()
+
+
+class ActionResultObject(ActionResultBase):
+    resultType = fields.Constant('object')
+    value = fields.Dict(required=True,
+                        allow_none=True,
+                        example={'foo': 'bar'},
+                        description="The return value of this action.")
+
+
+class ActionResultScalar(ActionResultBase):
+    resultType = fields.Constant('scalar')
+    value = fields.String(required=True,
+                          allow_none=True,
+                          example="Done.",
+                          description="The return value of this action.")
+
+
+class ActionResult(OneOfSchema):
+    type_field = 'resultType'
+    type_schemas = {
+        'object': ActionResultObject,
+    }
+
+
+class AttributeDict(plugins.ValueTypedDictSchema):
+    value_type = fields.String()
+
+
 class DomainObject(Linkable):
     domainType = fields.String(required=True)
     title = fields.String()
@@ -179,6 +232,16 @@ class DomainObject(Linkable):
 class Folder(DomainObject):
     domainType = fields.Constant(
         "folder",
+        required=True,
+    )
+
+
+class MoveFolder(Schema):
+    destination = fields.String(
+        description=("The folder-id of the folder to which this folder shall be moved to. May "
+                     "be 'root' for the root-folder."),
+        pattern="[a-fA-F0-9]{32}|root",
+        example="root",
         required=True,
     )
 
@@ -211,51 +274,6 @@ class Host(DomainObject):
     )
 
 
-class InputAttribute(Schema):
-    key = fields.String(required=True)
-    value = fields.String(required=True)
-
-
-class InputHost(Schema):
-    hostname = fields.String(example="host01")
-    folder_id = fields.String(example="root", pattern="[a-fA-F0-9]{32}|root")
-    attributes = fields.Dict(example={})
-
-
-class InputHostGroup(Schema):
-    name = fields.String(required=True, example="windows")
-    alias = fields.String(example="Windows Servers")
-
-
-class InputContactGroup(Schema):
-    name = fields.String(required=True, example="admins")
-    alias = fields.String(example="")
-
-
-class InputServiceGroup(Schema):
-    name = fields.String(required=True, example="environment")
-    alias = fields.String(example="Environment Sensors")
-
-
-class InputFolder(Schema):
-    name = fields.String(required=True, example="Servers")
-    title = fields.String(required=True, example="Servers: The most important folder.")
-    attributes = fields.List(fields.Nested(InputAttribute),
-                             example=[{
-                                 'key': 'foo',
-                                 'value': 'bar'
-                             }])
-
-
-class UpdateFolder(Schema):
-    title = fields.String(required=True, example="Virtual Servers.")
-    attributes = fields.List(fields.Nested(InputAttribute),
-                             example=[{
-                                 'key': 'foo',
-                                 'value': 'bar'
-                             }])
-
-
 class ObjectAction(Linkable):
     parameters = fields.Nested(Parameter)
 
@@ -278,8 +296,13 @@ class User(Linkable):
 
 
 class InstalledVersions(Schema):
-    # TODO: Add properties and documentation.
-    pass
+    site = fields.String(description="The site where this API call was made on.",
+                         example="production")
+    group = fields.String(description="The Apache WSGI application group this call was made on.",
+                          example="de")
+    versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
+    edition = fields.String(description="The Checkmk edition.", example="raw")
+    demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
 
 
 class VersionCapabilities(Schema):

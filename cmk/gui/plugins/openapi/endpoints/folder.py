@@ -15,7 +15,8 @@ from connexion import ProblemException  # type: ignore
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects import response_schemas, constructors, endpoint_schema
+from cmk.gui.plugins.openapi.restful_objects import (response_schemas, constructors,
+                                                     endpoint_schema, request_schemas)
 from cmk.gui.watolib import CREFolder  # pylint: disable=unused-import
 from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
 
@@ -32,7 +33,7 @@ from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
                  response_schema=response_schemas.Folder,
                  etag='output',
                  request_body_required=True,
-                 request_schema=response_schemas.InputFolder)
+                 request_schema=request_schemas.InputFolder)
 def create(params):
     """Create a new folder
 
@@ -44,7 +45,7 @@ def create(params):
     parent = put_body['parent']
     attributes = put_body.get('attributes', {})
 
-    if parent is None:
+    if parent == "root":
         parent_folder = watolib.Folder.root_folder()
     else:
         parent_folder = load_folder(parent, status=400)
@@ -60,7 +61,7 @@ def create(params):
                  response_schema=response_schemas.Folder,
                  etag='both',
                  request_body_required=True,
-                 request_schema=response_schemas.UpdateFolder)
+                 request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder
 

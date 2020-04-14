@@ -7,7 +7,8 @@
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
-from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas, \
+    request_schemas
 from cmk.gui.watolib.groups import load_host_group_information, edit_group, add_group
 
 
@@ -15,7 +16,7 @@ from cmk.gui.watolib.groups import load_host_group_information, edit_group, add_
                  method='post',
                  etag='output',
                  request_body_required=True,
-                 request_schema=response_schemas.InputHostGroup,
+                 request_schema=request_schemas.InputHostGroup,
                  response_schema=response_schemas.HostGroup)
 def create(params):
     """Create a host-group"""
@@ -47,7 +48,7 @@ def delete(params):
                  response_schema=response_schemas.HostGroup,
                  etag='both',
                  request_body_required=True,
-                 request_schema=response_schemas.InputHostGroup)
+                 request_schema=request_schemas.InputHostGroup)
 def update(params):
     """Update a host-group"""
     name = params['name']

@@ -9,7 +9,8 @@ import json
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.folder import load_folder
-from cmk.gui.plugins.openapi.restful_objects import constructors, response_schemas, endpoint_schema
+from cmk.gui.plugins.openapi.restful_objects import constructors, response_schemas, endpoint_schema, \
+    request_schemas
 from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
 
 
@@ -17,7 +18,7 @@ from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
                  method='post',
                  etag='output',
                  request_body_required=True,
-                 request_schema=response_schemas.InputHost,
+                 request_schema=request_schemas.CreateHost,
                  response_schema=response_schemas.Host)
 def create_host(params):
     """Create a host"""
@@ -46,7 +47,7 @@ def create_host(params):
                  parameters=['hostname'],
                  etag='both',
                  request_body_required=True,
-                 request_schema=response_schemas.InputHost,
+                 request_schema=request_schemas.UpdateHost,
                  response_schema=response_schemas.Host)
 def update_host(params):
     """Update a host"""

@@ -7,7 +7,8 @@
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
-from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas, \
+    request_schemas
 from cmk.gui.watolib.groups import edit_group, add_group, load_service_group_information
 
 
@@ -15,7 +16,7 @@ from cmk.gui.watolib.groups import edit_group, add_group, load_service_group_inf
                  method='post',
                  etag='output',
                  request_body_required=True,
-                 request_schema=response_schemas.InputServiceGroup,
+                 request_schema=request_schemas.InputServiceGroup,
                  response_schema=response_schemas.DomainObject)
 def create(params):
     """Create a service-group"""
@@ -74,7 +75,7 @@ def delete(params):
                  response_schema=response_schemas.ServiceGroup,
                  etag='both',
                  request_body_required=True,
-                 request_schema=response_schemas.InputServiceGroup)
+                 request_schema=request_schemas.InputServiceGroup)
 def update(params):
     """Update a service-group"""
     name = params['name']

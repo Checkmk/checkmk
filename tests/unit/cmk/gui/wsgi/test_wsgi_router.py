@@ -190,7 +190,7 @@ def test_openapi_folders(
 
     resp = wsgi_app.call_method('post',
                                 "/NO_SITE/check_mk/api/v0/collections/folder",
-                                params='{"name": "new_folder", "title": "foo", "parent": null}',
+                                params='{"name": "new_folder", "title": "foo", "parent": "root"}',
                                 status=200,
                                 content_type='application/json')
 

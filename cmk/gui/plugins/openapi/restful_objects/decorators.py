@@ -149,12 +149,6 @@ def endpoint_schema(
     if etag is not None and etag not in ('input', 'output', 'both'):
         raise ValueError("etag must be one of 'input', 'output', 'both'.")
 
-    if not output_empty and response_schema is None:
-        raise ValueError("'output_schema' required when output is to be sent!")
-
-    if output_empty and response_schema:
-        raise ValueError("On empty output 'output_schema' may not be used.")
-
     if parameters is None:
         parameters = []
 
@@ -177,30 +171,37 @@ def endpoint_schema(
         if isinstance(param, six.string_types) and param not in global_param_names:
             raise ValueError("Param %r, which is required, was specified nowhere." % (param,))
 
-    # We don't(!) support any endpoint without an output schema.
-    # Just define one!
-    if response_schema is not None:
-        # _add_tag(_tag_from_schema(response_schema), tag_group='Response Schemas')
-
-        path_item = {
-            '200': {
-                'content': {
-                    content_type: {
-                        'schema': response_schema
-                    },
-                },
-                'description': apispec.utils.dedent(response_schema.__doc__ or ''),
-            }
-        }
-
-    # Actually, iff you don't want to give out anything, then we don't need a schema.
-    if output_empty:
-        path_item = {'204': {'description': 'Operation done successfully. No further output.'}}
-
     def _add_api_spec(func):
         module_obj = import_string(func.__module__)
         module_name = module_obj.__name__
         operation_id = func.__module__ + "." + func.__name__
+
+        if not output_empty and response_schema is None:
+            raise ValueError("%s: 'response_schema' required when output is to be sent!" %
+                             operation_id)
+
+        if output_empty and response_schema:
+            raise ValueError("%s: On empty output 'output_schema' may not be used." % operation_id)
+
+        # We don't(!) support any endpoint without an output schema.
+        # Just define one!
+        if response_schema is not None:
+            # _add_tag(_tag_from_schema(response_schema), tag_group='Response Schemas')
+
+            path_item = {
+                '200': {
+                    'content': {
+                        content_type: {
+                            'schema': response_schema
+                        },
+                    },
+                    'description': apispec.utils.dedent(response_schema.__doc__ or ''),
+                }
+            }
+
+        # Actually, iff you don't want to give out anything, then we don't need a schema.
+        if output_empty:
+            path_item = {'204': {'description': 'Operation done successfully. No further output.'}}
 
         tag_obj = {'name': module_name}
         tag_obj.update(_docstring_keys(module_obj.__doc__, 'x-displayName', 'description'))

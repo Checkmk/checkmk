@@ -19,6 +19,9 @@ Error Message:
 
 def notify_error(error) {
     slack_build_failed(error)
+    // after notifying everybody, the error needs to be thrown again
+    // This ensures that the build status is set correctly
+    throw error
 }
 
 return this

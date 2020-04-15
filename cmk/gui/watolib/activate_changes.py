@@ -20,7 +20,9 @@ import shutil
 import time
 from typing import List, Optional, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import (  # pylint: disable=unused-import
+    SiteId, SiteConfiguration,
+)
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -33,7 +35,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 from cmk.gui.sites import (  # pylint: disable=unused-import
-    SiteConfiguration, SiteStatus, states as sites_states, disconnect as sites_disconnect,
+    SiteStatus, states as sites_states, disconnect as sites_disconnect,
 )
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
@@ -613,11 +615,13 @@ class ActivateChangesManager(ActivateChanges):
         return site_configurations
 
     def _generate_snapshots(self, work_dir):
+        site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
+
         with multitar.SnapshotCreator(work_dir, get_replication_paths()) as snapshot_creator:
             for site_id in self._sites:
-                self._create_site_sync_snapshot(site_id, snapshot_creator)
+                self._create_site_sync_snapshot(site_id, snapshot_creator, site_configs)
 
-    def _create_site_sync_snapshot(self, site_id, snapshot_creator=None):
+    def _create_site_sync_snapshot(self, site_id, snapshot_creator, site_configs):
         self._check_snapshot_creation_permissions(site_id)
 
         snapshot_path = self._site_snapshot_file(site_id)
@@ -625,7 +629,7 @@ class ActivateChangesManager(ActivateChanges):
         site_tmp_dir = self._get_site_tmp_dir(site_id)
 
         paths = self._get_replication_components(site_id)
-        create_site_globals_file(site_id, site_tmp_dir)
+        create_site_globals_file(site_id, site_tmp_dir, site_configs[site_id])
 
         # Add site-specific global settings
         site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir,
@@ -1219,26 +1223,14 @@ def get_number_of_pending_changes():
     return len(changes.grouped_changes())
 
 
-def create_site_globals_file(site_id, tmp_dir, sites=None):
-    # TODO: Cleanup this local import
-    import cmk.gui.watolib.sites  # pylint: disable=redefined-outer-name
+def create_site_globals_file(site_id, tmp_dir, site_config):
+    # type: (SiteId, str, SiteConfiguration) -> None
+    store.makedirs(tmp_dir)
 
-    try:
-        os.makedirs(tmp_dir)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            pass
-        else:
-            raise
-
-    if not sites:
-        sites = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
-    site = sites[site_id]
-    site_globals = site.get("globals", {})
-
+    site_globals = site_config.get("globals", {}).copy()
     site_globals.update({
-        "wato_enabled": not site.get("disable_wato", True),
-        "userdb_automatic_sync": site.get("user_sync", user_sync_default_config(site_id)),
+        "wato_enabled": not site_config.get("disable_wato", True),
+        "userdb_automatic_sync": site_config.get("user_sync", user_sync_default_config(site_id)),
     })
 
     store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)

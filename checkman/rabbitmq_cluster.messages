@@ -11,4 +11,4 @@ description:
  Needs the datasource "Check state of RabbitMQ" to be configured.
 
 inventory:
- One service {"RabbitMQ Cluster"} is created
+ One service {"RabbitMQ Cluster"} is created.

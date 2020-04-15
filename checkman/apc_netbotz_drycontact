@@ -19,7 +19,7 @@ description:
  This check uses the PowerNet-MIB.
 
 inventory:
- One service per sensor is created. The location is added to
+ One service is created for each sensor.
 
 item:
  The input name and its index.

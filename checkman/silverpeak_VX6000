@@ -11,4 +11,4 @@ item:
  The fixed statement {Alarmstates}.
 
 inventory:
- One check is created which collects all active alarms.
+ One service is created. It collects all active alarms.

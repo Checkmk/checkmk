@@ -30,12 +30,10 @@ def test_parse_command_line():
     assert msi_engine.opt_verbose
 
 
-EXPECTED_FILE_TABLE = [
-    "check_mk_ini", "check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"
-]
+EXPECTED_FILE_TABLE = ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
 
 EXPECTED_COMPONENT_TABLE = [
-    "check_mk_ini_", "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"
+    "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"
 ]
 
 
@@ -47,13 +45,13 @@ def test_msi_tables():
 
 def test_msi_file_table():
     a = msi_engine.msi_file_table()
-    assert len(a) == len(EXPECTED_FILE_TABLE)  # size for now(ini, yml, dat & cap, zip)
+    assert len(a) == len(EXPECTED_FILE_TABLE)  # size for now(yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted
 
 
 def test_msi_component_table():
     a = msi_engine.msi_component_table()
-    assert len(a) == len(EXPECTED_COMPONENT_TABLE)  # size now(ini, yml, dat & cap, zip)
+    assert len(a) == len(EXPECTED_COMPONENT_TABLE)  # size now(yml, dat & cap, zip)
     a_sorted = sorted(a)
     assert a == a_sorted  # array should be sorted

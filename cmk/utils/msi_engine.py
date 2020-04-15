@@ -38,14 +38,12 @@ def bail_out(text):
 
 def msi_file_table():
     # we have to sort the table, the table is created by MSI installer
-    return ["check_mk_ini", "check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
+    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
 
 
 def msi_component_table():
     # we have to sort the table, the table is created by MSI installer too
-    return [
-        "check_mk_ini_", "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"
-    ]
+    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"]
 
 
 def remove_cab(path_to_msibuild, msi):
@@ -227,8 +225,6 @@ def export_msi_file(exe_path_prefix, entry_in, msi_in, out_dir):
 
 
 # tested
-# TODO: discuss do we need real command line or probably we could use msi_update as Python module to
-#  avoid stupid command line call
 def parse_command_line(argv):
     try:
         global opt_verbose
@@ -296,16 +292,12 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
 
         # Convert Input Files to Internal-MSI Presentation
         file_dir = work_dir
-        ini_file = Path(src_dir, "check_mk.ini")
-        ini_target = Path(file_dir, "check_mk_ini")
-        copy_or_create(ini_file, ini_target, u"# test file\r\n[global]\r\n port = 6556\r\n")
 
         yml_file = Path(src_dir, "check_mk.install.yml")
         yml_target = Path(file_dir, "check_mk_install_yml")
         copy_or_create(yml_file, yml_target,
                        u"# test file\r\nglobal:\r\n  enabled: yes\r\n  install: no\r\n")
 
-        shutil.copy(src_dir + "/check_mk.ini", file_dir + "/check_mk_ini")
         if src_dir != file_dir:
             shutil.copy(src_dir + "/checkmk.dat", file_dir + "/checkmk.dat")
         shutil.copy(src_dir + "/plugins.cap", file_dir + "/plugins_cap")

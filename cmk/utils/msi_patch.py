@@ -167,12 +167,12 @@ if __name__ == '__main__':
 
     if mode == "code":
         success = patch_package_code(f_name=file_name, mask=param)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     if mode == "1033":
         out_state_file = None if param == "" else Path(param)
         success = patch_package_code_by_marker(f_name=file_name, state_file=out_state_file)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     print("Invalid mode '{}'".format(mode))
-    exit(1)
+    sys.exit(1)

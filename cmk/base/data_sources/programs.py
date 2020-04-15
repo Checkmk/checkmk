@@ -74,7 +74,6 @@ class ProgramDataSource(CheckMKAgentDataSource):
     @staticmethod
     def _fetch_raw_data(commandline, command_stdin, logger):
         # type: (Union[bytes, Text], Optional[str], Logger) -> RawAgentData
-        exepath = commandline.split()[0]  # for error message, hide options!
 
         logger.debug("Calling external program %r" % (commandline))
         p = None
@@ -116,8 +115,15 @@ class ProgramDataSource(CheckMKAgentDataSource):
                 stdout, stderr = p.communicate(input=ensure_bytestr(command_stdin))
             else:
                 stdout, stderr = p.communicate()
-            exitstatus = p.returncode
 
+            if p.returncode == 127:
+                exepath = commandline.split()[0]  # for error message, hide options!
+                raise MKAgentError("Program '%s' not found (exit code 127)" %
+                                   six.ensure_str(exepath))
+            if p.returncode:
+                raise MKAgentError("Agent exited with code %d: %s" %
+                                   (p.returncode, six.ensure_str(stderr)))
+            return stdout
         except MKTimeout:
             # On timeout exception try to stop the process to prevent child process "leakage"
             if p:
@@ -133,15 +139,6 @@ class ProgramDataSource(CheckMKAgentDataSource):
                     raise Exception("stdout needs to be set")
                 p.stdout.close()
                 p.stderr.close()
-
-        if exitstatus:
-            if exitstatus == 127:
-                raise MKAgentError("Program '%s' not found (exit code 127)" %
-                                   six.ensure_str(exepath))
-            raise MKAgentError("Agent exited with code %d: %s" %
-                               (exitstatus, six.ensure_str(stderr)))
-
-        return stdout
 
     def describe(self):
         # type: () -> str

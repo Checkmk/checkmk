@@ -72,7 +72,7 @@ def _get_migrated_agent_sections(_load_all_checks):
     return config.registered_agent_sections.copy()
 
 
-@pytest.fixture(scope="module", name="migrated_snmp_sections")
+@pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
 def _get_migrated_snmp_sections(_load_all_checks):
     return config.registered_snmp_sections.copy()
 
@@ -119,6 +119,13 @@ def test_snmp_tree_tranlation(snmp_info):
 
 def test_scan_function_translation(snmp_scan_functions):
     for name, scan_func in snmp_scan_functions.items():
+        if name in (
+                # these are already migrated manually:
+                "ucd_mem",
+                "hr_mem",
+        ):
+            continue
+
         assert scan_func is not None
 
         # make sure we can convert the scan function

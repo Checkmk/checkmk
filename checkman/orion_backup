@@ -11,4 +11,4 @@ description:
  CRIT if 'fail' is reported, otherwise OK.
 
 inventory:
- One service for each item is generated.
+ One service is created.

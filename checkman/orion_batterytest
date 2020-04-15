@@ -12,4 +12,4 @@ description:
  'failed' or 'load failure'.
 
 inventory:
- One service for each item is generated.
+ One service is created.

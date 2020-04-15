@@ -7,6 +7,8 @@
 
 import re
 
+import six
+
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item  # pylint: disable=unused-import
 
 import cmk.gui.watolib as watolib
@@ -58,9 +60,9 @@ class ModePatternEditor(WatoMode):
     def title(self):
         if not self._hostname and not self._item:
             return _("Logfile Pattern Analyzer")
-        elif not self._hostname:
+        if not self._hostname:
             return _("Logfile Patterns of Logfile %s on all Hosts") % (self._item)
-        elif not self._item:
+        if not self._item:
             return _("Logfile Patterns of Host %s") % (self._hostname)
         return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
 
@@ -221,7 +223,7 @@ class ModePatternEditor(WatoMode):
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
                     ("host", self._hostname),
-                    ("item", watolib.mk_repr(self._item)),
+                    ("item", six.ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")

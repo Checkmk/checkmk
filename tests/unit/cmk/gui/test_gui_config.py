@@ -382,6 +382,8 @@ def test_registered_permissions():
         'view.invorapga_search',
         'view.invoratablespace_of_host',
         'view.invoratablespace_search',
+        'view.invorasystemparameter_of_host',
+        'view.invorasystemparameter_search',
         'view.invother_of_host',
         'view.invother_search',
         'view.invpsu_of_host',

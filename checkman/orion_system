@@ -11,4 +11,4 @@ item:
  The fixed statemnt {{System}}
 
 inventory:
- One service for each item is generated.
+ One service is created for each battery.

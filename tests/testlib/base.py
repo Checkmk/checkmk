@@ -26,7 +26,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'f5_bigip_cluster_v11'),
     ('section', 'f5_bigip_vcmpfailover'),
     ('section', 'f5_bigip_vcmpguests'),
-    ('section', 'hr_mem'),
     ('section', 'if'),
     ('section', 'if64'),
     ('section', 'if64adm'),
@@ -41,7 +40,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'netscaler_vserver'),
     ('section', 'printer_pages'),
     ('section', 'pulse_secure_users'),
-    ('section', 'ucd_mem'),
 ]
 
 KNOWN_AUTO_MIGRATION_FAILURES_INV = [

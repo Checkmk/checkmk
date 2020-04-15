@@ -8,4 +8,4 @@ description:
  A status of "Running" is interpreted as OK, "Not runnning" as CRIT
 
 inventory:
- One service per device will be created.
+ One service is created for each device.

@@ -1014,7 +1014,19 @@ class APICallSites(APICallCollection):
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        secret = watolib.do_site_login(request["site_id"], request["username"], request["password"])
+        response = watolib.do_site_login(request["site_id"], request["username"],
+                                         request["password"])
+
+        if isinstance(response, dict):
+            if cmk_version.is_managed_edition() and response["edition_short"] != "cme":
+                raise MKUserError(
+                    None,
+                    _("The Check_MK Managed Services Edition can only "
+                      "be connected with other sites using the CME."))
+            secret = response["login_secret"]
+        else:
+            secret = response
+
         site["secret"] = secret
         site_mgmt.save_sites(all_sites)
 

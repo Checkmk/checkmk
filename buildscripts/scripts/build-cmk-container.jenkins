@@ -17,6 +17,10 @@ properties([
   ])
 ])
 
+// TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
+// the copy&paste below can be removed. First we'll have to clean up the
+// DAILY_DATA directories below. All that stuff needs to be moved to the
+// workspace.
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
@@ -39,10 +43,12 @@ def get_cmk_version(BRANCH, VERSION) {
     def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
     def DATE = new Date()
 
-    if(BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE)
+    if (BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
+    } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }

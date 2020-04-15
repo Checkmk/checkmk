@@ -9,6 +9,8 @@ from typing import (  # pylint: disable=unused-import
     Set, List, Dict, Any,
 )
 
+import six
+
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath  # pylint: disable=unused-import
 from cmk.utils.type_defs import CheckPluginName  # pylint: disable=unused-import
@@ -145,13 +147,8 @@ class ModeCheckPlugins(WatoMode):
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
             if isinstance(entry, dict):
-                name = entry.get("name", "")
-                if isinstance(name, str):
-                    name = name.decode("utf8")
-
-                title = entry.get("title", "")
-                if isinstance(title, str):
-                    title = title.decode("utf8")
+                name = six.ensure_text(entry.get("name", ""))
+                title = six.ensure_text(entry.get("title", ""))
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
 
@@ -173,10 +170,9 @@ class ModeCheckPlugins(WatoMode):
                         name = match.get("name")
                         if name and name in handled_check_names:
                             continue  # avoid duplicate
-                        else:
-                            collection[key].append(match)
-                            if name:
-                                handled_check_names.add(name)
+                        collection[key].append(match)
+                        if name:
+                            handled_check_names.add(name)
 
             elif isinstance(entries, dict):
                 for k, subentries in entries.items():
@@ -191,12 +187,12 @@ class ModeCheckPlugins(WatoMode):
         def path_prefix_matches(p, op):
             if op and not p:
                 return False
-            elif not op:
+            if not op:
                 return True
             return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
         def strip_manpage_entry(entry):
-            return dict([(k, v) for (k, v) in entry.items() if k in ["name", "agents", "title"]])
+            return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
 
         tree = {}  # type: Dict[str, Any]
         if len(self._path) > 0:

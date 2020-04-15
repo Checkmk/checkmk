@@ -205,10 +205,10 @@ def write_as_text(werks, f, write_version=True):
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
         # write_version=False is used by the announcement mails
         if write_version:
-            f.write("%s:\n" % version)
+            f.write("%s:\n" % six.ensure_str(version))
         for component, component_group in itertools.groupby(version_group,
                                                             key=translator.component_of):
-            f.write("    %s:\n" % component.encode("utf-8"))
+            f.write("    %s:\n" % six.ensure_str(component))
             for werk in component_group:
                 write_werk_as_text(f, werk)
             f.write("\n")
@@ -227,7 +227,7 @@ def write_werk_as_text(f, werk):
     else:
         omit = ""
 
-    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"].encode("utf-8"), omit))
+    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, six.ensure_str(werk["title"]), omit))
 
     if werk["compatible"] == "incomp":
         f.write("            NOTE: Please refer to the migration notes!\n")

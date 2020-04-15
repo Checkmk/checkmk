@@ -12,4 +12,4 @@ description:
  See werk 7100 for detailed information.
 
 inventory:
- One service per process is created.
+ One service is created for each process.

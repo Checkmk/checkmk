@@ -18,6 +18,5 @@ item:
   The domain name of the domain backuped.
 
 inventory:
- One check per plesk domain is created if the {plesk_backups} agent plugin
- is installed and working (it outputs the {<<<plesk_backups>>>} section).
+ One service is created for each plesk domain.
 

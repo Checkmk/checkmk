@@ -758,7 +758,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     elif time_range_days < 32 and start_month == end_month:
         labelling = "%d"
         label_size = 2.5
-        label_shift = 86400 / 2
+        label_shift = 86400 // 2
         label_distance_at_least = 86400
 
     elif start_time_local.tm_year == end_time_local.tm_year:
@@ -866,7 +866,7 @@ def dist_week(start_time, end_time):
 
 def dist_month(start_time, end_time, months):
     # Jump to beginning of month
-    broken = list(time.localtime(start_time))
+    broken = time.localtime(start_time)
     broken_tm_year = broken[0]
     broken_tm_mon = broken[1]
     broken_tm_mday = 1
@@ -930,7 +930,7 @@ def dist_month(start_time, end_time, months):
 def dist_equal(start_time, end_time, distance, subdivision):
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
-    align_broken = list(time.localtime(start_time))
+    align_broken = time.localtime(start_time)
     align = time.mktime((
         align_broken[0],
         align_broken[1],

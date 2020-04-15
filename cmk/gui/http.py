@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -21,7 +21,7 @@ from cmk.gui.exceptions import MKUserError
 UploadedFile = Tuple[str, str, bytes]
 
 
-class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
+class LegacyVarsMixin(object):
     """Holds a dict of vars.
 
     These vars are being set throughout the codebase. Using this Mixin the vars will
@@ -108,7 +108,7 @@ class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
         return super(LegacyVarsMixin, self).var(varname, default)  # type: ignore[misc]
 
 
-class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
+class LegacyUploadMixin(object):
     def __init__(self, *args, **kw):
         # type: (*Any, **Any) -> None
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -135,7 +135,7 @@ class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
         return upload
 
 
-class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritance
+class LegacyDeprecatedMixin(object):
     """Some wrappers which are still used while their use is considered deprecated.
 
     They are to be removed as they provide no additional value over the already available

@@ -221,8 +221,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
-	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
-	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
@@ -244,10 +242,10 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/precompile-werks.py .werks .werks/werks cre
 
 ChangeLog: .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/create-changelog.py ChangeLog .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV3) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages

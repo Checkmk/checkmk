@@ -127,52 +127,13 @@ check_info['aws_elbv2_application.connections'] = {
 
 
 def check_aws_elbv2_application_http_elb(item, params, parsed):
-    now = time.time()
-    request_count = parsed.get('RequestCount')
-    if request_count is not None:
-        request_rate = get_rate('aws_elb_statistics', now, request_count)
-        yield 0, 'Requests: %s/s' % request_rate, [('requests_per_second', request_rate)]
-    else:
-        request_rate = 0
-
-    for http_errors_nr in ["4", "5"]:
-        http_errors = parsed.get('HTTPCode_ELB_%sXX_Count' % http_errors_nr)
-        if http_errors is None:
-            continue
-
-        http_errors_rate = get_rate('aws_elbv2_http_elb.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
-               [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
-
-        try:
-            http_errors_perc = 100.0 * http_errors_rate / request_rate
-        except ZeroDivisionError:
-            pass
-        else:
-            yield check_levels(http_errors_perc,
-                               'http_%sxx_perc' % http_errors_nr,
-                               params.get('levels_http_%sxx_perc' % http_errors_nr),
-                               human_readable_func=get_percent_human_readable,
-                               infoname="%sXX-Errors of total requests" % http_errors_nr)
-
-    http_backend_3xx = parsed.get('HTTPCode_ELB_3XX_Count')
-    if http_backend_3xx is not None:
-        yield 0, '3XX-Requests: %s/s' % get_rate('aws_elbv2_http_elb.3xx', now, http_backend_3xx)
-
-    for http_500_errors_nr in ["0", "2", "3", "4"]:
-        http_500_errors = parsed.get('HTTPCode_ELB_50%s_Count' % http_500_errors_nr)
-        if http_500_errors is None:
-            continue
-
-        http_500_errors_rate = get_rate('aws_elbv2_http_elb.50%s' % http_500_errors_nr, now,
-                                        http_500_errors)
-        yield 0, '50%s-Errors: %s/s' % (http_500_errors_nr, http_500_errors_rate)
+    return check_aws_http_elb(item, params.get("levels_load_balancers", params), parsed,
+                              ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                              'HTTPCode_ELB_%s_Count', 'aws_elbv2_http_elb')
 
 
 check_info['aws_elbv2_application.http_elb'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p, [
-        'RequestCount', 'HTTPCode_ELB_3XX_Count', 'HTTPCode_ELB_4XX_Count', 'HTTPCode_ELB_5XX_Count'
-    ]),
+    'inventory_function': lambda p: inventory_aws_generic_single(p, ['RequestCount']),
     'check_function': check_aws_elbv2_application_http_elb,
     'service_description': 'AWS/ApplicationELB HTTP ELB',
     'includes': ['aws.include'],

@@ -76,7 +76,7 @@ tearDown () {
 test_mk_oracle_default_config () {
     load_config
 
-    assertEquals "instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks" "$SYNC_SECTIONS"
+    assertEquals "instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks systemparameter" "$SYNC_SECTIONS"
     assertEquals "tablespaces rman jobs resumable" "$ASYNC_SECTIONS"
     assertEquals "instance processes" "$SYNC_ASM_SECTIONS"
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"

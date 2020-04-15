@@ -635,26 +635,24 @@ class ModeEditRuleset(WatoMode):
                 ruleset.delete_rule(rule)
                 rulesets.save()
                 return
-            elif c is False:  # not yet confirmed
+            if c is False:  # not yet confirmed
                 return ""
             return None  # browser reload
 
+        if not html.check_transaction():
+            return None  # browser reload
+
+        if action == "up":
+            ruleset.move_rule_up(rule)
+        elif action == "down":
+            ruleset.move_rule_down(rule)
+        elif action == "top":
+            ruleset.move_rule_to_top(rule)
+        elif action == "move_to":
+            ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
         else:
-            if not html.check_transaction():
-                return None  # browser reload
-
-            if action == "up":
-                ruleset.move_rule_up(rule)
-            elif action == "down":
-                ruleset.move_rule_down(rule)
-            elif action == "top":
-                ruleset.move_rule_to_top(rule)
-            elif action == "move_to":
-                ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
-            else:
-                ruleset.move_rule_to_bottom(rule)
-
-            rulesets.save()
+            ruleset.move_rule_to_bottom(rule)
+        rulesets.save()
 
     def page(self):
         if not self._hostname:
@@ -760,8 +758,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", watolib.mk_repr(self._item)),
-            ("service", watolib.mk_repr(self._service)),
+            ("item", six.ensure_str(watolib.mk_repr(self._item))),
+            ("service", six.ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -772,8 +770,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", watolib.mk_repr(self._item)),
-            ("service", watolib.mk_repr(self._service)),
+            ("item", six.ensure_str(watolib.mk_repr(self._item))),
+            ("service", six.ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -902,8 +900,8 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", watolib.mk_repr(self._item))
-            html.hidden_field("service", watolib.mk_repr(self._service))
+            html.hidden_field("item", six.ensure_str(watolib.mk_repr(self._item)))
+            html.hidden_field("service", six.ensure_str(watolib.mk_repr(self._service)))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)
@@ -1320,11 +1318,10 @@ class EditRuleMode(WatoMode):
         except Exception as e:
             if config.debug:
                 raise
-            else:
-                html.show_warning(
-                    _('Unable to read current options of this rule. Falling back to '
-                      'default values. When saving this rule now, your previous settings '
-                      'will be overwritten. Problem was: %s.') % e)
+            html.show_warning(
+                _('Unable to read current options of this rule. Falling back to '
+                  'default values. When saving this rule now, your previous settings '
+                  'will be overwritten. Problem was: %s.') % e)
 
             # In case of validation problems render the input with default values
             valuespec.render_input("ve", valuespec.default_value())
@@ -1748,7 +1745,7 @@ class LabelCondition(Transform):
     def _single_label_from_valuespec(self, operator, label_value):
         if operator == "is":
             return label_value
-        elif operator == "is_not":
+        if operator == "is_not":
             return {"$ne": label_value}
         raise NotImplementedError()
 

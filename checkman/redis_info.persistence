@@ -16,4 +16,4 @@ item:
  Name of the Redis instance.
 
 inventory:
- One service for each instance {"Redis MY_REDIS Persistence"} will be created.
+ One service is created for each instance {"Redis MY_REDIS Persistence"}.

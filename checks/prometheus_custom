@@ -31,14 +31,6 @@ def parse_prometheus_custom(info):
     return parsed
 
 
-def _parse_metric_description(metric_name):
-    name_elements = metric_name.split("_")
-    if len(name_elements) == 1:
-        return metric_name.capitalize()
-    name_elements = [NAME_TRANSLATION.get(element, element) for element in name_elements]
-    return " ".join(name_elements).title()
-
-
 def _check_for_invalid_result(metric_details, promql_expression):
     """Produces the output including service status and infotext for a invalid/failed
        PromQL query (and therefore service metric)
@@ -76,15 +68,17 @@ def _check_for_invalid_result(metric_details, promql_expression):
 def check_prometheus_custom(_item, _params, data):
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
-        metric_name = metric_details["name"]
+        metric_name = metric_details.get("name")
 
         invalid_result = _check_for_invalid_result(metric_details, promql_expression)
         if invalid_result:
             yield invalid_result
             continue
 
-        infoname = metric_details.get("label", _parse_metric_description(metric_name))
-        yield check_levels(float(metric_details["value"]), metric_name, None, infoname=infoname)
+        yield check_levels(float(metric_details["value"]),
+                           metric_name,
+                           None,
+                           infoname=metric_details["label"])
 
 
 check_info["prometheus_custom"] = {
@@ -92,5 +86,5 @@ check_info["prometheus_custom"] = {
     'check_function': check_prometheus_custom,
     'inventory_function': discover(),
     'service_description': '%s',
-    'has_perfdata': False,
+    'has_perfdata': True,
 }

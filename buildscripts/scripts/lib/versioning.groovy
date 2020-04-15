@@ -12,9 +12,11 @@ def get_cmk_version(scm, VERSION) {
     def DATE = new Date()
 
     if (BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE)
+        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
+    } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }

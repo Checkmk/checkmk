@@ -100,7 +100,7 @@ def _do_create_snapshot(data):
                 "tar", "czf", path_subtar, "--ignore-failed-read", "--force-local", "-C", prefix
             ] + paths
 
-            proc = subprocess.Popen(
+            proc_create = subprocess.Popen(
                 command,
                 stdin=None,
                 close_fds=True,
@@ -109,8 +109,8 @@ def _do_create_snapshot(data):
                 cwd=prefix,
                 encoding="utf-8",
             )
-            _stdout, stderr = proc.communicate()
-            exit_code = proc.wait()
+            _stdout, stderr = proc_create.communicate()
+            exit_code = proc_create.wait()
             # Allow exit codes 0 and 1 (files changed during backup)
             if exit_code not in [0, 1]:
                 raise MKGeneralException(
@@ -123,13 +123,13 @@ def _do_create_snapshot(data):
 
             # Append tar.gz subtar to snapshot
             command = ["tar", "--append", "--file=" + filename_work, filename_subtar]
-            proc = subprocess.Popen(
+            proc_append = subprocess.Popen(
                 command,
                 cwd=work_dir,
                 close_fds=True,
             )
-            proc.communicate()
-            exit_code = proc.wait()
+            proc_append.communicate()
+            exit_code = proc_append.wait()
 
             if os.path.exists(filename_subtar):
                 os.unlink(filename_subtar)
@@ -205,8 +205,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
             size = statinfo.st_size
         if size < 256:
             raise MKGeneralException(_("Invalid snapshot (too small)"))
-        else:
-            status["total_size"] = size
+        status["total_size"] = size
 
     def check_extension():
         # Check snapshot extension: tar or tar.gz
@@ -250,7 +249,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
                 _('You are currently using the Check_MK Micro Core, but this snapshot does not use the '
                   'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
                   'the core, restoring the snapshot and changing the core back again.'))
-        elif not using_cmc and snapshot_cmc:
+        if not using_cmc and snapshot_cmc:
             raise MKGeneralException(
                 _('You are currently not using the Check_MK Micro Core, but this snapshot uses the '
                   'Check_MK Micro Core. If you need to migrate your data, you could consider changing '
@@ -320,14 +319,13 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
             # Check if this process is still running
             if os.path.exists(path_pid):
-                if os.path.exists(path_pid) \
-                   and not os.path.exists("/proc/%s" % open(path_pid).read()):
+                if os.path.exists(path_pid) and not os.path.exists(
+                        "/proc/%s" % open(path_pid).read()):
                     status["progress_status"] = _("ERROR: Snapshot progress no longer running!")
                     raise MKGeneralException(
                         _("Error: The process responsible for creating the snapshot is no longer running!"
                          ))
-                else:
-                    status["progress_status"] = _("Snapshot build currently in progress")
+                status["progress_status"] = _("Snapshot build currently in progress")
 
             # Read snapshot status file (regularly updated by snapshot process)
             if os.path.exists(path_status):

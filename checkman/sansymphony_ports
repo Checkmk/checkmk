@@ -13,5 +13,5 @@ description:
 item:
  Name of the port
 
-Inventory:
- One service will be created
+inventory:
+ One service is created.

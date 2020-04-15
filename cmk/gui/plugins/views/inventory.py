@@ -1173,6 +1173,12 @@ declare_invtable_view(
     _("Oracle PGA performance"),
     _("Oracle PGA performance"),
 )
+declare_invtable_view(
+    "invorasystemparameter",
+    ".software.applications.oracle.systemparameter:",
+    _("Oracle system parameter"),
+    _("Oracle system parameters"),
+)
 declare_invtable_view("invibmmqmanagers", ".software.applications.ibm_mq.managers:", _("Manager"),
                       _("IBM MQ Managers"))
 declare_invtable_view("invibmmqchannels", ".software.applications.ibm_mq.channels:", _("Channel"),
@@ -1777,14 +1783,8 @@ class NodeRenderer(object):
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
-        elif isinstance(value, bytes):
-            try:
-                text = value.decode("utf-8")
-            except UnicodeDecodeError:
-                text = value
-            html.write_text(text)
-        elif isinstance(value, six.text_type):
-            html.write_text(value)
+        elif isinstance(value, six.string_types):
+            html.write_text(six.ensure_text(value))
         elif isinstance(value, int):
             html.write(str(value))
         elif isinstance(value, float):

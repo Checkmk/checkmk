@@ -10,4 +10,4 @@ item:
  Number of the fan
 
 inventory:
- One check for each fan will be created.
+ One service is created for each fan.

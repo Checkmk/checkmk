@@ -172,3 +172,42 @@ def check_aws_limits(aws_service, params, parsed):
 
     if long_output:
         yield 0, "\n%s" % "\n".join(sorted(long_output))
+
+
+def check_aws_http_elb(item, params, parsed, http_err_codes, cloudwatch_metrics_format, rate_id):
+
+    now = time.time()
+    request_count = parsed.get('RequestCount')
+    if request_count is not None:
+        request_rate = get_rate('%s.requests' % rate_id, now, request_count, is_rate=True)
+        yield 0, 'Requests: %s/s' % get_number_with_precision(request_rate, precision=3), [
+            ('requests_per_second', request_rate)
+        ]
+    else:
+        request_rate = 0
+
+    for http_err_code in http_err_codes:
+
+        http_errors = parsed.get(cloudwatch_metrics_format % http_err_code.upper())
+        if http_errors is None:
+            http_errors = 0  # CloudWatch only reports HTTPCode_... if the value is nonzero
+
+        http_errors_rate = get_rate('%s.%s' % (rate_id, http_err_code),
+                                    now,
+                                    http_errors,
+                                    is_rate=True)
+        yield (0, '%s-Errors: %s/s' %
+               (http_err_code.upper(), get_number_with_precision(http_errors_rate, precision=3)), [
+                   ('aws_http_%s_rate' % http_err_code, http_errors_rate)
+               ])
+
+        try:
+            http_errors_perc = 100.0 * http_errors_rate / request_rate
+        except ZeroDivisionError:
+            http_errors_perc = 0
+
+        yield check_levels(http_errors_perc,
+                           'aws_http_%s_perc' % http_err_code,
+                           params.get('levels_http_%s_perc' % http_err_code),
+                           human_readable_func=get_percent_human_readable,
+                           infoname="%s-Errors of total requests" % http_err_code.upper())

@@ -156,16 +156,8 @@ def create_check_plugin(
     """
     # TODO (mo): unhack this CMK-3983
     if (name is None or service_name is None or discovery_function is None or
-            check_function is None or forbidden_names is None):
+            check_function is None or forbidden_names is None or cluster_check_function is None):
         raise TypeError()
-    # TODO (mo): Implement it.
-    #            "None" is only allowed in version 0.x if the check API.
-    #            It will result in the "legacy mode from hell".
-    #            From Version 1 onwards, the default behavior will be to
-    #            just output something along the lines of
-    #            "This service is not cluster compatible."
-    if cluster_check_function is not None:
-        raise NotImplementedError("[%s]: cluster_check_function is not yet available" % name)
 
     plugin_name = PluginName(name, forbidden_names)
 
@@ -215,15 +207,14 @@ def create_check_plugin(
         check_ruleset_name is not None,
         subscribed_sections,
     )
-    if cluster_check_function is not None:
-        _validate_function_args(
-            name,
-            "cluster check",
-            cluster_check_function,
-            requires_item,
-            check_ruleset_name is not None,
-            subscribed_sections,
-        )
+    _validate_function_args(
+        name,
+        "cluster check",
+        cluster_check_function,
+        requires_item,
+        check_ruleset_name is not None,
+        subscribed_sections,
+    )
 
     return CheckPlugin(
         plugin_name,

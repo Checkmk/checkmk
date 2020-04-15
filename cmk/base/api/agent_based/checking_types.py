@@ -279,5 +279,5 @@ CheckPlugin = NamedTuple("CheckPlugin", [
     ("check_function", Callable),
     ("check_default_parameters", Optional[Dict]),
     ("check_ruleset_name", Optional[PluginName]),
-    ("cluster_check_function", Optional[Callable]),
+    ("cluster_check_function", Callable),
 ])

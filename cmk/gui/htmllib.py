@@ -1130,6 +1130,7 @@ OUTPUT_FORMAT_MIME_TYPES = {
     "html": "text/html",
     "xml": "text/xml",
     "pdf": "application/pdf",
+    "x-tgz": "application/x-tgz",
 }
 
 

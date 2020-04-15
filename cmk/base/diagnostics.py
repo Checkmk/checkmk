@@ -58,7 +58,7 @@ class DiagnosticsDump:
         self.optional_elements = self._get_optional_elements()
         self.elements = self.fixed_elements + self.optional_elements
 
-        dump_folder = cmk.utils.paths.diagnostics_dir.joinpath(cmk_version.omd_site())
+        dump_folder = cmk.utils.paths.diagnostics_dir
         # TODO use context manager for temporary folders
         self.dump_folder = dump_folder
         self.tmp_dump_folder = dump_folder.joinpath("tmp")

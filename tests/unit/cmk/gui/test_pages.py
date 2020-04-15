@@ -71,6 +71,7 @@ def test_registered_pages():
         'delete_dashlet',
         'download_agent_output',
         'download_crash_report',
+        'download_diagnostics_dump',
         'edit_bookmark_list',
         'edit_custom_snapin',
         'edit_dashboard',

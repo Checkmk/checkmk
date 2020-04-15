@@ -56,6 +56,7 @@ def test_registered_automation_commands():
         'activate-changes',
         'push-profiles',
         'check-analyze-config',
+        'diagnostics-dump-get-file',
         'fetch-agent-output-get-file',
         'fetch-agent-output-get-status',
         'fetch-agent-output-start',

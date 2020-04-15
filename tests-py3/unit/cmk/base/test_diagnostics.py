@@ -33,9 +33,8 @@ def test_diagnostics_dump_create(monkeypatch, tmp_path):
 
     assert diagnostics_dump.dump_folder.exists()
     assert diagnostics_dump.tmp_dump_folder.exists()
-    assert diagnostics_dump.dump_folder.name == "NO_SITE"
+    assert diagnostics_dump.dump_folder.name == "diagnostics"
     assert diagnostics_dump.tmp_dump_folder.name == "tmp"
-    assert diagnostics_dump.tmp_dump_folder.parent.name == "NO_SITE"
 
     diagnostics_dump._create_tarfile()
 

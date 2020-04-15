@@ -98,6 +98,7 @@ SnapshotSettings = NamedTuple("SnapshotSettings", [
     ("work_dir", str),
     ("snapshot_components", List[ReplicationPath]),
     ("component_names", Set[str]),
+    ("site_config", SiteConfiguration),
 ])
 
 
@@ -596,6 +597,8 @@ class ActivateChangesManager(ActivateChanges):
         # type: () -> Dict[SiteId, SnapshotSettings]
         snapshot_settings = {}
 
+        site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
+
         for site_id in self._sites:
             self._check_snapshot_creation_permissions(site_id)
 
@@ -620,24 +623,23 @@ class ActivateChangesManager(ActivateChanges):
                 work_dir=work_dir,
                 snapshot_components=snapshot_components,
                 component_names=component_names,
+                site_config=site_configs[site_id],
             )
 
         return snapshot_settings
 
     def _generate_snapshots(self, work_dir, site_snapshot_settings):
         # type: (str, Dict[SiteId, SnapshotSettings]) -> None
-        site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
 
         with multitar.SnapshotCreator(work_dir, get_replication_paths()) as snapshot_creator:
             for site_id in self._sites:
                 self._create_site_sync_snapshot(site_id, site_snapshot_settings[site_id],
-                                                snapshot_creator, site_configs)
+                                                snapshot_creator)
 
-    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
-                                   site_configs):
-        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator, SiteConfiguration) -> None
+    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator):
+        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator) -> None
         paths = self._get_replication_components(site_id)
-        create_site_globals_file(site_id, snapshot_settings.work_dir, site_configs[site_id])
+        create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
         # Add site-specific global settings
         site_specific_paths = [("file", "sitespecific",

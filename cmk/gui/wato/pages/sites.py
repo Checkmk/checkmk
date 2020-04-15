@@ -157,6 +157,7 @@ class ModeEditSite(WatoMode):
                 })
 
         else:
+            assert self._site_id is not None
             try:
                 self._site = configured_sites[self._site_id]
             except KeyError:
@@ -186,6 +187,7 @@ class ModeEditSite(WatoMode):
         if self._new:
             self._site_id = site_spec["id"]
         del site_spec["id"]
+        assert self._site_id is not None
 
         configured_sites = self._site_mgmt.load_sites()
 

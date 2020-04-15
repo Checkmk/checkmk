@@ -18,6 +18,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
+from cmk.gui.sites import SiteConfigurations  # pylint: disable=unused-import
 import cmk.gui.multitar as multitar
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -283,6 +284,7 @@ class SiteManagement(object):
 
     @classmethod
     def load_sites(cls):
+        # type: () -> SiteConfigurations
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 

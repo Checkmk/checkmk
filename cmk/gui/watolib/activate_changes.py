@@ -18,8 +18,11 @@ import ast
 import os
 import shutil
 import time
-from typing import List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, Set, List, Optional, Tuple, Union, NamedTuple,
+)
 import multiprocessing
+
 from livestatus import (  # pylint: disable=unused-import
     SiteId, SiteConfiguration,
 )
@@ -89,6 +92,13 @@ var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 # TODO: Always use quadruples (last entry can be an empty list). Null pattern FTW!!!1!11!!!
 ReplicationPath = Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]
+
+SnapshotSettings = NamedTuple("SnapshotSettings", [
+    ("snapshot_path", str),
+    ("work_dir", str),
+    ("snapshot_components", List[ReplicationPath]),
+    ("component_names", Set[str]),
+])
 
 
 # This ugly dispatching is the price one has to pay for the even uglier union above...
@@ -576,43 +586,43 @@ class ActivateChangesManager(ActivateChanges):
             if cmk_version.is_managed_edition():
                 import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
                 managed_snapshots.CMESnapshotManager(
-                    work_dir, self._get_site_configurations()).generate_snapshots()
+                    work_dir, self._site_snapshot_settings()).generate_snapshots()
             else:
                 self._generate_snapshots(work_dir)
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
 
-    def _get_site_configurations(self):
-        site_configurations = {}
+    def _site_snapshot_settings(self):
+        # type: () -> Dict[SiteId, SnapshotSettings]
+        snapshot_settings = {}
 
         for site_id in self._sites:
-            site_configuration = {}
             self._check_snapshot_creation_permissions(site_id)
 
-            site_configuration["snapshot_path"] = self._site_snapshot_file(site_id)
-            site_configuration["work_dir"] = self._get_site_tmp_dir(site_id)
+            work_dir = self._get_site_tmp_dir(site_id)
 
             # Change all default replication paths to be in the site specific temporary directory
             # These paths are then packed into the sync snapshot
-            replication_components = [
-                _replace_omd_root(site_configuration["work_dir"], repl_comp)
+            snapshot_components = [
+                _replace_omd_root(work_dir, repl_comp)
                 for repl_comp in self._get_replication_components(site_id)
             ]
 
             # Add site-specific global settings
-            replication_components.append(("file", "sitespecific",
-                                           os.path.join(site_configuration["work_dir"],
-                                                        "site_globals", "sitespecific.mk")))
+            snapshot_components.append(
+                ("file", "sitespecific", os.path.join(work_dir, "site_globals", "sitespecific.mk")))
 
             # Generate a quick reference_by_name for each component
-            site_configuration["snapshot_components"] = replication_components
-            site_configuration["component_names"] = set()
-            for component in site_configuration["snapshot_components"]:
-                site_configuration["component_names"].add(component[1])
+            component_names = {c[1] for c in snapshot_components}
 
-            site_configurations[site_id] = site_configuration
+            snapshot_settings[site_id] = SnapshotSettings(
+                snapshot_path=self._site_snapshot_file(site_id),
+                work_dir=work_dir,
+                snapshot_components=snapshot_components,
+                component_names=component_names,
+            )
 
-        return site_configurations
+        return snapshot_settings
 
     def _generate_snapshots(self, work_dir):
         site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()

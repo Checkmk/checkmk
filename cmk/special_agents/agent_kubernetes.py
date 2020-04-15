@@ -832,7 +832,7 @@ class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-a
         return {item.name: item.labels for item in self}
 
     def group_by(self, selectors):
-        grouped = {}
+        grouped = {}  # type: Dict[str, K8sList[ListElem]]
         for element in self:
             for name, selector in selectors.items():
                 if element.matches(selector):

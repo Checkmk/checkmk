@@ -30,6 +30,8 @@ import traceback
 from types import FrameType  # pylint: disable=unused-import
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon
 import cmk.utils.defines
@@ -69,7 +71,7 @@ class SyslogPriority:
     def __init__(self, value):
         # type: (int) -> None
         super().__init__()
-        self.value = int(value)
+        self.value = value
 
     def __repr__(self):
         return "SyslogPriority(%d)" % self.value
@@ -370,15 +372,16 @@ class TimePeriods:
         # type: (Logger) -> None
         super().__init__()
         self._logger = logger
-        self._periods = None
+        self._periods = None  # type: Optional[Dict[str, Tuple[str, bool]]]
         self._last_update = 0
 
     def _update(self):
+        # type: () -> None
         if self._periods is not None and int(time.time() / 60.0) == self._last_update:
             return  # only update once a minute
         try:
             table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
-            periods = {}
+            periods = {}  # type: Dict[str, Tuple[str, bool]]
             for tpname, alias, isin in table:
                 periods[tpname] = (alias, bool(isin))
             self._periods = periods
@@ -388,6 +391,7 @@ class TimePeriods:
             raise
 
     def check(self, tpname):
+        # type: (str) -> bool
         self._update()
         if not self._periods:
             self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
@@ -515,15 +519,17 @@ class Perfcounters:
         self._rates = {}  # type: Dict[str, float]
         self._average_rates = {}  # type: Dict[str, float]
         self._times = {}  # type: Dict[str, float]
-        self._last_statistics = None
+        self._last_statistics = None  # type: Optional[float]
 
         self._logger = logger.getChild("Perfcounters")
 
     def count(self, counter):
+        # type: (str) -> None
         with self._lock:
             self._counters[counter] += 1
 
     def count_time(self, counter, ptime):
+        # type: (str, float) -> None
         with self._lock:
             if counter in self._times:
                 self._times[counter] = lerp(ptime, self._times[counter], self._weights[counter])
@@ -531,6 +537,7 @@ class Perfcounters:
                 self._times[counter] = ptime
 
     def do_statistics(self):
+        # type: () -> None
         with self._lock:
             now = time.time()
             if self._last_statistics:
@@ -567,8 +574,9 @@ class Perfcounters:
         return columns
 
     def get_status(self):
+        # type: () -> List[float]
         with self._lock:
-            row = []
+            row = []  # type: List[float]
             # Please note: status_columns() and get_status() need to produce lists with exact same column order
             for name in self._counter_names:
                 row.append(self._counters[name])
@@ -620,9 +628,9 @@ class EventServer(ECServerThread):
                          slave_status=slave_status,
                          profiling_enabled=settings.options.profile_event,
                          profile_file=settings.paths.event_server_profile.value)
-        self._syslog = None
-        self._syslog_tcp = None
-        self._snmptrap = None
+        self._syslog = None  # type: Optional[socket.socket]
+        self._syslog_tcp = None  # type: Optional[socket.socket]
+        self._snmptrap = None  # type: Optional[socket.socket]
 
         # TODO: Improve type!
         self._rules = []  # type: List[Any]
@@ -1274,7 +1282,7 @@ class EventServer(ECServerThread):
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
-        self._rule_hash = {}  # type: Dict[int, Dict[str, Any]]
+        self._rule_hash = {}  # type: Dict[int, Dict[int, Any]]
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
@@ -1719,12 +1727,13 @@ class EventServer(ECServerThread):
         try:
             with get_logfile(self._config, self.settings.paths.messages_dir.value,
                              self._message_period).open(mode='ab') as f:
-                f.write("%s %s %s%s: %s\n" % (
-                    time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
-                    event["host"],
-                    event["application"],
-                    event["pid"] and ("[%s]" % event["pid"]) or "",
-                    event["text"]))
+                f.write(
+                    six.ensure_binary("%s %s %s%s: %s\n" % (
+                        time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
+                        event["host"],
+                        event["application"],
+                        event["pid"] and ("[%s]" % event["pid"]) or "",
+                        event["text"])))
         except Exception:
             if self.settings.options.debug:
                 raise

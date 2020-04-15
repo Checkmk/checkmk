@@ -10,5 +10,5 @@ description:
  CPU usage of the jobs that consumed the most CPU since.
 
 inventory:
- One check per OpenVMS host will be created.
+ One service is created for each OpenVMS host.
 

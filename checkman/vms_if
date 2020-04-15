@@ -13,3 +13,6 @@ description:
 
 item:
  The port of the interface
+
+inventory:
+ One service is created for each port.

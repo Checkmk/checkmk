@@ -9,4 +9,5 @@ description:
  in the plugin output
 
 inventory:
- One check is created if the host provides that information
+ One service is created.
+

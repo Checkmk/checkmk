@@ -17,6 +17,6 @@ description:
 
 
 inventory:
- One check is created whereas the router mode during the inventory
- is remembered as a param
+ One service is created.
+ The router mode during the inventory is remembered as a param.
 

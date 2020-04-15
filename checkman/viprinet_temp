@@ -10,5 +10,5 @@ item:
  One of the two statements: {{CPU}}, {{System}}
 
 inventory:
- Creates two checks "Temperature CPU" and "Temperature System"
+ Two service are created ("Temperature CPU" and "Temperature System").
 

@@ -9,7 +9,8 @@ description:
  The check returns {CRIT} if the level is above 5.000000 %, {WARN} if the level is blow 5.000000 % and above 3.000000 %, {OK} otherwise.
 
 inventory:
- Creates two checks, one for every Smoke Detector.
+ Two services are created.
+ One service for every smoke detector.
 
 item:
  One of the two numbers {{1}} or {{2}}

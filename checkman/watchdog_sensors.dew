@@ -10,4 +10,4 @@ item:
  Name of the watchdog device
 
 inventory:
- All available dew point sensors are automatically inventorized.
+ One service is created for each available dew point sensor.

@@ -8,5 +8,5 @@ description:
  running) processes on OpenVMS. You can set levels on the number.
 
 inventory:
- One check per OpenVMS system will be created.
+ One service is created for each OpenVMS system.
 

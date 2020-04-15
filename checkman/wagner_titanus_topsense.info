@@ -12,5 +12,4 @@ description:
  This check is for information only and returns always {OK}.
 
 inventory:
- Creates exactly one check for each Top Sense device called
- Topsense Info.
+ One service is created for each Top Sense device.

@@ -8,5 +8,5 @@ description:
  on an OpenVMS host. The check is always OK.
 
 inventory:
- One check per OpenVMS host will be created.
+ One service is created for each OpenVMS host.
 

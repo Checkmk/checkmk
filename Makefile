@@ -365,6 +365,8 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea"\
 	    --exclude='\.werks/.last'\
 	    --exclude='\.werks/.my_ids'
 
@@ -375,6 +377,8 @@ mrclean:
 	    --exclude="Pipfile" \
 	    --exclude="Pipfile.lock" \
 	    --exclude=".venv*" \
+	    --exclude="**/.vscode"\
+	    --exclude="**/.idea"\
 	    --exclude="virtual-envs/*/.venv/"
 
 setup:

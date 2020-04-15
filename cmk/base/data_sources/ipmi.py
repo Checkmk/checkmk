@@ -24,7 +24,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
 )
 
-from .abstract import CheckMKAgentDataSource, management_board_ipaddress
+from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, management_board_ipaddress
 
 
 def _handle_false_positive_warnings(reading):
@@ -86,7 +86,7 @@ def _parse_sensor_reading(number, reading):
     ]
 
 
-class IPMIDataFetcher:
+class IPMIDataFetcher(AbstractDataFetcher):
     def __init__(self, ipaddress, username, password, logger):
         super(IPMIDataFetcher, self).__init__()
         self._ipaddress = ipaddress  # type: HostAddress

@@ -20,7 +20,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     RawAgentData, ServiceCheckResult)
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
-from .abstract import CheckMKAgentDataSource
+from .abstract import AbstractDataFetcher, CheckMKAgentDataSource
 
 
 def _raw_data(hostname, time_settings):
@@ -28,7 +28,7 @@ def _raw_data(hostname, time_settings):
     return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 
-class PiggyBackDataFetcher:
+class PiggyBackDataFetcher(AbstractDataFetcher):
     def __init__(self, hostname, ipaddress, time_settings):
         super(PiggyBackDataFetcher, self).__init__()
         self._hostname = hostname  # type: HostName

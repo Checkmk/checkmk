@@ -32,7 +32,7 @@ from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-impor
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress)
 
-from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
+from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
 
 #.
 #   .--Datasoure Programs--------------------------------------------------.
@@ -47,7 +47,7 @@ from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=un
 #   '----------------------------------------------------------------------'
 
 
-class ProgramDataFetcher(object):  # pylint: disable=useless-object-inheritance
+class ProgramDataFetcher(AbstractDataFetcher):
     def __init__(self, cmdline, stdin, logger):
         super(ProgramDataFetcher, self).__init__()
         self._cmdline = cmdline  # type: Union[bytes, Text]

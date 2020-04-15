@@ -20,7 +20,7 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
 )
 from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
 
-from .abstract import CheckMKAgentDataSource, verify_ipaddress
+from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, verify_ipaddress
 
 #.
 #   .--Agent---------------------------------------------------------------.
@@ -35,7 +35,7 @@ from .abstract import CheckMKAgentDataSource, verify_ipaddress
 #   '----------------------------------------------------------------------'
 
 
-class TCPDataFetcher(object):  # pylint: disable=useless-object-inheritance
+class TCPDataFetcher(AbstractDataFetcher):
     def __init__(self, family, address, timeout, encryption_settings, logger):
         super(TCPDataFetcher, self).__init__()
         self._family = family  # type: socket.AddressFamily

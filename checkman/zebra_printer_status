@@ -8,4 +8,4 @@ description:
  is {CRITICAL}, if the printer is online, printing or warming up the status is {OK}.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

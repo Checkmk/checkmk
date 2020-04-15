@@ -9,6 +9,5 @@ description:
  {check_mk.ini}. You can do this by adding {counters = 638:tcp_conn} to the section {[winperf]}.
 
 inventory:
- If the windows agents has the section {<<<winperf_tcp_conn>>>}, then one check
- will be created
+ One service is created if the windows agents has the section {<<<winperf_tcp_conn>>>}.
 

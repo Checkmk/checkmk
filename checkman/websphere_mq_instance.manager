@@ -16,5 +16,5 @@ item:
  The name of the manager.
 
 inventory:
- One service will be created for each manager.
+ One service is created for each manager.
 

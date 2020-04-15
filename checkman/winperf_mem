@@ -11,6 +11,5 @@ description:
  You can configure levels for the number of pages per second.
 
 inventory:
- If the windows agents has the section {<<<winperf_mem>>>}, then one check
- will be created
+ One service is created if the windows agents has the section {<<<winperf_mem>>>}.
 

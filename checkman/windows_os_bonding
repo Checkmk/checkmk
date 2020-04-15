@@ -21,6 +21,6 @@ item:
  The team name of the bonding interface.
 
 inventory:
- One check will be created for every bonding interface found in state
+ One service is created for every bonding interface found in state
  up or degraded.
 

@@ -13,5 +13,5 @@ item:
  The name of the bonding interface
 
 inventory:
- One check per {active} bonding interface will be created.
+ One service is created for each {active} bonding interface.
 

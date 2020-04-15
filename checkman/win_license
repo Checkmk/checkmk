@@ -14,5 +14,5 @@ description:
  The check can be configured via the corresponding WATO rule {Windows License}
 
 inventory:
- The service {Windows License} is created.
+ One service named {Windows License} is created.
 

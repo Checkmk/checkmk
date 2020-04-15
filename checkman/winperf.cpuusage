@@ -17,6 +17,5 @@ description:
  It is replaced by {winperf_processor.util}.
 
 inventory:
- A check of this type is automatically created for all Windows
- hosts.
+ One service is created for each Windows host.
 

@@ -11,4 +11,4 @@ item:
  The IO index of the port
 
 inventory:
- All channels are automatically inventorized with their state.
+ One service is created for each channel.

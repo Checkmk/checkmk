@@ -15,4 +15,4 @@ description:
  for this check.
 
 inventory:
- Per DHCP Server one service will be created.
+ One service is created for each DHCP Server.

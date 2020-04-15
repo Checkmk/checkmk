@@ -13,5 +13,5 @@ item:
  The name of the printer
 
 inventory:
- One service will be created for each printer.
+ One service is created for each printer.
 

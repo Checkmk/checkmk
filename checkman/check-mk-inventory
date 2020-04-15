@@ -1,6 +1,6 @@
-title: Check for Checkmk's Discovery Procedure
+title: Checkmk: Discovery Procedure
 agents: aix, freebsd, hpux, linux, macosx, netbsd, openwbsd, openwrt, solaris
-catalog: generic
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

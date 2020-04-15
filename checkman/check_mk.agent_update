@@ -1,6 +1,6 @@
-title: Check Automatic Agent Deployments of Checkmk Agent
+title: Checkmk Agent: Automatic Agent Deployments
 agents: linux, windows
-catalog: generic
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

@@ -1,4 +1,4 @@
-title: Retrieve Informational SNMP Data about Host
+title: SNMP: Informational Data about Host
 agents: snmp
 catalog: os/misc
 license: GPL

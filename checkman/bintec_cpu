@@ -1,6 +1,6 @@
 title: Bintec Devices: CPU Utilization
 agents: snmp
-catalog: os/kernel
+catalog: hw/network/bintec
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
-title: Brocade NetIron MLX Devices: NI-MLX or BR-MLX Module CPU Utilization
+title: Brocade NetIron MLX Devices: CPU Utilization
 agents: snmp
-catalog: os/kernel
+catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:

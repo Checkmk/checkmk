@@ -1,6 +1,6 @@
 title: Checkmk: Site Status
 agents: linux
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

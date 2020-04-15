@@ -1,4 +1,4 @@
-title: Uptime of SNMP Hosts
+title: SNMP: Uptime of Hosts
 agents: snmp
 catalog: os/misc
 license: GPL

@@ -1,6 +1,6 @@
-title: Retrieve Informational SNMP Data about Bintec Routers
+title: Bintec Routers: General Information
 agents: snmp
-catalog: os/misc
+catalog: hw/network/bintec
 license: GPL
 distribution: check_mk
 description:

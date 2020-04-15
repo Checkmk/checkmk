@@ -1,6 +1,6 @@
 title: Entersekt EMR: Number of HTTP Errors
 agents: snmp
-catalog: os/networking
+catalog: app/entersekt
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: Checkmk: Performance and Settings
 agents: linux
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

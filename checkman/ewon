@@ -1,6 +1,6 @@
-title: eWON Industrial VPN Router: Relayed Data
+title: Ewon Industrial VPN Router: Relayed Data
 agents: snmp
-catalog: os/networking
+catalog: hw/network/ewon
 license: GPL
 distribution: check_mk
 description:

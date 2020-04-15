@@ -1,6 +1,6 @@
 title: Checkmk: State of BI Aggregation
 agents: BI
-catalog: app/omd
+catalog: app/cmk
 license: GPL
 distribution: check_mk
 description:

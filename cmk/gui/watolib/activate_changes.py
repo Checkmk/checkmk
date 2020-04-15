@@ -625,7 +625,7 @@ class ActivateChangesManager(ActivateChanges):
         site_tmp_dir = self._get_site_tmp_dir(site_id)
 
         paths = self._get_replication_components(site_id)
-        self.create_site_globals_file(site_id, site_tmp_dir)
+        create_site_globals_file(site_id, site_tmp_dir)
 
         # Add site-specific global settings
         site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir,
@@ -675,30 +675,6 @@ class ActivateChangesManager(ActivateChanges):
             paths = [e for e in paths if e[1] not in ["local", "mkps"]]
 
         return paths
-
-    def create_site_globals_file(self, site_id, tmp_dir, sites=None):
-        # TODO: Cleanup this local import
-        import cmk.gui.watolib.sites  # pylint: disable=redefined-outer-name
-
-        try:
-            os.makedirs(tmp_dir)
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
-                raise
-
-        if not sites:
-            sites = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
-        site = sites[site_id]
-        site_globals = site.get("globals", {})
-
-        site_globals.update({
-            "wato_enabled": not site.get("disable_wato", True),
-            "userdb_automatic_sync": site.get("user_sync", user_sync_default_config(site_id)),
-        })
-
-        store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
 
     def _start_activation(self):
         self._log_activation()
@@ -1241,3 +1217,28 @@ def get_number_of_pending_changes():
     changes = ActivateChanges()
     changes.load()
     return len(changes.grouped_changes())
+
+
+def create_site_globals_file(site_id, tmp_dir, sites=None):
+    # TODO: Cleanup this local import
+    import cmk.gui.watolib.sites  # pylint: disable=redefined-outer-name
+
+    try:
+        os.makedirs(tmp_dir)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+
+    if not sites:
+        sites = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
+    site = sites[site_id]
+    site_globals = site.get("globals", {})
+
+    site_globals.update({
+        "wato_enabled": not site.get("disable_wato", True),
+        "userdb_automatic_sync": site.get("user_sync", user_sync_default_config(site_id)),
+    })
+
+    store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)

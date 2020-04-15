@@ -11,5 +11,5 @@ item:
  The fixed statement {{Battery}}
 
 inventory:
- Creates one item if the sensor is connected.
+ One service is created if the sensor is connected.
 

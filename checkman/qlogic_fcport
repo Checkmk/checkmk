@@ -24,7 +24,7 @@ item:
  e. g. 1.1
 
 inventory:
- One service is created for eeach FC Port found by SNMP in AdminStatus "online" or
+ One service is created for each FC Port found by SNMP in AdminStatus "online" or
  "testing" and Operational Status "online" or "testing".
 
  To change this behavior, please edit the configuration variables, see section

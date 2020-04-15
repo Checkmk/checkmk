@@ -7,7 +7,7 @@ description:
  The check monitors the battery temperature of CPS UPS devices.
 
 inventory:
- One check per device is created.
+ One service is created for each device.
 
 item:
  The fixed statement {{Battery}}

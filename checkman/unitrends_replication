@@ -16,4 +16,4 @@ item:
  Target of the replication
 
 inventory:
- One Service for each replication target will be created
+ One service is created for each replication target.

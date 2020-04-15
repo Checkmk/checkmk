@@ -11,5 +11,5 @@ item:
  ID of the phase
 
 inventory:
- One check per Socomec UPS output phase is created.
+ One service is created for each Socomec UPS output phase.
 

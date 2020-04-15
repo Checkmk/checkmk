@@ -24,6 +24,6 @@ item:
  Name of the job
 
 inventory:
- A check will be created for all hosts known to check_mk and reported
+ One service is created for each host known to check_mk and reported
  by the Veeam agent plugin.
 

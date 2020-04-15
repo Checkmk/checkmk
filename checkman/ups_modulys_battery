@@ -9,5 +9,5 @@ description:
  Note: It is currently unclear whether the time until shutdown is reliably reported by the device.
 
 inventory:
- Creates exactly one item.
+ One service is created.
 

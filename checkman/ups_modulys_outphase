@@ -10,5 +10,5 @@ item:
  The identifier of the phase (usually {"Phase 1"}, {"Phase 2"}, {"Phase 3"}).
 
 inventory:
- Creates one or three items - one per output phase.
+ One service is created for each input phase (usually one or three).
 

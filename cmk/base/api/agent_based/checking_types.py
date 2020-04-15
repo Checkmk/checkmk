@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Generator, Iterable, List, NamedTuple, Optional, Tuple, Union  # pylint: disable=unused-import
 import sys
 import collections
 import enum
@@ -251,16 +251,20 @@ class IgnoreResults:
     pass
 
 
+DiscoveryFunction = Callable[..., Generator[Service, None, None]]
+
+CheckFunction = Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
+
 CheckPlugin = NamedTuple("CheckPlugin", [
     ("name", PluginName),
     ("sections", List[PluginName]),
     ("service_name", str),
     ("management_board", Optional[management_board]),
-    ("discovery_function", Callable),
+    ("discovery_function", DiscoveryFunction),
     ("discovery_default_parameters", Optional[Dict]),
     ("discovery_ruleset_name", Optional[PluginName]),
-    ("check_function", Callable),
+    ("check_function", CheckFunction),
     ("check_default_parameters", Optional[Dict]),
     ("check_ruleset_name", Optional[PluginName]),
-    ("cluster_check_function", Callable),
+    ("cluster_check_function", CheckFunction),
 ])

@@ -6,9 +6,9 @@
 """Background tools required to register a check plugin
 """
 from typing import (  # pylint: disable=unused-import
-    Callable, Dict, List, Optional,
-)
+    Any, Callable, Dict, Generator, List, Optional, Type, TypeVar, Union)
 import sys
+import functools
 import inspect
 import itertools
 
@@ -19,8 +19,7 @@ else:
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (  # pylint: disable=unused-import
-    management_board, CheckPlugin,
-)
+    management_board, CheckPlugin, Service, Result, Metric, IgnoreResults)
 
 ITEM_VARIABLE = "%s"
 
@@ -91,6 +90,40 @@ def _validate_function_args(plugin_name, func_type, function, has_item, has_para
             if name not in ("section_%s" % section, "_section_%s" % section):
                 raise TypeError("[%s]: %s function must have 'section_%s' as %d. argument, got %r" %
                                 (plugin_name, func_type, section, pos, name))
+
+
+def _filter_discovery(
+    generator,  # type: Callable[..., Generator[Any, None, None]]
+):
+    # type: (...) -> Callable[..., Generator[Service, None, None]]
+    """Only let Services through
+
+    This allows for better typing in base code.
+    """
+    @functools.wraps(generator)
+    def filtered_generator(*args, **kwargs):
+        for element in generator(*args, **kwargs):
+            if not isinstance(element, Service):
+                raise TypeError("unexpected type in discovery: %r" % type(element))
+
+    return filtered_generator
+
+
+def _filter_check(
+    generator,  # type: Callable[..., Generator[Any, None, None]]
+):
+    # type: (...) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
+    """Only let Result, Metric and IgnoreResults through
+
+    This allows for better typing in base code.
+    """
+    @functools.wraps(generator)
+    def filtered_generator(*args, **kwargs):
+        for element in generator(*args, **kwargs):
+            if not isinstance(element, (Result, Metric, IgnoreResults)):
+                raise TypeError("unexpected type in check function: %r" % type(element))
+
+    return filtered_generator
 
 
 def _validate_default_parameters(plugin_name, params_type, ruleset_name, default_parameters):
@@ -184,7 +217,7 @@ def create_check_plugin(
         "discovery",
         discovery_function,
         False,  # no item
-        discovery_ruleset_name is not None,  # params?
+        discovery_ruleset_name is not None,
         subscribed_sections,
     )
 
@@ -221,11 +254,11 @@ def create_check_plugin(
         subscribed_sections,
         service_name,
         management_board_option,
-        discovery_function,
+        _filter_discovery(discovery_function),
         discovery_default_parameters,
         None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
-        check_function,
+        _filter_check(check_function),
         check_default_parameters,
         None if check_ruleset_name is None else PluginName(check_ruleset_name),
-        cluster_check_function,
+        _filter_check(cluster_check_function),
     )

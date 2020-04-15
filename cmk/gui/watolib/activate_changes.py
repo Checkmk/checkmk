@@ -588,7 +588,7 @@ class ActivateChangesManager(ActivateChanges):
                 managed_snapshots.CMESnapshotManager(
                     work_dir, self._site_snapshot_settings()).generate_snapshots()
             else:
-                self._generate_snapshots(work_dir)
+                self._generate_snapshots(work_dir, self._site_snapshot_settings())
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
 
@@ -624,32 +624,31 @@ class ActivateChangesManager(ActivateChanges):
 
         return snapshot_settings
 
-    def _generate_snapshots(self, work_dir):
+    def _generate_snapshots(self, work_dir, site_snapshot_settings):
+        # type: (str, Dict[SiteId, SnapshotSettings]) -> None
         site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
 
         with multitar.SnapshotCreator(work_dir, get_replication_paths()) as snapshot_creator:
             for site_id in self._sites:
-                self._create_site_sync_snapshot(site_id, snapshot_creator, site_configs)
+                self._create_site_sync_snapshot(site_id, site_snapshot_settings[site_id],
+                                                snapshot_creator, site_configs)
 
-    def _create_site_sync_snapshot(self, site_id, snapshot_creator, site_configs):
-        self._check_snapshot_creation_permissions(site_id)
-
-        snapshot_path = self._site_snapshot_file(site_id)
-
-        site_tmp_dir = self._get_site_tmp_dir(site_id)
-
+    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
+                                   site_configs):
+        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator, SiteConfiguration) -> None
         paths = self._get_replication_components(site_id)
-        create_site_globals_file(site_id, site_tmp_dir, site_configs[site_id])
+        create_site_globals_file(site_id, snapshot_settings.work_dir, site_configs[site_id])
 
         # Add site-specific global settings
-        site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir,
-                                                                     "sitespecific.mk"))]
-        snapshot_creator.generate_snapshot(snapshot_path,
+        site_specific_paths = [("file", "sitespecific",
+                                os.path.join(snapshot_settings.work_dir,
+                                             "sitespecific.mk"))]  # type: List[ReplicationPath]
+        snapshot_creator.generate_snapshot(snapshot_settings.snapshot_path,
                                            paths,
                                            site_specific_paths,
                                            reuse_identical_snapshots=True)
 
-        shutil.rmtree(site_tmp_dir)
+        shutil.rmtree(snapshot_settings.work_dir)
 
     def _get_site_tmp_dir(self, site_id):
         if self._activation_id is None:

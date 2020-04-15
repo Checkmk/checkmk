@@ -10,6 +10,7 @@
 
 checkname = "mssql_backup"
 
+freeze_time = '2020-01-30 00:00:00'
 
 info = [
      ['MSSQL_SQL0x4', 'master', '2016-07-08 20:20:27', 'D'],
@@ -134,4 +135,3 @@ checks = {'': [('MSSQL_Parrot Polly',
                  'partial_diff': (None, None),
                  'unspecific': (None, None)},
                 [(1, 'No backup found', [])])]}
-

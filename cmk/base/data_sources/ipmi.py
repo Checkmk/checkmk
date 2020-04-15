@@ -103,7 +103,7 @@ class IPMIDataFetcher:
     def __exit__(self, exc_type, exc_value, traceback):
         # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> bool
         self.close()
-        if isinstance(exc_type, IpmiException) and not exc_value:
+        if exc_type is IpmiException and not str(exc_value):
             # Raise a more specific exception
             raise MKAgentError("IPMI communication failed: %r" % exc_type)
         if not cmk.utils.debug.enabled():

@@ -18,10 +18,12 @@ import ast
 import os
 import shutil
 import time
-from typing import (  # pylint: disable=unused-import
-    Dict, Set, List, Optional, Tuple, Union, NamedTuple,
-)
+import abc
 import multiprocessing
+from typing import (  # pylint: disable=unused-import
+    Dict, Set, List, Optional, Tuple, Union, NamedTuple, Type,
+)
+import six
 
 from livestatus import (  # pylint: disable=unused-import
     SiteId, SiteConfiguration,
@@ -583,13 +585,12 @@ class ActivateChangesManager(ActivateChanges):
 
             if self._activation_id is None:
                 raise Exception("activation ID is not set")
+
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
-            if cmk_version.is_managed_edition():
-                import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
-                managed_snapshots.CMESnapshotManager(
-                    work_dir, self._site_snapshot_settings()).generate_snapshots()
-            else:
-                self._generate_snapshots(work_dir, self._site_snapshot_settings())
+
+            snapshot_manager = SnapshotManagerFactory().factory(work_dir,
+                                                                self._site_snapshot_settings())
+            snapshot_manager.generate_snapshots()
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
 
@@ -604,16 +605,21 @@ class ActivateChangesManager(ActivateChanges):
 
             work_dir = self._get_site_tmp_dir(site_id)
 
-            # Change all default replication paths to be in the site specific temporary directory
-            # These paths are then packed into the sync snapshot
-            snapshot_components = [
-                _replace_omd_root(work_dir, repl_comp)
-                for repl_comp in self._get_replication_components(site_id)
-            ]
+            if cmk_version.is_managed_edition():
+                # Change all default replication paths to be in the site specific temporary directory
+                # These paths are then packed into the sync snapshot
+                snapshot_components = [
+                    _replace_omd_root(work_dir, repl_comp)
+                    for repl_comp in self._get_replication_components(site_id)
+                ]
 
-            # Add site-specific global settings
-            snapshot_components.append(
-                ("file", "sitespecific", os.path.join(work_dir, "site_globals", "sitespecific.mk")))
+                # Add site-specific global settings
+                snapshot_components.append(("file", "sitespecific",
+                                            os.path.join(work_dir, "site_globals",
+                                                         "sitespecific.mk")))
+
+            else:
+                snapshot_components = self._get_replication_components(site_id)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -627,30 +633,6 @@ class ActivateChangesManager(ActivateChanges):
             )
 
         return snapshot_settings
-
-    def _generate_snapshots(self, work_dir, site_snapshot_settings):
-        # type: (str, Dict[SiteId, SnapshotSettings]) -> None
-
-        with multitar.SnapshotCreator(work_dir, get_replication_paths()) as snapshot_creator:
-            for site_id in self._sites:
-                self._create_site_sync_snapshot(site_id, site_snapshot_settings[site_id],
-                                                snapshot_creator)
-
-    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator):
-        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator) -> None
-        paths = self._get_replication_components(site_id)
-        create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
-
-        # Add site-specific global settings
-        site_specific_paths = [("file", "sitespecific",
-                                os.path.join(snapshot_settings.work_dir,
-                                             "sitespecific.mk"))]  # type: List[ReplicationPath]
-        snapshot_creator.generate_snapshot(snapshot_settings.snapshot_path,
-                                           paths,
-                                           site_specific_paths,
-                                           reuse_identical_snapshots=True)
-
-        shutil.rmtree(snapshot_settings.work_dir)
 
     def _get_site_tmp_dir(self, site_id):
         if self._activation_id is None:
@@ -749,6 +731,60 @@ class ActivateChangesManager(ActivateChanges):
     @classmethod
     def site_filename(cls, site_id):
         return "site_%s.mk" % site_id
+
+
+class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
+    def __init__(self, activation_work_dir, site_snapshot_settings):
+        # type: (str, Dict[SiteId, SnapshotSettings]) -> None
+        super(ABCSnapshotManager, self).__init__()
+        self._activation_work_dir = activation_work_dir
+        self._site_snapshot_settings = site_snapshot_settings
+
+        # Stores site and folder specific information to speed-up the snapshot generation
+        self._logger = logger.getChild(self.__class__.__name__)
+
+    @abc.abstractmethod
+    def generate_snapshots(self):
+        # type: () -> None
+        raise NotImplementedError()
+
+
+class CRESnapshotManager(ABCSnapshotManager):
+    def generate_snapshots(self):
+        # type: () -> None
+        with multitar.SnapshotCreator(self._activation_work_dir,
+                                      get_replication_paths()) as snapshot_creator:
+            for site_id, snapshot_settings in self._site_snapshot_settings.items():
+                self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator)
+
+    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator):
+        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator) -> None
+        create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
+
+        # Add site-specific global settings
+        site_specific_paths = [("file", "sitespecific",
+                                os.path.join(snapshot_settings.work_dir,
+                                             "sitespecific.mk"))]  # type: List[ReplicationPath]
+
+        snapshot_creator.generate_snapshot(target_filepath=snapshot_settings.snapshot_path,
+                                           generic_components=snapshot_settings.snapshot_components,
+                                           custom_components=site_specific_paths,
+                                           reuse_identical_snapshots=True)
+
+        shutil.rmtree(snapshot_settings.work_dir)
+
+
+class SnapshotManagerFactory(object):
+    @staticmethod
+    def factory(work_dir, site_snapshot_settings):
+        # type: (str, Dict[SiteId, SnapshotSettings]) -> ABCSnapshotManager
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
+            cls = managed_snapshots.CMESnapshotManager  # type: Type[ABCSnapshotManager]
+        else:
+            cls = CRESnapshotManager
+
+        return cls(work_dir, site_snapshot_settings)
 
 
 @gui_background_job.job_registry.register

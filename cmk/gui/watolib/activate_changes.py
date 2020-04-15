@@ -3,6 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Managing configuration activation of Checkmk
+
+The major elements here are:
+
+ActivateChangesManager - Coordinates a single activation of Checkmk config changes for all affected
+                         sites.
+CRE/CMESnapshotCreator - Prepare the configuration to be synchronized to a site.
+ActivateChangesSite    - Executes the activation procedure for a single site.
+"""
 
 import errno
 import ast
@@ -353,6 +362,17 @@ class ActivateChanges(object):
 
 
 class ActivateChangesManager(ActivateChanges):
+    """Mangages the activation of pending changes in Checkmk
+
+    A single object cares about one activation for all affected sites.
+
+    It is used to execute an activation using ActivateChangesManager.start().  During execution it
+    persists it's activation information. This makes it possible to gather the activation state
+    asynchronously.
+
+    Prepares the snapshots for synchronization and handles all the ActivateChangesSite objects that
+    manage the activation for the single sites.
+    """
     # Temporary data
     activation_tmp_base_dir = cmk.utils.paths.tmp_dir + "/wato/activation"
     # Persisted data
@@ -832,6 +852,7 @@ def execute_activation_cleanup_background_job():
 
 
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
+    """Executes and monitors a single activation for one site"""
     def __init__(self, site_id, activation_id, site_snapshot_file, prevent_activate=False):
         super(ActivateChangesSite, self).__init__()
 

@@ -194,7 +194,8 @@ Function get_dbversion_software {
      # Example: SQL*Plus: Release 12.1.0.2.0 Production
      $res= [string]$res
      $verarr= $res.split(' ')
-     $version = $verarr[3]
+     # third element from version string
+     $version = $verarr[2]
      # remove all '.' from string
      $version = ($version -replace '\D+','')
 

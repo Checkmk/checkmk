@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+import collections
 import os
 import signal
-import collections
-from typing import (  # pylint: disable=unused-import
-    Set, Union, Text, Optional, Tuple, Dict,
-)
 import sys
+from logging import Logger  # pylint: disable=unused-import
+from typing import Dict, Optional, Set, Text, Union  # pylint: disable=unused-import
+
 import six
 
 if sys.version_info[0] >= 3:
@@ -47,20 +48,35 @@ from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=un
 
 class ProgramDataSource(CheckMKAgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
+    @property
+    @abc.abstractmethod
+    def source_cmdline(self):
+        # type: () -> str
+        """Return the command line to the source."""
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def source_stdin(self):
+        # type: () -> Optional[str]
+        """Return the standard in of the source, or None."""
+        raise NotImplementedError()
+
     def _cpu_tracking_id(self):
         # type: () -> str
         return "ds"
 
     def _execute(self):
         # type: () -> RawAgentData
-        command_line, command_stdin = self._get_command_line_and_stdin()
-        return self._get_agent_info_program(command_line, command_stdin)
+        return ProgramDataSource._fetch_raw_data(self.source_cmdline, self.source_stdin,
+                                                 self._logger)
 
-    def _get_agent_info_program(self, commandline, command_stdin):
-        # type: (Union[bytes, Text], Optional[str]) -> RawAgentData
+    @staticmethod
+    def _fetch_raw_data(commandline, command_stdin, logger):
+        # type: (Union[bytes, Text], Optional[str], Logger) -> RawAgentData
         exepath = commandline.split()[0]  # for error message, hide options!
 
-        self._logger.debug("Calling external program %r" % (commandline))
+        logger.debug("Calling external program %r" % (commandline))
         p = None
         try:
             if config.monitoring_core == "cmc":
@@ -139,18 +155,12 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
         return stdout
 
-    def _get_command_line_and_stdin(self):
-        # type: () -> Tuple[str, Optional[str]]
-        """Returns the final command line to be executed"""
-        raise NotImplementedError()
-
     def describe(self):
         # type: () -> str
         """Return a short textual description of the agent"""
-        command_line, command_stdin = self._get_command_line_and_stdin()
-        response = ["Program: %s" % command_line]
-        if command_stdin:
-            response.extend(["  Program stdin:", command_stdin])
+        response = ["Program: %s" % self.source_cmdline]
+        if self.source_stdin:
+            response.extend(["  Program stdin:", self.source_stdin])
         return "\n".join(response)
 
 
@@ -167,18 +177,20 @@ class DSProgramDataSource(ProgramDataSource):
     def name(self):
         # type: () -> str
         """Return a unique (per host) textual identification of the data source"""
-        command_line, _command_stdin = self._get_command_line_and_stdin()
-        program = command_line.split(" ")[0]
+        program = self.source_cmdline.split(" ")[0]
         return os.path.basename(program)
 
-    def _get_command_line_and_stdin(self):
-        # type: () -> Tuple[str, Optional[str]]
+    @property
+    def source_cmdline(self):
+        # type: () -> str
         cmd = self._command_template
-
         cmd = self._translate_legacy_macros(cmd)
         cmd = self._translate_host_macros(cmd)
+        return cmd
 
-        return cmd, None
+    @property
+    def source_stdin(self):
+        return None
 
     def _translate_legacy_macros(self, cmd):
         # type: (str) -> str
@@ -224,25 +236,38 @@ class SpecialAgentDataSource(ProgramDataSource):
         # type: () -> Set[CheckPluginName]
         return config.discoverable_tcp_checks()
 
-    def _get_command_line_and_stdin(self):
-        # type: () -> Tuple[str, Optional[str]]
-        """Create command line using the special_agent_info"""
+    @property
+    def _source_path(self):
+        # type: () -> Path
+        local_path = cmk.utils.paths.local_agents_dir / "special" / self.special_agent_plugin_file_name
+        if local_path.exists():
+            return local_path
+        return Path(cmk.utils.paths.agents_dir) / "special" / self.special_agent_plugin_file_name
+
+    @property
+    def _source_args(self):
+        # type: () -> str
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
             cmd_arguments = agent_configuration.args
-            command_stdin = agent_configuration.stdin
         else:
             cmd_arguments = agent_configuration
-            command_stdin = None
 
-        final_arguments = config.prepare_check_command(cmd_arguments,
-                                                       self._hostname,
-                                                       description=None)
+        return config.prepare_check_command(cmd_arguments, self._hostname, description=None)
 
-        agent_name = "agent_" + self._special_agent_id
-        special_agent_path = Path(cmk.utils.paths.agents_dir, "special", agent_name)
-        local_special_agent_path = cmk.utils.paths.local_agents_dir / "special" / agent_name
+    @property
+    def source_cmdline(self):
+        # type: () -> str
+        """Create command line using the special_agent_info"""
+        return "%s %s" % (self._source_path, self._source_args)
 
-        path = local_special_agent_path if local_special_agent_path.exists() else special_agent_path
-        return "%s %s" % (path, final_arguments), command_stdin
+    @property
+    def source_stdin(self):
+        # type: () -> Optional[str]
+        """Create command line using the special_agent_info"""
+        info_func = config.special_agent_info[self._special_agent_id]
+        agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
+        if isinstance(agent_configuration, SpecialAgentConfiguration):
+            return agent_configuration.stdin
+        return None

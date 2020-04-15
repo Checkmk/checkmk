@@ -9,11 +9,12 @@ import sys
 from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple  # pylint: disable=unused-import
 import six
 import werkzeug.wrappers
-import werkzeug.wrappers.json as json  # type: ignore[import]
+import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
 
 from cmk.utils.encoding import ensure_unicode
 
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 
@@ -126,7 +127,12 @@ class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
             self.upload_cache[name] = (f.filename, f.mimetype, f.read())
             f.close()
 
-        return self.upload_cache[name]
+        try:
+            upload = self.upload_cache[name]
+        except KeyError:
+            raise MKUserError(name, _("Please choose a file to upload."))
+
+        return upload
 
 
 class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritance
@@ -255,16 +261,16 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
-    and provides some low level functions to the application for accessing these
-    information. These should be basic HTTP request handling things and no application
-    specific mechanisms.
+    and provides some low level functions to the application for accessing this information.
+    These should be basic HTTP request handling things and no application specific mechanisms.
     """
     # pylint: disable=too-many-ancestors
     @property
     def request_timeout(self):
         # type: () -> int
-        """The system web servers configured request timeout. This is the time
-        before the request is terminated from the view of the client."""
+        """The system web servers configured request timeout.
+
+        This is the time before the request terminates from the view of the client."""
         # TODO: Found no way to get this information from WSGI environment. Hard code
         #       the timeout for the moment.
         return 110
@@ -352,21 +358,34 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
+    def get_float_input(self, varname, deflt=None):
+        # type: (str, Optional[float]) -> Optional[float]
+
+        value = self.var(varname, "%s" % deflt if deflt is not None else None)
+        if value is None:
+            return None
+
+        try:
+            return float(value)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not a float.") % varname)
+
+    def get_float_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[float]) -> float
+        value = self.get_float_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
 
 class Response(werkzeug.wrappers.Response):
-    # NOTE: Currently we rely on a *relavtive* Location header in redirects!
+    # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
-
-    def __init__(self, is_secure, *args, **kwargs):
-        # type: (bool, *Any, **Any) -> None
-        super(Response, self).__init__(*args, **kwargs)
-        self._is_secure = is_secure
 
     def set_http_cookie(self, key, value, secure=None):
         # type: (str, str, Optional[bool]) -> None
         if secure is None:
-            # TODO: Use the request-self proxy for this so the callers don't have to supply this
-            secure = self._is_secure
+            secure = request.is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
 
     def set_content_type(self, mime_type):

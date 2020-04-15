@@ -1,4 +1,4 @@
-title: AWS/ELBv2 Application and Network Limits
+title: AWS ELBv2: Application and Network Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -34,4 +34,4 @@ description:
  possibly configured restriction to names or tags.
 
 inventory:
- One service will be created.
+ One service is created.

@@ -1,4 +1,4 @@
-title: Didactum devices: Discrete sensors
+title: Didactum Devices: Discrete Sensors
 agents: snmp
 catalog: hw/environment/didactum
 license: GPL
@@ -16,4 +16,4 @@ item:
  The discrete sensor identifier.
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

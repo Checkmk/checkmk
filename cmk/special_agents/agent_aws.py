@@ -1284,7 +1284,8 @@ class EBSSummary(AWSSectionGeneric):
 
             # Should be attached to max. one instance
             for instance_name in instance_names:
-                content_by_piggyback_hosts.setdefault(instance_name, [vol])
+                content_by_piggyback_hosts.setdefault(instance_name, [])
+                content_by_piggyback_hosts[instance_name].append(vol)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -3290,7 +3291,7 @@ class AWSConfig:
 
     def _load_config_hash(self):
         try:
-            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:  # pylint: disable=no-member
+            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
                 return int(f.read().strip())
         except IOError as e:
             if e.errno != errno.ENOENT:

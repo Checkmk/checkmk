@@ -1,34 +1,14 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
 import os
 import stat
 import sys
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple  # pylint: disable=unused-import
 
 opt_debug = "-d" in sys.argv or "--debug" in sys.argv
 
@@ -107,13 +87,10 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     # Search in running processes for Apache
     for line in os.popen("ps ax -o pid,user,command").readlines():
         parts = line.split()
-        if len(parts) >= 3 and \
-               (parts[2].endswith("/apache2") or \
-                parts[2].endswith("/httpd") or \
-                parts[2].endswith("/httpd2-prefork") or \
-                parts[2].endswith("/httpd2-worker")
-                ) and \
-                parts[1] != 'root':
+        if (len(parts) >= 3 and
+            (parts[2].endswith("/apache2") or parts[2].endswith("/httpd") or
+             parts[2].endswith("/httpd2-prefork") or parts[2].endswith("/httpd2-worker")) and
+                parts[1] != 'root'):
             wwwuser = parts[1]
             apache_pid = int(parts[0])
             break
@@ -121,7 +98,6 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         raise Exception("Cannot find Apache process. Is it running?")
 
     def scan_apacheconf(apache_conffile):
-        confdirs = []
         if apache_conffile[0] != '/':
             apache_conffile = httpd_root + "/" + apache_conffile
         confdirs = []
@@ -244,7 +220,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     common_groups = [g for g in www_groups if g in nagios_groups]
     if len(common_groups) > 1:
         if 'nagios' in common_groups:
-            common_group = 'nagios'
+            common_group = 'nagios'  # type: Optional[str]
         elif 'icinga' in common_groups:
             common_group = 'icinga'
         else:
@@ -509,7 +485,7 @@ try:
                         if sline.startswith("Status File:"):
                             nagios_status_file = sline.split()[-1]
                             break
-                        elif sline.startswith("Error reading status file"):
+                        if sline.startswith("Error reading status file"):
                             nagios_status_file = sline.split()[-1][1:-1]
                             break
                 except Exception:
@@ -644,8 +620,7 @@ except Sorry as e:
 except Exception as e:
     if opt_debug:
         raise
-    else:
-        sys.stderr.write("* Sorry, something unexpected happened: %s\n\n" % e)
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    sys.stderr.write("* Sorry, something unexpected happened: %s\n\n" % e)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)

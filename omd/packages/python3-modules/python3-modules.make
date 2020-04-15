@@ -48,7 +48,7 @@ PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.8.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
-PYTHON3_MODULES_LIST += pyghmi-1.5.3.tar.gz # needed by base for IPMI
+PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
@@ -100,21 +100,35 @@ PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special agent
+
+PYTHON3_MODULES_LIST += Cython-0.29.15.tar.gz # needed by pymssql for translating .pyx files to .c
+PYTHON3_MODULES_LIST += pymssql-2.1.4.tar.gz # needed by check_sql active check
+PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
+PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
+
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
-$(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_PATCHING)
+$(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(POSTGRESQL_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_PATCHING)
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \
+	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH):$(PACKAGE_POSTGRESQL_INCLUDE_PATH)" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
-	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH):$(PACKAGE_POSTGRESQL_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON3_BIN):$(PACKAGE_POSTGRESQL_BIN):$$PATH" ; \
 	    for M in $(PYTHON3_MODULES_LIST); do \
 		echo "=== Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
@@ -177,6 +191,7 @@ python3-modules-dump-Pipfile:
 	@echo 'bson = "*"  # used by test_mk_mongodb unit test'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
+	@echo 'dockerpty = "*"  # used by dockerized tests for opening debug shells'
 	@echo 'freezegun = "*"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'

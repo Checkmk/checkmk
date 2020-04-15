@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_couchbase_buckets_operations(info):
@@ -58,7 +38,7 @@ def check_couchbase_buckets_operations(_item, params, data):
             infoname='Gets',
         )
 
-    cmd_set = data.set('cmd_set')
+    cmd_set = data.get('cmd_set')
     if cmd_set is not None:
         yield check_levels(
             cmd_set,
@@ -68,7 +48,27 @@ def check_couchbase_buckets_operations(_item, params, data):
             infoname='Sets',
         )
 
-    deletes = data.set('ep_num_ops_del_meta')
+    creates = data.get('ep_ops_create')
+    if creates is not None:
+        yield check_levels(
+            creates,
+            None,
+            None,
+            unit="/s",
+            infoname='Creates',
+        )
+
+    updates = data.get('ep_ops_update')
+    if updates is not None:
+        yield check_levels(
+            updates,
+            None,
+            None,
+            unit="/s",
+            infoname='Updates',
+        )
+
+    deletes = data.get('ep_num_ops_del_meta')
     if deletes is not None:
         yield check_levels(
             deletes,

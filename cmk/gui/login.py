@@ -9,7 +9,7 @@ import time
 import traceback
 import sys
 from hashlib import md5
-from typing import Union, Tuple, Optional, Text  # pylint: disable=unused-import
+from typing import List, Union, Optional, Text, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -19,6 +19,7 @@ else:
 import six
 from werkzeug.local import LocalProxy
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
@@ -95,8 +96,8 @@ def _load_secret():
     secret_path = htpasswd_path.parent.joinpath('auth.secret')
 
     secret = u''
-    if secret_path.exists():  # pylint: disable=no-member
-        with secret_path.open(encoding="utf-8") as f:  # pylint: disable=no-member
+    if secret_path.exists():
+        with secret_path.open(encoding="utf-8") as f:
             secret = f.read().strip()
 
     # Create new secret when this installation has no secret
@@ -107,7 +108,7 @@ def _load_secret():
     # renew their login after update.
     if secret == '' or len(secret) == 32:
         secret = _generate_secret()
-        with secret_path.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        with secret_path.open("w", encoding="utf-8") as f:
             f.write(secret)
 
     return secret
@@ -211,9 +212,9 @@ def _session_cookie_value(username, session_id):
 
 def _get_session_id_from_cookie(username):
     # type: (UserId) -> str
-    raw_value = html.request.cookie(_session_cookie_name(), b"::")
+    raw_value = html.request.cookie(_session_cookie_name(), "::")
     assert raw_value is not None
-    cookie_username, session_id, cookie_hash = raw_value.split(b':', 2)
+    cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
     if ensure_unicode(cookie_username) != username \
        or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
@@ -269,7 +270,7 @@ def _check_auth_cookie(cookie_name):
 
 def _parse_auth_cookie(cookie_name):
     # type: (str) -> Tuple[UserId, float, str]
-    raw_cookie = html.request.cookie(cookie_name, b"::")
+    raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
     raw_value = ensure_unicode(raw_cookie)
@@ -499,11 +500,10 @@ class LoginPage(Page):
                 if change_pw_result:
                     raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
                                        (html.urlencode(origtarget), change_pw_result))
-                else:
-                    raise HTTPRedirect(origtarget)
-            else:
-                userdb.on_failed_login(username)
-                raise MKUserError(None, _('Invalid credentials.'))
+                raise HTTPRedirect(origtarget)
+
+            userdb.on_failed_login(username)
+            raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError as e:
             html.add_user_error(e.varname, e)
 
@@ -516,7 +516,7 @@ class LoginPage(Page):
         default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
         origtarget = html.get_url_input("_origtarget", default_origtarget)
 
-        # Never allow the login page to be opened in a frameset. Redirect top page to login page.
+        # Never allow the login page to be opened in the iframe. Redirect top page to login page.
         # This will result in a full screen login page.
         html.javascript('''if(top != self) {
     window.top.location.href = location;
@@ -530,7 +530,8 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.div("" if "hide_version" in config.login_screen else cmk.__version__, id_="version")
+        html.div("" if "hide_version" in config.login_screen else cmk_version.__version__,
+                 id_="version")
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')
@@ -559,19 +560,19 @@ class LoginPage(Page):
             html.show_message(config.login_screen["login_message"])
             html.close_div()
 
-        footer = []
+        footer = []  # type: List[Union[HTML, str]]
         for title, url, target in config.login_screen.get("footer_links", []):
             footer.append(html.render_a(title, href=url, target=target))
 
         if "hide_version" not in config.login_screen:
-            footer.append("Version: %s" % cmk.__version__)
+            footer.append("Version: %s" % cmk_version.__version__)
 
         footer.append("&copy; %s" %
                       html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
 
         html.write(HTML(" - ").join(footer))
 
-        if cmk.is_raw_edition():
+        if cmk_version.is_raw_edition():
             html.br()
             html.br()
             html.write(
@@ -596,13 +597,13 @@ class LogoutPage(Page):
 
         if auth_type == 'cookie':
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
-        else:
-            # Implement HTTP logout with cookie hack
-            if not html.request.has_cookie('logout'):
-                html.response.headers['WWW-Authenticate'] = (
-                    'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
-                html.response.set_http_cookie('logout', '1')
-                raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
-            else:
-                html.response.delete_cookie('logout')
-                raise HTTPRedirect(config.url_prefix() + 'check_mk/')
+
+        # Implement HTTP logout with cookie hack
+        if not html.request.has_cookie('logout'):
+            html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
+                                                         config.omd_site())
+            html.response.set_http_cookie('logout', '1')
+            raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
+
+        html.response.delete_cookie('logout')
+        raise HTTPRedirect(config.url_prefix() + 'check_mk/')

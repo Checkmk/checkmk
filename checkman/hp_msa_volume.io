@@ -17,4 +17,4 @@ item:
  The IO summary or the volume identifier.
 
 inventory:
- One service for the summary or one service per volume is created
+ One service is created for the summary or one service is created for each volume.

@@ -1,18 +1,28 @@
+def DISTRO_LIST_DEFAULT
+def NODE = ''
+withFolderProperties{
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    NODE = env.BUILD_NODE
+}
+
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
-  ])
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' )
+   ])
 ])
 def DISTRO_LIST = DISTROS.split(' ')
 def DOCKER_BUILDS = [:]
 
 currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
-node {
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
         COMMON_IMAGE.pull()
-        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
+        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN') {
+            def VERS_TAG
+            def BRANCH
+            def BRANCH_VERSION
             stage('checkout sources') {
                 checkout(scm)
                 // Load libraries
@@ -22,40 +32,28 @@ node {
                 // Image Version Tag
                 VERS_TAG = versioning.get_docker_tag(scm)
                 BRANCH = versioning.get_branch(scm)
-
-                //Stash Files for later
-                dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
-                    stash name: 'bw-build-gnu-toolchain', includes: 'bw-build-gnu-toolchain.sh'
-                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "./bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -d"
-                    }
-                }
-               stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile'
+                BRANCH_VERSION = versioning.get_branch_version()
             }
-        }
-    }
-}
 
-DISTRO_LIST.each { DISTRO ->
-    DOCKER_BUILDS[DISTRO] = {
-        node {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
-                COMMON_IMAGE.pull()
-                COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN') {
-                    stage('build ' + DISTRO + ' image') {
-                        unstash name: 'dockerfiles'
-                        dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {
-                            unstash name: 'bw-build-gnu-toolchain'
+            DISTRO_LIST.each { DISTRO ->
+                DOCKER_BUILDS[DISTRO] = {
+                    def IMAGE
+                    stage('build ' + DISTRO) {
+                        dir('buildscripts/infrastructure/build-nodes') {
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                            def Image = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' .")
-                            Image.push()
-                            Image.push(BRANCH + '-latest')
+                            withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                IMAGE = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' --build-arg BRANCH_VERSION='$BRANCH_VERSION' -f $DISTRO/Dockerfile .")
+                            }
                         }
                     }
+
+                    stage('upload ' + DISTRO) {
+                        IMAGE.push()
+                        IMAGE.push(BRANCH + '-latest')
+                    }
                 }
             }
+            parallel DOCKER_BUILDS
         }
     }
 }
-parallel DOCKER_BUILDS

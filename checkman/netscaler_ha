@@ -1,4 +1,4 @@
-title: Citrix Netscaler High Availability
+title: Citrix Netscaler: High Availability
 agents: snmp
 catalog: app/netscaler
 license: GPL
@@ -17,4 +17,4 @@ description:
  critical in other states {haCurState} can be.
 
 inventory:
- One service per host will be created.
+ One service is created for each host.

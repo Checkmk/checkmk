@@ -19,5 +19,5 @@ item:
  The name of the MDisk.
 
 inventory:
- Creates one check for every MDisk in the IBM SVC / Storwize V3700 / V7000 device.
+ One service is created for each MDisk.
 

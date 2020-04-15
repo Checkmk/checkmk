@@ -1,4 +1,4 @@
-title: IBM tape library: Changer devices
+title: IBM Tape Library: Changer Devices
 agents: snmp
 catalog: hw/storagehw/ibm
 license: GPL
@@ -10,7 +10,7 @@ description:
  The device sends its state itself.
 
 item:
- The changer device name.
+ The name of the changer device
 
 inventory:
- One service for each device is created.
+ One service is created for each device.

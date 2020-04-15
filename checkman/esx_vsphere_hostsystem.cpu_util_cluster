@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: CPU utilization of clusters
+title: VMWare ESX Host Systems: CPU Utilization of Clusters
 agents: vsphere
 catalog: os/kernel
 license: GPL

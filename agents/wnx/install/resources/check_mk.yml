@@ -243,6 +243,7 @@ mrpe:
     # entries and cfg have  the same format as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
+        # - check = Checker (100:yes) 'c:\windows\system32\mode.com' # Description (max_age:add_info) command line
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
@@ -250,11 +251,12 @@ mrpe:
 modules:
     enabled: yes
 
+    python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
+
     table:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
-          exts: ['.py', '.tribe29.py' ]   # list of extensions to be used automatically
+          exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically
           exec: 'Scripts\python.exe {}'   # command line, exe is relative to folder modules
-          dir: 'modules\{}'               #  relative folder to install the package {} means name
     
 
 system:

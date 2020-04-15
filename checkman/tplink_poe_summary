@@ -1,4 +1,4 @@
-title: TP-LINK switches: Power over Ethernet power consumption
+title: TP-LINK Switches: Power over Ethernet Power Consumption
 agents: snmp
 catalog: hw/network/tplink
 license: GPL

@@ -1,4 +1,4 @@
-title: CPU utilization via SNMP on HP-UX
+title: HP-UX: CPU Utilization (via SNMP)
 agents: snmp
 catalog: os/kernel
 license: GPL
@@ -9,4 +9,4 @@ description:
  for user, system, nice and idle.
 
 inventory:
- One check per host is created if the agent supports this check.
+ One service is created for each host.

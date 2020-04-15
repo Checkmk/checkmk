@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB HTTP Redirects
+title: AWS ApplicationELB: HTTP Redirects
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -10,4 +10,5 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (HTTP_Redirect_Count,
+ HTTP_Redirect_Url_Limit_Exceeded_Count) are given.

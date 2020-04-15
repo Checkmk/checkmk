@@ -1,4 +1,4 @@
-title: AWS/EC2 Instance Network IO
+title: AWS EC2: Instance Network IO
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -6,8 +6,12 @@ distribution: check_mk
 description:
  This check monitors the number of bytes/packets received and transmitted on
  all network interfaces by the instance.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
+item:
+ Name of the instance
+
 inventory:
- One service will be created.
+ One service is created if all required metrics (NetworkIn, NetworkOut) are given.

@@ -22,21 +22,24 @@ description:
  of the power can be one of the following:
 
  - Unknown
- 
+
  - Alternating Current
- 
+
  - Direct Current
- 
+
  - External Power Supply
- 
+
  - Internal Redundant
 
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
 inventory:
- During the inventory phase of check_mk, it will create one or more service {Sensor psX_unitX}
- entries, as long as the MIB defined above is supported on the switch.
+ One service is created for each power supply if the MIB
+ defined above is supported on the switch.
+
+item:
+ The Name of the power supply
 
 example:
  If a switch has 2 PSU devices in the device, it may create one service for each PSU, or a single

@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
 
-from typing import Dict as _Dict, List as _List, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict as _Dict, List as _List, Tuple as _Tuple, Any as _Any,
+)
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -37,6 +39,7 @@ log_levels = {
     "cmk.web.auth": 30,
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
+    "cmk.web.background-job": 30,
 }
 
 multisite_users = {}  # type: _Dict
@@ -280,7 +283,7 @@ graph_timeranges = [
         'title': "The last 400 days",
         "duration": 400 * 24 * 60 * 60
     },
-]
+]  # type: _List[_Dict[str, _Any]]
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
@@ -301,7 +304,7 @@ default_user_profile = {
     'contactgroups': [],
     'roles': ['user'],
     'force_authuser': False,
-}
+}  # type: _Dict[str, _Any]
 lock_on_logon_failures = False
 user_idle_timeout = None
 single_user_session = None
@@ -388,7 +391,7 @@ user_downtime_timeranges = [
         'title': "This year",
         'end': 'next_year'
     },
-]
+]  # type: _List[_Dict[str, _Any]]
 
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility = {}  # type: _Dict
@@ -467,9 +470,9 @@ wato_read_only = {}  # type: _Dict
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
 wato_icon_categories = [
-    ("logos", "Logos"),
-    ("parts", "Parts"),
-    ("misc", "Misc"),
+    ("logos", u"Logos"),
+    ("parts", u"Parts"),
+    ("misc", u"Misc"),
 ]
 
 #.

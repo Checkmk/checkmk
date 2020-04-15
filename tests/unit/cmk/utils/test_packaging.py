@@ -1,13 +1,25 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import shutil
 import tarfile
 import ast
 import json
 from io import BytesIO
-import pytest  # type: ignore[import]
-from pathlib2 import Path
 
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+
+import pytest  # type: ignore[import]
+import six
+
+from cmk.utils.i18n import _
 import cmk.utils.paths
 import cmk.utils.packaging as packaging
 
@@ -31,24 +43,29 @@ def clean_dirs():
 
 
 def test_package_parts():
-    assert packaging.get_package_parts() == [
-        packaging.PackagePart('checks', 'Checks', 'local/share/check_mk/checks'),
-        packaging.PackagePart('notifications', 'Notification scripts',
-                              'local/share/check_mk/notifications'),
-        packaging.PackagePart('inventory', 'Inventory plugins', 'local/share/check_mk/inventory'),
-        packaging.PackagePart('checkman', "Checks' man pages", 'local/share/check_mk/checkman'),
-        packaging.PackagePart('agents', 'Agents', 'local/share/check_mk/agents'),
-        packaging.PackagePart('web', 'Multisite extensions', 'local/share/check_mk/web'),
-        packaging.PackagePart('pnp-templates', 'PNP4Nagios templates',
-                              'local/share/check_mk/pnp-templates'),
-        packaging.PackagePart('doc', 'Documentation files', 'local/share/doc/check_mk'),
-        packaging.PackagePart('locales', 'Localizations', 'local/share/check_mk/locale'),
-        packaging.PackagePart('bin', 'Binaries', 'local/bin'),
-        packaging.PackagePart('lib', 'Libraries', 'local/lib'),
-        packaging.PackagePart('mibs', 'SNMP MIBs', 'local/share/snmp/mibs'),
-        packaging.PackagePart('alert_handlers', 'Alert handlers',
-                              'local/share/check_mk/alert_handlers'),
-    ]
+    assert sorted(packaging.get_package_parts()) == sorted([
+        packaging.PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
+                              str(cmk.utils.paths.local_agent_based_plugins_dir)),
+        packaging.PackagePart('checks', _('Legacy check plugins'),
+                              str(cmk.utils.paths.local_checks_dir)),
+        packaging.PackagePart('notifications', _('Notification scripts'),
+                              str(cmk.utils.paths.local_notifications_dir)),
+        packaging.PackagePart('inventory', _('Legacy inventory plugins'),
+                              str(cmk.utils.paths.local_inventory_dir)),
+        packaging.PackagePart('checkman', _("Checks' man pages"),
+                              str(cmk.utils.paths.local_check_manpages_dir)),
+        packaging.PackagePart('agents', _('Agents'), str(cmk.utils.paths.local_agents_dir)),
+        packaging.PackagePart('web', _('GUI extensions'), str(cmk.utils.paths.local_web_dir)),
+        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates'),
+                              str(cmk.utils.paths.local_pnp_templates_dir)),
+        packaging.PackagePart('doc', _('Documentation files'), str(cmk.utils.paths.local_doc_dir)),
+        packaging.PackagePart('locales', _('Localizations'), str(cmk.utils.paths.local_locale_dir)),
+        packaging.PackagePart('bin', _('Binaries'), str(cmk.utils.paths.local_bin_dir)),
+        packaging.PackagePart('lib', _('Libraries'), str(cmk.utils.paths.local_lib_dir)),
+        packaging.PackagePart('mibs', _('SNMP MIBs'), str(cmk.utils.paths.local_mib_dir)),
+        packaging.PackagePart('alert_handlers', _('Alert handlers'),
+                              str(cmk.utils.paths.local_share_dir.joinpath('alert_handlers'))),
+    ])
 
 
 def test_config_parts():
@@ -81,6 +98,7 @@ def test_get_config_parts():
 
 def test_get_package_parts():
     assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted([
+        'agent_based',
         'agents',
         'alert_handlers',
         'bin',
@@ -253,7 +271,7 @@ def test_create_mkp_file():
     tar = tarfile.open(fileobj=mkp, mode="r:gz")
     assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
-    info = ast.literal_eval(tar.extractfile("info").read())
+    info = ast.literal_eval(six.ensure_str(tar.extractfile("info").read()))
     assert info["name"] == "aaa"
 
     info2 = json.loads(tar.extractfile("info.json").read())
@@ -268,6 +286,7 @@ def test_remove_package():
 
 def test_unpackaged_files_none():
     assert packaging.unpackaged_files() == {
+        'agent_based': [],
         'agents': [],
         'alert_handlers': [],
         'bin': [],
@@ -292,7 +311,12 @@ def test_unpackaged_files():
     with p.open("w", encoding="utf-8") as f:
         f.write(u"lala\n")
 
+    p = cmk.utils.paths.local_agent_based_plugins_dir.joinpath("dada")
+    with p.open("w", encoding="utf-8") as f:
+        f.write(u"huhu\n")
+
     assert packaging.unpackaged_files() == {
+        'agent_based': ['dada'],
         'agents': [],
         'alert_handlers': [],
         'bin': [],

@@ -4,8 +4,17 @@ catalog: hw/network/arris
 license: GPL
 distribution: check_mk
 description:
- This Check shows the current and total memory usage of module in a Arris CMTS device.
+ This check shows the current and total memory usage of module in a Arris CMTS device.
+
+ You configure upper levels for {WARN}/{CRIT} (default: 80.0/90.0)
+
+ The service goes {WARN}/{CRIT} if the memory usage exceeds these levels.
+
+ The check uses the CADANT-CMTS-EQUIPMENT-MIB.
 
 item:
- The id of the module
+ The ID of the module
+
+inventory:
+ One service is created for each module
 

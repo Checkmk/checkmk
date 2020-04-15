@@ -17,4 +17,4 @@ item:
  the PSM name, and the unit on the PSM
 
 inventory:
- For each power system module found, an entry is created
+ One service is creatd for each power system module.

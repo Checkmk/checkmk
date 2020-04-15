@@ -1,4 +1,4 @@
-title: Fortinet FortiSandbox CPU Utilization
+title: Fortinet FortiSandbox: CPU Utilization
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL
@@ -10,5 +10,5 @@ description:
  configurable levels.
 
 inventory:
- One check per host will be created.
+ One service is created for each host.
 

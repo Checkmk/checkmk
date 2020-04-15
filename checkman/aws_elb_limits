@@ -1,4 +1,4 @@
-title: AWS/ELB Limits
+title: AWS ELB: Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -7,6 +7,7 @@ description:
  This check monitors the AWS/ELB limits, ie. the number of
  allowed load balancers and the registered instances and
  listeners per load balancer.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
@@ -18,11 +19,11 @@ description:
  - 100 listeners per load balancer
 
  - 1000 registered instances per load balancer.
- 
+
  These levels are configurable.
 
  If limits are enabled all load balancers are fetched regardless of
  possibly configured restriction to names or tags.
 
 inventory:
- One service will be created.
+ One service is created.

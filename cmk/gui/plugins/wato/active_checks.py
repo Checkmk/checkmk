@@ -489,10 +489,11 @@ def _valuespec_active_checks_dns():
                         "expected_address",
                         Transform(
                             ListOfStrings(
-                                title=_("Expected answer (IP address or hostname)"),
+                                title=_("Expected DNS answers"),
                                 help=_("List all allowed expected answers here. If query for an "
                                        "IP address then the answer will be host names, that end "
-                                       "with a dot."),
+                                       "with a dot. Multiple IP addresses within one answer must "
+                                       "be separated by comma."),
                             ),
                             forth=lambda old: isinstance(old, six.string_types) and [old] or old,
                         ),
@@ -948,6 +949,11 @@ def _active_checks_http_transform_check_http(params):
     return transformed
 
 
+def _validate_active_check_http_name(value, varprefix):
+    if value.strip() == "^":
+        raise MKUserError(varprefix, _("Please provide a valid name"))
+
+
 def _valuespec_active_checks_http():
     return Transform(
         Dictionary(
@@ -966,7 +972,9 @@ def _valuespec_active_checks_http():
                          "Will be used in the service description. If the name starts with "
                          "a caret (<tt>^</tt>), the service description will not be prefixed with either "
                          "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
-                     allow_empty=False)),
+                     allow_empty=False,
+                     validate=_validate_active_check_http_name,
+                 )),
                 ("host", _active_checks_http_hostspec()),
                 ("proxy", _active_checks_http_proxyspec()),
                 ("mode",

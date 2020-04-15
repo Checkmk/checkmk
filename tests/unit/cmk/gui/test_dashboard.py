@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -47,7 +51,7 @@ def test_dashlet_registry_plugins():
         'snapin',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
         ]
@@ -73,7 +77,7 @@ def _expected_intervals():
         ('linked_view', False),
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected += [
             ('custom_graph', 60),
         ]

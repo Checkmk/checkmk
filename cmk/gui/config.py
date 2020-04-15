@@ -21,18 +21,22 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from werkzeug.local import LocalProxy
+from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
+    SiteId, SiteConfiguration, SiteConfigurations,
+)
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
-
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import local
+# TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
+# this is a bit difficult due to our beloved circular imports. :-/ Or should we
+# do this the other way round? Anyway, we will know when the cycle has been
+# broken...
+from cmk.gui.globals import local, user
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -47,13 +51,11 @@ import cmk.gui.plugins.config
 # later handled with the default_config dict and _load_default_config()
 from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
-
-UserType = Union["LoggedInUser", LocalProxy]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -756,23 +758,19 @@ class LoggedInUser(object):
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return SiteConfigurations(dict(unfiltered_sites))
+            return dict(unfiltered_sites)
 
-        return SiteConfigurations({
+        return {
             site_id: s  #
             for site_id, s in unfiltered_sites.items()
             if site_id in authorized_sites
-        })
+        }
 
     def authorized_login_sites(self):
         # type: () -> SiteConfigurations
         login_site_ids = get_login_slave_sites()
         return self.authorized_sites(
-            SiteConfigurations({
-                site_id: s  #
-                for site_id, s in allsites().items()
-                if site_id in login_site_ids
-            }))
+            {site_id: s for site_id, s in allsites().items() if site_id in login_site_ids})
 
     def may(self, pname):
         # type: (str) -> bool
@@ -868,9 +866,6 @@ def _set_user(_user):
     local.user = _user
 
 
-# This holds the currently logged in user object
-user = LocalProxy(lambda: local.user)  # type: UserType
-
 #.
 #   .--User Handling-------------------------------------------------------.
 #   |    _   _                 _   _                 _ _ _                 |
@@ -960,7 +955,7 @@ def migrate_old_site_config(site_config):
 
 # During development of the 1.6 version the site configuration has been cleaned up in several ways:
 # 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
-#    deprecated long time ago and was not configurable in WATO. This has now been superceeded by
+#    deprecated long time ago and was not configurable in WATO. This has now been superseded by
 #    the dedicated "disabled" attribute.
 # 2. The "socket" attribute was optional. A not present socket meant "connect to local unix" socket.
 #    This is now replaced with a value like this ("local", None) to reflect the generic
@@ -974,12 +969,12 @@ def migrate_old_site_config(site_config):
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
-    # type: (Dict[AnyStr, Any]) -> None
-    if site_cfg.get("socket") is None:
+    # type: (Dict[str, Any]) -> None
+    socket = site_cfg.get("socket")
+    if socket is None:
         site_cfg["socket"] = ("local", None)
         return
 
-    socket = site_cfg["socket"]
     if isinstance(socket, tuple) and socket[0] == "proxy":
         site_cfg["proxy"] = socket[1]
 
@@ -1009,12 +1004,13 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 
 def _migrate_string_encoded_socket(value):
-    # type: (AnyStr) -> Tuple[AnyStr, Union[Dict]]
-    family_txt, address = value.split(":", 1)  # pylint: disable=no-member
+    # type: (AnyStr) -> Tuple[str, Union[Dict]]
+    str_value = six.ensure_str(value)
+    family_txt, address = str_value.split(":", 1)
 
     if family_txt == "unix":
         return "unix", {
-            "path": value.split(":", 1)[1],
+            "path": str_value.split(":", 1)[1],
         }
 
     if family_txt in ["tcp", "tcp6"]:
@@ -1042,18 +1038,18 @@ def _migrate_string_encoded_socket(value):
 
 def omd_site():
     # type: () -> SiteId
-    return SiteId(cmk.omd_site())
+    return SiteId(cmk_version.omd_site())
 
 
 def url_prefix():
     # type: () -> str
-    return "/%s/" % cmk.omd_site()
+    return "/%s/" % cmk_version.omd_site()
 
 
 def default_single_site_configuration():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
-        omd_site(): SiteConfiguration({
+    return {
+        omd_site(): {
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
             'disable_wato': True,
@@ -1067,16 +1063,16 @@ def default_single_site_configuration():
             'timeout': 5,
             'user_login': True,
             'proxy': None,
-        })
-    })
+        }
+    }
 
 
-sites = SiteConfigurations({})
+sites = {}  # type: SiteConfigurations
 
 
 def sitenames():
     # type: () -> List[SiteId]
-    return sites.keys()
+    return list(sites)
 
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
@@ -1085,16 +1081,16 @@ def sitenames():
 # TODO: Rename this!
 def allsites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         name: site(name)  #
         for name in sitenames()
         if not site(name).get("disabled", False)
-    })
+    }
 
 
 def configured_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({site_id: site(site_id) for site_id in sitenames()})
+    return {site_id: site(site_id) for site_id in sitenames()}
 
 
 def has_wato_slave_sites():
@@ -1133,11 +1129,11 @@ def get_login_slave_sites():
 
 def wato_slave_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         site_id: s  #
         for site_id, s in sites.items()
         if s.get("replication")
-    })
+    }
 
 
 def sorted_sites():
@@ -1148,7 +1144,7 @@ def sorted_sites():
 
 def site(site_id):
     # type: (SiteId) -> SiteConfiguration
-    s = SiteConfiguration(dict(sites.get(site_id, {})))
+    s = dict(sites.get(site_id, {}))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
@@ -1205,13 +1201,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, Text]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1227,9 +1223,15 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # type: () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, Text]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
+
+
+def get_wato_site_choices():
+    # type: () -> List[Tuple[SiteId, Text]]
+    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
+        "replication") is not None)
 
 
 #.
@@ -1264,10 +1266,10 @@ def theme_choices():
             continue
 
         theme_base_dir = base_dir / "htdocs" / "themes"
-        if not theme_base_dir.exists():  # pylint: disable=no-member
+        if not theme_base_dir.exists():
             continue
 
-        for theme_dir in theme_base_dir.iterdir():  # pylint: disable=no-member
+        for theme_dir in theme_base_dir.iterdir():
             meta_file = theme_dir / "theme.json"
             if not meta_file.exists():
                 continue

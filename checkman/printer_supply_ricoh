@@ -1,4 +1,4 @@
-title: Ricoh Printers: Remaining filling level
+title: Ricoh Printer: Remaining Filling Level
 agents: snmp
 catalog: hw/printer
 license: GPL
@@ -8,6 +8,9 @@ description:
  supplys like toner or fuser.
  The default check levels are 20% (warning) and 10% of the full level
  (critical).
+
+item:
+ Name of the printer
 
 inventory:
  One check is being created for each supply unit with a unique name.

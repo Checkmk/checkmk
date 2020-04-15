@@ -11,6 +11,7 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -72,26 +73,26 @@ class FilterWatoFolder(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        html.dropdown(self.ident, [("", "")] +
-                      [entry for entry in self.selection if entry[0] in allowed_folders])
+        choices = [("", "")]  # type: Choices
+        html.dropdown(self.ident,
+                      choices + [entry for entry in self.selection if entry[0] in allowed_folders])
 
     def filter(self, infoname):
         self.check_wato_data_update()
         current = html.request.var(self.ident)
-        if current:
-            path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
-            if current.endswith("/"):  # Hosts directly in this folder
-                path_regex += "hosts.mk"
-            else:
-                path_regex += "/"
-            if "*" in current:  # used by virtual host tree snapin
-                path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
-                op = "~~"
-            else:
-                op = "~"
-            return "Filter: host_filename %s %s\n" % (op, path_regex)
-        else:
+        if not current:
             return ""
+        path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
+        if current.endswith("/"):  # Hosts directly in this folder
+            path_regex += "hosts.mk"
+        else:
+            path_regex += "/"
+        if "*" in current:  # used by virtual host tree snapin
+            path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
+            op = "~~"
+        else:
+            op = "~"
+        return "Filter: host_filename %s %s\n" % (op, path_regex)
 
     # Construct pair-list of ( folder-path, title ) to be used
     # by the HTML selection box. This also updates self._tree,

@@ -10,6 +10,9 @@ by pasting the contents of a CSV file into a textbox."""
 import os
 import csv
 import time
+from typing import (  # pylint: disable=unused-import
+    Dict, Text,
+)
 from difflib import SequenceMatcher
 import six
 
@@ -55,8 +58,8 @@ class ModeBulkImport(WatoMode):
 
     def __init__(self):
         super(ModeBulkImport, self).__init__()
-        self._csv_reader = None
         self._params = None
+        self._has_title_line = True
 
     def title(self):
         return _("Bulk host import")
@@ -73,13 +76,14 @@ class ModeBulkImport(WatoMode):
             if html.request.has_var("_do_upload"):
                 self._upload_csv_file()
 
-            self._read_csv_file()
+            csv_reader = self._open_csv_file()
 
             if html.request.var("_do_import"):
-                return self._import()
+                return self._import(csv_reader)
 
     def _file_path(self):
-        file_id = html.request.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
+        file_id = html.request.get_unicode_input_mandatory(
+            "file_id", "%s-%d" % (config.user.id, int(time.time())))
         return self._upload_tmp_path + "/%s.csv" % file_id
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -117,7 +121,7 @@ class ModeBulkImport(WatoMode):
 
         return CustomCSVDialect()
 
-    def _read_csv_file(self):
+    def _open_csv_file(self):
         try:
             csv_file = open(self._file_path())
         except IOError:
@@ -127,6 +131,7 @@ class ModeBulkImport(WatoMode):
         params = self._vs_parse_params().from_html_vars("_preview")
         self._vs_parse_params().validate_value(params, "_preview")
         self._params = params
+        self._has_title_line = self._params.get("has_title_line")
 
         # try to detect the CSV format to be parsed
         if "field_delimiter" in params:
@@ -144,13 +149,12 @@ class ModeBulkImport(WatoMode):
                 else:
                     raise
 
-        # Save for preview in self.page()
-        self._csv_reader = csv.reader(csv_file, csv_dialect)
+        return csv.reader(csv_file, csv_dialect)
 
-    def _import(self):
-        if self._params.get("has_title_line"):
+    def _import(self, csv_reader):
+        if self._has_title_line:
             try:
-                next(self._csv_reader)  # skip header
+                next(csv_reader)  # skip header
             except StopIteration:
                 pass
 
@@ -158,7 +162,7 @@ class ModeBulkImport(WatoMode):
         fail_messages = []
         selected = []
 
-        for row in self._csv_reader:
+        for row in csv_reader:
             if not row:
                 continue  # skip empty lines
 
@@ -169,7 +173,7 @@ class ModeBulkImport(WatoMode):
                 num_succeeded += 1
             except Exception as e:
                 fail_messages.append(
-                    _("Failed to create a host from line %d: %s") % (self._csv_reader.line_num, e))
+                    _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e))
                 num_failed += 1
 
         self._delete_csv_file()
@@ -198,7 +202,7 @@ class ModeBulkImport(WatoMode):
 
     def _get_host_info_from_row(self, row):
         host_name = None
-        attributes = {}
+        attributes = {}  # type: Dict[str, Text]
         for col_num, value in enumerate(row):
             attribute = html.request.var("attribute_%d" % col_num)
             if attribute == "host_name":
@@ -273,8 +277,9 @@ class ModeBulkImport(WatoMode):
 
         attributes = self._attribute_choices()
 
-        self._read_csv_file()  # first line could be missing in situation of import error
-        if not self._csv_reader:
+        # first line could be missing in situation of import error
+        csv_reader = self._open_csv_file()
+        if not csv_reader:
             return  # don't try to show preview when CSV could not be read
 
         html.h2(_("Preview"))
@@ -297,22 +302,21 @@ class ModeBulkImport(WatoMode):
         # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
         # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
         # erneut importieren kann.
-        if self._params.get("has_title_line"):
+        if self._has_title_line:
             try:
-                headers = list(next(self._csv_reader))
+                headers = list(next(csv_reader))
             except StopIteration:
                 headers = []  # nope, there is no header
         else:
             headers = []
 
-        rows = list(self._csv_reader)
+        rows = list(csv_reader)
 
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([len(r) for r in [headers] + rows])
 
-        with table_element(sortable=False,
-                           searchable=False,
-                           omit_headers=not self._params.get("has_title_line")) as table:
+        with table_element(sortable=False, searchable=False,
+                           omit_headers=not self._has_title_line) as table:
 
             # Render attribute selection fields
             table.row()
@@ -321,7 +325,7 @@ class ModeBulkImport(WatoMode):
                 table.cell(html.render_text(header))
                 attribute_varname = "attribute_%d" % col_num
                 if html.request.var(attribute_varname):
-                    attribute_method = html.request.var("attribute_varname")
+                    attribute_method = html.request.get_ascii_input_mandatory("attribute_varname")
                 else:
                     attribute_method = self._try_detect_default_attribute(attributes, header)
                     html.request.del_var(attribute_varname)

@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List  # pylint: disable=unused-import
+
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    Integer,
-    Percentage,
-    TextAscii,
-    Transform,
-    Tuple,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Alternative, Dictionary, DictionaryEntry, Integer, Percentage, TextAscii, Transform, Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -25,33 +21,34 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _parameter_valuespec_cisco_mem():
+    elements = [
+        ("levels",
+         Alternative(
+             title=_("Levels for memory usage"),
+             elements=[
+                 Tuple(
+                     title=_("Specify levels in percentage of total RAM"),
+                     elements=[
+                         Percentage(title=_("Warning at a usage of"),
+                                    unit=_("% of RAM"),
+                                    maxvalue=None),
+                         Percentage(title=_("Critical at a usage of"),
+                                    unit=_("% of RAM"),
+                                    maxvalue=None)
+                     ],
+                 ),
+                 Tuple(
+                     title=_("Specify levels in absolute usage values"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("MB")),
+                         Integer(title=_("Critical at"), unit=_("MB"))
+                     ],
+                 ),
+             ],
+         )),
+    ]  # type: List[DictionaryEntry]
     return Transform(
-        Dictionary(elements=[
-            ("levels",
-             Alternative(
-                 title=_("Levels for memory usage"),
-                 elements=[
-                     Tuple(
-                         title=_("Specify levels in percentage of total RAM"),
-                         elements=[
-                             Percentage(title=_("Warning at a usage of"),
-                                        unit=_("% of RAM"),
-                                        maxvalue=None),
-                             Percentage(title=_("Critical at a usage of"),
-                                        unit=_("% of RAM"),
-                                        maxvalue=None)
-                         ],
-                     ),
-                     Tuple(
-                         title=_("Specify levels in absolute usage values"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("MB")),
-                             Integer(title=_("Critical at"), unit=_("MB"))
-                         ],
-                     ),
-                 ],
-             )),
-        ] + size_trend_elements),
+        Dictionary(elements=elements + size_trend_elements),
         forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},
     )
 

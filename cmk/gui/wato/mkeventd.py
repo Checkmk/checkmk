@@ -12,7 +12,7 @@ import re
 import io
 import time
 import zipfile
-from typing import Union, Dict, Text  # pylint: disable=unused-import
+from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -31,15 +31,17 @@ from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
 from pysmi.error import PySmiError  # type: ignore[import]
 import six
 
+import cmk.utils.version as cmk_version
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.render
+import cmk.utils.packaging
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -51,6 +53,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     TextUnicode,
     DropdownChoice,
@@ -77,10 +80,11 @@ from cmk.gui.valuespec import (
     Foldable,
     DualListChoice,
     LogLevelChoice,
+    rule_option_elements,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,
@@ -103,7 +107,6 @@ from cmk.gui.plugins.wato.utils import (
     HostnameTranslation,
     ContactGroupSelection,
     ConfigDomainEventConsole,
-    rule_option_elements,
     get_search_expression,
     add_change,
     changelog_button,
@@ -188,7 +191,7 @@ def substitute_help():
 
 
 def ActionList(vs, **kwargs):
-    def validate_action_list(self, value, varprefix):
+    def validate_action_list(value, varprefix):
         action_ids = [v["id"] for v in value]
         rule_packs = load_mkeventd_rules()
         for rule_pack in rule_packs:
@@ -245,12 +248,12 @@ class RuleState(CascadingDropdown):
                         'First the CRITICAL pattern is tested, then WARNING and OK at last. '
                         'When none of the patterns matches, the events state is set to UNKNOWN.'),
              )),
-        ]
+        ]  # type: List[CascadingDropdownChoice]
         CascadingDropdown.__init__(self, choices=choices, **kwargs)
 
 
 def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
-    elements = []
+    elements = []  # type: List[DictionaryEntry]
     if fixed_id:
         elements.append(("id",
                          FixedValue(
@@ -289,7 +292,7 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
                          label=_("Currently disable execution of all rules in the pack"),
                      )),)
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
 
     return Dictionary(
@@ -312,7 +315,7 @@ def vs_mkeventd_rule(customer=None):
          )),
     ] + rule_option_elements()
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         if customer:
             # Enforced by rule pack
             elements += [
@@ -731,12 +734,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=4),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=0),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     default_value=4,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     default_value=0,
+                 ),
              ],
          )),
         ("match_facility",
@@ -756,12 +763,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.service_levels,
-                                prefix_values=True),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.service_levels,
-                                prefix_values=True),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=cmk.gui.mkeventd.service_levels,
+                     prefix_values=True,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=cmk.gui.mkeventd.service_levels,
+                     prefix_values=True,
+                 ),
              ],
          )),
         ("match_timeperiod",
@@ -797,12 +808,16 @@ def vs_mkeventd_rule(customer=None):
              orientation="horizontal",
              show_titles=False,
              elements=[
-                 DropdownChoice(label=_("from:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=7),
-                 DropdownChoice(label=_(" to:"),
-                                choices=cmk.gui.mkeventd.syslog_priorities,
-                                default_value=5),
+                 DropdownChoice(
+                     label=_("from:"),
+                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     default_value=7,
+                 ),
+                 DropdownChoice(
+                     label=_(" to:"),
+                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     default_value=5,
+                 ),
              ],
          )),
         ("cancel_application",
@@ -967,7 +982,7 @@ def load_mkeventd_rules():
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    rule_stats = {}
+    rule_stats = {}  # type: Dict[str, int]
     for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
         rule_stats.setdefault(rule_id, 0)
         rule_stats[rule_id] += count
@@ -1104,7 +1119,7 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                             "snmpmib")
 
     def _get_rule_pack_to_mkp_map(self):
-        return {} if cmk.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
+        return {} if cmk_version.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
 
     def _vs_mkeventd_event(self):
         """Valuespec for simulating an event"""
@@ -1207,7 +1222,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Deletion of rule packs
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rule_pack = self._rule_packs[nr]
             c = wato_confirm(
                 _("Confirm rule pack deletion"),
@@ -1365,7 +1380,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 if id_ in found_packs:
-                    css_matches_search = "matches_search"
+                    css_matches_search = "matches_search"  # type: _Optional[str]
                 else:
                     css_matches_search = None
 
@@ -1482,7 +1497,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text(managed.get_customer_name(rule_pack))
@@ -1495,7 +1510,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
-        found_packs = {}
+        found_packs = {}  # type: Dict[str, List[ec.ECRuleSpec]]
         for rule_pack in rule_packs:
             if search_expression in rule_pack["id"].lower() \
                or search_expression in rule_pack["title"].lower():
@@ -1506,6 +1521,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs
+
+
+T = TypeVar('T')
+
+
+def _deref(x):
+    # type: (Union[T, Callable[[], T]]) -> T
+    return x() if callable(x) else x
 
 
 @mode_registry.register
@@ -1578,7 +1601,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return action_outcome
 
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rules = self._rules
             rule = rules[nr]
             c = wato_confirm(
@@ -1642,12 +1665,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if len(self._rule_packs) > 1:
             html.begin_form("move_to", method="POST")
 
+        # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
+        priorities = _deref(cmk.gui.mkeventd.syslog_priorities)
+        facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
+
         # Show content of the rule package
         with table_element(css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
-                    css_matches_search = "matches_search"
+                    css_matches_search = "matches_search"  # type: _Optional[str]
                 else:
                     css_matches_search = None
 
@@ -1705,7 +1732,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(_("ID"), html.render_a(rule["id"], edit_url))
 
-                if cmk.is_managed_edition():
+                if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text(
@@ -1739,10 +1766,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 if "match_priority" in rule:
                     prio_from, prio_to = rule["match_priority"]
                     if prio_from == prio_to:
-                        prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1]
+                        prio_text = priorities[prio_from][1]
                     else:
-                        prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                                    cmk.gui.mkeventd.syslog_priorities[prio_to][1][:2]
+                        prio_text = priorities[prio_from][1][:2] + ".." + priorities[prio_to][1][:2]
                 else:
                     prio_text = ""
                 table.cell(_("Priority"), prio_text)
@@ -1751,7 +1777,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Facility"))
                 if "match_facility" in rule:
                     facnr = rule["match_facility"]
-                    html.write("%s" % dict(cmk.gui.mkeventd.syslog_facilities)[facnr])
+                    html.write("%s" % facilities[facnr])
 
                 table.cell(
                     _("Service Level"),
@@ -1777,9 +1803,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # Move rule to other pack
                 if len(self._rule_packs) > 1:
                     table.cell(_("Move to pack..."))
-                    choices = [("", "")] + [(pack["id"], pack["title"])
-                                            for pack in self._rule_packs
-                                            if pack is not self._rule_pack]
+                    choices = [("", u"")]  # type: Choices
+                    choices += [(pack["id"], pack["title"])
+                                for pack in self._rule_packs
+                                if pack is not self._rule_pack]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
             if len(self._rule_packs) > 1:
@@ -1813,7 +1840,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack = {"rules": []}
+            self._rule_pack = {"rules": []}  # type: ec.ECRulePack
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -1916,9 +1943,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         else:
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
-            rule_id = html.request.var("rule_id")
-            if rule_id is None:
-                raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
+            rule_id = html.request.get_ascii_input_mandatory("rule_id")
 
             self._rule_pack = None
             for nr, pack in enumerate(self._rule_packs):
@@ -1934,8 +1959,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         self._rules = self._rule_pack["rules"]
 
-        self._edit_nr = int(html.request.var("edit", -1))  # missing -> new rule
-        self._clone_nr = int(html.request.var("clone", -1))  # Only needed in 'new' mode
+        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
+        self._clone_nr = html.request.get_integer_input_mandatory("clone",
+                                                                  -1)  # Only needed in 'new' mode
         self._new = self._edit_nr < 0
 
         if self._new:
@@ -2020,7 +2046,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                             (num_repl, num_groups))
             num_repl -= 1
 
-        if cmk.is_managed_edition() and "customer" in self._rule_pack:
+        if cmk_version.is_managed_edition() and "customer" in self._rule_pack:
             try:
                 del self._rule["customer"]
             except KeyError:
@@ -2407,7 +2433,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("w") as f:
+        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
             f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
@@ -2440,7 +2466,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs()])
+        compiler.addSources(
+            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
@@ -4006,8 +4033,8 @@ def mkeventd_update_notifiation_configuration(hosts):
     if not contactgroup and os.path.exists(path):
         os.remove(path)
     elif contactgroup:
-        open(path, "w").write(
-            """# Created by Check_MK Event Console
+        store.save_text_to_file(
+            path, u"""# Created by Check_MK Event Console
 # This configuration will send notifications about hosts and
 # services in the contact group '%(group)s' to the Event Console.
 

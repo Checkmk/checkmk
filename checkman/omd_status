@@ -1,4 +1,4 @@
-title: Status of OMD sites
+title: Checkmk: Site Status
 agents: linux
 catalog: app/omd
 license: GPL
@@ -16,8 +16,8 @@ description:
  or when all sites on the nodes are stopped.
 
 item:
- The name of the site (string).
+ The name of the site.
 
 inventory:
- One check per site will be created for each site where {AUTOSTART} is
+ One service is create for each site where {AUTOSTART} is
  set to {on}, regardless of the current state of the site.

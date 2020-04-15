@@ -1,4 +1,4 @@
-title: MSSQL Database properties
+title: MS SQL Database: Properties
 agents: windows
 catalog: app/mssql
 license: GPL
@@ -8,16 +8,16 @@ description:
  states of MSSQL databases reported by MSSQL.
 
  Default configuration for auto close and -shrink is:
- 
+
  - on is CRIT
- 
+
  - off if OK
- 
+
  These states are configurable.
 
 item:
  The MSSQL database identifier.
 
 inventory:
- One separate check for each database will be created.
+ One service is created for each database.
 

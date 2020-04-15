@@ -1,4 +1,4 @@
-title: Health of NFS mounts
+title: Health of NFS Mounts
 agents: linux, aix
 catalog: os/services
 license: GPL
@@ -26,7 +26,6 @@ item:
  The mount point.
 
 inventory:
-  All NFS mounts are found automatically. This is done
-  by scanning {/proc/mounts}. The file {/etc/fstab}
-  is irrelevant.
+  One service is created for each NFS mounts.
+  This is done by scanning {/proc/mounts}. The file {/etc/fstab} is irrelevant.
 

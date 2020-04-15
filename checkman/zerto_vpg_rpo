@@ -1,6 +1,6 @@
-title: Zerto VPG RPO
+title: Zerto: Virtual Protected Groups
 agents: linux
-catalog: hw/app/zerto
+catalog: app/zerto
 license: GPL
 distribution: check_mk
 description:
@@ -9,6 +9,9 @@ description:
  {CRIT}. If the VPG is initializing, in failover or move operations, being deleted
  or recovered, the check will be {WARN}.
  The VPG data is piggybacked to each VM.
+
+item:
+ The name of the VPG
 
 inventory:
  One service is created per VPG.

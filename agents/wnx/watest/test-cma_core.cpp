@@ -62,4 +62,17 @@ TEST(CmaCore, Misc) {
     }
 }
 
+namespace tools {
+TEST(CapTest, CheckAreFilesSame) {
+    EXPECT_TRUE(
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
+    EXPECT_FALSE(
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
+
+    EXPECT_FALSE(
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+}
+
+}  // namespace tools
+
 }  // namespace cma

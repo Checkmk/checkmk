@@ -1,4 +1,4 @@
-title: ORACLE Database Processes
+title: Oracle Database: Processes
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -7,3 +7,9 @@ description:
  This check monitors the current percentual usage of the processes and alarms
  if too many processes are in use. The default is to warn at a usage of 70%
  and go critical at 90%.
+
+item:
+ Name of the process
+
+inventory:
+ One service is created for each running database.

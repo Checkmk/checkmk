@@ -20,29 +20,30 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_storage_throughput():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         ("read",
          Tuple(
-             title=_(u"Read throughput per second"),
+             title=_("Read throughput per second"),
              elements=[
-                 Filesize(title=_(u"Warning at")),
-                 Filesize(title=_(u"Critical at")),
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
              ],
          )),
         ("write",
          Tuple(
-             title=_(u"Write throughput per second"),
+             title=_("Write throughput per second"),
              elements=[
-                 Filesize(title=_(u"Warning at")),
-                 Filesize(title=_(u"Critical at")),
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
              ],
          )),
         ("total",
          Tuple(
-             title=_(u"Total throughput per second"),
+             title=_("Total throughput per second"),
              elements=[
-                 Filesize(title=_(u"Warning at")),
-                 Filesize(title=_(u"Critical at")),
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
              ],
          )),
     ],)

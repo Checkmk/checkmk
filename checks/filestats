@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import ast
 
 # params = {
@@ -58,12 +39,16 @@ def parse_filestats(info):
         if not line:
             continue
         if line[0].startswith('[[['):
-            _output_variety, subsection_name = line[0][3:-3].split(None, 1)
-            current = sections_info.setdefault(subsection_name, [])
+            output_variety, subsection_name = line[0][3:-3].split(None, 1)
+            current = sections_info.setdefault((output_variety, subsection_name), [])
         else:
             current.append(line[0])
 
-    return {k: _parse_filestats_load_lines(v) for k, v in sections_info.items() if v}
+    return {
+        name: (variety, _parse_filestats_load_lines(v))
+        for (variety, name), v in sections_info.items()
+        if v
+    }
 
 
 def _parse_filestats_load_lines(info):
@@ -136,20 +121,61 @@ def check_filestats_extremes(files, params):
 @get_parsed_item_data
 def check_filestats(_item, params, data):
 
-    sumry = [s for s in data if s.get("type") == "summary"]
+    _output_variety, reported_lines = data
+    sumry = [s for s in reported_lines if s.get("type") == "summary"]
     count = sumry[0].get("count", None) if sumry else None
     if count is not None:
         yield check_filestats_count(count, params)
 
-    files = [i for i in data if i.get("type") == "file"]
+    files = [i for i in reported_lines if i.get("type") == "file"]
     if files:
         for subresult in check_filestats_extremes(files, params):
             yield subresult
 
 
+@get_parsed_item_data
+def check_filestats_single(_item, params, data):
+
+    _output_variety, reported_lines = data
+    if len(reported_lines) != 1:
+        yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."
+
+    single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
+    for key, hr_function in (('size', get_bytes_human_readable), ('age', get_age_human_readable)):
+
+        yield check_levels(single_stat.get(key),
+                           key if key == 'size' else None,
+                           (params.get("max_%s" % key,
+                                       (None, None))[0], params.get("max_%s" % key,
+                                                                    (None, None))[1],
+                            params.get("min_%s" % key,
+                                       (None, None))[0], params.get("min_%s" % key,
+                                                                    (None, None))[1]),
+                           human_readable_func=hr_function,
+                           infoname=key.title())
+
+
+@discover
+def discover_filestats(key, data):
+    return data[0] != "single_file"
+
+
+@discover
+def discover_filestats_single(key, data):
+    return data[0] == "single_file"
+
+
+check_info['filestats.single'] = {
+    "inventory_function": discover_filestats_single,
+    "check_function": check_filestats_single,
+    "service_description": "File %s",
+    "has_perfdata": True,
+    "group": "filestats_single",
+}
+
 check_info['filestats'] = {
     "parse_function": parse_filestats,
-    "inventory_function": discover(),
+    "inventory_function": discover_filestats,
     "check_function": check_filestats,
     "service_description": "File group %s",
     "has_perfdata": True,

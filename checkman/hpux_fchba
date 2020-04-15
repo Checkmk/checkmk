@@ -1,4 +1,4 @@
-title: Fibrechannel HBAs on HP-UX servers
+title: HP-UX: Fibrechannel HBAs
 agents: hpux
 catalog: os/storage
 license: GPL
@@ -21,8 +21,8 @@ item:
 
 
 inventory:
- One item for every HBA using the {"fcd"} driver that had an
- active SAN connection at the time of inventory.
+ One service is created for each HBA using the {"fcd"} driver with an
+ active SAN connection.
  Older {"td"} / {"fcms"} based HBAs are not reported from the
  agent per default.
 

@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # simple script to patch linux Pipfile to Windows pipfile
 # Deprecated now
 
+from __future__ import print_function
 import sys
-import re
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style  # type: ignore[import]  # pylint: disable=import-error
 
 init()
 
@@ -18,22 +24,22 @@ if len(sys.argv) < 2:
 try:
     # Read in the file
     print(info_c + "Opening '{}'...".format(sys.argv[1]))
-    with open(sys.argv[1], 'r') as file:
-        lines = file.readlines()
+    with open(sys.argv[1], 'r') as f:
+        lines = f.readlines()
 
     # Replace the target string
-    with open(sys.argv[1], 'w') as file:
+    with open(sys.argv[1], 'w') as f:
         for l in lines:
             if l.find('python_version = ') == 0:
-                file.write('python_version = "3.8" \n')
+                f.write('python_version = "3.8" \n')
             elif l.find('psycopg2 = ') == 0:
-                file.write('psycopg2 = "*" # windows need new version \n')
+                f.write('psycopg2 = "*" # windows need new version \n')
             elif l.find('pymssql = ') == 0:
-                file.write('# ' + l)
+                f.write('# ' + l)
             elif l.find('mysqlclient = ') == 0:
-                file.write('# ' + l)
+                f.write('# ' + l)
             else:
-                file.write(l)
+                f.write(l)
 
     print(ok_c + 'Finished')
 except Exception as e:

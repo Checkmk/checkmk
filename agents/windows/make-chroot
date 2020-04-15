@@ -182,12 +182,6 @@ if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
 
-# Build Google Test and Google Mock
-$SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"
-
-# Extract necessary boost headers
-$SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/extract-simpleini"
-
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 
 echo "+ CLEANING UP"

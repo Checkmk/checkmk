@@ -7,8 +7,11 @@
 settings"""
 
 import abc
+from typing import (  # pylint: disable=unused-import
+    Optional, Text, Union,
+)
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.watolib as watolib
@@ -158,14 +161,14 @@ class GlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    modified_cls = "modified"
-                    title = _("This option has been modified.")
+                    modified_cls = "modified"  # type: Optional[str]
+                    value_title = _("This option has been modified.")  # type: Optional[Text]
                 elif varname in self._global_settings:
                     modified_cls = "modified globally"
-                    title = _("This option has been modified in global settings.")
+                    value_title = _("This option has been modified in global settings.")
                 else:
                     modified_cls = None
-                    title = None
+                    value_title = None
 
                 if is_a_checkbox(valuespec):
                     html.open_div(class_=["toggle_switch_container", modified_cls])
@@ -174,12 +177,12 @@ class GlobalSettingsMode(WatoMode):
                         help_txt=_("Immediately toggle this setting"),
                         href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
                         class_=modified_cls,
-                        title=title,
+                        title=value_title,
                     )
                     html.close_div()
 
                 else:
-                    html.a(HTML(to_text), href=edit_url, class_=modified_cls, title=title)
+                    html.a(HTML(to_text), href=edit_url, class_=modified_cls, title=value_title)
 
             if header_is_painted:
                 forms.end()
@@ -194,7 +197,7 @@ class EditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._varname = html.request.get_ascii_input("varname")
+        self._varname = html.request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]()
             self._valuespec = self._config_variable.valuespec()
@@ -232,7 +235,8 @@ class EditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = _("Resetted configuration variable %s to its default.") % self._varname
+            msg = _("Resetted configuration variable %s to its default."
+                   ) % self._varname  # type: Union[HTML, Text]
         else:
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
@@ -343,7 +347,8 @@ class ModeEditGlobals(GlobalSettingsMode):
                                 watolib.folder_preserving_link([("mode", "read_only")]),
                                 "read_only")
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
     def action(self):

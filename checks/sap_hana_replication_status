@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public tmpl  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public tmpl for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# tmpl along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_sap_hana_replication_status(info):
@@ -40,13 +20,13 @@ def parse_sap_hana_replication_status(info):
 
 
 SAP_HANA_REPL_STATUS_MAP = {
-    "0": (3, "unknown status from replication script"),
-    "10": (2, "no system replication"),
-    "11": (2, "error"),
-    "12": (2, "unknown"),
-    "13": (1, "initializing"),
-    "14": (0, "syncing"),
-    "15": (0, "active"),
+    "0": (3, "unknown status from replication script", "state_unknown"),
+    "10": (2, "no system replication", "state_no_replication"),
+    "11": (2, "error", "state_error"),
+    "12": (2, "unknown", "state_replication_unknown"),
+    "13": (1, "initializing", "state_initializing"),
+    "14": (0, "syncing", "state_syncing"),
+    "15": (0, "active", "state_active"),
 }
 
 
@@ -59,11 +39,10 @@ def inventory_sap_hana_replication_status(parsed):
 @get_parsed_item_data
 def check_sap_hana_replication_status(item, params, data):
     sys_repl_status = data["sys_repl_status"]
-    state, state_readable = SAP_HANA_REPL_STATUS_MAP.get(sys_repl_status,
-                                                         (3, "unknown[%s]" % sys_repl_status))
-    yield state, "System replication: %s" % state_readable
+    state, state_readable, param_key = SAP_HANA_REPL_STATUS_MAP.get(
+        sys_repl_status, (3, "unknown[%s]" % sys_repl_status, "state_unknown"))
 
-    yield 0, "Mode: %s" % data["mode"]
+    yield params.get(param_key, state), "System replication: %s" % state_readable
 
 
 check_info['sap_hana_replication_status'] = {
@@ -71,5 +50,6 @@ check_info['sap_hana_replication_status'] = {
     'inventory_function': inventory_sap_hana_replication_status,
     'check_function': check_sap_hana_replication_status,
     'service_description': 'SAP HANA Replication Status %s',
+    'group': 'sap_hana_replication_status',
     'includes': ['sap_hana.include'],
 }

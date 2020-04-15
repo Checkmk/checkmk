@@ -2,11 +2,32 @@ ARG DOCKER_REGISTRY
 FROM ${DOCKER_REGISTRY}/sles-12sp3-base
 
 SHELL ["/bin/bash", "-c"]
+ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
-    && zypper ref -s \
+    && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
+    && zypper -n --no-gpg-checks in --replacefiles \
+    curl \
+    cyrus-sasl-devel \
+    enchant-devel \
+    git \
+    krb5-devel \
+    libmysqlclient-devel \
+    make \
+    nodejs \
+    npm \
+    openldap2-devel \
+    python \
+    python-devel \
+    python-openssl \
+    python-xml \
+    rrdtool-devel \
+    sudo \
+    && zypper clean -a
+
+RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
@@ -59,25 +80,33 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
     unzip \
     wget \
     which \
-    && zypper clean -a
-
-ARG ARTIFACT_STORAGE
-COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
-RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
-
-# New packages that are not needed for the build toolchain above should be added here.
-# We avoid rebuild of the whole previous steps this way
-RUN zypper ref \
-    && zypper -n in -y --force-resolution \
     chrpath \
     joe \
     iputils \
     vim \
     && zypper clean -a
+
+# Install our standard tool chain for building
+# - gnu-toolchain is needed for compiling all the C++ stuff
+# - cmake is needed for e.g. building re2
+# - openssl is needed by Python 3.7+
+# - python is needed by our build / test chain
+ARG NEXUS_ARCHIVES_URL
+ARG NEXUS_USERNAME
+ARG NEXUS_PASSWORD
+ARG DISTRO
+ARG BRANCH_VERSION
+ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+
+COPY scripts/* /opt/
+RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-cmake.sh
+RUN /opt/install-openssl.sh
+RUN /opt/install-python2.sh
+RUN /opt/install-python.sh
+RUN /opt/install-pipenv.sh
+RUN /opt/install-nodejs.sh
+RUN /opt/install-freetds.sh
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

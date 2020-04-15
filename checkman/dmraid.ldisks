@@ -1,4 +1,4 @@
-title: Logical disks of DMRaid
+title: DMRaid: Logical Disks
 agents: linux
 catalog: os/storage
 license: GPL
@@ -14,7 +14,7 @@ description:
  The check will return CRITICAL if the raid is inconsitent or WARNING if the array if currently rebuilding. An OK status will be returned as OK.
 
 item:
- One item is generated per logical disk found on the system.
+ Mountpoint of the logical disk
 
 inventory:
- All logical disks are automatically inventorized.
+ One service is created for each logical disk.

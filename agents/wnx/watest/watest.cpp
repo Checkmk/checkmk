@@ -4,8 +4,6 @@
 //
 #include "pch.h"
 
-#include "common/yaml.h"
-
 #include <filesystem>
 #include <iostream>
 
@@ -14,6 +12,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "read_file.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
@@ -41,6 +40,17 @@ TEST(StartTest, CheckStatus) {
 }  // namespace cma::cfg::details
 
 int wmain(int argc, wchar_t** argv) {
+    using namespace std::literals;
+    if (argc == 2 && argv[1] == L"wait"s) {
+        using namespace std::chrono;
+
+        // std::string s;
+        // std::cout << "Hit anything and press enter";
+        // std::cin >> s;
+        cma::tools::sleep(1h);
+        return 1;
+    }
+
     std::set_terminate([]() {
         //
         XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");

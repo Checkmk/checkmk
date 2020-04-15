@@ -16,7 +16,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 # Things imported here are used by pre legacy (pre 1.6) cron plugins)
-from . import (  # pylint: disable=unused-import
+from . import (  # noqa: F401 # pylint: disable=unused-import
     CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
 )
 
@@ -133,9 +133,9 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             return
 
         html.open_table(class_=["content_center", "tacticaloverview"],
-                        cellspacing=2,
-                        cellpadding=0,
-                        border=0)
+                        cellspacing="2",
+                        cellpadding="0",
+                        border="0")
 
         show_stales = self.parameters()["show_stale"] and config.user.may(
             "general.see_stales_in_tactical_overview")
@@ -229,7 +229,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
             )
 
-        elif what == "services":
+        if what == "services":
             return ViewURLParams(
                 total=[
                     ("view_name", "allservices"),
@@ -246,7 +246,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
             )
 
-        elif what == "events":
+        if what == "events":
             return ViewURLParams(
                 total=[
                     ("view_name", "ec_events"),
@@ -267,8 +267,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
                 stale=None,
             )
-        else:
-            raise NotImplementedError()
+
+        raise NotImplementedError()
 
     def _get_stats(self, what, context):
         if what == "hosts":

@@ -1,4 +1,4 @@
-title: ZFS arc Cache: Hit Ratios and Sizes
+title: ZFS Arc Cache: Hit Ratios and Sizes
 agents: solaris
 catalog: os/storage
 license: GPL

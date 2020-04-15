@@ -86,9 +86,9 @@ def _get_package_language_dirs():
     are then used in addition to the builtin and local localization files.
     """
     package_locale_dir = cmk.utils.paths.local_locale_dir / "packages"
-    if not package_locale_dir.exists():  # pylint: disable=no-member
+    if not package_locale_dir.exists():
         return []
-    return list(package_locale_dir.iterdir())  # pylint: disable=no-member
+    return list(package_locale_dir.iterdir())
 
 
 def get_language_alias(lang):

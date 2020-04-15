@@ -18,5 +18,5 @@ item:
  The name of the node.
 
 inventory:
- Creates one check per node.
+ One service is created for each node.
 

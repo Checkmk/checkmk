@@ -15,6 +15,7 @@ import sys
 import time
 import traceback
 from types import FrameType  # pylint: disable=unused-import
+import io
 
 from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any  # pylint: disable=unused-import
 import psutil  # type: ignore[import]
@@ -26,8 +27,6 @@ else:
 
 import six
 
-from cmk.gui.i18n import _
-import cmk
 import cmk.utils.log
 from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
@@ -35,6 +34,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk.gui.log
+from cmk.gui.i18n import _
 
 JobId = str
 JobParameters = Dict[str, Any]
@@ -94,8 +94,8 @@ class BackgroundProcessInterface(object):
 
         result_message_path = Path(
             self.get_work_dir()) / BackgroundJobDefines.result_message_filename
-        with result_message_path.open("ab") as f:  # pylint: disable=no-member
-            f.write(encoded_info)
+        with result_message_path.open("ab") as f:
+            f.write(six.ensure_binary(encoded_info))
 
     def send_exception(self, info):
         # type: (Union[Text, str]) -> None
@@ -104,8 +104,8 @@ class BackgroundProcessInterface(object):
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
         encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
-        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
-            f.write(encoded_info)
+        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
+            f.write(six.ensure_binary(encoded_info))
 
 
 #.
@@ -156,7 +156,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # type: () -> None
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
-        daemon.set_procname(BackgroundJobDefines.process_name)
+        daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
         sys.stdin.close()
         sys.stdout.close()
         sys.stderr.close()
@@ -222,9 +222,14 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         #   to be able to catch the (debug) output of libraries like libldap or subproccesses
         # - Use buffering=0 to make the non flushed output directly visible in
         #   the job progress dialog
-        sys.stdout = sys.stderr = (
-            Path(self.get_work_dir()) /  # pylint: disable=no-member
-            BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
+        # - Python 3's stdout and stderr expect 'str' not 'bytes'
+        unbuffered = (Path(self.get_work_dir()) /
+                      BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
+
+        if sys.version_info[0] >= 3:
+            sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
+        else:
+            sys.stdout = sys.stderr = unbuffered
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
@@ -493,7 +498,8 @@ class BackgroundJob(object):
         job_parameters["job_id"] = self._job_id
         job_parameters["jobstatus"] = self._jobstatus
         job_parameters["function_parameters"] = self._queued_function
-        p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
+        p = multiprocessing.Process(target=self._start_background_subprocess,
+                                    args=(job_parameters,))
 
         p.start()
         p.join()
@@ -554,7 +560,7 @@ class JobStatus(object):
 
     def get_status_from_file(self):
         # type: () -> JobStatusSpec
-        if not self._jobstatus_path.exists():  # pylint: disable=no-member
+        if not self._jobstatus_path.exists():
             data = {}  # type: JobStatusSpec
             data["state"] = "initialized"
         else:
@@ -575,8 +581,9 @@ class JobStatus(object):
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
-            if field_path.exists():  # pylint: disable=no-member
-                data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
+            if field_path.exists():
+                with field_path.open(encoding="utf-8") as f:
+                    data["loginfo"][field_id] = f.read().splitlines()
             else:
                 data["loginfo"][field_id] = []
 
@@ -592,11 +599,11 @@ class JobStatus(object):
 
     def statusfile_exists(self):
         # type: () -> bool
-        return self._jobstatus_path.exists()  # pylint: disable=no-member
+        return self._jobstatus_path.exists()
 
     def update_status(self, params):
         # type: (JobStatusSpec) -> None
-        if not self._jobstatus_path.parent.exists():  # pylint: disable=no-member
+        if not self._jobstatus_path.parent.exists():
             return
 
         if params:

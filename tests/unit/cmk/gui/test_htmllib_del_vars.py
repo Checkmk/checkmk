@@ -1,9 +1,14 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from werkzeug.test import create_environ
 
 from cmk.gui import htmllib
 from cmk.gui.globals import html, request, RequestContext, AppContext
-from cmk.gui.http import Request, Response
+from cmk.gui.http import Request
 from cmk.update_config import DummyApplication
 
 
@@ -12,7 +17,7 @@ def test_del_vars():
                    REQUEST_URI='',
                    QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            RequestContext(htmllib.html(Request(environ))):
         # First we hit the cached property so we can see that the underlying Request object
         # actually got replaced later.
         _ = request.args

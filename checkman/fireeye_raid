@@ -1,4 +1,4 @@
-title: FireEye Appliances: RAID status
+title: FireEye Appliances: RAID Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -9,9 +9,6 @@ description:
 
  The check is OK if the status is OK and health status is
  healthy. Otherise CRIT.
-
-item:
- No item.
 
 inventory:
  One service is created.

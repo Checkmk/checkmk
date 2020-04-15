@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent:
 
@@ -64,6 +44,8 @@
 #         Duplex: Full
 #         Auto-negotiation: on
 #         Link detected: yes
+
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 linux_nic_check = "lnx_if"
 
@@ -120,7 +102,7 @@ def _parse_lnx_if_sections(info):
     ethtool_stats = {}
     iface = None
     lines = iter(info)
-    ethtool_index = 0
+    indices_by_node = {}
     while True:
         try:
             node, line = _parse_lnx_if_node_info(lines)
@@ -135,7 +117,7 @@ def _parse_lnx_if_sections(info):
             # Parse '/proc/net/dev'
             # IFACE_NAME: VAL VAL VAL ...
             iface = ethtool_stats.setdefault((node, line[0]), {})
-            iface.update({"counters": map(int, line[1].strip().split())})
+            iface.update({"counters": list(map(int, line[1].strip().split()))})
             continue
 
         elif line[0].startswith('[') and line[0].endswith(']'):
@@ -145,8 +127,8 @@ def _parse_lnx_if_sections(info):
             #       KEY: VAL
             #       ...
             iface = ethtool_stats.setdefault((node, line[0][1:-1]), {})
-            ethtool_index += 1
-            iface["ethtool_index"] = ethtool_index
+            indices_by_node[node] = indices_by_node.setdefault(node, 0) + 1
+            iface["ethtool_index"] = indices_by_node[node]
             continue
 
         if iface is not None:
@@ -168,11 +150,11 @@ def parse_lnx_if(info):
         nic_info.append((node_info, iface_name, iface))
 
     if_table = []
-    index = 0
+    indices_by_node = {}
     for node_info, nic, attr in nic_info:
         counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        index += 1
-        ifIndex = attr.get("ethtool_index", index)
+        indices_by_node[node_info] = indices_by_node.setdefault(node_info, 0) + 1
+        ifIndex = attr.get("ethtool_index", indices_by_node[node_info])
         ifDescr = nic
         ifAlias = nic
 
@@ -190,11 +172,11 @@ def parse_lnx_if(info):
             if speed_text == '65535Mb/s':  # unknown
                 ifSpeed = ''
             elif speed_text.endswith("Kb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000
+                ifSpeed = int(float(speed_text[:-4])) * 1000
             elif speed_text.endswith("Mb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000000
+                ifSpeed = int(float(speed_text[:-4])) * 1000000
             elif speed_text.endswith("Gb/s"):
-                ifSpeed = int(speed_text[:-4]) * 1000000000
+                ifSpeed = int(float(speed_text[:-4])) * 1000000000
             else:
                 ifSpeed = ''
 
@@ -237,11 +219,11 @@ def parse_lnx_if(info):
                     ifOperStatus = 2
 
         raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
-        try:
+        if ":" in raw_phys_address:
             # We saw interface entries of tunnels for the address
             # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
-        except ValueError:
+        else:
             ifPhysAddress = ''
 
         row = [node_info] + list(

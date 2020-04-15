@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -72,7 +72,7 @@ class APICallBulkDiscovery(APICallCollection):
         because the API call currently only operates on a list of given hostnames where
         a lot of the GUI options are not relevant for. For a consistent parameter handling
         we use the valuespec here."""
-        params = copy.deepcopy(config.bulk_discovery_default_settings)
+        params = copy.deepcopy(config.bulk_discovery_default_settings)  # type: Dict[str, Any]
 
         params["mode"] = request.get("mode", params["mode"])
 

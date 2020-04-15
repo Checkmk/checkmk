@@ -8,9 +8,7 @@ description:
  a WuT (Wiesemann & Theis) Web-IO
 
 item:
- The item is the description of the channel as string, either
- "IO INPUT %d" or "IO INPUT" the user-defined string describing
- the channel.
+ The IO index of the port
 
 inventory:
  All channels are automatically inventorized with their state.

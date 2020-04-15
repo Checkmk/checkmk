@@ -10,7 +10,7 @@ import time
 import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Pattern, AnyStr, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
+    Pattern, Union, Generator, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
     Any,
 )
 import six
@@ -27,7 +27,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
 import cmk.base.console as console
@@ -56,6 +56,7 @@ from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
     HostLabel,
 )
+from cmk.base.api import PluginName
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -310,7 +311,8 @@ def discover_on_host(config_cache,
                                              ipaddress,
                                              check_plugin_names=None,
                                              do_snmp_scan=do_snmp_scan,
-                                             on_error=on_error)
+                                             on_error=on_error,
+                                             for_check_discovery=True)
 
         multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
@@ -871,10 +873,8 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     elif isinstance(entry, HostLabel):
                         entry.plugin_name = check_plugin_name
                         discovered_host_labels.add_label(entry)
-                    elif isinstance(entry, DiscoveredHostLabels):
-                        for host_label in entry.values():
-                            host_label.plugin_name = check_plugin_name
-                            discovered_host_labels.add_label(host_label)
+                    else:
+                        raise TypeError("unexpectedly discovered %r" % type(entry))
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as e:
@@ -900,8 +900,13 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error):
-    # type: (HostName, Optional[HostAddress], Optional[Set[CheckPluginName]], bool, str) -> data_sources.DataSources
+def _get_sources_for_discovery(hostname,
+                               ipaddress,
+                               check_plugin_names,
+                               do_snmp_scan,
+                               on_error,
+                               for_check_discovery=False):
+    # type: (HostName, Optional[HostAddress], Optional[Set[CheckPluginName]], bool, str, bool) -> data_sources.DataSources
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -910,6 +915,14 @@ def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
+
+            # During discovery, the snmp datasource can never fully rely on the locally cached data,
+            # since the available oid trees depend on the current running checks
+            # We can not disable the data_source_cache per default when caching is set
+            # since this would affect the WATO service discvoery page.
+            if for_check_discovery and source.get_may_use_cache_file():
+                source.disable_data_source_cache()
+
             source.set_check_plugin_name_filter(snmp_scan.gather_snmp_check_plugin_names)
 
     # When check types are specified via command line, enforce them and disable auto detection
@@ -969,7 +982,31 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return
 
-        # Now do the actual discovery
+        # *HOST LABEL* discovery
+        # TODO (mo):
+        # The host_label_function is tied to the section, not to the plugin, so
+        # I think this whole part should be somewhere else entirely.
+        # It should only be done once for every section.
+        # The host label function expects only the sections' content, so we currently need to
+        # check wether the check plugin has "extra sections" defined, and if so, remove them.
+        try:
+            section_plugin_name = PluginName(check_plugin_name)
+            section_plugin = config.get_registered_section_plugin(section_plugin_name)
+        except ValueError:
+            # this means we're dealing with a subcheck
+            # TODO (mo): Remove this case once subchecks don't exist anymore
+            section_plugin = None
+
+        # no section definition is OK (but you can't get host labels)
+        if section_plugin is not None:
+            has_extra_sections = bool(config.check_info[check_plugin_name]["extra_sections"])
+            hl_args = section_content[0] if has_extra_sections else section_content
+            discovered_host_labels_gen = section_plugin.host_label_function(hl_args)
+            for label in _filter_for_host_labels(hostname, section_plugin_name,
+                                                 discovered_host_labels_gen):
+                yield label
+
+        # *SERVICE* discovery
         discovery_function = _get_discovery_function_of(check_plugin_name)
         discovered_items = _execute_discovery_function(discovery_function, section_content)
         for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
@@ -1029,18 +1066,28 @@ def _execute_discovery_function(discovery_function, section_content):
     return discovered_items
 
 
+def _filter_for_host_labels(hostname, plugin_name, label_generator):
+    # type: (str, PluginName, Generator[HostLabel, None, None]) -> Generator[HostLabel, None, None]
+    for label in label_generator:
+        if not isinstance(label, HostLabel):
+            console.error("%s: Section plugin %s returned invalid host label data: %r\n" %
+                          (hostname, plugin_name, repr(label)))
+            continue
+        yield label
+
+
 # FIXME: Broken typing, see comment for _execute_discovery_function.
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
+    # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[DiscoveredService]
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
             parameters_unresolved = entry.parameters
             service_labels = entry.service_labels
-            yield entry.host_labels
 
+        # silently skip host labels, we're discovering them separately now.
+        # TODO: remove this case once we discover using the new registered_check_plugins data
         elif isinstance(entry, (DiscoveredHostLabels, HostLabel)):
-            yield entry
             continue
 
         elif isinstance(entry, tuple):
@@ -1373,9 +1420,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name),
                     )
                     item_state.raise_counter_wrap()
-                except item_state.MKCounterWrapped as e:
+                except item_state.MKCounterWrapped:
                     output = u"WAITING - Counter based check, cannot be done offline"
-                except Exception as e:
+                except Exception:
                     if cmk.utils.debug.enabled():
                         raise
                     exitcode = 3

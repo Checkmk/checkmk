@@ -14,5 +14,5 @@ item:
  The Name of the fan according to the {sysHealthname} in the {nsSysHealthTable}
 
 inventory:
- For each fan found on the appliance a service is created.
+ One service is created for each fan found on the appliance.
 

@@ -12,11 +12,28 @@ echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
+    --exclude=api \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
+    --exclude=diagnostics.py \
     -a * $ROOT/lib/python/cmk/base/
-sudo pycompile -q $ROOT/lib/python/cmk/base
+sudo rsync \
+    --exclude=cee \
+    --exclude=cee.py \
+    --exclude=cme.py \
+    -a * $ROOT/lib/python3/cmk/base/
+
+# Ensure cmk.base is a namespace package
+sudo rm -f \
+    "$ROOT/lib/python3/cmk/base/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/__init__.pyc"
+
+# Temporary fix until integration tests have been migrated to python3: remove
+# python3 only files that are installed to python 2 paths (by our packaging mechanism).
+if [ -d "$ROOT/lib/python/cmk/base/api" ]; then
+    sudo rm -rf "$ROOT/lib/python/cmk/base/api"
+fi
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
@@ -28,4 +45,9 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
             )
         fi
     done
+fi
+
+if [ -z "$ONLY_COPY" ]; then
+    sudo python -m compileall -qq $ROOT/lib/python/cmk/base
+    sudo python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi

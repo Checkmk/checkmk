@@ -1,4 +1,4 @@
-title: PostgreSQL Database Last Vacuum and Analyze
+title: PostgreSQL: Last Vacuum and Analyze for Tables
 agents: linux
 catalog: app/postgresql
 license: GPL
@@ -18,6 +18,9 @@ description:
  never analyzed or vacuumed the time period for which they exist is checked
  according to the WATO rule "PostgresSQL VACUUM and ANALYZE: Age of never
  analyzed/vacuumed tables".
+
+item:
+ One of the two statements {{VACUUM}} or {{ANALYSE}} plus the name of the database
 
 inventory:
   Two services for each database. One for VACUUM and one for ANALYZE.

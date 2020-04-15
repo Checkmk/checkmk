@@ -313,6 +313,12 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 
+        if not service.description:
+            core_config.warning(
+                "Skipping invalid service with empty description (plugin: %s) on host %s" %
+                (service.check_plugin_name, hostname))
+            continue
+
         # Make sure, the service description is unique on this host
         if service.description in used_descriptions:
             cn, it = used_descriptions[service.description]
@@ -378,6 +384,12 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
             has_perfdata = act_info.get('has_perfdata', False)
             description = config.active_check_service_description(hostname, acttype, params)
+
+            if not description:
+                core_config.warning(
+                    "Skipping invalid service with empty description (active check: %s) on host %s"
+                    % (acttype, hostname))
+                continue
 
             if do_omit_service(hostname, description):
                 continue
@@ -447,7 +459,9 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
 
-            if do_omit_service(hostname, description):
+            if not description:
+                core_config.warning("Skipping invalid service with empty description on host %s" %
+                                    hostname)
                 continue
 
             if command_line:
@@ -953,7 +967,7 @@ def _precompile_hostcheck(config_cache, hostname):
         return
 
     output = open(source_filename + ".new", "w")
-    output.write("#!/usr/bin/env python\n")
+    output.write("#!/usr/bin/env python3\n")
     output.write("# encoding: utf-8\n\n")
 
     output.write("import logging\n")
@@ -1063,9 +1077,9 @@ if '-d' in sys.argv:
     output.write("except MKTerminate:\n")
     output.write("    console.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")
-    output.write("except SystemExit, e:\n")
+    output.write("except SystemExit as e:\n")
     output.write("    sys.exit(e.code)\n")
-    output.write("except Exception, e:\n")
+    output.write("except Exception as e:\n")
     output.write("    import traceback, pprint\n")
 
     # status output message

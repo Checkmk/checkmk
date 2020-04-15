@@ -11,10 +11,17 @@ import hashlib
 import argparse
 import logging
 import xml.etree.ElementTree as ET
-from HTMLParser import HTMLParser
-from urlparse import urljoin
+
+if sys.version_info[0] >= 3:
+    from html.parser import HTMLParser
+    from urllib.parse import urljoin  # pylint: disable=import-error,no-name-in-module
+else:
+    from HTMLParser import HTMLParser  # pylint: disable=import-error
+    from urlparse import urljoin  # pylint: disable=import-error
 
 import requests
+from requests.structures import CaseInsensitiveDict
+import six
 import urllib3  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
@@ -125,7 +132,7 @@ class HPMSAConnection(object):
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
         self._session = requests.Session()
-        self._session.headers = {"User-agent": "Checkmk special agent_hp_msa"}
+        self._session.headers = CaseInsensitiveDict({"User-agent": "Checkmk special agent_hp_msa"})
         # we cannot use self._session.verify because it will be overwritten by
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
@@ -148,7 +155,12 @@ class HPMSAConnection(object):
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)
-        session_key = xml_tree.find("./OBJECT/PROPERTY[@name='response']").text
+        response_element = xml_tree.find("./OBJECT/PROPERTY[@name='response']")
+        if response_element is None:
+            raise Exception("no response element")
+        session_key = response_element.text
+        if not isinstance(session_key, six.string_types):
+            raise Exception("invalid response element")
         if session_key.lower() == "authentication unsuccessful":
             raise AuthError("Connecting to %s failed. Please verify host address & login details" %
                             self._base_url)
@@ -183,7 +195,7 @@ def main(argv=None):
                 raise
 
     # Output sections
-    for section, lines in sections.iteritems():
+    for section, lines in sections.items():
         print("<<<hp_msa_%s>>>" % section)
         print("\n".join(x.encode("utf-8") for x in lines))
 

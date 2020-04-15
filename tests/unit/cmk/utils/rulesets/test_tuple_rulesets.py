@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
@@ -5,12 +11,12 @@ from testlib.base import Scenario
 import cmk.base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 
-import cmk
+import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
-    monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
 
 
 @pytest.fixture()

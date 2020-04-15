@@ -1,4 +1,4 @@
-title: Uptime of Java application server via JMX and j4p.war - DEPRECATED
+title: Java Application Server: Uptime (deprecated)
 agents: linux
 catalog: app/java
 license: GPL
@@ -18,4 +18,4 @@ item:
  {instance}.
 
 inventory:
- One check is created for each JMX instance sent by the agent.
+ One service is created for each JMX instance sent by the agent.

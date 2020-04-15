@@ -1,4 +1,4 @@
-title: Retrieve informational SNMP data about bintec routers
+title: Retrieve Informational SNMP Data about Bintec Routers
 agents: snmp
 catalog: os/misc
 license: GPL
@@ -13,4 +13,4 @@ description:
  The check always reports an OK state.
 
 inventory:
- One check per SNMP host will be created.
+ One service is created for each SNMP host.

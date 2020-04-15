@@ -9,7 +9,7 @@ description:
  rulesets. Additionally the ratio of deduplication will be displayed.
 
 item:
- The ID of the service set is the item
+ The ID of the service set
 
 inventory:
  One service for each service set is created

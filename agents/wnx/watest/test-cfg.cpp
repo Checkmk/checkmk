@@ -275,18 +275,20 @@ TEST(CmaCfg, InstallProtocol) {
 }
 
 TEST(CmaCfg, Modules) {
-    ASSERT_TRUE(!cma::cfg::GetModulesDir().empty());
-    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kModules) == L"modules");
+    ASSERT_TRUE(!cma::cfg::GetUserModulesDir().empty());
+    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kUserModules) == L"modules");
+    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kInstalledModules) == L"modules");
     ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
     auto all_dir = details::AllDirTable();
+
     ASSERT_TRUE(std::any_of(
         std::begin(all_dir), std::end(all_dir),
-        [](std::wstring_view dir) { return dir == dirs::kModules; }));
+        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
 
     auto removable_dir = details::AllDirTable();
     ASSERT_TRUE(std::any_of(
         std::begin(removable_dir), std::end(removable_dir),
-        [](std::wstring_view dir) { return dir == dirs::kModules; }));
+        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
 }
 
 TEST(CmaCfg, ProcessPluginEnvironment) {

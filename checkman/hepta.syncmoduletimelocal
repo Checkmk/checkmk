@@ -1,4 +1,4 @@
-title: Hepta 8030
+title: Hepta 8030: Local Time
 agents: snmp
 catalog: hw/time/hopf
 license: GPL
@@ -7,7 +7,7 @@ description:
  This check monitors the local time of the module.
 
 inventory:
- One service for SyncModuleTimeLocal
+ One service is created.
 
 item:
- "SyncModuleTimeLocal"
+ The fixed statement {{SyncModuleTimeLocal}}

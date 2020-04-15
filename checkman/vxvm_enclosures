@@ -17,6 +17,9 @@ description:
 
   You need to install the agent plugin {vxvm}.
 
+item:
+ Name of the disk enclosure
+
 inventory:
   One item is generated per VxVM disk enclosure, the naming is
   inherited from VxVM. See the man page for {vxdmpadm} about

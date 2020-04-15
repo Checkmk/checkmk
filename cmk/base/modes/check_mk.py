@@ -10,7 +10,7 @@ from typing import Optional, Dict, List  # pylint: disable=unused-import
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.log as log
@@ -38,6 +38,7 @@ import cmk.base.dump_host
 import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
+import cmk.base.diagnostics
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
@@ -275,7 +276,7 @@ modes.register(
 def mode_list_tag(args):
     # type: (List[str]) -> None
     hosts = _list_all_hosts_with_tags(args)
-    console.output("\n".join(hosts))
+    console.output("\n".join(sorted(hosts)))
     if hosts:
         console.output("\n")
 
@@ -396,7 +397,7 @@ def mode_dump_agent(hostname):
                 console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
-        console.output(six.ensure_str(output))
+        console.output(six.ensure_str(output, errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -1318,7 +1319,7 @@ modes.register(
 
 
 def mode_inventory_as_check(options, hostname):
-    # type: (Dict, HostName) -> None
+    # type: (Dict, HostName) -> int
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)
@@ -1381,7 +1382,7 @@ def mode_automation(args):
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
 
-    sys.exit(automations.automations.execute(args[0], args[2:]))
+    sys.exit(automations.automations.execute(args[0], args[1:]))
 
 
 modes.register(
@@ -1686,7 +1687,7 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""", cmk.__version__, six.ensure_str(cmk.edition_short().upper()))
+""", cmk_version.__version__, six.ensure_str(cmk_version.edition_short().upper()))
 
 
 modes.register(
@@ -1734,6 +1735,35 @@ modes.register(
         short_option="h",
         handler_function=mode_help,
         short_help="Print this help",
+        needs_config=False,
+        needs_checks=False,
+    ))
+
+#.
+#   .--diagnostics---------------------------------------------------------.
+#   |             _ _                             _   _                    |
+#   |          __| (_) __ _  __ _ _ __   ___  ___| |_(_) ___ ___           |
+#   |         / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|          |
+#   |        | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \          |
+#   |         \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/          |
+#   |                       |___/                                          |
+#   '----------------------------------------------------------------------'
+
+
+def mode_create_diagnostics_dump():
+    # type: () -> None
+    cmk.base.diagnostics.create_diagnostics_dump()
+
+
+modes.register(
+    Mode(
+        long_option="create-diagnostics-dump",
+        handler_function=mode_create_diagnostics_dump,
+        short_help="Create diagnostics dump",
+        long_help=[
+            "Create a dump containing information for diagnostic analysis "
+            "in the folder var/check_mk/diagnostics."
+        ],
         needs_config=False,
         needs_checks=False,
     ))

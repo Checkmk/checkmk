@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX500 storage systems: Status of PCIeflash modules
+title: Fujitsu ETERNUS DX500 Storage Systems: Status of PCIeflash Modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPL
@@ -15,4 +15,4 @@ item:
  The flash module identifier.
 
 inventory:
- One service per module is created.
+ One service is created for the status of each module.

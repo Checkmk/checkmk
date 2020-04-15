@@ -9,8 +9,6 @@ modified via rules."""
 
 from typing import List, Tuple, Optional, Text  # pylint: disable=unused-import
 
-import cmk
-
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -50,7 +48,7 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     def _from_vars(self):
-        self._hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
+        self._hostname = html.request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
@@ -135,6 +133,8 @@ class ModeObjectParameters(WatoMode):
         self._show_labels(host_info["labels"], "host", host_info["label_sources"])
 
     def _show_service_info(self, all_rulesets):
+        assert self._service is not None
+
         serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
                                                   [self._hostname, self._service])
         if not serviceinfo:
@@ -406,7 +406,7 @@ class ModeObjectParameters(WatoMode):
         # patterns are configured in logwatch_rules. We do not have access to the actual
         # patterns here but just to the useless "None". In order not to complicate things
         # we simply display nothing here.
-        elif varname == "logwatch_rules":
+        if varname == "logwatch_rules":
             pass
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:

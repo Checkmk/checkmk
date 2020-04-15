@@ -1,0 +1,11 @@
+Title: hyperv_vmstate: Consider Protocol_Mismatch 'OK'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1585911029
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+According to Microsoft, this can safely be ignored.

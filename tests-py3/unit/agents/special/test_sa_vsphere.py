@@ -1,4 +1,9 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore[import]
@@ -13,7 +18,6 @@ DEFAULT_AGRS = {
     "port": 443,
     "hostname": None,
     "skip_placeholder_vm": False,
-    "pysphere": False,
     "host_pwr_display": None,
     "vm_pwr_display": None,
     "snapshot_display": None,
@@ -64,9 +68,6 @@ DEFAULT_AGRS = {
     }),
     (['-P'], {
         "skip_placeholder_vm": True
-    }),
-    (['--pysphere'], {
-        "pysphere": True
     }),
     (['--host_pwr_display', 'vm'], {
         "host_pwr_display": "vm"

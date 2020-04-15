@@ -12,4 +12,4 @@ description:
  Needs the datasource "Check state of Graylog" to be configured.
 
 inventory:
- One service {"Graylog Cluster MongoDB Stats"} will be created
+ One service is created.

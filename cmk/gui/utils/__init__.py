@@ -173,7 +173,7 @@ def load_web_plugins(forwhat, globalvars):
         for file_path in sorted(plugins_path.iterdir()):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
-                    exec (_drop_comments(file_path.open().read()), globalvars)
+                    exec(_drop_comments(file_path.open().read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
                     code_bytes = file_path.open("rb").read()[8:]

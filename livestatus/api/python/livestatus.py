@@ -1,28 +1,8 @@
-#!/usr/bin/python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
 import socket
@@ -35,11 +15,15 @@ import sys
 from typing import (  # pylint: disable=unused-import
     NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
 )
+import six
 
-UserId = NewType("UserId", Text)
-SiteId = NewType("SiteId", str)
-SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
-SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+# TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
+# (https://github.com/PyCQA/pylint/issues/2296)
+UserId = six.text_type  # NewType("UserId", Text)
+SiteId = str  # NewType("SiteId", str)
+SiteConfiguration = Dict[str, Any]  # NewType("SiteConfiguration", Dict[str, Any])
+SiteConfigurations = Dict[
+    SiteId, SiteConfiguration]  # NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
@@ -494,8 +478,10 @@ class SingleSiteConnection(Helpers):
         if not query.endswith("\n"):
             query += "\n"
         query += self.auth_header + self.add_headers
-        query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(
-            time.time())
+        query += "Localtime: %d\n" % int(time.time())
+        query += "OutputFormat: %s\n" % ("python3" if sys.version_info[0] >= 3 else "python")
+        query += "KeepAlive: on\n"
+        query += "ResponseHeader: fixed16\n"
         query += add_headers
 
         if not query.endswith("\n"):
@@ -686,7 +672,7 @@ class MultiSiteConnection(Helpers):
     def __init__(self, sites, disabled_sites=None):
         # type: (SiteConfigurations, Optional[SiteConfigurations]) -> None
         if disabled_sites is None:
-            disabled_sites = SiteConfigurations({})
+            disabled_sites = {}
 
         self.sites = sites
         self.connections = []  # type: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]]

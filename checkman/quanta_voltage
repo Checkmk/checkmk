@@ -1,4 +1,4 @@
-title: Voltage sensors (by QCT-RACK-MIB)
+title: Quanta Devices: Voltage Sensors
 agents: snmp
 catalog: hw/environment/quanta
 license: GPL

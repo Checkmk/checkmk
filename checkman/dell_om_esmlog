@@ -1,4 +1,4 @@
-title: Dell OpenManage: ESM log
+title: Dell OpenManage: ESM Log
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -14,5 +14,5 @@ description:
  (OMSA) on your target server. This is available for Linux and Windows.
 
 inventory:
- One check will be created
+ One service is created.
 

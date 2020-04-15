@@ -29,6 +29,10 @@ from cmk.gui.utils.html import HTML
 #   |                                                                      |
 #   '----------------------------------------------------------------------
 
+# TODO: Figure out if this should actually be HTMLTagValue or HTMLContent or...
+# All the HTML-related types are slightly chaotic...
+EscapableEntity = Union[None, int, HTML, str, Text]
+
 _UNESCAPER_TEXT = re.compile(
     r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
 _QUOTE = re.compile(r"(?:&quot;|&#x27;)")
@@ -37,7 +41,7 @@ _A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
 # TODO: Cleanup the accepted types!
 def escape_attribute(value):
-    # type: (Union[None, int, HTML, str, Text]) -> Text
+    # type: (EscapableEntity) -> Text
     """Escape HTML attributes.
 
     For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -62,13 +66,16 @@ def escape_attribute(value):
     attr_type = type(value)
     if value is None:
         return u''
-    elif attr_type == int:
+    if attr_type == int:
         return six.text_type(value)
-    elif isinstance(value, HTML):
+    if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
-        value = u"%s" % value
-    return ensure_unicode(html_escape(value, quote=True))
+    if isinstance(attr_type, six.text_type):
+        return html_escape(value, quote=True)
+    if isinstance(attr_type, six.binary_type):  # TODO: Not in the signature!
+        return html_escape(six.ensure_str(value), quote=True)
+    # TODO: What is this case for? Exception?
+    return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
 
 def unescape_attributes(value):
@@ -82,7 +89,7 @@ def unescape_attributes(value):
 
 
 def escape_text(text):
-    # type: (Union[None, int, HTML, str, Text]) -> Text
+    # type: (EscapableEntity) -> Text
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -156,7 +163,7 @@ def strip_scripts(ht):
 
 
 def strip_tags(ht):
-    # type: (Union[HTML, str, Text]) -> Text
+    # type: (EscapableEntity) -> Text
     """Strip all HTML tags from a text.
 
     Args:

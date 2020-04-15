@@ -1,4 +1,4 @@
-title: EMC VNX Storage: iSCSI traffic on HBAs
+title: EMC VNX Storage: iSCSI Traffic on HBAs
 agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL
@@ -17,4 +17,4 @@ item:
  E. g. "SP A Port 0"
 
 inventory:
- Automatically configures one check for every HBA listed in the agent output.
+ One service is created for each HBA listed in the agent output.

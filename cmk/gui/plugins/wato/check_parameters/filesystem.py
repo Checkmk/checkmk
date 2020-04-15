@@ -6,12 +6,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Checkbox,
     Dictionary,
     ListChoice,
     ListOf,
+    Transform,
+    CascadingDropdown,
+    DropdownChoice,
     TextAscii,
-    TextUnicode,
+    TextOrRegExpUnicode,
     Tuple,
 )
 
@@ -29,7 +31,26 @@ def _valuespec_inventory_df_rules():
     return Dictionary(
         title=_("Discovery parameters for filesystem checks"),
         elements=[
-            ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
+            ("include_volume_name",
+             Transform(
+                 CascadingDropdown(
+                     title=_("Service description format"),
+                     choices=
+                     [(False, _("Name of mount point")),
+                      (True, _("Name of volume and name of mount point"),
+                       DropdownChoice(
+                           label=_("Filesystem grouping"),
+                           choices=[
+                               ('mountpoint', _('Grouping pattern applies to mount point only')),
+                               ('volume_name_and_mountpoint',
+                                _('Grouping pattern applies to volume name and mount point')),
+                           ],
+                           help=_(
+                               "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a> "
+                               "feature processes this filesystem."),
+                       ))]),
+                 forth=lambda x: (True, "mountpoint") if x is True else x,
+             )),
             ("ignore_fs_types",
              ListChoice(title=_("Filesystem types to ignore"),
                         choices=[
@@ -42,12 +63,11 @@ def _valuespec_inventory_df_rules():
                         default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
             ("never_ignore_mountpoints",
              ListOf(
-                 TextUnicode(),
-                 title=_(u"Mountpoints to never ignore"),
+                 TextOrRegExpUnicode(),
+                 title=_("Mountpoints to never ignore"),
                  help=_(
-                     u"Regardless of filesystem type, these mountpoints will always be discovered."
-                     u"Globbing or regular expressions are currently not supported."),
-             )),
+                     "Regardless of filesystem type, these mountpoints will always be discovered."
+                     "Regular expressions are supported."))),
         ],
     )
 
@@ -63,18 +83,23 @@ rulespec_registry.register(
 
 def _valuespec_filesystem_groups():
     return ListOf(
-        Tuple(show_titles=True,
-              orientation="horizontal",
-              elements=[
-                  TextAscii(title=_("Name of group"),),
-                  TextAscii(
-                      title=_("Pattern for mount point (using * and ?)"),
-                      help=_("You can specify one or several patterns containing "
-                             "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
-                             "The filesystems matching the patterns will be monitored "
-                             "like one big filesystem in a single service."),
-                  ),
-              ]),
+        Tuple(
+            show_titles=True,
+            orientation="horizontal",
+            elements=[
+                TextAscii(title=_("Name of group"),),
+                TextAscii(
+                    title=_("Pattern for item (using * and ?)"),
+                    help=
+                    _("You can specify one or several globbing patterns containing "
+                      "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                      "The filesystems matching the patterns will be monitored "
+                      "like one big filesystem in a single service. Depending on the configuration in the "
+                      "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>Discovery parameters "
+                      " for filesystem checks</a>, the pattern matches the mount point or "
+                      "the combination of volume and mount point"),
+                ),
+            ]),
         add_label=_("Add pattern"),
         title=_('Filesystem grouping patterns'),
         help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '

@@ -9,15 +9,18 @@
 import copy
 from functools import partial
 import os
+from typing import Any, Dict, List  # pylint: disable=unused-import
+
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 
 import cmk.utils.tags
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.exceptions import (
     MKException,
@@ -236,15 +239,18 @@ class APICallHosts(APICallCollection):
                                                 request.get("create_folders", "1"))
         create_parent_folders = bool(int(create_parent_folders_var))
 
-        hostname = request.get("hostname")
-        folder_path = request.get("folder")
+        # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+        # strings.  After reading the config into the GUI ensure we really
+        # process the host names as str. TODO: Can be removed with Python 3.
+        hostname = str(request.get("hostname"))
+        folder_path = str(request.get("folder"))
         attributes = request.get("attributes", {})
         cluster_nodes = request.get("nodes")
 
         check_hostname(hostname, should_exist=False)
 
         # Validate folder
-        if folder_path != "" and folder_path != "/":
+        if folder_path not in ('', '/'):
             folders = folder_path.split("/")
             for foldername in folders:
                 watolib.check_wato_foldername(None, foldername, just_name=True)
@@ -277,7 +283,7 @@ class APICallHosts(APICallCollection):
         result = {
             "succeeded_hosts": [],
             "failed_hosts": {},
-        }
+        }  # type: Dict[str, Any]
         for host_request in request["hosts"]:
             try:
                 if action_name == "add":
@@ -383,7 +389,7 @@ class APICallHosts(APICallCollection):
         if unknown_hosts:
             raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
 
-        grouped_by_folders = {}
+        grouped_by_folders = {}  # type: Dict[watolib.CREFolder, List[Any]]
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
@@ -495,7 +501,7 @@ class APICallGroups(APICallCollection):
     # We work around this wart by making "customer" an optional key formally
     # and doing some manual a posteriori validation here.  :-P
     def _check_customer(self, request):
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             if "customer" not in request.keys():
                 raise MKUserError(None, _("Missing required key(s): %s") % "customer")
         else:
@@ -509,7 +515,7 @@ class APICallGroups(APICallCollection):
         if group_type == "contact" and "nagvis_maps" in request:
             extra_info["nagvis_maps"] = request["nagvis_maps"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             extra_info["customer"] = request["customer"]
 
         return extra_info
@@ -657,7 +663,7 @@ class APICallRules(APICallCollection):
         collection.load()
         ruleset = collection.get(ruleset_name)
 
-        ruleset_dict = {}
+        ruleset_dict = {}  # type: Dict[str, List[Any]]
         for folder, _rule_index, rule in ruleset.get_rules():
             ruleset_dict.setdefault(folder.path(), []).append(rule.to_web_api())
 
@@ -894,7 +900,7 @@ class APICallHosttags(APICallCollection):
 @api_call_collection_registry.register
 class APICallSites(APICallCollection):
     def get_api_calls(self):
-        if cmk.is_demo():
+        if cmk_version.is_demo():
             return {}
 
         required_permissions = ["wato.sites"]
@@ -1084,7 +1090,8 @@ class APICallOther(APICallCollection):
             # Do an actual discovery on the nodes -> data is written
             result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
                                                  ["@scan"] + [hostname])
-            counts = {"new": 0, "old": 0}
+            # TODO: This *way* too general, even for our very low standards...
+            counts = {"new": 0, "old": 0}  # type: Dict[Any, Any]
             for entry in result["check_table"]:
                 if entry[0] in counts:
                     counts[entry[0]] += 1
@@ -1145,8 +1152,9 @@ class APICallOther(APICallCollection):
             if not config.user.may("wato.activateforeign"):
                 raise MKAuthException(_("You are not allowed to activate changes of other users."))
             if not allow_foreign_changes:
-                raise MKAuthException(_("There are changes from other users and foreign changes "\
-                                        "are not allowed in this API call."))
+                raise MKAuthException(
+                    _("There are changes from other users and foreign changes are not allowed in this API call."
+                     ))
 
         if mode == "specific":
             for site in sites:

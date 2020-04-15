@@ -1,4 +1,4 @@
-title: Hitachi HNAS: Number of Users using CIFS shares
+title: Hitachi HNAS: Number of Users Using CIFS Shares
 agents: snmp
 catalog: hw/storagehw/hitachi
 license: GPL
@@ -12,4 +12,4 @@ item:
  E. g. 6 home
 
 inventory:
- Finds one item per CIFS share.
+ One service is created for each CIFS share.

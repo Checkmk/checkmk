@@ -33,6 +33,9 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
+ManPage = Dict[six.text_type, Any]
+ManPageCatalogPath = Tuple[str, ...]
+
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
         "environment" : "Environmental sensors",
@@ -68,7 +71,6 @@ catalog_titles = {
             "tinkerforge"  : "Tinkerforge",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
-        "other"       : "Other devices",
         "time"        : "Clock Devices",
             "hopf"       : "Hopf",
             "meinberg"   : "Meinberg",
@@ -91,6 +93,7 @@ catalog_titles = {
             "cisco"       : "Cisco Systems (also IronPort)",
             "decru"       : "Decru",
             "dell"        : "DELL",
+            "docsis"      : "DOCSIS",
             "enterasys"   : "Enterasys Networks",
             "f5"          : "F5 Networks",
             "fireeye"     : "FireEye",
@@ -137,11 +140,14 @@ catalog_titles = {
             "gude"       : "Gude",
             "janitza"    : "Janitza electronics",
         "printer"     : "Printers",
+        "mail"        : "Mail appliances",
+            "artec"         : "ARTEC",
         "server"      : "Server hardware, blade enclosures",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "atto"       : "ATTO",
             "brocade"    : "Brocade",
             "bdt"        : "BDT",
+            "ddn_s2a"    : "DDN S2A",
             "emc"        : "EMC",
             "fastlta"    : "FAST LTA",
             "fujitsu"    : "Fujitsu",
@@ -149,7 +155,7 @@ catalog_titles = {
             "netapp"     : "NetApp",
             "nimble"     : "Nimble Storage",
             "hitachi"    : "Hitachi",
-            "oraclehw"   : "ORACLE",
+            "oraclehw"   : "Oracle",
             "qlogic"     : "QLogic",
             "quantum"    : "Quantum",
             "synology"   : "Synology Inc.",
@@ -159,12 +165,12 @@ catalog_titles = {
         "ad"            : "Active Directory",
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
-        "artec"         : "ARTEC",
         "barracuda"     : "Barracuda",
-        "check_mk"      : "Check_MK Monitoring System",
+        "checkmk"       : "Checkmk Monitoring System",
         "citrix"        : "Citrix",
         "couchbase"     : "Couchbase",
         "db2"           : "IBM DB2",
+        "dotnet"        : "dotNET",
         "elasticsearch" : "Elasticsearch",
         "exchange"      : "Microsoft Exchange",
         "graylog"       : "Graylog",
@@ -193,12 +199,15 @@ catalog_titles = {
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
         "prometheus"    : "Prometheus",
+        "proxmox"       : "Proxmox",
         "qmail"         : "qmail",
+        "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
         "sansymphony"   : "Datacore SANsymphony",
+        "silverpeak"    : "Silver Peak",
         "skype"         : "Skype",
         "splunk"        : "Splunk",
         "sshd"          : "SSH Daemon",
@@ -207,6 +216,8 @@ catalog_titles = {
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
         "zerto"         : "Zerto",
+        "ibm_mq"        : "IBM MQ",
+        "pulse_secure"  : "Pulse Secure",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",
@@ -260,9 +271,7 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
-
-ManPage = Dict[six.text_type, Any]
+_manpage_catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
 
 
 def man_page_exists(name):
@@ -323,8 +332,8 @@ def man_page_catalog_titles():
 
 
 def load_man_page_catalog():
-    # type: () -> Dict[Tuple[str,...], List[Dict]]
-    catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
+    # type: () -> Dict[ManPageCatalogPath, List[Dict]]
+    catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -341,7 +350,7 @@ def load_man_page_catalog():
 
 
 def print_man_page_browser(cat=()):
-    # typxe: (Tuple[str]) -> None
+    # typxe: (ManPageCatalogPath) -> None
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 

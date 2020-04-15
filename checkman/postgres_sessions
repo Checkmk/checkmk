@@ -1,4 +1,4 @@
-title: PostgreSQL Database sessions
+title: PostgreSQL: Sessions
 agents: linux
 catalog: app/postgresql
 license: GPL
@@ -10,6 +10,9 @@ description:
   actively querying something.
 
   This check relies on data reported by the agent-side plugin {mk_postgres}
+
+item:
+ Name of the category
 
 inventory:
   The check generates one item for the sessions connected to the PostgreSQL

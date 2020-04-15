@@ -1,11 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import socket
 import pytest  # type: ignore[import]
-import cmk
+import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
-    monkeypatch.setattr(cmk, "omd_site", lambda: "NO_SITE")
+    monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
 
 
 # Unit tests should not be executed in site.

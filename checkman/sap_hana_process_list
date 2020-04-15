@@ -11,8 +11,5 @@ description:
  Note: This check is deprecated and replaced by newer checks.
  See werk 7100 for detailed information.
 
-item:
- The process name
-
 inventory:
  One service per process is created.

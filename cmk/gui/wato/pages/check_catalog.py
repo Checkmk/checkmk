@@ -5,8 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import (  # pylint: disable=unused-import
+    Set, List, Dict, Any,
+)
 
 import cmk.utils.man_pages as man_pages
+from cmk.utils.man_pages import ManPageCatalogPath  # pylint: disable=unused-import
+from cmk.utils.type_defs import CheckPluginName  # pylint: disable=unused-import
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -87,7 +92,7 @@ class ModeCheckPlugins(WatoMode):
         if self._topic and not self._search:
             heading = "%s - %s" % (_("Catalog of Check Plugins"), self._topic_title)
         elif self._search:
-            heading = html.render_text("%s: %s" % (_("Check plugins matching"), self._search))
+            heading = "%s: %s" % (_("Check plugins matching"), self._search)
         else:
             heading = _("Catalog of Check Plugins")
         return heading
@@ -134,8 +139,8 @@ class ModeCheckPlugins(WatoMode):
             menu.show()
 
     def _get_manpages_after_search(self):
-        collection = {}
-        handled_check_names = set([])
+        collection = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+        handled_check_names = set()  # type: Set[CheckPluginName]
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
@@ -193,7 +198,7 @@ class ModeCheckPlugins(WatoMode):
         def strip_manpage_entry(entry):
             return dict([(k, v) for (k, v) in entry.items() if k in ["name", "agents", "title"]])
 
-        tree = {}
+        tree = {}  # type: Dict[str, Any]
         if len(self._path) > 0:
             only_path = tuple(self._path)
         else:
@@ -258,7 +263,7 @@ class ModeCheckPlugins(WatoMode):
             for subcat in subnode.values():
                 num_plugins += len(subcat)
 
-        text = ""
+        text = u""
         if num_cats > 1:
             text += "%d %s<br>" % (num_cats, _("sub categories"))
         text += "%d %s" % (num_plugins, _("check plugins"))
@@ -320,7 +325,7 @@ class ModeCheckManPage(WatoMode):
         return []
 
     def _from_vars(self):
-        self._check_type = html.request.get_ascii_input("check_type")
+        self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
         # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
         # As long as the old one is available, allow a minus here.

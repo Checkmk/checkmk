@@ -24,14 +24,14 @@ def _parameter_valuespec_safenet_hsm_operstats():
     return Dictionary(elements=[
         ("error_rate",
          Tuple(
-             title=_(u"Error rate"),
+             title=_("Error rate"),
              elements=[
                  Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
                  Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
              ],
          )),
         ("request_rate", Levels(
-            title=_(u"Request rate"),
+            title=_("Request rate"),
             unit=_("1/s"),
             default_value=None,
         )),

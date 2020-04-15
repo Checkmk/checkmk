@@ -17,6 +17,10 @@ function python_files() {
             echo $file
             continue
         fi
+        if [[ ${file#"$GIT_ROOT/"} == cmk/utils* ]]; then
+            echo $file
+            continue
+        fi
         if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
             echo $file
             continue

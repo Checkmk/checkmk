@@ -1,4 +1,8 @@
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 from pathlib import Path
@@ -37,7 +41,7 @@ _PERMISSIONS = [
     ('enterprise/active_checks/*', is_executable, []),
     ('enterprise/agents/bakery/*', is_not_executable, []),
     ('enterprise/agents/plugins/*', is_executable, [
-        "chroot_version", "Makefile", "pyinstaller-deps.make", "chroot", "src",
+        "chroot_version", "Dockerfile", "Makefile", "pyinstaller-deps.make", "chroot", "src",
         "cmk_update_agent.pyc", "pip-deps-32.make", "pip-deps.make", "dist",
         "cmk-update-agent.spec", "cmk-update-agent-32.spec", "build"
     ]),

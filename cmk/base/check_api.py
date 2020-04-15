@@ -88,7 +88,7 @@ import pprint  # noqa: F401 # pylint: disable=unused-import
 import calendar
 
 from typing import (  # pylint: disable=unused-import
-    Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, Text,
+    Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union,
 )
 
 import six
@@ -148,8 +148,9 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY = _snmp_utils.BINARY
-CACHED_OID = _snmp_utils.CACHED_OID
+# backwards compatibility: allow to pass integer.
+BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
+CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
 
 OID_END = _snmp_utils.OID_END
 OID_STRING = _snmp_utils.OID_STRING
@@ -174,6 +175,10 @@ from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-
 Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
+
+# The class 'as_float' has been moved to the cmk.base.api domain.
+# import it here under the old name
+from cmk.base.api.agent_based.checking_types import MetricFloat as as_float  # pylint: disable=unused-import
 
 
 def saveint(i):
@@ -202,18 +207,6 @@ def savefloat(f):
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-class as_float(float):
-    """Extends the float representation for Infinities in such way that
-    they can be parsed by eval"""
-    def __repr__(self):
-        # type: () -> str
-        if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
-        if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
-        return super(as_float, self).__repr__()
 
 
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
@@ -383,7 +376,7 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
-    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Optional[Union[int, float]]) -> List
+    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
     if not dsname:
         return []
 
@@ -641,19 +634,18 @@ def discover_single(info):
 
 
 def validate_filter(filter_function):
-    # type: (Callable) -> Callable
+    # type: (Any) -> Callable
     """Validate function argument is a callable and return it"""
-
-    if hasattr(filter_function, '__call__'):
+    if callable(filter_function):
         return filter_function
-    if filter_function is not None:
-        raise ValueError("Filtering function is not a callable,"
-                         " a {} has been given.".format(type(filter_function)))
-    return lambda *entry: entry[0]
+    if filter_function is None:
+        return lambda *entry: entry[0]
+    raise ValueError("Filtering function is not a callable, a {} has been given.".format(
+        type(filter_function)))
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[dict, str]]) -> Callable
+    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -712,52 +704,49 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-    def roller(parsed):
-        # type: (Any) -> Any
-        if isinstance(parsed, dict):
-            return parsed.items()
-        if isinstance(parsed, (list, tuple)):
-            return parsed
-        raise ValueError("Discovery function only works with dictionaries,"
-                         " lists, and tuples you gave a {}".format(type(parsed)))
-
     def _discovery(filter_function):
         # type: (Callable) -> Callable
         @functools.wraps(filter_function)
         def discoverer(parsed):
-            # type: (Union[dict, list]) -> Iterable[Tuple]
-
+            # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
             params = default_params if isinstance(default_params, six.string_types +
                                                   (dict,)) else {}
-            filterer = validate_filter(filter_function)
-            from_dict = isinstance(parsed, dict)
-
-            for entry in roller(parsed):
-                if from_dict:
-                    key, value = entry
-                    name = filterer(key, value)
-                else:
-                    name = filterer(entry)
-
-                if isinstance(name, six.string_types):
-                    yield (name, params)
-                elif name is True and from_dict:
-                    yield (key, params)
-                elif name is True and not from_dict:
-                    yield (entry[0], params)
-                elif name and hasattr(name, '__iter__'):
-                    for new_name in name:
-                        yield (new_name, params)
+            if isinstance(parsed, dict):
+                filterer = validate_filter(filter_function)
+                for key, value in parsed.items():
+                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                        yield (n, params)
+            elif isinstance(parsed, (list, tuple)):
+                filterer = validate_filter(filter_function)
+                for entry in parsed:
+                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                        yield (n, params)
+            else:
+                raise ValueError(
+                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}"
+                    .format(type(parsed)))
 
         return discoverer
 
-    if selector is not None and hasattr(selector, '__call__'):
+    if callable(selector):
         return _discovery(selector)
 
     if selector is None and default_params is None:
         return _discovery(lambda *args: args[0])
 
     return _discovery
+
+
+def _get_discovery_iter(name, get_name):
+    # type: (Any, Callable[[], str]) -> Iterable[str]
+    if isinstance(name, six.string_types):
+        return iter((six.ensure_str(name),))
+    if name is True:
+        return iter((get_name(),))
+    try:
+        return iter(name)
+    except TypeError:
+        return iter(())
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

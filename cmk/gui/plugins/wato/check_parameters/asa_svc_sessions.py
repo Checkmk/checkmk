@@ -6,6 +6,8 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Transform,
+    Dictionary,
     Integer,
     Tuple,
 )
@@ -16,22 +18,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def _transform_asa_svc_sessions(p):
+    if isinstance(p, tuple):
+        return {"levels_svc": p}
+    return p
+
+
 def _parameter_valuespec_asa_svc_sessions():
-    return Tuple(
-        title=_("Number of active sessions"),
-        help=_("This check monitors the current number of active sessions"),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("sessions"),
-                default_value=100,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("sessions"),
-                default_value=200,
-            ),
-        ],
+    return Transform(
+        Dictionary(title=_("Number of active sessions"),
+                   elements=[(
+                       "levels_%s" % vpn_type.lower(),
+                       Tuple(
+                           title="Active %s sessions" % vpn_type,
+                           elements=[
+                               Integer(
+                                   title=_("Warning at"),
+                                   unit=_("sessions"),
+                               ),
+                               Integer(
+                                   title=_("Critical at"),
+                                   unit=_("sessions"),
+                               ),
+                           ],
+                       ),
+                   ) for vpn_type in ["SVC", "WebVPN", "IPsec"]]),
+        forth=_transform_asa_svc_sessions,
     )
 
 
@@ -40,5 +52,5 @@ rulespec_registry.register(
         check_group_name="asa_svc_sessions",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_asa_svc_sessions,
-        title=lambda: _("Cisco SSl VPN Client Sessions"),
+        title=lambda: _("Cisco SVC/WebVPN/IPsec Sessions"),
     ))

@@ -12,4 +12,4 @@ item:
  The sensorDescr from SNMP.
 
 inventory:
- Creates one check per voltage sensor (sensorType 3).
+ One service is created for each voltage sensor.

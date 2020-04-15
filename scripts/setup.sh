@@ -1,28 +1,7 @@
 #!/bin/bash
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 VERSION=1.7.0i1
 NAME=check_mk
@@ -385,12 +364,6 @@ have to log in twice"
 ask_title "Integration with PNP4Nagios 0.6"
 # -------------------------------------------------------------------
 
-ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates $OMD_ROOT/local/share/check_mk/pnp-templates "PNP4Nagios templates" \
-  "Check_MK ships templates for PNP4Nagios for most of its checks.
-Those templates make the history graphs look nice. PNP4Nagios
-expects such templates in the directory pnp/templates in your
-document root for static web pages"
-
 ask_dir rrd_path /var/lib/nagios/rrd $HOMEBASEDIR/var/nagios/rrd $OMD_ROOT/var/pnp4nagios/perfdata "RRD files" \
     "Configure the directory PNP4Nagios stores the RRD database files in"
 
@@ -723,8 +696,6 @@ do
 	   tar xzf $SRCDIR/inventory.tar.gz -C $DESTDIR$inventorydir &&
 	   mkdir -p $DESTDIR$web_dir &&
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
-	   mkdir -p $DESTDIR$pnptemplates &&
-	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
 	   mkdir -p $DESTDIR$docdir &&
 	   tar xzf $SRCDIR/doc.tar.gz -C $DESTDIR$docdir &&
 	   mkdir -p $DESTDIR$checkmandir &&

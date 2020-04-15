@@ -257,6 +257,7 @@ void ServiceProcessor::preStartBinaries() {
     ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
+    plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
@@ -566,6 +567,13 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // preparation if any
         ReloadConfigInServiceMode();
+
+        // module commander loading(and install if service)
+        if (cma::IsService()) {
+            mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
+        } else
+            mc_.LoadDefault();
+
         preStartBinaries();
         // *******************
 

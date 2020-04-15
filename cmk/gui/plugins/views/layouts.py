@@ -7,6 +7,9 @@
 import abc
 import re
 import json
+from typing import Any, Dict, List, Optional, Tuple, Text  # pylint: disable=unused-import
+
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -47,8 +50,8 @@ def init_rowselect(view):
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
-    html.label("", row_id(view, row))
+    html.input(type_="checkbox", name=six.ensure_str(row_id(view, row)), value=(num_tds + 1))
+    html.label("", six.ensure_str(row_id(view, row)))
 
 
 def render_checkbox_td(view, row, num_tds):
@@ -132,12 +135,12 @@ class GroupedBoxesLayout(Layout):
             this_group = group_value(row, group_cells)
             if this_group != last_group:
                 last_group = this_group
-                current_group = []
+                current_group = []  # type: List[Tuple[Text, Any]]
                 groups.append((this_group, current_group))
             current_group.append((row_id(view, row), row))
 
         # Create empty columns
-        columns = []
+        columns = []  # type: List[List[Any]]
         for _x in range(num_columns):
             columns.append([])
 
@@ -169,7 +172,7 @@ class GroupedBoxesLayout(Layout):
                       show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
-        html.open_table(class_="groupheader", cellspacing=0, cellpadding=0, border=0)
+        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
         html.open_tr(class_="groupheader")
         painted = False
         for cell in group_cells:
@@ -307,7 +310,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
 
     # First create dictionaries for each found group containing the
     # group spec and the row indizes of the grouped rows
-    groups = {}
+    groups = {}  # type: Dict[Any, Tuple[Any, List[Any]]]
     current_group = None
     group_id = None
     last_row_group = None
@@ -339,7 +342,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
             if current_group is None or current_group != group_spec:
                 continue  # skip grouping first row
 
-            elif current_group == group_spec:
+            if current_group == group_spec:
                 row = rows.pop(index)
                 rows.insert(index - len(groups[group_id][1]), row)
                 continue
@@ -614,9 +617,9 @@ class LayoutTable(Layout):
                         html.open_td(class_="groupheader",
                                      colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
                         html.open_table(class_="groupheader",
-                                        cellspacing=0,
-                                        cellpadding=0,
-                                        border=0)
+                                        cellspacing="0",
+                                        cellpadding="0",
+                                        border="0")
                         html.open_tr()
                         painted = False
                         for cell in group_cells:
@@ -881,13 +884,15 @@ class LayoutMatrix(Layout):
         return majorities.get(None, {})
 
     def _matrix_find_majorities(self, rows, cells, for_header=False):
-        counts = {}  # dict row_id -> cell_nr -> value -> count
+        # dict row_id -> cell_nr -> value -> count
+        counts = {}  # type: Dict[Any, Dict[Any, Any]]
 
         for row in rows:
             if for_header:
-                rid = None
+                rid = None  # type: Optional[Tuple]
             else:
-                rid = tuple(group_value(row, [cells[0]]))
+                # TODO: WTF???
+                rid = tuple(group_value(row, [cells[0]]))  # type: ignore[arg-type]
 
             for cell_nr, cell in enumerate(cells[1:]):
                 value = group_value(row, [cell])
@@ -897,7 +902,8 @@ class LayoutMatrix(Layout):
                 cell_entry[value] += 1
 
         # Now find majorities for each row
-        majorities = {}  # row_id -> cell_nr -> majority value
+        # row_id -> cell_nr -> majority value
+        majorities = {}  # type: Dict[Any, Dict[Any, Any]]
         for rid, row_entry in counts.items():
             maj_entry = majorities.setdefault(rid, {})
             for cell_nr, cell_entry in row_entry.items():
@@ -931,10 +937,12 @@ def create_matrices(rows, group_cells, cells, num_columns):
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts
     # in the matrix
-    groups = []
+    groups = []  # type: List[Tuple[Any, Any]]
     last_group_id = None
-    unique_row_ids = []  # not a set, but a list. Need to keep sort order!
-    matrix_cells = {}  # Dict from row_id -> group_id -> row
+    # not a set, but a list. Need to keep sort order!
+    unique_row_ids = []  # type: List[Any]
+    # Dict from row_id -> group_id -> row
+    matrix_cells = {}  # type: Dict[Any, Dict[Any, Any]]
     col_num = 0
 
     for row in rows:

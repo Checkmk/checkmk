@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import sys
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.pages
 
 
@@ -93,6 +99,7 @@ def test_registered_pages():
         'search_open',
         'side',
         'sidebar_add_snapin',
+        'sidebar_ajax_add_snapin',
         'sidebar_ajax_set_snapin_site',
         'sidebar_ajax_speedometer',
         'sidebar_ajax_tag_tree',
@@ -122,7 +129,7 @@ def test_registered_pages():
         'ajax_render_graph_content',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_pages += [
             'ajax_metric_choice',
             'ajax_pagetype_add_element',

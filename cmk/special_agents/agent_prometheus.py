@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent for monitoring Prometheus with Checkmk.
 """
@@ -30,8 +10,9 @@ import ast
 import sys
 import argparse
 import json
+import time
 import logging
-from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable
+from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
 from collections import OrderedDict, defaultdict
 import math
 from urllib.parse import quote, urljoin
@@ -74,6 +55,211 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
+class NodeExporter:
+    def __init__(self, api_client):
+        self.api_client = api_client
+
+    def df_summary(self):
+        # type: () -> List[str]
+
+        # value division by 1000 because of Prometheus format
+        df_list = [
+            ("available", "node_filesystem_avail_bytes/1000"),
+            ("size", "node_filesystem_size_bytes/1000"),
+            ("used", "(node_filesystem_size_bytes - node_filesystem_free_bytes)/1000"),
+        ]
+        return self._process_filesystem_queries(df_list)
+
+    def df_inodes_summary(self):
+        # type: () -> List[str]
+
+        # no value division for inodes as format already correct
+        inodes_list = [("available", "node_filesystem_files_free"),
+                       ("used", "node_filesystem_files - node_filesystem_files_free"),
+                       ("size", "node_filesystem_files")]
+        return self._process_filesystem_queries(inodes_list)
+
+    def _process_filesystem_queries(self, promql_list):
+        # type: (List[Tuple[str, str]]) -> List[str]
+
+        temp_result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
+        for entity_name, promql_query in promql_list:
+            for mountpoint_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                mountpoint_dict = temp_result.setdefault(mountpoint_info["labels"]["device"], {})
+                if "name" not in mountpoint_dict:
+                    mountpoint_dict["name"] = mountpoint_info["labels"]["device"]
+                if "type" not in mountpoint_dict:
+                    mountpoint_dict["type"] = mountpoint_info["labels"]["fstype"]
+                if "mountpoint" not in mountpoint_dict:
+                    mountpoint_dict["mountpoint"] = mountpoint_info["labels"]["mountpoint"]
+                mountpoint_dict[entity_name] = int(float(mountpoint_info["value"]))
+
+        result = []  # type: List[str]
+        for _device, device_info in temp_result.items():
+            if all(k in device_info for k in ("type", "size", "used", "available", "mountpoint")):
+                device_parsed = "{name} {type} {size} {used} {available} None {mountpoint}".format(
+                    **device_info)
+                result.append(device_parsed)
+        return result
+
+    def diskstat_summary(self):
+        # type: () -> List[str]
+
+        diskstat_list = [("reads_completed", "node_disk_reads_completed_total"),
+                         ("reads_merged", "node_disk_reads_merged_total"),
+                         ("sectors_read", "node_disk_read_bytes_total/512"),
+                         ("time_reading", "node_disk_read_time_seconds_total*1000"),
+                         ("writes_completed", "node_disk_writes_completed_total"),
+                         ("writes_merged", "node_disk_writes_merged_total"),
+                         ("sectors_written", "node_disk_written_bytes_total/512"),
+                         ("time_spent_writing", "node_disk_write_time_seconds_total*1000"),
+                         ("ios_progress", "node_disk_io_now"),
+                         ("time_io", "node_disk_io_time_seconds_total*1000"),
+                         ("weighted_time_io", "node_disk_io_time_weighted_seconds_total"),
+                         ("discards_completed", "node_disk_io_time_weighted_seconds_total"),
+                         ("discards_merged", "node_disk_io_time_weighted_seconds_total"),
+                         ("sectors_discarded", "node_disk_discarded_sectors_total"),
+                         ("time_discarding", "node_disk_discard_time_seconds_total * 1000")]
+
+        return self._process_diskstat_info(diskstat_list,
+                                           self._retrieve_diskstat_info(diskstat_list))
+
+    def _process_diskstat_info(self, diskstat_list, diskstat_info_dict):
+        # type: (List[Tuple[str, str]], Dict[str, Dict[str, Union[int, str]]]) -> List[str]
+
+        result = []  # type: List[str]
+        diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
+        result.append("%d" % time.time())
+        for _device_name, device_info in diskstat_info_dict.items():
+            if all(k in device_info for k in diskstat_entities_list):
+                device_parsed = "None None {device} {reads_completed} {reads_merged} {sectors_read} {time_reading} {writes_completed} " \
+                                "{writes_merged} {sectors_written} {time_spent_writing} {ios_progress} {time_io} {weighted_time_io} " \
+                                "{discards_completed} {discards_merged} {sectors_discarded} {time_discarding}".format(**device_info)
+                result.append(device_parsed)
+        return result
+
+    def _retrieve_diskstat_info(self, diskstat_list):
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, Union[int, str]]]
+
+        result = {}  # type: Dict[str, Dict[str, Union[int, str]]]
+        for entity_name, promql_query in diskstat_list:
+            for device_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                device_dict = result.setdefault(device_info["labels"]["device"], {})
+                if "device" not in device_dict:
+                    device_dict["device"] = device_info["labels"]["device"]
+                device_dict[entity_name] = int(float(device_info["value"]))
+        return result
+
+    def memory_summary(self):
+        memory_list = [
+            ("MemTotal", "node_memory_MemTotal_bytes/1024"),
+            ("MemFree", "node_memory_MemFree_bytes/1024"),
+            ("MemAvailable", "node_memory_MemAvailable_bytes/1024"),
+            ("Buffers", "node_memory_Buffers_bytes/1024"),
+            ("Cached", "node_memory_Cached_bytes/1024"),
+            ("SwapCached", "node_memory_SwapCached_bytes/1024"),
+            ("Active(anon)", "node_memory_Active_bytes/1024"),
+            ("Inactive(anon)", "node_memory_Inactive_bytes/1024"),
+            ("Active(file)", "node_memory_Active_file_bytes/1024"),
+            ("Inactive(file)", "node_memory_Inactive_bytes/1024"),
+            ("Unevctaible", "node_memory_Unevictable_bytes/1024"),
+            ("Mlocked", "node_memory_Mlocked_bytes/1024"),
+            ("SwapTotal", "node_memory_SwapTotal_bytes/1024"),
+            ("SwapFree", "node_memory_SwapFree_bytes/1024"),
+            ("Dirty", "node_memory_Dirty_bytes/1024"),
+            ("Writeback", "node_memory_Writeback_bytes/1024"),
+            ("AnonPages", "node_memory_AnonPages_bytes/1024"),
+            ("Mapped", "node_memory_AnonPages_bytes/1024"),
+            ("Shmem", "node_memory_Shmem_bytes/1024"),
+            ("KReclaimable", "node_memory_KReclaimable_bytes/1024"),
+            ("Slab", "node_memory_Slab_bytes/1024"),
+            ("SReclaimable", "node_memory_SReclaimable_bytes/1024"),
+            ("SUnreclaim", "node_memory_SUnreclaim_bytes/1024"),
+            ("KernelStack", "node_memory_KernelStack_bytes/1024"),
+            ("PageTables", "node_memory_PageTables_bytes/1024"),
+            ("NFS_Unstable", "node_memory_NFS_Unstable_bytes/1024"),
+            ("Bounce", "node_memory_Bounce_bytes/1024"),
+            ("WritebackTmp", "node_memory_WritebackTmp_bytes/1024"),
+            ("CommitLimit", "node_memory_CommitLimit_bytes/1024"),
+            ("Committed_AS", "node_memory_Committed_AS_bytes/1024"),
+            ("VmallocTotal", "node_memory_VmallocTotal_bytes/1024"),
+            ("VmallocUsed", "node_memory_VmallocUsed_bytes/1024"),
+            ("VmallocChunk", "node_memory_VmallocChunk_bytes/1024"),
+            ("Percpu", "node_memory_Percpu_bytes/1024"),
+            ("HardwareCorrupted", "node_memory_HardwareCorrupted_bytes/1024"),
+            ("AnonHugePages", "node_memory_AnonHugePages_bytes/1024"),
+            ("ShmemHugePages", "node_memory_ShmemHugePages_bytes/1024"),
+            ("ShmemPmdMapped", "node_memory_ShmemPmdMapped_bytes/1024"),
+            ("CmaTotal", "node_memory_CmaTotal_bytes/1024"),
+            ("CmaFree", "node_memory_CmaFree_bytes/1024"),
+            ("HugePages_Total", "node_memory_HugePages_Total/1024"),
+            ("HugePages_Free", "node_memory_HugePages_Free/1024"),
+            ("HugePages_Rsvd", "node_memory_HugePages_Rsvd/1024"),
+            ("HugePages_Surp", "node_memory_HugePages_Surp/1024"),
+            ("Hugepagesize", "node_memory_Hugepagesize_bytes/1024"),
+            ("Hugetlb", "node_memory_Hugetlb_bytes/1024"),
+            ("DirectMap4k", "node_memory_DirectMap4k_bytes/1024"),
+            ("DirectMap2M", "node_memory_DirectMap2M_bytes/1024"),
+            ("DirectMap1G", "node_memory_DirectMap1G_bytes/1024"),
+        ]
+
+        return self._generate_memory_stats(memory_list)
+
+    def _generate_memory_stats(self, promql_list):
+        result = []
+        for entity_name, promql_query in promql_list:
+            promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
+            if len(promql_result) != 1:
+                return []
+            result.append("{}: {} kb".format(entity_name, promql_result[0]["value"]))
+        return result
+
+    def kernel_summary(self):
+        # type: () -> List[str]
+
+        kernel_list = [("cpu", "sum by (mode)(node_cpu_seconds_total*100)"),
+                       ("cpu", "node_cpu_seconds_total*100"),
+                       ("guest", "sum by (mode)(node_cpu_guest_seconds_total)"),
+                       ("guest", "node_cpu_guest_seconds_total"),
+                       ("ctxt", "node_context_switches_total"), ("pswpin", "node_vmstat_pswpin"),
+                       ("pwpout", "node_vmstat_pswpout"), ("pgmajfault", "node_vmstat_pgmajfault")]
+        return self._process_kernel_info(self._retrieve_kernel_info(kernel_list))
+
+    @staticmethod
+    def _process_kernel_info(temp_result):
+        # type: (Dict[str, Dict[str, int]]) -> List[str]
+
+        result = ["%d" % time.time()]  # type: List[str]
+        for entity_name, entity_info in temp_result.items():
+            if entity_name.startswith("cpu"):
+                entity_parsed = "{cpu} {user} {nice} {system} {idle} {iowait} {irq} " \
+                                "{softirq} {steal} {guest_user} {guest_nice}".format(cpu=entity_name, **entity_info)
+                result.append(entity_parsed)
+            else:
+                result.append("{} {}".format(entity_name, entity_info["value"]))
+        return result
+
+    def _retrieve_kernel_info(self, kernel_list):
+        # type: (List[Tuple[str, str]]) -> Dict[str, Dict[str, int]]
+        result = {}  # type: Dict[str, Dict[str, int]]
+
+        for entity_name, promql_query in kernel_list:
+            for device_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                metric_value = int(float(device_info["value"]))
+                if entity_name in ("cpu", "guest"):
+                    labels = device_info["labels"]
+                    cpu_name = "cpu{}".format(labels["cpu"]) if "cpu" in labels else "cpu"
+                    mode_name = "guest_{}".format(
+                        labels["mode"]) if entity_name == "guest" else labels["mode"]
+                    result.setdefault(cpu_name, {})[mode_name] = metric_value
+                else:
+                    result[entity_name] = {"value": metric_value}
+        return result
+
+
 class CAdvisorExporter:
     def __init__(self, api_client, options):
         self.api_client = api_client
@@ -95,7 +281,8 @@ class CAdvisorExporter:
         self.container_ids.update(container_ids)
         self.pod_containers.update(result)
 
-    def diskstat_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def diskstat_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         disk_info = {
             "disk_utilisation":
                 'sum by ({{group_element}})(container_fs_usage_bytes{exclusion}) / '
@@ -107,7 +294,8 @@ class CAdvisorExporter:
         }
         return self._retrieve_formatted_cadvisor_info(disk_info, group_element)
 
-    def cpu_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def cpu_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         # Reference ID: 34923788
         cpu_info = {
             "cpu_user": 'sum by ({{group_element}})(rate(container_cpu_user_seconds_total{exclusion}[5m])*100)',
@@ -115,7 +303,8 @@ class CAdvisorExporter:
         }
         return self._retrieve_formatted_cadvisor_info(cpu_info, group_element)
 
-    def df_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def df_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         df_info = {
             "df_size": 'sum by ({{group_element}})(container_fs_limit_bytes{exclusion})',
             "df_used": 'sum by ({{group_element}})(container_fs_usage_bytes{exclusion})',
@@ -124,7 +313,8 @@ class CAdvisorExporter:
         }
         return self._retrieve_formatted_cadvisor_info(df_info, group_element)
 
-    def if_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def if_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         if_info = {
             "if_in_total": 'sum by ({{group_element}})(rate(container_network_receive_bytes_total{exclusion}[5m]))',
             "if_in_discards": 'sum by ({{group_element}})(rate(container_network_receive_packets_dropped_total{exclusion}[5m]))',
@@ -135,7 +325,8 @@ class CAdvisorExporter:
         }
         return self._retrieve_formatted_cadvisor_info(if_info, group_element)
 
-    def memory_pod_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def memory_pod_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         memory_info = {
             "memory_usage_pod": 'container_memory_usage_bytes{pod!="", container=""}',
             "memory_limit": 'sum by(pod)(container_spec_memory_limit_bytes{container!=""})',
@@ -155,7 +346,8 @@ class CAdvisorExporter:
 
         return result_temp
 
-    def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def memory_container_summary(self, group_element):
+        # type: (str) -> List[Dict[str, Dict[str, Any]]]
         memory_info = {
             "memory_usage_container": 'sum by (pod, container, name)(container_memory_usage_bytes{container!=""})',
             "memory_rss": 'container_memory_rss{container!=""}',
@@ -176,7 +368,9 @@ class CAdvisorExporter:
 
         return result_temp
 
-    def _retrieve_formatted_cadvisor_info(self, entity_info: Dict[str, str], group_element: str):
+    def _retrieve_formatted_cadvisor_info(self, entity_info, group_element):
+        # type: (Dict[str, str], str) ->  List[Dict[str, Dict[str, Any]]]
+
         exclusion_element = '{{container!="POD",container!=""}}' if group_element == "container" else '{{container!=""}}'
 
         for metric_name, metric_promql in entity_info.items():
@@ -184,8 +378,8 @@ class CAdvisorExporter:
 
         return self._retrieve_cadvisor_info(entity_info, group_element)
 
-    def _retrieve_cadvisor_info(self, entity_info: Dict[str, str],
-                                group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+    def _retrieve_cadvisor_info(self, entity_info, group_element):
+        # type: (Dict[str, str], str) -> List[Dict[str, Dict[str, Any]]]
         result = []
         group_element = "name" if group_element == "container" else group_element
         for entity_name, entity_promql in entity_info.items():
@@ -213,11 +407,367 @@ class CAdvisorExporter:
         return promql_result_new
 
 
+class KubeStateExporter:
+    def __init__(self, api_client, clustername):
+        self.api_client = api_client
+        self.cluster_name = clustername
+
+    # CLUSTER SECTION
+
+    def cluster_resources_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+        # Cluster Section
+        resources_list = [
+            ("allocatable", "cpu", "sum(kube_node_status_allocatable_cpu_cores)"),
+            ("allocatable", "memory", "sum(kube_node_status_allocatable_memory_bytes)"),
+            ("allocatable", "pods", "sum(kube_node_status_allocatable_pods)"),
+            ("capacity", "cpu", "sum(kube_node_status_capacity_cpu_cores)"),
+            ("capacity", "memory", "sum(kube_node_status_capacity_memory_bytes)"),
+            ("capacity", "pods", "sum(kube_node_status_capacity_pods)"),
+            ("requests", "cpu", "sum(kube_pod_container_resource_requests_cpu_cores)"),
+            ("requests", "memory", "sum(kube_pod_container_resource_requests_memory_bytes)"),
+        ]
+        result = {}  # type: Dict[str, Dict[str, Any]]
+        for resource_family, resource_type, promql_query in resources_list:
+            for cluster_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                cluster_value = int(cluster_info["value"]) if resource_type == "pods" else float(
+                    cluster_info["value"])
+                result.setdefault(self.cluster_name,
+                                  {}).setdefault(resource_family, {})[resource_type] = cluster_value
+        # Adding the limits seperately
+        result[self.cluster_name].update(self._cluster_limits())
+        return [result]
+
+    def _cluster_limits(self):
+        # type: () -> Dict[str, Dict[str, float]]
+        cluster_limit_queries = {
+            "cpu": "sum(kube_pod_container_resource_limits_cpu_cores)",
+            "memory": "sum(kube_pod_container_resource_limits_memory_bytes)"
+        }
+        valid_node_limits = self._nodes_limits()
+        node_number = int(
+            self.api_client.perform_multi_result_promql("count(kube_node_info)").promql_metrics[0]
+            ["value"])
+        cluster_limits = {}
+        for limit_type, nodes in valid_node_limits.items():
+            if len(nodes) == node_number:
+                limit_value = float(
+                    self.api_client.perform_multi_result_promql(
+                        cluster_limit_queries[limit_type]).promql_metrics[0]["value"])
+            else:
+                limit_value = float("inf")
+            cluster_limits[limit_type] = limit_value
+        return {"limits": cluster_limits}
+
+    def storage_classes_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        result = {}  # type: Dict[str, Dict[str, Any]]
+        for cluster_storage_dict in self.api_client.perform_multi_result_promql(
+                "kube_storageclass_info").promql_metrics:
+            storage_labels = cluster_storage_dict["labels"]
+            storage_dict = result.setdefault(self.cluster_name,
+                                             {}).setdefault(storage_labels["storageclass"], {})
+            storage_dict["reclaim_policy"] = storage_labels["reclaimPolicy"]
+            storage_dict["provisioner"] = storage_labels["provisioner"]
+        return [result]
+
+    def namespaces_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        # Cluster Section
+        node_result = {}  # type: Dict[str, Dict[str, Any]]
+        for namespace_dict in self.api_client.perform_multi_result_promql(
+                "kube_namespace_status_phase").promql_metrics:
+            namespace_labels = namespace_dict["labels"]
+            if int(namespace_dict["value"]):
+                node_result.setdefault(self.cluster_name,
+                                       {}).setdefault(namespace_labels["namespace"],
+                                                      {})["status"] = {
+                                                          "phase": namespace_labels["phase"]
+                                                      }
+        return [node_result]
+
+    def cluster_node_info(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        nodes_list = [
+            node_info["labels"]["node"] for node_info in
+            self.api_client.perform_multi_result_promql("kube_node_info").promql_metrics
+        ]
+        return [{self.cluster_name: {"nodes": nodes_list}}]
+
+    # NODE SECTION
+
+    def node_conditions_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        # Eventually consider adding PID Pressure in check
+        node_conditions_info = {
+            "DiskPressure": 'kube_node_status_condition{condition="DiskPressure"}',
+            "MemoryPressure": 'kube_node_status_condition{condition="MemoryPressure"}',
+            "Ready": 'kube_node_status_condition{condition="Ready"}',
+        }
+        result = []  # type: List[Dict[str, Dict[str, Any]]]
+        for entity_name, promql_query in node_conditions_info.items():
+            node_result = {}  # type: Dict[str, Dict[str, Any]]
+            for node_condition_dict in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                node_condition_labels = node_condition_dict["labels"]
+                if int(node_condition_dict["value"]):
+                    node_result.setdefault(
+                        node_condition_labels["node"],
+                        {})[entity_name] = node_condition_labels["status"].capitalize()
+            result.append(node_result)
+        return result
+
+    def node_resources(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        resources_list = [
+            ("allocatable", "cpu", "sum by (node)(kube_node_status_allocatable_cpu_cores)"),
+            ("allocatable", "memory", "sum by (node)(kube_node_status_allocatable_memory_bytes)"),
+            ("allocatable", "pods", "sum by (node)(kube_node_status_allocatable_pods)"),
+            ("capacity", "cpu", 'kube_node_status_capacity{resource="cpu"}'),
+            ("capacity", "memory", 'kube_node_status_capacity{resource="memory"}'),
+            ("capacity", "pods", 'kube_node_status_capacity{resource="pods"}'),
+            ("requests", "cpu", "sum by (node)(kube_pod_container_resource_requests_cpu_cores)"),
+            ("requests", "memory",
+             "sum by (node)(kube_pod_container_resource_requests_memory_bytes)"),
+            ("requests", "pods", "count by (node)(kube_pod_info)"),
+            ("limits", "cpu", "sum by (node)(kube_pod_container_resource_limits_cpu_cores)"),
+            ("limits", "memory", "sum by (node)(kube_pod_container_resource_limits_memory_bytes)"),
+        ]
+
+        node_valid_limits = self._nodes_limits()
+
+        result = {}  # type: Dict[str, Dict[str, Any]]
+        for resource_family, resource_type, promql_query in resources_list:
+            for node_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                if resource_family == "limits" and node_info["labels"][
+                        "node"] not in node_valid_limits[resource_type]:
+                    value = float("inf")
+                else:
+                    value = int(node_info["value"]) if resource_type == "pods" else float(
+                        node_info["value"])
+                result.setdefault(node_info["labels"]["node"],
+                                  {}).setdefault(resource_family, {})[resource_type] = value
+        return [result]
+
+    def _nodes_limits(self):
+        # type: () -> Dict[str, List[str]]
+
+        pods_count_expressions = [
+            ("total", "count by (node)(kube_pod_info)"),
+            ("with_cpu_limits",
+             "count by (node)(count by (pod, node)(kube_pod_container_resource_limits_cpu_cores))"),
+            ("with_memory_limits",
+             "count by (node)(count by (pod, node)(kube_pod_container_resource_requests_memory_bytes))"
+            )
+        ]
+
+        node_pods = {}  # type: Dict[str, Dict[str, str]]
+        for pod_count_type, promql_query in pods_count_expressions:
+            for count_result in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                node_pods.setdefault(count_result["labels"]["node"],
+                                     {})[pod_count_type] = count_result["value"]
+
+        nodes_with_limits = {"memory": [], "cpu": []}  # type: Dict[str, List[str]]
+
+        for node, pods_count in node_pods.items():
+            entity_total_pods = pods_count["total"]
+            if entity_total_pods == pods_count["with_cpu_limits"]:
+                nodes_with_limits["cpu"].append(node)
+            if entity_total_pods == pods_count["with_memory_limits"]:
+                nodes_with_limits["memory"].append(node)
+        return nodes_with_limits
+
+    # PODS SECTION
+
+    def pod_conditions_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        # Unschedulable missing for now
+        pod_conditions_info = [
+            ("PodScheduled", "kube_pod_status_scheduled"),
+            ("Ready", "kube_pod_status_ready"),
+            ("ContainersReady",
+             "sum by (pod)(kube_pod_container_status_ready) / count by (pod)(kube_pod_container_status_ready)"
+            ),
+        ]
+        result = []
+        for promql_metric, promql_query in pod_conditions_info:
+            promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
+            if promql_metric == "ContainersReady":
+                for node_ready_dict in promql_result:
+                    ready_result = {}
+                    ready_status = "True" if int(node_ready_dict["value"]) == 1 else "False"
+                    ready_result[node_ready_dict["labels"]["pod"]] = {promql_metric: ready_status}
+                    result.append(ready_result)
+            else:
+                schedule_result = {}  # type: Dict[str, Dict[str, Any]]
+                for node_condition_dict in promql_result:
+                    node_condition_labels = node_condition_dict["labels"]
+                    if int(node_condition_dict["value"]):
+                        schedule_result.setdefault(
+                            node_condition_labels["pod"],
+                            {})[promql_metric] = node_condition_labels["condition"].capitalize()
+                result.append(schedule_result)
+        return result
+
+    def pod_container_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        info = [("waiting", "kube_pod_container_status_waiting"),
+                ("running", "kube_pod_container_status_running"),
+                ("ready", "kube_pod_container_status_ready"),
+                ("terminated", "kube_pod_container_status_terminated")]
+        pod_container_result = []
+        for condition, promql_query in info:
+            temp_result = {}  # type: Dict[str, Dict[str, Any]]
+            for container_info in self.api_client.perform_multi_result_promql(
+                    promql_query).promql_metrics:
+                labels = container_info["labels"]
+                query_value = int(container_info["value"])
+                metric_dict = temp_result.setdefault(labels["pod"],
+                                                     {}).setdefault(labels["container"], {})
+
+                if condition == "ready":
+                    metric_dict["ready"] = bool(query_value)
+                elif condition == "terminated":
+                    metric_dict["state_exit_code"] = query_value
+                    if query_value:
+                        metric_dict["state"] = "terminated"
+                else:
+                    if query_value:
+                        metric_dict["state"] = condition
+
+                if temp_result:
+                    pod_container_result.append(temp_result)
+
+        return pod_container_result
+
+    def pod_resources_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        pods_container_count = self.api_client.perform_multi_result_promql(
+            "count by (pod)(kube_pod_container_info)").get_value_only_dict("pod")
+
+        resources_list = [
+            ("requests", "cpu", "sum by (pod)(kube_pod_container_resource_requests_cpu_cores)"),
+            ("requests", "memory", "kube_pod_container_resource_requests_memory_bytes"),
+            ("limits", "cpu", "kube_pod_container_resource_limits_cpu_cores"),
+            ("limits", "memory", "kube_pod_container_resource_limits_memory_bytes")
+        ]
+
+        def _process_resources(resource, query):
+            # type: (str, str) -> Dict[str, Dict[str, Dict[str, float]]]
+
+            pod_resources = {}  # type: Dict[str, Dict[str, Dict[str, float]]]
+            promql_result = self.api_client.perform_multi_result_promql(
+                query).get_value_only_piggybacked_services(resource, "pod")
+            for pod in pods_container_count.keys():
+                resource_value = 0.0 if pod not in promql_result else promql_result[pod][resource]
+                pod_resources.setdefault(pod, {}).setdefault(resource_family,
+                                                             {})[resource] = resource_value
+            return pod_resources
+
+        def _process_limits(resource, query):
+            # type: (str, str) -> Dict[str, Dict[str, Dict[str, float]]]
+
+            promql_limits = self.api_client.perform_multi_result_promql(
+                "sum by (pod)(%s)" % query).get_value_only_dict("pod")
+            promql_counts = self.api_client.perform_multi_result_promql(
+                "count by (pod)(%s)" % query).get_value_only_dict("pod")
+
+            pod_limits = {}  # type: Dict[str, Dict[str, Dict[str, float]]]
+            for pod in pods_container_count.keys():
+                if pod in promql_limits and promql_counts[pod] == pods_container_count[pod]:
+                    limit_value = promql_limits[pod]
+                else:
+                    limit_value = float("inf")
+                pod_limits.setdefault(pod, {}).setdefault("limits", {})[resource] = limit_value
+            return pod_limits
+
+        result = []
+        for resource_family, resource_type, promql_query in resources_list:
+            if resource_family == "requests":
+                resource_results = _process_resources(resource_type, promql_query)
+            else:
+                resource_results = _process_limits(resource_type, promql_query)
+            result.append(resource_results)
+
+        return result
+
+    def daemon_pods_summary(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        daemon_pods_info = {
+            "number_ready": "kube_daemonset_status_number_ready",
+            "desired_number_scheduled": "kube_daemonset_status_desired_number_scheduled",
+            "current_number_scheduled": "kube_daemonset_status_current_number_scheduled",
+            "updated_number_scheduled": "kube_daemonset_updated_number_scheduled",
+            "number_available": "kube_daemonset_status_number_available",
+            "number_unavailable": "kube_daemonset_status_number_unavailable"
+        }
+        result = []
+        for entity_name, promql_query in daemon_pods_info.items():
+            promql_result = self.api_client.perform_multi_result_promql(
+                promql_query).get_value_only_piggybacked_services(
+                    metric_description=entity_name,
+                    promql_label_for_piggyback="daemonset",
+                    number_convert="int")
+            result.append(promql_result)
+        return result
+
+    def services_selector(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        # Cluster Section
+        service_label_translation = {
+            "label_k8s_app": "k8s-app",
+            "label_app_kubernetes_io_name": "app.kubernetes.io/name"
+        }
+        result = {}  # type: Dict[str, Dict[str, Any]]
+        for service_info in self.api_client.perform_multi_result_promql(
+                "kube_service_labels").promql_metrics:
+            service_labels = service_info["labels"]
+            service_piggyback = result.setdefault(service_labels["service"], {})
+            if len(service_labels) == 5:
+                service_piggyback["name"] = service_labels["service"]
+            else:
+                for label_key, label_value in service_labels.items():
+                    if label_value == service_labels["service"] and label_key != "service":
+                        service_piggyback.update(
+                            {service_label_translation.get(label_key, label_key): label_value})
+        return [result]
+
+    def services_info(self):
+        # type: () -> List[Dict[str, Dict[str, Any]]]
+
+        result = {}  # type: Dict[str, Dict[str, Any]]
+        for service_info in self.api_client.perform_multi_result_promql(
+                "kube_service_info").promql_metrics:
+            service_labels = service_info["labels"]
+            service_piggyback = result.setdefault(service_labels["service"], {})
+            service_piggyback.update({
+                "cluster_ip": service_labels["cluster_ip"],
+                "load_balance_ip": service_labels["load_balancer_ip"]
+                                   if service_labels["load_balancer_ip"] else "null"
+            })
+        return [result]
+
+
 class PromQLResponse:
-    def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
+    def __init__(self, promql_response):
+        # type: (List[Dict[str, Any]]) -> None
         self.response = promql_response
 
-    def process_single_result(self) -> Dict[str, Any]:
+    def process_single_result(self):
+        # type: () -> Dict[str, Any]
         """Process the PromQL response which is restricted to 1 single element
 
         Returns: The queried PromQL metric for entity_name, entity_promql in entity_info.items()
@@ -234,25 +784,31 @@ class PromQLResponse:
         return {"invalid_info": inv_info}
 
     @staticmethod
-    def _extract_metric_value(promql_metric: Dict[str, Any]) -> Dict[str, float]:
+    def _extract_metric_value(promql_metric):
+        # type: (Dict[str, Any]) -> Dict[str, float]
+
         if "value" in promql_metric:
             return {"value": promql_metric["value"][1]}
         return {}
 
     @staticmethod
-    def _identify_metric_scrape_target(promql_metric_info: PromQLMetric) -> str:
+    def _identify_metric_scrape_target(promql_metric_info):
+        # type: (PromQLMetric) -> str
+
         promql_metric_labels = promql_metric_info["labels"]
         scrape_target_name = "%s-%s" % (promql_metric_labels["job"],
                                         promql_metric_labels["instance"])
         return scrape_target_name
 
     @staticmethod
-    def _extract_metric_label(promql_metric_info: PromQLMetric, label_key: str) -> str:
+    def _extract_metric_label(promql_metric_info, label_key):
+        # type: (PromQLMetric, str) -> str
         return promql_metric_info["labels"][label_key]
 
     @staticmethod
-    def _extract_metric_labels(metric_labels_dict: Dict[str, str],
-                               promql_labels_subset: List[str]) -> str:
+    def _extract_metric_labels(metric_labels_dict, promql_labels_subset):
+        # type: (Dict[str, str], List[str]) -> str
+
         metric_labels_holder = ""
         for promql_label in promql_labels_subset:
             metric_labels_holder += metric_labels_dict[promql_label]
@@ -262,15 +818,14 @@ class PromQLResponse:
 class PromQLMultiResponse(PromQLResponse):
     """PromQL Response where one or more metric results are expected
     """
-    def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
+    def __init__(self, promql_response):
+        # type: (List[Dict[str, Any]]) -> None
         super(PromQLMultiResponse, self).__init__(promql_response)
-        self.labels_overall_frequencies: Dict[str, Dict[str, float]] = {}
+        self.labels_overall_frequencies = {}  # type: Dict[str, Dict[str, float]]
         self.promql_metrics = self._process_multi_result()
 
-    def get_piggybacked_services(
-            self,
-            metric_description: str,
-            promql_label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+    def get_piggybacked_services(self, metric_description, promql_label_for_piggyback=None):
+        # type: (str, Optional[str]) -> Dict[str, Dict[str, Any]]
         """Process PromQL response to get "piggybacked" services
 
         Args:
@@ -281,7 +836,7 @@ class PromQLMultiResponse(PromQLResponse):
             Dict: where key is the piggyback host and the value is a dict containing the services metrics
 
         """
-        result: Dict[str, Dict[str, Any]] = {}
+        result = {}  # type: Dict[str, Dict[str, Any]]
         for promql_metric in self.promql_metrics:
             if promql_label_for_piggyback is not None:
                 piggyback_host = self._extract_metric_label(promql_metric,
@@ -297,11 +852,43 @@ class PromQLMultiResponse(PromQLResponse):
                                                              []).append(promql_metric)
         return result
 
-    def get_piggybacked_services_with_least_labels(
-        self,
-        metric_description: str,
-        promql_label_for_piggyback: Optional[str] = None,
-    ) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    def get_value_only_piggybacked_services(self,
+                                            metric_description,
+                                            promql_label_for_piggyback=None,
+                                            number_convert="float"):
+        # type: (str, Optional[str], str) -> Dict[str, Dict[str, Union[int, float]]]
+
+        result = {}  # type: Dict[str, Dict[str, Union[int, float]]]
+        for promql_metric in self.promql_metrics:
+            if promql_label_for_piggyback is not None:
+                piggyback_host = self._extract_metric_label(promql_metric,
+                                                            promql_label_for_piggyback)
+            else:
+                piggyback_host = self._identify_metric_scrape_target(promql_metric)
+
+            if piggyback_host == "":
+                continue
+
+            if number_convert == "int":
+                metric_value = int(promql_metric["value"])  # type: Union[int, float]
+            elif number_convert == "float":
+                metric_value = float(promql_metric["value"])
+            result.setdefault(piggyback_host, {})[metric_description] = metric_value
+        return result
+
+    def get_value_only_dict(self, key_label):
+        # type: (str) -> Dict[str, float]
+
+        result = {}
+        for promql_metric in self.promql_metrics:
+            result[self._extract_metric_label(promql_metric,
+                                              key_label)] = float(promql_metric["value"])
+        return result
+
+    def get_piggybacked_services_with_least_labels(self,
+                                                   metric_description,
+                                                   promql_label_for_piggyback=None):
+        # type: (str, Optional[str]) -> Dict[str, Dict[str, Dict[str, Any]]]
         """Piggybacked services with subset of unique making PromQL labels
 
         Args:
@@ -320,8 +907,10 @@ class PromQLMultiResponse(PromQLResponse):
                                     {})[metric_description] = unique_least_promql_labels
         return piggybacked_services
 
-    def _process_multi_result(self) -> List[PromQLMetric]:
-        result: List[PromQLMetric] = []
+    def _process_multi_result(self):
+        # type: () -> List[PromQLMetric]
+
+        result = []  # type: List[PromQLMetric]
         if not self.response:
             return result
         for metric in self.response:
@@ -333,14 +922,18 @@ class PromQLMultiResponse(PromQLResponse):
             result.append(metric_info)
         return result
 
-    def _update_labels_overall_frequencies(self, metric_labels: Dict[str, str]) -> None:
+    def _update_labels_overall_frequencies(self, metric_labels):
+        # type: (Dict[str, str]) -> None
+
         for promql_specific_label, metric_specific_label in metric_labels.items():
             promql_specific_label_frequencies = self.labels_overall_frequencies.setdefault(
                 promql_specific_label, defaultdict(int))
             promql_specific_label_frequencies[metric_specific_label] += 1
             promql_specific_label_frequencies["total_count"] += 1
 
-    def _get_unique_least_promql_labels(self) -> List[str]:
+    def _get_unique_least_promql_labels(self):
+        # type: () -> List[str]
+
         information_gains = self._determine_promql_labels_information_gains()
         promql_labels_by_relevance = PromQLMultiResponse._extract_promql_labels_by_relevance(
             information_gains)
@@ -348,7 +941,8 @@ class PromQLMultiResponse(PromQLResponse):
             promql_labels_by_relevance)
         return unique_least_labels
 
-    def _determine_promql_labels_information_gains(self) -> Dict[str, float]:
+    def _determine_promql_labels_information_gains(self):
+        # type: () -> Dict[str, float]
         """Calculates the information gain for each PromQL label
 
         An information gain value of 0 for a PromQL label signifies that all metric labels are the same across the
@@ -371,13 +965,16 @@ class PromQLMultiResponse(PromQLResponse):
         return information_gains
 
     @staticmethod
-    def _determine_single_entropy(p: float) -> float:
+    def _determine_single_entropy(p):
+        # type: (float) -> float
+
         if p > 1.0 or p <= 0.0:
             return 0
         return -p * math.log2(p)
 
     @staticmethod
-    def _extract_promql_labels_by_relevance(information_gains: Dict[str, float]) -> List[str]:
+    def _extract_promql_labels_by_relevance(information_gains):
+        # type: (Dict[str, float]) -> List[str]
         """Creates a list with the PromQL labels sorted by information gain relevance
         """
         promql_labels_by_relevance = [
@@ -387,8 +984,8 @@ class PromQLMultiResponse(PromQLResponse):
             promql_labels_by_relevance.remove("pod_name")
         return promql_labels_by_relevance
 
-    def _determine_unique_least_labels_combination(
-            self, promql_labels_by_relevance: List[str]) -> List[str]:
+    def _determine_unique_least_labels_combination(self, promql_labels_by_relevance):
+        # type: (List[str]) -> List[str]
         """Determines the smallest, valid subset of PromQL labels which allows to uniquely identify
         each PromQL metric from the PromQL query result set. It should be noted that this approach does not
         find the exact solution to the underlying problem as the problem cannot be solved in polynomial time (NP-Hard)
@@ -402,8 +999,10 @@ class PromQLMultiResponse(PromQLResponse):
 
         return promql_labels_by_relevance
 
-    def _verify_all_unique(self, promql_labels_subset: List[str]) -> bool:
-        seen_labels_combination: List[str] = []
+    def _verify_all_unique(self, promql_labels_subset):
+        # type: (List[str]) -> bool
+
+        seen_labels_combination = []  # type: List[str]
         for promql_metric in self.promql_metrics:
             metric_labels_dict = promql_metric["labels"]
             metric_labels_subset = PromQLMultiResponse._extract_metric_labels(
@@ -423,10 +1022,14 @@ class PrometheusServer:
     Query and process general information from the Prometheus Server including
     its own status and the connected scrape targets
     """
-    def __init__(self, api_client: 'PrometheusAPI') -> None:
+    def __init__(self, api_client):
+        # type: ('PrometheusAPI') -> None
+
         self.api_client = api_client
 
-    def scrape_targets_health(self) -> Dict[str, Dict[str, Any]]:
+    def scrape_targets_health(self):
+        # type: () -> Dict[str, Dict[str, Any]]
+
         result = {}
         for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
             result[scrape_target_name] = {
@@ -436,7 +1039,9 @@ class PrometheusServer:
             }
         return result
 
-    def health(self) -> Dict[str, Any]:
+    def health(self):
+        # type: () -> Dict[str, Any]
+
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
 
@@ -445,12 +1050,15 @@ class PrometheusAPI:
     """
     Realizes communication with the Prometheus API
     """
-    def __init__(self, server_address: str) -> None:
+    def __init__(self, server_address):
+        # type: (str) -> None
+
         self.server_address = "http://%s" % server_address
         self.api_endpoint = "%s/api/v1/" % self.server_address
         self.scrape_targets_dict = self._connected_scrape_targets()
 
-    def scrape_targets_attributes(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
+    def scrape_targets_attributes(self):
+        # type: () -> Iterator[Tuple[str, Dict[str, Any]]]
         """Format the scrape_targets_dict for information processing
 
         Returns:
@@ -462,8 +1070,8 @@ class PrometheusAPI:
             scrape_target_name = info["name"]
             yield scrape_target_name, info["attributes"]
 
-    def perform_specified_promql_queries(
-            self, custom_services: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    def perform_specified_promql_queries(self, custom_services):
+        # type: (List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]
         """Prepare Host & Piggyback data from custom defined PromQL expressions
 
         For custom Prometheus services, only allow PromQL expressions which
@@ -479,7 +1087,7 @@ class PrometheusAPI:
                  contains the information of one service including the service metrics
 
         """
-        result: Dict[str, Dict[str, Any]] = {}
+        result = {}  # type:  Dict[str, Dict[str, Any]]
         for service in custom_services:
             # Per default assign resulting service to Prometheus Host
             host_name = service.get("host_name", "")
@@ -505,7 +1113,8 @@ class PrometheusAPI:
             }
         return result
 
-    def query_static_endpoint(self, endpoint: str) -> requests.models.Response:
+    def query_static_endpoint(self, endpoint):
+        # type: (str) -> requests.models.Response
         """Query the given endpoint of the Prometheus API expecting a text response
 
         Args:
@@ -519,7 +1128,8 @@ class PrometheusAPI:
         response.raise_for_status()
         return response
 
-    def perform_multi_result_promql(self, promql_expression: str) -> Optional[PromQLMultiResponse]:
+    def perform_multi_result_promql(self, promql_expression):
+        # type: (str) -> Optional[PromQLMultiResponse]
         """Performs a PromQL query where multi metrics response is allowed
         """
         try:
@@ -530,20 +1140,24 @@ class PrometheusAPI:
 
         return promql_response
 
-    def _query_promql(self, promql: str) -> List[Dict[str, Any]]:
+    def _query_promql(self, promql):
+        # type: (str) -> List[Dict[str, Any]]
+
         api_query_expression = "query?query=%s" % quote(promql)
         promql_request = urljoin(self.api_endpoint, api_query_expression)
         result = self._process_json_request(promql_request)["data"]["result"]
         return result
 
-    def _query_json_endpoint(self, endpoint: str) -> Dict[str, Any]:
+    def _query_json_endpoint(self, endpoint):
+        # type: (str) -> Dict[str, Any]
         """Query the given endpoint of the Prometheus API expecting a json response
         """
         endpoint_request = "%s%s" % (self.server_address, endpoint)
         result = self._process_json_request(endpoint_request)
         return result
 
-    def _connected_scrape_targets(self) -> Dict[str, Any]:
+    def _connected_scrape_targets(self):
+        # type: () -> Dict[str, Any]
         """Query and parse the information concerning the connected Scrape Targets
         """
         result = self._query_json_endpoint("/api/v1/targets")
@@ -551,14 +1165,18 @@ class PrometheusAPI:
         return scrape_targets
 
     @staticmethod
-    def _process_json_request(request: str) -> Dict[str, Any]:
+    def _process_json_request(request):
+        # type: (str) -> Dict[str, Any]
+
         response = requests.get(request)
         response.raise_for_status()
         return response.json()
 
-    def test(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def test(self, result):
+        # type: (Dict[str, Any]) -> Dict[str, Any]
+
         scrape_targets = {}
-        scrape_target_names: DefaultDict[str, int] = defaultdict(int)
+        scrape_target_names = defaultdict(int)  # type: DefaultDict[str, int]
         for scrape_target_info in result["data"]["activeTargets"]:
             scrape_target_labels = scrape_target_info["labels"]
             job_label = scrape_target_labels["job"]
@@ -583,10 +1201,14 @@ class Section:
     """
     An agent section.
     """
-    def __init__(self) -> None:
-        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+    def __init__(self):
+        # type: () -> None
 
-    def insert(self, check_data: Dict[str, Any]) -> None:
+        self._content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+
+    def insert(self, check_data):
+        # type: (Dict[str, Any])-> None
+
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
@@ -596,7 +1218,9 @@ class Section:
                 else:
                     raise ValueError('Key %s is already present and cannot be merged' % key)
 
-    def output(self) -> str:
+    def output(self):
+        # type: ()-> str
+
         return json.dumps(self._content)
 
 
@@ -604,16 +1228,22 @@ class PiggybackHost:
     """
     An element that bundles a collection of sections.
     """
-    def __init__(self) -> None:
-        super(PiggybackHost, self).__init__()
-        self._sections: OrderedDict[str, Section] = OrderedDict()
+    def __init__(self):
+        # type: ()-> None
 
-    def get(self, section_name: str) -> Section:
+        super(PiggybackHost, self).__init__()
+        self._sections = OrderedDict()  # type: OrderedDict[str, Section]
+
+    def get(self, section_name):
+        # type: (str)-> Section
+
         if section_name not in self._sections:
             self._sections[section_name] = Section()
         return self._sections[section_name]
 
-    def output(self) -> List[str]:
+    def output(self):
+        # type: () -> List[str]
+
         data = []
         for name, section in self._sections.items():
             data.append('<<<%s:sep(0)>>>' % name)
@@ -625,21 +1255,28 @@ class PiggybackGroup:
     """
     A group of elements where an element is e.g. a piggyback host.
     """
-    def __init__(self) -> None:
-        self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
+    def __init__(self):
+        # type: () -> None
 
-    def get(self, element_name: str) -> PiggybackHost:
+        self._elements = OrderedDict()  # type: OrderedDict[str, PiggybackHost]
+
+    def get(self, element_name):
+        # type: (str)-> PiggybackHost
+
         if element_name not in self._elements:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
-    def join(self, section_name: str, pairs: Mapping[str, Dict[str, Any]]) -> "PiggybackGroup":
+    def join(self, section_name, pairs):
+        # type: (str, Mapping[str, Dict[str, Any]])-> "PiggybackGroup"
+
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
         return self
 
-    def output(self, piggyback_prefix: str = "") -> List[str]:
+    def output(self, piggyback_prefix=""):
+        # type: (str)-> List[str]
         data = []
         for name, element in self._elements.items():
             data.append('<<<<%s>>>>' % (piggyback_prefix + name))
@@ -653,31 +1290,46 @@ class ApiData:
     Hub for all various metrics coming from different sources including the Prometheus
     Server & the Prometheus Exporters
     """
-    def __init__(self, api_client: PrometheusAPI, exporter_options) -> None:
+    def __init__(self, api_client, exporter_options):
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:
             self.cadvisor_exporter = CAdvisorExporter(api_client, exporter_options["cadvisor"])
 
-    def promql_section(self, custom_services: List[Dict[str, Any]]) -> str:
+        if "kube_state" in exporter_options:
+            self.kube_state_exporter = KubeStateExporter(
+                api_client, exporter_options["kube_state"]["cluster_name"])
+
+        if "node_exporter" in exporter_options:
+            self.node_exporter = NodeExporter(api_client)
+
+    def promql_section(self, custom_services):
+        # type: (List[Dict[str, Any]]) -> str
+
         logging.info("Prometheus PromQl queries")
         e = PiggybackGroup()
         e.join('prometheus_custom',
                self.api_client.perform_specified_promql_queries(custom_services))
         return '\n'.join(e.output())
 
-    def server_info_section(self) -> str:
+    def server_info_section(self):
+        # type: () -> str
+
         logging.info('Prometheus Server Info')
         g = PiggybackHost()
         g.get('prometheus_api_server').insert(self.prometheus_server.health())
         return '\n'.join(g.output())
 
-    def scrape_targets_section(self) -> str:
+    def scrape_targets_section(self):
+        # type: () -> str
+
         e = PiggybackGroup()
         e.join('prometheus_scrape_target', self.prometheus_server.scrape_targets_health())
         return '\n'.join(e.output())
 
-    def cadvisor_section(self, cadvisor_options: Dict[str, List[str]]) -> Iterator[str]:
+    def cadvisor_section(self, cadvisor_options):
+        # type: (Dict[str, List[str]]) -> Iterator[str]
+
         self.cadvisor_exporter.update_pod_containers()
 
         cadvisor_summaries = {
@@ -715,8 +1367,10 @@ class ApiData:
                                                          ["container"])
 
     @staticmethod
-    def _output_cadvisor_summary(cadvisor_service_name: str, retrieve_cadvisor_summary: Callable,
-                                 summary_group_options: List[str]) -> Iterator[str]:
+    def _output_cadvisor_summary(cadvisor_service_name, retrieve_cadvisor_summary,
+                                 summary_group_options):
+        # type: (str, Callable, List[str]) -> Iterator[str]
+
         for group_option in summary_group_options:
             e = PiggybackGroup()
             promql_result = retrieve_cadvisor_summary(group_option)
@@ -725,8 +1379,128 @@ class ApiData:
                 e.join(cadvisor_service_name, diskio_element)
             yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
 
+    def kube_state_section(self, kube_state_options):
+        # type: (Dict[str, List[str]]) -> Iterator[str]
 
-def _extract_config_args(config) -> Dict[str, Any]:
+        kube_state_summaries = {
+            "cluster_resources": self.kube_state_exporter.cluster_resources_summary,
+            "storage_classes": self.kube_state_exporter.storage_classes_summary,
+            "namespaces": self.kube_state_exporter.namespaces_summary,
+            "cluster_node_info": self.kube_state_exporter.cluster_node_info,
+            "node_conditions": self.kube_state_exporter.node_conditions_summary,
+            "node_resources": self.kube_state_exporter.node_resources,
+            "pod_conditions": self.kube_state_exporter.pod_conditions_summary,
+            "pod_container": self.kube_state_exporter.pod_container_summary,
+            "pod_resources": self.kube_state_exporter.pod_resources_summary,
+            "daemon_pods": self.kube_state_exporter.daemon_pods_summary,
+            "services_selector": self.kube_state_exporter.services_selector,
+            "services_info": self.kube_state_exporter.services_info,
+        }
+
+        if "cluster" in kube_state_options:
+            cluster_resources = {
+                "service_name": "k8s_resources",
+                "summary": kube_state_summaries["cluster_resources"]
+            }
+
+            namespaces = {
+                "service_name": "k8s_namespaces",
+                "summary": kube_state_summaries["namespaces"]
+            }
+
+            storage_classes = {
+                "service_name": "k8s_namespaces",
+                "summary": kube_state_summaries["storage_classes"]
+            }
+            yield from self._output_kube_state_summary(
+                [cluster_resources, namespaces, storage_classes])
+
+        if "nodes" in kube_state_options:
+            node_resources = {
+                "service_name": "k8s_resources",
+                "summary": kube_state_summaries["node_resources"]
+            }
+
+            node_conditions = {
+                "service_name": "k8s_conditions",
+                "summary": kube_state_summaries["node_conditions"]
+            }
+            yield from self._output_kube_state_summary([node_resources, node_conditions])
+
+        if "pods" in kube_state_options:
+            pod_resources = {
+                "service_name": "k8s_resources",
+                "summary": kube_state_summaries["pod_resources"]
+            }
+
+            pod_conditions = {
+                "service_name": "k8s_conditions",
+                "summary": kube_state_summaries["pod_conditions"]
+            }
+
+            pod_container = {
+                "service_name": "k8s_pod_container",
+                "summary": kube_state_summaries["pod_container"]
+            }
+            yield from self._output_kube_state_summary(
+                [pod_resources, pod_conditions, pod_container], piggyback_prefix="pod_")
+
+        if "services" in kube_state_options:
+            services_selector = {
+                "service_name": "k8s_service_selector",
+                "summary": kube_state_summaries["services_selector"]
+            }
+
+            services_info = {
+                "service_name": "k8s_service_info",
+                "summary": kube_state_summaries["services_info"]
+            }
+
+            yield from self._output_kube_state_summary([services_selector, services_info],
+                                                       piggyback_prefix="service_")
+
+        if "daemon_sets" in kube_state_options:
+            daemon_pods = {
+                "service_name": "k8s_daemon_pods",
+                "summary": kube_state_summaries["daemon_pods"]
+            }
+            yield from self._output_kube_state_summary([daemon_pods])
+
+    @staticmethod
+    def _output_kube_state_summary(kube_state_services, piggyback_prefix=""):
+        # type: (List[Dict[str, Any]], str) -> Iterator[str]
+        e = PiggybackGroup()
+        for kube_state_service_info in kube_state_services:
+            promql_result = kube_state_service_info["summary"]()
+            for element in promql_result:
+                e.join(kube_state_service_info["service_name"], element)
+        yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
+
+    def node_exporter_section(self, node_options):
+        # type: (Dict[str, List[str]]) -> Iterator[str]
+
+        if "df" in node_options:
+            df_section = [
+                "<<<df>>>", '\n'.join(self.node_exporter.df_summary()), "<<<df>>>",
+                "[df_inodes_start]", '\n'.join(self.node_exporter.df_inodes_summary()),
+                "[df_inodes_end]\n"
+            ]
+            yield "\n".join(df_section)
+
+        if "diskstat" in node_options:
+            df_section = ["<<<diskstat>>>", '\n'.join(self.node_exporter.diskstat_summary()), "\n"]
+            yield "\n".join(df_section)
+
+        if "mem" in node_options:
+            mem_section = ["<<<mem>>>", '\n'.join(self.node_exporter.memory_summary()), "\n"]
+            yield "\n".join(mem_section)
+
+        if "kernel" in node_options:
+            kernel_section = ["<<<kernel>>>", '\n'.join(self.node_exporter.kernel_summary()), "\n"]
+            yield "\n".join(kernel_section)
+
+
+def _extract_config_args(config):
     server_address = config["host_address"]
     if "port" in config:
         server_address += ":%s" % config["port"]
@@ -760,9 +1534,14 @@ def main(argv=None):
         print(api_data.server_info_section())
         print(api_data.scrape_targets_section())
         print(api_data.promql_section(config_args["custom_services"]))
-
         if "cadvisor" in exporter_options:
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))
+        if "kube_state" in exporter_options:
+            print(*list(api_data.kube_state_section(exporter_options["kube_state"]["entities"])))
+        if "node_exporter" in exporter_options:
+            print(*list(
+                api_data.node_exporter_section(exporter_options["node_exporter"]["entities"])))
+
     except Exception as e:
         if args.debug:
             raise

@@ -15,3 +15,5 @@ description:
  In addition to the state, the check displays the following other parameters
  of the server: drsPotentialPower, drsMaxPowerSpecification, drsWattsReading, drsAmpsReading
 
+inventory:
+ One service is created.

@@ -7,13 +7,14 @@
 import abc
 import ast
 import time
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 import six
 from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
 
+import cmk.base.check_utils as check_utils
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
@@ -27,8 +28,10 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, SNMPTable, RawSNMPData, PersistedSNMPSections, SNMPSections, SNMPSectionContent,
     SNMPCredentials,
 )
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import SNMPTree
 
-from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
+from .abstract import DataSource, management_board_ipaddress, verify_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
@@ -223,29 +226,17 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def _execute(self):
         # type: () -> RawSNMPData
-        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
-
-        self._verify_ipaddress()
-
+        verify_ipaddress(self._ipaddress)
         check_plugin_names = self.get_check_plugin_names()
 
         snmp_config = self._snmp_config
         info = {}  # type: RawSNMPData
-        oid_info = None  # type: Optional[OIDInfo]
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
-            has_snmp_info = False
-            section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
-            if section_name in config.snmp_info:
-                oid_info = config.snmp_info[section_name]  # type: ignore[assignment]
-            elif section_name in cmk.base.inventory_plugins.inv_info:
-                oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
-                if oid_info:
-                    has_snmp_info = True
-            else:
-                oid_info = None
+            section_name = check_utils.section_name_of(check_plugin_name)
+            oid_info, has_snmp_info = SNMPDataSource._oid_info_from_section_name(section_name)
 
             if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
                 continue
@@ -254,19 +245,19 @@ class SNMPDataSource(ABCSNMPDataSource):
                 continue
 
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
-            # Skip gathering new data here. The persisted data will be added latera
+            # Skip gathering new data here. The persisted data will be added later
             if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)" %
-                                   (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (persisted info exists)",
+                                   check_plugin_name)
                 continue
 
             # Prevent duplicate data fetching of identical section in case of SNMP sub checks
             if section_name in info:
-                self._logger.debug("%s: Skip fetching data (section already fetched)" %
-                                   (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (section already fetched)",
+                                   check_plugin_name)
                 continue
 
-            self._logger.debug("%s: Fetching data" % (check_plugin_name))
+            self._logger.debug("%s: Fetching data", check_plugin_name)
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
@@ -283,7 +274,26 @@ class SNMPDataSource(ABCSNMPDataSource):
 
         return info
 
-    def _sort_check_plugin_names(self, check_plugin_names):
+    @staticmethod
+    def _oid_info_from_section_name(section_name):
+        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[SNMPTree]], bool]
+        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
+        has_snmp_info = False
+        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
+        snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
+        if snmp_section_plugin:
+            oid_info = snmp_section_plugin.trees
+        elif section_name in cmk.base.inventory_plugins.inv_info:
+            # TODO: merge this into config.registered_snmp_sections!
+            oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
+            if oid_info:
+                has_snmp_info = True
+        else:
+            oid_info = None
+        return oid_info, has_snmp_info
+
+    @staticmethod
+    def _sort_check_plugin_names(check_plugin_names):
         # type: (Set[CheckPluginName]) -> List[CheckPluginName]
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
@@ -344,10 +354,13 @@ class SNMPDataSource(ABCSNMPDataSource):
 # 2. snmpv3 context
 
 
-class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
+class SNMPManagementBoardDataSource(SNMPDataSource):
+    _for_mgmt_board = True
+
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        super(SNMPManagementBoardDataSource, self).__init__(hostname,
+                                                            management_board_ipaddress(hostname))
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

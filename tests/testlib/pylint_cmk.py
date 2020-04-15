@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Check_MK
 
@@ -92,15 +98,16 @@ def get_pylint_files(base_path, file_pattern):
     return files
 
 
-def is_python_file(path):
+def is_python_file(path, shebang_name=None):
+    if shebang_name is None:
+        shebang_name = "python3" if sys.version_info[0] >= 3 else "python"
+
     if not os.path.isfile(path) or os.path.islink(path):
         return False
 
-    check_name = "python3" if sys.version_info[0] >= 3 else "python"
-
     # Only add python files
     shebang = open(path, "r").readline().rstrip()
-    if shebang.startswith("#!") and shebang.endswith(check_name):
+    if shebang.startswith("#!") and shebang.endswith(shebang_name):
         return True
 
     return False

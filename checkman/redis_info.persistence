@@ -13,7 +13,7 @@ description:
  Needs the agent plugin "mk_redis" to be installed.
 
 item:
- The item is the name of the Redis instance.
+ Name of the Redis instance.
 
 inventory:
  One service for each instance {"Redis MY_REDIS Persistence"} will be created.

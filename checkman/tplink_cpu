@@ -1,4 +1,4 @@
-title: TP-LINK switches: CPU utilization
+title: TP-LINK Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/tplink
 license: GPL

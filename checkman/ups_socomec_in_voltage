@@ -8,5 +8,8 @@ description:
 
  Please refer to the manpage of ups_in_voltage for configuration examples.
 
+item:
+ ID of the phase
+
 inventory:
  Supported.

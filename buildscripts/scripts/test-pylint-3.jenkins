@@ -3,7 +3,12 @@ properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-node {
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
         COMMON_IMAGE.pull()
@@ -15,7 +20,7 @@ node {
     }
 }
 
-node {
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def TEST_IMAGE = docker.image('ubuntu-19.04-os-image')
         TEST_IMAGE.pull()

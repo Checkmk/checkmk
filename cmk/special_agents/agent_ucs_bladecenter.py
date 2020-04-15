@@ -9,10 +9,18 @@ import argparse
 import logging
 # opportunity to use lxml.etree as drop-in replacement for ET in the future
 import xml.etree.ElementTree as ET
+from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    StrResult = str
+else:
+    StrResult = Any
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
 from cmk.utils.exceptions import MKException
+
+ElementAttributes = Dict[StrResult, StrResult]
 
 # TODO Add functionality in the future
 #import cmk.utils.password_store
@@ -204,7 +212,7 @@ class Server(object):
         attributes = {
             'inName': self._username,
             'inPassword': self._password,
-        }
+        }  # type: ElementAttributes
 
         root = self._communicate(ET.Element('aaaLogin', attrib=attributes))
         cookie = root.attrib.get('outCookie')
@@ -214,7 +222,7 @@ class Server(object):
 
     def logout(self):
         logging.debug("Server.logout: Logout")
-        attributes = {}
+        attributes = {}  # type: ElementAttributes
         if self._cookie:
             attributes.update({'inCookie': self._cookie})
         self._communicate(ET.Element('aaaLogout', attrib=attributes))
@@ -230,7 +238,7 @@ class Server(object):
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
-        data = {}
+        data = {}  # type: Dict[str, List[Tuple[Any, Any]]]
         for header, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
@@ -280,7 +288,7 @@ class Server(object):
         attributes = {
             'classId': class_id,
             'inHierarchical': 'false',
-        }
+        }  # type: ElementAttributes
         if self._cookie:
             attributes.update({'cookie': self._cookie})
         root = self._communicate(ET.Element('configResolveClass', attrib=attributes))

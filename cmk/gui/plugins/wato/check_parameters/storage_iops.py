@@ -20,29 +20,30 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_storage_iops():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         ("read",
          Tuple(
-             title=_(u"Read IO operations per second"),
+             title=_("Read IO operations per second"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
+                 Float(title=_("Warning at"), unit="1/s"),
+                 Float(title=_("Critical at"), unit="1/s"),
              ],
          )),
         ("write",
          Tuple(
-             title=_(u"Write IO operations per second"),
+             title=_("Write IO operations per second"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
+                 Float(title=_("Warning at"), unit="1/s"),
+                 Float(title=_("Critical at"), unit="1/s"),
              ],
          )),
         ("total",
          Tuple(
-             title=_(u"Total IO operations per second"),
+             title=_("Total IO operations per second"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
+                 Float(title=_("Warning at"), unit="1/s"),
+                 Float(title=_("Critical at"), unit="1/s"),
              ],
          )),
     ],)

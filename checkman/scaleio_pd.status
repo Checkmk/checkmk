@@ -8,7 +8,7 @@ description:
  state will change to {CRIT} if the reported health is not "active".
 
 item:
- The PD id is used as item
+ The PD id
 
 inventory:
  One service for each PD is created

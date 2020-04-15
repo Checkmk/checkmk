@@ -8,6 +8,8 @@ import os
 import errno
 import sys
 import getopt
+from typing import Dict, List, Tuple  # pylint: disable=unused-import
+import six
 import cmk.utils.cmk_subprocess as subprocess
 
 
@@ -48,16 +50,16 @@ def parse_data(data, excludes):
     for line in data:
         if line.startswith("ID"):
             continue
-        elif excludes:
+        if excludes:
             has_excludes = False
             for exclude in excludes:
                 if exclude in line:
                     has_excludes = True
                     break
             if not has_excludes:
-                sys.stdout.write(("%s\n" % line).encode("utf-8"))
+                sys.stdout.write(six.ensure_str("%s\n" % line))
         else:
-            sys.stdout.write(("%s\n" % line).encode("utf-8"))
+            sys.stdout.write(six.ensure_str("%s\n" % line))
 
 
 def main(sys_argv=None):
@@ -89,7 +91,7 @@ def main(sys_argv=None):
         if o in ['--help']:
             agent_ipmi_sensors_usage()
             return 1
-        elif o in ['--debug']:
+        if o in ['--debug']:
             opt_debug = True
 
         # Common options
@@ -139,7 +141,7 @@ def main(sys_argv=None):
                      "-h", hostname, "-u", username,
                      "-p", password, "-l", privilege_lvl ] + \
                      additional_opts
-        queries = {"_sensors": ([], [])}
+        queries = {"_sensors": ([], [])}  # type: Dict[str, Tuple[List[str], List[str]]]
     elif ipmi_cmd_type == 'ipmitool':
         ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
         # As in check_mk_agent
@@ -158,7 +160,7 @@ def main(sys_argv=None):
         sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
 
     errors = []
-    for section, (types, excludes) in queries.iteritems():
+    for section, (types, excludes) in queries.items():
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
@@ -172,20 +174,19 @@ def main(sys_argv=None):
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
-                    raise Exception("Could not find '%s' command (PATH: %s)"\
-                                    % (ipmi_cmd_type, os.environ.get("PATH")))
-                else:
-                    raise
+                    raise Exception("Could not find '%s' command (PATH: %s)" %
+                                    (ipmi_cmd_type, os.environ.get("PATH")))
+                raise
 
             stdout, stderr = p.communicate()
             if stderr:
                 errors.append(stderr)
             parse_data(stdout.splitlines(), excludes)
         except Exception as e:
-            errors.append(e)
+            errors.append(str(e))
 
     if errors:
         msg = "ERROR: '%s'.\n" % ", ".join(errors)
-        sys.stderr.write(msg.encode("utf-8"))
+        sys.stderr.write(six.ensure_str(msg))
         return 1
     return 0

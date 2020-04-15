@@ -1,4 +1,4 @@
-title: BEA Weblogic: Length of queue
+title: BEA Weblogic: Length of Queue
 agents: linux
 catalog: app/java
 license: GPL
@@ -20,7 +20,7 @@ item:
  I.e. webservices webservices
 
 inventory:
- One check is created for each application running inside a weblogic
+ One service is created for each application running inside a weblogic
  instance sent by the agent.
 
 

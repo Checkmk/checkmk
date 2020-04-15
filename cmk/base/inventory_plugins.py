@@ -15,6 +15,10 @@ import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.check_utils
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    create_snmp_section_plugin_from_legacy,)
+
 from cmk.utils.type_defs import CheckPluginName, InventoryPluginName  # pylint: disable=unused-import
 InventoryInfo = Dict[str, Any]
 
@@ -34,6 +38,11 @@ _plugin_contexts = {}  # type: Dict[str, Dict[str, Any]]
 # These are the contexts of the check include files
 _include_contexts = {}  # type: Dict[str, Any]
 
+# This is needed for the auto-migration to the new check API.
+# For some reason, inspect.getsourcefile fails to find the
+# right file, so we pass a list of candidates.
+_plugin_file_lookup = {}  # type: Dict[str, str]
+
 
 def load_plugins(get_check_api_context, get_inventory_context):
     # type: (config.GetCheckApiContext, config.GetInventoryApiContext) -> None
@@ -51,7 +60,6 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
         try:
             plugin_context = _new_inv_context(get_check_api_context, get_inventory_context)
-            known_plugins = inv_info
 
             _load_plugin_includes(f, plugin_context)
 
@@ -64,8 +72,41 @@ def load_plugins(get_check_api_context, get_inventory_context):
             continue
 
         # Now store the check context for all plugins found in this file
-        for check_plugin_name in set(inv_info).difference(known_plugins):
-            _plugin_contexts[check_plugin_name] = plugin_context
+        for check_plugin_name in inv_info:
+            _plugin_contexts.setdefault(check_plugin_name, plugin_context)
+            _plugin_file_lookup.setdefault(check_plugin_name, f)
+
+    _extract_snmp_sections()
+
+
+def _extract_snmp_sections():
+    # type: () -> None
+    for plugin_name, plugin_info in sorted(inv_info.items()):
+        if 'snmp_info' not in plugin_info:
+            continue
+        section_name = cmk.base.check_utils.section_name_of(plugin_name)
+        if config.get_registered_section_plugin(PluginName(section_name)):
+            continue
+
+        fallback_files = ([_include_file_path(i) for i in plugin_info.get('includes', [])] +
+                          [_plugin_file_lookup[plugin_name]])
+
+        try:
+            snmp_section_plugin = create_snmp_section_plugin_from_legacy(
+                section_name,
+                {},
+                plugin_info['snmp_scan_function'],
+                plugin_info['snmp_info'],
+                scan_function_fallback_files=fallback_files,
+            )
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
+            msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
+            if cmk.utils.debug.enabled():
+                raise MKGeneralException(msg)
+            # TODO (mo): bring this back:
+            #console.warning(msg)
+        else:
+            config.registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
 
 
 def _new_inv_context(get_check_api_context, get_inventory_context):

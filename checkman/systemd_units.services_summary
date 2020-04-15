@@ -12,5 +12,4 @@ description:
  states are OK, failed and all others are CRIT.
 
 item:
- Summary.
-
+ The fixed statement {{Summary}}

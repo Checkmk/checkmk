@@ -6,7 +6,9 @@
 
 import re
 import json
-from typing import TYPE_CHECKING, Optional, Tuple, Union, Text, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    TYPE_CHECKING, Optional, Tuple, Union, Text, List, Any, Dict,
+)
 import six
 
 from livestatus import SiteId  # pylint: disable=unused-import
@@ -21,7 +23,10 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
 
 CSSClass = str
-CellContent = Union[Text, str, HTML]
+# Dict: The aggr_treestate painters are returning a dictionary data structure (see
+# paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have
+# separated the data from rendering of the data, we can hopefully clean this up
+CellContent = Union[Text, str, HTML, Dict[str, Any]]
 CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
@@ -34,6 +39,7 @@ if TYPE_CHECKING:
 # TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output, row=None, shall_escape=True):
     # type: (CellContent, Optional[Row], bool) -> Text
+    assert not isinstance(output, dict)
     ok_marker = '<b class="stmark state0">OK</b>'
     warn_marker = '<b class="stmark state1">WARN</b>'
     crit_marker = '<b class="stmark state2">CRIT</b>'

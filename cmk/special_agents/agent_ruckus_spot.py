@@ -7,11 +7,14 @@
 import sys
 import getopt
 import socket
+from typing import NoReturn  # pylint: disable=unused-import
 
 import requests
+import six
 
 
 def usage():
+    # type: () -> NoReturn
     sys.stderr.write("""Check_MK Ruckus Spot Agent
 
 USAGE: agent_ruckus_spot [OPTIONS] HOST
@@ -27,17 +30,18 @@ OPTIONS:
 
 # TODO: put into special_agent lib
 def get_agent_info_tcp(host):
+    # type: (str) -> bytes
     ipaddress = socket.gethostbyname(host)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(10)
     s.connect((ipaddress, 6556))
 
     try:
-        s.setblocking(1)
+        s.setblocking(True)
     except Exception:
         pass
 
-    resp = ""
+    resp = b""
     while True:
         out = s.recv(4096, socket.MSG_WAITALL)
         if out and len(out) > 0:
@@ -93,7 +97,7 @@ def main(sys_argv=None):
 
         if agent_port is not None:
             hostname = address.split(":")[0]
-            sys.stdout.write(get_agent_info_tcp(hostname))
+            sys.stdout.write(six.ensure_str(get_agent_info_tcp(hostname)))
 
     except Exception as e:
         sys.stderr.write("Connection error %s" % e)

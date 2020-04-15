@@ -1,4 +1,4 @@
-title: MongoDB Replication Info
+title: MongoDB: Replication Info
 agents: linux
 catalog: app/mongodb
 license: GPL
@@ -9,4 +9,4 @@ description:
  The oplog is a special capped collection that keeps a rolling record of all operations that modify the data stored in databases.
 
 inventory:
- One service is created named 'MongoDB Replication Info'
+ One service is created named 'MongoDB Replication Info'.

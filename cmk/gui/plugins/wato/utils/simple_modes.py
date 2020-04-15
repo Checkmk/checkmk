@@ -14,7 +14,9 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, List, Type, Union, Text, Tuple, Dict,
+)
 import six
 
 from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
@@ -23,10 +25,6 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
-)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
@@ -38,6 +36,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextUnicode,
     Checkbox,
+    DocumentationURL,
+    RuleComment,
 )
 
 
@@ -127,7 +127,7 @@ class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
         super(SimpleWatoModeBase, self).__init__()
 
     def _add_change(self, action, entry, text):
-        # type: (str, dict, str) -> None
+        # type: (str, Dict, Text) -> None
         """Add a WATO change entry for this object type modifications"""
         watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
                            text,
@@ -150,7 +150,7 @@ class SimpleListMode(SimpleWatoModeBase):
         raise NotImplementedError()
 
     def _handle_custom_action(self, action):
-        # type: (str) -> Optional[Union[bool, Tuple[Optional[str], Text]]]
+        # type: (str) -> Union[None, bool, Tuple[Optional[str], Text]]
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -176,11 +176,12 @@ class SimpleListMode(SimpleWatoModeBase):
         if not html.transaction_valid():
             return
 
-        if not html.request.has_var("_action"):
+        action_var = html.request.get_str_input("_action")
+        if action_var is None:
             return
 
-        if html.request.var("_action") != "delete":
-            return self._handle_custom_action(html.request.var("_action"))
+        if action_var != "delete":
+            return self._handle_custom_action(action_var)
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
@@ -199,7 +200,8 @@ class SimpleListMode(SimpleWatoModeBase):
                               _("This %s does not exist.") % self._mode_type.name_singular())
 
         if ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("_delete", \
+            raise MKUserError(
+                "_delete",
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular())
 
         self._validate_deletion(ident, entries[ident])
@@ -272,7 +274,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                                   _("This %s does not exist.") % self._mode_type.name_singular())
 
             self._new = False
-            self._ident = ident
+            self._ident = ident  # type: Optional[str]
             self._entry = entry
             return
 
@@ -398,7 +400,8 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             raise MKUserError("ident", _("This ID is already in use. Please choose another one."))
 
         if not self._new and self._ident not in self._store.filter_editable_entries(entries):
-            raise MKUserError("ident", \
+            raise MKUserError(
+                "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
         entries[self._ident] = self._entry

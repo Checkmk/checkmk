@@ -171,8 +171,8 @@ def show_package(name, show_info=False):
         sys.stdout.write("Title:                         %s\n" % package["title"])
         sys.stdout.write("Author:                        %s\n" % package["author"])
         sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
-        sys.stdout.write("Files:                         %s\n" % \
-                " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package["files"].items()]))
+        files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package["files"].items()])
+        sys.stdout.write("Files:                         %s\n" % files)
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
         if logger.isEnabledFor(VERBOSE):

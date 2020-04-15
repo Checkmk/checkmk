@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import tarfile
@@ -63,8 +67,8 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
 def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
     test_dir = Path(site.dir) / "xyz"
     test_file = test_dir / "test_file"
-    test_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    test_file.touch()  # pylint: disable=no-member
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file.touch()
 
     orig_add = omdlib.backup.BackupTarFile.add
 
@@ -75,7 +79,7 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
         # add() for all found entries. Remove the test_file here to simulate
         # a vanished file during this step.
         if arcname == "unit/xyz/test_file":
-            test_file.unlink()  # pylint: disable=no-member
+            test_file.unlink()
         orig_add(self, name, arcname, recursive, filter=filter)
 
     monkeypatch.setattr(omdlib.backup.BackupTarFile, "add", add)

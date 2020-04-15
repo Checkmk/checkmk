@@ -1,4 +1,9 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 from typing import Dict  # pylint: disable=unused-import
 from glob import glob
@@ -18,12 +23,16 @@ REQUIRED_ARGUMENTS = {
     #     '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
     #     'SECRET'
     # ],
+    'agent_couchbase': ['HOSTNAME'],
     'agent_elasticsearch': ['HOSTNAME'],
     'agent_graylog': ['HOSTNAME'],
     'agent_jenkins': ['HOSTNAME'],
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
     'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
     'agent_prometheus': [],
+    'agent_rabbitmq': [
+        '-P', 'PROTOCOL', '-m', 'SECTIONS', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'
+    ],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],

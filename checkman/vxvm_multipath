@@ -14,6 +14,8 @@ description:
 
   You need to install the agent plugin {vxvm}.
 
+item:
+ Name of the multipath device
 
 inventory:
   One item is generated per multipathed LUN. It is named after the

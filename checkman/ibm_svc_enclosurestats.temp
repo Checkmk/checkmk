@@ -18,5 +18,5 @@ item:
  The ID of the enclosure.
 
 inventory:
- Creates one check per enclosure.
+ One service is created for each enclosure.
 

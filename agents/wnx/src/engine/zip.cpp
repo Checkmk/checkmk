@@ -208,7 +208,7 @@ bool Extract(std::wstring_view file_src, std::wstring_view dir_dest) {
 
     auto hres = UnzipExec(to_folder.get(), file_items.get());
 
-    if (!SUCCEEDED(hres)) {
+    if (hres != S_OK) {
         XLOG::l("Error during copy here /unzip/ {:X}", hres);
         return false;
     }

@@ -14,4 +14,4 @@ item:
  The Name of the PSU according to the {sysHealthname} in the {nsSysHealthTable}
 
 inventory:
- For each PSU found on the appliance a service is created.
+ One service is created for each PSU found on the appliance.

@@ -18,6 +18,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
+import six
+
 import cmk.utils.paths
 
 from cmk.utils.exceptions import MKGeneralException
@@ -109,9 +111,8 @@ def _compiled_werks_dir():
 def load():
     werks = {}  # type: Dict[int, Dict[str, Any]]
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-    for file_name in itertools.chain(
-            _compiled_werks_dir().glob("werks"),  # pylint: disable=no-member
-            _compiled_werks_dir().glob("werks-*")):  # pylint: disable=no-member
+    for file_name in itertools.chain(_compiled_werks_dir().glob("werks"),
+                                     _compiled_werks_dir().glob("werks-*")):
         werks.update(load_precompiled_werks_file(file_name))
     return werks
 
@@ -190,8 +191,8 @@ def _load_werk(path):
 
 
 def write_precompiled_werks(path, werks):
-    with path.open("wb") as fp:
-        json.dump(werks, fp, check_circular=False)
+    with path.open("w", encoding="utf-8") as fp:
+        fp.write(six.ensure_text(json.dumps(werks, check_circular=False)))
 
 
 def write_as_text(werks, f, write_version=True):

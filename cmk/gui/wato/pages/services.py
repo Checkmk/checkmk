@@ -15,19 +15,20 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
+from typing import Any, Tuple, Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
+from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
-from cmk.gui.view_utils import render_labels
+from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
@@ -55,10 +56,13 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.utils.context_buttons import changelog_button
 
+AjaxDiscoveryRequest = Dict[Text, Any]
+CheckTableEntry = Tuple  # TODO: Improve this type
+CheckTable = List[CheckTableEntry]  # TODO: Improve this type
 DiscoveryResult = NamedTuple("DiscoveryResult", [
     ("job_status", dict),
     ("check_table_created", int),
-    ("check_table", list),
+    ("check_table", CheckTable),
     ("host_labels", dict),
 ])
 
@@ -158,7 +162,7 @@ class ModeDiscovery(WatoMode):
         return ["hosts"]
 
     def _from_vars(self):
-        self._host = watolib.Folder.current().host(html.request.get_ascii_input("host"))
+        self._host = watolib.Folder.current().host(html.request.get_ascii_input_mandatory("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -341,7 +345,7 @@ def _get_check_table_from_remote(request):
                 "state": JobStatusStates.INITIALIZED,
             },
             check_table=check_table,
-            check_table_created=time.time(),
+            check_table_created=int(time.time()),
             host_labels={},
         )
 
@@ -482,7 +486,7 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
-        check_table_created = time.time()
+        check_table_created = int(time.time())
         result = check_mk_automation(request.host.site_id(), "try-inventory",
                                      ["@noscan", request.host.name()])
 
@@ -504,7 +508,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         config.user.need_permission("wato.hosts")
 
-        request = self.webapi_request()
+        request = self.webapi_request()  # type: AjaxDiscoveryRequest
         html.request.del_var("request")  # Do not add this to URLs constructed later
         request.setdefault("update_target", None)
         request.setdefault("update_source", None)
@@ -526,6 +530,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                                         if request.get("discovery_result") else None
 
         if self._use_previous_discovery_result(request, previous_discovery_result):
+            assert previous_discovery_result is not None
             discovery_result = previous_discovery_result
         else:
             discovery_result = self._get_check_table()
@@ -564,7 +569,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         }
 
     def _get_status_message(self, discovery_result, performed_action):
-        # type: (DiscoveryResult, DiscoveryAction) -> Optional[Text]
+        # type: (DiscoveryResult, str) -> Optional[Text]
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -1045,13 +1050,14 @@ class DiscoveryPageRenderer(object):
         return discovery_result.job_status["is_active"]
 
     def _get_group_header(self, entry):
+        # type: (TableGroupEntry) -> HTML
         map_icons = {
             DiscoveryState.UNDECIDED: "undecided",
             DiscoveryState.MONITORED: "monitored",
             DiscoveryState.IGNORED: "disabled"
         }
 
-        group_header = ""
+        group_header = HTML("")
         if entry.table_group in map_icons:
             group_header += html.render_icon("%s_service" % map_icons[entry.table_group]) + " "
         group_header += entry.title
@@ -1059,7 +1065,8 @@ class DiscoveryPageRenderer(object):
         return group_header + html.render_help(entry.help_text)
 
     def _group_check_table_by_state(self, check_table):
-        by_group = {}
+        # type: (CheckTable) -> Dict[str, List[CheckTableEntry]]
+        by_group = {}  # type: Dict[str, List[CheckTableEntry]]
         for entry in check_table:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
@@ -1330,7 +1337,10 @@ class DiscoveryPageRenderer(object):
             # Do not show long output
             service_details = output.split("\n", 1)
             if service_details:
-                html.write_text(service_details[0])
+                html.write_html(
+                    HTML(
+                        format_plugin_output(service_details[0],
+                                             shall_escape=config.escape_plugin_output)))
             return
 
         div_id = "activecheck_%s" % descr
@@ -1365,7 +1375,7 @@ class DiscoveryPageRenderer(object):
             if config.debug:
                 err = traceback.format_exc()
             else:
-                err = e
+                err = "%s" % e
             paramtext = "<b>%s</b>: %s<br>" % (_("Invalid check parameter"), err)
             paramtext += "%s: <tt>%s</tt><br>" % (_("Variable"), varname)
             paramtext += _("Parameters:")
@@ -1373,11 +1383,10 @@ class DiscoveryPageRenderer(object):
             html.write_text(paramtext)
 
     def _show_discovered_labels(self, service_labels):
-        label_code = cmk.gui.view_utils.render_labels(
-            service_labels,
-            "service",
-            with_links=False,
-            label_sources={k: "discovered" for k in service_labels.keys()})
+        label_code = render_labels(service_labels,
+                                   "service",
+                                   with_links=False,
+                                   label_sources={k: "discovered" for k in service_labels.keys()})
         html.write(label_code)
 
     def _show_bulk_checkbox(self, table, discovery_result, request, check_type, item,
@@ -1538,7 +1547,7 @@ class DiscoveryPageRenderer(object):
                 ("host", self._host.name()),
                 ("item", watolib.mk_repr(item)),
                 ("service", watolib.mk_repr(descr)),
-            ]),
+            ])
 
         html.icon_button(url, _("Edit and analyze the check parameters of this service"),
                          "check_parameters")
@@ -1562,6 +1571,7 @@ class DiscoveryPageRenderer(object):
         return None
 
     def _ordered_table_groups(self):
+        # type: () -> List[TableGroupEntry]
         return [
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,
@@ -1710,20 +1720,20 @@ class DiscoveryPageRenderer(object):
 @page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
-        self._site = html.request.get_ascii_input("site")
+        self._site = html.request.get_ascii_input_mandatory("site")
         if self._site not in config.sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = html.request.get_ascii_input("host")
+        self._host_name = html.request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
 
         # TODO: Validate
-        self._check_type = html.request.get_ascii_input("checktype")
+        self._check_type = html.request.get_ascii_input_mandatory("checktype")
         # TODO: Validate
-        self._item = html.request.var("item")
+        self._item = html.request.get_unicode_input_mandatory("item")
 
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)

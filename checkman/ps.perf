@@ -1,4 +1,4 @@
-title: State and Count of Processes (with additional performance data)
+title: State and Count of Processes (with additional Performance Data)
 agents: linux
 catalog: os/ps
 license: GPL
@@ -10,6 +10,9 @@ description:
  Note: If you want to use {ps.perf} on Windows systems then you need to install
  the plugin {psperf.bat} into the {plugins} directory of you Windows agent.
  Do not use {wmicchecks.bat}. This is obsolete.
+
+item:
+ Name of the process
 
 inventory:
  {ps.perf} supports inventory in exactly the same way as {ps}, just

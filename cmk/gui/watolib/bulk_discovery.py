@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
@@ -24,10 +25,16 @@ from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
-                                             ("host_name", str)])
-DiscoveryTask = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
-                                             ("host_names", list)])
+DiscoveryHost = NamedTuple("DiscoveryHost", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_name", str),
+])
+DiscoveryTask = NamedTuple("DiscoveryTask", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_names", list),
+])
 
 
 def get_tasks(hosts_to_discover, bulk_size):
@@ -51,15 +58,10 @@ def get_tasks(hosts_to_discover, bulk_size):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    if render_form:
-        render = "form"
-    else:
-        render = None
+    selection_elements = []  # type: List[ValueSpec]
 
     if include_subfolders:
-        selection_elements = [Checkbox(label=_("Include all subfolders"), default_value=True)]
-    else:
-        selection_elements = []
+        selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
 
     selection_elements += [
         Checkbox(label=_("Only include hosts that failed on previous discovery"),
@@ -70,7 +72,7 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 
     return Dictionary(
         title=_("Bulk discovery"),
-        render=render,
+        render="form" if render_form else "normal",
         elements=[
             ("mode",
              DropdownChoice(
@@ -93,9 +95,11 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
                    ])),
             ("error_handling",
-             Checkbox(title=_("Error handling"),
-                      label=_("Ignore errors in single check plugins"),
-                      default_value=True)),
+             Checkbox(
+                 title=_("Error handling"),
+                 label=_("Ignore errors in single check plugins"),
+                 default_value=True,
+             )),
         ],
         optional_keys=[],
     )
@@ -187,7 +191,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         counts, failed_hosts = check_mk_automation(task.site_id,
                                                    "inventory",
                                                    arguments,
-                                                   timeout=timeout)
+                                                   timeout=timeout,
+                                                   non_blocking_http=True)
 
         return counts, failed_hosts
 

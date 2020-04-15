@@ -1,4 +1,4 @@
-title: Huawei Switches: PSU operation status
+title: Huawei Switches: PSU Operation Status
 agents: snmp
 catalog: hw/network/huawei
 license: GPL
@@ -16,4 +16,4 @@ item:
  PSU of this member.
 
 inventory:
- One service for each PSU of each stack member is created
+ One service is created for each PSU of each stack member.

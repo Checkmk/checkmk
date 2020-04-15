@@ -1,4 +1,4 @@
-title: Errors and traffic over network interfaces
+title: Errors and Traffic over Network Interfaces
 agents: linux
 catalog: os/networking
 license: GPL
@@ -16,6 +16,5 @@ item:
  for example {"eth0"}
 
 inventory:
-  All network interfaces except {lo} and {sit...} are found and
-  inventorized.
+ One service is created for each network interface except {lo} and {sit...}.
 

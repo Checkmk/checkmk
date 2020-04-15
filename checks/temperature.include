@@ -1,29 +1,32 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-from typing import Union, Tuple, Optional, AnyStr, List, TypedDict
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Union, Tuple, Optional, AnyStr, List
+
+# TODO: Can be removed with python 3.8+
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from mypy_extensions import TypedDict
+else:
+    from typing import TypedDict  # pylint: disable=no-name-in-module
+
+
+def minn(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a, b)
+
+
+def maxx(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return max(a, b)
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -47,7 +50,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
 def from_celsius(tempc, unit, relative=False):
     if unit == "f":
         return celsius_to_fahrenheit(tempc, relative)
-    elif unit == "k":
+    if unit == "k":
         if relative:
             return tempc
         return tempc + 273.15
@@ -57,12 +60,12 @@ def from_celsius(tempc, unit, relative=False):
 def to_celsius(reading, unit, relative=False):
     if isinstance(reading, tuple):
         return tuple([to_celsius(x, unit, relative) for x in reading])
-    elif unit == "f":
+    if unit == "f":
         return fahrenheit_to_celsius(reading, relative)
-    elif unit == "k":
+    if unit == "k":
         if relative:
             return reading
-        elif reading is None:
+        if reading is None:
             return None
         return reading - 273.15
     return reading
@@ -85,9 +88,6 @@ temp_unitsym = {
 
 def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, usr_crit_lower,
                                        dev_warn, dev_crit, dev_warn_lower, dev_crit_lower):
-    # min that deals correctly with None
-    def minn(a, b):
-        return min(a, b) or a or b
 
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
@@ -107,15 +107,15 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
     # take that. max deals correctly with None here. min does not work because None < int.
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
-        warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
+        warn, crit = maxx(usr_warn, dev_warn), maxx(usr_crit, dev_crit)
         warn_lower, crit_lower = minn(usr_warn_lower,
                                       dev_warn_lower), minn(usr_crit_lower, dev_crit_lower)
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = max(usr_warn_lower,
-                                     dev_warn_lower), max(usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = maxx(usr_warn_lower,
+                                      dev_warn_lower), maxx(usr_crit_lower, dev_crit_lower)
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":
@@ -311,7 +311,7 @@ TempParamDict = TypedDict(
     },
     total=False,
 )
-TempParamType = Optional[Union[TwoLevelsType, FourLevelsType, TempParamDict]]
+TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
 def check_temperature(
@@ -551,7 +551,7 @@ def check_temperature_list(sensorlist, params, unique_name):
     def worststate(a, b):
         if a != 3 and b != 3:
             return max(a, b)
-        elif a != 2 and b != 2:
+        if a != 2 and b != 2:
             return 3
         return 2
 

@@ -5,6 +5,10 @@
 import "core-js/stable";
 
 import $ from "jquery";
+import * as d3 from "d3";
+import * as d3_sankey from "d3-sankey";
+import * as crossfilter from "crossfilter2";
+import * as dc from "dc";
 import * as forms from "forms";
 import * as ajax from "ajax";
 import * as prediction from "prediction";
@@ -23,6 +27,7 @@ import * as crash_reporting from "crash_reporting";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
+import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
@@ -34,13 +39,16 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
-import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
+import * as cmk_figures from "cmk_figures";
+import "cmk_figure_plugins";
+
+
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
+
 import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
@@ -59,6 +67,10 @@ $(() => {
 });
 
 export const cmk_export = {
+    crossfilter: crossfilter.default,
+    d3: d3,
+    dc: dc,
+    sankey: d3_sankey,
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -79,6 +91,7 @@ export const cmk_export = {
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,
+        sidebar: sidebar, /* needed for add snapin page */
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
@@ -89,12 +102,12 @@ export const cmk_export = {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
+        // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
         node_visualization_viewport_utils: node_visualization_viewport_utils,
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
-        d3: d3,
-        d3_flextree: d3_flextree,
+        figures: cmk_figures,
     }
 };

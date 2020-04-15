@@ -6,11 +6,13 @@ distribution: check_mk
 description:
  Reports values of Pressure Sensors in ALLNET IP Sensoric devices.
 
- This check is for creating performace data only and allways returns {OK}.
+ This check is for creating performance data for the pressure.
+
+ The service always returns {OK}.
 
 item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
 inventory:
- Creates one check for every Pressure Sensor (function = 16).
+ One service is created for every pressure sensor (function = 16).

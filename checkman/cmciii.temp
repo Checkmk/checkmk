@@ -20,4 +20,4 @@ item:
  The unit name and the name of the temperature sensor
 
 inventory:
- All single temperature sensors on all cmciii units are detected
+ One service is created for each temperature sensor.

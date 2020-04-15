@@ -14,6 +14,7 @@ from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 from .context_buttons import global_buttons
 
 NewMode = Union[None, bool, str]
+ActionResult = Union[NewMode, Tuple[NewMode, Text]]
 
 
 class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
@@ -54,7 +55,7 @@ class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
         global_buttons()
 
     def action(self):
-        # type: () -> Union[NewMode, Tuple[NewMode, Text]]
+        # type: () -> ActionResult
         pass
 
     def page(self):

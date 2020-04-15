@@ -22,6 +22,4 @@ item:
  The name of the MDisksGrp
 
 inventory:
- Creates one check for every MDiskGrp in th IBM SVC / Storwize V3700 / V7000
- device.
-
+ One service is created for each MDiskGrp.

@@ -144,46 +144,42 @@ export function reschedule_check(oLink, site, host, service, wait_svc) {
     utils.remove_class(img, "reload_failed");
     utils.add_class(img, "reloading");
 
-    ajax.get_url("ajax_reschedule.py" +
-            "?site="     + encodeURIComponent(site) +
-            "&host="     + encodeURIComponent(host) +
-            "&service="  + service + // Already URL-encoded!
-            "&wait_svc=" + wait_svc,
-            reschedule_check_response_handler, img); // eslint-disable-line indent
+    var post_data = "request=" + encodeURIComponent(JSON.stringify({
+        "site": site,
+        "host": host,
+        "service": service,
+        "wait_svc": wait_svc,
+    }));
+
+    ajax.call_ajax("ajax_reschedule.py", {
+        method: "POST",
+        post_data: post_data,
+        response_handler: reschedule_check_response_handler,
+        handler_data: {
+            img: img,
+        },
+    });
 }
 
-// Protocol is:
-// For regular response:
-// [ 'OK', 'last check', 'exit status plugin', 'output' ]
-// For timeout:
-// [ 'TIMEOUT', 'output' ]
-// For error:
-// [ 'ERROR', 'output' ]
-// Everything else:
-// <undefined> - Unknown format. Simply echo.
-function reschedule_check_response_handler(img, code) {
-    var validResponse = true;
-    var response = null;
-
+function reschedule_check_response_handler(handler_data, ajax_response) {
+    var img = handler_data.img;
     utils.remove_class(img, "reloading");
 
-    try {
-        response = eval(code);
-    } catch(e) {
-        validResponse = false;
+    var response = JSON.parse(ajax_response);
+    if (response.result_code != 0) {
+        utils.add_class(img, "reload_failed");
+        img.title = "Error [" + response.result_code + "]: " + response.result; // eslint-disable-line
+        return;
     }
 
-    if(validResponse && response[0] === "OK") {
+    if (response.result.state === "OK") {
         window.location.reload();
-    } else if(validResponse && response[0] === "TIMEOUT") {
+    } else if(response.result.state === "TIMEOUT") {
         utils.add_class(img, "reload_failed");
-        img.title = "Timeout while performing action: " + response[1];
-    } else if(validResponse) {
-        utils.add_class(img, "reload_failed");
-        img.title = "Problem while processing - Response: " + response.join(" ");
+        img.title = "Timeout while performing action: " + response.result.message;
     } else {
         utils.add_class(img, "reload_failed");
-        img.title = "Invalid response: " + response;
+        img.title = response.result.message;
     }
 }
 

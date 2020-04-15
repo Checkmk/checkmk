@@ -7,13 +7,17 @@ description:
  This checks monitors the current measured for power supplies of the
  ADVA FSP 3000 scalable optical transport solution.
 
- No thresholds are set in the check, since thresholds are configured in the
- device itself. The upper threshold for the current is
- read from the device. If the current value is above the threshold
- the check is {CRIT}, otherwise it is {OK}.
+ No default thresholds are set in the check, since thresholds are configured
+ in the device itself.
+ The upper threshold for the current is read from the device.
+
+ If the value is above the threshold the service goes {CRIT},
+ otherwise it is {OK}.
+
+ This check uses the FspR7-MIB.
 
 item:
  Name of the power supply module.
 
 inventory:
- All connected power supply units are detected
+ One service is created for each connected power supply unit

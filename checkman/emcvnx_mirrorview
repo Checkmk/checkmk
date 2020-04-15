@@ -18,13 +18,13 @@ description:
  logical units with the state 'Attention' are WARN.
 
  Furthermore the faulted mirror view state can be:
- 
+
  - NO would be OK
- 
+
  - Yes would be CRIT.
 
 item:
  The logical unit number.
 
 inventory:
- One service per logical unit is created.
+ One service is created for each logical unit.

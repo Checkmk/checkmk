@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Enclosure: Power module
+title: Primergy BX600 Blade Enclosure: Power Module
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -13,5 +13,5 @@ item:
  The index of the power module as returned by SNMP.
 
 inventory:
- Creates one check per power module.
+ One service is created for each power module.
 

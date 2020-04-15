@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 import cmk.gui.config
@@ -15,7 +20,7 @@ def test_split_perf_data(data_string, result):
 
 
 @pytest.mark.parametrize("perf_str, check_command, result", [
-    ("", None, ([], None)),
+    ("", None, ([], "")),
     ("hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),
     (u"hi=l6 [ihe]", "ter", ([], "ihe")),
     (u"hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),
@@ -65,17 +70,17 @@ def test_perfvar_translation(perf_name, check_command, result):
 
 @pytest.mark.parametrize("perf_data, check_command, result", [
     (("in", 496876.200933, "", None, None, 0, 125000000), 'check_mk-lnx_if', ('if_in_bps', {
-        "orig_name": "in",
+        "orig_name": ["in"],
         "value": 3975009.607464,
         "scalar": {
             "max": 1000000000,
             "min": 0
         },
-        "scale": 8,
+        "scale": [8],
         "auto_graph": True,
     })),
     (("fast", 5, "", 4, 9, 0, 10), 'check_mk-imaginary', ('fast', {
-        "orig_name": "fast",
+        "orig_name": ["fast"],
         "value": 5.0,
         "scalar": {
             "warn": 4.0,
@@ -83,7 +88,7 @@ def test_perfvar_translation(perf_name, check_command, result):
             "min": 0.0,
             "max": 10.0
         },
-        "scale": 1.0,
+        "scale": [1.0],
         "auto_graph": True,
     })),
 ])

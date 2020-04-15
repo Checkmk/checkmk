@@ -14,6 +14,7 @@ from html import escape as html_escape  # type: ignore[import]
 from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
+import six
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
@@ -24,7 +25,7 @@ import cmk.utils.cmk_subprocess as subprocess
 def collect_context():
     # type: () -> Dict[str, Text]
     return {
-        var[7:]: value.decode("utf-8")
+        var[7:]: six.ensure_text(value)
         for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_")
     }
@@ -210,6 +211,8 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
+# TODO: Why do we return Dict[str, str] below while collect_context() returns a
+# Dict[str, Text]???
 def read_bulk_contexts():
     # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}
@@ -289,8 +292,14 @@ def post_request(message_constructor, success_code=200):
     context = collect_context()
 
     url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+    proxy_url = context.get("PARAMETER_PROXY_URL")
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
-    r = requests.post(url=url, json=message_constructor(context))
+    try:
+        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+    except requests.exceptions.ProxyError:
+        sys.stderr.write(six.ensure_str("Cannot connect to proxy: %s\n" % proxy_url))
+        sys.exit(2)
 
     if r.status_code == success_code:
         sys.exit(0)

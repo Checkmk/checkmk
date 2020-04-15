@@ -8,8 +8,7 @@ description:
  to monitor the temperature of the CPUs.
 
 item:
- The description of the service as provided by
- the index of the device.
+ The index of the CPU
 
 inventory:
  Each cpu will be inventorized.

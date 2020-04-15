@@ -9,7 +9,7 @@ description:
  WATO ruleset. Upper default levels are 6000, 6500 RPM.
 
 item:
- The name of the Fan
+ The name of the fan
 
 inventory:
  One check is created for each System Fan

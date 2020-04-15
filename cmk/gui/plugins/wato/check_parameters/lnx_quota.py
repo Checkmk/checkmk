@@ -27,7 +27,7 @@ def _item_spec_lnx_quota():
 
 def _parameter_valuespec_lnx_quota():
     return Dictionary(
-        optional_keys=None,
+        optional_keys=False,
         elements=[
             ("user", Checkbox(
                 title=_("Monitor user quotas"),

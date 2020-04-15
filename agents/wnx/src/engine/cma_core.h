@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // core common functionaliaty
 // probably "file" is better name
 
@@ -23,6 +27,10 @@ namespace cma {
 wtools::InternalUser ObtainInternalUser(std::wstring_view group);
 void KillAllInternalUsers();
 }  // namespace cma
+
+namespace cma::srv {
+class ServiceProcessor;
+}
 
 namespace cma {
 namespace tools {
@@ -66,6 +74,9 @@ T ReadFromHandle(HANDLE Handle) {
     }
     return buf;
 }
+
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src);
 
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
@@ -239,12 +250,11 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
-    bool startEx(std::wstring_view Id, std::filesystem::path ExeFile,
-                 StartMode start_mode, wtools::InternalUser internal_user);
-    bool start(std::wstring_view Id, std::filesystem::path ExeFile,
-
-               StartMode start_mode) {
-        return startEx(Id, ExeFile, start_mode, {});
+    bool startEx(std::wstring_view Id, std::wstring exec, StartMode start_mode,
+                 wtools::InternalUser internal_user);
+    bool startStd(std::wstring_view Id, std::wstring exec,
+                  StartMode start_mode) {
+        return startEx(Id, exec, start_mode, {});
     }
 
     // strange?
@@ -516,6 +526,9 @@ public:
     // which plugin
     std::filesystem::path path() const { return path_; }
 
+    // which plugin
+    void setCmdLine(std::wstring_view name);
+
     // stored data from plugin
     std::vector<char> data() const {
         std::lock_guard lk(data_lock_);
@@ -590,6 +603,8 @@ public:
 
     static int threadCount() noexcept { return thread_count_.load(); }
 
+    std::wstring cmdLine() const noexcept { return cmd_line_; }
+
 protected:
     void fillInternalUser();
     void resetData() {
@@ -646,6 +661,8 @@ private:
 
     static std::atomic<int> thread_count_;
 
+    std::wstring cmd_line_;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
@@ -654,6 +671,8 @@ private:
     FRIEND_TEST(PluginTest, Async0DataPickup);
     FRIEND_TEST(PluginTest, AsyncLocal);
     FRIEND_TEST(PluginTest, SyncLocal);
+
+    FRIEND_TEST(PluginTest, Entry);
 #endif
 };
 wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
@@ -695,6 +714,8 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
                      const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
                      bool CheckExists = true);
 
+void UpdatePluginMapCmdLine(PluginMap& Out, cma::srv::ServiceProcessor* sp);
+
 // API call to exec all plugins and get back data and count
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
@@ -725,4 +746,5 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
+
 }  // namespace cma

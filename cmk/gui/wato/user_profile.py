@@ -7,6 +7,8 @@
 
 import time
 
+import six
+
 import cmk.gui.i18n
 import cmk.gui.sites
 import cmk.gui.userdb as userdb
@@ -69,9 +71,9 @@ def user_profile_async_replication_dialog(sites):
             estimated_duration = changes_manager.get_activation_time(site_id,
                                                                      ACTIVATION_TIME_PROFILE_SYNC,
                                                                      2.0)
-            html.javascript(
-                'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
-                (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
+            html.javascript('cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
+                            (site_id, int(estimated_duration * 1000.0),
+                             six.ensure_str(_('Replication in progress'))))
             num_replsites += 1
         else:
             _add_profile_replication_change(site_id, status_txt)
@@ -145,6 +147,8 @@ def _show_page_user_profile(change_pw):
                     cmk.gui.i18n.localize(config.user.language)
 
                     user = users.get(config.user.id)
+                    if user is None:
+                        raise Exception("current user is not in user DB")
                     if config.user.may('general.edit_notifications') and user.get(
                             "notifications_enabled"):
                         value = forms.get_input(watolib.get_vs_flexible_notifications(),
@@ -256,7 +260,7 @@ def _show_page_user_profile(change_pw):
         html.reload_sidebar()
         if change_pw:
             html.show_message(_("Your password has been changed."))
-            raise HTTPRedirect(html.request.var('_origtarget', 'index.py'))
+            raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
         else:
             html.show_message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction
@@ -338,14 +342,15 @@ class ModeAjaxProfileReplication(AjaxPage):
     def page(self):
         request = self.webapi_request()
 
-        site_id = request.get("site")
-        if not site_id:
+        site_id_val = request.get("site")
+        if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
-
+        site_id = six.ensure_str(site_id_val)
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
-        status = cmk.gui.sites.states().get(site_id, {}).get("state", "unknown")
+        status = cmk.gui.sites.states().get(site_id,
+                                            cmk.gui.sites.SiteStatus({})).get("state", "unknown")
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 

@@ -1,4 +1,8 @@
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
@@ -65,7 +69,7 @@ def test_find_debug_code(path):
             if [folder for folder in exclude_folders if folder in file_path]:
                 continue
 
-            if file_path.endswith((".pyc", ".whl", ".tar.gz")):
+            if file_path.endswith((".pyc", ".whl", ".tar.gz", ".swp")):
                 continue
 
             if os.path.relpath(file_path, cmk_path()) in exclude_files:

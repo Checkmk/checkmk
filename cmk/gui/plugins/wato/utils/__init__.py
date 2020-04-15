@@ -12,16 +12,12 @@ import abc
 import json
 import re
 import subprocess
-import time  # pylint: disable=unused-import
-# NOTE: We have a clash with Tuple here! :-/
-import typing  # pylint: disable=unused-import
-from typing import Optional as TypingOptional, List, Callable, Text, Union  # pylint: disable=unused-import
+from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
 
 import six
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.globals import g
 import cmk.gui.mkeventd
 import cmk.gui.config as config
 from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
@@ -31,156 +27,72 @@ import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.globals import html, g
+from cmk.gui.htmllib import Choices, HTML  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (
-    TextAscii,
-    TextAsciiAutocomplete,
-    Dictionary,
-    Tuple,
-    Checkbox,
-    Integer,
-    DropdownChoice,
-    Alternative,
-    Password,
-    Transform,
-    FixedValue,
-    ListOf,
-    ListOfMultiple,
-    RegExpUnicode,
-    RegExp,
-    TextUnicode,
-    ElementSelection,
-    OptionalDropdownChoice,
-    Percentage,
-    Float,
-    CascadingDropdown,
-    ListChoice,
-    ListOfStrings,
-    DualListChoice,
-    ValueSpec,
-    Url,
-    MonitoredHostname,
-    ABCPageListOfMultipleGetChoice,
+from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
+    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
+    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
+    ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname, OptionalDropdownChoice,
+    Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii, TextAsciiAutocomplete,
+    TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
 )
-from cmk.gui.plugins.wato.utils.base_modes import (
-    WatoMode,)
-from cmk.gui.plugins.wato.utils.simple_modes import (
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
+from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
+    ActionResult, WatoMode,
 )
-from cmk.gui.plugins.wato.utils.context_buttons import (
-    global_buttons,
-    changelog_button,
-    home_button,
-    host_status_button,
+from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
+    SimpleEditMode, SimpleListMode, SimpleModeType,
 )
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_confirm,
-    search_form,
+from cmk.gui.plugins.wato.utils.context_buttons import (  # noqa: F401 # pylint: disable=unused-import
+    changelog_button, global_buttons, home_button, host_status_button,
 )
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainMenu,
-    MenuItem,
-    main_module_registry,
-    MainModule,
-    WatoModule,
-    register_modules,
+from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
+    search_form, wato_confirm,
 )
-from cmk.gui.plugins.wato.utils.valuespecs import (
-    DocumentationURL,
-    RuleComment,
+from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
+    MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.timeperiods import TimeperiodSelection
+from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.watolib.users import notification_script_title
 from cmk.gui.watolib.groups import (
-    load_service_group_information,
-    load_host_group_information,
     load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
 )
-from cmk.gui.watolib.rulespecs import (
-    TimeperiodValuespec,
-    rulespec_registry,
-    Rulespec,
-    HostRulespec,
-    ServiceRulespec,
-    BinaryHostRulespec,
-    BinaryServiceRulespec,
-    CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem,
-    ManualCheckParameterRulespec,
-    RulespecGroupManualChecksNetworking,
-    RulespecGroupManualChecksApplications,
-    RulespecGroupManualChecksEnvironment,
-    RulespecGroupManualChecksOperatingSystem,
-    RulespecGroupManualChecksHardware,
-    RulespecGroupManualChecksStorage,
-    RulespecGroupManualChecksVirtualization,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecSubGroup,
+from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
+    BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
+    RulespecGroup, RulespecGroupManualChecksApplications, RulespecGroupManualChecksEnvironment,
+    RulespecGroupManualChecksHardware, RulespecGroupManualChecksNetworking,
+    RulespecGroupManualChecksOperatingSystem, RulespecGroupManualChecksStorage,
+    RulespecGroupManualChecksVirtualization, RulespecSubGroup, ServiceRulespec, TimeperiodValuespec,
+    rulespec_group_registry, rulespec_registry,
 )
-from cmk.gui.watolib.host_attributes import (
-    HostAttributeTopicBasicSettings,
-    HostAttributeTopicAddress,
-    HostAttributeTopicDataSources,
-    HostAttributeTopicHostTags,
-    HostAttributeTopicNetworkScan,
-    HostAttributeTopicManagementBoard,
-    HostAttributeTopicCustomAttributes,
-    HostAttributeTopicMetaData,
+from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
+    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, HostAttributeTopicAddress,
+    HostAttributeTopicBasicSettings, HostAttributeTopicCustomAttributes,
+    HostAttributeTopicDataSources, HostAttributeTopicHostTags, HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData, HostAttributeTopicNetworkScan, host_attribute_registry,
     host_attribute_topic_registry,
-    ABCHostAttributeValueSpec,
-    ABCHostAttributeNagiosText,
-    host_attribute_registry,
 )
-from cmk.gui.watolib import (
-    multisite_dir,
-    wato_root_dir,
-    user_script_title,
-    user_script_choices,
-    is_wato_slave_site,
-    wato_fileheader,
-    add_change,
-    log_audit,
-    get_rulegroup,
-    register_rule,
-    add_replication_paths,
-    make_action_link,
-    folder_preserving_link,
-    ACTestCategories,
-    ACTest,
-    ac_test_registry,
-    ACResultCRIT,
-    ACResultWARN,
-    ACResultOK,
-    config_domain_registry,
-    ABCConfigDomain,
-    ConfigDomainCore,
-    ConfigDomainOMD,
-    ConfigDomainEventConsole,
-    ConfigDomainGUI,
-    ConfigDomainCACertificates,
-    LivestatusViaTCP,
-    site_neutral_path,
+from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
+    ABCConfigDomain, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest, ACTestCategories,
+    ConfigDomainCACertificates, ConfigDomainCore, ConfigDomainEventConsole, ConfigDomainGUI,
+    ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
+    config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
+    make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
+    user_script_title, wato_fileheader, wato_root_dir,
 )
-from cmk.gui.plugins.watolib.utils import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_variable_registry,
-    ConfigVariable,
-    register_configvar,
-    SampleConfigGenerator,
-    sample_config_generator_registry,
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
+    config_variable_registry, register_configvar, sample_config_generator_registry,
 )
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (
-    permission_section_registry,
     PermissionSection,
+    permission_section_registry,
 )
 
 
@@ -259,10 +171,10 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Text]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     only_v3=False,  # type: bool
-    default_value="public",  # type: Text
+    default_value="public",  # type: _Optional[Text]
     allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):
@@ -545,40 +457,53 @@ class _GroupSelection(ElementSelection):
 
 def ContactGroupSelection(**kwargs):
     """Select a single contact group"""
-    return _GroupSelection("contact",
-                           choices=lambda: _group_choices(load_contact_group_information()),
-                           **kwargs)
+    return _GroupSelection("contact", choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupSelection(**kwargs):
     """Select a single service group"""
-    return _GroupSelection("service",
-                           choices=lambda: _group_choices(load_service_group_information()),
-                           **kwargs)
+    return _GroupSelection("service", choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupSelection(**kwargs):
     """Select a single host group"""
-    return _GroupSelection("host",
-                           choices=lambda: _group_choices(load_host_group_information()),
-                           **kwargs)
+    return _GroupSelection("host", choices=_sorted_host_group_choices, **kwargs)
 
 
 def ContactGroupChoice(**kwargs):
     """Select multiple contact groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_contact_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)
 
 
 def ServiceGroupChoice(**kwargs):
     """Select multiple service groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_service_group_information()),
-                          **kwargs)
+    return DualListChoice(choices=_sorted_service_group_choices, **kwargs)
 
 
 def HostGroupChoice(**kwargs):
     """Select multiple host groups"""
-    return DualListChoice(choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+    return DualListChoice(choices=_sorted_host_group_choices, **kwargs)
+
+
+def _sorted_contact_group_choices():
+    cache_id = "sorted_contact_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_contact_group_information())
+    return g.cache_id
+
+
+def _sorted_service_group_choices():
+    cache_id = "sorted_service_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_service_group_information())
+    return g.cache_id
+
+
+def _sorted_host_group_choices():
+    cache_id = "sorted_host_group_choices"
+    if cache_id not in g:
+        g.cache_id = _group_choices(load_host_group_information())
+    return g.cache_id
 
 
 def _group_choices(group_information):
@@ -593,13 +518,14 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
+        help=help,
         choices=[
             ("password", _("Explicit"), Password(
                 allow_empty=allow_empty,
@@ -621,8 +547,8 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title=None,  # type: TypingOptional[Text]
-    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
     allow_empty=True,  # type: bool
     size=25,  # type: int
 ):
@@ -654,7 +580,9 @@ def HTTPProxyReference():
                  help=
                  _("Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
                    "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                   "Have a look at the python requests module documentation for further information."
+                   "Have a look at the python requests module documentation for further information. Note "
+                   "that these variables must be defined as a site-user in ~/etc/environment and that "
+                   "this might affect other notification methods which also use the requests module."
                   ),
                  totext=_("Use proxy settings from the process environment"),
              )),
@@ -1005,19 +933,18 @@ def Levels(**kwargs):
     def match_levels_alternative(v):
         if isinstance(v, dict):
             return 2
-        elif isinstance(v, tuple) and v != (None, None):
+        if isinstance(v, tuple) and v != (None, None):
             return 1
         return 0
 
     help_txt = kwargs.get("help")
-    unit = kwargs.get("unit")
+    unit = kwargs.get("unit", "")
+    if not isinstance(unit, six.string_types):
+        raise Exception("illegal unit for Levels: %r" % (unit,))
     title = kwargs.get("title")
     default_levels = kwargs.get("default_levels", (0.0, 0.0))
     default_difference = kwargs.get("default_difference", (0, 0))
-    if "default_value" in kwargs:
-        default_value = kwargs["default_value"]
-    else:
-        default_value = default_levels if default_levels else None
+    default_value = kwargs.get("default_value", default_levels if default_levels else None)
 
     return Alternative(
         title=title,
@@ -1056,10 +983,10 @@ def Levels(**kwargs):
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    elif varname in ["custom_checks", "datasource_programs"]:
+    if varname in ["custom_checks", "datasource_programs"]:
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.add_or_modify_executables")
-    elif varname == "agent_config:custom_files":
+    if varname == "agent_config:custom_files":
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.agent_deploy_custom_files")
     return config.user.may("wato.rulesets")
@@ -1071,7 +998,9 @@ class CheckTypeSelection(DualListChoice):
 
     def get_elements(self):
         checks = get_check_information()
-        elements = sorted([(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()])
+        elements = sorted([
+            (cn, (cn + " - " + six.ensure_text(c["title"]))[:60]) for (cn, c) in checks.items()
+        ])
         return elements
 
 
@@ -1119,203 +1048,216 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
             add_default = []
 
         return [
-           ( "match_host_event",
-              ListChoice(
-                   title = _("Match host event type"),
-                   help = _("Select the host event types and transitions this rule should handle.<br>"
-                            "Note: If you activate this option and do <b>not</b> also specify service event "
-                            "types then this rule will never hold for service notifications!<br>"
-                            "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
-                                "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options",
-                   choices = [
-                       ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
-                       ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
-                       ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
-                       ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
-                       ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
-                       ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-                       ( '?r', _("any")         + u" ➤ " + _("UP")),
-                       ( '?d', _("any")         + u" ➤ " + _("DOWN")),
-                       ( '?u', _("any")         + u" ➤ " + _("UNREACHABLE")),
-                   ] + add_choices,
-                   default_value = [ 'rd', 'dr', ] + add_default,
-             )
-           ),
-           ( "match_service_event",
-               ListChoice(
-                   title = _("Match service event type"),
-                    help  = _("Select the service event types and transitions this rule should handle.<br>"
-                              "Note: If you activate this option and do <b>not</b> also specify host event "
-                              "types then this rule will never hold for host notifications!<br>"
-                              "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
-                                "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options",
-                   choices = [
-                       ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
-                       ( 'rr', _("OK")      + u" ➤ " + _("OK")),
-                       ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
-                       ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
-                       ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
-                       ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
-                       ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
-                       ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
-                       ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
-                       ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
-                       ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
-                       ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
-                       ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-                       ( '?r', _("any") + u" ➤ " + _("OK")),
-                       ( '?w', _("any") + u" ➤ " + _("WARN")),
-                       ( '?c', _("any") + u" ➤ " + _("CRIT")),
-                       ( '?u', _("any") + u" ➤ " + _("UNKNOWN")),
-                   ] + add_choices,
-                   default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,
-              )
-            ),
+            ("match_host_event",
+             ListChoice(
+                 title=_("Match host event type"),
+                 help=
+                 (_("Select the host event types and transitions this rule should handle.<br>"
+                    "Note: If you activate this option and do <b>not</b> also specify service event "
+                    "types then this rule will never hold for service notifications!<br>"
+                    "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
+                   ) % "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options"),
+                 choices=[
+                     ('rd', _("UP") + u" ➤ " + _("DOWN")),
+                     ('ru', _("UP") + u" ➤ " + _("UNREACHABLE")),
+                     ('dr', _("DOWN") + u" ➤ " + _("UP")),
+                     ('du', _("DOWN") + u" ➤ " + _("UNREACHABLE")),
+                     ('ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
+                     ('ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
+                     ('?r', _("any") + u" ➤ " + _("UP")),
+                     ('?d', _("any") + u" ➤ " + _("DOWN")),
+                     ('?u', _("any") + u" ➤ " + _("UNREACHABLE")),
+                 ] + add_choices,
+                 default_value=[
+                     'rd',
+                     'dr',
+                 ] + add_default,
+             )),
+            ("match_service_event",
+             ListChoice(
+                 title=_("Match service event type"),
+                 help=(_(
+                     "Select the service event types and transitions this rule should handle.<br>"
+                     "Note: If you activate this option and do <b>not</b> also specify host event "
+                     "types then this rule will never hold for host notifications!<br>"
+                     "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
+                 ) % "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options"),
+                 choices=[
+                     ('rw', _("OK") + u" ➤ " + _("WARN")),
+                     ('rr', _("OK") + u" ➤ " + _("OK")),
+                     ('rc', _("OK") + u" ➤ " + _("CRIT")),
+                     ('ru', _("OK") + u" ➤ " + _("UNKNOWN")),
+                     ('wr', _("WARN") + u" ➤ " + _("OK")),
+                     ('wc', _("WARN") + u" ➤ " + _("CRIT")),
+                     ('wu', _("WARN") + u" ➤ " + _("UNKNOWN")),
+                     ('cr', _("CRIT") + u" ➤ " + _("OK")),
+                     ('cw', _("CRIT") + u" ➤ " + _("WARN")),
+                     ('cu', _("CRIT") + u" ➤ " + _("UNKNOWN")),
+                     ('ur', _("UNKNOWN") + u" ➤ " + _("OK")),
+                     ('uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
+                     ('uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
+                     ('?r', _("any") + u" ➤ " + _("OK")),
+                     ('?w', _("any") + u" ➤ " + _("WARN")),
+                     ('?c', _("any") + u" ➤ " + _("CRIT")),
+                     ('?u', _("any") + u" ➤ " + _("UNKNOWN")),
+                 ] + add_choices,
+                 default_value=[
+                     'rw',
+                     'rc',
+                     'ru',
+                     'wc',
+                     'wu',
+                     'uc',
+                 ] + add_default,
+             )),
         ]
 
     @classmethod
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
-            ( "match_servicegroups",
-              ServiceGroupChoice(
-                  title = _("Match Service Groups"),
-                  help = _("The service must be in one of the selected service groups. For host events this condition "
-                           "never matches as soon as at least one group is selected."),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_exclude_servicegroups",
-              ServiceGroupChoice(
-                  title = _("Exclude Service Groups"),
-                  help = _("The service must not be in one of the selected service groups. For host events this condition "
-                           "is simply ignored."),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_servicegroups_regex",
-              Tuple(
-                    title = _("Match Service Groups (regex)"),
-                    elements = [
-                    DropdownChoice(
-                        choices = [
-                            ( "match_id",    _("Match the internal identifier")),
-                            ( "match_alias", _("Match the alias"))
-                        ],
-                        default_value = "match_id"
-                      ),
-                      ListOfStrings(
-                          help = _("The service group alias must match one of the following regular expressions."
-                                   " For host events this condition never matches as soon as at least one group is selected."),
-                          valuespec = RegExpUnicode(
-                              size = 32,
-                              mode = RegExpUnicode.infix,
+            ("match_servicegroups",
+             ServiceGroupChoice(
+                 title=_("Match Service Groups"),
+                 help=_(
+                     "The service must be in one of the selected service groups. For host events this condition "
+                     "never matches as soon as at least one group is selected."),
+                 allow_empty=False,
+             )),
+            ("match_exclude_servicegroups",
+             ServiceGroupChoice(
+                 title=_("Exclude Service Groups"),
+                 help=_(
+                     "The service must not be in one of the selected service groups. For host events this condition "
+                     "is simply ignored."),
+                 allow_empty=False,
+             )),
+            ("match_servicegroups_regex",
+             Tuple(
+                 title=_("Match Service Groups (regex)"),
+                 elements=[
+                     DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
+                                             ("match_alias", _("Match the alias"))],
+                                    default_value="match_id"),
+                     ListOfStrings(
+                         help=
+                         _("The service group alias must match one of the following regular expressions."
+                           " For host events this condition never matches as soon as at least one group is selected."
                           ),
-                          orientation = "horizontal",
-                      )
-                    ]
-              )
-            ),
-            ( "match_exclude_servicegroups_regex",
-              Tuple(
-                    title = _("Exclude Service Groups (regex)"),
-                    elements = [
-                      DropdownChoice(
-                        choices = [
-                            ( "match_id",    _("Match the internal identifier")),
-                            ( "match_alias", _("Match the alias"))
-                        ],
-                        default_value = "match_id"
-                      ),
-                      ListOfStrings(
-                          help = _("The service group alias must not match one of the following regular expressions. "
-                                   "For host events this condition is simply ignored."),
-                          valuespec = RegExpUnicode(
-                              size = 32,
-                              mode = RegExpUnicode.infix,
-                          ),
-                          orientation = "horizontal",
-                      )
-                    ]
-              )
-            ),
-            ( "match_services",
-              ListOfStrings(
-                  title = _("Match only the following services"),
-                  help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
-                           "service name in order for the rule to match. Note: Host notifications never match this "
-                           "rule if this option is being used."),
-                  valuespec = RegExpUnicode(
-                      size = 32,
-                      mode = RegExpUnicode.prefix,
+                         valuespec=RegExpUnicode(
+                             size=32,
+                             mode=RegExpUnicode.infix,
+                         ),
+                         orientation="horizontal",
+                     )
+                 ])),
+            ("match_exclude_servicegroups_regex",
+             Tuple(
+                 title=_("Exclude Service Groups (regex)"),
+                 elements=[
+                     DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
+                                             ("match_alias", _("Match the alias"))],
+                                    default_value="match_id"),
+                     ListOfStrings(
+                         help=_(
+                             "The service group alias must not match one of the following regular expressions. "
+                             "For host events this condition is simply ignored."),
+                         valuespec=RegExpUnicode(
+                             size=32,
+                             mode=RegExpUnicode.infix,
+                         ),
+                         orientation="horizontal",
+                     )
+                 ])),
+            ("match_services",
+             ListOfStrings(
+                 title=_("Match only the following services"),
+                 help=
+                 _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
+                   "service name in order for the rule to match. Note: Host notifications never match this "
+                   "rule if this option is being used."),
+                 valuespec=RegExpUnicode(
+                     size=32,
+                     mode=RegExpUnicode.prefix,
+                 ),
+                 orientation="horizontal",
+                 allow_empty=False,
+                 empty_text=
+                 _("Please specify at least one service regex. Disable the option if you want to allow all services."
                   ),
-                  orientation = "horizontal",
-                  allow_empty = False,
-                  empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
-              )
+             )),
+            ("match_exclude_services",
+             ListOfStrings(
+                 title=_("Exclude the following services"),
+                 valuespec=RegExpUnicode(
+                     size=32,
+                     mode=RegExpUnicode.prefix,
+                 ),
+                 orientation="horizontal",
+             )),
+            ("match_checktype",
+             CheckTypeSelection(
+                 title=_("Match the following check types"),
+                 help=
+                 _("Only apply the rule if the notification originates from certain types of check plugins. "
+                   "Note: Host notifications never match this rule if this option is being used."),
+             )),
+            (
+                "match_plugin_output",
+                RegExp(
+                    title=_("Match the output of the check plugin"),
+                    help=_(
+                        "This text is a regular expression that is being searched in the output "
+                        "of the check plugins that produced the alert. It is not a prefix but an infix match."
+                    ),
+                    mode=RegExpUnicode.prefix,
+                ),
             ),
-            ( "match_exclude_services",
-              ListOfStrings(
-                  title = _("Exclude the following services"),
-                  valuespec = RegExpUnicode(
-                      size = 32,
-                      mode = RegExpUnicode.prefix,
-                  ),
-                  orientation = "horizontal",
-              )
+            ("match_contacts",
+             ListOf(
+                 userdb.UserSelection(only_contacts=True),
+                 title=_("Match Contacts"),
+                 help=_("The host/service must have one of the selected contacts."),
+                 movable=False,
+                 allow_empty=False,
+                 add_label=_("Add contact"),
+             )),
+            ("match_contactgroups",
+             ContactGroupChoice(
+                 title=_("Match Contact Groups"),
+                 help=_(
+                     "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
+                     "If you don't use the CMC that filter will not apply"),
+                 allow_empty=False,
+             )),
+            (
+                "match_sl",
+                Tuple(
+                    title=_("Match service level"),
+                    help=_(
+                        "Host or service must be in the following service level to get notification"
+                    ),
+                    orientation="horizontal",
+                    show_titles=False,
+                    elements=[
+                        DropdownChoice(label=_("from:"),
+                                       choices=cmk.gui.mkeventd.service_levels,
+                                       prefix_values=True),
+                        DropdownChoice(label=_(" to:"),
+                                       choices=cmk.gui.mkeventd.service_levels,
+                                       prefix_values=True),
+                    ],
+                ),
             ),
-            ( "match_checktype",
-              CheckTypeSelection(
-                  title = _("Match the following check types"),
-                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
-                           "Note: Host notifications never match this rule if this option is being used."),
-              )
-            ),
-            ( "match_plugin_output",
-              RegExp(
-                 title = _("Match the output of the check plugin"),
-                 help = _("This text is a regular expression that is being searched in the output "
-                          "of the check plugins that produced the alert. It is not a prefix but an infix match."),
-                 mode = RegExpUnicode.prefix,
-              ),
-            ),
-            ( "match_contacts",
-              ListOf(
-                  userdb.UserSelection(only_contacts = True),
-                      title = _("Match Contacts"),
-                      help = _("The host/service must have one of the selected contacts."),
-                      movable = False,
-                      allow_empty = False,
-                      add_label = _("Add contact"),
-              )
-            ),
-            ( "match_contactgroups",
-              ContactGroupChoice(
-                  title = _("Match Contact Groups"),
-                  help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
-                           "If you don't use the CMC that filter will not apply"),
-                  allow_empty = False,
-              )
-            ),
-            ( "match_sl",
-              Tuple(
-                title = _("Match service level"),
-                help = _("Host or service must be in the following service level to get notification"),
-                orientation = "horizontal",
-                show_titles = False,
-                elements = [
-                  DropdownChoice(label = _("from:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
-                  DropdownChoice(label = _(" to:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
-                ],
-              ),
-            ),
-            ( "match_timeperiod",
-              watolib.timeperiods.TimeperiodSelection(
-                  title = _("Match only during timeperiod"),
-                  help = _("Match this rule only during times where the selected timeperiod from the monitoring "
-                           "system is active."),
-                  no_preselect = True,
-                  no_preselect_title = _("Select a timeperiod"),
-              ),
+            (
+                "match_timeperiod",
+                watolib.timeperiods.TimeperiodSelection(
+                    title=_("Match only during timeperiod"),
+                    help=_(
+                        "Match this rule only during times where the selected timeperiod from the monitoring "
+                        "system is active."),
+                    no_preselect=True,
+                    no_preselect_title=_("Select a timeperiod"),
+                ),
             ),
         ]
 
@@ -1325,7 +1267,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
     def _generic_rule_list_actions(self, rules, what, what_title, save_rules):
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
+            nr = html.request.get_integer_input_mandatory("_delete")
             rule = rules[nr]
             c = wato_confirm(
                 _("Confirm deletion of %s") % what_title,
@@ -1353,7 +1295,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
 
 def sort_sites(sites):
-    # type: (SiteConfigurations) -> typing.List[typing.Tuple[SiteId, SiteConfiguration]]
+    # type: (SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(sites.items(),
                   key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
@@ -1493,8 +1435,8 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + html.render_a(container.title(),
-                                                                              href=url)
+                        inherited_from = _("Inherited from ") + Text(
+                            html.render_a(container.title(), href=url))
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
@@ -1631,7 +1573,8 @@ def configure_attributes(new,
                 if not new and not is_editable and active:
                     value = values[0]
                 else:
-                    explanation = " (" + inherited_from + ")"
+                    if inherited_from is not None:
+                        explanation = " (" + inherited_from + ")"
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):
@@ -1657,8 +1600,8 @@ def configure_attributes(new,
     dialog_properties = {
         "inherited_tags": inherited_tags,
         "check_attributes": list(
-            set(dependency_mapping_tags.keys() + dependency_mapping_roles.keys() + hide_attributes)
-        ),
+            set(dependency_mapping_tags.keys()) | set(dependency_mapping_roles.keys()) |
+            set(hide_attributes)),
         "aux_tags_by_tag": config.tags.get_aux_tags_by_tag(),
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
@@ -1701,7 +1644,8 @@ class SiteBackupJobs(backup.Jobs):
                              stderr=subprocess.STDOUT,
                              stdin=open(os.devnull))
         if p.wait() != 0:
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
+            out = "Huh???" if p.stdout is None else p.stdout.read()
+            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % out)
 
 
 # TODO: Kept for compatibility with pre-1.6 WATO plugins
@@ -1842,7 +1786,7 @@ class DictHostTagCondition(Transform):
     def _single_tag_from_valuespec(self, operator, tag_id):
         if operator == "is":
             return tag_id
-        elif operator == "is_not":
+        if operator == "is_not":
             return {"$ne": tag_id}
         raise NotImplementedError()
 
@@ -1862,8 +1806,8 @@ class DictHostTagCondition(Transform):
             del_label=_("Remove tag"),
             magic="@@#!#@@",
             movable=False,
-            validate=lambda value, varprefix: \
-                self._validate_tag_list(value, varprefix, tag_choices),
+            validate=lambda value, varprefix: self._validate_tag_list(value, varprefix, tag_choices
+                                                                     ),
         )
 
         return (
@@ -2078,7 +2022,7 @@ class HostTagCondition(ValueSpec):
             ("ignore", _("ignore")),
             ("is", _("is")),
             ("isnot", _("isnot")),
-        ]
+        ]  # type: Choices
         html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
         html.close_td()
 
@@ -2191,7 +2135,7 @@ def get_search_expression():
 
 
 def get_hostnames_from_checkboxes(filterfunc=None):
-    # type: (typing.Optional[typing.Callable]) -> typing.List[str]
+    # type: (_Optional[Callable]) -> List[str]
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
@@ -2229,29 +2173,6 @@ class FolderChoice(DropdownChoice):
         kwargs["choices"] = watolib.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
-
-
-def rule_option_elements(disabling=True):
-    elements = [
-        ("description",
-         TextUnicode(
-             title=_("Description"),
-             help=_("A description or title of this rule"),
-             size=80,
-         )),
-        ("comment", RuleComment()),
-        ("docu_url", DocumentationURL()),
-    ]
-    if disabling:
-        elements += [
-            ("disabled",
-             Checkbox(
-                 title=_("Rule activation"),
-                 help=_("Disabled rules are kept in the configuration but are not applied."),
-                 label=_("do not apply this rule"),
-             )),
-        ]
-    return elements
 
 
 def get_check_information():

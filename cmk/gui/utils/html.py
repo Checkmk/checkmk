@@ -39,7 +39,7 @@ class HTML(object):  # pylint: disable=useless-object-inheritance
 
     def __html__(self):
         # type: () -> Text
-        return "%s" % self
+        return six.ensure_text("%s" % self)
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"

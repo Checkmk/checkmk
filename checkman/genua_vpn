@@ -1,4 +1,4 @@
-title: Genua: VPN state
+title: Genua: VPN State
 agents: snmp
 catalog: hw/network/genua
 license: GPL
@@ -7,10 +7,12 @@ description:
  This check monitors the VPN state on genuscreen VPN appliance (version 5.1).
 
 item:
- The VPN id.
+ The VPN ID.
 
 inventory:
- The inventory process checks if the device has a system description OID
- of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen",
- "genuscript" or "genubox" (case insensitive).
- One service per VPN is created.
+ One service is created for each VPN
+ if the VPN
+
+ - has a system description OID (.1.3.6.1.2.1.1.2.0)
+
+ - OID name contains "genuscreen", "genuscript" or "genubox" (case insensitive).

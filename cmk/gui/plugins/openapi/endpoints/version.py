@@ -6,23 +6,26 @@
 
 import sys
 
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.gui.globals import request
 
+from cmk.gui.plugins.openapi.restful_objects import endpoint_schema, response_schemas
 
-def search(user=None, token_info=None):
+
+@endpoint_schema('/version', method='get', response_schema=response_schemas.InstalledVersions)
+def search(param):
     if request.args.get('fail'):
         raise Exception("This is an intentional failure.")
     return {
-        "site": cmk.omd_site(),
+        "site": cmk_version.omd_site(),
         "group": request.environ.get('mod_wsgi.application_group', 'unknown'),
         "versions": {
             "apache": request.environ.get('apache.version', 'unknown'),
-            "checkmk": cmk.omd_version(),
+            "checkmk": cmk_version.omd_version(),
             "python": sys.version,
             'mod_wsgi': request.environ.get('mod_wsgi.version', 'unknown'),
             'wsgi': request.environ['wsgi.version'],
         },
-        "edition": cmk.edition_short(),
-        "demo": cmk.is_demo(),
+        "edition": cmk_version.edition_short(),
+        "demo": cmk_version.is_demo(),
     }

@@ -15,4 +15,4 @@ item:
  The sensor number.
 
 inventory:
- One service for each temperature sensor is created.
+ One service is created for each temperature sensor.

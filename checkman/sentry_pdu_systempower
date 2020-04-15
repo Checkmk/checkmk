@@ -10,7 +10,7 @@ description:
  WARN or CRIT dependent on the levels and input data.
 
 item:
- The only item is called "Power Supply System"
+ The fixed statement {{Power Supply System}}
 
 inventory:
  One service per device.

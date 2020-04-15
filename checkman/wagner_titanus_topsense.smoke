@@ -12,5 +12,4 @@ inventory:
  Creates two checks, one for every Smoke Detector.
 
 item:
- The ID of the detector.
-
+ One of the two numbers {{1}} or {{2}}

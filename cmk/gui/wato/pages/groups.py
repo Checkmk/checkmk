@@ -40,6 +40,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MenuItem,
 )
 
+from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -60,15 +61,18 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         raise NotImplementedError()
 
     def __init__(self):
+        # type: () -> None
         super(ModeGroups, self).__init__()
         self._groups = self._load_groups()
 
     def buttons(self):
+        # type: () -> None
         global_buttons()
 
     def action(self):
+        # type: () -> ActionResult
         if html.request.var('_delete'):
-            delname = html.request.var("_delete")
+            delname = html.request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
 
             if usages:
@@ -93,6 +97,7 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         return None
 
     def _page_no_groups(self):
+        # type: () -> None
         html.div(_("No groups are defined yet."), class_="info")
 
     def _collect_additional_data(self):
@@ -113,6 +118,7 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         table.cell(_("Alias"), escaping.escape_attribute(group['alias']))
 
     def page(self):
+        # type: () -> None
         if not self._groups:
             self._page_no_groups()
             return
@@ -145,11 +151,12 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         super(ModeEditGroup, self).__init__()
 
     def _from_vars(self):
-        self._name = html.request.var("edit")  # missing -> new group
+        # type: () -> None
+        self._name = html.request.get_ascii_input("edit")  # missing -> new group
         self._new = self._name is None
 
         if self._new:
-            clone_group = html.request.var("clone")
+            clone_group = html.request.get_ascii_input("clone")
             if clone_group:
                 self._name = clone_group
 
@@ -168,27 +175,27 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
             raise MKUserError(None, _("This group does not exist."))
 
     def buttons(self):
+        # type: () -> None
         html.context_button(
             _("All groups"),
             watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
     def _determine_additional_group_data(self):
+        # type: () -> None
         pass
 
     def action(self):
+        # type: () -> ActionResult
         if not html.check_transaction():
             return "%s_groups" % self.type_name
 
-        alias = html.request.get_unicode_input("alias").strip()
-        if not alias:
-            raise MKUserError("alias", _("Please specify an alias name."))
-
+        alias = html.request.get_unicode_input_mandatory("alias").strip()
         self.group = {"alias": alias}
 
         self._determine_additional_group_data()
 
         if self._new:
-            self._name = html.request.var("name").strip()
+            self._name = html.request.get_ascii_input_mandatory("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
             watolib.edit_group(self._name, self.type_name, self.group)
@@ -199,6 +206,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         pass
 
     def page(self):
+        # type: () -> None
         html.begin_form("group")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new)
@@ -206,7 +214,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
             _("The name of the group is used as an internal key. It cannot be "
               "changed later. It is also visible in the status GUI."))
         if self._new:
-            html.text_input("name", self._name)
+            html.text_input("name")
             html.set_focus("name")
         else:
             html.write_text(self._name)

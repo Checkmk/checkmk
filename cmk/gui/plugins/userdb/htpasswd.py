@@ -24,7 +24,7 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-from . import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb import UserConnector, user_connector_registry
 
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",
@@ -65,7 +65,8 @@ class Htpasswd(object):
     def save(self, entries):
         # type: (Dict[Text, Text]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = "\n".join("%s:%s" % entry for entry in sorted(entries.items())) + "\n"
+        output = u"\n".join(u"%s:%s" % (six.ensure_text(e[0]), six.ensure_text(e[1]))
+                            for e in sorted(entries.items())) + u"\n"
         store.save_text_to_file("%s" % self._path, output)
 
 

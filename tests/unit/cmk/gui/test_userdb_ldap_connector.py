@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 from pathlib2 import Path
@@ -233,13 +237,13 @@ def encode_to_byte_strings(inp):
 def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)
-    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:
         f.write(u"%r" % {
             "alias": u"admin",
             "connector": "default",
         })
 
-    Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)
     with open(cmk.utils.paths.htpasswd_file, "w") as f:
         f.write(
             "automation:$5$rounds=535000$eDIHah5PgsY2widK$tiVBvDgq0Nwxy5zd/oNFRZ8faTlOPA2T.tx.lTeQoZ1\n"

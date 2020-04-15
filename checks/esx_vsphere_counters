@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -59,6 +39,8 @@
 #   |                          \___| .__/ \__,_|                           |
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
+
+factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 factory_settings['esx_vsphere_counters_cpu_default_levels'] = {
     'cpu_costop': (5.0, 10.0),
@@ -216,7 +198,7 @@ def parse_esx_vsphere_counters(info):
 def esx_vsphere_get_average(values):
     if not values:
         return 0
-    int_values = map(int, values)
+    int_values = list(map(int, values))
     return sum(int_values) / float(len(int_values))
 
 
@@ -536,4 +518,48 @@ check_info['esx_vsphere_counters.ramdisk'] = {
     'includes': ['size_trend.include', 'df.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
+}
+
+#   .--swap----------------------------------------------------------------.
+#   |                                                                      |
+#   |                       _____      ____ _ _ __                         |
+#   |                      / __\ \ /\ / / _` | '_ \                        |
+#   |                      \__ \\ V  V / (_| | |_) |                       |
+#   |                      |___/ \_/\_/ \__,_| .__/                        |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+
+
+def _parse_esx_vsphere_counters_swap(parsed):
+
+    swap_values = {}
+
+    for agent_key, key in (('mem.swapin', 'in'), ('mem.swapout', 'out'), ('mem.swapused', 'used')):
+        try:
+            swap_values[key] = parsed[agent_key][''][0][0][0]
+        except (KeyError, IndexError, TypeError, ValueError):
+            swap_values[key] = "n.a."
+
+    return swap_values
+
+
+def inventory_esx_vsphere_counters_swap(parsed):
+    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+
+    if any([elem for elem in SWAP.values()]):
+        return [(None, {})]
+
+
+def check_esx_vsphere_counters_swap(item, params, parsed):
+    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+
+    for key in ('in', 'out', 'used'):
+        yield 0, "Swap %s: %s" % (key, get_bytes_human_readable(float(SWAP[key]), unit="KB"))
+
+
+check_info['esx_vsphere_counters.swap'] = {
+    'inventory_function': inventory_esx_vsphere_counters_swap,
+    'check_function': check_esx_vsphere_counters_swap,
+    'service_description': 'VMKernel Swap',
+    'has_perfdata': False,
 }

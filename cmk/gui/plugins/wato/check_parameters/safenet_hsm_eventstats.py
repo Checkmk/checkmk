@@ -20,11 +20,12 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_safenet_hsm_eventstats():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         ("critical_events",
          Tuple(
-             title=_(u"Critical events"),
-             help=_(u"Sets levels on total critical events since last counter reset."),
+             title=_("Critical events"),
+             help=_("Sets levels on total critical events since last counter reset."),
              elements=[
                  Integer(title=_("Warning at"), default_value=0),
                  Integer(title=_("Critical at"), default_value=1),
@@ -32,8 +33,8 @@ def _parameter_valuespec_safenet_hsm_eventstats():
          )),
         ("noncritical_events",
          Tuple(
-             title=_(u"Noncritical events"),
-             help=_(u"Sets levels on total noncritical events since last counter reset."),
+             title=_("Noncritical events"),
+             help=_("Sets levels on total noncritical events since last counter reset."),
              elements=[
                  Integer(title=_("Warning at"), default_value=0),
                  Integer(title=_("Critical at"), default_value=1),
@@ -41,7 +42,7 @@ def _parameter_valuespec_safenet_hsm_eventstats():
          )),
         ("critical_event_rate",
          Tuple(
-             title=_(u"Critical event rate"),
+             title=_("Critical event rate"),
              elements=[
                  Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
                  Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
@@ -49,7 +50,7 @@ def _parameter_valuespec_safenet_hsm_eventstats():
          )),
         ("noncritical_event_rate",
          Tuple(
-             title=_(u"Noncritical event rate"),
+             title=_("Noncritical event rate"),
              elements=[
                  Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
                  Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),

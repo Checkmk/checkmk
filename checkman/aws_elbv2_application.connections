@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB Connections
+title: AWS ApplicationELB: Connections
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -11,4 +11,4 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created for each connection.

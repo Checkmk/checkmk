@@ -15,18 +15,20 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import CSSSpec, HTML, HTMLTagContent, HTMLTagAttributes  # pylint: disable=unused-import
+from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes  # pylint: disable=unused-import
 
-TableHeader = NamedTuple("TableHeader", [
-    ("title", Union[Text, str, HTML]),
-    ("css", Optional[str]),
-    ("help_txt", Optional[Text]),
-    ("sortable", bool),
-])
+TableHeader = NamedTuple(
+    "TableHeader",
+    [
+        ("title", Union[int, HTML, str, Text]),  # basically HTMLContent without None
+        ("css", CSSSpec),
+        ("help_txt", Optional[Text]),
+        ("sortable", bool),
+    ])
 
 CellSpec = NamedTuple("CellSpec", [
     ("content", Text),
-    ("css", Optional[str]),
+    ("css", CSSSpec),
     ("colspan", Optional[int]),
 ])
 
@@ -50,7 +52,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id=None,  # type: Optional[str]
-    title=None,  # type: HTMLTagContent
+    title=None,  # type: HTMLContent
     searchable=True,  # type: bool
     sortable=True,  # type: bool
     foldable=False,  # type: bool
@@ -108,7 +110,7 @@ class Table(object):
     def __init__(
         self,
         table_id=None,  # type: Optional[str]
-        title=None,  # type: HTMLTagContent
+        title=None,  # type: HTMLContent
         searchable=True,  # type: bool
         sortable=True,  # type: bool
         foldable=False,  # type: bool
@@ -162,9 +164,9 @@ class Table(object):
 
     def text_cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
-        css=None,  # type: Optional[str]
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]
         sortable=True,  # type: bool
@@ -178,9 +180,9 @@ class Table(object):
 
     def cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
-        css=None,  # type: Optional[str]
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]
         sortable=True,  # type: bool
@@ -216,9 +218,9 @@ class Table(object):
 
     def _add_cell(
         self,
-        title="",  # type: HTMLTagContent
-        text="",  # type: HTMLTagContent
-        css=None,  # type: Optional[str]
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
         help_txt=None,  # type: Optional[Text]
         colspan=None,  # type: Optional[int]
         sortable=True,  # type: bool
@@ -544,15 +546,22 @@ class Table(object):
 
             if header.help_txt:
                 header_title = html.render_span(
-                    header.title, title=header.help_txt)  # type: Union[Text, str, HTML]
+                    header.title, title=header.help_txt)  # type: Union[int, HTML, Text]
             else:
                 header_title = header.title
 
-            css_class = ("header_%s" % header.css) if header.css else None
+            if not isinstance(header.css, list):
+                css_class = [header.css]  # type: CSSSpec
+            else:
+                css_class = header.css
+
+            assert isinstance(css_class, list)
+            css_class = [("header_%s" % c) for c in css_class if c is not None]
 
             if not self.options["sortable"] or not header.sortable:
                 html.open_th(class_=css_class)
             else:
+                css_class.insert(0, "sort")
                 reverse = 0
                 sort = html.request.get_ascii_input('_%s_sort' % table_id)
                 if sort:
@@ -561,7 +570,7 @@ class Table(object):
                         reverse = 1 if sort_reverse == 0 else 0
 
                 action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
-                html.open_th(class_=["sort", css_class],
+                html.open_th(class_=css_class,
                              title=_("Sort by %s") % header.title,
                              onclick="location.href='%s'" % action_uri)
 

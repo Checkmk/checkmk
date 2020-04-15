@@ -1,4 +1,4 @@
-title: Database statistics for PostgreSQL
+title: PostgreSQL: Statistics
 agents: linux
 catalog: app/postgresql
 license: GPL
@@ -19,6 +19,9 @@ description:
   You can then define levels on the per-second amount of the statements.
 
   This check relies on data reported by the agent-side plugin {mk_postgres}
+
+item:
+ Name of the category and the name of the database
 
 inventory:
   One item is generated per database.

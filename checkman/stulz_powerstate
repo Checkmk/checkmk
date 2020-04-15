@@ -7,5 +7,8 @@ description:
  This plugin shows the power state (on/off) of all connected clima units on a stulz management.
  The check is only informatial an returns always {OK}
 
+item:
+ Name of the unit
+
 inventory:
  The inventory will create one service per device.

@@ -1,26 +1,7 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 msgid ""
 msgstr ""
 "Project-Id-Version: Check_MK Multisite translation 0.1\n"
@@ -966,8 +947,8 @@ msgstr ""
 "<b>Ungültige Regelverwendung</b>Die Regel '%s' benötigt %d Argumente: <tt>%s</"
 "tt>. Sie haben %d Argumente definiert: <tt>%s</tt>"
 
-msgid "<b>N</b> * 100% as each core contributes with 100% at full load"
-msgstr "<b>N</b> * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
+msgid "N * 100% as each core contributes with 100% at full load"
+msgstr "N * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -2252,6 +2233,12 @@ msgstr "Absolute Schwellen für freien Speicher"
 msgid "Absolute levels for free temp space"
 msgstr "Absolute Schwellen für freien %s"
 
+msgid "Absolute levels for free RAM"
+msgstr "Absolute Schwellen für freien RAM"
+
+msgid "Absolute levels for free swap"
+msgstr "Absolute Schwellen für freien Swap"
+
 #, fuzzy
 msgid "Absolute levels for input traffic"
 msgstr "Absolutschwellwerte für ungenutzte Lizenzen"
@@ -2659,6 +2646,9 @@ msgstr "Active Directory Replikation (Windows)"
 msgid "Active ICMP Sessions"
 msgstr "Aktive ICMP-Sitzungen"
 
+msgid "Active IPsec sessions"
+msgstr "Aktive IPsec-Sitzungen"
+
 msgid "Active Power"
 msgstr "Aktive Leistung"
 
@@ -2667,6 +2657,9 @@ msgstr "Aktive SSL-Proxy-Sitzungen"
 
 msgid "Active Sessions"
 msgstr "Aktive Sitzungen"
+
+msgid "Active SVC sessions"
+msgstr "Aktive SVC-Sitzungen"
 
 msgid "Active Spot Fleet Requests"
 msgstr "Aktive Spot-Fleet-Anfragen"
@@ -2691,6 +2684,9 @@ msgstr "Aktive VPN-Benutzer"
 
 msgid "Active VPN Web Sessions"
 msgstr "Aktive VPN-Web-Sitzungen"
+
+msgid "Active WebVPN sessions"
+msgstr "Aktive WebVPN-Sitzungen"
 
 msgid "Active and Inactive Memory"
 msgstr "Aktiver und inaktiver Speicher"
@@ -10650,6 +10646,9 @@ msgstr "CRIT bei Provisionierung von"
 
 msgid "Critical at a steal time of"
 msgstr "Kritisch bei einer Steal-Zeit von"
+
+msgid "Critical at a swap usage of"
+msgstr "Kritisch bei einer Swap-Nutzung von"
 
 msgid "Critical at a usage of"
 msgstr "CRIT bei einer Benutzung von"
@@ -21566,50 +21565,19 @@ msgstr ""
 "Regel erstellt werden, nicht deaktivieren."
 
 msgid ""
-"If you use <b>Automatic HTTP/s</b> the URL prefix for host and service links "
-"within the notification mail is filled automatically. If you specify an URL "
-"prefix here, then several parts of the VictorOPS message are armed with "
-"hyperlinks to your Check_MK GUI. In both cases the recipient of the message "
-"can directly visit the host or service in question in Check_MK. Specify an "
-"absolute URL including the <tt>.../check_mk/</tt>"
-msgstr ""
-"Wenn Sie <b>Automatisches HTTP/s</b> verwenden, wird das URL-Präfix für Host- "
-"und Service-Links in der Benachrichtigungsmail automatisch gefüllt. Wenn Sie "
-"hier ein URL-Präfix angeben, dann sind mehrere Teile der VictorOPS-Nachricht "
-"mit Hyperlinks auf Ihre Check_MK-GUI versehen. In beiden Fällen kann der "
-"Empfänger der Nachricht direkt den betreffenden Host oder Dienst in Check_MK "
-"besuchen. Geben Sie eine absolute URL an, die <tt>.../check_mk/</tt> enthält."
-
-msgid ""
-"If you use <b>Automatic HTTP/s</b> the URL prefix for host and service links "
-"within the notification mail is filled automatically. If you specify an URL "
-"prefix here, then several parts of the email body are armed with hyperlinks "
-"to your Check_MK GUI. In both cases the recipient of the email can directly "
+"If you use <b>Automatic HTTP/s</b>, the URL prefix for host and service links "
+"within the notification is filled automatically. If you specify an URL prefix "
+"here, then several parts of the notification are armed with hyperlinks to your "
+"Check_MK GUI. In both cases, the recipient of the notification can directly "
 "visit the host or service in question in Check_MK. Specify an absolute URL "
-"including the <tt>.../check_mk/</tt>"
-msgstr ""
-"Im Falls <b>Automatic HTTP/s</b> wird das URL-Präfix für Host- und "
-"Servicelinks innerhalb der Mailalarmierung automatisch gesetzt. Falls eine "
-"URL angegeben wird, wird vor alle Links gehängt, die innerhalb der "
-"Alarmierungs-Email auf die Check_MK-Oberfläche zeigen. In beiden Fällen kann "
-"der Empfänger direkt die betroffenen Hosts oder Services anklicken, um diese "
-"in Check_MK zu sehen. Geben Sie eine absolute URL zu Check_MK an, bis "
-"einschließlich des <tt>.../check_mk/</tt>."
-
-msgid ""
-"If you use <b>Automatic HTTP/s</b> the URL prefix for host and service links "
-"within the notification mail is filled automatically. If you specify an URL "
-"prefix here, then several parts of the slack message are armed with "
-"hyperlinks to your Check_MK GUI. In both cases the recipient of the message "
-"can directly visit the host or service in question in Check_MK. Specify an "
-"absolute URL including the <tt>.../check_mk/</tt>"
+"including <tt>.../check_mk/</tt>."
 msgstr ""
 "Wenn Sie <b>Automatisches HTTP/s</b> verwenden, wird das URL-Präfix für Host- "
-"und Service-Links in der Benachrichtigungsmail automatisch gefüllt. Wenn Sie "
-"hier ein URL-Präfix angeben, dann sind mehrere Teile der Slack-Nachricht mit "
-"Hyperlinks zu Ihrer Check_MK-GUI ausgestattet. In beiden Fällen kann der "
-"Empfänger der Nachricht direkt den betreffenden Host oder Dienst in Check_MK "
-"besuchen. Geben Sie eine absolute URL an, die <tt>.../check_mk/</tt> enthält."
+"und Service-Links in der Benachrichtigung automatisch gefüllt. Wenn Sie hier "
+"ein URL-Präfix angeben, dann sind mehrere Teile der Benachrichtigung mit "
+"Hyperlinks auf Ihre Check_MK-GUI versehen. In beiden Fällen kann der Empfänger "
+"der Nachricht direkt den betroffenen Host oder Dienst in Check_MK besuchen. "
+"Geben Sie eine absolute URL an, die <tt>.../check_mk/</tt> enthält."
 
 msgid ""
 "If you use this option, then <tt>traceroute</tt> is <b>not</b> being called "
@@ -24254,6 +24222,9 @@ msgstr "Schwellen für Prozessanzahl"
 msgid "Levels for provisioning count"
 msgstr "Schwellen für die Anzahl der Datenbereitstellungen"
 
+msgid "Levels for RAM usage"
+msgstr "Schwellwerte für RAM-Nutzung"
+
 msgid "Levels for queue length"
 msgstr "Schwellwerte für die Länge der Warteschlange"
 
@@ -24293,6 +24264,9 @@ msgstr "Schwellen für benutzte Sitzungen"
 
 msgid "Levels for signal/noise ratio"
 msgstr "Schwellwerte für Signal/Rauschen-Verhältnis"
+
+msgid "Levels for swap usage"
+msgstr "Schwellwerte für die Swap-Nutzung"
 
 #, fuzzy
 msgid "Levels for size on disk"
@@ -27435,6 +27409,9 @@ msgstr "Monitoring State falls der Service fehlgeschlagen ist"
 msgid "Monitoring state if service is inactive"
 msgstr "Monitoring State falls der Service inaktiv ist"
 
+msgid "Monitoring state in case of swap errors"
+msgstr "Monitoring State im Fall von Swap-Fehlern"
+
 msgid "Monitoring state requirement"
 msgstr "Überwachungszustandsanforderung"
 
@@ -29312,7 +29289,7 @@ msgid "Number of active paths"
 msgstr "Anzahl von aktiven Pfaden"
 
 msgid "Number of active sessions"
-msgstr "Anzahl von aktiven Sitzungen"
+msgstr "Anzahl aktiver Sitzungen"
 
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
@@ -29657,6 +29634,9 @@ msgstr "Anzahl von Services mit Status WARN (Servicegruppe)"
 
 msgid "Number of shared and exclusive locks"
 msgstr "Anzahl von gemeinsamen und exklusiven Locks"
+
+msgid "Number of signed-in web users"
+msgstr "Anzahl angemeldeter Web-Benutzer"
 
 msgid "Number of spare disks"
 msgstr "Anzahl der Ersatzlplatten"
@@ -31523,6 +31503,12 @@ msgstr "Prozentuale Schwellen für genutzten %s"
 msgid "Percentual levels for used memory"
 msgstr "Prozentuale Schwellen für benutzen Speicher"
 
+msgid "Percentual levels for used RAM"
+msgstr "Prozentuale Schwellen für benutzen RAM"
+
+msgid "Percentual levels for used swap"
+msgstr "Prozentuale Schwellen für benutzten Swap"
+
 #, python-format
 msgid "Percentual levels%s"
 msgstr "Prozentualle Schwellen%s"
@@ -33075,6 +33061,15 @@ msgstr "Anderen Benutzern freigeben"
 
 msgid "Publisher"
 msgstr "Publisher"
+
+msgid "Pulse Secure disk utilization"
+msgstr "Pulse Secure Festplattennutzung"
+
+msgid "Pulse Secure IVE memory utilization"
+msgstr "Pulse Secure IVE Speichernutzung"
+
+msgid "Pulse Secure users"
+msgstr "Pulse Secure Benutzer"
 
 msgid "Push configuration to this site"
 msgstr "Konfiguration auf diese Instanz übertragen"
@@ -50266,6 +50261,9 @@ msgstr "Obere Schwellen für die Lizenzgröße"
 msgid "Upper levels for disk usage"
 msgstr "Obere Schwellen für die Festplattennutzung"
 
+msgid "Upper levels for disk utilization"
+msgstr "Obere Schwellen für die Festplattennutzung"
+
 msgid "Upper levels for encountered exceptions"
 msgstr "Obere Schwellen für aufgetretene Exceptions"
 
@@ -50283,6 +50281,12 @@ msgstr "Obere Schwellen für Indices"
 
 msgid "Upper levels for infections"
 msgstr "Obere Schwellen für Infizierungen"
+
+msgid "Upper levels for IVE RAM utilization"
+msgstr "Obere Schwellen für die IVE RAM-Nutzung"
+
+msgid "Upper levels for IVE swap utilization"
+msgstr "Obere Schwellen für die IVE Swap-Nutzung"
 
 msgid "Upper levels for latency"
 msgstr "Obere Schwellen für Latenzzeit"
@@ -50866,12 +50870,17 @@ msgid ""
 "Use the proxy settings from the environment variables. The variables "
 "<tt>NO_PROXY</tt>, <tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken "
 "into account during execution. Have a look at the python requests module "
-"documentation for further information."
+"documentation for further information. Note that these variables must be "
+"defined as a site-user in ~/etc/environment and that this might affect "
+"other notification methods which also use the requests module."
 msgstr ""
 "Die Proxy-Einstellungen aus den Umgebungsvariablen verwenden. Die Variablen "
 "<tt>NO_PROXY</tt>, <tt>HTTP_PROXY</tt> und <tt>HTTPS_PROXY</tt> werden bei "
 "der Ausführung berücksichtigt. Weitere Informationen finden Sie in der "
-"Moduldokumentation von python requests."
+"Moduldokumentation von python requests. Beachten Sie, dass diese Variablen "
+"als Site-Benutzer in ~/etc/environmnet definiert werden müssen und dass "
+"dies auch andere Benachrichtigungsmethoden, welche ebenso das request-Modul "
+"verwenden, beeinflussen kann."
 
 msgid "Use the remote SID"
 msgstr "Benutze die Remote-ID"
@@ -52259,13 +52268,13 @@ msgid "Warning at a Co-Stop time of"
 msgstr "Warnung bei einer Steal-Zeit von"
 
 msgid "Warning at a RAM usage of"
-msgstr "Warnung bei einem RAM-Verbrauch von"
+msgstr "Warnung bei einer RAM-Nutzung von"
 
 msgid "Warning at a disk wait of"
 msgstr "Warning bei Platten Wartezyklen von"
 
 msgid "Warning at a memory usage of"
-msgstr "Warnung bei einem Speicherverbrauch von"
+msgstr "Warnung bei einer Speichernutzung von"
 
 msgid "Warning at a provisioning of"
 msgstr "Warnung bei Provisionierung von"
@@ -52278,6 +52287,9 @@ msgstr "Warnung bei Verwendung von"
 
 msgid "Warning at a utilization of"
 msgstr "Warnung bei Verwendung von"
+
+msgid "Warning at a swap usage of"
+msgstr "Warnung bei einer Swap-Nuztung von"
 
 msgid "Warning at or above"
 msgstr "Warnung bei oder über"
@@ -52432,6 +52444,16 @@ msgstr ""
 "mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">hier</"
 "a><br />Diese URL kann auch aus dem Passwortspeicher von Check_MK übernommen "
 "werden."
+
+msgid ""
+"Webhook URL. Setup Cisco Webex Teams Webhook <a href=\"https://apphub.webex.com/"
+"teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+"<br />This URL can also be collected from the Password Store from Check_MK."
+msgstr ""
+"URL eines Cisco Webex Teams Webhooks. Richten Sie <a href=\"https://apphub.webex."
+"com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">hier"
+"</a> einen ein.<br/>Diese URL kann auch aus dem Passwortspeicher von Check_MK "
+"übernommen werden."
 
 msgid "Webhook-URL"
 msgstr "Webhook-URL"
@@ -57434,6 +57456,168 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+msgid "State of Microsoft Hyper-V Server VMs"
+msgstr "Status der Microsoft Hyper-V Server VMs"
+
+msgid "Name of the VM"
+msgstr "Name der VM"
+
+msgid "Specify the name of the VM, for example z4065012."
+msgstr "Geben sie den Namen der VM an, z.B. z4065012."
+
+msgid "Map VM state to monitoring state"
+msgstr "Zuordnung des Status der VM zu einem Monitoringstatus"
+
+msgid "Monitoring state if VM state is Other"
+msgstr "Monitoringstatus, falls VM-Status Other ist"
+
+msgid "Monitoring state if VM state is Running"
+msgstr "Monitoringstatus, falls VM-Status Running ist"
+
+msgid "Monitoring state if VM state is Off"
+msgstr "Monitoringstatus, falls VM-Status Off ist"
+
+msgid "Monitoring state if VM state is Stopping"
+msgstr "Monitoringstatus, falls VM-Status Stopping ist"
+
+msgid "Monitoring state if VM state is Saved"
+msgstr "Monitoringstatus, falls VM-Status Saved ist"
+
+msgid "Monitoring state if VM state is Paused"
+msgstr "Monitoringstatus, falls VM-Status Paused ist"
+
+msgid "Monitoring state if VM state is Starting"
+msgstr "Monitoringstatus, falls VM-Status Starting ist"
+
+msgid "Monitoring state if VM state is Reset"
+msgstr "Monitoringstatus, falls VM-Status Reset ist"
+
+msgid "Monitoring state if VM state is Saving"
+msgstr "Monitoringstatus, falls VM-Status Saving ist"
+
+msgid "Monitoring state if VM state is Pausing"
+msgstr "Monitoringstatus, falls VM-Status Pausing ist"
+
+msgid "Monitoring state if VM state is Resuming"
+msgstr "Monitoringstatus, falls VM-Status Resuming ist"
+
+msgid "Monitoring state if VM state is FastSaved"
+msgstr "Monitoringstatus, falls VM-Status FastSaved ist"
+
+msgid "Monitoring state if VM state is FastSaving"
+msgstr "Monitoringstatus, falls VM-Status FastSaving ist"
+
+msgid "Monitoring state if VM state is RunningCritical"
+msgstr "Monitoringstatus, falls VM-Status RunningCritical ist"
+
+msgid "Monitoring state if VM state is OffCritical"
+msgstr "Monitoringstatus, falls VM-Status OffCritical ist"
+
+msgid "Monitoring state if VM state is StoppingCritical"
+msgstr "Monitoringstatus, falls VM-Status StoppingCritical ist"
+
+msgid "Monitoring state if VM state is SavedCritical"
+msgstr "Monitoringstatus, falls VM-Status SavedCritical ist"
+
+msgid "Monitoring state if VM state is PausedCritical"
+msgstr "Monitoringstatus, falls VM-Status PausedCritical ist"
+
+msgid "Monitoring state if VM state is StartingCritical"
+msgstr "Monitoringstatus, falls VM-Status StartingCritical ist"
+
+msgid "Monitoring state if VM state is ResetCritical"
+msgstr "Monitoringstatus, falls VM-Status ResetCritical ist"
+
+msgid "Monitoring state if VM state is SavingCritical"
+msgstr "Monitoringstatus, falls VM-Status SavingCritical ist"
+
+msgid "Monitoring state if VM state is PausingCritical"
+msgstr "Monitoringstatus, falls VM-Status PausingCritical ist"
+
+msgid "Monitoring state if VM state is ResumingCritical"
+msgstr "Monitoringstatus, falls VM-Status ResumingCritical ist"
+
+msgid "Monitoring state if VM state is FastSavedCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavedCritical ist"
+
+msgid "Monitoring state if VM state is FastSavingCritical"
+msgstr "Monitoringstatus, falls VM-Status FastSavingCritical ist"
+
+msgid "Check result if reported VM state is Other"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Other ist"
+
+msgid "Check result if reported VM state is Running"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Running ist"
+
+msgid "Check result if reported VM state is Off"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Off ist"
+
+msgid "Check result if reported VM state is Stopping"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Stopping ist"
+
+msgid "Check result if reported VM state is Saved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saved ist"
+
+msgid "Check result if reported VM state is Paused"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Paused ist"
+
+msgid "Check result if reported VM state is Starting"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Starting ist"
+
+msgid "Check result if reported VM state is Reset"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Reset ist"
+
+msgid "Check result if reported VM state is Saving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Saving ist"
+
+msgid "Check result if reported VM state is Pausing"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Pausing ist"
+
+msgid "Check result if reported VM state is Resuming"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status Resuming ist"
+
+msgid "Check result if reported VM state is FastSaved"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaved ist"
+
+msgid "Check result if reported VM state is FastSaving"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSaving ist"
+
+msgid "Check result if reported VM state is RunningCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status RunningCritical ist"
+
+msgid "Check result if reported VM state is OffCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status OffCritical ist"
+
+msgid "Check result if reported VM state is StoppingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StoppingCritical ist"
+
+msgid "Check result if reported VM state is SavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavedCritical ist"
+
+msgid "Check result if reported VM state is PausedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausedCritical ist"
+
+msgid "Check result if reported VM state is StartingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status StartingCritical ist"
+
+msgid "Check result if reported VM state is ResetCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResetCritical ist"
+
+msgid "Check result if reported VM state is SavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status SavingCritical ist"
+
+msgid "Check result if reported VM state is PausingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status PausingCritical ist"
+
+msgid "Check result if reported VM state is ResumingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status ResumingCritical ist"
+
+msgid "Check result if reported VM state is FastSavedCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavedCritical ist"
+
+msgid "Check result if reported VM state is FastSavingCritical"
+msgstr "Check-Ergebnis, falls ger gemeldete VM-Status FastSavingCritical ist"
 
 #, fuzzy
 #~ msgid "Not enough data to process"

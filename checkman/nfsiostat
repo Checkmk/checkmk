@@ -1,4 +1,4 @@
-title: Check NFS IO Stats
+title: NFS Mounts: IO Performance
 agents: linux
 catalog: os/storage
 distribution:
@@ -13,4 +13,8 @@ description:
  second, bytes per operation, retransmissions (%), average RTT (ms) and average
  exe (ms).
 
+item:
+ Name of the NFS mount
 
+inventory:
+ One service is created for each NFS mount.

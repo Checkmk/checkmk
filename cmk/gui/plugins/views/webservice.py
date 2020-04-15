@@ -11,6 +11,7 @@ import six
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.views import (
     layout_registry,
     Layout,
@@ -67,8 +68,15 @@ class LayoutPython(Layout):
             html.write_text("[")
             for cell in cells:
                 joined_row = join_row(row, cell)
-                _tdclass, content = cell.render_content(joined_row)
-                html.write(repr(escaping.strip_tags(content)))
+                content = cell.render_for_export(joined_row)
+
+                # The aggr_treestate painters are returning a dictionary data structure (see
+                # paint_aggregated_tree_state()) in case the output_format is not HTML. Only
+                # remove the HTML tags from the top level strings produced by painters.
+                if isinstance(content, (HTML, six.string_types)):
+                    content = escaping.strip_tags(content)
+
+                html.write(repr(content))
                 html.write_text(",")
             html.write_text("],")
         html.write_text("\n]\n")
@@ -87,7 +95,7 @@ class JSONLayout(Layout):
             painted_row = []
             for cell in cells:
                 joined_row = join_row(row, cell)
-                content = cell.render_content(joined_row)[1]
+                content = cell.render_for_export(joined_row)
                 if isinstance(content, (list, dict)):
                     # Allow painters to return lists and dicts, then json encode them
                     # as such data structures without wrapping them into strings
@@ -178,7 +186,7 @@ class LayoutJSONP(JSONLayout):
 
 class CSVLayout(Layout):
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
-        csv_separator = html.request.var("csv_separator", ";")
+        csv_separator = html.request.get_str_input_mandatory("csv_separator", ";")
         first = True
         for cell in group_cells + cells:
             if first:
@@ -197,7 +205,7 @@ class CSVLayout(Layout):
                 else:
                     html.write(csv_separator)
                 joined_row = join_row(row, cell)
-                _tdclass, content = cell.render_content(joined_row)
+                content = cell.render_for_export(joined_row)
                 html.write('"%s"' % self._format_for_csv(content))
 
     def _format_for_csv(self, raw_data):

@@ -7,9 +7,10 @@
 
 import os
 import signal
-import tempfile
+from random import Random
 import time
 import copy
+import errno
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
@@ -17,13 +18,12 @@ from typing import (  # pylint: disable=unused-import
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
-from cmk.utils.encoding import make_utf8
 
 import cmk.base.utils
 import cmk.base.core
@@ -45,7 +45,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 )
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
     import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
@@ -63,7 +63,7 @@ _submit_to_core = True
 _show_perfdata = False
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
-UncleanPerfValue = Optional[Union[str, float]]
+UncleanPerfValue = Union[None, str, float]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -82,7 +82,7 @@ UncleanPerfValue = Optional[Union[str, float]]
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", six.ensure_str(cmk.__version__))
+    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -366,12 +366,20 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
                 return a
             return min(a, b)
 
+        def maxn(a, b):
+            # type: (Optional[int], Optional[int]) -> Optional[int]
+            if a is None:
+                return b
+            if b is None:
+                return a
+            return max(a, b)
+
         for host_sections in multi_host_sections.get_host_sections().values():
             section_entries = host_sections.cache_info
             if section_name in section_entries:
                 cached_at, cache_interval = section_entries[section_name]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
-                largest_interval = max(largest_interval, cache_interval)
+                largest_interval = maxn(largest_interval, cache_interval)
 
         _submit_check_result(hostname,
                              description,
@@ -399,6 +407,12 @@ def determine_check_params(entries):
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries = {}  # type: Dict[str, Any]
     for entry in entries[::-1]:
+        if not isinstance(entry, dict):
+            # Ignore (old) default parameters like
+            #   'NAME_default_levels' = (80.0, 85.0)
+            # A rule with a timespecifc parameter settings always has an
+            # implicit default parameter set, even if no timeperiod matches.
+            continue
         timespecific_entries.update(_evaluate_timespecific_entry(entry))
 
     return timespecific_entries
@@ -445,7 +459,7 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
-    # type: (Optional[Union[ServiceCheckResult, Tuple, Iterable]], bool) -> ServiceCheckResult
+    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
@@ -532,7 +546,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 def _convert_perf_data(p):
     # type: (List[UncleanPerfValue]) -> str
-    # replace None with "" and fill up to 7 values
+    # replace None with "" and fill up to 6 values
     normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 
@@ -624,8 +638,9 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", servicedesc.encode('utf-8'), tty.bold,
-                    tty.states[state], make_utf8(infotext.split('\n')[0]), tty.normal, make_utf8(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", six.ensure_str(servicedesc), tty.bold,
+                    tty.states[state], six.ensure_str(infotext.split('\n')[0]), tty.normal,
+                    six.ensure_str(p))
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
@@ -654,7 +669,8 @@ def _submit_via_check_result_file(host, service, state, output):
     if _checkresult_file_fd:
         now = time.time()
         os.write(
-            _checkresult_file_fd, """host_name=%s
+            _checkresult_file_fd,
+            six.ensure_binary("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -665,7 +681,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, make_utf8(service), now, now, state, make_utf8(output)))
+""" % (six.ensure_str(host), six.ensure_str(service), now, now, state, six.ensure_str(output))))
 
 
 def _open_checkresult_file():
@@ -674,11 +690,78 @@ def _open_checkresult_file():
     global _checkresult_file_path
     if _checkresult_file_fd is None:
         try:
-            _checkresult_file_fd, _checkresult_file_path = \
-                tempfile.mkstemp('', 'c', cmk.utils.paths.check_result_path)
+            _checkresult_file_fd, _checkresult_file_path = _create_nagios_check_result_file()
         except Exception as e:
             raise MKGeneralException("Cannot create check result file in %s: %s" %
                                      (cmk.utils.paths.check_result_path, e))
+
+
+def _create_nagios_check_result_file():
+    # type: () -> Tuple[int, str]
+    """Create some temporary file for storing the checkresults.
+    Nagios expects a seven character long file starting with "c". Since Python3 we can not
+    use tempfile.mkstemp anymore since it produces file names with 9 characters length.
+
+    Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
+    """
+
+    base_dir = cmk.utils.paths.check_result_path
+
+    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+
+    names = _get_candidate_names()
+    for _seq in range(os.TMP_MAX):
+        name = next(names)
+        filepath = os.path.join(base_dir, "c" + name)
+        try:
+            fd = os.open(filepath, flags, 0o600)
+        except FileExistsError:
+            continue  # try again
+        return (fd, os.path.abspath(filepath))
+
+    raise FileExistsError(errno.EEXIST, "No usable temporary file name found")
+
+
+_name_sequence = None  # type: Optional[_RandomNameSequence]
+
+
+def _get_candidate_names():
+    # type: () -> _RandomNameSequence
+    global _name_sequence
+    if _name_sequence is None:
+        _name_sequence = _RandomNameSequence()
+    return _name_sequence
+
+
+class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
+    """An instance of _RandomNameSequence generates an endless
+    sequence of unpredictable strings which can safely be incorporated
+    into file names.  Each string is eight characters long.  Multiple
+    threads can safely use the same instance at the same time.
+
+    _RandomNameSequence is an iterator."""
+
+    characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+
+    @property
+    def rng(self):
+        # type: () -> Random
+        cur_pid = os.getpid()
+        if cur_pid != getattr(self, '_rng_pid', None):
+            self._rng = Random()
+            self._rng_pid = cur_pid
+        return self._rng
+
+    def __iter__(self):
+        # type: () -> _RandomNameSequence
+        return self
+
+    def __next__(self):
+        # type: () -> str
+        c = self.characters
+        choose = self.rng.choice
+        letters = [choose(c) for dummy in range(6)]
+        return ''.join(letters)
 
 
 def _close_checkresult_file():
@@ -686,8 +769,10 @@ def _close_checkresult_file():
     global _checkresult_file_fd
     if _checkresult_file_fd is not None and _checkresult_file_path is not None:
         os.close(_checkresult_file_fd)
-        open(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
+
+        with open(_checkresult_file_path + ".ok", "w"):
+            pass
 
 
 def _submit_via_command_pipe(host, service, state, output):
@@ -698,7 +783,7 @@ def _submit_via_command_pipe(host, service, state, output):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
                                                                    state, output)
-        _nagios_command_pipe.write(make_utf8(msg))
+        _nagios_command_pipe.write(six.ensure_binary(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()

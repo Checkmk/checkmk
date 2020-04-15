@@ -1,4 +1,4 @@
-title: Disk space on OpenVMS
+title: OpenVMS: Disk Space
 agents: openvms
 catalog: os/storage
 license: GPL
@@ -7,3 +7,6 @@ description:
  This check measures the used disk space on OpenVMS. The check
  is fully compatible with {df}. Please look at the man page
  of {df} for details.
+
+item:
+ The mountpoint of the filesystem

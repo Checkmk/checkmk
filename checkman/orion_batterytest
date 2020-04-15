@@ -1,4 +1,4 @@
-title: Delta Energy Systems: Batter test
+title: Delta Energy Systems: Battery Test
 agents: snmp
 catalog: hw/environment/orion
 license: GPL
@@ -10,9 +10,6 @@ description:
  The check is OK in case of 'none' and 'OK', it is WARN if
  the test was 'aborted' and CRIT is reported in case of
  'failed' or 'load failure'.
-
-item:
- The item is called 'Battery'.
 
 inventory:
  One service for each item is generated.

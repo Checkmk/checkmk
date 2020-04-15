@@ -7,15 +7,21 @@
 from __future__ import print_function
 import sys
 import base64
-import urllib2
 import xml.etree.ElementTree as etree
+
+if sys.version_info[0] >= 3:
+    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
+else:
+    from urllib2 import Request, urlopen  # pylint: disable=import-error
+
+import six
 
 
 def get_informations(credentials, name, xml_id, org_name):
     server, address, user, password = credentials
     data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
     address = "http://%s%s%s" % (server, data_url, xml_id)
-    c = False
+    c = None
     for line in etree.parse(get_url(address, user, password)).getroot():
         for child in line:
             if child.get('c'):
@@ -58,10 +64,11 @@ def get_licenses(credentials):
 
 
 def get_url(address, user, password):
-    request = urllib2.Request(address)
-    base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
-    request.add_header("Authorization", "Basic %s" % base64string)
-    return urllib2.urlopen(request)
+    request = Request(address)
+    base64string = base64.encodebytes(six.ensure_binary('%s:%s' % (user, password))).replace(
+        b'\n', b'')
+    request.add_header("Authorization", "Basic %s" % six.ensure_str(base64string))
+    return urlopen(request)
 
 
 def main(sys_argv=None):

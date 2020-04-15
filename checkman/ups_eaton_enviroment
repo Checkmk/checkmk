@@ -7,9 +7,6 @@ description:
  Shows Sensor information for Temperature, External Temperature an Humidity for
  Eaton UPS devices
 
-item:
- None
-
 inventory:
  One service will be created
 

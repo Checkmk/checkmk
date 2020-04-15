@@ -24,5 +24,4 @@ description:
  can be configured by WATO.
 
 inventory:
- Creates exactly one check for every IBM SVC / Storwize V3700 / V7000 named
- IBM SVC Hosts.
+ One service is created on each device named IBM SVC Hosts.

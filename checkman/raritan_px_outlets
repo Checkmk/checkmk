@@ -11,7 +11,7 @@ description:
  of voltage are configurable via WATO.
 
 item:
- Sensor number, sensor name
+ The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
 inventory:
  One service per outlet is created.

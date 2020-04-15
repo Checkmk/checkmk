@@ -1,4 +1,4 @@
-title: AppDynamics: Memory usage
+title: AppDynamics: Memory Usage
 agents: appdynamics
 catalog: app/java
 license: GPL
@@ -8,7 +8,12 @@ description:
  using the information collected by AppDynamics. Hence there is no need to
  query the application server itself.
 
- The WATO ruleset {JVM memory levels} applies crit/warn levels to this check.
+ The WATO ruleset {JVM memory levels} applies {WARN}/{CRIT} levels to this check.
+
+ The service goes {WARN}/{CRIT} if the memory usage exceeds these levels.
+
+item:
+ Name of the disk and either {{Heap}} or {{Non-Heap}}.
 
 inventory:
- One item per Application and memory type (Heap, Non-Heap) is generated.
+ One service is created for each application and memory type (Heap, Non-Heap).

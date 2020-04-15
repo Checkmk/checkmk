@@ -1,4 +1,4 @@
-title: MongoDB Instance
+title: MongoDB: Instance
 agents: linux
 catalog: app/mongodb
 license: GPL
@@ -8,4 +8,4 @@ description:
  Possible types are {Primary}, {Secondary}, {Arbiter} and {Instance is down}.
 
 inventory:
- Creates one service.
+ One service is created.

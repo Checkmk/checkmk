@@ -75,6 +75,18 @@ class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, Persis
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
 
 
+# Abstract methods:
+#
+# def _execute(self):
+# def _empty_raw_data(self):
+# def _empty_host_sections(self):
+# def _from_cache_file(self, raw_data):
+# def _to_cache_file(self, raw_data):
+# def _convert_to_sections(self, raw_data):
+# def _gather_check_plugin_names(self):
+# def _cpu_tracking_id(self):
+# def id(self):
+# def describe(self):
 class DataSource(
         six.with_metaclass(
             abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
@@ -411,15 +423,6 @@ class DataSource(
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
-    def _verify_ipaddress(self):
-        # type: () -> None
-        if not self._ipaddress:
-            raise MKIPAddressLookupError("Host as no IP address configured.")
-
-        if self._ipaddress in ["0.0.0.0", "::"]:
-            raise MKIPAddressLookupError(
-                "Failed to lookup IP address and no explicit IP address configured")
-
     def set_max_cachefile_age(self, max_cachefile_age):
         # type: (int) -> None
         self._max_cachefile_age = max_cachefile_age
@@ -604,6 +607,11 @@ class DataSource(
         cls._use_outdated_cache_file = state
 
 
+# Abstract methods:
+#
+# def _execute(self):
+# def id(self):
+# def describe(self):
 class CheckMKAgentDataSource(
         six.with_metaclass(
             abc.ABCMeta, DataSource[RawAgentData, AgentSections, PersistedAgentSections,
@@ -681,9 +689,9 @@ class CheckMKAgentDataSource(
         if config.agent_simulator:
             raw_data = cmk.base.agent_simulator.process(raw_data)
 
-        return self._parse_info(raw_data)
+        return self._parse_host_section(raw_data)
 
-    def _parse_info(self, raw_data):
+    def _parse_host_section(self, raw_data):
         # type: (RawAgentData) -> AgentHostSections
         """Split agent output in chunks, splits lines by whitespaces.
 
@@ -701,33 +709,33 @@ class CheckMKAgentDataSource(
         # handle sections with option persist(...)
         persisted_sections = {}  # type: PersistedAgentSections
         section_content = []  # type: AgentSectionContent
-        section_options = {}  # type: Dict[bytes, Optional[bytes]]
+        section_options = {}  # type: Dict[str, Optional[str]]
         agent_cache_info = {}  # type: SectionCacheInfo
         separator = None  # type: Optional[str]
         encoding = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
-            if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
+            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
                 piggybacked_hostname =\
                     self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
             elif piggybacked_hostname:  # processing data for an other host
-                if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                     line = self._add_cached_info_to_piggybacked_section_header(
                         stripped_line, piggybacked_cached_at, piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-            elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
-                section_header = stripped_line[3:-3]
-                headerparts = section_header.split(b":")
+            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
+                section_header = six.ensure_str(stripped_line[3:-3])
+                headerparts = section_header.split(":")
                 section_name = headerparts[0]
                 section_options = {}
-                opt_args = None  # type: Optional[bytes]
+                opt_args = None  # type: Optional[str]
                 for o in headerparts[1:]:
-                    opt_parts = o.split(b"(")
+                    opt_parts = o.split("(")
                     opt_name = opt_parts[0]
                     if len(opt_parts) > 1:
                         opt_args = opt_parts[1][:-1]
@@ -735,39 +743,38 @@ class CheckMKAgentDataSource(
                         opt_args = None
                     section_options[opt_name] = opt_args
 
-                content = sections.get(str(section_name), None)
+                content = sections.get(section_name, None)
                 if content is None:  # section appears in output for the first time
                     section_content = []
-                    sections[six.ensure_str(section_name)] = section_content
+                    sections[section_name] = section_content
                 else:
                     section_content = content
 
-                raw_separator = section_options.get(b"sep")
+                raw_separator = section_options.get("sep")
                 if raw_separator is None:
                     separator = None
                 else:
                     separator = chr(int(raw_separator))
 
                 # Split of persisted section for server-side caching
-                raw_persist = section_options.get(b"persist")
+                raw_persist = section_options.get("persist")
                 if raw_persist is not None:
                     until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
-                    agent_cache_info[six.ensure_str(section_name)] = (cached_at, cache_interval)
-                    persisted_sections[six.ensure_str(section_name)] = (cached_at, until,
-                                                                        section_content)
+                    agent_cache_info[section_name] = (cached_at, cache_interval)
+                    persisted_sections[section_name] = (cached_at, until, section_content)
 
-                raw_cached = section_options.get(b"cached")
+                raw_cached = section_options.get("cached")
                 if raw_cached is not None:
-                    cache_times = list(map(int, raw_cached.split(b",")))
-                    agent_cache_info[six.ensure_str(section_name)] = cache_times[0], cache_times[1]
+                    cache_times = list(map(int, raw_cached.split(",")))
+                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
-                encoding = section_options.get(b"encoding")
+                encoding = section_options.get("encoding")
 
-            elif stripped_line != '':
-                raw_nostrip = section_options.get(b"nostrip")
+            elif stripped_line != b'':
+                raw_nostrip = section_options.get("nostrip")
                 if raw_nostrip is None:
                     line = stripped_line
 
@@ -783,7 +790,7 @@ class CheckMKAgentDataSource(
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
         # type: (bytes) -> Optional[HostName]
-        piggybacked_hostname = str(orig_piggyback_header[4:-4])
+        piggybacked_hostname = six.ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 
@@ -802,7 +809,9 @@ class CheckMKAgentDataSource(
         # type: (bytes, int, int) -> bytes
         if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
-        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
+        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
+                                            six.ensure_binary("%d" % cached_at),
+                                            six.ensure_binary("%d" % cache_age))
 
     # TODO: refactor
     def _summary_result(self, for_checking):
@@ -955,59 +964,50 @@ class CheckMKAgentDataSource(
                 (agent_version, expected_version, e))
 
 
-class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
-    """Abstract base class for all data sources that work with the management board configuration"""
+def management_board_ipaddress(hostname):
+    # type: (HostName) -> Optional[HostAddress]
+    mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
 
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
+    if mgmt_ipaddress is None:
+        return None
 
-    # pylint: disable=abstract-method
-
-    _for_mgmt_board = True
-
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
-        self._ipaddress = self._management_board_ipaddress(hostname)
-
-    def _management_board_ipaddress(self, hostname):
-        # type: (HostName) -> Optional[HostAddress]
-        mgmt_ipaddress = self._host_config.management_address
-
-        if mgmt_ipaddress is None:
+    if not _is_ipaddress(mgmt_ipaddress):
+        try:
+            return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+        except MKIPAddressLookupError:
             return None
+    else:
+        return mgmt_ipaddress
 
-        if not self._is_ipaddress(mgmt_ipaddress):
-            try:
-                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
-            except MKIPAddressLookupError:
-                return None
-        else:
-            return mgmt_ipaddress
 
-    # TODO: Why is it used only here?
-    @staticmethod
-    def _is_ipaddress(address):
-        # type: (HostAddress) -> bool
-        if address is None:
-            return False
+def verify_ipaddress(address):
+    # type: (Optional[HostAddress]) -> None
+    if not address:
+        raise MKIPAddressLookupError("Host as no IP address configured.")
 
-        try:
-            socket.inet_pton(socket.AF_INET, address)
-            return True
-        except socket.error:
-            # not a ipv4 address
-            pass
+    if address in ["0.0.0.0", "::"]:
+        raise MKIPAddressLookupError(
+            "Failed to lookup IP address and no explicit IP address configured")
 
-        try:
-            socket.inet_pton(socket.AF_INET6, address)
-            return True
-        except socket.error:
-            # no ipv6 address either
-            return False
+
+def _is_ipaddress(address):
+    # type: (HostAddress) -> bool
+    if address is None:
+        return False
+
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+        return True
+    except socket.error:
+        # not a ipv4 address
+        pass
+
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except socket.error:
+        # no ipv6 address either
+        return False
 
 
 def _normalize_ip_addresses(ip_addresses):

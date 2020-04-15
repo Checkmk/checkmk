@@ -1,4 +1,4 @@
-title: AWS/RDS Connections
+title: AWS RDS: Connections
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -10,5 +10,9 @@ description:
 
  No default levels are set. Upper levels are configurable.
 
+item:
+ Name of the instance
+
 inventory:
- One service per databse will be created.
+ One service is create for each database if all required metrics
+ (DatabaseConnections) are given.

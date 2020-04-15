@@ -1,4 +1,4 @@
-title: Generic UPS Device: Output power
+title: Generic UPS Device: Output Power
 agents: snmp
 catalog: hw/power/generic
 license: GPL
@@ -10,6 +10,9 @@ description:
  You can define warning and critical levels of power, below which
  the phases must not drop. Each phase is realized as a separate
  check.
+
+item:
+ ID of the phase
 
 inventory:
  Supported.

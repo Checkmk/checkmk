@@ -1,4 +1,4 @@
-title: AWS/ApplicationELB Statistics
+title: AWS ApplicationELB: Statistics
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -10,4 +10,5 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (ProcessedBytes, IPv6ProcessedBytes,
+ IPv6RequestCount, RuleEvaluations) are given.

@@ -1,4 +1,4 @@
-title: pfSense Status
+title: pfSense: Status
 agents: snmp
 catalog: app/pfsense
 license: GPL

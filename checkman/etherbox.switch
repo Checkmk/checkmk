@@ -15,5 +15,5 @@ item:
  Example: "2.4" A switch contact sensor(type 4) on port 2
 
 inventory:
- The inventory creates a service for each switch contact sensor found
+ One service is created for each switch contact sensor.
 

@@ -15,8 +15,8 @@ description:
  can be configured by WATO.
 
 item:
- "Drives", "MDisks" or "VDisks".
+ {{Drives}}, {{MDisks}} or {{VDisks}}.
 
 inventory:
- Creates one check for Drives, one for MDisks and one for VDisks.
+ One service is created for the drives, one for MDisks and one for VDisks.
 

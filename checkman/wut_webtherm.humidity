@@ -8,7 +8,7 @@ description:
  to a WuT (Wiesemann & Theis) Web-Thermograph.
 
 item:
- The item is the number of the sensor as string - usually {"2"}.
+ The ID of the sensor
 
 inventory:
  All available humidity sensors are automatically inventorized.

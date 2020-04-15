@@ -16,5 +16,5 @@ inventory:
  Creates two checks per device, one for every Detector.
 
 item:
- The ID of the detector.
+ One of the two numbers {{1}} or {{2}}
 

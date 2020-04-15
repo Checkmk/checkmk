@@ -53,7 +53,7 @@ def _parameter_valuespec_inotify():
                     title=_("Age of last operation"),
                     movable=False)),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 

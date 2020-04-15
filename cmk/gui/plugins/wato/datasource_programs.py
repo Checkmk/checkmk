@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
@@ -87,12 +89,12 @@ rulespec_registry.register(
 def _valuespec_special_agents_ddn_s2a():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", Password(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8008)),
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", Password(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8008)),
         ],
         optional_keys=["port"],
-        title=_(u"DDN S2A"),
+        title=_("DDN S2A"),
     )
 
 
@@ -107,12 +109,12 @@ rulespec_registry.register(
 def _valuespec_special_agents_proxmox():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8006)),
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8006)),
         ],
         optional_keys=["port"],
-        title=_(u"Proxmox"),
+        title=_("Proxmox"),
     )
 
 
@@ -169,7 +171,7 @@ def _valuespec_special_agents_kubernetes():
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
                 ("port",
-                 Integer(title=_(u"Port"),
+                 Integer(title=_("Port"),
                          help=_("If no port is given a default value of 443 will be used."),
                          default_value=443)),
                 ("url-prefix",
@@ -189,7 +191,7 @@ def _valuespec_special_agents_kubernetes():
                      allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
-            title=_(u"Kubernetes"),
+            title=_("Kubernetes"),
             help=_(
                 "This rule selects the Kubenetes special agent for an existing Checkmk host. "
                 "If you want to monitor multiple Kubernetes clusters "
@@ -227,89 +229,138 @@ def _valuespec_generic_metrics_prometheus():
             (
                 "exporter",
                 Dictionary(
-                    elements=[(
-                        "cadvisor",
-                        Dictionary(
-                            elements=[
-                                ("diskio",
-                                 ListChoice(
-                                     choices=[("container", _("Group by Container")),
-                                              ("pod", _("Group by Pod"))],
-                                     title=_("Disk IO"),
-                                     allow_empty=False,
-                                     help=_("You must specify by which entity level you "
-                                            "would like the Disk IO information to be "
-                                            "aggregated. It is possible to select multiple "
-                                            "options here."),
-                                 )),
-                                ("cpu",
-                                 ListChoice(
-                                     choices=[("container", _("Group by Container")),
-                                              ("pod", _("Group by Pod"))
-                                             ],
-                                     title=_("CPU Utilisation"),
-                                     allow_empty=False,
-                                     help=_("You must specify by which entity level you "
-                                            "would like the CPU information to be "
-                                            "aggregated. It is possible to select multiple "
-                                            "options here."),
-                                 )),
-                                ("df",
-                                 ListChoice(
-                                     choices=[("container", _("Group by Container")),
-                                              ("pod", _("Group by Pod"))
-                                             ],
-                                     title=_("Filesystem"),
-                                     allow_empty=False,
-                                     help=_("You must specify by which entity level you "
-                                            "would like the Filesystem information to be "
-                                            "aggregated. It is possible to select multiple "
-                                            "options here."),
-                                 )),
-                                ("if",
-                                 ListChoice(
-                                     choices=[("pod", _("Group by Pod"))
-                                             ],
-                                     title=_("Network"),
-                                     allow_empty=False,
-                                 )),
-                                ("memory",
-                                 ListChoice(
-                                     choices=[("container", _("Group by Container")),
-                                              ("pod", _("Group by Pod"))
-                                             ],
-                                     title=_("Filesystem"),
-                                     allow_empty=False,
-                                     help=_("You must specify by which entity level you "
-                                            "would like the memory information to be "
-                                            "aggregated. It is possible to select multiple "
-                                            "options here. The container's used memory will be "
-                                            "displayed relative to its respective pod. The pod's "
-                                            "used memory will be shown in reference to its "
-                                            "specified limit or the machine memory if a limit is "
-                                            "not applicable."),
-                                 )),
-                                ("container_id",
-                                 DropdownChoice(
-                                     title=_("Host name used for containers"),
-                                     help=_(
-                                         "Choose which identifier is used for the monitored containers."
-                                         " This will affect the name used for the piggyback host"
-                                         " corresponding to the container, as well as items for"
-                                         " services created on the node for each container."),
-                                     choices=[
-                                         ("short",
-                                          _("Short - Use the first 12 characters of the docker container ID"
-                                           )),
-                                         ("long", _("Long - Use the full docker container ID")),
-                                         ("name", _("Name - Use the containers' name")),
-                                     ],
-                                 )),
-                            ],
-                            title=_("CAdvisor"),
-                            validate=_check_not_empty_exporter_dict,
-                            optional_keys=["diskio", "cpu", "df", "if", "memory"],
-                        ))],
+                    elements=[
+                        ("node_exporter",
+                         Dictionary(
+                             elements=[
+                                 (
+                                     "entities",
+                                     ListChoice(
+                                         choices=[
+                                             ("df", _("Filesystems")),
+                                             ("diskstat", _("Disk IO")),
+                                             ("mem", _("Memory")),
+                                             ("kernel", _("CPU utilization & Kernel Performance")),
+                                         ],
+                                         default_value=["df"],
+                                         allow_empty=False,
+                                         title=_("Retrieve information about..."),
+                                         help=_(
+                                             "For your respective kernel select the hardware or OS entity "
+                                             "you would like to retrieve information about.")),
+                                 ),
+                             ],
+                             title=_("Node Exporter metrics"),
+                             optional_keys=[],
+                         )),
+                        ("kube_state",
+                         Dictionary(
+                             elements=[
+                                 ("entities",
+                                  ListChoice(
+                                      choices=[
+                                          ("cluster", _("Cluster")),
+                                          ("nodes", _("Nodes")),
+                                          ("services", _("Services")),
+                                          ("pods", _("Pods")),
+                                          ("daemon_sets", _("Daemon sets")),
+                                      ],
+                                      default_value=["cluster", "nodes"],
+                                      allow_empty=False,
+                                      title=_("Retrieve information about..."),
+                                      help=
+                                      _("For your Kubernetes cluster select for which entity levels "
+                                        "you would like to retrieve information about. Piggyback hosts "
+                                        "for the respective entities will be created."))),
+                                 ("cluster_name",
+                                  TextAscii(
+                                      title=_('Cluster name: '),
+                                      allow_empty=False,
+                                      help=_("You must specify a name for your Kubernetes cluster"))
+                                 ),
+                             ],
+                             title=_("Kube state metrics"),
+                             optional_keys=[],
+                         )),
+                        ("cadvisor",
+                         Dictionary(
+                             elements=[
+                                 ("diskio",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Disk IO"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the Disk IO information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
+                                 ("cpu",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("CPU Utilisation"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the CPU information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
+                                 ("df",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Filesystem"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the Filesystem information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
+                                 ("if",
+                                  ListChoice(
+                                      choices=[("pod", _("Group by Pod"))],
+                                      title=_("Network"),
+                                      allow_empty=False,
+                                  )),
+                                 ("memory",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Filesystem"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the memory information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here. The container's used memory will be "
+                                             "displayed relative to its respective pod. The pod's "
+                                             "used memory will be shown in reference to its "
+                                             "specified limit or the machine memory if a limit is "
+                                             "not applicable."),
+                                  )),
+                                 ("container_id",
+                                  DropdownChoice(
+                                      title=_("Host name used for containers"),
+                                      help=_(
+                                          "Choose which identifier is used for the monitored containers."
+                                          " This will affect the name used for the piggyback host"
+                                          " corresponding to the container, as well as items for"
+                                          " services created on the node for each container."),
+                                      choices=[
+                                          ("short",
+                                           _("Short - Use the first 12 characters of the docker container ID"
+                                            )),
+                                          ("long", _("Long - Use the full docker container ID")),
+                                          ("name", _("Name - Use the containers' name")),
+                                      ],
+                                  )),
+                             ],
+                             title=_("CAdvisor"),
+                             validate=_check_not_empty_exporter_dict,
+                             optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                         )),
+                    ],
                     title=_("Exporters"),
                     validate=_check_not_empty_exporter_dict,
                     help=_("You can specify which Source Targets including Exporters "
@@ -377,7 +428,7 @@ def _valuespec_generic_metrics_prometheus():
                  ],
                             optional_keys=["host_name"]),
                  title=_("Service creation using PromQL queries"),
-             ))
+             )),
         ],
         title=_("Prometheus"),
         optional_keys=["port", "exporter"],
@@ -390,8 +441,7 @@ def _validate_prometheus_service_metrics(value, _varprefix):
         metric_name = metric_details["metric_name"]
         if metric_name in used_metric_names:
             raise MKUserError(metric_name, "Each metric name must be unique for a service")
-        else:
-            used_metric_names.append(metric_name)
+        used_metric_names.append(metric_name)
 
 
 rulespec_registry.register((HostRulespec(
@@ -461,16 +511,6 @@ def _valuespec_special_agents_vsphere():
                  default_value=60,
                  minvalue=1,
                  unit=_("seconds"),
-             )),
-            ("use_pysphere",
-             Checkbox(
-                 title=_("Compatibility mode"),
-                 label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                 true_label=_("Support 4.1"),
-                 false_label=_("fast"),
-                 help=_("The current very performant implementation of the ESX special agent "
-                        "does not support older ESX versions than 5.0. Please use the slow "
-                        "compatibility mode for those old hosts."),
              )),
             ("infos",
              Transform(
@@ -568,6 +608,7 @@ def _valuespec_special_agents_vsphere():
             "snapshot_display",
             "vm_piggyname",
         ],
+        ignored_keys=["use_pysphere"],
     ),
                      title=_("Check state of VMWare ESX via vSphere"),
                      help=_(
@@ -1099,7 +1140,7 @@ def _valuespec_special_agents_hivemanager_ng():
                 allow_empty=False,
             )),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 
@@ -1181,7 +1222,7 @@ rulespec_registry.register(
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
-    valuetypes = {}
+    valuetypes = {}  # type: Dict[Any, Any]
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:
@@ -2773,6 +2814,10 @@ def _valuespec_special_agents_jira():
                                    ),
                                    Integer(
                                        title=_("Limit number of processed search results"),
+                                       help=_("Here you can define, how many search results "
+                                              "should be processed. The max. internal limit "
+                                              "of Jira is 1000 results. If you want to "
+                                              "ignore any limit, set -1 here. Default is 50."),
                                        default_value=50,
                                    ),
                                ],)),
@@ -2810,4 +2855,82 @@ rulespec_registry.register(
         group=RulespecGroupDatasourcePrograms,
         name="special_agents:jira",
         valuespec=_valuespec_special_agents_jira,
+    ))
+
+
+def _factory_default_special_agents_rabbitmq():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_rabbitmq():
+    return Dictionary(
+        title=_("Check state of RabbitMQ"),
+        help=_("Requests data from a RabbitMQ instance."),
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("RabbitMQ instance to query"),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_rabbitmq.com. If not set, the "
+                        "assigned host is used as instance."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "RabbitMQ API."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            ("port",
+             Integer(
+                 title=_("Port"),
+                 default_value=15672,
+                 help=_("The port that is used for the api call."),
+             )),
+            ("sections",
+             ListChoice(
+                 title=_("Informations to query"),
+                 help=_("Defines what information to query. You can choose "
+                        "between the cluster, nodes, vhosts and queues."),
+                 choices=[
+                     ("cluster", _("Clusterwide")),
+                     ("nodes", _("Nodes")),
+                     ("vhosts", _("Vhosts")),
+                     ("queues", _("Queues")),
+                 ],
+                 default_value=["cluster", "nodes", "vhosts", "queues"],
+                 allow_empty=False,
+             )),
+        ],
+        optional_keys=[
+            "instance",
+            "port",
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_rabbitmq(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:rabbitmq",
+        valuespec=_valuespec_special_agents_rabbitmq,
     ))

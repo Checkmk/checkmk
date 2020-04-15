@@ -1,20 +1,26 @@
 import java.text.SimpleDateFormat
 
-def DISTRO_STR = ''
-if(JOB_BASE_NAME == 'nightly_build_containerized') {
-    DISTRO_STR = DISTRO_LIST_MASTER
-} else {
-    DISTRO_STR = DISTRO_LIST_TESTBUILD
+def DISTRO_LIST_DEFAULT = ''
+def NODE = ''
+withFolderProperties{
+    if(JOB_BASE_NAME == 'nightly_build_containerized') {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    } else {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
+    }
+
+    NODE = env.BUILD_NODE
 }
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
     string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
-    string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' )
+    string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' ),
+    booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', defaultValue: false, description: 'Use faked windows agent artifacts instead of building them')
   ])
 ])
 
@@ -25,11 +31,12 @@ def DISTRO_LIST = DISTROS.split(' ');
 def BUILD_IMAGE = 'ubuntu-18.04-common'
 
 println("Building for the following Distros:" + DISTRO_LIST)
-currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
+currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS
 
 def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
+def BRANCH_VERSION
 
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
@@ -52,119 +59,131 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
+def DOCKER_REGISTRY_NO_HTTP
+
 //
 // MAIN
 //
+try {
+    node(NODE) {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
+                stage('Checkout sources') {
+                    cleanup_work_directories(DAILY_DATA)
+                    dir("${DAILY_DATA}/git") {
+                        checkout_git(scm, VERSION)
+                        // Load libraries
+                        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                        windows = load 'buildscripts/scripts/lib/windows.groovy'
+                        str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+                        notify = load 'buildscripts/scripts/lib/notify.groovy'
+                        withFolderProperties{
+                            DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                        }
 
-node {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
-            stage('Checkout sources') {
-                cleanup_work_directories(DAILY_DATA)
-                dir("${DAILY_DATA}/git") {
-                    checkout_git(scm, VERSION)
-                    // Load libraries
-                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-                    windows = load 'buildscripts/scripts/lib/windows.groovy'
-                    withFolderProperties{
-                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                        patch_themes(EDITION)
+                        patch_demo(DEMO)
+                        set_version(CMK_VERS)
+                        BRANCH_VERSION = versioning.get_branch_version()
+
+                        DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+
+                        // Remember files needed for building the windows agent on the windows node later
+                        stash(
+                            name: 'WinDep',
+                            includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
+                        )
                     }
-
-                    patch_themes(EDITION)
-                    patch_demo(DEMO)
-                    set_version(CMK_VERS)
-
-                    // Remember files needed for building the windows agent on the windows node later
-                    stash(
-                        name: 'WinDep',
-                        includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
-                    )
                 }
             }
         }
     }
-}
 
-AGENT_LIST.each { AGENT ->
-    AGENT_BUILDS['build agent ' + AGENT] = {
-        if (AGENT == 'windows') {
-            node('windows') {
-                bat 'powershell Remove-Item .\\* -Recurse -Force'
-                // Receive files needed for building the agent
-                unstash(name: 'WinDep')
-                windows.build(
-                    TARGET: 'agent',
-                    STASH_NAME: 'WinMSI'
-                )
-                windows.build(
-                    TARGET: 'module',
-                    STASH_NAME: 'WinPython'
-                )
+    if (!params.FAKE_WINDOWS_ARTIFACTS) {
+        AGENT_LIST.each { AGENT ->
+            AGENT_BUILDS['build agent ' + AGENT] = {
+                if (AGENT == 'windows') {
+                    node('windows') {
+                        bat 'powershell Remove-Item .\\* -Recurse -Force'
+                        // Receive files needed for building the agent
+                        unstash(name: 'WinDep')
+                        windows.build(
+                            TARGET: 'agent',
+                            STASH_NAME: 'WinMSI'
+                        )
+                        windows.build(
+                            TARGET: 'module',
+                            STASH_NAME: 'WinPython'
+                        )
+                    }
+                }
+                else {
+                    node(NODE) {
+                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+
+                            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
+                                build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
+                            }
+                        }
+                    }
+                }
             }
         }
-        else {
-            node {
+        parallel AGENT_BUILDS
+    }
+
+    node(NODE) {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+                prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
+                create_source_package(DAILY_DATA)
+
+                def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
+                def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
+                def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
+
+                copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
+
+                cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
+                test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
+                upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+            }
+        }
+    }
+
+
+    DISTRO_LIST.each { DISTRO ->
+        PACKAGE_BUILDS[DISTRO] = {
+            node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image('agent-builder-' + AGENT).inside(DOCKER_ARGS + " --privileged") {
-                        build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION)
+                    docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                            versioning.print_image_tag()
+                            build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
+                        }
+                    }
+                }
+            }
+            node(NODE) {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                        def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
+                        def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
+                        def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
+
+                        sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
+                        test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
+                        copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                        upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
                     }
                 }
             }
         }
     }
+    parallel PACKAGE_BUILDS
+}catch(Exception e) {
+    notify.notify_error(e)
 }
-parallel AGENT_BUILDS
-
-node {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-            prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
-            create_source_package(DAILY_DATA)
-
-            def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
-            def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
-            def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
-
-            copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
-
-            cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
-            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
-        }
-    }
-}
-
-
-DISTRO_LIST.each { DISTRO ->
-    PACKAGE_BUILDS[DISTRO] = {
-        node {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
-                    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        versioning.print_image_tag()
-                        build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
-                    }
-                }
-            }
-        }
-        node {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                    def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
-                    def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
-                    def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
-
-                    sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
-                    test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
-                    copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                    upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
-                }
-            }
-        }
-    }
-}
-parallel PACKAGE_BUILDS
-
 //
 // FUNCTIONS
 //
@@ -187,7 +206,7 @@ def get_agent_list(EDITION) {
     if (EDITION == "raw") {
         return ["windows", "windows-legacy"]
     } else {
-        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
+        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy"]
     }
 }
 
@@ -273,12 +292,11 @@ def set_version(CMK_VERS) {
 // TODO: Clean this up
 // - AGENT variable handling is confusing
 // - Naming is misleading here. We build:
-//   a) legacy windows agent
-//   b) windows agent updater
-//   c) linux32 agent updater
-//   d) linux64 agent updater
+//   a) windows agent updater
+//   b) linux32 agent updater
+//   c) linux64 agent updater
 // - Split agent logic from agent updater
-def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
+def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP) {
     stage('Build agent ' + AGENT) {
         if (AGENT == 'linux-64bit') {
             AGENT = ''
@@ -289,40 +307,39 @@ def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
         }
 
         sh 'rm -rf *'
-        mount_overlay("${DAILY_DATA}/git","${WORKSPACE}/agent${AGENT}-dest")
+        sh """
+            cp -r ${DAILY_DATA}/git/.git ${WORKSPACE}/agent${AGENT}-dest/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/windows/plugins
+            cp -r ${DAILY_DATA}/git/enterprise/agents/windows/plugins/* ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/windows/plugins/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins
+            cp -r ${DAILY_DATA}/git/enterprise/agents/plugins/* ${WORKSPACE}/agent${AGENT}-dest/enterprise/agents/plugins/
+            mkdir -p ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
+            cp ${DAILY_DATA}/git/buildscripts/infrastructure/build-nodes/scripts/build_lib.sh ${WORKSPACE}/agent${AGENT}-dest/buildscripts/infrastructure/build-nodes/scripts
+        """
         if (AGENT == '-windows') {
-            // Legacy windows agent
-            sh script: """
-                mkdir -p ${DAILY_DATA}/agents
-                cd agent${AGENT}-dest/agents/windows/
-                CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                    CHROOT_NAME="agent-builder-windows" \
-                    ./build-agent
-                cp check_mk_agent-64.exe ${DAILY_DATA}/agents/check_mk_agent_legacy-64.exe
-                cp check_mk_agent.exe ${DAILY_DATA}/agents/check_mk_agent_legacy.exe
-                cp check_mk_agent.msi ${DAILY_DATA}/agents/check_mk_agent_legacy.msi
-            """
             // Windows agent updater
             if(EDITION != 'raw') {
-                sh script: """
-                    cd agent${AGENT}-dest/enterprise/agents/windows/plugins
-                    CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                        make
-                    cp cmk-update-agent.exe ${DAILY_DATA}/agents/
-                """
+                withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                    sh script: """
+                        cd agent${AGENT}-dest/enterprise/agents/windows/plugins
+                        BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-win-agent-updater
+                        mkdir -p ${DAILY_DATA}/agents/
+                        cp cmk-update-agent.exe ${DAILY_DATA}/agents/
+                    """
+                }
             }
         } else { // Linux agent updater (64 and 32 bit)
-            sh script: """cd agent${AGENT}-dest/enterprise/agents/plugins \
-                && CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                    BITNESS_SUFFIX='${AGENT}' \
-                    make
-            """
+            withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                sh script: """
+                    cd agent${AGENT}-dest/enterprise/agents/plugins
+                    BRANCH_VERSION=${BRANCH_VERSION} DOCKER_REGISTRY_NO_HTTP=${DOCKER_REGISTRY_NO_HTTP} ./make-agent-updater${AGENT}
+                """
+            }
             sh """
                 mkdir -p ${DAILY_DATA}/agents
                 cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
             """
         }
-        unmount_overlay("${WORKSPACE}/agent${AGENT}-dest")
     }
 }
 
@@ -335,18 +352,26 @@ def prepare_archive_dir(ARCHIVE_DIR, CMK_VERS) {
 
 def create_source_package(DAILY_DATA) {
     stage('Create source package') {
-       sh 'rm -rf *'
-       unstash(name: 'WinMSI')
-       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe ${DAILY_DATA}/agents/"
-       unstash(name: 'WinPython')
-       dir("${DAILY_DATA}/git") {
+        sh 'rm -rf *'
+        if (!params.FAKE_WINDOWS_ARTIFACTS) {
+            unstash(name: 'WinMSI')
+            unstash(name: 'WinPython')
+        } else {
+            sh "mkdir -p ${DAILY_DATA}/agents"
+            if(EDITION != 'raw') {
+                sh "touch ${DAILY_DATA}/agents/cmk-update-agent ${DAILY_DATA}/agents/cmk-update-agent-32 ${DAILY_DATA}/agents/cmk-update-agent.exe"
+            }
+            sh "touch check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip"
+        }
+        sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip ${DAILY_DATA}/agents/"
+
+        dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
             }
-            sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml} agents/windows"
-            sh "cp ${DAILY_DATA}/agents/{check_mk_agent_legacy-64.exe,check_mk_agent_legacy.exe,check_mk_agent_legacy.msi} agents/windows"
+            sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }

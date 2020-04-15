@@ -1,4 +1,4 @@
-title: Kaspersky Anti-Virus Quarantine
+title: Kaspersky Anti-Virus: Quarantine
 agents: linux
 catalog: app/kaspersky
 license: GPL
@@ -9,4 +9,4 @@ description:
  You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
 
 inventory:
- One service will be created for each system will be created.
+ One service is created for each system.

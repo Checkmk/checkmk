@@ -8,6 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
+    TextAscii,
     Tuple,
 )
 
@@ -43,6 +44,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="uptime_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_uptime,
         title=lambda: _("Uptime since last reboot of devices with modules"),

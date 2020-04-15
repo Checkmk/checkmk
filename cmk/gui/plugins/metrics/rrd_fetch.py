@@ -7,7 +7,7 @@
 
 import time
 import collections
-from typing import List, Callable, Set  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Set, Tuple, Union  # pylint: disable=unused-import
 
 import livestatus
 
@@ -21,7 +21,9 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
     needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
-    rrd_data = {}
+    # TODO: The Unions below are horrible! Fix this by making this a NewType/class.
+    rrd_data = {
+    }  # type: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]], Union[Tuple[float, float, float], TimeSeries]]
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in \
@@ -106,20 +108,24 @@ def needed_elements_of_expression(expression):
 
 
 def get_needed_sources(metrics, condition=lambda x: True):
-    # type: (List, Callable) -> Set
+    # type: (List[Dict[str, Any]], Callable[[Any], bool]) -> Set
     """Extract all metric data sources definitions
 
     metrics: List
         List of paint-able metrics, extract from defining expression needed metrics
     condition: Callable
         Filter function for metrics that are considered"""
-    return set(source for metric in metrics
-               for source in needed_elements_of_expression(metric["expression"])
-               if condition(metric))
+    return {
+        source  #
+        for metric in metrics
+        for source in needed_elements_of_expression(metric["expression"])
+        if condition(metric)
+    }
 
 
 def group_needed_rrd_data_by_service(needed_rrd_data):
-    by_service = collections.defaultdict(set)
+    by_service = collections.defaultdict(
+        set)  # type: Dict[Tuple[str, str, str], Set[Tuple[Any, Any, Any]]]
     for site, host_name, service_description, perfvar, cf, scale in needed_rrd_data:
         by_service[(site, host_name, service_description)].add((perfvar, cf, scale))
     return by_service
@@ -144,11 +150,11 @@ def livestatus_query_for_rrd_data(host_name, service_description, metric_cols, d
         if default_cf:
             cf = default_cf
         else:
-            cf = cf or "max"
+            cf = cf or u"max"
 
-        rpn = "%s.%s" % (perfvar, cf)
+        rpn = u"%s.%s" % (perfvar, cf)
         if scale != 1.0:
-            rpn += ",%f,*" % scale
-        lql_columns.append("rrddata:m%d:%s:%s" % (nr, rpn, point_range))
+            rpn += u",%f,*" % scale
+        lql_columns.append(u"rrddata:m%d:%s:%s" % (nr, rpn, point_range))
 
     return livestatus_lql([host_name], lql_columns, service_description)

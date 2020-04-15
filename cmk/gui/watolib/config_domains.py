@@ -11,15 +11,17 @@ import os
 import re
 import signal
 import traceback
+from typing import Any, Dict  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.paths
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -92,7 +94,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk.is_raw_edition() and config.liveproxyd_enabled
+        return not cmk_version.is_raw_edition() and config.liveproxyd_enabled
 
     def config_dir(self):
         return liveproxyd_config_dir()
@@ -110,7 +112,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             try:
                 pid = int(open(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
-            except IOError as e:
+            except IOError as e:  # NOTE: In Python 3 IOError has been merged into OSError!
                 # No liveproxyd running: No reload needed.
                 if e.errno != errno.ENOENT:
                     raise
@@ -288,13 +290,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def _get_certificates_from_file(self, path):
         try:
-            return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
+            return [
+                match.group(0) for match in self._PEM_RE.finditer(open("%s" % path, "rb").read())
+            ]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
                 return []
-            else:
-                raise
+            raise
 
     def default_globals(self):
         return {
@@ -401,7 +404,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
     def _from_omd_config(self, omd_config):
-        settings = {}
+        settings = {}  # type: Dict[str, Any]
 
         for key, value in omd_config.items():
             if value == "on":
@@ -448,7 +451,7 @@ class ConfigDomainOMD(ABCConfigDomain):
                 settings["MKEVENTD"] = None
 
         # Convert from OMD key (to lower, add "site_" prefix)
-        settings = dict([("site_%s" % key.lower(), val) for key, val in settings.items()])
+        settings = {"site_%s" % key.lower(): val for key, val in settings.items()}
 
         return settings
 
@@ -456,7 +459,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, settings):
         # Convert to OMD key
-        settings = dict([(key.upper()[5:], val) for key, val in settings.items()])
+        settings = {key.upper()[5:]: val for key, val in settings.items()}
 
         if "LIVESTATUS_TCP" in settings:
             if settings["LIVESTATUS_TCP"] is not None:

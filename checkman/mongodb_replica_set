@@ -1,4 +1,4 @@
-title: MongoDB Replica Set - Replication Lag
+title: MongoDB Replica Set: Replication Lag
 agents: linux
 catalog: app/mongodb
 license: GPL
@@ -10,4 +10,4 @@ description:
  from the oplog to the secondary.
 
 inventory:
- One service is created named 'MongoDB Replication Lag'
+ One service is created named 'MongoDB Replication Lag'.

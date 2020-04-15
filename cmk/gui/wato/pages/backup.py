@@ -169,7 +169,7 @@ class ModeAjaxBackupJobState(AjaxPage):
     def page(self):
         config.user.need_permission("wato.backups")
         if html.request.var("job") == "restore":
-            page = backup.PageBackupRestoreState()
+            page = backup.PageBackupRestoreState()  # type: backup.PageAbstractBackupJobState
         else:
             page = ModeBackupJobState()
         page.show_job_details()
@@ -263,9 +263,12 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
             return backup.SystemBackupTargetsReadOnly().get(target_ident)
 
     def _show_target_list(self):
+        # type: () -> None
         super(ModeBackupRestore, self)._show_target_list()
         backup.SystemBackupTargetsReadOnly().show_list(editable=False,
                                                        title=_("System global targets"))
 
     def _show_backup_list(self):
-        self._target.show_backup_list("Check_MK")
+        # type: () -> None
+        assert self._target is not None
+        self._target.show_backup_list(only_type="Check_MK")

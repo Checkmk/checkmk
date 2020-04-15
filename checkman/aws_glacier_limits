@@ -1,4 +1,4 @@
-title: AWS/Glacier Limits
+title: AWS Glacier: Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -16,4 +16,4 @@ description:
  possibly configured restriction to names or tags.
 
 inventory:
- One service will be created.
+ One service is created.

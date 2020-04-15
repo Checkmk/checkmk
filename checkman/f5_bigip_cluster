@@ -1,4 +1,4 @@
-title: F5 Big-IP: Cluster state, up to firmware version 10
+title: F5 Big-IP: Cluster State, Up to Firmware Version 10
 agents: snmp
 catalog: hw/network/f5
 license: GPL
@@ -16,5 +16,6 @@ description:
  devices.
 
 inventory:
-  One service is defined for the cluster status unless the load balancer config sync is in a status of "unconfigured"
+  One service is created for the cluster status
+  unless the load balancer config sync is in a status of "unconfigured".
 

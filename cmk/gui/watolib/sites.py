@@ -9,10 +9,12 @@ import re
 import time
 import shutil
 import traceback
-from typing import NamedTuple
+from typing import (  # pylint: disable=unused-import
+    NamedTuple, Type,
+)
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
@@ -64,8 +66,9 @@ from cmk.gui.plugins.watolib.utils import wato_fileheader
 class SiteManagementFactory(object):
     @staticmethod
     def factory():
-        if cmk.is_raw_edition():
-            cls = CRESiteManagement
+        # type: () -> SiteManagement
+        if cmk_version.is_raw_edition():
+            cls = CRESiteManagement  # type: Type[SiteManagement]
         else:
             cls = CEESiteManagement
 
@@ -113,7 +116,7 @@ class SiteManagement(object):
                          allow_empty=False,
                      )),
                  ],
-                 optional_keys=None,
+                 optional_keys=False,
              )),
         ]
         return conn_choices
@@ -144,7 +147,7 @@ class SiteManagement(object):
                  )),
                 ("tls", cls._tls_valuespec()),
             ],
-            optional_keys=None,
+            optional_keys=False,
         )
 
     @classmethod
@@ -173,7 +176,7 @@ class SiteManagement(object):
                                 "leave this enabled."),
                           )),
                      ],
-                     optional_keys=None,
+                     optional_keys=False,
                  )),
             ],
             help=
@@ -283,13 +286,11 @@ class SiteManagement(object):
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
-        config_vars = {"sites": {}}
-        exec (open(cls._sites_mk()).read(), config_vars, config_vars)
-
-        if not config_vars["sites"]:
+        raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
+        if not raw_sites:
             return config.default_single_site_configuration()
 
-        sites = config.migrate_old_site_config(config_vars["sites"])
+        sites = config.migrate_old_site_config(raw_sites)
         for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
@@ -350,10 +351,9 @@ class SiteManagement(object):
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
-                                           _("Deleted site %s") % html.render_tt(site_id),
+                                           _("Deleted site %s") % site_id,
                                            domains=domains,
                                            sites=[default_site()])
-        return None
 
     @classmethod
     def _affected_config_domains(cls):
@@ -690,7 +690,10 @@ def _delete_distributed_wato_file():
         store.save_file(p, "")
 
 
-PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [("site_id", str), ("tar_content", str)])
+PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
+    ("site_id", str),
+    ("tar_content", six.binary_type),
+])
 
 
 @automation_command_registry.register
@@ -700,16 +703,14 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def get_request(self):
         # type: () -> PushSnapshotRequest
-        site_id = html.request.var("siteid")
-
+        site_id = html.request.get_ascii_input_mandatory("siteid")
         self._verify_slave_site_config(site_id)
-        assert site_id is not None
 
         snapshot = html.request.uploaded_file("snapshot")
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
+        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool

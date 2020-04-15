@@ -1,4 +1,4 @@
-title: FireEye Appliances: Disk status
+title: FireEye Appliances: Disk Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -11,7 +11,7 @@ description:
  healthy. Otherise CRIT.
 
 item:
- No disk identifier.
+ Name of the disk
 
 inventory:
- One service per disk is created.
+ One service is created for each disk.

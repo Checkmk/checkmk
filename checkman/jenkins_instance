@@ -9,4 +9,4 @@ description:
  if security is used (as configured within Jenkins "Configure Global Security").
 
 inventory:
- One service {"Jenkins Instance"} will be created
+ One service is created ({"Jenkins Instance"}).

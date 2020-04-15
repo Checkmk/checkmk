@@ -136,7 +136,7 @@ def load_mk_file(path, default=None, lock=False):
     try:
         try:
             with path.open(mode="rb") as f:
-                exec (f.read(), globals(), default)
+                exec(f.read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
@@ -227,7 +227,7 @@ def load_bytes_from_file(path, default=b"", lock=False):
 # ast.literal_eval. As a workaround, we use casts, but this isn't a real
 # solution....
 def _load_data_from_file(path, lock=False, encoding=None):
-    # type: (Union[Path, str], bool, Optional[str]) -> Optional[Union[Text, bytes]]
+    # type: (Union[Path, str], bool, Optional[str]) -> Union[None, Text, bytes]
     if not isinstance(path, Path):
         path = Path(path)
 

@@ -1,0 +1,11 @@
+title: Pulse Secure: Log File Utilization
+agents: snmp
+catalog: app/pulse_secure
+license: GPL
+distribution: check_mk
+description:
+ This check monitors how full the log file is
+ (in percent) for Pulse Secure appliances.
+
+inventory:
+ One service is created.

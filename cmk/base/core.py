@@ -22,7 +22,7 @@ import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base import config_cache as _config_cache
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.cleanup
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 

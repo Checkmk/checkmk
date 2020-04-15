@@ -13,4 +13,4 @@ item:
  The volume identifier.
 
 inventory:
- One service per volume is created.
+ One service is created for each volume.

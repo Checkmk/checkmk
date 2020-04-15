@@ -232,7 +232,7 @@ def _parse_autocheck_entry(hostname, entry, service_description):
     elif isinstance(ast_item, ast.Num) and isinstance(ast_item.n, (int, float)):
         # NOTE: We exclude complex here. :-)
         item = "%s" % int(ast_item.n)
-    elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
+    elif _ast_node_is_none(ast_item):
         item = None
     else:
         raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
@@ -254,6 +254,12 @@ def _parse_autocheck_entry(hostname, entry, service_description):
         description,
         _parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
         service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
+
+
+def _ast_node_is_none(node):
+    if sys.version_info[0] >= 3:
+        return isinstance(node, ast.NameConstant) and node.value is None
+    return isinstance(node, ast.Name) and node.id == "None"
 
 
 def _parse_pre_16_tuple_autocheck_entry(entry):
@@ -320,7 +326,11 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
     for key, value in zip(ast_service_labels.keys, ast_service_labels.values):
         if key is not None:
             # mypy does not get the types of the ast objects here
-            labels.add_label(ServiceLabel(key.s, value.s))  # type: ignore[attr-defined]
+            labels.add_label(
+                ServiceLabel(
+                    six.ensure_text(key.s),  # type: ignore[attr-defined]
+                    six.ensure_text(value.s),  # type: ignore[attr-defined]
+                ))
     return labels
 
 
@@ -385,7 +395,7 @@ def _remove_duplicate_autochecks(autochecks):
 def save_autochecks_file(hostname, items):
     # type: (HostName, List[DiscoveredService]) -> None
     path = _autochecks_path_for(hostname)
-    path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    path.parent.mkdir(parents=True, exist_ok=True)
     content = []
     content.append("[")
     for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):

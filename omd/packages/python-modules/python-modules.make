@@ -57,7 +57,13 @@ endif
 # Check_MK Edition specific
 PYTHON_MODULES_LIST += simplejson-3.16.0.tar.gz
 PYTHON_MODULES_LIST += mysqlclient-1.3.13.tar.gz  # needed by check_sql
+# Is built for python3 and only available there from now for el6
+# (had to remove the build dependency from the container)
+ifneq ($(DISTRO_CODE),el6)
 PYTHON_MODULES_LIST += psycopg2-2.6.2.tar.gz # needed by check_sql
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0007-psycopg-wrong-ifdef.patch
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0016-make-psycopg2-build-with-ubuntu-bionic.patch
+endif
 PYTHON_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
@@ -228,6 +234,14 @@ PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
 PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
 
 PYTHON_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+PYTHON_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
+
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack

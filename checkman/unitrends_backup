@@ -1,4 +1,4 @@
-title: Unitrends Backup Schedules
+title: Unitrends: Backup Schedules
 agents: linux
 catalog: app/unitrends
 license: GPL
@@ -12,6 +12,9 @@ description:
  As long all of the jobs are succsessful the check returns a {OK} state. In each other
  case the check will return {CRITICAL}. In anycase it's possible to see the complete
  log in the long plugin output field from the core.
+
+item:
+ Name of the application
 
 inventory:
  One Service for each schedule will be created

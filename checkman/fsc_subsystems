@@ -1,4 +1,4 @@
-title: Physical status of Fujitsu Siemens (FSC) Hardware parts
+title: Fujitsu Siemens FSC: Physical Status of Hardware Parts
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -13,5 +13,8 @@ description:
 
  The check raises a CRITICAL state when parts are reported as degraded, error or failed.
 
+item:
+ Name of the hardware part
+
 inventory:
- The check creates one service for each device provided in the SNMP data.
+ One service is created for each device.

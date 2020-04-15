@@ -8,8 +8,12 @@
 import abc
 import json
 import operator
-
+from typing import (  # pylint: disable=unused-import
+    List, Tuple, Text, Dict,
+)
 import six
+
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -38,9 +42,8 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    TextUnicode,
-    TextAscii,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    TextUnicode, TextAscii, ValueSpec,
 )
 
 
@@ -207,7 +210,7 @@ class ModeFolder(WatoMode):
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
-            self._folder.delete_subfolder(subfolder_name)  # pylint: disable=no-member
+            self._folder.delete_subfolder(subfolder_name)
             return "folder"
         elif c is False:  # not yet confirmed
             return ""
@@ -443,7 +446,7 @@ class ModeFolder(WatoMode):
             contact_group_names = load_contact_group_information()
 
             host_errors = self._folder.host_validation_errors()
-            rendered_hosts = []
+            rendered_hosts = []  # type: List[HostName]
 
             # Now loop again over all hosts and display them
             for hostname in hostnames:
@@ -579,10 +582,10 @@ class ModeFolder(WatoMode):
             html.a(host.folder().alias_path(), href=host.folder().url())
 
     def _limit_labels(self, labels):
-        show_all, limit = "", 3
+        show_all, limit = HTML(""), 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
-            show_all = " %s" % html.render_a("... (%s)" % _("show all"),
-                                             href=html.makeuri([("_show_all", "1")]))
+            show_all = HTML(" ") + html.render_a("... (%s)" % _("show all"),
+                                                 href=html.makeuri([("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
@@ -679,21 +682,24 @@ class ModeFolder(WatoMode):
     # FIXME: Cleanup
     def _host_bulk_move_to_folder_combo(self, top):
         choices = self._folder.choices_for_moving_host()
-        if len(choices):
-            choices = [("@", _("(select target folder)"))] + choices
-            html.button("_bulk_move", _("Move to:"))
-            html.write("&nbsp;")
-            field_name = 'bulk_moveto'
-            if top:
-                field_name = '_top_bulk_moveto'
-                if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                    html.request.var('bulk_moveto', ''))
-            html.dropdown(field_name,
-                          choices,
-                          deflt="@",
-                          onchange="cmk.selection.update_bulk_moveto(this.value)",
-                          class_='bulk_moveto')
+        if not choices:
+            return
+
+        choices.insert(0, ("@", _("(select target folder)")))
+
+        html.button("_bulk_move", _("Move to:"))
+        html.write("&nbsp;")
+        field_name = 'bulk_moveto'
+        if top:
+            field_name = '_top_bulk_moveto'
+            if html.request.has_var('bulk_moveto'):
+                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                html.request.var('bulk_moveto', ''))
+        html.dropdown(field_name,
+                      choices,
+                      deflt="@",
+                      onchange="cmk.selection.update_bulk_moveto(this.value)",
+                      class_='bulk_moveto')
 
     def _move_to_imported_folders(self, host_names_to_move):
         c = wato_confirm(
@@ -708,7 +714,7 @@ class ModeFolder(WatoMode):
             return None  # browser reload
 
         # Create groups of hosts with the same target folder
-        target_folder_names = {}
+        target_folder_names = {}  # type: Dict[str, List[HostName]]
         for host_name in host_names_to_move:
             host = self._folder.host(host_name)
             imported_folder_name = host.attribute('imported_folder')
@@ -797,7 +803,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
             "_host_move_%s" % self._ident,
             choices=choices,
             deflt="@",
-            size='10',
+            size=10,
             onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;" %
             (self._back_url, self._ident, self._what),
         )
@@ -879,7 +885,7 @@ class FolderMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         # title
         basic_attributes = [
             ("title", TextUnicode(title=_("Title")), self._folder.title()),
-        ]
+        ]  # type: List[Tuple[str, ValueSpec, Text]]
         html.set_focus("title")
 
         # folder name (omit this for root folder)
@@ -954,7 +960,7 @@ class ModeCreateFolder(FolderMode):
 
     def _save(self, title, attributes):
         if not config.wato_hide_filenames:
-            name = html.request.var("name", "").strip()
+            name = html.request.get_ascii_input_mandatory("name", "").strip()
             watolib.check_wato_foldername("name", name)
         else:
             name = _create_wato_foldername(title)

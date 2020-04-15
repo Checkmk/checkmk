@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 
-from . import (
+from cmk.gui.plugins.dashboard import (
     builtin_dashboards,
     GROW,
     MAX,

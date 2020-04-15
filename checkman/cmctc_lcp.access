@@ -11,4 +11,4 @@ item:
  The description of the connected sensor.
 
 inventory:
- One item per detected sensor.
+ One service is created for each detected sensor.

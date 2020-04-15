@@ -300,12 +300,12 @@ class ModeAuditLog(WatoMode):
 
         newpath = self.log_path.with_name(self.log_path.name + time.strftime(".%Y-%m-%d"))
         # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-        if newpath.exists():  # pylint: disable=no-member
+        if newpath.exists():
             n = 1
             while True:
                 n += 1
                 with_num = newpath.with_name(newpath.name + "-%d" % n)
-                if not with_num.exists():  # pylint: disable=no-member
+                if not with_num.exists():
                     newpath = with_num
                     break
 

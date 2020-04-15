@@ -19,7 +19,7 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from typing import Any, Union  # pylint: disable=unused-import
+    from typing import Any  # pylint: disable=unused-import
     from cmk.gui import htmllib, http, config  # pylint: disable=unused-import
 
 _sentinel = object()
@@ -157,7 +157,11 @@ def request_local_attr(name=None):
 
 local = request_local_attr()  # None as name will get the whole object.
 
-user = request_local_attr('user')  # type: Union[config.LoggedInUser, LocalProxy]
-request = request_local_attr('request')  # type: Union[http.Request, LocalProxy]
-response = request_local_attr('response')  # type: Union[http.Response, LocalProxy]
-html = request_local_attr('html')  # type: Union[htmllib.html, LocalProxy]
+# NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but
+# LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
+# mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
+# tools in general.
+user = request_local_attr('user')  # type: config.LoggedInUser
+request = request_local_attr('request')  # type: http.Request
+
+html = request_local_attr('html')  # type: htmllib.html

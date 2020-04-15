@@ -11,7 +11,7 @@ description:
  it returns {OK}.
 
 item:
- The ID of the detector.
+ One of the two numbers {{1}} or {{2}}
 
 inventory:
  Creates two checks on every Top Sense device, one for each detector.

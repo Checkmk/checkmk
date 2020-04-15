@@ -6,17 +6,25 @@
 
 import re
 import copy
-from typing import Tuple, Dict, List, Text  # pylint: disable=unused-import
+from typing import Any, Dict, List, Text, Tuple, Union  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
+from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+# TODO: Cleanup call sites
+from cmk.gui.groups import (  # noqa: F401  # pylint: disable=unused-import
+    load_group_information, load_host_group_information, load_service_group_information,
+    load_contact_group_information,
+)
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
@@ -40,74 +48,17 @@ from cmk.gui.watolib.notifications import (
 )
 from cmk.gui.valuespec import DualListChoice
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
-
-def load_host_group_information():
-    return _load_group_information()["host"]
-
-
-def load_service_group_information():
-    return _load_group_information()["service"]
-
-
-def load_contact_group_information():
-    return _load_group_information()["contact"]
 
 
 def _clear_group_information_request_cache():
     g.pop("group_information", None)
 
 
-def _load_group_information():
-    if "group_information" in g:
-        return g.group_information
-
-    cmk_base_groups = _load_cmk_base_groups()
-    gui_groups = _load_gui_groups()
-
-    # Merge information from Check_MK and Multisite worlds together
-    groups = {}
-    for what in ["host", "service", "contact"]:
-        groups[what] = {}
-        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
-            groups[what][gid] = {'alias': alias}
-
-            if gid in gui_groups['multisite_%sgroups' % what]:
-                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
-
-    g.group_information = groups
-    return groups
-
-
-def _load_cmk_base_groups():
-    """Load group information from Check_MK world"""
-    group_specs = {
-        "define_hostgroups": {},
-        "define_servicegroups": {},
-        "define_contactgroups": {},
-    }
-
-    return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
-                              default=group_specs)
-
-
-def _load_gui_groups():
-    # Now load information from the Web world
-    group_specs = {
-        "multisite_hostgroups": {},
-        "multisite_servicegroups": {},
-        "multisite_contactgroups": {},
-    }
-
-    return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
-                              default=group_specs)
-
-
 def add_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     # Check group name
@@ -129,7 +80,7 @@ def add_group(name, group_type, extra_info):
 
 def edit_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     if name not in groups:
@@ -138,7 +89,7 @@ def edit_group(name, group_type, extra_info):
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         old_customer = managed.get_customer_id(old_group_backup)
         new_customer = managed.get_customer_id(extra_info)
         if old_customer != new_customer:
@@ -162,7 +113,7 @@ def delete_group(name, group_type):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
         raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
@@ -185,8 +136,12 @@ def delete_group(name, group_type):
 # by the CME code for better encapsulation.
 def _add_group_change(group, action_name, text):
     group_sites = None
-    if cmk.is_managed_edition() and not managed.is_global(managed.get_customer_id(group)):
-        group_sites = managed.get_sites_of_customer(managed.get_customer_id(group))
+    if cmk_version.is_managed_edition():
+        cid = managed.get_customer_id(group)
+        if not managed.is_global(cid):
+            if cid is None:  # conditional caused by bad typing
+                raise Exception("cannot happen: no customer ID")
+            group_sites = managed.get_sites_of_customer(cid)
 
     add_change(action_name, text, sites=group_sites)
 
@@ -199,7 +154,10 @@ def _check_modify_group_permissions(group_type):
     }
 
     # Check permissions
-    for permission in required_permissions.get(group_type):
+    perms = required_permissions.get(group_type)
+    if perms is None:
+        raise Exception("invalid group type %r" % (group_type,))
+    for permission in perms:
         config.user.need_permission(permission)
 
 
@@ -224,8 +182,8 @@ def _set_group(all_groups, group_type, name, extra_info):
 
 def save_group_information(all_groups, custom_default_config_dir=None):
     # Split groups data into Check_MK/Multisite parts
-    check_mk_groups = {}
-    multisite_groups = {}
+    check_mk_groups = {}  # type: Dict[str, Dict[Any, Any]]
+    multisite_groups = {}  # type: Dict[str, Dict[Any, Any]]
 
     if custom_default_config_dir:
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
@@ -402,7 +360,7 @@ def _find_usages_of_group_in_rules(name, varnames):
 
 def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups
-    all_groups = _load_group_information()
+    all_groups = load_group_information()
     for what, groups in all_groups.items():
         for gid, group in groups.items():
             if group['alias'] == my_alias and (my_what != what or my_name != gid):
@@ -411,7 +369,8 @@ def is_alias_used(my_what, my_name, my_alias):
     # Timeperiods
     timeperiods = cmk.gui.watolib.timeperiods.load_timeperiods()
     for key, value in timeperiods.items():
-        if value.get("alias") == my_alias and (my_what != "timeperiods" or my_name != key):
+        if timeperiod_spec_alias(value) == my_alias and (my_what != "timeperiods" or
+                                                         my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
@@ -463,15 +422,17 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts = []
+        texts = []  # type: List[Text]
         self.load_data()
+        if self._contactgroups is None:  # conditional caused by horrible API
+            raise Exception("invalid contact groups")
         items = self._contactgroups.items()
         for name, cgroup in sorted(items, key=lambda x: x[1]['alias']):
             if name in value["groups"]:
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
                              (name, display_name))
-        result = ", ".join(texts)
+        result = ", ".join(texts)  # type: Union[Text, HTML]
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),
@@ -553,6 +514,8 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return True
 
     def _vs_contactgroups(self):
+        if self._contactgroups is None:  # conditional caused by horrible API
+            raise Exception("invalid contact groups")
         cg_choices = sorted([(cg_id, cg_attrs.get("alias", cg_id))
                              for cg_id, cg_attrs in self._contactgroups.items()],
                             key=lambda x: x[1])

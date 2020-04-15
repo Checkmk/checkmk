@@ -7,7 +7,7 @@
 import operator
 import functools
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
@@ -72,7 +72,7 @@ def evaluate_time_series_expression(expression, rrd_data):
         if transform == 'percentile':
             return time_series_operator_perc(operands_evaluated, conf)
         if transform == 'forecast':
-            if cmk.is_raw_edition():
+            if cmk_version.is_raw_edition():
                 raise MKGeneralException(
                     _("Forecast calculations are only available with the "
                       "Checkmk Enterprise Editions"))
@@ -168,4 +168,5 @@ def time_series_operators():
         "MAX": (_("Maximum"), time_series_operator_maximum),
         "MIN": (_("Minimum"), time_series_operator_minimum),
         "AVERAGE": (_("Average"), time_series_operator_average),
+        "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }

@@ -1,6 +1,6 @@
-title: Prtdiag based health check for solaris
+title: Solaris: Health (prtdiag)
 agents: solaris
-catalog: os/solaris
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

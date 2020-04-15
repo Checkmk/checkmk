@@ -13,7 +13,8 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.html import HTML
 
-OutputFunnelInput = Union[str, Text, "HTML"]
+# TODO: Almost HTMLContent, only None is missing, but that would be OK, too...
+OutputFunnelInput = Union[int, "HTML", str, Text]
 
 
 class OutputFunnel(object):
@@ -40,6 +41,8 @@ class OutputFunnel(object):
 
         if isinstance(text, HTML):
             text = "%s" % text
+        elif isinstance(text, int):
+            text = str(text)
 
         if not isinstance(text, six.string_types):
             raise MKGeneralException(
@@ -49,6 +52,11 @@ class OutputFunnel(object):
             self.plug_text[-1].append(text)
         else:
             self._lowlevel_write(six.ensure_binary(text))
+
+    # Please note that this does not work with the plugs at the moment (The plugs store text)
+    def write_binary(self, data):
+        # type: (bytes) -> None
+        self._response.stream.write(data)
 
     def _lowlevel_write(self, text):
         # type: (bytes) -> None

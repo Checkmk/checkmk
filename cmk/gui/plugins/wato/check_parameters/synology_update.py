@@ -47,7 +47,7 @@ def _parameter_valuespec_synology_update():
                  default_value=[1, 4],
              )),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 

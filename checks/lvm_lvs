@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # example output
 
@@ -31,49 +11,42 @@ factory_settings["lvm_lvs_default_levels"] = {
     "levels_meta": (80.0, 90.0),
 }
 
+LvmLvsEntry = collections.namedtuple('LvmLvsEntry', ['data', 'meta'])
+
 
 def parse_lvm_lvs(info):
+    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ''}
+
     parsed = {}
     for line in info:
-        item = "%s/%s" % (line[1], line[4])
-        if not line[4] == "" and not item in parsed:
-            parsed[item] = []
-
-    for line in info:
         item = "%s/%s" % (line[1], line[0])
-        if item in parsed:
-            parsed[item] = {"data": line[6], "meta": line[7]}
+        if item not in possible_items:
+            continue
 
+        try:
+            parsed[item] = LvmLvsEntry(data=float(line[6]), meta=float(line[7]))
+        except (IndexError, ValueError):
+            pass
     return parsed
 
 
-def inventory_lvm_lvs(parsed):
-    for key in parsed:
-        yield (key, {})
-
-
-def check_lvm_lvs(item, params, parsed):
-    for key, values in parsed.items():
-        if item == key:
-            for key, value in values.items():
-                value = float(value)
-                warn, crit = params["levels_%s" % key]
-                if value >= crit:
-                    state = 2
-                elif value >= warn:
-                    state = 1
-                else:
-                    state = 0
-
-                key = key[0].upper() + key[1:]
-                yield 0, "%s usage: %.2f %%" % (key, value)
-                if state:
-                    yield state, "(warn/crit at %s/%s)" % (warn, crit)
+@get_parsed_item_data
+def check_lvm_lvs(item, params, entry):
+    yield check_levels(entry.data,
+                       "data_usage",
+                       params["levels_data"],
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Data usage")
+    yield check_levels(entry.meta,
+                       "meta_usage",
+                       params["levels_meta"],
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Meta usage")
 
 
 check_info['lvm_lvs'] = {
     'parse_function': parse_lvm_lvs,
-    'inventory_function': inventory_lvm_lvs,
+    'inventory_function': discover(),
     'check_function': check_lvm_lvs,
     'service_description': 'LVM LV Pool %s',
     'has_perfdata': True,

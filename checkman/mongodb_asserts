@@ -1,4 +1,4 @@
-title: MongoDB Assert
+title: MongoDB: Assert
 agents: linux
 catalog: app/mongodb
 license: GPL
@@ -13,4 +13,4 @@ description:
  to a pseudo host named after the replica set name, intead.
 
 inventory:
- Creates one check
+ One service is created.

@@ -1,4 +1,4 @@
-title: Siemens PLC: CPU state
+title: Siemens PLC: CPU State
 agents: siemens_plc
 catalog: hw/server/siemens
 license: GPL

@@ -16,8 +16,8 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_safenet_ntls_clients():
     return Levels(
-        title=_(u"NTLS Clients"),
-        help=_(u"Number of connected clients"),
+        title=_("NTLS Clients"),
+        help=_("Number of connected clients"),
         default_value=None,
     )
 

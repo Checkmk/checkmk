@@ -13,5 +13,8 @@ description:
 
  Needs the agent plugin "mk_redis" to be installed.
 
+item:
+ Name of the client
+
 inventory:
  One service {"Redis Clients"} will be created.

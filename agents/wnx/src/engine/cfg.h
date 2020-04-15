@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 #pragma once
 
@@ -124,7 +127,7 @@ std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
-std::wstring GetModulesDir() noexcept;
+std::wstring GetUserModulesDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
@@ -234,11 +237,11 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 template <typename T>
 T GetVal(const YAML::Node& yaml, std::string_view name, T dflt,
          int* error_out = nullptr) noexcept {
-    if (yaml.size() == 0) {
-        if (error_out) *error_out = Error::kEmpty;
-        return dflt;
-    }
     try {
+        if (yaml.size() == 0) {
+            if (error_out) *error_out = Error::kEmpty;
+            return dflt;
+        }
         auto val = yaml[name];
         if (!val.IsDefined()) return dflt;
 
@@ -401,11 +404,11 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
 template <typename T>
 std::vector<T> GetArray(const YAML::Node& yaml, std::string_view node_name,
                         int* error_out = nullptr) noexcept {
-    if (yaml.size() == 0) {
-        if (error_out) *error_out = Error::kEmpty;
-        return {};
-    }
     try {
+        if (yaml.size() == 0) {
+            if (error_out) *error_out = Error::kEmpty;
+            return {};
+        }
         auto val = yaml[node_name];
         if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
 

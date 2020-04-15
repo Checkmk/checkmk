@@ -33,13 +33,56 @@ namespace wtools {
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
                            FALSE, pid);
-    if (!h) return {0, GetLastError()};
+    if (nullptr == h) return {0, GetLastError()};
 
     ON_OUT_OF_SCOPE(::CloseHandle(h));
     DWORD exit_code = 0;
     auto success = ::GetExitCodeProcess(h, &exit_code);
-    if (!success) return {-1, GetLastError()};
+    if (FALSE == success) return {-1, GetLastError()};
+
     return {exit_code, 0};
+}
+
+std::wstring GetProcessPath(uint32_t pid) noexcept {
+    auto h =
+        ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (h == nullptr) return {};
+    ON_OUT_OF_SCOPE(::CloseHandle(h));
+
+    wchar_t buffer[MAX_PATH];
+    if (::GetModuleFileNameEx(h, 0, buffer, MAX_PATH)) return buffer;
+
+    return {};
+}
+
+// returns count of killed processes
+int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
+    namespace fs = std::filesystem;
+    constexpr size_t kMinimumPathLen = 16;  // safety
+
+    if (dir.empty()) return -1;
+
+    if (dir.u8string().size() < kMinimumPathLen) return -1;
+
+    int killed_count = 0;
+
+    ScanProcessList([dir, &killed_count,
+                     kMinimumPathLen](const PROCESSENTRY32W& entry) -> bool {
+        auto pid = entry.th32ProcessID;
+        auto exe = wtools::GetProcessPath(pid);
+        if (exe.length() < kMinimumPathLen) return true;  // skip short path
+
+        fs::path p{exe};
+
+        auto shift = p.lexically_relative(dir).u8string();
+        if (!shift.empty() && shift[0] != '.') {
+            KillProcess(pid);
+            killed_count++;
+        }
+        return true;  // continue, we want to scan all process in the system
+    });
+
+    return killed_count;
 }
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -1927,7 +1970,7 @@ static std::string MakeWmiTailForData(StatusColumn status_column,
 // Total,1500
 // AFter
 // Name,Freq,WMIStatus
-// Total,1500,OK
+// Total, 500, OK
 // Empty or quite short strings are replaced with WMIStatus\nTimeout\n
 std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
                            char separator) {

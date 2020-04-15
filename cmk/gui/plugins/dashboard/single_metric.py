@@ -4,11 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import (  # pylint: disable=unused-import
+    Dict, List, Text, Union, Tuple,
+)
+import six
+
 import livestatus
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -259,7 +265,12 @@ class SingleMetricDashlet(Dashlet):
         return chosen_metric_name, metric_choices
 
     def _get_titles(self, metric_spec, links, render_options):
-        titles = {"above": [], "below": [], "tooltip": []}
+        titles = {
+            "above": [],
+            "below": [],
+            "tooltip": [],
+        }  # type: Dict[str, List[Union[Text, Tuple[Text, int]]]]
+
         for opt in ["site", "host", "service", "metric"]:
             opt_id = "show_%s" % opt
             if opt_id in render_options and render_options[opt_id]:
@@ -267,9 +278,10 @@ class SingleMetricDashlet(Dashlet):
                 if isinstance(tmp_opt, tuple):  # position != tooltip
                     position, font_size = tmp_opt
                     titles[position].append(
-                        (str(links[opt]) if opt in links else metric_spec[opt], font_size))
+                        (six.text_type(links[opt] if opt in links else metric_spec[opt]),
+                         font_size))
                 elif tmp_opt == "tooltip":
-                    titles[tmp_opt].append(str(metric_spec[opt]))
+                    titles[tmp_opt].append(six.text_type(metric_spec[opt]))
         return titles
 
     def _get_rendered_metric_value(self, metric, render_options, tooltip_titles, service_url):
@@ -377,9 +389,10 @@ class SingleMetricDashlet(Dashlet):
                 if metric_choices:
                     # TODO: Fix this handling of no available/matching metric
                     # after the implementation of host/site contexts
-                    warning_txt = _("The given metric \"%s\" could not be found.\
+                    warning_txt = HTML(
+                        _("The given metric \"%s\" could not be found.\
                             For the selected service \"%s\" you can choose from the following metrics:"
-                                    % (metric, service))
+                          % (metric, service)))
                     warning_txt += html.render_ul("".join(
                         [str(html.render_li(b)) for _a, b in metric_choices]))
                     html.show_warning(warning_txt)

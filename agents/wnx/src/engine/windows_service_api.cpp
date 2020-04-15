@@ -20,6 +20,7 @@
 #include "external_port.h"  // windows api abstracted
 #include "firewall.h"
 #include "install_api.h"  // install
+#include "modules.h"
 #include "realtime.h"
 #include "service_processor.h"  // cmk service implementation class
 #include "tools/_kbd.h"
@@ -332,9 +333,12 @@ int TestLegacy() {
 
 int RestoreWATOConfig() {
     try {
+        using namespace cma::cfg;
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);
-        cma::cfg::cap::ReInstall();
+        cap::ReInstall();
+        modules::ModuleCommander mc;
+        mc.InstallDefault(modules::InstallMode::force);
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
@@ -1009,7 +1013,6 @@ wtools::WinService::StartMode GetServiceStartModeFromCfg(
 
 wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(
     std::string_view mode) {
-
     using namespace cma::tools;
     using namespace cma::cfg;
     using namespace wtools;

@@ -17,6 +17,7 @@
 #include "common/wtools.h"
 #include "glob_match.h"
 #include "section_header.h"  // we have logging here
+#include "service_processor.h"
 #include "windows_service_api.h"
 
 namespace cma {
@@ -70,6 +71,32 @@ bool Remove(const std::filesystem::path& Target, std::error_code& Ec) noexcept {
 std::atomic<int> PluginEntry::thread_count_ = 0;
 
 namespace tools {
+
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src) {
+    try {
+        std::ifstream f1(tgt, std::ifstream::binary | std::ifstream::ate);
+        std::ifstream f2(src, std::ifstream::binary | std::ifstream::ate);
+
+        if (f1.fail() || f2.fail()) {
+            return false;  // file problem
+        }
+
+        if (f1.tellg() != f2.tellg()) {
+            return false;  // size mismatch
+        }
+
+        // seek back to beginning and use std::equal to compare contents
+        f1.seekg(0, std::ifstream::beg);
+        f2.seekg(0, std::ifstream::beg);
+        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                          std::istreambuf_iterator<char>(),
+                          std::istreambuf_iterator<char>(f2.rdbuf()));
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
+        return false;
+    }
+}
 
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
                        std::string_view value) noexcept {
@@ -650,8 +677,16 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
                                               int MaxTimeout) {
     if (failed()) return {};
 
+    auto exec = cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
+    if (exec.empty()) {
+        XLOG::l(
+            "Failed to start minibox sync '{}', can't find executables for the '{}'",
+            wtools::ConvertToUTF8(Id), path().u8string());
+        return {};
+    }
+
     auto started =
-        minibox_.startEx(L"id", path(), TheMiniBox::StartMode::job, iu_);
+        minibox_.startEx(L"id", exec, TheMiniBox::StartMode::job, iu_);
     if (!started) {
         XLOG::l("Failed to start minibox sync '{}'", wtools::ConvertToUTF8(Id));
         return {};
@@ -694,6 +729,8 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
     minibox_.clean();
     return accu;
 }
+
+void PluginEntry::setCmdLine(std::wstring_view name) { cmd_line_ = name; }
 
 // stop with asyncing
 void PluginEntry::breakAsync() {
@@ -747,21 +784,20 @@ bool TheMiniBox::waitForStop(std::chrono::milliseconds interval) {
     return stopped || stop_set_;
 }
 
-bool TheMiniBox::startEx(std::wstring_view uniq_id,
-                         std::filesystem::path exe_file, StartMode start_mode,
+bool TheMiniBox::startEx(std::wstring_view uniq_id, std::wstring exec,
+                         StartMode start_mode,
                          wtools::InternalUser internal_user) {
     std::lock_guard lk(lock_);
     if (process_) return false;
 
     sw_.start();
     id_ = uniq_id;
-    exec_ = exe_file.wstring();
+    exec_ = exec;
 
     // send exec array entries to internal
     try {
         // now exec
         auto ar = new wtools::AppRunner;
-        auto exec = cma::ConstructCommandToExec(exec_);
         XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
                   static_cast<int>(start_mode));
 
@@ -992,7 +1028,15 @@ void PluginEntry::threadCore(const std::wstring& Id) {
     // core
     auto mode = GetStartMode(path());
 
-    auto started = minibox_.startEx(Id, path(), mode, iu_);
+    auto exec = cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
+    if (exec.empty()) {
+        XLOG::l(
+            "Failed to start minibox '{}', can't find executables for the '{}'",
+            wtools::ConvertToUTF8(Id), path().u8string());
+        return;
+    }
+
+    auto started = minibox_.startEx(Id, exec, mode, iu_);
     if (!started) {
         XLOG::l("Failed to start minibox thread {}", wtools::ConvertToUTF8(Id));
         return;

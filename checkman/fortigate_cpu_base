@@ -1,4 +1,4 @@
-title: FortiGate firewalls: CPU utilization
+title: FortiGate Firewalls: CPU Utilization
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL
@@ -11,5 +11,5 @@ description:
  are configurable.
 
 inventory:
- One service will be created
+ One service is created.
 

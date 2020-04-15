@@ -10,19 +10,22 @@ import ast
 import re
 import socket
 import time
-from typing import List, Tuple, Text  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import livestatus
+import six
 
+import livestatus
+from livestatus import SiteId  # pylint: disable=unused-import
+
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -33,6 +36,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
+from cmk.gui.valuespec import DropdownChoices  # pylint: disable=unused-import
 
 
 def _socket_path():
@@ -64,7 +68,7 @@ syslog_priorities = [
     (5, "notice"),
     (6, "info"),
     (7, "debug"),
-]
+]  # type: DropdownChoices
 
 syslog_facilities = [
     (0, "kern"),
@@ -92,7 +96,7 @@ syslog_facilities = [
     (22, "local6"),
     (23, "local7"),
     (31, "snmptrap"),
-]
+]  # type: DropdownChoices
 
 phase_names = {
     'counting': _("counting"),
@@ -183,7 +187,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", list(map(make_utf8, rfc)), site=event["site"])
+    execute_command("CREATE", [six.ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
@@ -210,14 +214,14 @@ def query_ec_directly(query):
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = ""
+        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk
             if not chunk:
                 break
 
-        return ast.literal_eval(response_text)
+        return ast.literal_eval(six.ensure_str(response_text))
     except SyntaxError as e:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
@@ -229,6 +233,7 @@ def query_ec_directly(query):
 
 
 def execute_command(name, args=None, site=None):
+    # type: (str, Optional[List[str]], Optional[SiteId]) -> None
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -257,7 +262,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}
+    total_stats = {}  # type: Dict[str, float]
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):
@@ -266,8 +271,7 @@ def get_total_stats(only_sites):
     if not total_stats:
         if only_sites is None:
             raise MKGeneralException(_("Got no data from any site"))
-        else:
-            raise MKGeneralException(_("Got no data from this site"))
+        raise MKGeneralException(_("Got no data from this site"))
 
     for row in stats_per_site:
         for time_key, in_relation_to in [
@@ -374,7 +378,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         if reason:
             return reason
 
-    if cmk.is_managed_edition():
+    if cmk_version.is_managed_edition():
         import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
@@ -383,7 +387,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
         site_customer_id = managed.get_customer_id(config.sites[event["site"]])
 
-        if rule_customer_id != managed.SCOPE_GLOBAL and site_customer_id != rule_customer_id:
+        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
             return _("Wrong customer")
 
     if match_groups is True:
@@ -395,12 +399,13 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
+        livesock.send(
+            six.ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
         if answer == "":
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
-        elif int(answer) == 0:
+        if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
     except Exception as e:
         if config.debug:
@@ -411,16 +416,15 @@ def check_timeperiod(tpname):
 def match(pattern, text, complete=True):
     if pattern is None:
         return True
+    if complete:
+        if not pattern.endswith("$"):
+            pattern += '$'
+        m = re.compile(pattern, re.IGNORECASE).match(text)
     else:
-        if complete:
-            if not pattern.endswith("$"):
-                pattern += '$'
-            m = re.compile(pattern, re.IGNORECASE).match(text)
-        else:
-            m = re.compile(pattern, re.IGNORECASE).search(text)
-        if m:
-            return m.groups()
-        return False
+        m = re.compile(pattern, re.IGNORECASE).search(text)
+    if m:
+        return m.groups()
+    return False
 
 
 def match_ipv4_network(pattern, ipaddress_text):

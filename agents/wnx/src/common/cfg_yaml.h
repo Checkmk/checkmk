@@ -1,3 +1,8 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 // Configuration Parameters for YAML and YAML-INI related configs
 #pragma once
 #include <cstdint>
@@ -182,6 +187,8 @@ constexpr std::string_view kModulesExts = "exts";    // list of string
 constexpr std::string_view kModulesExec = "exec";    // string
 constexpr std::string_view kModulesDir = "dir";      // string
 
+constexpr std::string_view kModulesPython = "python";  // string
+
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
 constexpr const char* const kFirewallMode = "mode";  // string
@@ -199,6 +206,10 @@ namespace values {
 // modules.table
 constexpr std::string_view kModulesNamePython = "python-3.8";             //
 constexpr std::string_view kModulesCmdPython = "Scripts\\python.exe {}";  //
+
+// modules...
+constexpr std::string_view kModuleUsageSystem = "system";
+constexpr std::string_view kModuleUsageAuto = "auto";
 
 // Firewall.Mode
 constexpr const char* const kModeConfigure = "configure";  // install [*]
@@ -238,6 +249,8 @@ constexpr uint32_t kMrpeTimeout = 10;
 constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
 
 constexpr std::string_view kModulesDir = "modules\\{}";
+
+constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 }  // namespace defaults
 

@@ -15,11 +15,12 @@ from cmk.gui.plugins.wato import (
 
 
 def fortigate_sessions_element():
+    # type: () -> Tuple
     return Tuple(
-        title=_(u"Levels for active sessions"),
+        title=_("Levels for active sessions"),
         elements=[
-            Integer(title=_(u"Warning at"), default_value=100000, size=10),
-            Integer(title=_(u"Critical at"), default_value=150000, size=10),
+            Integer(title=_("Warning at"), default_value=100000, size=10),
+            Integer(title=_("Critical at"), default_value=150000, size=10),
         ],
     )
 

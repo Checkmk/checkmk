@@ -1,4 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest  # type: ignore[import]
+
+import cmk.utils.version as cmk_version
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
@@ -32,7 +40,7 @@ def test_registered_config_domains():
         'rrdcached',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_config_domains += [
             'dcd',
             'mknotifyd',
@@ -55,9 +63,11 @@ def test_registered_automation_commands():
         'ping',
         'push-snapshot',
         'service-discovery-job',
+        'checkmk-remote-automation-start',
+        'checkmk-remote-automation-get-status',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_automation_commands += [
             'execute-dcd-command',
         ]
@@ -188,7 +198,7 @@ def test_registered_configvars():
         'graph_timeranges',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_vars += [
             'agent_deployment_enabled',
             'agent_deployment_host_selection',
@@ -279,7 +289,7 @@ def test_registered_configvar_groups():
         u'User Management',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_groups += [
             u'Dynamic Configuration',
             u'Automatic agent updates',

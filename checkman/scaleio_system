@@ -9,7 +9,7 @@ description:
  ruleset for filesystems can be used to set thresholds.
 
 item:
- The system id is used as item
+ The system id
 
 inventory:
  One service for each system is created

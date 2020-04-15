@@ -7,6 +7,7 @@
 
 #include "cap.h"
 #include "cfg.h"
+#include "cma_core.h"
 #include "common/yaml.h"
 #include "lwa/types.h"
 #include "read_file.h"
@@ -16,15 +17,7 @@
 #include "tools/_tgt.h"
 
 namespace cma::cfg::cap {
-
 TEST(CapTest, CheckAreFilesSame) {
-    EXPECT_TRUE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
-
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     auto [file1, file2] = tst::CreateInOut();
@@ -34,7 +27,7 @@ TEST(CapTest, CheckAreFilesSame) {
     {
         tst::ConstructFile(file1 / name, "abcde0");
         tst::ConstructFile(file2 / name, "abcde1");
-        EXPECT_FALSE(AreFilesSame(file1 / name, file2 / name));
+        EXPECT_FALSE(cma::tools::AreFilesSame(file1 / name, file2 / name));
         EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
     }
 }

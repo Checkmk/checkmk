@@ -4,13 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK vSphere Special Agent"""
-
+from typing import Iterable
 import argparse
 import collections
 import datetime
 import errno
 import functools
-import os
 import re
 import socket
 import sys
@@ -61,6 +60,9 @@ REQUESTED_COUNTERS_KEYS = (
     'net.errorsRx',
     'net.errorsTx',
     'net.unknownProtos',
+    'mem.swapused',
+    'mem.swapin',
+    'mem.swapout',
     'sys.uptime',
     'sys.resourceMemConsumed',
     'datastore.read',
@@ -899,11 +901,6 @@ def parse_arguments(argv):
                         action="store_true",
                         help="""Disables the checking of the servers ssl certificate""")
     parser.add_argument(
-        "--pysphere",
-        action="store_true",
-        help="""Fallback to old pysphere based special agent. It supports ESX 4.1 but is
-        very slow.""")
-    parser.add_argument(
         "-D",
         "--direct",
         action="store_true",
@@ -1168,7 +1165,7 @@ class ESXConnection:
         auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
         response = self._session.postsoap(self._soap_templates.login % auth)
 
-        server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
+        server_cookie = response.headers.get("set-cookie")
 
         if response.status_code != 200 or not server_cookie:
             raise SystemExit("Cannot login to vSphere Server (reason: [%s] %s). Please check the "
@@ -1557,12 +1554,13 @@ def convert_hostname(hostname, opt):
 
 
 def write_output(lines, opt):
+    # type: (Iterable[str], argparse.Namespace) -> None
     if opt.agent:
         for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
-            sys.stdout.write(chunk + "\n")
+            sys.stdout.write(chunk)
+        sys.stdout.write("\n")
 
-    for line in lines:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, str) else line) + "\n")
+    sys.stdout.writelines("%s\n" % line for line in lines)
     sys.stdout.flush()
 
 
@@ -1895,15 +1893,6 @@ def fetch_data(connection, opt):
     return output
 
 
-def call_legacy_pysphere():
-    # TODO: Remove this, drop agent_vsphere.pysphere
-    import subprocess  # pylint: disable=import-outside-toplevel
-
-    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
-    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere] + sys.argv[1:]
-    return subprocess.call(cmd)
-
-
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -1921,10 +1910,6 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     opt = parse_arguments(argv)
-
-    # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-    if opt.pysphere:
-        sys.exit(call_legacy_pysphere())
 
     socket.setdefaulttimeout(opt.timeout)
 

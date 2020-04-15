@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Find and print the absolute paths of all Python 2/3 source code files
 set -e
 
@@ -30,6 +34,7 @@ if [ -d "$REPO_PATH/enterprise" ]; then
     SEARCH+=" enterprise/alert_handlers"
     SEARCH+=" enterprise/bin"
     SEARCH+=" enterprise/cmk"
+    SEARCH+=" enterprise/core/src/test"
     PRUNE+=" -path $(realpath enterprise/agents/bakery) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/cee) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/gui/cee) -prune -o"

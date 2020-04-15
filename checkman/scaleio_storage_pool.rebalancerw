@@ -1,4 +1,4 @@
-title: EMC ScaleIO: Storage Pool Rebalance read/write
+title: EMC ScaleIO: Storage Pool Rebalance Read/Write
 agents: linux
 catalog: os/storage
 license: GPL
@@ -9,7 +9,7 @@ description:
  throughput.
 
 item:
- The SP id is used as item
+ The SP id
 
 inventory:
  One service for each SP is created

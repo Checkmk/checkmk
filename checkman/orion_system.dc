@@ -8,7 +8,7 @@ description:
  devices which support the ORION-MIB.
 
 item:
- The items are 'System', 'Battery' and 'Rectifier'.
+ Either {{Battery}} or {{Rectifier}}.
 
 inventory:
  One service for each item is generated.

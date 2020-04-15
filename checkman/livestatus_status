@@ -1,4 +1,4 @@
-title: Performance and settings of a Check_MK/OMD instance
+title: Checkmk: Performance and Settings
 agents: linux
 catalog: app/omd
 license: GPL
@@ -16,4 +16,4 @@ item:
  The name of the OMD site.
 
 inventory:
- One check per running OMD site is being created.
+ One service is created for each running OMD site.

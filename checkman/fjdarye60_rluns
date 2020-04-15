@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX storage systems: RLUNs
+title: Fujitsu ETERNUS DX Storage Systems: RLUNs
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPL
@@ -20,5 +20,5 @@ item:
  has index {1}.
 
 inventory:
- All RLUNs with byte 3 being {A0} (assumed to mean "present") are inventorized.
+ One service is created for each present RLUN.
 

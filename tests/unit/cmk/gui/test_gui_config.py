@@ -1,11 +1,16 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import json
 import six
 import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKAuthException
@@ -15,7 +20,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
-from livestatus import SiteConfigurations
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -66,7 +70,7 @@ def test_registered_permission_sections():
         ('icons_and_actions', (50, u'Icons', True)),
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_sections += [
             ('custom_graph', (50, u'Custom Graphs', True)),
             ('forecast_graph', (50, u'Forecast Graphs', True)),
@@ -216,6 +220,7 @@ def test_registered_permissions():
         'nagvis.Map_view_*',
         'nagvis.Rotation_view_*',
         'notification_plugin.asciimail',
+        'notification_plugin.cisco_webex_teams',
         'notification_plugin.jira_issues',
         'notification_plugin.mail',
         'notification_plugin.mkeventd',
@@ -355,6 +360,12 @@ def test_registered_permissions():
         'view.invdockerimages_search',
         'view.invfan_of_host',
         'view.invfan_search',
+        'view.invibmmqchannels_of_host',
+        'view.invibmmqchannels_search',
+        'view.invibmmqmanagers_of_host',
+        'view.invibmmqmanagers_search',
+        'view.invibmmqqueues_of_host',
+        'view.invibmmqqueues_search',
         'view.invinterface_of_host',
         'view.invinterface_search',
         'view.invmodule_of_host',
@@ -367,6 +378,8 @@ def test_registered_permissions():
         'view.invorarecoveryarea_search',
         'view.invorasga_of_host',
         'view.invorasga_search',
+        'view.invorapga_of_host',
+        'view.invorapga_search',
         'view.invoratablespace_of_host',
         'view.invoratablespace_search',
         'view.invother_of_host',
@@ -491,6 +504,7 @@ def test_registered_permissions():
         'wato.update_dns_cache',
         'wato.use',
         'wato.users',
+        'wato.diagnostics',
         'view.cmk_servers',
         'view.cmk_sites',
         'view.cmk_sites_of_host',
@@ -500,7 +514,7 @@ def test_registered_permissions():
         'view.service_graphs',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_permissions += [
             'general.edit_reports',
             'icons_and_actions.agent_deployment',
@@ -998,14 +1012,14 @@ def test_unauthenticated_users_language(mocker, user):
     config.LoggedInSuperUser(),
 ])
 def test_unauthenticated_users_authorized_sites(mocker, user):
-    assert user.authorized_sites(SiteConfigurations({
+    assert user.authorized_sites({
         'site1': {},
-    })) == SiteConfigurations({
+    }) == {
         'site1': {},
-    })
+    }
 
-    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({'site1': {}, 'site2': {}}))
-    assert user.authorized_sites() == SiteConfigurations({'site1': {}, 'site2': {}})
+    mocker.patch.object(config, 'allsites', lambda: {'site1': {}, 'site2': {}})
+    assert user.authorized_sites() == {'site1': {}, 'site2': {}}
 
 
 @pytest.mark.parametrize('user', [
@@ -1014,11 +1028,11 @@ def test_unauthenticated_users_authorized_sites(mocker, user):
 ])
 def test_unauthenticated_users_authorized_login_sites(mocker, user):
     mocker.patch.object(config, 'get_login_slave_sites', lambda: ['slave_site'])
-    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({
+    mocker.patch.object(config, 'allsites', lambda: {
         'master_site': {},
         'slave_site': {},
-    }))
-    assert user.authorized_login_sites() == SiteConfigurations({'slave_site': {}})
+    })
+    assert user.authorized_login_sites() == {'slave_site': {}}
 
 
 def test_logged_in_nobody_permissions(mocker):

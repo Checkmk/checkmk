@@ -11,5 +11,5 @@ item:
  power and energy.
 
 inventory:
- One item per phase and one summary item is added.
+ One service is created for each phase and one summary service is created.
 

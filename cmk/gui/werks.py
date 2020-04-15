@@ -11,8 +11,11 @@ import itertools
 import os
 import re
 import time
+from typing import Any, Dict, Union  # pylint: disable=unused-import
+
 import six
 
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
 import cmk.utils.werks
@@ -37,12 +40,12 @@ from cmk.gui.valuespec import (
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
-g_werks = None
+g_werks = {}  # type: Dict[int, Dict[str, Any]]
 
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Checkmk %s Release Notes") % cmk.__version__)
+    html.header(_("Checkmk %s Release Notes") % cmk_version.__version__)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -127,7 +130,7 @@ def page_werk():
 
 def load_werks():
     global g_werks
-    if g_werks is None:
+    if not g_werks:
         g_werks = cmk.utils.werks.load()
 
     ack_ids = load_acknowledgements()
@@ -199,14 +202,12 @@ def _werk_table_option_entries():
             choices=sorted(translator.levels()),
         ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
-        ("id", "single",
-         TextAscii(
-             title=_("Werk ID"),
-             label="#",
-             regex="[0-9]{4}",
-             allow_empty=True,
-             size=4,
-         ), ""),
+        ("id", "single", TextAscii(
+            title=_("Werk ID"),
+            label="#",
+            regex="^[0-9]{1,5}$",
+            size=7,
+        ), ""),
         ("compatibility", "single",
          DropdownChoice(title=_("Compatibility"),
                         choices=[
@@ -345,13 +346,21 @@ def render_werks_table_row(table, translator, werk):
 
 
 def werk_matches_options(werk, werk_table_options):
-    if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
-           werk["level"] in werk_table_options["levels"] and \
-           werk["class"] in werk_table_options["classes"] and \
-           werk["compatible"] in werk_table_options["compatibility"] and \
-           werk_table_options["component"] in ( None, werk["component" ]) and \
-           werk["date"] >= werk_table_options["date_range"][0] and \
-           werk["date"] <= werk_table_options["date_range"][1]):
+    # TODO: Fix this silly typing chaos below!
+    # check if werk id is int because valuespec is TextAscii
+    # else, set empty id to return all results beside input warning
+    try:
+        werk_to_match = int(werk_table_options["id"])  # type: Union[int, str]
+    except ValueError:
+        werk_to_match = ""
+
+    if not ((not werk_to_match or werk["id"] == werk_to_match) and
+            werk["level"] in werk_table_options["levels"] and
+            werk["class"] in werk_table_options["classes"] and
+            werk["compatible"] in werk_table_options["compatibility"] and
+            werk_table_options["component"] in (None, werk["component"]) and
+            werk["date"] >= werk_table_options["date_range"][0] and
+            werk["date"] <= werk_table_options["date_range"][1]):
         return False
 
     if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:
@@ -379,7 +388,8 @@ def werk_matches_options(werk, werk_table_options):
 
 def _default_werk_table_options():
     werk_table_options = {
-        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()
+        name: default_value  #
+        for name, _height, _vs, default_value in _werk_table_option_entries()
     }
     werk_table_options["date_range"] = (1, time.time())
     werk_table_options["compatibility"] = ["incomp_unack"]
@@ -387,7 +397,7 @@ def _default_werk_table_options():
 
 
 def _render_werk_table_options():
-    werk_table_options = {}
+    werk_table_options = {}  # type: Dict[str, Any]
 
     for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value

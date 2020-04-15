@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: Used space
+title: VMWare ESX Host Systems: Used Space
 agents: vsphere
 catalog: os/storage
 license: GPL
@@ -16,5 +16,5 @@ item:
  The logical name of the filesystem (not the mountpoint!)
 
 inventory:
- One service per datastore will be created.
+ One service is created for each datastore.
 

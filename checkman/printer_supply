@@ -1,4 +1,4 @@
-title: Generic Printer: Remaining filling level
+title: Generic Printer: Remaining Filling Level
 agents: snmp
 catalog: hw/printer
 license: GPL
@@ -17,6 +17,9 @@ description:
  One example is {Toner Cartridge OKI DATA CORP}. In this case the color of
  the supply unit is added to the beginning of the name to get a unique
  item name.
+
+item:
+ The description of the printer
 
 inventory:
  One check is being created for each supply unit with a unique name.

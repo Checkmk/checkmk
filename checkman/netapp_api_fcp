@@ -1,4 +1,4 @@
-title: NetApp Cluster-Mode: State of fibrechannel interfaces
+title: NetApp Cluster-Mode: State of Fibrechannel Interfaces
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL
@@ -12,5 +12,5 @@ item:
  The interface description
 
 inventory:
- The inventory creates one service for each fibrechannel interface
+ One service is created for each fibrechannel interface.
 

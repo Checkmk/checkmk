@@ -31,14 +31,14 @@ import abc
 import copy
 import errno
 import logging
-from multiprocessing.pool import ThreadPool
-from multiprocessing import TimeoutError
 import os
 import re
 import shutil
 import sys
 import time
-from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, IO, Union, Dict, List, Set, Text,
+)
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -46,11 +46,12 @@ import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
 
+import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.escaping as escaping
@@ -71,18 +72,29 @@ from cmk.gui.valuespec import (
     ListChoice,
     Age,
     Password,
+    rule_option_elements,
 )
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
     UserConnector,
     user_connector_registry,
     get_user_attributes,
+    user_sync_config,
+    load_roles,
+    load_connection_config,
+    save_connection_config,
+    new_user_template,
+    load_cached_profile,
+    get_connection,
+    cleanup_connection_id,
+    release_users_lock,
 )
 
-import cmk.gui.sites as sites
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -131,6 +143,9 @@ ldap_filter_map = {
 class MKLDAPException(MKGeneralException):
     pass
 
+
+DistinguishedName = Text
+GroupMemberships = Dict[DistinguishedName, Dict[str, Union[Text, List[Text]]]]
 
 #.
 #   .--UserConnector-------------------------------------------------------.
@@ -189,7 +204,7 @@ class LDAPUserConnector(UserConnector):
     def __init__(self, cfg):
         super(LDAPUserConnector, self).__init__(self.transform_config(cfg))
 
-        self._ldap_obj = None
+        self._ldap_obj = None  # type: Optional[ldap.ldapobject.ReconnectLDAPObject]
         self._ldap_obj_config = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
@@ -224,15 +239,19 @@ class LDAPUserConnector(UserConnector):
 
     def connect_server(self, server):
         try:
-            trace_args = {}
             if self._logger.isEnabledFor(logging.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
-                trace_args["trace_level"] = 2
-                trace_args["trace_file"] = sys.stderr
+                trace_level = 2
+                trace_file = sys.stderr  # type: Optional[IO[str]]
+            else:
+                trace_level = 0
+                trace_file = None
 
             uri = self._format_ldap_uri(server)
-            conn = ldap.ldapobject.ReconnectLDAPObject(uri, **trace_args)
+            conn = ldap.ldapobject.ReconnectLDAPObject(uri,
+                                                       trace_level=trace_level,
+                                                       trace_file=trace_file)
             conn.protocol_version = self._config.get('version', 3)
             conn.network_timeout = self._config.get('connect_timeout', 2.0)
             conn.retry_delay = 0.5
@@ -291,9 +310,8 @@ class LDAPUserConnector(UserConnector):
            and self._config == self._ldap_obj_config:
             self._logger.info('LDAP CONNECT - Using existing connecting')
             return  # Use existing connections (if connection settings have not changed)
-        else:
-            self._logger.info('LDAP CONNECT - Connecting...')
-            self.disconnect()
+        self._logger.info('LDAP CONNECT - Connecting...')
+        self.disconnect()
 
         # Some major config var validations
 
@@ -422,8 +440,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
             if catch:
                 raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
-            else:
-                raise
+            raise
 
     def servers(self):
         connect_params = self._get_connect_params()
@@ -474,9 +491,11 @@ class LDAPUserConnector(UserConnector):
         return self._config['group_dn'] != ''
 
     def get_group_dn(self):
+        # type: () -> DistinguishedName
         return self._replace_macros(self._config['group_dn'])
 
     def _get_user_dn(self):
+        # type: () -> DistinguishedName
         return self._replace_macros(self._config['user_dn'])
 
     def _get_suffix(self):
@@ -496,27 +515,30 @@ class LDAPUserConnector(UserConnector):
                       "The LDAP connections %s and %s both use "
                       "the suffix %s which is not allowed.") %
                     (LDAPUserConnector.connection_suffixes[suffix], self.id(), suffix))
-            else:
-                LDAPUserConnector.connection_suffixes[suffix] = self.id()
+            LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
     def needed_attributes(self):
+        # type: () -> List[Text]
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
-        attrs = set([])
+        attrs = set()  # type: Set[Text]
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
 
     def object_exists(self, dn):
+        # type: (DistinguishedName) -> bool
         try:
             return bool(self._ldap_search(dn, columns=['dn'], scope='base'))
         except Exception:
             return False
 
     def user_base_dn_exists(self):
+        # type: () -> bool
         return self.object_exists(self._get_user_dn())
 
     def group_base_dn_exists(self):
+        # type: () -> bool
         return self.object_exists(self.get_group_dn())
 
     def _ldap_paged_async_search(self, base, scope, filt, columns):
@@ -531,6 +553,7 @@ class LDAPUserConnector(UserConnector):
         results = []
         while True:
             # issue the ldap search command (async)
+            assert self._ldap_obj is not None
             msgid = self._ldap_obj.search_ext(base, scope, filt, columns, serverctrls=[lc])
 
             unused_code, response, unused_msgid, serverctrls = self._ldap_obj.result3(
@@ -625,9 +648,8 @@ class LDAPUserConnector(UserConnector):
                     (escaping.escape_attribute(base), escaping.escape_attribute(scope),
                      escaping.escape_attribute(filt), escaping.escape_attribute(
                          ','.join(columns)), last_exc))
-            else:
-                raise MKLDAPException(
-                    _('Unable to successfully perform the LDAP search (%s)') % last_exc)
+            raise MKLDAPException(
+                _('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
         self._logger.info('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
         return result
@@ -636,12 +658,11 @@ class LDAPUserConnector(UserConnector):
         # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
         if scope in ['sub', 'subtree']:
             return ldap.SCOPE_SUBTREE
-        elif scope == 'base':
+        if scope == 'base':
             return ldap.SCOPE_BASE
-        elif scope == 'one':
+        if scope == 'one':
             return ldap.SCOPE_ONELEVEL
-        else:
-            raise Exception('Invalid scope specified: %s' % scope)
+        raise Exception('Invalid scope specified: %s' % scope)
 
     # Returns the ldap filter depending on the configured ldap directory type
     def ldap_filter(self, key, handle_config=True):
@@ -822,6 +843,7 @@ class LDAPUserConnector(UserConnector):
         return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(self, filters, filt_attr='cn', nested=False):
+        # type: (List[Text], str, bool) -> GroupMemberships
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_search_cache:
             return self._group_search_cache[cache_key]
@@ -843,7 +865,8 @@ class LDAPUserConnector(UserConnector):
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
     def _get_direct_group_memberships(self, filters, filt_attr):
-        groups = {}
+        # type: (List[Text], str) -> GroupMemberships
+        groups = {}  # type: GroupMemberships
         filt = self.ldap_filter('groups')
         member_attr = self._member_attr().lower()
 
@@ -883,7 +906,8 @@ class LDAPUserConnector(UserConnector):
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
     def _get_nested_group_memberships(self, filters, filt_attr):
-        groups = {}
+        # type: (List[Text], str) -> GroupMemberships
+        groups = {}  # type: GroupMemberships
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
         # query instead of one for groups and one for users below when searching for the members.
@@ -937,6 +961,9 @@ class LDAPUserConnector(UserConnector):
                     'cn': cn,
                 }
 
+                members = groups[dn]['members']
+                assert isinstance(members, list)
+
                 # Register the group construct, collect the members later. This way we can also
                 # catch the case where a group refers to itself, which is prevented by some LDAP
                 # editing tools, like "Active Directory Users & Computers", but can somehow be
@@ -947,7 +974,7 @@ class LDAPUserConnector(UserConnector):
                 sub_group_filters = []
                 for obj_dn, obj in self._ldap_search(base_dn, filt, ['dn', 'objectclass'], 'sub'):
                     if "user" in obj['objectclass']:
-                        groups[dn]['members'].append(obj_dn)
+                        members.append(obj_dn)
 
                     elif "group" in obj['objectclass']:
                         sub_group_filters.append(obj_dn)
@@ -957,9 +984,9 @@ class LDAPUserConnector(UserConnector):
                 for _sub_group_dn, sub_group in self.get_group_memberships(sub_group_filters,
                                                                            filt_attr='dn',
                                                                            nested=True).items():
-                    groups[dn]['members'] += sub_group["members"]
+                    members += sub_group["members"]
 
-                groups[dn]['members'].sort()
+                members.sort()
 
         return groups
 
@@ -1043,8 +1070,7 @@ class LDAPUserConnector(UserConnector):
                     key = what + "_" + key
                 connection[key] = val
 
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        userdb.save_connection_config([connection])
+        save_connection_config([connection])
         config.user_connections.append(connection)
 
     # This function only validates credentials, no locked checking or similar
@@ -1060,9 +1086,8 @@ class LDAPUserConnector(UserConnector):
         enforce_this_connection = self._user_enforces_this_connection(user_id)
         if enforce_this_connection is False:
             return None  # Skip this connection, another one is enforced
-        else:
-            # Always use the stripped user ID for communication with the LDAP server
-            user_id = self._strip_suffix(user_id)
+        # Always use the stripped user ID for communication with the LDAP server
+        user_id = self._strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the user_id as tuple which are both needed for
@@ -1087,8 +1112,7 @@ class LDAPUserConnector(UserConnector):
                 # use it in case it exists. If not, use the user with the suffix. A connection may
                 # have created users while the connection had no suffix and a suffix has been added
                 # to the connection later.
-                import cmk.gui.userdb as userdb  # TODO: Cleanup
-                if userdb.connection_id_of_user(user_id) == self.id():
+                if self._connection_id_of_user(user_id) == self.id():
                     result = user_id
                 else:
                     result = self._add_suffix(user_id)
@@ -1099,6 +1123,13 @@ class LDAPUserConnector(UserConnector):
         self._default_bind(self._ldap_obj)
         return result
 
+    def _connection_id_of_user(self, user_id):
+        # type: (UserId) -> Optional[str]
+        user = load_cached_profile(user_id)
+        if user is None:
+            return None
+        return user.get("connector")
+
     def _user_enforces_this_connection(self, username):
         matched_connection_ids = []
         for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
@@ -1107,10 +1138,9 @@ class LDAPUserConnector(UserConnector):
 
         if not matched_connection_ids:
             return None
-        elif len(matched_connection_ids) > 1:
+        if len(matched_connection_ids) > 1:
             raise MKUserError(None, _("Unable to match connection"))
-        else:
-            return matched_connection_ids[0] == self.id()
+        return matched_connection_ids[0] == self.id()
 
     def _username_matches_suffix(self, username, suffix):
         return username.endswith('@' + suffix)
@@ -1125,7 +1155,7 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return '%s@%s' % (username, suffix)
 
-    def do_sync(self, add_to_changelog, only_username):
+    def do_sync(self, add_to_changelog, only_username, load_users_func, save_users_func):
         if not self.has_user_base_dn_configured():
             self._logger.info("Not trying sync (no \"user base DN\" configured)")
             return  # silently skip sync without configuration
@@ -1142,8 +1172,7 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        users = userdb.load_users(lock=True)
+        users = load_users_func(lock=True)
 
         changes = []
 
@@ -1152,14 +1181,14 @@ class LDAPUserConnector(UserConnector):
                 user = copy.deepcopy(users[user_id])
                 mode_create = False
             else:
-                user = userdb.new_user_template(self.id())
+                user = new_user_template(self.id())
                 mode_create = True
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in users.items():
-            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+            user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self._strip_suffix(
                     user_id) not in ldap_users:
                 del users[user_id]  # remove the user
@@ -1169,7 +1198,7 @@ class LDAPUserConnector(UserConnector):
         profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
-            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+            user_connection_id = cleanup_connection_id(user.get('connector'))
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
@@ -1187,7 +1216,7 @@ class LDAPUserConnector(UserConnector):
                 if self._has_suffix():
                     user_id = self._add_suffix(user_id)
                     mode_create, user = load_user(user_id)
-                    user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+                    user_connection_id = cleanup_connection_id(user.get('connector'))
                     if user_connection_id != connection_id:
                         self._logger.info('  SKIP SYNC "%s" (name conflict after adding suffix '
                                           'with user from "%s" connector)' %
@@ -1251,20 +1280,16 @@ class LDAPUserConnector(UserConnector):
                         _("LDAP [%s]: Modified user %s (%s)") %
                         (connection_id, user_id, ', '.join(details)))
 
-        synchronize_profiles_to_sites(self._logger, profiles_to_synchronize)
+        hooks.call("ldap-sync-finished", self._logger, profiles_to_synchronize, changes)
 
         duration = time.time() - start_time
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec, Queries: %d' %
                           (duration, self._num_queries))
 
-        import cmk.gui.watolib as watolib
-        if changes and config.wato_enabled and not config.is_wato_slave_site():
-            watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
-
         if changes or has_changed_passwords:
-            userdb.save_users(users)
+            save_users_func(users)
         else:
-            userdb.release_users_lock()
+            release_users_lock()
 
         self._set_last_sync_time()
 
@@ -1295,17 +1320,8 @@ class LDAPUserConnector(UserConnector):
     def _set_last_sync_time(self):
         open(self._sync_time_file, 'w').write('%s\n' % time.time())
 
-    # no ldap check, just check the WATO attribute. This handles setups where
-    # the locked attribute is not synchronized and the user is enabled in LDAP
-    # and disabled in Check_MK. When the user is locked in LDAP a login is
-    # not possible.
-    def is_locked(self, user_id):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        return userdb.user_locked(user_id)
-
     def is_enabled(self):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        sync_config = userdb.user_sync_config()
+        sync_config = user_sync_config()
         if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False
@@ -1369,8 +1385,7 @@ class LDAPConnectionValuespec(Transform):
     def __init__(self, new, connection_id):
         self._new = new
         self._connection_id = connection_id
-        import cmk.gui.userdb as userdb  # TODO: Clean this up!
-        self._connection = userdb.get_connection(self._connection_id)
+        self._connection = get_connection(self._connection_id)
 
         general_elements = self._general_elements()
         connection_elements = self._connection_elements()
@@ -1417,7 +1432,8 @@ class LDAPConnectionValuespec(Transform):
                                                       forth=LDAPUserConnector.transform_config)
 
     def _general_elements(self):
-        general_elements = []
+        # type: () -> List[DictionaryEntry]
+        general_elements = []  # type: List[DictionaryEntry]
 
         if self._new:
             id_element = (
@@ -1430,7 +1446,7 @@ class LDAPConnectionValuespec(Transform):
                     allow_empty=False,
                     size=12,
                     validate=self._validate_ldap_connection_id,
-                ))
+                ))  # type: DictionaryEntry
         else:
             id_element = ("id", FixedValue(
                 self._connection_id,
@@ -1439,10 +1455,9 @@ class LDAPConnectionValuespec(Transform):
 
         general_elements += [id_element]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             general_elements += managed.customer_choice_element()
 
-        from cmk.gui.plugins.wato.utils import rule_option_elements  # TODO: Clean this up!
         general_elements += rule_option_elements()
 
         return general_elements
@@ -1569,6 +1584,7 @@ class LDAPConnectionValuespec(Transform):
         return connection_elements
 
     def _vs_directory_options(self, ty):
+        # type: (str) -> Dictionary
         connect_to_choices = [
             ("fixed_list", _("Manually specify list of LDAP servers"),
              Dictionary(
@@ -1595,7 +1611,7 @@ class LDAPConnectionValuespec(Transform):
                  ],
                  optional_keys=["failover_servers"],
              )),
-        ]
+        ]  # type: List[CascadingDropdownChoice]
 
         if ty == "ad":
             connect_to_choices.append((
@@ -1814,8 +1830,6 @@ class LDAPConnectionValuespec(Transform):
                 _("This ID is already user by another connection. Please choose another one."))
 
     def _validate_ldap_connection(self, value, varprefix):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
             if role_id == "nested":
                 continue  # This is the option to enabled/disable nested group handling, not a role to DN entry
@@ -1827,9 +1841,10 @@ class LDAPConnectionValuespec(Transform):
                     group_dn = value["group_dn"]
 
                 else:
-                    connection = userdb.get_connection(connection_id)
+                    connection = get_connection(connection_id)
                     if not connection:
                         continue
+                    assert isinstance(connection, LDAPUserConnector)
                     group_dn = connection.get_group_dn()
 
                 if not group_dn:
@@ -1981,7 +1996,7 @@ def register_user_attribute_sync_plugins():
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
         plugin = plugin_class()
         if not plugin.is_builtin:
-            del ldap_attribute_plugin_registry[ident]
+            ldap_attribute_plugin_registry.unregister(ident)
 
     for name, attr in get_user_attributes():
         plugin_class = type(
@@ -2016,25 +2031,25 @@ def register_user_attribute_sync_plugins():
 
 # Helper function for gathering the default LDAP attribute names of a connection.
 def ldap_attr_of_connection(connection_id, attr):
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    connection = userdb.get_connection(connection_id)
+    connection = get_connection(connection_id)
     if not connection:
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
         return ldap_attr_map["ad"].get(attr, attr).lower()
 
+    assert isinstance(connection, LDAPUserConnector)
     return connection.ldap_attr(attr)
 
 
 # Helper function for gathering the default LDAP filters of a connection.
 def ldap_filter_of_connection(connection_id, *args, **kwargs):
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    connection = userdb.get_connection(connection_id)
+    connection = get_connection(connection_id)
     if not connection:
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
         return ldap_filter_map["ad"].get(args[0], '(objectclass=*)')
 
+    assert isinstance(connection, LDAPUserConnector)
     return connection.ldap_filter(*args, **kwargs)
 
 
@@ -2050,8 +2065,7 @@ def get_connection_choices(add_this=True):
     if add_this:
         choices.append((None, _("This connection")))
 
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    for connection in userdb.load_connection_config():
+    for connection in load_connection_config():
         descr = connection['description']
         if not descr:
             descr = connection['id']
@@ -2067,21 +2081,19 @@ def get_group_member_cmp_val(connection, user_id, ldap_user):
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-
     # Figure out how to check group membership.
     user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
     # Get list of LDAP connections to query
     connections = {connection}
     for connection_id in other_connection_ids:
-        c = userdb.get_connection(connection_id)
+        c = get_connection(connection_id)
         if c:
             connections.add(c)
 
     # Load all LDAP groups which have a CN matching one contact
     # group which exists in WATO
-    ldap_groups = {}
+    ldap_groups = {}  # type: GroupMemberships
     for conn in connections:
         ldap_groups.update(conn.get_group_memberships(cg_names, nested=nested))
 
@@ -2281,7 +2293,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                     'locked': True,
                     'serial': user.get('serial', 0) + 1,
                 }
-            elif not locked_in_ad and locked_in_cmk:
+            if not locked_in_ad and locked_in_cmk:
                 return {
                     'locked': False,
                 }
@@ -2414,7 +2426,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 
     def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
         # Gather all group names to search for in LDAP
-        from cmk.gui.watolib.groups import load_contact_group_information
+        from cmk.gui.groups import load_contact_group_information
         cg_names = load_contact_group_information().keys()
 
         return {
@@ -2588,7 +2600,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # username needs to be used for filtering here.
         user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
-        roles = set([])
+        roles = set()
 
         # Loop all roles mentioned in params (configured to be synchronized)
         for role_id, group_specs in params.items():
@@ -2616,12 +2628,14 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return {'roles': list(roles)}
 
     def fetch_needed_groups_for_groups_to_roles(self, connection, params):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-
         # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
         ldap_groups = {}
         for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
-            conn = userdb.get_connection(connection_id)
+            conn = get_connection(connection_id)
+            if conn is None:
+                continue
+            assert isinstance(conn, LDAPUserConnector)
+
             ldap_groups.update(
                 dict(
                     conn.get_group_memberships(group_dns,
@@ -2631,7 +2645,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return ldap_groups
 
     def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch = {}
+        groups_to_fetch = {}  # type: Dict[str, List[Text]]
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
@@ -2663,9 +2677,8 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         )
 
     def _list_roles_with_group_dn(self):
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        elements = []
-        for role_id, role in userdb.load_roles().items():
+        elements = []  # type: List[DictionaryEntry]
+        for role_id, role in load_roles().items():
             elements.append((
                 role_id,
                 Transform(
@@ -2711,127 +2724,3 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                  totext=_('Nested group memberships are resolved'),
              )))
         return elements
-
-
-#.
-#   .--WATO-Sync-----------------------------------------------------------.
-#   |       __        ___  _____ ___       ____                            |
-#   |       \ \      / / \|_   _/ _ \     / ___| _   _ _ __   ___          |
-#   |        \ \ /\ / / _ \ | || | | |____\___ \| | | | '_ \ / __|         |
-#   |         \ V  V / ___ \| || |_| |_____|__) | |_| | | | | (__          |
-#   |          \_/\_/_/   \_\_| \___/     |____/ \__, |_| |_|\___|         |
-#   |                                            |___/                     |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# In case the sync is done on the master of a distributed setup the auth serial
-# is increased on the master, but not on the slaves. The user can not access the
-# slave sites anymore with the master sites cookie since the serials differ. In
-# case the slave sites sync with LDAP on their own this issue will be repaired after
-# the next LDAP sync on the slave, but in case the slaves do not sync, this problem
-# will be repaired automagically once an admin performs the next WATO sync for
-# another reason.
-# Now, to solve this issue, we issue a user profile sync in case the password has
-# been changed. We do this only when only the password has changed.
-# Hopefully we have no large bulks of users changing their passwords at the same
-# time. In this case the implementation does not scale well. We would need to
-# change this to some kind of profile bulk sync per site.
-# TODO: Should we move this to watolib?
-
-
-class SynchronizationResult(object):
-    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
-        self.site_id = site_id
-        self.error_text = error_text
-        self.failed = failed
-        self.disabled = disabled
-        self.succeeded = succeeded
-
-
-def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
-    if not profiles_to_synchronize:
-        return
-
-    import cmk.gui.watolib as watolib
-    remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_slave_sites()]
-
-    logger.info('Credentials changed for %s. Trying to sync to %d sites' %
-                (", ".join(profiles_to_synchronize.keys()), len(remote_sites)))
-
-    states = sites.states()
-
-    pool = ThreadPool()
-    jobs = []
-    for site_id, site in remote_sites:
-        jobs.append(
-            pool.apply_async(_sychronize_profile_worker,
-                             (states, site_id, site, profiles_to_synchronize)))
-
-    results = []
-    start_time = time.time()
-    while time.time() - start_time < 30:
-        for job in jobs[:]:
-            try:
-                results.append(job.get(timeout=0.5))
-                jobs.remove(job)
-            except TimeoutError:
-                pass
-        if not jobs:
-            break
-
-    contacted_sites = {x[0] for x in remote_sites}
-    working_sites = {result.site_id for result in results}
-    for site_id in contacted_sites - working_sites:
-        results.append(
-            SynchronizationResult(site_id,
-                                  error_text=_("No response from update thread"),
-                                  failed=True))
-
-    for result in results:
-        if result.error_text:
-            logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
-            if config.wato_enabled:
-                watolib.add_change("edit-users",
-                                   _('Password changed (sync failed: %s)') % result.error_text,
-                                   add_user=False,
-                                   sites=[result.site_id],
-                                   need_restart=False)
-
-    pool.terminate()
-    pool.join()
-
-    num_failed = sum([1 for result in results if result.failed])
-    num_disabled = sum([1 for result in results if result.disabled])
-    num_succeeded = sum([1 for result in results if result.succeeded])
-    logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
-                (num_disabled, num_succeeded, num_failed))
-
-
-def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
-    import cmk.gui.watolib.user_profile as user_profile
-
-    if not site.get("replication"):
-        return SynchronizationResult(site_id, disabled=True)
-
-    if site.get("disabled"):
-        return SynchronizationResult(site_id, disabled=True)
-
-    status = states.get(site_id, {}).get("state", "unknown")
-    if status == "dead":
-        return SynchronizationResult(site_id,
-                                     error_text=_("Site %s is dead") % site_id,
-                                     failed=True)
-
-    try:
-        result = user_profile.push_user_profiles_to_site_transitional_wrapper(
-            site, profiles_to_synchronize)
-        if result is not True:
-            return SynchronizationResult(site_id, error_text=result, failed=True)
-        return SynchronizationResult(site_id, succeeded=True)
-    except RequestTimeout:
-        # This function is currently only used by the background job
-        # which does not have any request timeout set, just in case...
-        raise
-    except Exception as e:
-        return SynchronizationResult(site_id, error_text="%s" % e, failed=True)

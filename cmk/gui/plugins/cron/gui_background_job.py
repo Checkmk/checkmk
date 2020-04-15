@@ -9,11 +9,12 @@ import cmk.gui.background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.log import logger
 
-from . import register_job
+from cmk.gui.plugins.cron import register_job
 
 
 def housekeeping():
-    housekeep_classes = gui_background_job.job_registry.values()
+    # type: () -> None
+    housekeep_classes = list(gui_background_job.job_registry.values())
     cmk.gui.background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
 
 

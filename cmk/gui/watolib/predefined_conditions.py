@@ -27,6 +27,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
         if config.user.may("wato.edit_all_predefined_conditions"):
             return entries
 
+        assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
 
         entries = self.filter_editable_entries(entries)
@@ -38,6 +39,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
         if config.user.may("wato.edit_all_predefined_conditions"):
             return entries
 
+        assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
         return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])
 

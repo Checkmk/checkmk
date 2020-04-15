@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // engine to install/remove cap files
 
 #ifndef cap_h__
@@ -35,9 +39,6 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
-
-bool AreFilesSame(const std::filesystem::path &Target,
-                  const std::filesystem::path &Src);
 
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);

@@ -10,4 +10,4 @@ description:
  This check is informational only and returns always {OK}.
 
 inventory:
- Creates exactly one check per device.
+ One service is created for each device.

@@ -8,8 +8,14 @@ automation functions on slaves,"""
 
 import traceback
 
-import cmk
+import six
+
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
+from cmk.utils.type_defs import UserId
+
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -47,11 +53,11 @@ class ModeAutomationLogin(AjaxPage):
             response = _get_login_secret(create_on_demand=True)
         else:
             response = {
-                "version": cmk.__version__,
-                "edition_short": cmk.edition_short(),
+                "version": cmk_version.__version__,
+                "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
-        html.write_html(repr(response))
+        html.write(repr(response))
 
 
 @page_registry.register_page("noauth:automation")
@@ -95,29 +101,25 @@ class ModeAutomation(AjaxPage):
         # we request the lock in all cases.
         with store.lock_checkmk_configuration():
             watolib.init_wato_datastructures(with_wato_lock=False)
-
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
                 self._execute_cmk_automation()
                 return
-
-            elif self._command == "push-profile":
+            if self._command == "push-profile":
                 self._execute_push_profile()
                 return
-
             try:
                 automation_command = watolib.automation_command_registry[self._command]
             except KeyError:
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-
             self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
-        cmk_command = html.request.var("automation")
-        args = watolib.mk_eval(html.request.var("arguments"))
-        indata = watolib.mk_eval(html.request.var("indata"))
-        stdin_data = watolib.mk_eval(html.request.var("stdin_data"))
-        timeout = watolib.mk_eval(html.request.var("timeout"))
+        cmk_command = html.request.get_str_input_mandatory("automation")
+        args = watolib.mk_eval(html.request.get_str_input_mandatory("arguments"))
+        indata = watolib.mk_eval(html.request.get_str_input_mandatory("indata"))
+        stdin_data = watolib.mk_eval(html.request.get_str_input_mandatory("stdin_data"))
+        timeout = watolib.mk_eval(html.request.get_str_input_mandatory("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         html.write(repr(result))
@@ -125,7 +127,7 @@ class ModeAutomation(AjaxPage):
     def _execute_push_profile(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(watolib.mk_repr(self._automation_push_profile()))
+            html.write(six.ensure_str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if config.debug:
@@ -153,8 +155,7 @@ class ModeAutomation(AjaxPage):
             raise MKGeneralException(_('Invalid call: The profile is missing.'))
 
         users = userdb.load_users(lock=True)
-        profile = watolib.mk_eval(profile)
-        users[user_id] = profile
+        users[UserId(user_id)] = watolib.mk_eval(profile)
         userdb.save_users(users)
 
         return True
@@ -168,8 +169,7 @@ class ModeAutomation(AjaxPage):
             logger.exception("error executing automation command")
             if config.debug:
                 raise
-            html.write_text(_("Internal automation error: %s\n%s") % \
-                            (e, traceback.format_exc()))
+            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
 
 def _get_login_secret(create_on_demand=False):

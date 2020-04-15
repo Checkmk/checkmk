@@ -1,4 +1,4 @@
-title: F5 Big-IP: active/active or passive/active cluster status
+title: F5 Big-IP: Active/Active or Passive/Active Cluster Status (> V11.2)
 agents: snmp
 catalog: hw/network/f5
 license: GPL
@@ -13,5 +13,5 @@ description:
  differs from {active}.
 
 inventory:
- Creates on service
+ One service is created.
 

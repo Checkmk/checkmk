@@ -17,4 +17,4 @@ item:
  The module name.
 
 inventory:
- One service per module is created.
+ One service is created for each activated module.

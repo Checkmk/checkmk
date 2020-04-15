@@ -1,10 +1,10 @@
-title: Network load of DR:BD devices
+title: DR:BD Devices: Network Load
 agents: linux
 catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
- This check uses the contents of {/proc/drbd} as sent by the Check_MK linux
+ This check uses the contents of {/proc/drbd} as sent by the Checkmk linux
  agent. The check monitors the inbound and outbound network load of each DRBD
  device.
 
@@ -14,6 +14,6 @@ item:
  The name of the DRBD device e.g. drbd0
 
 inventory:
- Each configured DRBD device will result in one service during inventory. All
- devices with the connection state "Unconfigured" are skipped.
+ One service is created for each configured DRBD device.
+ All devices with the connection state "Unconfigured" are skipped.
 

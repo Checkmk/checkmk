@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import subprocess
 import signal
 from typing import List, Optional  # pylint: disable=unused-import
 
@@ -13,6 +12,7 @@ import six
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils
@@ -42,19 +42,22 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = subprocess.Popen(command,
-                                        close_fds=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+        snmp_process = subprocess.Popen(
+            command,
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
         exitstatus = snmp_process.wait()
         if snmp_process.stderr is None or snmp_process.stdout is None:
             raise TypeError()
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-            console.verbose(six.ensure_str(snmp_process.stderr.read()) + "\n")
+            console.verbose(snmp_process.stderr.read() + "\n")
             return None
 
-        line = six.ensure_str(snmp_process.stdout.readline()).strip()
+        line = snmp_process.stdout.readline().strip()
         if not line:
             console.verbose("Error in response to snmpget.\n")
             return None
@@ -103,7 +106,8 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
                                             close_fds=True,
                                             stdin=open(os.devnull),
                                             stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+                                            stderr=subprocess.PIPE,
+                                            encoding="utf-8")
 
             rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
 
@@ -148,7 +152,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         rowinfo = []
         while True:
             try:
-                line = six.ensure_str(next(line_iter).strip())
+                line = next(line_iter).strip()
             except StopIteration:
                 break
 

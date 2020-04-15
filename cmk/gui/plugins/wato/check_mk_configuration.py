@@ -6,9 +6,13 @@
 
 import re
 import logging
+from typing import (  # pylint: disable=unused-import
+    Dict, List,
+)
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
+from cmk.utils.tags import TagGroup  # pylint: disable=unused-import
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -18,35 +22,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-    TextUnicode,
-    HTTPUrl,
-    DropdownChoice,
-    Tuple,
-    ListOf,
-    Integer,
-    Float,
-    Transform,
-    ListOfStrings,
-    IPNetwork,
-    CascadingDropdown,
-    MonitoringState,
-    RegExpUnicode,
-    IconSelector,
-    PasswordSpec,
-    ListOfTimeRanges,
-    Age,
-    FixedValue,
-    Optional,
-    Alternative,
-    ListChoice,
-    Checkbox,
-    ID,
-    ListOfCAs,
-    LogLevelChoice,
-    Labels,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Dictionary, TextAscii, TextUnicode, HTTPUrl, DropdownChoice, Tuple, ListOf, Integer, Float,
+    Transform, ListOfStrings, IPNetwork, CascadingDropdown, MonitoringState, RegExpUnicode,
+    IconSelector, PasswordSpec, ListOfTimeRanges, Age, FixedValue, Optional, Alternative,
+    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoice,
 )
 
 from cmk.gui.plugins.wato import (
@@ -177,7 +157,11 @@ class ConfigVariableLogLevels(ConfigVariable):
                "details for each executed compilation.")),
             ("cmk.web.automations", _("Automation calls"),
              _("Communication between different components of Check_MK (e.g. GUI and check engine) "
-               "will be logged in this log level."))
+               "will be logged in this log level.")),
+            ("cmk.web.background-job", _("Background jobs"),
+             _("Some long running tasks are executed as executed in so called background jobs. You "
+               "can use this log level to individually enable more detailed logging for the "
+               "background jobs.")),
         ]:
             elements.append((level_id,
                              LogLevelChoice(
@@ -630,7 +614,6 @@ class ConfigVariableCrashReportURL(ConfigVariable):
         return HTTPUrl(
             title=_("Crash report HTTP URL"),
             help=_("By default crash reports will be sent to our crash reporting server."),
-            size=80,
             show_as_link=False,
         )
 
@@ -760,7 +743,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - consist only of checkbox tags
         #  - contain at least two entries
         choices = []
-        by_topic = {}
+        by_topic = {}  # type: Dict[str, List[TagGroup]]
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic, []).append(tag_group)
@@ -2167,12 +2150,11 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         )
 
     def _default_user_profile_elements(self):
-        elements = []
-
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-            elements += managed.customer_choice_element()
-
+            elements = managed.customer_choice_element()
+        else:
+            elements = []
         return elements + [
             ('roles',
              ListChoice(
@@ -2660,7 +2642,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                          )),
                         ("proxy_url", HTTPProxyInput()),
                     ],
-                    optional_keys=None,
+                    optional_keys=False,
                 ),
                 title=_("HTTP proxies"),
                 movable=False,
@@ -3123,13 +3105,7 @@ rulespec_registry.register(
 
 
 def _host_check_commands_host_check_command_choices():
-    if config.user.may('wato.add_or_modify_executables'):
-        custom_choice = [
-            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
-        ]
-    else:
-        custom_choice = []
-    return [
+    choices = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Check_MK Micro Core)")),
         ("tcp", _("TCP Connect"),
@@ -3144,7 +3120,11 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ] + custom_choice
+    ]  # type: List[CascadingDropdownChoice]
+    if config.user.may('wato.add_or_modify_executables'):
+        return choices + [
+            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
+        ]
 
 
 def _valuespec_host_check_commands():
@@ -4688,13 +4668,13 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed.") \
-            + _("If you are using the Agent bakery, the configuration will be "
-                "used for restricting network access to the baked agents. Even "
-                "if you don't use the bakery, the configured IP address "
-                "restrictions of a host will be verified against the allowed "
-                "IP addresses reported by the agent. This is done during "
-                "monitoring by the Check_MK service."),
+               "access the agent. IPv6 addresses and networks are also allowed.") +
+        _("If you are using the Agent bakery, the configuration will be "
+          "used for restricting network access to the baked agents. Even "
+          "if you don't use the bakery, the configured IP address "
+          "restrictions of a host will be verified against the allowed "
+          "IP addresses reported by the agent. This is done during "
+          "monitoring by the Check_MK service."),
     )
 
 

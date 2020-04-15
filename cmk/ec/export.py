@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# flake8: noqa
 # pylint: disable=unused-import
 
 from .defaults import (
@@ -19,6 +20,9 @@ from .settings import (
 )
 
 from .rule_packs import (
+    ECRulePack,
+    ECRulePacks,
+    ECRuleSpec,
     MkpRulePackProxy,
     RulePackType,
     rule_pack_dir,

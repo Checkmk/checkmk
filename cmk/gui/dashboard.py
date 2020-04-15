@@ -12,6 +12,7 @@ from typing import (  # pylint: disable=unused-import
 )
 import six
 
+import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 from cmk.utils.encoding import ensure_unicode
@@ -57,10 +58,10 @@ from cmk.gui.plugins.visuals.utils import (
 
 import cmk.gui.plugins.dashboard
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
@@ -82,7 +83,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletId,
 )
 
-loaded_with_language = False  # type: Optional[Union[bool, str]]
+loaded_with_language = False  # type: Union[None, bool, str]
 
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
@@ -306,7 +307,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 
     @classmethod
     def vs_parameters(cls):
-        # type: () -> Optional[Union[List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]]
+        # type: () -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]
         return cls._spec.get("parameters", None)
 
     @classmethod
@@ -1145,8 +1146,15 @@ def choose_view(name, title, create_dashlet_spec_func):
             dashlet = create_dashlet_spec_func(dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%s' %
-                               (html.urlencode(name), html.urlencode(str(dashlet_id))))
+            raise HTTPRedirect(
+                html.makeuri_contextless(
+                    [
+                        ("name", name),
+                        ("id", str(dashlet_id)),
+                        ("back", back_url),
+                    ],
+                    filename="edit_dashlet.py",
+                ))
         except MKUserError as e:
             html.user_error(e)
 
@@ -1174,11 +1182,7 @@ def page_edit_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ty = html.request.get_str_input_mandatory('type')
     ident = html.request.get_integer_input("id")
-
-    if ident is None and not ty:
-        raise MKUserError("id", _('The ID of the dashlet is missing.'))
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1186,6 +1190,7 @@ def page_edit_dashlet():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     if ident is None:
+        ty = html.request.get_str_input_mandatory('type')
         mode = 'add'
         title = _('Add Dashlet')
 

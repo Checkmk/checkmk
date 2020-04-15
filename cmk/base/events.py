@@ -26,7 +26,7 @@ from typing import (  # pylint: disable=unused-import
 import six
 
 import livestatus
-import cmk
+import cmk.utils.version as cmk_version
 from cmk.utils.regex import regex
 import cmk.utils.debug
 import cmk.utils.daemon
@@ -101,7 +101,7 @@ def event_keepalive(event_function,
                     try:
                         new_data = b""
                         new_data = os.read(0, 32768)
-                    except IOError as e:
+                    except IOError:
                         new_data = b""
                     except Exception as e:
                         if cmk.utils.debug.enabled():
@@ -169,6 +169,7 @@ def event_data_available(loop_interval):
 
 
 def pipe_decode_raw_context(raw_context):
+    # type: (EventContext) -> None
     """
     cmk_base replaces all occurences of the pipe symbol in the infotext with
     the character "Light vertical bar" before a check result is submitted to
@@ -189,7 +190,7 @@ def pipe_decode_raw_context(raw_context):
 def raw_context_from_string(data):
     # type: (bytes) -> EventContext
     # Context is line-by-line in g_notify_readahead_buffer
-    context = {}
+    context = {}  # type: EventContext
     try:
         for line in data.split(b'\n'):
             varname, value = six.ensure_str(line.strip()).split("=", 1)
@@ -304,7 +305,7 @@ def complete_raw_context(raw_context, with_dump):
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
         raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
-        raw_context.setdefault("OMD_SITE", cmk.omd_site())
+        raw_context.setdefault("OMD_SITE", cmk_version.omd_site())
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
@@ -386,7 +387,7 @@ def complete_raw_context(raw_context, with_dump):
             raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
-        for key, value in raw_context.items():
+        for key, value in list(raw_context.items()):
             if key.endswith("STATE"):
                 raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
@@ -468,7 +469,7 @@ def event_match_site(rule, context):
     required_site_ids = rule["match_site"]
 
     # Fallback to local site ID in case there is none in the context
-    site_id = context.get("OMD_SITE", cmk.omd_site())
+    site_id = context.get("OMD_SITE", cmk_version.omd_site())
 
     if site_id not in required_site_ids:
         return "The site '%s' is not in the required sites list: %s" % \

@@ -1,11 +1,28 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest  # type: ignore[import]
 
 from testlib import on_time
 from cmk.gui.plugins.metrics import artwork
 
 
+@pytest.mark.parametrize("_min, _max, mirrored, result", [
+    (5, 15, False, (5, 15)),
+    (None, None, False, (0, 1)),
+    (None, None, True, (-1, 1)),
+    (None, 5, False, (0, 5)),
+    (None, 5, True, (-5, 5)),
+])
+def test_min(_min, _max, mirrored, result):
+    assert artwork._purge_min_max(_min, _max, mirrored) == result
+
+
 @pytest.mark.parametrize("args, result", [
-    ((10, 5, 1565481600, 1565481620), [(1565481600.0, 2, True), (1565481605.0, 1, False),
+    ((1565481600, 1565481620, 10, 5), [(1565481600.0, 2, True), (1565481605.0, 1, False),
                                        (1565481610.0, 2, True), (1565481615.0, 1, False),
                                        (1565481620.0, 2, True)]),
 ])

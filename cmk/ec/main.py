@@ -30,7 +30,7 @@ import traceback
 from types import FrameType  # pylint: disable=unused-import
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon
 import cmk.utils.defines
 import cmk.utils.log as log
@@ -856,13 +856,13 @@ class EventServer(ECServerThread):
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections
@@ -2330,7 +2330,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_site(self, rule, event):
-        return "match_site" not in rule or cmk.omd_site() in rule["match_site"]
+        return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
 
     def event_rule_matches_host(self, rule, event):
         if match(rule.get("match_host"), event["host"], complete=True) is False:
@@ -3756,10 +3756,10 @@ def load_master_config(settings, config, logger):
     # type: (Settings, Dict[str, Any], Logger) -> None
     path = settings.paths.master_config_file.value
     try:
-        config = ast.literal_eval(path.read_text(encoding="utf-8"))
-        config["rules"] = config["rules"]
-        config["rule_packs"] = config.get("rule_packs", [])
-        config["actions"] = config["actions"]
+        master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
+        config["rules"] = master_config["rules"]
+        config["rule_packs"] = master_config.get("rule_packs", [])
+        config["actions"] = master_config["actions"]
         logger.info("Replication: restored %d rule packs and %d actions from %s" %
                     (len(config["rule_packs"]), len(config["actions"]), path))
     except Exception:
@@ -3914,7 +3914,7 @@ def main():
     # type: () -> None
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = create_settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+    settings = create_settings(cmk_version.__version__, Path(cmk.utils.paths.omd_root),
                                Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
@@ -3927,7 +3927,7 @@ def main():
             log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting", cmk.__version__)
+        logger.info("mkeventd version %s starting", cmk_version.__version__)
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)

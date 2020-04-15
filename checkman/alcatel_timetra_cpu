@@ -1,13 +1,17 @@
-title: Alcatel switches: CPU utilization
+title: Alcatel Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL
 distribution: check_mk
 description:
- This Check Monitors the cpu utilization on Alcatel switchtes supporting the
- TIMETRA-CHASSIS-MIB. The shown value is an anverage calculated by the device.
+ This check monitors the CPU utilization on Alcatel switches.
 
+ The shown value is an anverage calculated by the device.
+
+ The check has configurable levels for {WARN}/{CRIT} (default: 90.0, 95.0).
+
+ The check uses the ALCATEL-IND1-TIMETRA-CHASSIS-MIB.
 
 inventory:
- One check is created
+ One service is created
 

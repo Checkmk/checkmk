@@ -1,6 +1,6 @@
 title: DDN S2A: IO
 agents: ddn_s2a
-catalog: storage/other
+catalog: hw/storagehw/ddn_s2a
 license: GPL
 distribution: check_mk
 description:
@@ -10,4 +10,5 @@ item:
  The port number or "Total"
 
 inventory:
- One service per FC port is created, plus one for the total IO.
+ One service is created for each FC port and
+ one service is created for the total IO.

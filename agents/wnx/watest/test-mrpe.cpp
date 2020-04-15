@@ -249,6 +249,31 @@ TEST(SectionProviderMrpe, ProcessCfg) {
     }
 }
 
+TEST(SectionProviderMrpe, Ctor) {
+    {
+        std::string base = "Codepage 'c:\\windows\\system32\\chcp.com' x d f";
+        MrpeEntry me("", base);
+        EXPECT_EQ(me.exe_name_, "chcp.com");
+        EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
+        EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
+        EXPECT_EQ(me.description_, "Codepage");
+        ASSERT_EQ(me.add_age_, false);
+        ASSERT_EQ(me.cache_max_age_, 0);
+    }
+
+    {
+        std::string base =
+            "Codepage (123456:yes) 'c:\\windows\\system32\\chcp.com' x d f";
+        MrpeEntry me("", base);
+        EXPECT_EQ(me.exe_name_, "chcp.com");
+        EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
+        EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
+        EXPECT_EQ(me.description_, "Codepage");
+        ASSERT_EQ(me.add_age_, true);
+        ASSERT_EQ(me.cache_max_age_, 123456);
+    }
+}
+
 TEST(SectionProviderMrpe, Run) {
     YamlLoaderMrpe w;
     using namespace cma::cfg;

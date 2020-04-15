@@ -6,5 +6,8 @@ distribution: check_mk
 description:
  Checks the status of fans as described in the Packeteer MIB.
 
+item:
+ Number of the fan
+
 inventory:
  One check for each fan will be created.

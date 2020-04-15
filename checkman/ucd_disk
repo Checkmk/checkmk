@@ -15,4 +15,4 @@ item:
  The mount point of the disk.
 
 inventory:
- One service per mount point is created.
+ One service is created for each mount point.

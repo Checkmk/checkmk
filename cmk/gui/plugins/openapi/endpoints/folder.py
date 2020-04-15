@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Folders"""
 import sys
 if sys.version_info[0] > 2:
     import http.client as http_client
@@ -14,7 +15,8 @@ from connexion import ProblemException  # type: ignore
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects import response_schemas, constructors, endpoint_schema
+from cmk.gui.plugins.openapi.restful_objects import (response_schemas, constructors,
+                                                     endpoint_schema, request_schemas)
 from cmk.gui.watolib import CREFolder  # pylint: disable=unused-import
 from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
 
@@ -31,7 +33,7 @@ from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
                  response_schema=response_schemas.Folder,
                  etag='output',
                  request_body_required=True,
-                 request_schema=response_schemas.InputFolder)
+                 request_schema=request_schemas.InputFolder)
 def create(params):
     """Create a new folder
 
@@ -43,7 +45,7 @@ def create(params):
     parent = put_body['parent']
     attributes = put_body.get('attributes', {})
 
-    if parent is None:
+    if parent == "root":
         parent_folder = watolib.Folder.root_folder()
     else:
         parent_folder = load_folder(parent, status=400)
@@ -59,9 +61,9 @@ def create(params):
                  response_schema=response_schemas.Folder,
                  etag='both',
                  request_body_required=True,
-                 request_schema=response_schemas.UpdateFolder)
+                 request_schema=request_schemas.UpdateFolder)
 def update(params):
-    """Update a folder.
+    """Update a folder
 
     Title and attributes can be updated, but there is no checking of the attributes done."""
     ident = params['ident']
@@ -82,6 +84,7 @@ def update(params):
                  output_empty=True,
                  etag='input')
 def delete(params):
+    """Delete a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
     parent = folder.parent()
@@ -96,6 +99,7 @@ def delete(params):
                  response_schema=response_schemas.Folder,
                  etag='both')
 def move(params):
+    """Move a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
 
@@ -117,6 +121,7 @@ def move(params):
                  method='get',
                  response_schema=response_schemas.DomainObjectCollection)
 def list_folders(_params):
+    """List folders"""
     return constructors.serve_json({
         'id': 'folders',
         'value': [
@@ -133,6 +138,7 @@ def list_folders(_params):
                  etag='output',
                  parameters=['ident'])
 def show_folder(params):
+    """Show a folder"""
     ident = params['ident']
     folder = load_folder(ident, status=404)
     return _serve_folder(folder)

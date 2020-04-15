@@ -11,4 +11,4 @@ item:
  The SDS id
 
 inventory:
- One service for each SDS is created
+ One service is created for each SDS.

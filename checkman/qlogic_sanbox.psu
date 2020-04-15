@@ -14,4 +14,4 @@ item:
  dots, e. g. 129.45.1
 
 inventory:
- Creates one check for every power supply found by SNMP.
+ One service is created for each power supply found by SNMP.

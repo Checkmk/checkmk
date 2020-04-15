@@ -22,5 +22,5 @@ item:
  The description of the printer
 
 inventory:
- One check is being created for each supply unit with a unique name.
+ One service is created for each supply unit with a unique name.
 

@@ -11,4 +11,4 @@ item:
  The PD id
 
 inventory:
- One service for each PD is created
+ One service is created for each PD.

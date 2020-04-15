@@ -15,7 +15,7 @@ description:
  hardware appliances (such as Riverbed Steelhead).
 
 inventory:
- One check per host is created if the agent supports the UCD-MIB.
+ One service is created for each host if the agent supports the UCD-MIB.
  Currently the SNMP scan function will only consider hosts
  with the text {linux} in their system description. You can
  try an explicit inventory with {cmk --checks ucd_cpu_util -I HOSTNAME}

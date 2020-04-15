@@ -8,9 +8,10 @@ description:
  {STORMSHIELD-HA-MIB} to monitor the status of
  disk(s).
 
+ The services can be {OK} or {WARN}, depending on the selftest.
+
 item:
  Index of the disk
 
 inventory:
- Each disk will be inventorized.
- The services can be {ok} or {warn}, depending on the selftest.
+ One service is created for each disk.

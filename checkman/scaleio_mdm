@@ -16,4 +16,4 @@ description:
  "Normal". In this case the state will change accordingly as described above.
 
 inventory:
- Only one service is created
+ One service is created.

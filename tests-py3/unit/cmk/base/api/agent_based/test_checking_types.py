@@ -16,7 +16,6 @@ from cmk.base.api.agent_based.checking_types import (
     MetricFloat,
     Metric,
     Result,
-    AdditionalDetails,
 )
 
 
@@ -149,36 +148,39 @@ def test_metric():
     assert metric1 != metric2
 
 
-@pytest.mark.parametrize("state_, details", [
-    (8, "foo"),
-    (0, b"foo"),
-    (0, "newline is a \no-no"),
-])
-def test_result_invalid(state_, details):
+@pytest.mark.parametrize(
+    "state_, summary, details",
+    [
+        (8, "foo", None),
+        (state.OK, b"foo", None),
+        (state.OK, "newline is a \no-no", None),
+        (state.OK, "", ""),  # either is required
+        (state.OK, "", None),  # either is required
+        (state.OK, None, ""),  # either is required
+        (state.OK, None, None),  # either is required
+        (state.OK, "this is longer than the", "detailed variant"),
+        (state.OK, "summary", {
+            "at the moment": "impossible",
+            "someday": "maybe"
+        }),
+    ])
+def test_result_invalid(state_, summary, details):
     with pytest.raises((TypeError, ValueError)):
-        _ = Result(state_, details)
+        _ = Result(state=state_, summary=summary, details=details)
 
 
 def test_result():
-    result = Result(0, "moooo,")
+    result = Result(state=state.OK,
+                    summary="moooo",
+                    details="I'm a cow and I will chill out all day.")
     assert result.state == state.OK
-    assert result.details == "moooo"
+    assert result.summary == "moooo"
+    assert result.details == "I'm a cow and I will chill out all day."
 
-
-@pytest.mark.parametrize("lines", ["_", (0, 1)])
-def test_additional_details_invalid(lines):
-    with pytest.raises(TypeError):
-        _ = AdditionalDetails(lines)
-
-
-def test_additional_details():
-    def lines():
-        yield "line one\n"
-        yield "line two"
-        yield "line three"
-
-    a_det = AdditionalDetails(lines())
-    assert str(a_det) == "line one\nline two\nline three"
+    result = Result(summary="info", details="")
+    assert result.state is None
+    assert result.summary == "info"
+    assert result.details is None
 
 
 def test_ignore_results():

@@ -42,7 +42,7 @@ description:
  The {warn} and {crit} level are configurable via WATO rule {Device Component PCI IO Utilization}.
 
 inventory:
-  All server racks included in the agent plugin output are found automatically.
+ One service is created for each server rack included in the agent plugin output.
 
 item:
  {{Rack unit}} followed by the index of the rack

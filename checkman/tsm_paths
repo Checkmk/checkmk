@@ -9,5 +9,5 @@ description:
  OK state the check always display the number of paths.
 
 inventory:
- One service will be created
+ One service is created.
 

@@ -11,4 +11,4 @@ item:
  The index of the CPU
 
 inventory:
- Each cpu will be inventorized.
+ One service is created for each CPU.

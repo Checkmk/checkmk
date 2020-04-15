@@ -4,18 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK vSphere Special Agent"""
-from typing import Iterable
+
 import argparse
 import collections
 import datetime
 import errno
 import functools
+from pathlib import Path
 import re
 import socket
 import sys
 import time
+from typing import Any, Counter, Dict, Iterable, List, Set  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore[import]
-from pathlib import Path
+
 import requests
 import urllib3  # type: ignore[import]
 from dateutil import tz
@@ -1197,7 +1199,7 @@ class ESXConnection:
 
 
 def fetch_available_counters(connection, hostsystems):
-    counters_available_by_host = {}
+    counters_available_by_host = {}  # type: Dict[str, Dict[str, List[str]]]
     for host in hostsystems:
         counter_avail_response = connection.query_server('perfcounteravail', esxhost=host)
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
@@ -1258,7 +1260,7 @@ def fetch_extra_interface_counters(connection, opt):
 
 
 def fetch_counters(connection, host, counters_selected):
-    counter_data = []
+    counter_data = []  # type: List[str]
     for entry, instances in counters_selected:
         counter_data.extend(
             "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance>"
@@ -1290,7 +1292,8 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     section_lines = []
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
     counters_available_all = functools.reduce(lambda x, y: x.union(y),
-                                              counters_available_by_host.values(), set())
+                                              counters_available_by_host.values(),
+                                              set())  # type: Set[str]
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_description = fetch_counters_syntax(connection, counters_available_all)
 
@@ -1363,7 +1366,8 @@ def eval_hardwarestatus_info(_hostname, _current_propname, propset):
 
 def eval_multipath_info(_hostname, current_propname, multipath_propset):
     multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)", multipath_propset)
-    properties, sensors = {}, {}
+    properties = {}  # type: Dict[str, List[str]]
+    sensors = {}  # type: Dict
     for vml_id, xml_paths in multipath_infos:
         # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
         lun_id = vml_id[10:-12]
@@ -1375,7 +1379,7 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
 
 
 def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
-    properties = {}
+    properties = {}  # type: Dict[str, List[str]]
     for entries in _iter_dicts(elements, propset):
         for key, value in entries.items():
             properties.setdefault("%s.%s.%s" % (current_propname, key, entries[id_key]),
@@ -1397,7 +1401,7 @@ def eval_pci_device(hostname, current_propname, pci_propset):
 def eval_systeminfo_other(_hostname, _current_propname, propset):
     data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", propset)
 
-    keys_counter = collections.Counter()
+    keys_counter = collections.Counter()  # type: Counter[str]
     properties = {}
     for value, key in data:
         idx = keys_counter[key]
@@ -1422,7 +1426,8 @@ def fetch_hostsystem_data(connection):
     esxhostdetails_response = connection.query_server('esxhostdetails')
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
-    hostsystems_properties, hostsystems_sensors = {}, {}
+    hostsystems_properties = {}  # type: Dict[str, Dict[Any, Any]]
+    hostsystems_sensors = {}  # type: Dict[str, Dict[Any, Any]]
     for entry in hostsystems_objects:
         hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
         hostsystems_properties[hostname] = {}
@@ -1480,7 +1485,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 
 def get_vm_power_states(vms, hostsystems, opt):
-    piggy_data = {}
+    piggy_data = {}  # type: Dict[str, List[Any]]
     for used_hostname, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
@@ -1497,7 +1502,7 @@ def get_vm_power_states(vms, hostsystems, opt):
 
 
 def _get_vms_by_hostsystem(vms, hostsystems):
-    vms_by_hostsys = {}
+    vms_by_hostsys = {}  # type: Dict[str, List[Any]]
     for vm_name, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
@@ -1512,7 +1517,7 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
     if opt.hostname and opt.direct and opt.host_pwr_display != "vm":
         override_hostname = opt.hostname
 
-    piggy_data = {}
+    piggy_data = {}  # type: Dict[str, List[str]]
     for data in hostsystems_properties.values():
         orig_hostname = data["name"][0]
         used_hostname = override_hostname or convert_hostname(orig_hostname, opt)
@@ -1580,7 +1585,7 @@ def get_agent_info_tcp(address, timeout, debug):
             pass  # some old Python versions lack settimeout(). Better ignore than fail
         soc.connect((ipaddress, 6556))
         try:
-            soc.setblocking(1)
+            soc.setblocking(True)
         except AttributeError:
             pass
         while True:
@@ -1600,7 +1605,7 @@ def get_pattern(pattern, line):
 
 def get_sections_aggregated_snapshots(vms, hostsystems):
 
-    aggregated = {}
+    aggregated = {}  # type: Dict[str, List[Any]]
     for data in vms.values():
         if hostsystems is not None:
             running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
@@ -1719,7 +1724,7 @@ def fetch_datastores(connection):
     datastores_response = connection.query_server('datastores')
     elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                            datastores_response)
-    datastores = {}
+    datastores = {}  # type: Dict[str, Dict[str, Any]]
     for datastore, content in elements:
         entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
         datastores[datastore] = {}
@@ -1756,7 +1761,8 @@ def get_section_licenses(connection):
 
 
 def fetch_virtual_machines(connection, hostsystems, datastores, opt):
-    vms, vm_esx_host = {}, {}
+    vms = {}
+    vm_esx_host = {}  # type: Dict[str, List[Any]]
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
     vmdetails_response = connection.query_server('vmdetails')
@@ -1819,10 +1825,10 @@ def get_sections_clusters(connection, vm_esx_host, opt):
                 response)
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
-            cluster_vms = (convert_hostname(cvm, opt) for cvm in cluster_vms)
             section_lines += [
                 "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)),
-                "%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(cluster_vms)),
+                "%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(
+                    convert_hostname(cvm, opt) for cvm in cluster_vms)),
             ]
 
     return section_lines

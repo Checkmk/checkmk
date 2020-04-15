@@ -301,15 +301,19 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         section_plugin_name = PluginName(section_name)
         section_plugin = config.get_registered_section_plugin(section_plugin_name)
         if section_plugin is None:
-            return section_content
-
-        # TODO (mo): deal with the parsed_section_name feature (CMK-4006)
-        if section_plugin.name != section_plugin.parsed_section_name:
-            raise NotImplementedError()
+            # use legacy parse function for unmigrated sections
+            parse_function = config.check_info.get(section_name, {}).get("parse_function")
+            if parse_function is None:
+                return section_content
+        else:
+            # TODO (mo): deal with the parsed_section_name feature (CMK-4006)
+            if section_plugin.name != section_plugin.parsed_section_name:
+                raise NotImplementedError()
+            parse_function = section_plugin.parse_function
 
         # TODO (mo): make this unnecessary
         parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
-                              section_plugin.parse_function)
+                              parse_function)
 
         # TODO: Item state needs to be handled in local objects instead of the
         # item_state._cached_item_states object

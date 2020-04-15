@@ -10,4 +10,4 @@ description:
  This check requires the special agent configurable through "Nutanix Prism".
 
 inventory:
- Exactly one item will be discovered if the configured server can be reached.
+ One service is created if the configured server can be reached.

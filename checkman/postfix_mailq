@@ -20,4 +20,4 @@ item:
  Name of the Postfix queue
 
 inventory:
- On each system which provides the {postconf} command one service is created.
+ One service is created on each system which provides the {postconf}.

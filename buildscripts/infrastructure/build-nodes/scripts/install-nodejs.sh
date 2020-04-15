@@ -30,7 +30,7 @@ sles-*)
     exit 0
     ;;
 *)
-    echo "ERROR: Unhandled DISTRO"
+    echo "ERROR: Unhandled DISTRO: $DISTRO"
     exit 1
     ;;
 esac

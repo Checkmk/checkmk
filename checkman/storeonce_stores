@@ -14,4 +14,4 @@ item:
  The store name of a particular service set
 
 inventory:
- One service for each store is created
+ One service is created for each store.

@@ -14,5 +14,5 @@ item:
  The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
 inventory:
- One service per outlet is created.
+ One service is created for each outlet.
 

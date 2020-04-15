@@ -15,4 +15,4 @@ description:
  ({UNKNOWN}).
 
 inventory:
- One check for each device is created automatically.
+ One service is created for each device.

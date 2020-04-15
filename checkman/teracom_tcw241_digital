@@ -11,4 +11,4 @@ item:
  The index of the module
 
 inventory:
- One service for every sensor will be created.
+ One service is created for each sensor.

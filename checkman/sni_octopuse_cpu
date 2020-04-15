@@ -9,5 +9,5 @@ description:
  A high CPU utilization is not known to cause issues, so the check does not have configurable levels.
 
 inventory:
- There is one service created on inventory.
+ One service is created.
 

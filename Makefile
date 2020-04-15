@@ -288,9 +288,13 @@ headers:
 	doc/helpers/headrify
 
 
+openapi: $(OPENAPI_SPEC)
+
 $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
-	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $@
+	export TMPFILE=$$(mktemp);  \
+	$(PIPENV2) run python cmk/gui/plugins/openapi/specgen.py > $$TMPFILE && \
+	mv $$TMPFILE $@
 
 node_modules/.bin/redoc-cli:
 	@if test ! -f node_modules/.bin/redoc-cli; then \
@@ -303,6 +307,7 @@ $(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
 		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
 		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
 
+openapi: $(OPENAPI_SPEC)
 openapi-doc: $(OPENAPI_DOC)
 
 

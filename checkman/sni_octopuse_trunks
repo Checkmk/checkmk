@@ -16,9 +16,10 @@ item:
  The index of the card and the index of the port seperated by a {{/}}
 
 inventory:
- The check will inventorize a trunk port if two conditions are fulfilled.
- The port must be named "S0 trunk: extern" and be in an active state at the
- time of inventory. The check can easily be extended to handle other port
- types.
- A service named "Trunk port" including a slot/port ID is generated for
- each port and used as the check item.
+ One service is created for each trunk port if two conditions are fulfilled.
+
+ - The port must be named "S0 trunk: extern"
+
+ - The port must be in an active state at the time of inventory.
+
+ The check can easily be extended to handle other port types.

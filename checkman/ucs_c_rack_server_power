@@ -38,7 +38,7 @@ description:
  The input current and input voltage are not checked but provided for information purposes only.
 
 inventory:
-  All motherboards of the rack server are found automatically.
+ One service is created for each motherboard of the rack server.
 
 item:
  {{Rack unit}} followed by the index of the rack

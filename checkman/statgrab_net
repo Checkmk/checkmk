@@ -18,4 +18,7 @@ description:
   (24).
 
 item:
-  The number of the interface of the name as defined in the operating system.
+ The number of the interface of the name as defined in the operating system.
+
+inventory:
+ One service is created for each interface.

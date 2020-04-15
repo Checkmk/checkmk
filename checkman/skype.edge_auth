@@ -10,5 +10,5 @@ description:
  The threshold for this can be configured.
 
 inventory:
- Exactly one item is discovered.
+ One service is created.
 

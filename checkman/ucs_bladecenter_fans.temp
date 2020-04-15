@@ -15,5 +15,5 @@ item:
  Location of the fans prefixed by {{Ambient}} and suffixed by {{FAN}}
 
 inventory:
- One summary check for each component is created
+ One summary service is created for each component.
 

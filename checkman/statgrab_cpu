@@ -13,5 +13,5 @@ description:
  The check allways returns {OK} status.
 
 inventory:
- One check per host is created if the agent contains a {statgrab_cpu}
- section containing cpu information.
+ One service is created for each host
+ if the agent output contains a {statgrab_cpu} section containing cpu information.

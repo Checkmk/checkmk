@@ -11,5 +11,5 @@ description:
  being throttled.
 
 inventory:
- One item will be discovered for each server.
+ One service is created for each server.
 

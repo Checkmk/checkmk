@@ -8,4 +8,4 @@ description:
  The printer has to support the generic PRINTER-MIB.
 
 inventory:
- Supported.
+ One service is created.

@@ -11,4 +11,4 @@ item:
  ID of the pump
 
 inventory:
- The inventory will create exactly one service per pump.
+ One service is created for each pump.

@@ -268,7 +268,7 @@ class CAdvisorExporter:
         self.container_ids = {}
 
     def update_pod_containers(self):
-        result = {}
+        result = {}  # type: Dict[str, List[str]]
         container_ids = {}
         temp_result = self.api_client.perform_multi_result_promql(
             'container_last_seen{container!="", pod!=""}').promql_metrics

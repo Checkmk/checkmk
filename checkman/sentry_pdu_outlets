@@ -13,4 +13,4 @@ item:
  The name of the outlet.
 
 inventory:
- One service per outlet.
+ One service is created for each outlet.

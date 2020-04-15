@@ -14,4 +14,4 @@ item:
  The name of the policy
 
 inventory:
- One check for each service is created by the inventory.
+ One service is created for each policy.

@@ -19,5 +19,5 @@ description:
  Thresholds can be configured for all these counters except the failure index.
 
 inventory:
- Exactly one item is discovered.
+ One service is created.
 

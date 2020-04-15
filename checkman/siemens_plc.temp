@@ -20,4 +20,4 @@ item:
  Name of the device and the mode seperated by a space
 
 inventory:
- One check for each configured temperature value is created automatically.
+ One service is created for each configured temperature value.

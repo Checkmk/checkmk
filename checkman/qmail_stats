@@ -17,5 +17,5 @@ item:
  An empty string
 
 inventory:
- On each system which provides the {qmail-qstat} command one service is being created.
+ One service is created on each system which provides the {qmail-qstat} command.
 

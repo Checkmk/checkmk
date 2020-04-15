@@ -42,5 +42,5 @@ description:
 item:
  {{Rack unit}} followed by the index of the rack followed by {{Module}} and the module index
 
-Inventory:
- One service for every unit requested by the Special Agent agent_ucs_bladecenter.
+inventory:
+ One service is created for each unit requested by the Special Agent agent_ucs_bladecenter.

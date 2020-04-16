@@ -125,16 +125,10 @@ class SnapshotCreationBase(object):
             for line in lines:
                 self._logger.debug("TAR:     - %s" % line)
 
-    def _generate_snapshot(self,
-                           target_filepath,
-                           generic_components,
-                           custom_components,
-                           reuse_identical_snapshots=False):
+    def _generate_snapshot(self, target_filepath, generic_components, custom_components,
+                           reuse_identical_snapshots):
         # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
         generate_start_time = time.time()
-        if not custom_components:
-            custom_components = []
-
         target_basename = os.path.basename(target_filepath)
 
         # Convert the tuple lists into a more managable format
@@ -304,23 +298,21 @@ class SnapshotCreator(SnapshotCreationBase):
         self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
         self._worker_subprocesses = []  # type: List[multiprocessing.Process]
 
-    def generate_snapshot(self,
-                          target_filepath,
-                          generic_components,
-                          custom_components,
-                          reuse_identical_snapshots=False):
+    def generate_snapshot(self, target_filepath, generic_components, custom_components,
+                          reuse_identical_snapshots):
         # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
-        self._generate_snapshot(target_filepath,
-                                generic_components,
-                                custom_components,
-                                reuse_identical_snapshots=False)
+        self._generate_snapshot(target_filepath, generic_components, custom_components,
+                                reuse_identical_snapshots)
 
-    def generate_snapshot_in_subprocess(self, *args, **kwargs):
+    def generate_snapshot_in_subprocess(self, target_filepath, generic_components,
+                                        custom_components, reuse_identical_snapshots):
+        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
         def myworker():
             # type: () -> None
             log = logger.getChild("SnapshotWorker(%d)" % os.getpid())
             try:
-                self._generate_snapshot(*args, **kwargs)
+                self._generate_snapshot(target_filepath, generic_components, custom_components,
+                                        reuse_identical_snapshots)
             except Exception:
                 log.error("Error in subprocess")
                 log.error(traceback.format_exc())

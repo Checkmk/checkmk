@@ -7,7 +7,7 @@
 import os
 import sys
 import subprocess
-from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Any, Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -41,7 +41,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Column, SNMPValueEncoding,
     SNMPHostConfig, SNMPRowInfo, SNMPRowInfoForStoredWalk, SNMPTable, ResultColumnsUnsanitized,
     ResultColumnsSanitized, ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
-    DecodedString,
+    DecodedString, Columns,
 )
 
 try:
@@ -179,31 +179,7 @@ def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
-    # oid_info is either ( oid, columns ) or
-    # ( oid, suboids, columns )
-    # suboids is a list if OID-infixes that are put between baseoid
-    # and the columns and also prefixed to the index column. This
-    # allows to merge distinct SNMP subtrees with a similar structure
-    # to one virtual new tree (look into cmctc_temp for an example)
-    suboids = [None]  # type: List
-    if isinstance(oid_info, SNMPTree):
-        # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
-        #            once we have the auto-conversion of SNMPTrees in place.
-        #            In particular:
-        #              * remove all 'suboids' related code (index_column!)
-        #              * remove all casts, and extend the livetime of the
-        #                 SNMPTree Object as far as possible.
-        #             * I think the below code can be improved by making
-        #               SNMPTree an iterable.
-        tmp_base = str(oid_info.base)
-        oid, targetcolumns = cast(OIDWithColumns, (tmp_base, oid_info.oids))
-    elif len(oid_info) == 2:
-        oid, targetcolumns = cast(OIDWithColumns, oid_info)
-    else:
-        oid, suboids, targetcolumns = cast(OIDWithSubOIDsAndColumns, oid_info)
-
-    if not oid.startswith("."):
-        raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
+    oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
     index_format = None
@@ -279,6 +255,37 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
         info += _construct_snmp_table_of_rows(decoded_columns)
 
     return info
+
+
+def _make_target_columns(oid_info):
+    # type: (Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], Columns]
+    # oid_info is either ( oid, columns ) or
+    # ( oid, suboids, columns )
+    # suboids is a list if OID-infixes that are put between baseoid
+    # and the columns and also prefixed to the index column. This
+    # allows to merge distinct SNMP subtrees with a similar structure
+    # to one virtual new tree (look into cmctc_temp for an example)
+    suboids = [None]  # type: List
+    if isinstance(oid_info, SNMPTree):
+        # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
+        #            once we have the auto-conversion of SNMPTrees in place.
+        #            In particular:
+        #              * remove all 'suboids' related code (index_column!)
+        #              * remove all casts, and extend the livetime of the
+        #                 SNMPTree Object as far as possible.
+        #             * I think the below code can be improved by making
+        #               SNMPTree an iterable.
+        tmp_base = str(oid_info.base)
+        oid, targetcolumns = cast(OIDWithColumns, (tmp_base, oid_info.oids))
+    elif len(oid_info) == 2:
+        oid, targetcolumns = cast(OIDWithColumns, oid_info)
+    else:
+        oid, suboids, targetcolumns = cast(OIDWithSubOIDsAndColumns, oid_info)
+
+    if not oid.startswith("."):
+        raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
+
+    return oid, suboids, targetcolumns
 
 
 def _make_index_rows(max_column, index_format, fetchoid):

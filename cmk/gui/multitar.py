@@ -14,14 +14,12 @@ import tarfile
 import time
 import shutil
 import io
-import glob
 import traceback
 import itertools
 import multiprocessing
 from types import TracebackType  # pylint: disable=unused-import
 from typing import Any, Optional, Type, Union, Tuple, Dict, Text, List  # pylint: disable=unused-import
 
-import cmk.utils.paths
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.store as store
 
@@ -31,7 +29,6 @@ from cmk.gui.exceptions import MKGeneralException
 
 Command = List[str]
 ComponentSpec = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
-DomainSpec = Dict
 
 
 class SnapshotComponentsParser(object):
@@ -374,214 +371,6 @@ def extract_from_buffer(buffer_, elements):
     _extract(tarfile.open(None, "r", stream), elements)
 
 
-def list_tar_content(the_tarfile):
-    # type: (Union[str, io.BytesIO]) -> Dict[str, Dict[str, int]]
-    files = {}
-    try:
-        if not isinstance(the_tarfile, str):
-            the_tarfile.seek(0)
-            tar = tarfile.open("r", fileobj=the_tarfile)
-        else:
-            tar = tarfile.open(the_tarfile, "r")
-        for x in tar.getmembers():
-            files.update({x.name: {"size": x.size}})
-    except Exception:
-        return {}
-    return files
-
-
-def get_file_content(the_tarfile, filename):
-    # type: (Union[str, io.BytesIO], str) -> bytes
-    if not isinstance(the_tarfile, str):
-        the_tarfile.seek(0)
-        tar = tarfile.open("r", fileobj=the_tarfile)
-    else:
-        tar = tarfile.open(the_tarfile, "r")
-
-    obj = tar.extractfile(filename)
-    if obj is None:
-        raise MKGeneralException(_('Failed to extract %s') % filename)
-
-    return obj.read()
-
-
-def extract_domains(tar, domains):
-    # type: (tarfile.TarFile, Dict[str, DomainSpec]) -> None
-    """Used to restore a configuration snapshot for "discard changes"""
-    tar_domains = {}
-    for member in tar.getmembers():
-        try:
-            if member.name.endswith(".tar.gz"):
-                tar_domains[member.name[:-7]] = member
-        except Exception:
-            pass
-
-    # We are using the var_dir, because tmp_dir might not have enough space
-    restore_dir = cmk.utils.paths.var_dir + "/wato/snapshots/restore_snapshot"
-    if not os.path.exists(restore_dir):
-        os.makedirs(restore_dir)
-
-    def check_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
-        errors = []
-
-        prefix = domain["prefix"]
-
-        def check_exists_or_writable(path_tokens):
-            # type: (List[str]) -> bool
-            if not path_tokens:
-                return False
-            if os.path.exists("/".join(path_tokens)):
-                if os.access("/".join(path_tokens), os.W_OK):
-                    return True  # exists and writable
-
-                errors.append(_("Permission problem: Path not writable %s") % "/".join(path_tokens))
-                return False  # not writable
-
-            return check_exists_or_writable(path_tokens[:-1])
-
-        # The complete tar file never fits in stringIO buffer..
-        tar.extract(tar_member, restore_dir)
-
-        # Older versions of python tarfile handle empty subtar archives :(
-        # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(
-            ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-        )
-        stdout, stderr = p.communicate()
-        if stderr:
-            errors.append(_("Contains corrupt file %s") % tar_member.name)
-            return errors
-
-        for line in stdout:
-            full_path = prefix + "/" + line
-            path_tokens = full_path.split("/")
-            check_exists_or_writable(path_tokens)
-
-        # Cleanup
-        os.unlink("%s/%s" % (restore_dir, tar_member.name))
-
-        return errors
-
-    def cleanup_domain(domain):
-        # type: (DomainSpec) -> List[Text]
-        # Some domains, e.g. authorization, do not get a cleanup
-        if domain.get("cleanup") is False:
-            return []
-
-        def path_valid(prefix, path):
-            # type: (str, str) -> bool
-            if path.startswith("/") or path.startswith(".."):
-                return False
-            return True
-
-        # Remove old stuff
-        for what, path in domain.get("paths", {}):
-            if not path_valid(domain["prefix"], path):
-                continue
-            full_path = "%s/%s" % (domain["prefix"], path)
-            if os.path.exists(full_path):
-                if what == "dir":
-                    exclude_files = []
-                    for pattern in domain.get("exclude", []):
-                        if "*" in pattern:
-                            exclude_files.extend(glob.glob("%s/%s" % (domain["prefix"], pattern)))
-                        else:
-                            exclude_files.append("%s/%s" % (domain["prefix"], pattern))
-                    _cleanup_dir(full_path, exclude_files)
-                else:
-                    os.remove(full_path)
-        return []
-
-    def extract_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
-        try:
-            target_dir = domain.get("prefix")
-            if not target_dir:
-                return []
-            # The complete tar.gz file never fits in stringIO buffer..
-            tar.extract(tar_member, restore_dir)
-
-            command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
-            p = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                encoding="utf-8",
-            )
-            _stdout, stderr = p.communicate()
-            exit_code = p.wait()
-            if exit_code:
-                return ["%s - %s" % (domain["title"], stderr)]
-        except Exception as e:
-            return ["%s - %s" % (domain["title"], str(e))]
-
-        return []
-
-    def execute_restore(domain, is_pre_restore=True):
-        # type: (DomainSpec, bool) -> List[Text]
-        if is_pre_restore:
-            if "pre_restore" in domain:
-                return domain["pre_restore"]()
-        else:
-            if "post_restore" in domain:
-                return domain["post_restore"]()
-        return []
-
-    total_errors = []
-    logger.info("Restoring snapshot: %s", tar.name)
-    logger.info("Domains: %s", ", ".join(tar_domains.keys()))
-    for what, abort_on_error, handler in [
-        ("Permissions", True, check_domain),
-        ("Pre-Restore", True,
-         lambda domain, tar_member: execute_restore(domain, is_pre_restore=True)),
-        ("Cleanup", False, lambda domain, tar_member: cleanup_domain(domain)),
-        ("Extract", False, extract_domain),
-        ("Post-Restore", False,
-         lambda domain, tar_member: execute_restore(domain, is_pre_restore=False))
-    ]:
-        errors = []  # type: List[Text]
-        for name, tar_member in tar_domains.items():
-            if name in domains:
-                try:
-                    dom_errors = handler(domains[name], tar_member)
-                    errors.extend(dom_errors or [])
-                except Exception:
-                    # This should NEVER happen
-                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name,
-                                                                             traceback.format_exc())
-                    errors.append(err_info)
-                    logger.critical(err_info)
-                    if not abort_on_error:
-                        # At this state, the restored data is broken.
-                        # We still try to apply the rest of the snapshot
-                        # Hopefully the log entry helps in identifying the problem..
-                        logger.critical("Snapshot restore FAILED! (possible loss of snapshot data)")
-                        continue
-                    break
-
-        if errors:
-            if what == "Permissions":
-                errors = list(set(errors))
-                errors.append(
-                    _("<br>If there are permission problems, please ensure the site user has write permissions."
-                     ))
-            if abort_on_error:
-                raise MKGeneralException(
-                    _("%s - Unable to restore snapshot:<br>%s") % (what, "<br>".join(errors)))
-            total_errors.extend(errors)
-
-    # Cleanup
-    _wipe_directory(restore_dir)
-
-    if total_errors:
-        raise MKGeneralException(
-            _("Errors on restoring snapshot:<br>%s") % "<br>".join(total_errors))
-
-
 def _extract(tar, components):
     # type: (tarfile.TarFile, List[ComponentSpec]) -> None
     """Extract a tar archive with the new site configuration received from a central site"""
@@ -615,7 +404,7 @@ def _extract(tar, components):
                     _update_check_mk(target_dir, subtar)
                     continue
                 if what == "dir":
-                    _wipe_directory(path)
+                    wipe_directory(path)
                 else:
                     os.remove(path)
             elif what == "dir":
@@ -627,41 +416,7 @@ def _extract(tar, components):
                                      (name, traceback.format_exc()))
 
 
-# Try to cleanup everything starting from the root_path
-# except the specific exclude files
-def _cleanup_dir(root_path, exclude_files=None):
-    # type: (str, Optional[List[str]]) -> None
-    if exclude_files is None:
-        exclude_files = []
-
-    paths_to_remove = []
-    files_to_remove = []
-    for path, dirnames, filenames in os.walk(root_path):
-        for dirname in dirnames:
-            pathname = "%s/%s" % (path, dirname)
-            for entry in exclude_files:
-                if entry.startswith(pathname):
-                    break
-            else:
-                paths_to_remove.append(pathname)
-        for filename in filenames:
-            filepath = "%s/%s" % (path, filename)
-            if filepath not in exclude_files:
-                files_to_remove.append(filepath)
-
-    paths_to_remove.sort()
-    files_to_remove.sort()
-
-    for path in paths_to_remove:
-        if os.path.exists(path) and os.path.isdir(path):
-            shutil.rmtree(path, ignore_errors=True)
-
-    for filename in files_to_remove:
-        if os.path.dirname(filename) not in paths_to_remove:
-            os.remove(filename)
-
-
-def _wipe_directory(path):
+def wipe_directory(path):
     # type: (str) -> None
     for entry in os.listdir(path):
         p = path + "/" + entry

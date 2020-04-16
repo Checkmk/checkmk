@@ -14,7 +14,6 @@ import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.multitar as multitar
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.utils.render as render
@@ -139,11 +138,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                 watolib.backup_domains)
 
     def _extract_from_file(self, filename, elements):
-        # type: (str, Dict[str, multitar.DomainSpec]) -> None
+        # type: (str, Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
-        multitar.extract_domains(tarfile.open(filename, "r"), elements)
+        cmk.gui.watolib.snapshots.extract_snapshot(tarfile.open(filename, "r"), elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):

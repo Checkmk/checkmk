@@ -33,7 +33,7 @@ from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.snmp_utils import OIDCached, OIDBytes
 
-from . import register, state
+from . import register, render, state
 
 __all__ = [
     # register functions
@@ -45,6 +45,7 @@ __all__ = [
     "OIDBytes",
     "HostLabel",
     # utils
+    "render",
     "parse_string_table",
     # detect spec helper
     "all_of",

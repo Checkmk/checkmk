@@ -137,3 +137,7 @@ msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 [FORMAT]
 max-line-length=100
+
+[VARIABLES]
+# Be a little bit more mypy-friendly.
+additional-builtins=reveal_type

@@ -371,7 +371,7 @@ def extract_from_buffer(buffer_, elements):
     stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
-    extract(tarfile.open(None, "r", stream), elements)
+    _extract(tarfile.open(None, "r", stream), elements)
 
 
 def list_tar_content(the_tarfile):
@@ -407,6 +407,7 @@ def get_file_content(the_tarfile, filename):
 
 def extract_domains(tar, domains):
     # type: (tarfile.TarFile, Dict[str, DomainSpec]) -> None
+    """Used to restore a configuration snapshot for "discard changes"""
     tar_domains = {}
     for member in tar.getmembers():
         try:
@@ -490,7 +491,7 @@ def extract_domains(tar, domains):
                             exclude_files.extend(glob.glob("%s/%s" % (domain["prefix"], pattern)))
                         else:
                             exclude_files.append("%s/%s" % (domain["prefix"], pattern))
-                    cleanup_dir(full_path, exclude_files)
+                    _cleanup_dir(full_path, exclude_files)
                 else:
                     os.remove(full_path)
         return []
@@ -574,16 +575,16 @@ def extract_domains(tar, domains):
             total_errors.extend(errors)
 
     # Cleanup
-    wipe_directory(restore_dir)
+    _wipe_directory(restore_dir)
 
     if total_errors:
         raise MKGeneralException(
             _("Errors on restoring snapshot:<br>%s") % "<br>".join(total_errors))
 
 
-# Extract a tarball
-def extract(tar, components):
+def _extract(tar, components):
     # type: (tarfile.TarFile, List[ComponentSpec]) -> None
+    """Extract a tar archive with the new site configuration received from a central site"""
     for component in components:
         if len(component) == 4:
             what, name, path, _excludes = component  # type: ignore[misc]
@@ -614,7 +615,7 @@ def extract(tar, components):
                     _update_check_mk(target_dir, subtar)
                     continue
                 if what == "dir":
-                    wipe_directory(path)
+                    _wipe_directory(path)
                 else:
                     os.remove(path)
             elif what == "dir":
@@ -628,7 +629,7 @@ def extract(tar, components):
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
-def cleanup_dir(root_path, exclude_files=None):
+def _cleanup_dir(root_path, exclude_files=None):
     # type: (str, Optional[List[str]]) -> None
     if exclude_files is None:
         exclude_files = []
@@ -660,7 +661,7 @@ def cleanup_dir(root_path, exclude_files=None):
             os.remove(filename)
 
 
-def wipe_directory(path):
+def _wipe_directory(path):
     # type: (str) -> None
     for entry in os.listdir(path):
         p = path + "/" + entry

@@ -250,24 +250,10 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
                 max_len_col = colno
 
         if index_column != -1:
-            index_rows = []
             # Take end-oids of non-index columns as indices
             fetchoid, max_column, value_encoding = columns[max_len_col]
-            for o, _unused_value in max_column:
-                if index_format == snmp_utils.OID_END:
-                    val = six.ensure_binary(_extract_end_oid(fetchoid, o))
-                elif index_format == snmp_utils.OID_STRING:
-                    val = six.ensure_binary(o)
-                elif index_format == snmp_utils.OID_BIN:
-                    val = _oid_to_bin(o)
-                elif index_format == snmp_utils.OID_END_BIN:
-                    val = _oid_to_bin(_extract_end_oid(fetchoid, o))
-                elif index_format == snmp_utils.OID_END_OCTET_STRING:
-                    val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
-                else:
-                    raise MKGeneralException("Invalid index format %r" % (index_format,))
-                index_rows.append((o, val))
 
+            index_rows = _make_index_rows(max_column, index_format, fetchoid)
             index_encoding = columns[index_column][-1]
             columns[index_column] = fetchoid, index_rows, index_encoding
 
@@ -293,6 +279,26 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
         info += _construct_snmp_table_of_rows(decoded_columns)
 
     return info
+
+
+def _make_index_rows(max_column, index_format, fetchoid):
+    # type: (SNMPRowInfo, Optional[Column], OID) -> SNMPRowInfo
+    index_rows = []
+    for o, _unused_value in max_column:
+        if index_format == snmp_utils.OID_END:
+            val = six.ensure_binary(_extract_end_oid(fetchoid, o))
+        elif index_format == snmp_utils.OID_STRING:
+            val = six.ensure_binary(o)
+        elif index_format == snmp_utils.OID_BIN:
+            val = _oid_to_bin(o)
+        elif index_format == snmp_utils.OID_END_BIN:
+            val = _oid_to_bin(_extract_end_oid(fetchoid, o))
+        elif index_format == snmp_utils.OID_END_OCTET_STRING:
+            val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
+        else:
+            raise MKGeneralException("Invalid index format %r" % (index_format,))
+        index_rows.append((o, val))
+    return index_rows
 
 
 # Contextes can only be used when check_plugin_name is given.

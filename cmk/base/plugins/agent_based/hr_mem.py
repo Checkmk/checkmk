@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Dict, List, Tuple  # pylint: disable=unused-import
 from cmk.base.plugins.agent_based.v0 import register, SNMPTree  # type: ignore[import]
 from cmk.base.plugins.agent_based.utils import ucd_hr_detection  # type: ignore[import]
 
@@ -23,7 +24,7 @@ def parse_hr_mem(string_table):
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
     }
 
-    parsed = {}
+    parsed = {}  # type: Dict[str, List[Tuple[str, int, int]]]
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         try:
             size = int(hrsize) * int(hrunits)

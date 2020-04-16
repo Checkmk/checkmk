@@ -15,7 +15,6 @@ import time
 import shutil
 import io
 import glob
-import fnmatch
 import traceback
 import itertools
 import multiprocessing
@@ -361,68 +360,6 @@ class SnapshotCreator(SnapshotCreationBase):
         self._execute_bash_commands(bash_commands)
         self._statistics_rsync.append(
             _("RSync of generic files took %.4fsec") % (time.time() - prepare_start_time))
-
-
-# Can be removed soon, since it is deprecated by the SnapshotCreator
-def create(tar_filename, components):
-    # type: (str, List[ComponentSpec]) -> None
-    tar = tarfile.open(tar_filename, "w:gz")
-    start = time.time()
-    for component in components:
-        if len(component) == 4:
-            # Mypy does not understand the different lengths
-            what, name, path, excludes = component  # type: ignore[misc]
-        else:
-            # Mypy does not understand the different lengths
-            what, name, path = component  # type: ignore[misc]
-            excludes = []
-
-        excludes = excludes[:]
-        # exclude all temporary files
-        excludes.append(".*new*")
-
-        abspath = os.path.abspath(path)
-        if os.path.exists(path):
-            if what == "dir":
-                basedir = abspath
-                filename = "."
-            else:
-                basedir = os.path.dirname(abspath)
-                filename = os.path.basename(abspath)
-
-            subtar_buffer = io.BytesIO()
-            with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
-
-                def exclude_filter(x, excludes=excludes):
-                    return filter_subtar_files(x, excludes)
-
-                subtar_obj.add(os.path.join(basedir, filename),
-                               arcname=filename,
-                               filter=exclude_filter)
-
-            subtar_size = len(subtar_buffer.getvalue())
-            subtar_buffer.seek(0)
-
-            info = tarfile.TarInfo("%s.tar" % name)
-            info.mtime = int(time.time())
-            info.uid = 0
-            info.gid = 0
-            info.size = subtar_size
-            info.mode = 0o644
-            info.type = tarfile.REGTYPE
-
-            tar.addfile(info, subtar_buffer)
-
-    logger.debug("Packaging %s took %.3fsec", os.path.basename(tar_filename), time.time() - start)
-
-
-def filter_subtar_files(tarinfo, excludes):
-    # type: (tarfile.TarInfo, List[str]) -> Optional[tarfile.TarInfo]
-    filename = os.path.basename(tarinfo.name)
-    for exclude in excludes:
-        if filename == exclude or fnmatch.fnmatchcase(filename, exclude):
-            return None
-    return tarinfo
 
 
 def extract_from_buffer(buffer_, elements):

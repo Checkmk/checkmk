@@ -85,6 +85,8 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
     user_script_title, wato_fileheader, wato_root_dir,
 )
+from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
+    ReplicationPath,)
 from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
     ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
     config_variable_registry, register_configvar, sample_config_generator_registry,

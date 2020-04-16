@@ -28,6 +28,7 @@ from cmk.gui.plugins.wato.utils import (
     ac_test_registry,
     add_change,
     add_replication_paths,
+    ReplicationPath,
     global_buttons,
     changelog_button,
     home_button,

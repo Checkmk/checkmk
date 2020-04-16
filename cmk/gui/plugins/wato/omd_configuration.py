@@ -47,6 +47,7 @@ from cmk.gui.plugins.wato import (
     ConfigVariable,
     site_neutral_path,
     add_replication_paths,
+    ReplicationPath,
     wato_fileheader,
 )
 
@@ -382,7 +383,7 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
 
 
 add_replication_paths([
-    ("file", "diskspace", ConfigDomainDiskspace.diskspace_config),
+    ReplicationPath("file", "diskspace", ConfigDomainDiskspace.diskspace_config, []),
 ])
 
 #.

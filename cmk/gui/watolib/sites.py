@@ -45,7 +45,7 @@ from cmk.gui.valuespec import (
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
-from cmk.gui.watolib.config_sync import extract_from_buffer
+from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath
 from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainGUI,
@@ -748,7 +748,7 @@ class AutomationPushSnapshot(AutomationCommand):
             if not os.path.exists(tmp_dir):
                 store.mkdir(tmp_dir)
 
-            extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
+            extract_from_buffer(tarcontent, [ReplicationPath("dir", "sitespecific", tmp_dir, [])])
 
             site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
             save_site_global_settings(site_globals)

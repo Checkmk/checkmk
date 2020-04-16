@@ -60,7 +60,7 @@ import cmk.gui.watolib.automations
 import cmk.gui.watolib.utils
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
-from cmk.gui.watolib.config_sync import SnapshotCreator
+from cmk.gui.watolib.config_sync import SnapshotCreator, ReplicationPath
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 from cmk.gui.watolib.changes import (
@@ -92,9 +92,6 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
-# TODO: Always use quadruples (last entry can be an empty list). Null pattern FTW!!!1!11!!!
-ReplicationPath = Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]
-
 SnapshotSettings = NamedTuple("SnapshotSettings", [
     ("snapshot_path", str),
     ("work_dir", str),
@@ -104,59 +101,82 @@ SnapshotSettings = NamedTuple("SnapshotSettings", [
 ])
 
 
-# This ugly dispatching is the price one has to pay for the even uglier union above...
 def _replace_omd_root(new_root, rp):
     # type: (str, ReplicationPath) -> ReplicationPath
-    new_dir = rp[2].replace(cmk.utils.paths.omd_root, new_root)
-    if len(rp) == 3:
-        return rp[0], rp[1], new_dir
-    if len(rp) == 4:
-        # NOTE: mypy is too dumb to figure out tuple lengths, so we use the funny "+ 0" below. Fragile...
-        components = rp[3 + 0]
-        if isinstance(components, list):
-            return rp[0], rp[1], new_dir, components
-    raise Exception("invalid replication path %r" % (rp,))
+    return ReplicationPath(
+        ty=rp.ty,
+        ident=rp.ident,
+        path=rp.path.replace(cmk.utils.paths.omd_root, new_root),
+        excludes=rp.excludes,
+    )
 
 
 # Directories and files to synchronize during replication
 _replication_paths = []  # type: List[ReplicationPath]
 
+ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
+ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
+
 
 def add_replication_paths(paths):
-    _replication_paths.extend(paths)
+    # type: (List[ReplicationPathCompat]) -> None
+
+    clean_paths = []  # type: List[ReplicationPath]
+
+    for path in paths:
+        # Be compatible to pre 1.7 tuple syntax and convert it to the
+        # new internal strucure
+        # TODO: Remove with 1.8
+        if isinstance(path, tuple) and not isinstance(path, ReplicationPath):
+            if len(path) not in [3, 4]:
+                raise Exception("invalid replication path %r" % (path,))
+
+            # mypy does not understand this
+            excludes = path[3] if len(path) == 4 else []  # type: ignore[misc]
+            clean_paths.append(ReplicationPath(path[0], path[1], path[2], excludes))
+            continue
+
+        clean_paths.append(path)
+
+    _replication_paths.extend(clean_paths)
 
 
 def get_replication_paths():
+    # type: () -> List[ReplicationPath]
     paths = [
-        ("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(), ["sitespecific.mk"]),
-        ("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(), ["sitespecific.mk"]),
-        ("file", "htpasswd", cmk.utils.paths.htpasswd_file),
-        ("file", "auth.secret", '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)),
-        ("file", "auth.serials",
-         '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)),
+        ReplicationPath("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(),
+                        ["sitespecific.mk"]),
+        ReplicationPath("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(),
+                        ["sitespecific.mk"]),
+        ReplicationPath("file", "htpasswd", cmk.utils.paths.htpasswd_file, []),
+        ReplicationPath("file", "auth.secret",
+                        '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file), []),
+        ReplicationPath("file", "auth.serials",
+                        '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), []),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
-        ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
-        ("dir", "local", cmk.utils.paths.omd_root + "/local"),
+        ReplicationPath("dir", "usersettings", cmk.utils.paths.var_dir + "/web",
+                        ["*/report-thumbnails"]),
+        ReplicationPath("dir", "mkps", cmk.utils.paths.var_dir + "/packages", []),
+        ReplicationPath("dir", "local", cmk.utils.paths.omd_root + "/local", []),
     ]  # type: List[ReplicationPath]
 
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
         paths += [
-            ("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
-             ["sitespecific.mk"]),
+            ReplicationPath("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
+                            ["sitespecific.mk"]),
         ]
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
         _rule_pack_dir = str(ec.rule_pack_dir())
-        paths.append(("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
+        paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
 
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
-        paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
+        paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
     return paths + _replication_paths
 
@@ -614,9 +634,13 @@ class ActivateChangesManager(ActivateChanges):
                 ]
 
                 # Add site-specific global settings
-                snapshot_components.append(("file", "sitespecific",
-                                            os.path.join(work_dir, "site_globals",
-                                                         "sitespecific.mk")))
+                snapshot_components.append(
+                    ReplicationPath(
+                        ty="file",
+                        ident="sitespecific",
+                        path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
+                        excludes=[],
+                    ))
 
             else:
                 snapshot_components = self._get_replication_components(site_id)
@@ -665,11 +689,11 @@ class ActivateChangesManager(ActivateChanges):
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
         if not config.sites[site_id].get("replicate_ec"):
-            paths = [e for e in paths if e[1] not in ["mkeventd", "mkeventd_mkp"]]
+            paths = [e for e in paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
 
         # Remove extensions if site does not want them
         if not config.sites[site_id].get("replicate_mkps"):
-            paths = [e for e in paths if e[1] not in ["local", "mkps"]]
+            paths = [e for e in paths if e.ident not in ["local", "mkps"]]
 
         return paths
 
@@ -762,9 +786,14 @@ class CRESnapshotManager(ABCSnapshotManager):
         create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
         # Add site-specific global settings
-        site_specific_paths = [("file", "sitespecific",
-                                os.path.join(snapshot_settings.work_dir,
-                                             "sitespecific.mk"))]  # type: List[ReplicationPath]
+        site_specific_paths = [
+            ReplicationPath(
+                ty="file",
+                ident="sitespecific",
+                path=os.path.join(snapshot_settings.work_dir, "sitespecific.mk"),
+                excludes=[],
+            )
+        ]  # type: List[ReplicationPath]
 
         snapshot_creator.generate_snapshot(target_filepath=snapshot_settings.snapshot_path,
                                            generic_components=snapshot_settings.snapshot_components,

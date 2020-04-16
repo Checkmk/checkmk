@@ -17,7 +17,9 @@ import traceback
 import itertools
 import multiprocessing
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Any, Optional, Type, Union, Tuple, Dict, Text, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Optional, Type, Tuple, Dict, Text, List, NamedTuple,
+)
 
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.store as store
@@ -27,18 +29,24 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 Command = List[str]
-ComponentSpec = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
+
+ReplicationPath = NamedTuple("ReplicationPath", [
+    ("ty", str),
+    ("ident", str),
+    ("path", str),
+    ("excludes", List[str]),
+])
 
 
 class SnapshotComponentsParser(object):
     def __init__(self, component_list):
-        # type: (List[ComponentSpec]) -> None
+        # type: (List[ReplicationPath]) -> None
         super(SnapshotComponentsParser, self).__init__()
         self.components = []  # type: List[SnapshotComponent]
         self._from_component_list(component_list)
 
     def _from_component_list(self, component_list):
-        # type: (List[ComponentSpec]) -> None
+        # type: (List[ReplicationPath]) -> None
         for component in component_list:
             self.components.append(SnapshotComponent(component))
 
@@ -66,16 +74,11 @@ class SnapshotComponent(object):
         self._from_tuple(component)
 
     def _from_tuple(self, component):
-        # type: (ComponentSpec) -> None
-        # Self explanatory, tuples are ugly to parse..
-        if len(component) == 4:
-            # Mypy does not understand the different lengths
-            self.component_type, self.name, self.configured_path, excludes = component  # type: ignore[misc]
-            self.excludes = excludes[:]
-        else:
-            # Mypy does not understand the different lengths
-            self.component_type, self.name, self.configured_path = component  # type: ignore[misc]
-            self.excludes = []
+        # type: (ReplicationPath) -> None
+        self.component_type = component.ty
+        self.name = component.ident
+        self.configured_path = component.path
+        self.excludes = component.excludes[:]
 
         self.configured_path = os.path.abspath(self.configured_path).rstrip("/")
         if self.component_type == "dir":
@@ -89,8 +92,14 @@ class SnapshotComponent(object):
 
     def __str__(self):
         # type: () -> str
-        return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % \
-                (self.component_type, self.name, self.configured_path, self.base_dir, self.filename, self.excludes)
+        return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % (
+            self.component_type,
+            self.name,
+            self.configured_path,
+            self.base_dir,
+            self.filename,
+            self.excludes,
+        )
 
 
 class SnapshotCreationBase(object):
@@ -122,7 +131,7 @@ class SnapshotCreationBase(object):
 
     def _generate_snapshot(self, target_filepath, generic_components, custom_components,
                            reuse_identical_snapshots):
-        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
+        # type: (str, List[ReplicationPath], List[ReplicationPath], bool) -> None
         generate_start_time = time.time()
         target_basename = os.path.basename(target_filepath)
 
@@ -287,7 +296,7 @@ class SnapshotCreationBase(object):
 
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, work_dir, all_generic_components):
-        # type: (str, List[ComponentSpec]) -> None
+        # type: (str, List[ReplicationPath]) -> None
         super(SnapshotCreator, self).__init__(work_dir)
         self._setup_directories()
         self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
@@ -295,13 +304,13 @@ class SnapshotCreator(SnapshotCreationBase):
 
     def generate_snapshot(self, target_filepath, generic_components, custom_components,
                           reuse_identical_snapshots):
-        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
+        # type: (str, List[ReplicationPath], List[ReplicationPath], bool) -> None
         self._generate_snapshot(target_filepath, generic_components, custom_components,
                                 reuse_identical_snapshots)
 
     def generate_snapshot_in_subprocess(self, target_filepath, generic_components,
                                         custom_components, reuse_identical_snapshots):
-        # type: (str, List[ComponentSpec], List[ComponentSpec], bool) -> None
+        # type: (str, List[ReplicationPath], List[ReplicationPath], bool) -> None
         def myworker():
             # type: () -> None
             log = logger.getChild("SnapshotWorker(%d)" % os.getpid())
@@ -359,7 +368,7 @@ class SnapshotCreator(SnapshotCreationBase):
 
 
 def extract_from_buffer(buffer_, elements):
-    # type: (bytes, List[ComponentSpec]) -> None
+    # type: (bytes, List[ReplicationPath]) -> None
     """Called during activate changes on the remote site to apply the received configuration"""
     if not isinstance(elements, list):
         raise NotImplementedError()
@@ -371,7 +380,7 @@ def extract_from_buffer(buffer_, elements):
 
 
 def _extract(tar, components):
-    # type: (tarfile.TarFile, List[ComponentSpec]) -> None
+    # type: (tarfile.TarFile, List[ReplicationPath]) -> None
     """Extract a tar archive with the new site configuration received from a central site"""
     for component in components:
         if len(component) == 4:

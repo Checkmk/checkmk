@@ -9,7 +9,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
-from typing import NamedTuple, List, Optional, Text  # pylint: disable=unused-import
+from typing import Dict, NamedTuple, List, Optional, Text  # pylint: disable=unused-import
 import six
 
 import cmk.gui.config as config
@@ -134,18 +134,16 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         return False
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _extract_snapshot(self, snapshot_file):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
                                 watolib.backup_domains)
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
-        if isinstance(elements, list):
-            multitar.extract(tarfile.open(filename, "r"), elements)
+        # type: (str, Dict[str, multitar.DomainSpec]) -> None
+        if not isinstance(elements, dict):
+            raise NotImplementedError()
 
-        elif isinstance(elements, dict):
-            multitar.extract_domains(tarfile.open(filename, "r"), elements)
+        multitar.extract_domains(tarfile.open(filename, "r"), elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):

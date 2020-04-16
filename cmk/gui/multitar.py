@@ -426,14 +426,15 @@ def filter_subtar_files(tarinfo, excludes):
 
 
 def extract_from_buffer(buffer_, elements):
-    # type: (bytes, Union[List[ComponentSpec], Dict[str, DomainSpec]]) -> None
+    # type: (bytes, List[ComponentSpec]) -> None
+    """Called during activate changes on the remote site to apply the received configuration"""
+    if not isinstance(elements, list):
+        raise NotImplementedError()
+
     stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
-    if isinstance(elements, list):
-        extract(tarfile.open(None, "r", stream), elements)
-    elif isinstance(elements, dict):
-        extract_domains(tarfile.open(None, "r", stream), elements)
+    extract(tarfile.open(None, "r", stream), elements)
 
 
 def list_tar_content(the_tarfile):

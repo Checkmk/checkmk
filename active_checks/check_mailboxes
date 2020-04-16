@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import time
-import imaplib
 import email
 import email.utils
+from getpass import getpass
+import imaplib
+from optparse import OptionParser  # pylint: disable=deprecated-module
 import re
 import socket
+import sys
+import time
 import traceback
-from getpass import getpass
-from optparse import OptionParser  # pylint: disable=deprecated-module
 
 import cmk.utils.render
 import cmk.utils.password_store
@@ -32,7 +32,8 @@ class Mail:
         if self.__mail is None:
             msg = self.__conn.fetch(self.__mail_id, "(RFC822)")
             self.__mail = email.message_from_string(msg[1][0][1])
-            self.__timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(self.__mail["DATE"]))
+            parsed = email.utils.parsedate_tz(self.__mail["DATE"])
+            self.__timestamp = int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
 
     def timestamp(self):
         if self.__timestamp is None:
@@ -69,10 +70,7 @@ class LoginError(MKException):
 
 class ImapWrapper:
     def __init__(self, host, user, password, use_ssl):
-        if use_ssl:
-            self.__conn = imaplib.IMAP4_SSL(host)
-        else:
-            self.__conn = imaplib.IMAP4(host)
+        self.__conn = imaplib.IMAP4_SSL(host) if use_ssl else imaplib.IMAP4(host)
         res = self.__conn.login(user, password)
         if res[0].lower() != 'ok':
             raise LoginError("Login as user \"%s\" failed" % user)
@@ -80,7 +78,13 @@ class ImapWrapper:
     def mailboxes(self):
         mb_list = self.__conn.list()[1]
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        return [pattern.search(mb.decode("utf-8")).group(3).strip("\"") for mb in mb_list]
+        return [
+            match.group(3).strip("\"")  #
+            for mb in mb_list  #
+            if isinstance(mb, bytes)  #
+            for match in [pattern.search(mb.decode("utf-8"))]  #
+            if match is not None
+        ]
 
     def __format_date(self, timestamp):
         return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
@@ -229,11 +233,11 @@ def main(options):
         if options.crit_count and options.warn_count:
             count = len(imap.mails(mb))
             if count >= options.crit_count:
-                messages.append((2, "%s has %d messages (warn/crit at %d/%d)" % \
-                                (mb, count, options.warn_count, options.crit_count)))
+                messages.append((2, "%s has %d messages (warn/crit at %d/%d)" %
+                                 (mb, count, options.warn_count, options.crit_count)))
             elif count >= options.warn_count:
-                messages.append((1, "%s has %d messages (warn/crit at %d/%d)" % \
-                                (mb, count, options.warn_count, options.crit_count)))
+                messages.append((1, "%s has %d messages (warn/crit at %d/%d)" %
+                                 (mb, count, options.warn_count, options.crit_count)))
 
         if options.crit_age and options.warn_age:
             # we want to filter mails by their age in at least minute precision,
@@ -259,10 +263,9 @@ def main(options):
 
                 if status > 0:
                     messages.append(
-                            (status,
-                             "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
-                             (mb, report_age, status_icon,
-                             cmk.utils.render.Age(options.warn_age), cmk.utils.render.Age(options.crit_age))))
+                        (status, "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %
+                         (mb, report_age, status_icon, cmk.utils.render.Age(
+                             options.warn_age), cmk.utils.render.Age(options.crit_age))))
 
         if options.crit_new and options.warn_new:
             new_mails = imap.mails(mb, after=(now - options.crit_new))
@@ -285,8 +288,9 @@ def main(options):
 
             if status > 0:
                 messages.append(
-                    (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
-                     (mb, report_age, status_icon, cmk.utils.render.Age(options.warn_new), cmk.utils.render.Age(options.crit_new))))
+                    (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %
+                     (mb, report_age, status_icon, cmk.utils.render.Age(
+                         options.warn_new), cmk.utils.render.Age(options.crit_new))))
 
     if messages:
         status = max([m[0] for m in messages])

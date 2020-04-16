@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.gui.multitar as multitar
+import cmk.gui.watolib.config_sync as config_sync
 
 
 @pytest.mark.parametrize("master, slave, result", [
@@ -90,4 +90,4 @@ import cmk.gui.multitar as multitar
         id="Update Global user notifications. Retain Customer user notifications"),
 ])
 def test_update_contacts_dict(master, slave, result):
-    assert multitar._update_contacts_dict(master, slave) == result
+    assert config_sync._update_contacts_dict(master, slave) == result

@@ -61,7 +61,6 @@ import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-import cmk.gui.multitar as multitar
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.werks as werks
 import cmk.gui.log as log

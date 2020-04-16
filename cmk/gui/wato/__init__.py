@@ -96,7 +96,6 @@ import cmk.gui.utils as utils
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.table import table_element
-import cmk.gui.multitar as multitar
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 import cmk.gui.mkeventd

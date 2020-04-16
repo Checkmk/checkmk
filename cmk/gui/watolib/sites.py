@@ -19,7 +19,6 @@ import cmk.utils.store as store
 
 import cmk.gui.sites
 from cmk.gui.sites import SiteConfigurations  # pylint: disable=unused-import
-import cmk.gui.multitar as multitar
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
@@ -46,6 +45,7 @@ from cmk.gui.valuespec import (
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui.watolib.config_sync import extract_from_buffer
 from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainGUI,
@@ -717,8 +717,8 @@ class AutomationPushSnapshot(AutomationCommand):
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
-            multitar.extract_from_buffer(request.tar_content,
-                                         cmk.gui.watolib.activate_changes.get_replication_paths())
+            extract_from_buffer(request.tar_content,
+                                cmk.gui.watolib.activate_changes.get_replication_paths())
 
             try:
                 self._save_site_globals_on_slave_site(request.tar_content)
@@ -748,7 +748,7 @@ class AutomationPushSnapshot(AutomationCommand):
             if not os.path.exists(tmp_dir):
                 store.mkdir(tmp_dir)
 
-            multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
+            extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
 
             site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
             save_site_global_settings(site_globals)

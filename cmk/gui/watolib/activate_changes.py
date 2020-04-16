@@ -43,7 +43,6 @@ from cmk.gui.sites import (  # pylint: disable=unused-import
     SiteStatus, states as sites_states, disconnect as sites_disconnect,
 )
 import cmk.gui.config as config
-import cmk.gui.multitar as multitar
 import cmk.gui.log as log
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -61,6 +60,7 @@ import cmk.gui.watolib.automations
 import cmk.gui.watolib.utils
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
+from cmk.gui.watolib.config_sync import SnapshotCreator
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 from cmk.gui.watolib.changes import (
@@ -752,13 +752,13 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
 class CRESnapshotManager(ABCSnapshotManager):
     def generate_snapshots(self):
         # type: () -> None
-        with multitar.SnapshotCreator(self._activation_work_dir,
-                                      get_replication_paths()) as snapshot_creator:
+        with SnapshotCreator(self._activation_work_dir,
+                             get_replication_paths()) as snapshot_creator:
             for site_id, snapshot_settings in self._site_snapshot_settings.items():
                 self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator)
 
     def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator):
-        # type: (SiteId, SnapshotSettings, multitar.SnapshotCreator) -> None
+        # type: (SiteId, SnapshotSettings, SnapshotCreator) -> None
         create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
         # Add site-specific global settings

@@ -3,8 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module contains some helper functions dealing with the creation
-of multi-tier tar files (tar files containing tar files)"""
+"""Preparing the site configuration in distributed setups for synchronization"""
 
 import ast
 import errno
@@ -404,7 +403,7 @@ def _extract(tar, components):
                     _update_check_mk(target_dir, subtar)
                     continue
                 if what == "dir":
-                    wipe_directory(path)
+                    _wipe_directory(path)
                 else:
                     os.remove(path)
             elif what == "dir":
@@ -416,7 +415,7 @@ def _extract(tar, components):
                                      (name, traceback.format_exc()))
 
 
-def wipe_directory(path):
+def _wipe_directory(path):
     # type: (str) -> None
     for entry in os.listdir(path):
         p = path + "/" + entry

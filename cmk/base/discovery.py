@@ -842,10 +842,9 @@ def schedule_discovery_check(hostname):
 def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
     # type: (str, Optional[str], data_sources.MultiHostSections, str) -> DiscoveredHostLabels
     discovered_host_labels = DiscoveredHostLabels()
-    host_key = (hostname, ipaddress)
 
     try:
-        host_data = multi_host_sections.get_host_sections()[host_key]
+        host_data = multi_host_sections.get_host_sections()[(hostname, ipaddress)]
     except KeyError:
         return discovered_host_labels
 
@@ -861,7 +860,8 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
         for parsed_section_name in sorted(parsed_sections):
             try:
                 plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
-                section = multi_host_sections.get_parsed_section(parsed_section_name, host_key)
+                section = multi_host_sections.get_parsed_section(hostname, ipaddress,
+                                                                 parsed_section_name)
                 if plugin is None or section is None:
                     continue
                 for label in plugin.host_label_function(section):

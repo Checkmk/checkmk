@@ -6,7 +6,7 @@
 
 import abc
 import sys
-from typing import Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic  # pylint: disable=unused-import
+from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic  # pylint: disable=unused-import
 import six
 
 import cmk.utils.debug
@@ -110,18 +110,58 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         # type: () -> MultiHostSectionsData
         return self._multi_host_sections
 
+    def get_section_kwargs(self, host_name, ip_address, subscribed_sections):
+        # type: (HostName, Optional[HostAddress], List[PluginName]) -> Dict[str, Any]
+        """Prepares section keyword arguments for a non-cluster host
+
+        It returns a dictionary containing one entry (may be None) for each
+        of the required sections, or an empty dictionary of no data was found at all.
+        """
+        kwarg_keys = ["section"] if len(subscribed_sections) == 1 else [
+            "section_%s" % s for s in subscribed_sections
+        ]
+
+        kwargs = {
+            kwarg_key: self.get_parsed_section(host_name, ip_address, sec_name)
+            for kwarg_key, sec_name in zip(kwarg_keys, subscribed_sections)
+        }
+
+        return {} if all(v is None for v in kwargs.values()) else kwargs
+
+    def get_section_cluster_kwargs(self, host_name, subscribed_sections, service_description):
+        """Prepares section keyword arguments for a cluster host
+
+        It returns a dictionary containing one optional dictionary[Host, ParsedSection]
+        for each of the required sections, or an empty dictionary of no data was found at all.
+        """
+        # see which host entries we must use
+        nodes_of_clustered_service = self._get_nodes_of_clustered_service(
+            host_name, service_description) or []
+        host_entries = self._get_host_entries(host_name, None)
+        used_entries = [he for he in host_entries if he[0] in nodes_of_clustered_service]
+
+        kwargs = {}  # type: Dict[str, Dict[str, Any]]
+        for node_name, node_ip in used_entries:
+            node_kwargs = self.get_section_kwargs(node_name, node_ip, subscribed_sections)
+            for key, sections_node_data in node_kwargs.items():
+                kwargs.setdefault(key, {})[node_name] = sections_node_data
+
+        # return empty dict if no data is found
+        return {} if all(all(v is None for v in s.values()) for s in kwargs.values()) else kwargs
+
     def get_parsed_section(
         self,
+        host_name,  # type: HostName
+        ip_address,  # type: Optional[HostAddress]
         section_name,  # type: PluginName
-        host_key,  # type:  Tuple[HostName, Optional[HostAddress]]
     ):
         # type: (...) -> Optional[ParsedSectionContent]
-        cache_key = host_key + (section_name,)
+        cache_key = (host_name, ip_address, section_name)
         if cache_key in self._parsed_renamed_sections:
             return self._parsed_renamed_sections[cache_key]
 
         try:
-            hosts_raw_sections = self._multi_host_sections[host_key].sections
+            hosts_raw_sections = self._multi_host_sections[(host_name, ip_address)].sections
         except KeyError:
             return self._parsed_renamed_sections.setdefault(cache_key, None)
 

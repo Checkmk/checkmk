@@ -39,9 +39,20 @@ SECTION_TWO = _TestSection(
     [PluginName("one")],
 )
 
+SECTION_THREE = _TestSection(
+    PluginName("three"),
+    PluginName("parsed2"),
+    lambda x: {
+        "parsed_by": "three",
+        "node": x[0][0]
+    },
+    [],
+)
+
 MOCK_SECTIONS = {
     SECTION_ONE.name: SECTION_ONE,
     SECTION_TWO.name: SECTION_TWO,
+    SECTION_THREE.name: SECTION_THREE,
 }
 
 NODE_1 = [
@@ -102,10 +113,135 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
     multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
                                                  AgentHostSections(sections=node_section_content))
 
-    content = multi_host_sections.get_parsed_section(PluginName("parsed"), ("node1", "127.0.0.1"))
+    content = multi_host_sections.get_parsed_section("node1", "127.0.0.1", PluginName("parsed"))
 
     assert expected_result == content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, content)
+
+
+@pytest.mark.parametrize("required_sections,expected_result", [
+    (["nonexistent"], {}),
+    (["parsed"], {
+        "section": {
+            "parsed_by": "one",
+            "node": "node1"
+        }
+    }),
+    (["parsed", "nonexistent"], {
+        "section_parsed": {
+            "parsed_by": "one",
+            "node": "node1"
+        },
+        "section_nonexistent": None
+    }),
+    (["parsed", "parsed2"], {
+        "section_parsed": {
+            "parsed_by": "one",
+            "node": "node1"
+        },
+        "section_parsed2": {
+            "parsed_by": "three",
+            "node": "node1"
+        }
+    }),
+])
+def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
+
+    _set_up(monkeypatch, "node1", None, {})
+
+    node_section_content = {
+        "one": NODE_1,
+        # TODO (mo): CMK-4232 # "two": NODE_1,
+        "three": NODE_1
+    }
+
+    multi_host_sections = MultiHostSections()
+    multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
+                                                 AgentHostSections(sections=node_section_content))
+
+    kwargs = multi_host_sections.get_section_kwargs("node1", "127.0.0.1",
+                                                    [PluginName(n) for n in required_sections])
+
+    assert expected_result == kwargs,\
+           "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
+
+
+@pytest.mark.parametrize("required_sections,expected_result", [
+    (["nonexistent"], {}),
+    (["parsed"], {
+        "section": {
+            "node1": {
+                "parsed_by": "one",
+                "node": "node1"
+            },
+            "node2": {
+                "parsed_by": "two",
+                "node": "node2"
+            },
+        }
+    }),
+    (["parsed", "nonexistent"], {
+        "section_parsed": {
+            "node1": {
+                "parsed_by": "one",
+                "node": "node1"
+            },
+            "node2": {
+                "parsed_by": "two",
+                "node": "node2"
+            },
+        },
+        "section_nonexistent": {
+            "node1": None,
+            "node2": None
+        }
+    }),
+    (["parsed", "parsed2"], {
+        "section_parsed": {
+            "node1": {
+                "parsed_by": "one",
+                "node": "node1"
+            },
+            "node2": {
+                "parsed_by": "two",
+                "node": "node2"
+            },
+        },
+        "section_parsed2": {
+            "node1": {
+                "parsed_by": "three",
+                "node": "node1"
+            },
+            "node2": {
+                "parsed_by": "three",
+                "node": "node2"
+            },
+        }
+    }),
+])
+def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_result):
+
+    _set_up(monkeypatch, "cluster", ["node2", "node1"], {"node1": "cluster", "node2": "cluster"})
+
+    node1_section_content = {
+        "one": NODE_1,
+        # TODO (mo): CMK-4232 # "two": NODE_1,
+        "three": NODE_1
+    }
+
+    node2_section_content = {"two": NODE_2, "three": NODE_2}
+
+    multi_host_sections = MultiHostSections()
+    multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
+                                                 AgentHostSections(sections=node1_section_content))
+    multi_host_sections.add_or_get_host_sections("node2", "127.0.0.1",
+                                                 AgentHostSections(sections=node2_section_content))
+
+    kwargs = multi_host_sections.get_section_cluster_kwargs(
+        "cluster", [PluginName(n) for n in required_sections], "_service_description")
+
+    assert expected_result == kwargs,\
+           "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
 
 
 @pytest.mark.parametrize(

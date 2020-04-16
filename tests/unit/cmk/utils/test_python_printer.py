@@ -5,18 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import List  # pylint: disable=unused-import
 import pytest  # type: ignore[import]
 from cmk.utils.python_printer import pformat
 
 
 def test_same_as_repr():
-    for obj in [
-            None,
-            True,
-            False,
-            1,
-            -2,
-            3.1415,
+    objs = [
+        None,
+        True,
+        False,
+        1,
+        -2,
+        3.1415,
         (),
         (11,),
         (11, 22, 33),
@@ -31,7 +32,8 @@ def test_same_as_repr():
         {
             (11,): (33, 44, 22),
         },
-    ]:
+    ]  # type: List[object]
+    for obj in objs:
         assert pformat(obj) == repr(obj)
 
 

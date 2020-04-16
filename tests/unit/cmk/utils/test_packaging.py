@@ -24,6 +24,13 @@ import cmk.utils.paths
 import cmk.utils.packaging as packaging
 
 
+def _read_package_info(pacname):
+    # type: (packaging.PackageName) -> packaging.PackageInfo
+    package_info = packaging.read_package_info(pacname)
+    assert package_info is not None
+    return package_info
+
+
 @pytest.fixture(autouse=True)
 def package_dir():
     packaging.package_dir().mkdir(parents=True, exist_ok=True)
@@ -148,7 +155,7 @@ def test_create_package_twice():
 
 def test_read_package_info():
     _create_simple_test_package("aaa")
-    assert packaging.read_package_info("aaa")["version"] == "1.0"
+    assert _read_package_info("aaa")["version"] == "1.0"
 
 
 def test_read_package_info_not_existing():
@@ -172,7 +179,7 @@ def test_edit_package():
 
     packaging.edit_package("aaa", new_package_info)
 
-    assert packaging.read_package_info("aaa")["version"] == "2.0"
+    assert _read_package_info("aaa")["version"] == "2.0"
 
 
 def test_edit_package_rename():
@@ -182,7 +189,7 @@ def test_edit_package_rename():
 
     packaging.edit_package("aaa", new_package_info)
 
-    assert packaging.read_package_info("bbb")["name"] == "bbb"
+    assert _read_package_info("bbb")["name"] == "bbb"
     assert packaging.read_package_info("aaa") is None
 
 
@@ -198,7 +205,7 @@ def test_edit_package_rename_conflict():
 def test_install_package():
     # Create
     _create_simple_test_package("aaa")
-    package_info = packaging.read_package_info("aaa")
+    package_info = _read_package_info("aaa")
 
     # Build MKP in memory
     mkp = BytesIO()
@@ -214,7 +221,7 @@ def test_install_package():
 
     # Check result
     assert packaging._package_exists("aaa") is True
-    package_info = packaging.read_package_info("aaa")
+    package_info = _read_package_info("aaa")
     assert package_info["version"] == "1.0"
     assert package_info["files"]["checks"] == ["aaa"]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -223,7 +230,7 @@ def test_install_package():
 def test_install_package_by_path(tmp_path):
     # Create
     _create_simple_test_package("aaa")
-    package_info = packaging.read_package_info("aaa")
+    package_info = _read_package_info("aaa")
 
     # Write MKP file
     mkp_path = tmp_path.joinpath("aaa.mkp")
@@ -239,7 +246,7 @@ def test_install_package_by_path(tmp_path):
 
     # Check result
     assert packaging._package_exists("aaa") is True
-    package_info = packaging.read_package_info("aaa")
+    package_info = _read_package_info("aaa")
     assert package_info["version"] == "1.0"
     assert package_info["files"]["checks"] == ["aaa"]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -271,10 +278,14 @@ def test_create_mkp_file():
     tar = tarfile.open(fileobj=mkp, mode="r:gz")
     assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
-    info = ast.literal_eval(six.ensure_str(tar.extractfile("info").read()))
+    info_file = tar.extractfile("info")
+    assert info_file is not None
+    info = ast.literal_eval(six.ensure_str(info_file.read()))
     assert info["name"] == "aaa"
 
-    info2 = json.loads(tar.extractfile("info.json").read())
+    info_json_file = tar.extractfile("info.json")
+    assert info_json_file is not None
+    info2 = json.loads(info_json_file.read())
     assert info2["name"] == "aaa"
 
 
@@ -350,7 +361,7 @@ def test_get_optional_package_infos(monkeypatch, tmp_path):
 
     # Create package
     _create_simple_test_package("optional")
-    package_info = packaging.read_package_info("optional")
+    package_info = _read_package_info("optional")
 
     # Write MKP file
     mkp_path = mkp_dir.joinpath("optional.mkp")

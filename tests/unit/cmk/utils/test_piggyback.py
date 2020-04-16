@@ -20,24 +20,25 @@ def test_config():
     host_dir = piggyback_dir / "test-host"
     host_dir.mkdir(parents=True, exist_ok=True)
 
-    for f in piggyback_dir.glob("*/*"):
-        f.unlink()
+    for f1 in piggyback_dir.glob("*/*"):
+        f1.unlink()
 
     source_file = piggyback_dir / "test-host" / "source1"
-    with source_file.open(mode="wb") as f:
-        f.write(b"<<<check_mk>>>\nlala\n")
+    with source_file.open(mode="wb") as f2:
+        f2.write(b"<<<check_mk>>>\nlala\n")
 
     cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
-    with source_status_file.open("wb") as f:
-        f.write(b"")
+    with source_status_file.open("wb") as f3:
+        f3.write(b"")
     source_stat = source_status_file.stat()
 
     os.utime(str(source_file), (source_stat.st_atime, source_stat.st_mtime))
 
 
 def test_piggyback_default_time_settings():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
     piggybacked_hostname = "test-host"
     piggyback.get_piggyback_raw_data(piggybacked_hostname, time_settings)
     piggyback.get_source_and_piggyback_hosts(time_settings)
@@ -56,7 +57,8 @@ def test_cleanup_piggyback_files():
 
 
 def test_get_piggyback_raw_data_no_data():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
     assert piggyback.get_piggyback_raw_data("no-host", time_settings) == []
 
 
@@ -132,7 +134,8 @@ def test_get_piggyback_raw_data_successful(time_settings):
 
 
 def test_get_piggyback_raw_data_not_updated():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
 
     # Fake age the test-host piggyback file
     os.utime(str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
@@ -148,7 +151,8 @@ def test_get_piggyback_raw_data_not_updated():
 
 
 def test_get_piggyback_raw_data_not_sending():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
 
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
     if source_status_file.exists():
@@ -164,7 +168,7 @@ def test_get_piggyback_raw_data_not_sending():
 
 
 def test_get_piggyback_raw_data_too_old_global():
-    time_settings = [(None, "max_cache_age", -1)]
+    time_settings = [(None, "max_cache_age", -1)]  # type: piggyback.PiggybackTimeSettings
 
     for raw_data_info in piggyback.get_piggyback_raw_data("test-host", time_settings):
         assert raw_data_info.source_hostname == "source1"
@@ -179,7 +183,7 @@ def test_get_piggyback_raw_data_too_old_source():
     time_settings = [
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "max_cache_age", -1),
-    ]
+    ]  # type: piggyback.PiggybackTimeSettings
 
     for raw_data_info in piggyback.get_piggyback_raw_data("test-host", time_settings):
         assert raw_data_info.source_hostname == "source1"
@@ -207,12 +211,14 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host():
 
 
 def test_has_piggyback_raw_data_no_data():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
     assert piggyback.has_piggyback_raw_data("no-host", time_settings) is False
 
 
 def test_has_piggyback_raw_data():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
     assert piggyback.has_piggyback_raw_data("test-host", time_settings) is True
 
 
@@ -225,7 +231,8 @@ def test_remove_source_status_file():
 
 
 def test_store_piggyback_raw_data_new_host():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
 
     piggyback.store_piggyback_raw_data("source2", {"pig": [
         b"<<<check_mk>>>",
@@ -242,7 +249,8 @@ def test_store_piggyback_raw_data_new_host():
 
 
 def test_store_piggyback_raw_data_second_source():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
 
     piggyback.store_piggyback_raw_data("source2", {"test-host": [
         b"<<<check_mk>>>",
@@ -267,7 +275,8 @@ def test_store_piggyback_raw_data_second_source():
 
 
 def test_get_source_and_piggyback_hosts():
-    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)
+                    ]  # type: piggyback.PiggybackTimeSettings
     cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)
 
     piggyback.store_piggyback_raw_data("source1", {

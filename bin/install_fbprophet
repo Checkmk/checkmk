@@ -5,7 +5,7 @@ function install(){
     # Install dependecies
     pip install pystan
     LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install subprocess32
-    LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install fbprophet
+    LIBRARY_PATH=${OMD_ROOT}/lib:${LIBRARY_PATH} pip install fbprophet==0.5
     pip uninstall -y matplotlib
 
     # Cleanup of unnecessary files

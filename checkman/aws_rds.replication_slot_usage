@@ -6,10 +6,12 @@ distribution: check_mk
 description:
  This check monitors the replication slot disk usage of
  AWS/RDS.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set. Upper levels are configurable.
+ No default levels are set.
+ Upper levels are configurable.
 
 item:
  Name of the instance

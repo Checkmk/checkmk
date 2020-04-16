@@ -5,10 +5,12 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the number of database connections in use.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set. Upper levels are configurable.
+ No default levels are set.
+ Upper levels are configurable.
 
 item:
  Name of the instance

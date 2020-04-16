@@ -6,6 +6,7 @@ distribution: check_mk
 description:
  This check monitors the transaction logs disk usage of
  AWS/RDS.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 

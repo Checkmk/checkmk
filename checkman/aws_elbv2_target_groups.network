@@ -6,11 +6,17 @@ distribution: check_mk
 description:
  This check monitors target groups of AWS Network ELB and reports a
  summary across all target groups.
+
  To make this check work you have to configure the related special agent
  {Amazon Web Services (AWS)}.
 
- If at least on target group is unhealthy, the check goes CRIT. If the
- state is unknown the check is UNKNOWN, otherwise OK.
+ The service goes
+
+ - {CRIT} if at least on target group is unhealthy,
+
+ - {UNKNOWN} if the state is unknown
+
+ - {OK} in all other cases
 
 inventory:
  One service is created.

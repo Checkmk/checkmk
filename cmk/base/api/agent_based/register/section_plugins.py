@@ -52,7 +52,7 @@ def _validate_host_label_function(host_label_function):
                         (host_label_function,))
 
     parameters = signature(host_label_function).parameters
-    if list(parameters) not in (['section'], ['_section']):
+    if list(parameters) != ['section']:
         raise ValueError("host label function must accept exactly one argument 'section'")
 
 

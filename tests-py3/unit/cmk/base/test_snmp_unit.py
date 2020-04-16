@@ -81,8 +81,8 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
 
     def get_all_snmp_tables(info):
         if not isinstance(info, list):
-            return snmp.get_snmp_table(snmp_cfg, "unit-test", info, False)
-        return [snmp.get_snmp_table(snmp_cfg, "unit-test", i, False) for i in info]
+            return snmp.get_snmp_table(snmp_cfg, "unit-test", info)
+        return [snmp.get_snmp_table(snmp_cfg, "unit-test", i) for i in info]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 

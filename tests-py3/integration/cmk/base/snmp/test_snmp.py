@@ -239,10 +239,11 @@ def test_get_data_types(snmp_config, type_name, oid, expected_response):
     assert isinstance(response, six.text_type)
 
     oid_start, oid_end = oid.rsplit(".", 1)
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(oid_start, [oid_end]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(oid_start, [oid_end]),
+    )
 
     assert table[0][0] == expected_response
     assert isinstance(table[0][0], six.text_type)
@@ -284,14 +285,15 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config):
         raise NotImplementedError()
 
     with pytest.raises(MKSNMPError, match=exc_match):
-        snmp.get_snmp_table(snmp_config,
-                            check_plugin_name=None,
-                            oid_info=(".1.3.6.1.2.1.1", [
-                                "1.0",
-                                "2.0",
-                                "5.0",
-                            ]),
-                            use_snmpwalk_cache=False)
+        snmp.get_snmp_table(
+            snmp_config,
+            check_plugin_name=None,
+            oid_info=(".1.3.6.1.2.1.1", [
+                "1.0",
+                "2.0",
+                "5.0",
+            ]),
+        )
 
 
 def test_get_simple_snmp_table_wrong_credentials(snmp_config):
@@ -311,14 +313,15 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
         raise NotImplementedError()
 
     with pytest.raises(MKSNMPError, match=exc_match):
-        snmp.get_snmp_table(snmp_config,
-                            check_plugin_name=None,
-                            oid_info=(".1.3.6.1.2.1.1", [
-                                "1.0",
-                                "2.0",
-                                "5.0",
-                            ]),
-                            use_snmpwalk_cache=False)
+        snmp.get_snmp_table(
+            snmp_config,
+            check_plugin_name=None,
+            oid_info=(".1.3.6.1.2.1.1", [
+                "1.0",
+                "2.0",
+                "5.0",
+            ]),
+        )
 
 
 @pytest.mark.parametrize("bulk", [True, False])
@@ -327,14 +330,15 @@ def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
     cfg_dict["is_bulkwalk_host"] = bulk
     snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.1", [
-                                    "1.0",
-                                    "2.0",
-                                    "5.0",
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.1", [
+            "1.0",
+            "2.0",
+            "5.0",
+        ]),
+    )
 
     assert table == [
         [
@@ -347,14 +351,15 @@ def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
 
 
 def test_get_simple_snmp_table(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.1", [
-                                    "1.0",
-                                    "2.0",
-                                    "5.0",
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.1", [
+            "1.0",
+            "2.0",
+            "5.0",
+        ]),
+    )
 
     assert table == [
         [
@@ -367,15 +372,16 @@ def test_get_simple_snmp_table(snmp_config):
 
 
 def test_get_simple_snmp_table_oid_end(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.2.2.1", [
-                                    "1",
-                                    "2",
-                                    "3",
-                                    snmp_utils.OID_END,
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "1",
+            "2",
+            "3",
+            snmp_utils.OID_END,
+        ]),
+    )
 
     assert table == [
         [u'1', u'lo', u'24', u'1'],
@@ -384,15 +390,16 @@ def test_get_simple_snmp_table_oid_end(snmp_config):
 
 
 def test_get_simple_snmp_table_oid_string(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.2.2.1", [
-                                    "1",
-                                    "2",
-                                    "3",
-                                    snmp_utils.OID_STRING,
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "1",
+            "2",
+            "3",
+            snmp_utils.OID_STRING,
+        ]),
+    )
 
     assert table == [
         [u'1', u'lo', u'24', u'.1.3.6.1.2.1.2.2.1.1.1'],
@@ -401,15 +408,16 @@ def test_get_simple_snmp_table_oid_string(snmp_config):
 
 
 def test_get_simple_snmp_table_oid_bin(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.2.2.1", [
-                                    "1",
-                                    "2",
-                                    "3",
-                                    snmp_utils.OID_BIN,
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "1",
+            "2",
+            "3",
+            snmp_utils.OID_BIN,
+        ]),
+    )
 
     assert table == [
         [u'1', u'lo', u'24', u'\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x01'],
@@ -418,15 +426,16 @@ def test_get_simple_snmp_table_oid_bin(snmp_config):
 
 
 def test_get_simple_snmp_table_oid_end_bin(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.2.2.1", [
-                                    "1",
-                                    "2",
-                                    "3",
-                                    snmp_utils.OID_END_BIN,
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "1",
+            "2",
+            "3",
+            snmp_utils.OID_END_BIN,
+        ]),
+    )
 
     assert table == [
         [u'1', u'lo', u'24', u'\x01'],
@@ -435,12 +444,13 @@ def test_get_simple_snmp_table_oid_end_bin(snmp_config):
 
 
 def test_get_simple_snmp_table_with_hex_str(snmp_config):
-    table = snmp.get_snmp_table(snmp_config,
-                                check_plugin_name=None,
-                                oid_info=(".1.3.6.1.2.1.2.2.1", [
-                                    "6",
-                                ]),
-                                use_snmpwalk_cache=False)
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "6",
+        ]),
+    )
 
     assert table == [
         [u''],

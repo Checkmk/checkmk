@@ -168,8 +168,16 @@ def create_snmp_host_config(hostname):
     return host_config.snmp_config(address)
 
 
+def get_snmp_table(snmp_config, check_plugin_name, oid_info):
+    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False)
+
+
+def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
+    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True)
+
+
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
+def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )

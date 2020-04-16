@@ -261,17 +261,15 @@ class SNMPDataSource(ABCSNMPDataSource):
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
+            get_snmp = snmp.get_snmp_table_cached if self._use_snmpwalk_cache else snmp.get_snmp_table
             if isinstance(oid_info, list):
                 check_info = []  # type: List[SNMPTable]
                 for entry in oid_info:
-                    check_info_part = snmp.get_snmp_table(snmp_config, check_plugin_name, entry,
-                                                          self._use_snmpwalk_cache)
+                    check_info_part = get_snmp(snmp_config, check_plugin_name, entry)
                     check_info.append(check_info_part)
                 info[section_name] = check_info
             else:
-                info[section_name] = snmp.get_snmp_table(snmp_config, check_plugin_name, oid_info,
-                                                         self._use_snmpwalk_cache)
-
+                info[section_name] = get_snmp(snmp_config, check_plugin_name, oid_info)
         return info
 
     @staticmethod

@@ -1394,11 +1394,11 @@ class AutomationDiagHost(Automation):
         )
 
         # TODO: It is unclear why mypy complains about this structure. Investigate!
-        data = snmp.get_snmp_table(
+        data = snmp.get_snmp_table_cached(
             snmp_config,
             "",
             ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
-            use_snmpwalk_cache=True)
+        )
 
         if data:
             return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(

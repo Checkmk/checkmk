@@ -26,26 +26,16 @@ else:
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
-from testlib.utils import (
-    repo_path,
-    cmk_path,
-    cme_path,
-    cmc_path,
-    current_branch_name,
-    virtualenv_path,
-    get_cmk_download_credentials,
-    is_running_as_site_user,
-    site_id,
-    add_python_paths,
-    is_enterprise_repo,
-    is_managed_repo,
-    get_standard_linux_agent_output,
+from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
+    get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
+    is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
 )
-from testlib.fixtures import web, ec
-from testlib.site import Site, SiteFactory
-from testlib.version import CMKVersion
-from testlib.web_session import CMKWebSession, APIError
-from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
+from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
+from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
+from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
+from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
+from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -168,7 +158,10 @@ def import_module(pathname):
 
     if sys.version_info[0] >= 3:
         import importlib  # pylint: disable=import-outside-toplevel
-        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # pylint: disable=no-value-for-parameter,deprecated-method
+        # TODO: load_module() is deprecated, we should avoid using it.
+        # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
+        # mypy is confused about its arguments.
+        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
 
     import imp  # pylint: disable=import-outside-toplevel
     try:
@@ -208,7 +201,8 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
 
     def __exit__(self, *exc_info):
         try:
-            self._log.close()
+            if self._log is not None:
+                self._log.close()
         except AttributeError:
             pass
 
@@ -227,6 +221,8 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
                             (match_for, self._log_path, timeout))
 
     def _check_for_line(self, match_for, timeout):
+        if self._log is None:
+            raise Exception("no log file")
         timeout_at = time.time() + timeout
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))
@@ -243,10 +239,10 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
         return False
 
 
-def create_linux_test_host(request, web, site, hostname):
+def create_linux_test_host(request, web_fixture, site, hostname):
     def finalizer():
-        web.delete_host(hostname)
-        web.activate_changes()
+        web_fixture.delete_host(hostname)
+        web_fixture.activate_changes()
 
         for path in [
                 "var/check_mk/agent_output/%s" % hostname,
@@ -261,7 +257,7 @@ def create_linux_test_host(request, web, site, hostname):
 
     request.addfinalizer(finalizer)
 
-    web.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    web_fixture.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
 
     site.write_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
@@ -353,8 +349,7 @@ class Check(BaseCheck):
 
     def default_parameters(self):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        params = {}
-        return config._update_with_default_check_parameters(self.name, params)
+        return config._update_with_default_check_parameters(self.name, {})
 
     def run_parse(self, info):
         parse_func = self.info.get("parse_function")

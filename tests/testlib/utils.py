@@ -8,14 +8,14 @@
 
 from __future__ import print_function
 
+import logging
 import os
+import pwd
 import re
 import subprocess
 import sys
-import pwd
-import logging
+from typing import Optional  # pylint: disable=unused-import
 
-# Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
@@ -51,15 +51,14 @@ def is_managed_repo():
 
 
 def virtualenv_path(version=None):
+    # type: (Optional[int]) -> Path
     if version is None:
         version = sys.version_info[0]
 
     venv = subprocess.check_output(
         [repo_path() + "/scripts/run-pipenv",
          str(version), "--bare", "--venv"])
-    if not isinstance(venv, six.text_type):
-        venv = venv.decode("utf-8")
-    return Path(venv.rstrip("\n"))
+    return Path(six.ensure_str(venv).rstrip("\n"))
 
 
 def current_branch_name():

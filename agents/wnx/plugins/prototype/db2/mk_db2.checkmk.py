@@ -248,7 +248,7 @@ class Database():
 
         for db_name in db_names:
             db.process_databases(database=db_name,
-                                 port=Database.find_port(instance=instance, database=db_name),
+                                 port=int(Database.find_port(instance=instance, database=db_name)),
                                  now=cur_time,
                                  instance=instance)
 
@@ -287,7 +287,8 @@ class Database():
                           universal_newlines=True,
                           close_fds=True,
                           bufsize=0)
-
+            if shell.stdin is None or shell.stdout is None:
+                raise Exception("Huh? stdin or stdout vanished...")
             shell.stdin.write("@set DB2CLP=DB20FADE\n")
             shell.stdin.write("@db2 connect to SAMPLE\n")
             shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')

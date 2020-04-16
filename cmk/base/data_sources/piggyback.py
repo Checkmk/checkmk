@@ -18,6 +18,7 @@ from cmk.utils.piggyback import (  # pylint: disable=unused-import
 import cmk.base.config as config
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     RawAgentData, ServiceCheckResult)
+from cmk.base.exceptions import MKAgentError
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from .abstract import AbstractDataFetcher, CheckMKAgentDataSource
@@ -108,9 +109,9 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
     def _execute(self):
         # type: () -> RawAgentData
         with PiggyBackDataFetcher(self._hostname, self._ipaddress, self._time_settings) as fetcher:
-            raw_data = fetcher.data()
             self._summary = fetcher.summary()
-        return raw_data
+            return fetcher.data()
+        raise MKAgentError("Failed to read data")
 
     def _get_raw_data(self):
         # type: () -> Tuple[RawAgentData, bool]

@@ -254,8 +254,8 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
 
         with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
                              self._credentials["password"], self._logger) as fetcher:
-            data = fetcher.data()
-        return data
+            return fetcher.data()
+        raise MKAgentError("Failed to read data")
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

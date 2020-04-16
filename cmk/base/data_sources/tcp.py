@@ -209,11 +209,10 @@ class TCPDataSource(CheckMKAgentDataSource):
                 self._logger,
         ) as fetcher:
             output = fetcher.data()
-
-        if len(output) < 16:
-            raise MKAgentError("Too short output from agent: %r" % output)
-
-        return output
+            if len(output) < 16:
+                raise MKAgentError("Too short output from agent: %r" % output)
+            return output
+        raise MKAgentError("Failed to read data")
 
     def describe(self):
         # type: () -> str

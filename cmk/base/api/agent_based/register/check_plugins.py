@@ -82,12 +82,12 @@ def _validate_function_args(plugin_name, func_type, function, has_item, has_para
 
     if len(sections) == 1:
         pos, name = next(parameters)
-        if name not in ('section', '_section'):
+        if name != 'section':
             raise TypeError("[%s]: %s function must have 'section' as %d. argument, got %r" %
                             (plugin_name, func_type, pos, name))
     else:
         for (pos, name), section in itertools.zip_longest(parameters, sections):
-            if name not in ("section_%s" % section, "_section_%s" % section):
+            if name != "section_%s" % section:
                 raise TypeError("[%s]: %s function must have 'section_%s' as %d. argument, got %r" %
                                 (plugin_name, func_type, section, pos, name))
 

@@ -241,18 +241,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
                 new_first_column.append((o, six.ensure_binary(suboid) + b"." + col_val))
             columns[0] = fetchoid, new_first_column, value_encoding
 
-        # Here we have to deal with a nasty problem: Some brain-dead devices
-        # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
-        # in the interfaces MIB with 64 bit counters. So we need to look at
-        # the OIDs and watch out for gaps we need to fill with dummy values.
-        sanitized_columns = _sanitize_snmp_table_columns(columns)
-
-        # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
-        # get python byte strings. But for Check_MK we need unicode strings now.
-        # Convert them by using the standard Check_MK approach for incoming data
-        decoded_columns = _sanitize_snmp_encoding(snmp_config, sanitized_columns)
-
-        info += _construct_snmp_table_of_rows(decoded_columns)
+        info += _make_table(columns, snmp_config)
 
     return info
 
@@ -306,6 +295,22 @@ def _make_index_rows(max_column, index_format, fetchoid):
             raise MKGeneralException("Invalid index format %r" % (index_format,))
         index_rows.append((o, val))
     return index_rows
+
+
+def _make_table(columns, snmp_config):
+    # type: (ResultColumnsUnsanitized, SNMPHostConfig) -> SNMPTable
+    # Here we have to deal with a nasty problem: Some brain-dead devices
+    # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
+    # in the interfaces MIB with 64 bit counters. So we need to look at
+    # the OIDs and watch out for gaps we need to fill with dummy values.
+    sanitized_columns = _sanitize_snmp_table_columns(columns)
+
+    # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
+    # get python byte strings. But for Check_MK we need unicode strings now.
+    # Convert them by using the standard Check_MK approach for incoming data
+    decoded_columns = _sanitize_snmp_encoding(snmp_config, sanitized_columns)
+
+    return _construct_snmp_table_of_rows(decoded_columns)
 
 
 # Contextes can only be used when check_plugin_name is given.

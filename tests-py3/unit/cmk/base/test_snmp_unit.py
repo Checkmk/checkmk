@@ -86,7 +86,7 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 
-    # only conduct furhter tests for legacy spec
+    # only conduct further tests for legacy spec
     if (isinstance(snmp_info, SNMPTree) or
             isinstance(snmp_info, list) and all(isinstance(t, SNMPTree) for t in snmp_info)):
         return
@@ -97,10 +97,10 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     # ... using those to get the snmp data, ...
     reformatted_values = get_all_snmp_tables(snmp_info_as_tree_list)
 
-    # ... and then applying the layout recover function
+    # ... and then applying the layout recovery function
     recovered = layout_recovery(reformatted_values)
 
-    # ... we should get the originally expected data
+    # ... we should get the expected data
     assert recovered == expected_values
 
 

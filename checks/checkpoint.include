@@ -6,15 +6,10 @@
 
 
 def scan_checkpoint(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0", "")
-    return (
-        # Entry in sysDescr, varies a bit
-        (len(sys_descr.split(" ")) >= 3 and sys_descr.split(" ")[2].endswith("cp")) or
-        sys_descr.startswith("IPSO ") or
-        (sys_descr.startswith("Linux") and "cpx" in
-         sys_descr)) \
-      and \
-         oid(".1.3.6.1.4.1.2620.1.1.21.0", "").lower().startswith('firewall')
+    # we must keep this function with the current name, as long as
+    # not all checkpoint check plugins are migrated.
+    # see cmk.base.plugins.agent_based.utils.checkpoint.DETECT
+    raise NotImplementedError("already migrated")
 
 
 checkpoint_sensorstatus_to_nagios = {

@@ -1,0 +1,15 @@
+Title: Quicksearch: Validate if search string contains lookahead
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1587028382
+Class: fix
+
+If you enter a string containing lookaheads like "foo(?!bar)" you get a
+livestatus error like "Unhandled exception: 400: Filter: invalid perl operator:
+(?!".
+
+This has been fixed. You will now get a message within the quicksearch,
+that this input is not valid.

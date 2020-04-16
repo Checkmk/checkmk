@@ -115,6 +115,15 @@ def _to_regex(s):
             _('You search statement is not valid. You need to provide a regular '
               'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
               'if you like to search for a single backslash.'))
+
+    # livestatus uses re2 and re can not validate posix pattern, so we have to
+    # check for lookaheads here
+    lookahead_pattern = r'\((\?!|\?=|\?<)'
+
+    if re.search(lookahead_pattern, s):
+        raise MKGeneralException(
+            _('You search statement is not valid. You can not use a lookahead here.'))
+
     return s
 
 

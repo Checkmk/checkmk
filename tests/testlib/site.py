@@ -22,7 +22,6 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
-from six.moves.urllib.parse import urlparse
 
 from testlib.utils import (
     cmk_path,
@@ -99,7 +98,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         assert not path.startswith("http")
         assert "://" not in path
 
-        if "/" not in urlparse(path).path:
+        if "/" not in six.moves.urllib.parse.urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.id, path)
         return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
 
@@ -250,35 +249,21 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
-
-        if not self._is_running_as_site_user():
-            sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
-            cmd = [
+        cmd_txt = (
+            subprocess.list2cmdline(cmd) if self._is_running_as_site_user() else  #
+            " ".join([
                 "sudo", "su", "-l", self.id, "-c",
-                pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
-            ]
-            cmd_txt = " ".join(cmd)
-            return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
-
-        sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-        return Popen(  # nosec
-            subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
+                pipes.quote(" ".join(pipes.quote(p) for p in cmd))
+            ]))
+        sys.stdout.write("Executing: %s\n" % cmd_txt)
+        # TODO: Kick out our own Popen after the Python 3 migration, it's a
+        # valley of tears typing-wise...
+        return Popen(cmd_txt, shell=True, *args, **kwargs)  # type: ignore[call-overload] # nosec
 
     def omd(self, mode, *args):
-        if not self._is_running_as_site_user():
-            cmd = ["sudo"]
-        else:
-            cmd = []
-
-        cmd += ["/usr/bin/omd", mode]
-
-        if not self._is_running_as_site_user():
-            cmd += [self.id]
-        else:
-            cmd += []
-
-        cmd += args
-
+        # type: (str, str) -> int
+        sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
+        cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
         return subprocess.call(cmd)
 
@@ -642,7 +627,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 "WATO does not seem to be initialized: %r" % response
 
         logger.debug("Waiting for WATO files to be created...")
-        wait_time = 20
+        wait_time = 20.0
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)
             wait_time -= 0.5

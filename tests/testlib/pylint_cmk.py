@@ -132,7 +132,9 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
         if new_line is not None:
             msg = msg._replace(line=new_line)
 
-        super(CMKFixFileMixin, self).handle_message(msg)
+        # NOTE: I'm too lazy to define a Protocol for this mixin which is
+        # already on death row, so let's use a reflection hack...
+        getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
 
     def _change_path_to_repo_path(self, msg):
         return os.path.relpath(msg.abspath, cmk_path())
@@ -148,11 +150,7 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
             if line.startswith("# ORIG-FILE: "):
                 orig_file = line.split(": ", 1)[1].strip()
                 break
-
-        if orig_file is None:
-            went_back = None
-
-        return orig_file, went_back
+        return orig_file, (None if orig_file is None else went_back)
 
 
 class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
@@ -161,9 +159,11 @@ class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inherit
     Can be useful to track down pylint performance issues. Simply make the
     reporter class inherit from this class to use it."""
     def on_set_current_module(self, modname, filepath):
-        super(CMKOutputScanTimesMixin, self).on_set_current_module(modname, filepath)
+        # HACK: See note above.
+        getattr(super(CMKOutputScanTimesMixin, self), "on_set_current_module")(modname, filepath)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
+                                  getattr(self, "_current_filepath")))
 
         print("          %s..." % filepath)
         self._current_name = modname
@@ -172,9 +172,11 @@ class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inherit
         self._current_start_time = time.time()
 
     def on_close(self, stats, previous_stats):
-        super(CMKOutputScanTimesMixin, self).on_close(stats, previous_stats)
+        # HACK: See note above.
+        getattr(super(CMKOutputScanTimesMixin, self), "on_close")(stats, previous_stats)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
+                                  getattr(self, "_current_filepath")))
 
 
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):

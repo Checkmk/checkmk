@@ -62,10 +62,9 @@ def virtualenv_path(version=None):
 
 
 def current_branch_name():
+    # type: () -> str
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    if not isinstance(branch_name, six.text_type):
-        branch_name = branch_name.decode("utf-8")
-    return branch_name.split("\n", 1)[0]
+    return six.ensure_str(branch_name).split("\n", 1)[0]
 
 
 def current_base_branch_name():
@@ -75,10 +74,7 @@ def current_base_branch_name():
     # current branches git log one step by another and check which branches contain these
     # commits. Only search for our main (master + major-version) branches
     commits = subprocess.check_output(["git", "rev-list", "--max-count=30", branch_name])
-    if not isinstance(commits, six.text_type):
-        commits = commits.decode("utf-8")
-
-    for commit in commits.strip().split("\n"):
+    for commit in six.ensure_str(commits).strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out by jenkins do not create all
         # the branches locally
 
@@ -97,10 +93,7 @@ def current_base_branch_name():
         #        return head
 
         lines = subprocess.check_output(["git", "branch", "-r", "--contains", commit])
-        if not isinstance(lines, six.text_type):
-            lines = lines.decode("utf-8")
-
-        for line in lines.strip().split("\n"):
+        for line in six.ensure_str(lines).strip().split("\n"):
             if not line:
                 continue
             head = line.split()[0]

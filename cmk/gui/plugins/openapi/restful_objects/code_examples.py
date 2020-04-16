@@ -92,8 +92,21 @@ def _build_code_templates():
 
     We don't want to build all this stuff at the module-level as it is only needed when
     re-generating the SPEC file.
+
+    >>> tmpls = _build_code_templates()
+    >>> result = tmpls['curl'].render(
+    ...     request_endpoint='foo',
+    ...     request_method='get',
+    ...     request_schema=resolve_schema_instance('CreateHost')
+    ... )
+    >>> assert '&' not in result
+
     """
-    tmpl_env = jinja2.Environment(
+    # NOTE:
+    # This is not a security problem, as this is an Environment which accepts no data from the web
+    # but is only used to fill in our code examples.
+    tmpl_env = jinja2.Environment(  # nosec
+        autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.BaseLoader(),
         undefined=jinja2.StrictUndefined,
         keep_trailing_newline=True,
@@ -112,7 +125,8 @@ def _build_code_templates():
         parameters=SPEC.components._parameters,
     )
 
-    # NOTE: To add a new code-example, just add them to this OrderedDict.
+    # NOTE: To add a new code-example, just add them to this OrderedDict. The examples will
+    # appear in the order they are put in here.
     return collections.OrderedDict([
         ('curl', tmpl_env.from_string(CODE_TEMPLATE_CURL)),
         ('httpie', tmpl_env.from_string(CODE_TEMPLATE_HTTPIE)),

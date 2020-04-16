@@ -136,7 +136,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             parse_function = section_def.parse_function
 
         try:
-            string_table = hosts_raw_sections[raw_section_name]
+            string_table = hosts_raw_sections[str(raw_section_name)]
         except KeyError:
             return self._parsed_renamed_sections.setdefault(cache_key, None)
 

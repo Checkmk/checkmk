@@ -168,11 +168,13 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     console.step("Executing discovery plugins (%d)" % len(check_plugin_names))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
-    discovered_services, discovered_host_labels = _discover_services(hostname,
-                                                                     ipaddress,
-                                                                     sources,
-                                                                     multi_host_sections,
-                                                                     on_error=on_error)
+    discovered_services = _discover_services(
+        hostname,
+        ipaddress,
+        sources,
+        multi_host_sections,
+        on_error=on_error,
+    )
 
     # There are three ways of how to merge existing and new discovered checks:
     # 1. -II without --checks=
@@ -207,6 +209,13 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
             services_per_plugin[discovered_service.check_plugin_name] += 1
 
     autochecks.save_autochecks_file(hostname, new_services)
+
+    discovered_host_labels = _discover_host_labels(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        on_error=on_error,
+    )
 
     new_host_labels, host_labels_per_plugin = \
         _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new)
@@ -837,6 +846,47 @@ def schedule_discovery_check(hostname):
 #   '----------------------------------------------------------------------'
 
 
+def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
+    # type: (str, Optional[str], data_sources.MultiHostSections, str) -> DiscoveredHostLabels
+    discovered_host_labels = DiscoveredHostLabels()
+    host_key = (hostname, ipaddress)
+
+    try:
+        host_data = multi_host_sections.get_host_sections()[host_key]
+    except KeyError:
+        return discovered_host_labels
+
+    try:
+        raw_sections = [PluginName(n) for n in host_data.sections]
+        # We do *not* process all available raw sections. Instead we see which *parsed*
+        # sections would result from them, and then process those.
+        section_plugins = (config.get_registered_section_plugin(rs) for rs in raw_sections)
+        parsed_sections = {p.parsed_section_name for p in section_plugins if p is not None}
+
+        for parsed_section_name in sorted(parsed_sections):
+            try:
+                plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
+                section = multi_host_sections.get_parsed_section(parsed_section_name, host_key)
+                if plugin is None or section is None:
+                    continue
+                for label in plugin.host_label_function(section):
+                    label.plugin_name = str(plugin.name)
+                    discovered_host_labels.add_label(label)
+            except (KeyboardInterrupt, MKTimeout):
+                raise
+            except Exception as exc:
+                if cmk.utils.debug.enabled() or on_error == "raise":
+                    raise
+                if on_error == "warn":
+                    console.error("Host label discovery of '%s' failed: %s\n" %
+                                  (parsed_section_name, exc))
+
+    except KeyboardInterrupt:
+        raise MKGeneralException("Interrupted by Ctrl-C.")
+
+    return discovered_host_labels
+
+
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
 # services. The table has the following columns:
@@ -855,14 +905,19 @@ def schedule_discovery_check(hostname):
 # "ignore" -> silently ignore any exception
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
-def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[List[DiscoveredService], DiscoveredHostLabels]
+def _discover_services(
+    hostname,  # type: str
+    ipaddress,  # type: Optional[str]
+    sources,  # type: data_sources.DataSources
+    multi_host_sections,  # type: data_sources.MultiHostSections
+    on_error,  # type: str
+):
+    # type: (...) -> List[DiscoveredService]
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 
     discovered_services = []  # type: List[DiscoveredService]
-    discovered_host_labels = DiscoveredHostLabels()
     try:
         for check_plugin_name in sources.get_check_plugin_names():
             try:
@@ -871,8 +926,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     if isinstance(entry, DiscoveredService):
                         discovered_services.append(entry)
                     elif isinstance(entry, HostLabel):
-                        entry.plugin_name = check_plugin_name
-                        discovered_host_labels.add_label(entry)
+                        pass
                     else:
                         raise TypeError("unexpectedly discovered %r" % type(entry))
             except (KeyboardInterrupt, MKTimeout):
@@ -894,7 +948,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     discovered_service.item) not in check_table_formatted:
                 discovered_services.remove(discovered_service)
 
-        return discovered_services, discovered_host_labels
+        return discovered_services
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -1189,8 +1243,13 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     sources.enforce_check_plugin_names(check_plugin_names)
 
     # Handle discovered services -> "new"
-    discovered_services, discovered_host_labels = _discover_services(hostname, ipaddress, sources,
-                                                                     multi_host_sections, on_error)
+    discovered_services = _discover_services(
+        hostname,
+        ipaddress,
+        sources,
+        multi_host_sections,
+        on_error,
+    )
     for discovered_service in discovered_services:
         services.setdefault((discovered_service.check_plugin_name, discovered_service.item),
                             ("new", discovered_service))
@@ -1200,6 +1259,13 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
         table_id = existing_service.check_plugin_name, existing_service.item
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
+
+    discovered_host_labels = _discover_host_labels(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        on_error,
+    )
 
     return services, discovered_host_labels
 

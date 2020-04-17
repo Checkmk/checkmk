@@ -48,18 +48,12 @@ def check_cisco_cpu(item, params, info):
     else:
         util = float(info[0][0])
 
-    state = 0
-    infotext = "%.1f%% utilization in the last 5 minutes" % util
+    warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
 
-    warn, crit = params
-    if util >= crit:
-        state = 2
-    elif util >= warn:
-        state = 1
-    if state > 0:
-        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
-
-    return state, infotext, [("util", util, warn, crit, 0, 100)]
+    return check_levels(util,
+                        "util", (warn, crit),
+                        human_readable_func=get_percent_human_readable,
+                        infoname="Utilization in the last 5 minutes")
 
 
 check_info["cisco_cpu"] = {

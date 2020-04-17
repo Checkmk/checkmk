@@ -199,7 +199,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
         max_len = 0
         max_len_col = -1
 
-        for colno, column in enumerate(targetcolumns):
+        for column in targetcolumns:
             fetchoid = _compute_fetch_oid(oid, suboid, column)
             value_encoding = _value_encoding(column)
             # column may be integer or string like "1.5.4.2.3"
@@ -210,21 +210,22 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
             # similar: we fill in the complete OID of the entry, either as
             # string or as binary UTF-8 encoded number string
             if column in SPECIAL_COLUMNS:
-                if index_column >= 0 and index_column != colno:
+                if index_column >= 0 and index_column != len(columns):
                     raise MKGeneralException(
                         "Invalid SNMP OID specification in implementation of check. "
                         "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING."
                     )
                 rowinfo = []
-                index_column = colno
-                index_format = column
             else:
                 rowinfo = _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column,
                                         use_snmpwalk_cache)
-                number_of_rows = len(rowinfo)
-                if number_of_rows > max_len:
-                    max_len = number_of_rows
-                    max_len_col = colno
+
+            if column in SPECIAL_COLUMNS:
+                index_column = len(columns)
+                index_format = column
+            elif len(rowinfo) > max_len:
+                max_len_col = len(columns)
+            max_len = max(max_len, len(rowinfo))
             columns.append((fetchoid, rowinfo, value_encoding))
 
         if index_column != -1:

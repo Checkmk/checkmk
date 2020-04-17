@@ -59,6 +59,17 @@ DATA_3TUPLE = [
 ]
 
 
+@pytest.mark.parametrize("column", [
+    snmp_utils.OID_END,
+    snmp_utils.OID_STRING,
+    snmp_utils.OID_BIN,
+    snmp_utils.OID_END_BIN,
+    snmp_utils.OID_END_OCTET_STRING,
+])
+def test_value_encoding(column):
+    assert snmp._value_encoding(column) == "string"
+
+
 @pytest.mark.parametrize("snmp_info, expected_values", [
     (
         SNMPTree(

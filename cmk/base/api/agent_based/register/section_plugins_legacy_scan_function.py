@@ -23,10 +23,13 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection  # type: ignore[import]
+from cmk.base.plugins.agent_based.utils import (  # type: ignore[import]
+    checkpoint, ucd_hr_detection, printer,
+)
 
 MIGRATED_SCAN_FUNCTIONS = {
     "scan_checkpoint": checkpoint.DETECT,
+    "scan_ricoh_printer": printer.DETECT_RICOH,
     "_is_ucd": ucd_hr_detection.UCD,
     "is_ucd": ucd_hr_detection.UCD,
     "is_hr": ucd_hr_detection.HR,
@@ -69,12 +72,6 @@ def _explicit_conversions(function_name):
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.231'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.311'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072'),
-        )
-
-    if function_name == 'scan_ricoh_printer':
-        return all_of(
-            contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.367.1.1"),
-            exists(".1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1"),
         )
 
     if function_name == 'is_fsc':

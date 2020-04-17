@@ -8,7 +8,7 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-CMAKE_VERSION=3.16.2
+CMAKE_VERSION=3.17.1
 DIR_NAME=cmake-${CMAKE_VERSION}-Linux-x86_64
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR=/opt

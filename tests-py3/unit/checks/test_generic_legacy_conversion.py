@@ -142,7 +142,7 @@ def test_scan_function_translation(snmp_scan_functions):
     ("printer_pages", "scan_ricoh_printer"),
     ("fsc_temp", "is_fsc"),
     ("df_netapp32", "is_netapp_filer"),
-    ("cisco_cpu", "_has_table_8"),
+    ("cisco_cpu", "_has_table_2"),
     ("cisco_cpu", "_is_cisco"),
     ("cisco_cpu", "_is_cisco_nexus"),
 ])

@@ -602,18 +602,14 @@ def _snmpv3_contexts_of(snmp_config, check_plugin_name):
 
 def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool) -> SNMPRowInfo
-    is_cachable = isinstance(column, snmp_utils.OIDCached)
-    rowinfo = None  # type: Optional[SNMPRowInfo]
-    if is_cachable and use_snmpwalk_cache:
-        # Returns either the cached SNMP walk or None when nothing is cached
-        rowinfo = _get_cached_snmpwalk(snmp_config.hostname, fetchoid)
-
-    if rowinfo is None:
-        rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid)
-
-        if is_cachable:
-            _save_snmpwalk_cache(snmp_config.hostname, fetchoid, rowinfo)
-
+    save_to_cache = isinstance(column, snmp_utils.OIDCached)
+    get_from_cache = save_to_cache and use_snmpwalk_cache
+    cached = _get_cached_snmpwalk(snmp_config.hostname, fetchoid) if get_from_cache else None
+    if cached is not None:
+        return cached
+    rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid)
+    if save_to_cache:
+        _save_snmpwalk_cache(snmp_config.hostname, fetchoid, rowinfo)
     return rowinfo
 
 

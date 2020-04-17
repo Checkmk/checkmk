@@ -47,6 +47,21 @@ SNMP_SCAN_FUNCTIONS = config.snmp_scan_functions.copy()
             },
             True,
         ),
+        # make sure casing is ignored
+        (
+            "hwg_humidity",
+            {
+                ".1.3.6.1.2.1.1.1.0": "contains lower HWG"
+            },
+            True,
+        ),
+        (
+            "hwg_ste2",
+            {
+                ".1.3.6.1.2.1.1.1.0": "contains STE2"
+            },
+            True,
+        ),
         (
             "aironet_clients",
             {

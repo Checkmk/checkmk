@@ -16,9 +16,9 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.gui.escaping as escaping
 
-if cmk_version.is_managed_edition():
+try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
+except ImportError:
     managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config

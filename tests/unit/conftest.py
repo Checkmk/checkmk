@@ -31,6 +31,10 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
     store.makedirs(cmk.utils.paths.omd_root + '/var/log')
     store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
+    _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
 
 
 def _touch(path):

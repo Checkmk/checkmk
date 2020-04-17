@@ -4,51 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# We are not sure how to safely detect the UCD SNMP Daemon. We know that
-# it is mainly used on Linux, but not only. But fetching and OID outside
-# of the info area for scanning is not a good idea. It will slow down
-# scans for *all* hosts.
-
-#   ---ucd cpu load---------------------------------------------------------
-
-# We prefer HOST-RESOURCES-MIB implementation but not in case
-# of check 'ucd_cpu_load' because the HR-MIB has not data
-# about cpu load
+# The content of this include file has been migrated to cmk/base/plugins/agent_based/utils/ucd_hr_detection.py
+# We must keep the functions here for the moment, to keep the auto migration working.
 
 
 def is_ucd(oid):
-    return _is_ucd(oid)
+    raise NotImplementedError("already migrated")
 
 
 #   ---general ucd/hr-------------------------------------------------------
 
 
 def is_hr(oid):
-    return bool(oid('.1.3.6.1.2.1.25.1.1.0'))
+    raise NotImplementedError("already migrated")
 
 
 def prefer_hr_else_ucd(oid):
-    return _is_ucd(oid) and not oid(".1.3.6.1.2.1.25.1.1.0")
+    raise NotImplementedError("already migrated")
 
 
 #   ---memory---------------------------------------------------------------
 
 
 def is_ucd_mem(oid):
-    # Avoid inverting output of a function in a check plugin and be
-    # descriptive about what a function is actually doing
-    if _ignore_both(oid):
-        return False
-    return _is_ucd_mem(oid)
+    raise NotImplementedError("already migrated")
 
 
 def is_hr_mem(oid):
-    # We prefer HOST-RESOURCES-MIB implementation but not in case
-    # of devices, which are known to report incorrect information
-    # about mem usage
-    if _ignore_both(oid):
-        return False
-    return not _is_ucd_mem(oid)
+    raise NotImplementedError("already migrated")
 
 
 #   ---helper---------------------------------------------------------------
@@ -58,43 +41,12 @@ def is_hr_mem(oid):
 
 
 def _is_ucd(oid):
-    return ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "cmc-tc" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "hp onboard administrator" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "genugate" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "bomgar" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "pulse secure" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            # Artec email archive appliances
-            (oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' and
-             "version" in oid(".1.3.6.1.2.1.1.1.0").lower() and
-             "serial" in oid(".1.3.6.1.2.1.1.1.0").lower()))
+    raise NotImplementedError("already migrated")
 
 
 def _is_ucd_mem(oid):
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
-    # Devices for which ucd_mem should be used
-    # if and only if HR-table is not available
-    for name in [
-            "pfsense",
-            "ironport model c3",
-            "bomgar",
-    ]:
-        if name in sys_descr and not oid(".1.3.6.1.2.1.25.1.1.0"):
-            return True
-
-    # Astaro and Synology are Linux but should use hr_mem
-    # Otherwise Cache/Buffers are included in used memory
-    # generating critical state
-    if oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072."):
-        return False
-
-    # Otherwise use ucd_mem for listed devices in _is_ucd.
-    return _is_ucd(oid)
+    raise NotImplementedError("already migrated")
 
 
 def _ignore_both(oid):
-    # Some devices report incorrect data on both HR and UCD, eg. F5 BigIP
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3375") \
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2620")
+    raise NotImplementedError("already migrated")

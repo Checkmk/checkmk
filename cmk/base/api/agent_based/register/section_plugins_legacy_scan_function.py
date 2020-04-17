@@ -23,10 +23,17 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import checkpoint  # type: ignore[import]
+from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection  # type: ignore[import]
 
 MIGRATED_SCAN_FUNCTIONS = {
     "scan_checkpoint": checkpoint.DETECT,
+    "_is_ucd": ucd_hr_detection.UCD,
+    "is_ucd": ucd_hr_detection.UCD,
+    "is_hr": ucd_hr_detection.HR,
+    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,
+    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,
+    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,
+    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,
 }
 
 if sys.version_info[0] >= 3:
@@ -51,6 +58,9 @@ else:
 
 def _explicit_conversions(function_name):
     # type: (str) -> SNMPDetectSpec
+    if function_name in MIGRATED_SCAN_FUNCTIONS:
+        return MIGRATED_SCAN_FUNCTIONS[function_name]
+
     if function_name == 'has_ifHCInOctets':
         return exists('.1.3.6.1.2.1.31.1.1.1.6.*')
 
@@ -59,23 +69,6 @@ def _explicit_conversions(function_name):
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.231'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.311'),
             startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072'),
-        )
-
-    if function_name == '_is_ucd':
-        return any_of(
-            contains(".1.3.6.1.2.1.1.1.0", "linux"),
-            contains(".1.3.6.1.2.1.1.1.0", "cmc-tc"),
-            contains(".1.3.6.1.2.1.1.1.0", "hp onboard administrator"),
-            contains(".1.3.6.1.2.1.1.1.0", "barracuda"),
-            contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-            contains(".1.3.6.1.2.1.1.1.0", "genugate"),
-            contains(".1.3.6.1.2.1.1.1.0", "bomgar"),
-            contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
-            all_of(
-                equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072.3.2.10'),
-                contains(".1.3.6.1.2.1.1.1.0", "version"),
-                contains(".1.3.6.1.2.1.1.1.0", "serial"),
-            ),
         )
 
     if function_name == 'scan_ricoh_printer':
@@ -361,7 +354,12 @@ def create_detect_spec(name, snmp_scan_function, fallback_files):
     if name in ("if", "if64"):
         raise NotImplementedError(name)
     if snmp_scan_function.__name__ in MIGRATED_SCAN_FUNCTIONS:
-        return MIGRATED_SCAN_FUNCTIONS[snmp_scan_function.__name__]
+        try:
+            _ = snmp_scan_function(lambda x, default=None: "")
+        except NotImplementedError as exc:
+            if str(exc) == "already migrated":
+                return MIGRATED_SCAN_FUNCTIONS[snmp_scan_function.__name__]
+        raise NotImplementedError("please remove migrated code entirely")
 
     scan_func_ast = _get_scan_function_ast(name, snmp_scan_function, fallback_files)
 

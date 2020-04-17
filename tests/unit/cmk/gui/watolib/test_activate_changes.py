@@ -15,9 +15,9 @@ import testlib
 
 @pytest.fixture(autouse=True)
 def restore_orig_replication_paths():
-    _orig_paths = cmk.gui.watolib.activate_changes._replication_paths
+    _orig_paths = activate_changes._replication_paths[:]
     yield
-    cmk.gui.watolib.activate_changes._replication_paths = _orig_paths
+    activate_changes._replication_paths = _orig_paths
 
 
 @pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])

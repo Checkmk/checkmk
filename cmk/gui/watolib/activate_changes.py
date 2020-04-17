@@ -618,8 +618,6 @@ class ActivateChangesManager(ActivateChanges):
         # type: () -> Dict[SiteId, SnapshotSettings]
         snapshot_settings = {}
 
-        site_configs = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
-
         for site_id in self._sites:
             self._check_snapshot_creation_permissions(site_id)
 
@@ -653,7 +651,7 @@ class ActivateChangesManager(ActivateChanges):
                 work_dir=work_dir,
                 snapshot_components=snapshot_components,
                 component_names=component_names,
-                site_config=site_configs[site_id],
+                site_config=config.sites[site_id],
             )
 
         return snapshot_settings

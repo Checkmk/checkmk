@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List  # pylint: disable=unused-import
+
 import shutil
-# No stub file
 import pytest  # type: ignore[import]
-# No stub file
 from testlib import cmk_path  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
@@ -735,7 +735,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     def plugin_nested_list():
         node = struct_tree.get_list("level0_2.level1_nested_list:")
         for index in range(10):
-            array = {"foo": []}
+            array = {"foo": []}  # type: Dict[str, List[Dict[str, str]]]
             for a, b in [("nl1", "NL1"), ("nl2", "NL2")]:
                 array["foo"].append({a: "%s-%s" % (b, index)})
             node.append(array)

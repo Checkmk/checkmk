@@ -10,6 +10,8 @@ import itertools
 import shutil
 import struct
 import uuid
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import pytest  # type: ignore[import]
 
 import cmk.utils.paths
@@ -60,7 +62,7 @@ def test_format_var_for_export_strip_nested_dict():
                 },
             },
         },
-    }
+    }  # type: Dict[str, Any]
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)
@@ -96,7 +98,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
                 "c": [{}],
             },
         },
-    }
+    }  # type: Dict[str, Any]
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)

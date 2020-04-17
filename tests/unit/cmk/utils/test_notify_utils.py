@@ -4,13 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Text  # pylint: disable=unused-import
+
 import cmk.utils.notify as notify
 
 
 def test_notification_result_message():
     """Regression test for Werk #8783"""
-    plugin, exit_code, output = 'bulk asciimail', 0, []
-    context = {'CONTACTNAME': 'harri', 'HOSTNAME': 'test'}
+    plugin = notify.NotificationPluginName('bulk asciimail')
+    exit_code = notify.NotificationResultCode(0)
+    output = []  # type: List[Text]
+    context = notify.NotificationContext({'CONTACTNAME': 'harri', 'HOSTNAME': 'test'})
     actual = notify.notification_result_message(plugin, context, exit_code, output)
     expected = "%s: %s;%s;%s;%s;%s;%s" % (
         'HOST NOTIFICATION RESULT',

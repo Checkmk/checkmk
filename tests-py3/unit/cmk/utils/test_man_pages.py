@@ -245,10 +245,12 @@ def test_print_man_page(capsys):
 
 
 def test_missing_catalog_entries_of_man_pages():
+    # type: () -> None
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():
         man_page = man_pages.load_man_page(name)
+        assert man_page is not None
         found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
     assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(

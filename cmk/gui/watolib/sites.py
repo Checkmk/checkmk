@@ -7,8 +7,6 @@
 import os
 import re
 import time
-import shutil
-import traceback
 from typing import (  # pylint: disable=unused-import
     NamedTuple, Type,
 )
@@ -45,7 +43,6 @@ from cmk.gui.valuespec import (
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
-from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath
 from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainGUI,
@@ -55,13 +52,10 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
-from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.utils import (
     default_site,
     multisite_dir,
 )
-
-from cmk.gui.plugins.watolib.utils import wato_fileheader
 
 
 class SiteManagementFactory(object):
@@ -658,7 +652,7 @@ def _update_distributed_wato_file(sites):
         if site.get("replication"):
             distributed = True
         if config.site_is_local(siteid):
-            create_distributed_wato_file(siteid, is_slave=False)
+            cmk.gui.watolib.activate_changes.create_distributed_wato_file(siteid, is_slave=False)
 
     # Remove the distributed wato file
     # a) If there is no distributed WATO setup
@@ -670,17 +664,6 @@ def _update_distributed_wato_file(sites):
 def is_livestatus_encrypted(site):
     family_spec, address_spec = site["socket"]
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
-
-
-def create_distributed_wato_file(siteid, is_slave):
-    output = wato_fileheader()
-    output += ("# This file has been created by the master site\n"
-               "# push the configuration to us. It makes sure that\n"
-               "# we only monitor hosts that are assigned to our site.\n\n")
-    output += "distributed_wato_site = '%s'\n" % siteid
-    output += "is_wato_slave_site = %r\n" % is_slave
-
-    store.save_file(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk", output)
 
 
 def _delete_distributed_wato_file():
@@ -717,40 +700,5 @@ class AutomationPushSnapshot(AutomationCommand):
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
-            extract_from_buffer(request.tar_content,
-                                cmk.gui.watolib.activate_changes.get_replication_paths())
-
-            try:
-                self._save_site_globals_on_slave_site(request.tar_content)
-
-                # pending changes are lost
-                cmk.gui.watolib.activate_changes.confirm_all_local_changes()
-
-                hooks.call("snapshot-pushed")
-
-                # Create rule making this site only monitor our hosts
-                create_distributed_wato_file(request.site_id, is_slave=True)
-            except Exception:
-                raise MKGeneralException(
-                    _("Failed to deploy configuration: \"%s\". "
-                      "Please note that the site configuration has been synchronized "
-                      "partially.") % traceback.format_exc())
-
-            cmk.gui.watolib.changes.log_audit(
-                None, "replication",
-                _("Synchronized with master (my site id is %s.)") % request.site_id)
-
-            return True
-
-    def _save_site_globals_on_slave_site(self, tarcontent):
-        tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
-        try:
-            if not os.path.exists(tmp_dir):
-                store.mkdir(tmp_dir)
-
-            extract_from_buffer(tarcontent, [ReplicationPath("dir", "sitespecific", tmp_dir, [])])
-
-            site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
-            save_site_global_settings(site_globals)
-        finally:
-            shutil.rmtree(tmp_dir)
+            return cmk.gui.watolib.activate_changes.apply_sync_snapshot(
+                request.site_id, request.tar_content)

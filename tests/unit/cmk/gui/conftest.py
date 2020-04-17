@@ -11,6 +11,7 @@ import json
 import threading
 from cookielib import CookieJar
 from urllib import urlencode
+import shutil
 
 import webtest  # type: ignore[import]
 
@@ -95,8 +96,13 @@ def _create_and_destroy_user(automation=False):
     password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     config.load_config()
+
     yield username, password
+
     delete_users([username])
+
+    # User directories are not deleted by WATO by default. Clean it up here!
+    shutil.rmtree(paths.omd_root + "/var/check_mk/web/" + username)
 
 
 @pytest.fixture(scope='function')

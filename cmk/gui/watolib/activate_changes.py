@@ -20,6 +20,7 @@ import shutil
 import time
 import abc
 import multiprocessing
+import traceback
 from typing import (  # pylint: disable=unused-import
     Dict, Set, List, Optional, Tuple, Union, NamedTuple, Type,
 )
@@ -54,6 +55,7 @@ from cmk.gui.exceptions import (
 )
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
+from cmk.gui.plugins.watolib.utils import wato_fileheader
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.automations
@@ -62,6 +64,8 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 from cmk.gui.watolib.config_sync import SnapshotCreator, ReplicationPath
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+from cmk.gui.watolib.config_sync import extract_from_buffer
+from cmk.gui.watolib.global_settings import save_site_global_settings
 
 from cmk.gui.watolib.changes import (
     SiteChanges,
@@ -1295,6 +1299,60 @@ def get_number_of_pending_changes():
     changes = ActivateChanges()
     changes.load()
     return len(changes.grouped_changes())
+
+
+def apply_sync_snapshot(site_id, tar_content):
+    # type: (SiteId, bytes) -> bool
+    """Apply the snapshot received from a central site to the local site"""
+    extract_from_buffer(tar_content, get_replication_paths())
+
+    try:
+        _save_site_globals_on_slave_site(tar_content)
+
+        # pending changes are lost
+        confirm_all_local_changes()
+
+        hooks.call("snapshot-pushed")
+
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_file(site_id, is_slave=True)
+    except Exception:
+        raise MKGeneralException(
+            _("Failed to deploy configuration: \"%s\". "
+              "Please note that the site configuration has been synchronized "
+              "partially.") % traceback.format_exc())
+
+    cmk.gui.watolib.changes.log_audit(None, "replication",
+                                      _("Synchronized with master (my site id is %s.)") % site_id)
+
+    return True
+
+
+def _save_site_globals_on_slave_site(tarcontent):
+    # type: (bytes) -> None
+    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
+    try:
+        if not os.path.exists(tmp_dir):
+            store.mkdir(tmp_dir)
+
+        extract_from_buffer(tarcontent, [ReplicationPath("dir", "sitespecific", tmp_dir, [])])
+
+        site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
+        save_site_global_settings(site_globals)
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+def create_distributed_wato_file(siteid, is_slave):
+    # type: (SiteId, bool) -> None
+    output = wato_fileheader()
+    output += ("# This file has been created by the master site\n"
+               "# push the configuration to us. It makes sure that\n"
+               "# we only monitor hosts that are assigned to our site.\n\n")
+    output += "distributed_wato_site = '%s'\n" % siteid
+    output += "is_wato_slave_site = %r\n" % is_slave
+
+    store.save_file(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk", output)
 
 
 def create_site_globals_file(site_id, tmp_dir, site_config):

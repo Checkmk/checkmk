@@ -64,6 +64,7 @@ factory_settings["mssql_backup_default_levels"] = {
     "unspecific": (None, None),
 }
 
+_mssql_backup_ignore_types = ['log', 'database diff']
 
 def parse_mssql_backup(info):
     def _parse_date_and_time(b_date, b_time):
@@ -111,7 +112,7 @@ def inventory_mssql_backup(parsed):
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "summary":
         return
-    for db_name in parsed:
+    for db_name in parsed[0]:
         yield db_name, {}
 
 
@@ -124,16 +125,27 @@ def _mssql_backup_discovery_mode():
 
 
 def check_mssql_backup(item, params, parsed):
-    data = parsed.get(item)
+    data = parsed[0].get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
+    try:
+        # remove MSSQL_ at start of item
+        dbinfo = parsed[1].get(item[6:], {})
+    except AttributeError:
+        dbinfo = {}
+    if not dbinfo:
+        dbinfo = {}
+
     if not isinstance(params, dict):
         params = {"database": params}
 
     for backup in data:
+        if dbinfo.get('Recovery') == 'SIMPLE' and backup.type in _mssql_backup_ignore_types:
+            # ignore backups for SIMPLE databases
+            continue
         if backup.state == "no backup found":
             yield params.get("not_found", 1), "No backup found"
             continue
@@ -179,6 +191,7 @@ check_info['mssql_backup'] = {
     'service_description': 'MSSQL %s Backup',
     'has_perfdata': True,
     'group': 'mssql_backup',
+    'extra_sections': ['mssql_databases'],
     'default_levels_variable': 'mssql_backup_default_levels',
 }
 
@@ -203,15 +216,25 @@ def inventory_mssql_backup_per_type(parsed):
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "per_type":
         return
-    for db_name, attrs in parsed.iteritems():
+    for db_name, attrs in parsed[0].items():
+        try:
+            # remove MSSQL_ at start of item
+            dbinfo = parsed[1].get(db_name[6:], {})
+        except AttributeError:
+            dbinfo = {}
         for backup in attrs:
+            if dbinfo.get('Recovery') == 'SIMPLE' and backup.type in _mssql_backup_ignore_types:
+                # ignore backups for SIMPLE databases
+                continue
             yield _mssql_backup_per_type_item(db_name, backup), {}
 
 
 def check_mssql_backup_per_type(item, params, parsed):
-    for db_name, attrs in parsed.iteritems():
+    for db_name, attrs in parsed[0].items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
+                if backup.state == "no backup found":
+                    return params.get("not_found", 1), "No backup found"
                 return _check_mssql_backup(backup, params.get("levels", (None, None)), "backup_age")
     # Assume general connection problem to the database, which is reported
     # by the "X Instance" service and skip this check.

@@ -3,7 +3,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO(sp) We should really use autotools here...
-ifneq ($(shell which g++-9 2>/dev/null),)
+ifneq ($(shell which g++-10 2>/dev/null),)
+        CXX := g++-10 -std=c++17
+else ifneq ($(shell which clang++-10 2>/dev/null),)
+        CXX := clang++-10 -std=c++17
+else ifneq ($(shell which g++-9 2>/dev/null),)
         CXX := g++-9 -std=c++17
 else ifneq ($(shell which clang++-9 2>/dev/null),)
         CXX := clang++-9 -std=c++17

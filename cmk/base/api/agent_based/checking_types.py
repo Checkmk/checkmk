@@ -5,10 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from typing import Any, Callable, Dict, Generator, Iterable, List, NamedTuple, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union  # pylint: disable=unused-import
 import sys
-import collections
 import enum
+
+try:
+    from collections.abc import Mapping  # type: ignore[import]
+except ImportError:
+    from collections import Mapping
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.base.api import PluginName
@@ -21,7 +25,7 @@ class management_board(enum.Enum):
     EXCLUSIVE = "exclusive"
 
 
-class Parameters(collections.abc.Mapping):
+class Parameters(Mapping):
     """Parameter objects are used to pass parameters to discover and check functions"""
     def __init__(self, data):
         if not isinstance(data, dict):
@@ -50,8 +54,10 @@ class Service:
         labels=[ServiceLabel(...)],
     )
     """
-    def __init__(self, *, item=None, parameters=None, labels=None):
+    def __init__(self, item=None, parameters=None, labels=None):
         # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
+        # TODO (mo): unhack this CMK-3983
+        # all arguments should be kwarg-only
         self._item = item
         self._parameters = parameters or {}  # type: Dict[str, Any]
         self._labels = labels or []
@@ -157,14 +163,14 @@ class Metric:
         self,
         name,  # type: str
         value,  # type: float
-        *args,  # type: str  # *, # type shoud be "nothing"
+        # *args,  # type: str  # *, # type shoud be "nothing"
         levels=(None, None),  # type: Tuple[Optional[float], Optional[float]]
         boundaries=(None, None),  # type: Tuple[Optional[float], Optional[float]]
     ):
         # type: (...) -> None
-        if args:
-            # TODO (mo): unhack this CMK-3983
-            raise TypeError()
+        # if args:
+        #    # TODO (mo): unhack this CMK-3983
+        #    raise TypeError()
 
         self.validate_name(name)
 
@@ -221,9 +227,10 @@ class Result(
 
     _state_class = state  # avoid shadowing by keyword called "state"
 
-    def __new__(cls, *, summary=None, details=None, state=None):  # pylint: disable=redefined-outer-name
+    def __new__(cls, summary=None, details=None, state=None):  # pylint: disable=redefined-outer-name
         # type: (Optional[str], Optional[str], Optional[state]) -> Result
-
+        # TODO (mo): unhack this CMK-3983
+        # all arguments should be kwarg-only
         for var, name, type_ in (
             (summary, "summary", str),
             (details, "details", str),

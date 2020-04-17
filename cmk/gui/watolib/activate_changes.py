@@ -1301,10 +1301,10 @@ def get_number_of_pending_changes():
     return len(changes.grouped_changes())
 
 
-def apply_sync_snapshot(site_id, tar_content):
-    # type: (SiteId, bytes) -> bool
+def apply_sync_snapshot(site_id, tar_content, components):
+    # type: (SiteId, bytes, List[ReplicationPath]) -> bool
     """Apply the snapshot received from a central site to the local site"""
-    extract_from_buffer(tar_content, get_replication_paths())
+    extract_from_buffer(tar_content, components)
 
     try:
         _save_site_globals_on_slave_site(tar_content)

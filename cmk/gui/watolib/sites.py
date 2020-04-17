@@ -701,4 +701,5 @@ class AutomationPushSnapshot(AutomationCommand):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_sync_snapshot(
-                request.site_id, request.tar_content)
+                request.site_id, request.tar_content,
+                cmk.gui.watolib.activate_changes.get_replication_paths())

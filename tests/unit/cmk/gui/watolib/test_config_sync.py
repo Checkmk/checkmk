@@ -172,22 +172,17 @@ def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch,
                                               tmp_path)
 
     # Change unpack target directory from "unit test site" paths to a test specific path
-    # TODO: Add the replication_paths as parameters to the apply_sync_snapshot function
     unpack_dir = tmp_path / "snapshot_unpack"
-    orig_replication_paths = activate_changes.get_replication_paths()
-
-    def _fake_test_replication_paths():
-        return [
-            activate_changes._replace_omd_root(str(unpack_dir), p) for p in orig_replication_paths
-        ]
-
-    monkeypatch.setattr(activate_changes, "get_replication_paths", _fake_test_replication_paths)
+    components = [
+        activate_changes._replace_omd_root(str(unpack_dir), p)
+        for p in activate_changes.get_replication_paths()
+    ]
 
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
          RequestContext(htmllib.html(Request(environ))):
         with open(snapshot_settings.snapshot_path, "rb") as f:
-            activate_changes.apply_sync_snapshot("unit_remote_1", f.read())
+            activate_changes.apply_sync_snapshot("unit_remote_1", f.read(), components)
 
     expected_paths = [
         'etc',

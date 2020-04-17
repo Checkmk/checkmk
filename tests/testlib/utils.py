@@ -14,7 +14,7 @@ import pwd
 import re
 import subprocess
 import sys
-from typing import Optional  # pylint: disable=unused-import
+from typing import (Optional, List)  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -59,6 +59,22 @@ def virtualenv_path(version=None):
         [repo_path() + "/scripts/run-pipenv",
          str(version), "--bare", "--venv"])
     return Path(six.ensure_str(venv).rstrip("\n"))
+
+
+def find_git_rm_mv_files(dirpath):
+    # type: (Path) -> List[str]
+    del_files = []
+    out = six.ensure_str(subprocess.check_output(["git", "status", dirpath])).split("\n")
+
+    for line in out:
+        if "deleted:" in line or "renamed:" in line:
+            # Ignore files in subdirs of dirpath
+            if line.split(dirpath.name)[1].count("/") > 1:
+                continue
+
+            filename = line.split("/")[-1]
+            del_files.append(filename)
+    return del_files
 
 
 def current_branch_name():

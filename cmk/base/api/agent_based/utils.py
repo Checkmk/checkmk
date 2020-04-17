@@ -126,8 +126,10 @@ class GetRateError(IgnoreResultsError):
     pass
 
 
-def get_rate(value_store, key, time, value, *, raise_overflow=False):
+def get_rate(value_store, key, time, value, raise_overflow=False):
     # type: (MutableMapping, str, float, float, bool) -> float
+    # TODO (mo): unhack this CMK-3983
+    # raise overflow is kwarg only
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 

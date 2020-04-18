@@ -1,4 +1,4 @@
-title: Blue Coat Security Gateway: Disk and CPU utilization
+title: Blue Coat Security Gateway: Disk and CPU Utilization
 agents: snmp
 catalog: hw/network/bluecoat
 license: GPL
@@ -16,4 +16,4 @@ item:
   The item {CPU} represents the CPU utilization.
 
 inventory:
- Returns two checks for each appliance (machine): {Disk} and {CPU}
+ One service is created for each for each appliance (machine): {Disk} and {CPU}

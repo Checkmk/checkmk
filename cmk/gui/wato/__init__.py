@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # WATO
 #
@@ -73,6 +53,10 @@
 #   | Importing, Permissions, global variables                             |
 #   `----------------------------------------------------------------------'
 
+# A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
+# for them, we can remove this here and the imports
+# flake8: noqa
+
 import abc
 import ast
 import csv
@@ -83,7 +67,6 @@ import json
 import math
 import multiprocessing
 import pprint
-import Queue
 import random
 import re
 import tarfile
@@ -96,21 +79,23 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union  # pylint: disable=unused-import
+import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import regex
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
+from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.table import table_element
-import cmk.gui.multitar as multitar
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 import cmk.gui.mkeventd
@@ -125,6 +110,7 @@ import cmk.gui.view_utils
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.wato.mkeventd
+from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -151,6 +137,7 @@ from cmk.gui.wato.pages.activate_changes import (
     ModeAjaxActivationState,
 )
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
+from cmk.gui.wato.pages.diagnostics import ModeDiagnostics
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
 from cmk.gui.wato.pages.automation import ModeAutomationLogin, ModeAutomation
 import cmk.gui.wato.pages.fetch_agent_output
@@ -264,10 +251,10 @@ from cmk.gui.wato.pages.users import ModeUsers, ModeEditUser
 import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.bi
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
 
-if cmk.is_managed_edition():
+if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
@@ -289,7 +276,6 @@ from cmk.gui.plugins.wato import (
     UserIconOrAction,
     SNMPCredentials,
     HostnameTranslation,
-    rule_option_elements,
     register_check_parameters,
     sort_sites,
     Levels,
@@ -384,6 +370,12 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     register_modules,
 )
 
+NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
+NetworkScanResult = Dict[str, Any]
+
+if TYPE_CHECKING:
+    from cmk.gui.watolib.hosts_and_folders import CREFolder  # pylint: disable=unused-import
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -411,6 +403,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 
 @cmk.gui.pages.register("wato")
 def page_handler():
+    # type: () -> None
     initialize_wato_html_head()
 
     if not config.wato_enabled:
@@ -419,7 +412,8 @@ def page_handler():
               " in your <tt>multisite.mk</tt> if you want to use WATO."))
 
     # config.current_customer can not be checked with CRE repos
-    if cmk.is_managed_edition() and not managed.is_provider(config.current_customer):  # pylint: disable=no-member
+    if cmk_version.is_managed_edition() and not managed.is_provider(
+            config.current_customer):  # type: ignore[attr-defined]
         raise MKGeneralException(
             _("Check_MK can only be configured on "
               "the managers central site."))
@@ -441,6 +435,7 @@ def page_handler():
 
 
 def _wato_page_handler(current_mode, mode_permissions, mode_class):
+    # type: (str, List[PermissionName], Type[WatoMode]) -> None
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
     except Exception:
@@ -457,7 +452,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None
+    action_message = None  # type: _Optional[Text]
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -486,10 +481,11 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                 return
 
             # if newmode is not None, then the mode has been changed
-            elif newmode is not None:
+            if newmode is not None:
+                assert not isinstance(newmode, bool)
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
-                        html.message(action_message)
+                        html.show_message(action_message)
                         wato_html_footer()
                     return
                 mode_permissions, mode_class = get_mode_permission_and_class(newmode)
@@ -529,9 +525,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
 
     # Show outcome of action
     if html.has_user_errors():
-        html.show_error(action_message)
+        html.show_user_errors()
     elif action_message:
-        html.message(action_message)
+        html.show_message(action_message)
 
     # Show content
     mode.handle_page()
@@ -547,6 +543,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
 
 
 def get_mode_permission_and_class(mode_name):
+    # type: (str) -> _Tuple[List[PermissionName], Type[WatoMode]]
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 
@@ -565,6 +562,7 @@ def get_mode_permission_and_class(mode_name):
 
 
 def ensure_mode_permissions(mode_permissions):
+    # type: (List[PermissionName]) -> None
     for pname in mode_permissions:
         if '.' not in pname:
             pname = "wato." + pname
@@ -572,6 +570,7 @@ def ensure_mode_permissions(mode_permissions):
 
 
 def _show_read_only_warning():
+    # type: () -> None
     if cmk.gui.watolib.read_only.is_enabled():
         html.show_warning(cmk.gui.watolib.read_only.message())
 
@@ -593,6 +592,7 @@ def _show_read_only_warning():
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
 def execute_network_scan_job():
+    # type: () -> None
     init_wato_datastructures(with_wato_lock=True)
 
     if watolib.is_wato_slave_site():
@@ -619,7 +619,7 @@ def execute_network_scan_job():
         "end": True,  # means currently running
         "state": None,
         "output": "The scan is currently running.",
-    }
+    }  # type: NetworkScanResult
 
     # Mark the scan in progress: Is important in case the request takes longer than
     # the interval of the cron job (1 minute). Otherwise the scan might be started
@@ -657,11 +657,11 @@ def execute_network_scan_job():
         config.set_user_by_id(old_user)
 
 
-# Find the folder which network scan is longest waiting and return the
-# folder object.
 def find_folder_to_scan():
+    # type: () -> _Optional[CREFolder]
+    """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
-    for folder in watolib.Folder.all_folders().itervalues():
+    for folder in watolib.Folder.all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:
@@ -672,18 +672,17 @@ def find_folder_to_scan():
 
 
 def add_scanned_hosts_to_folder(folder, found):
+    # type: (CREFolder, NetworkScanFoundHosts) -> None
     network_scan_properties = folder.attribute("network_scan")
 
     translation = network_scan_properties.get("translate_names", {})
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = cmk.utils.translations.translate_hostname(translation, host_name)
+        host_name = six.ensure_str(
+            cmk.utils.translations.translate_hostname(translation, ensure_unicode(host_name)))
 
-        attrs = {
-            "meta_data":
-                cmk.gui.watolib.hosts_and_folders.get_meta_data(created_by=_("Network scan"))
-        }
+        attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
@@ -700,6 +699,7 @@ def add_scanned_hosts_to_folder(folder, found):
 
 
 def save_network_scan_result(folder, result):
+    # type: (CREFolder, NetworkScanResult) -> None
     # Reload the folder, lock WATO before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
@@ -723,10 +723,11 @@ def save_network_scan_result(folder, result):
 
 modes = {}
 
-loaded_with_language = False
+loaded_with_language = False  # type: Union[bool, None, str]
 
 
 def load_plugins(force):
+    # type: (bool) -> None
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -1791,6 +1792,29 @@ class PermissionWATOAnalyzeConfig(Permission):
     def description(self):
         return _(
             "WATO has a module that gives you hints on how to tune your Check_MK installation.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATODiagnostics(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "diagnostics"
+
+    @property
+    def title(self):
+        return _("Access the diagnostics mode")
+
+    @property
+    def description(self):
+        return _("Collect information of Checkmk sites for diagnostic analysis.")
 
     @property
     def defaults(self):

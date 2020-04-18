@@ -1,7 +1,13 @@
-import sys
-import pytest  # type: ignore
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk
+import sys
+import pytest  # type: ignore[import]
+
+import cmk.utils.version as cmk_version
 import cmk.gui.pages
 
 
@@ -57,6 +63,7 @@ def test_registered_pages():
         'create_view',
         'create_view_dashlet',
         'create_view_dashlet_infos',
+        'create_link_view_dashlet',
         'create_view_infos',
         'custom_snapins',
         'dashboard',
@@ -69,6 +76,7 @@ def test_registered_pages():
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
+        'clone_dashlet',
         'edit_view',
         'edit_views',
         'export_views',
@@ -84,7 +92,6 @@ def test_registered_pages():
         'mobile',
         'mobile_view',
         'noauth:automation',
-        'noauth:pnp_template',
         'noauth:run_cron',
         'notify',
         'prediction_graph',
@@ -92,6 +99,7 @@ def test_registered_pages():
         'search_open',
         'side',
         'sidebar_add_snapin',
+        'sidebar_ajax_add_snapin',
         'sidebar_ajax_set_snapin_site',
         'sidebar_ajax_speedometer',
         'sidebar_ajax_tag_tree',
@@ -116,16 +124,16 @@ def test_registered_pages():
         'wato_ajax_profile_repl',
         'webapi',
         'werk',
+        'ajax_graph',
+        'ajax_graph_hover',
+        'ajax_render_graph_content',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_pages += [
-            'ajax_graph',
-            'ajax_graph_hover',
             'ajax_metric_choice',
             'ajax_pagetype_add_element',
             'ajax_popup_add_metric_to_graph',
-            'ajax_render_graph_content',
             'ajax_scalar_choice',
             'combined_graphs',
             'create_report',

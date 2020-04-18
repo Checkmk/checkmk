@@ -1,4 +1,10 @@
-import cmk
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import cmk.utils.version as cmk_version
 # Following import is used to trigger plugin loading
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils as utils
@@ -12,7 +18,7 @@ def test_registered_generators():
         'ec_sample_rule_pack',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_generators += [
             'cee_agent_bakery',
             'cee_basic_config',
@@ -26,7 +32,7 @@ def test_get_sorted_generators():
         'basic_wato_config',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected += [
             'cee_basic_config',
             'cee_agent_bakery',

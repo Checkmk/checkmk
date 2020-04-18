@@ -1,0 +1,20 @@
+Title: Fixed separator of SNMP trap messages
+Class: fix
+Compatible: incomp
+Component: ec
+Date: 1586157312
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The event console messages created from SNMP traps can contain a list of
+OID/value pairs.  These pairs were separated by " , " previously, now they
+are separated by ", " (not the missing space before the comma).  Although
+the new behavior is more correct, it can have an impact on your configured
+event console rules: If you match on the text of the messsage, the change
+can make a difference, depending on the regex you use.
+
+A portable fix is to use " ?, " to match the separator, i.e.  make the first
+space optional in the regex.

@@ -1,4 +1,4 @@
-title: BEA Weblogic: Requests to JVM sessions
+title: BEA Weblogic: Requests to JVM Sessions
 agents: linux
 catalog: app/java
 license: GPL
@@ -16,5 +16,5 @@ item:
  I.e. webservices webservices
 
 inventory:
- One check is created for each selvet running inside a weblogic
+ One service is created for each selvet running inside a weblogic
  instance sent by the agent.

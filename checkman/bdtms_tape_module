@@ -10,7 +10,7 @@ description:
  {CRIT} will be returned.
 
 inventory:
- One service per host and module will be created.
+ One service is created for each module on each host.
 
 item:
  The device ID of the module.

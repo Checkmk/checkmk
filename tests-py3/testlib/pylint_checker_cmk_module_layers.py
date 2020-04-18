@@ -1,0 +1,1 @@
+../../tests/testlib/pylint_checker_cmk_module_layers.py

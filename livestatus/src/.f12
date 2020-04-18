@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 set -e
 
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
@@ -6,7 +10,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 echo Building rrdtool library...
-LANG=C make -j4 -C ../../omd re2-build rrdtool-build-library >/dev/null 2>&1
+LANG=C make -j4 -C ../../omd re2-build rrdtool-build-library >/dev/null
 LANG=C make -C ../.. config.status
 (cd ../.. && ./config.status)
 LANG=C make -j4

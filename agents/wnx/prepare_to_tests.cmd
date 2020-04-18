@@ -1,4 +1,6 @@
 @echo off
+set shared_fldr=c:\dev\shared_public
+
 powershell Write-Host "%0 is running..."  -Foreground Green
 set prdata=ProgramData
 if "%1" == "" set root=%cd%\..\..\artefacts&& goto exec_me
@@ -22,12 +24,11 @@ powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&&  exit /b 3
 copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Yellow
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&&  exit /b 5
-copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Write-Host "Failed check_mk.ini copy" -Foreground Red	&&  exit /b 55
 
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green
-set shared_fldr=c:\dev\shared_public
 if not exist "%shared_fldr%" powershell Write-Host Making folder %shared_fldr% -Foreground Yellow && mkdir %shared_fldr%
 copy .\test_files\shared_public     	%shared_fldr% > nul   || powershell Write-Host "Failed shared_public copy" -Foreground Red &&  exit /b 6
+powershell Write-Host "You must have in  Shared Folder at least one file with UNICODE name. This file must be created Manually."  -Foreground Cyan
 if not exist "%LOGONSERVER%\shared_public" powershell Write-Host Sharing %shared_fldr% -Foreground Yellow && net share shared_public=%shared_fldr% /grant:everyone,FULL 1> nul && Icacls %shared_fldr% /grant Everyone:F /inheritance:e /T 1> nul
 
 powershell Write-Host "2. Test machine preparation: Root Folder"  -Foreground Green
@@ -42,3 +43,4 @@ copy .\test_files\unit_test\*.ini 	    %user_dir% > nul      || powershell Write
 copy .\test_files\unit_test\*.dat 	    %user_dir% > nul      || powershell Write-Host "Failed test dat copy" -Foreground Red	&&  exit /b 13
 copy .\test_files\unit_test\*.state 	    %user_dir% > nul      || powershell Write-Host "Failed test state copy" -Foreground Red	&&  exit /b 14
 copy .\test_files\config\*.yml 	%user_dir% > nul	  || powershell Write-Host "Failed test ymls copy" -Foreground Red	&&  exit /b 15
+copy .\test_files\*.zip 	    %user_dir% > nul      || powershell Write-Host "Failed zips copy" -Foreground Red	&&  exit /b 16

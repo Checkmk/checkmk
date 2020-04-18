@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 
@@ -31,6 +11,7 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -92,26 +73,26 @@ class FilterWatoFolder(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        html.dropdown(self.ident, [("", "")] +
-                      [entry for entry in self.selection if entry[0] in allowed_folders])
+        choices = [("", "")]  # type: Choices
+        html.dropdown(self.ident,
+                      choices + [entry for entry in self.selection if entry[0] in allowed_folders])
 
     def filter(self, infoname):
         self.check_wato_data_update()
         current = html.request.var(self.ident)
-        if current:
-            path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
-            if current.endswith("/"):  # Hosts directly in this folder
-                path_regex += "hosts.mk"
-            else:
-                path_regex += "/"
-            if "*" in current:  # used by virtual host tree snapin
-                path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
-                op = "~~"
-            else:
-                op = "~"
-            return "Filter: host_filename %s %s\n" % (op, path_regex)
-        else:
+        if not current:
             return ""
+        path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
+        if current.endswith("/"):  # Hosts directly in this folder
+            path_regex += "hosts.mk"
+        else:
+            path_regex += "/"
+        if "*" in current:  # used by virtual host tree snapin
+            path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
+            op = "~~"
+        else:
+            op = "~"
+        return "Filter: host_filename %s %s\n" % (op, path_regex)
 
     # Construct pair-list of ( folder-path, title ) to be used
     # by the HTML selection box. This also updates self._tree,
@@ -124,14 +105,12 @@ class FilterWatoFolder(Filter):
             title_prefix = ""
         self.path_to_tree[my_path] = folder.title()
         sel = [(my_path, title_prefix + folder.title())]
-        sel += self.sublist(folder.all_subfolders(), my_path, depth)
+        sel += self.sublist(folder.subfolders(), my_path, depth)
         return sel
 
     def sublist(self, elements, my_path, depth):
-        vs = elements.values()
-        vs.sort(key=lambda x: x.title().lower())
         sel = []
-        for e in vs:
+        for e in sorted(elements, key=lambda x: x.title().lower()):
             sel += self.folder_selection(e, my_path, depth + 1)
         return sel
 

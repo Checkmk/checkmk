@@ -1,0 +1,12 @@
+Title: Agent bakery: Fix rules of non-main folder matching for GENERIC agent
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0p9
+Date: 1579780916
+Class: fix
+
+The generic agent package should only be affected by agent related rules that
+are assigned to the main folder. In previous 1.6 releases the GENERIC agent
+was affected by rules from all folders.

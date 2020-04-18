@@ -1,4 +1,4 @@
-title: Uptime of JVM
+title: Java Virtual Machine: Uptime (deprecated)
 agents: linux
 catalog: app/java
 license: GPL
@@ -15,7 +15,10 @@ description:
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 
+item:
+ The name of the instance
+
 inventory:
- One check is created for each application running inside an Jolokia
+ One service is created for each application running inside an Jolokia
  instance sent by the agent.
 

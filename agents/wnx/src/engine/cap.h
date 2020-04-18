@@ -1,3 +1,8 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 // engine to install/remove cap files
 
 #ifndef cap_h__
@@ -17,11 +22,15 @@
 
 namespace cma::cfg::cap {
 
+constexpr uint32_t kMaxAttemptsToStoreFile = 5;
+constexpr size_t kMinimumProcessNameLength = 10;
+constexpr std::string_view kAllowedExtension = ".EXE";
+
 enum class Mode { normal, forced };
 
 // main API
 void Install();    // normal installation of all files from the MSI
-void ReInstall();  // forced installation of all files from the MSI
+bool ReInstall();  // forced installation of all files from the MSI
 
 // support
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
@@ -32,9 +41,6 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
 
-bool AreFilesSame(const std::filesystem::path &Target,
-                  const std::filesystem::path &Src);
-
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
 
@@ -44,9 +50,9 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
 bool ReinstallIni(const std::filesystem::path &target_ini,
                   const std::filesystem::path &source_ini);
 
-bool ReinstallYaml(const std::filesystem::path &bakery_yml,
-                   const std::filesystem::path &target_yml,
-                   const std::filesystem::path &source_yml);
+bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
+                   const std::filesystem::path &target_yaml,
+                   const std::filesystem::path &source_yaml);
 
 namespace details {
 void UninstallYaml(const std::filesystem::path &bakery_yaml,
@@ -65,11 +71,11 @@ enum class ProcMode { install, remove, list };
 using FileInfo = std::tuple<std::string, std::vector<char>, bool>;
 
 // Main API to install and uninstall plugins cap
-bool Process(const std::string CapFileName, ProcMode Mode,
+bool Process(const std::string &cap_name, ProcMode Mode,
              std::vector<std::wstring> &FilesLeftOnDisk);
 
 // Secondary API to decompress plugins cap
-bool ExtractAll(const std::string CapFileName, std::filesystem::path to);
+bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to);
 
 // converts name in cap to name in actual environment
 std::wstring ProcessPluginPath(const std::string &File);
@@ -80,8 +86,18 @@ std::wstring ProcessPluginPath(const std::string &File);
 uint32_t ReadFileNameLength(std::ifstream &CapFile);
 std::string ReadFileName(std::ifstream &CapFile, uint32_t Length);
 std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile);
-FileInfo ExtractFile(std::ifstream &CapFile);
+FileInfo ExtractFile(std::ifstream &cap_file);
 bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
+
+[[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name);
+// we will try to kill the process with name of the executable if
+// we cannot write to the file
+[[nodiscard]] bool StoreFileAgressive(const std::wstring &name,
+                                      const std::vector<char> &data,
+                                      uint32_t attempts_count);
+
+[[nodiscard]] bool IsStoreFileAgressive() noexcept;
+[[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name);
 
 // idiotic API form thje past. Do not for what hell, but let it stay
 bool CheckAllFilesWritable(const std::string &Directory);

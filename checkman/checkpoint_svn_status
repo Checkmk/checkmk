@@ -12,5 +12,5 @@ description:
  everything except 0)
 
 inventory:
- Exactly one service will be discovered.
+ One service is created.
 

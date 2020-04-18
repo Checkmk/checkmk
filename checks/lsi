@@ -1,48 +1,30 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
-def inventory_lsi(check_type, info):
+def get_discover_lsi(item_type):
+    def discover_lsi(info):
+        # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
+        entries = zip(info[::2], info[1::2])
 
-    # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
-    entries = zip(info[::2], info[1::2])
+        arrays = []
+        disks = []
+        for entry in entries:
+            id_ = int(entry[0][1])
+            state = entry[1][1].split('(')[-1][:-1]
+            if entry[0][0] == 'VolumeID':
+                arrays.append((id_, state))
+            else:
+                disks.append((id_, state))
 
-    arrays = []
-    disks = []
-    for entry in entries:
-        id_ = int(entry[0][1])
-        state = entry[1][1].split('(')[-1][:-1]
-        if entry[0][0] == 'VolumeID':
-            arrays.append((id_, state))
-        else:
-            disks.append((id_, state))
+        if item_type == 'arrays':
+            return [(item, "None") for (item, _state) in arrays]
+        return [(item, '"%s"' % state) for (item, state) in disks]
 
-    if check_type == 'lsi.array':
-        return [(item, "None") for (item, state) in arrays]
-    return [(item, '"%s"' % state) for (item, state) in disks]
+    return discover_lsi
 
 
 def check_lsi_array(item, _no_params, info):
@@ -62,7 +44,7 @@ check_info["lsi.array"] = {
     'check_function': check_lsi_array,
     'default_levels_variable': None,
     'group': 'raid',
-    'inventory_function': lambda info: inventory_lsi('lsi.array', info),
+    'inventory_function': get_discover_lsi('arrays'),
     'service_description': 'RAID array %s',
     'snmp_info': None,
     'snmp_scan_function': None
@@ -86,7 +68,7 @@ check_info["lsi.disk"] = {
     'check_function': check_lsi_disk,
     'default_levels_variable': None,
     'group': 'raid_disk',
-    'inventory_function': lambda info: inventory_lsi('lsi.disk', info),
+    'inventory_function': get_discover_lsi('disks'),
     'service_description': 'RAID disk %s',
     'snmp_info': None,
     'snmp_scan_function': None

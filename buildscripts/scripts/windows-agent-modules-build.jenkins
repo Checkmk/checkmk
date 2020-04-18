@@ -1,0 +1,16 @@
+// builds python module for windows agent
+
+properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+    pipelineTriggers([pollSCM('H/15 * * * *')])
+])
+
+node ('windows') {
+    stage('git checkout') {
+        checkout(scm)
+            windows = load 'buildscripts/scripts/lib/windows.groovy'
+    }
+    windows.build(
+        TARGET: 'module'
+    )
+}

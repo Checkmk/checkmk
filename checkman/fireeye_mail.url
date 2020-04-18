@@ -1,4 +1,4 @@
-title: FireEye Appliances: URL rates
+title: FireEye Appliances: URL Rates
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -15,9 +15,6 @@ description:
  can be configured via WATO.
 
  The check is always in OK state.
-
-item:
- No item.
 
 inventory:
  One service is created.

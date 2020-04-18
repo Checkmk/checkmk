@@ -1,4 +1,10 @@
-import pytest  # type: ignore
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -499,7 +505,7 @@ def test_rule_clone(register_builtin_html):
     rule.from_config({
         "value": True,
         "condition": {
-            'host_name': 'HOSTLIST',
+            'host_name': ['HOSTLIST'],
             'service_description': [{
                 '$regex': 'SVC'
             }, {

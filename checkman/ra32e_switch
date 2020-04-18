@@ -14,4 +14,4 @@ item:
  sensor.
 
 inventory:
- One service for each switch sensor.
+ One service is created for each switch sensor.

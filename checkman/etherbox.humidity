@@ -12,5 +12,5 @@ item:
  Example: "2.3" A humidity sensor(type 3) on port 2
 
 inventory:
- The inventory creates a service for each humidity sensor found
+ One service is created for each humidity sensor.
 

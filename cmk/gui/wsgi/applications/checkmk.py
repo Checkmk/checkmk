@@ -1,43 +1,22 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-import contextlib
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import functools
-import httplib
 import os
 import traceback
+import six
 
 import livestatus
 
 import cmk.gui.crash_reporting as crash_reporting
-import cmk.gui.htmllib
-import cmk.gui.http
 import cmk.utils.paths
 import cmk.utils.profile
+import cmk.utils.store
 
-from cmk.gui import config, login, pages, modules
+from cmk.gui import config, login, pages, modules, http, htmllib
 from cmk.gui.exceptions import (
     MKUserError,
     MKConfigError,
@@ -47,25 +26,22 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import AppContext, RequestContext, html
+from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.utils import store
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
-#  * consolidate page handler handling
 
 
-def _auth(request, func):
+def _auth(func):
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Check_MK GUI supports and initializes the logged
     # in user objects.
     @functools.wraps(func)
     def _call_auth():
         if not login.authenticate(request):
-            _handle_not_authenticated()
-            return
+            return _handle_not_authenticated()
 
         # This may raise an exception with error messages, which will then be displayed to the user.
         _ensure_general_access()
@@ -80,6 +56,8 @@ def _auth(request, func):
 
         func()
 
+        return html.response
+
     return _call_auth
 
 
@@ -90,7 +68,6 @@ def _noauth(func):
     #
     # Currently these are:
     #  * noauth:run_cron
-    #  * noauth:pnp_template
     #  * noauth:deploy_agent
     #  * noauth:ajax_graph_images
     #  * noauth:automation
@@ -104,10 +81,12 @@ def _noauth(func):
             if config.debug:
                 html.write_text(traceback.format_exc())
 
+        return html.response
+
     return _call_noauth
 
 
-def get_and_wrap_page(request, script_name):
+def get_and_wrap_page(script_name):
     """Get the page handler and wrap authentication logic when needed.
 
     For all "noauth" page handlers the wrapping part is skipped. In the `_auth` wrapper
@@ -126,7 +105,7 @@ def get_and_wrap_page(request, script_name):
     if _handler is None:
         return _page_not_found
 
-    return _auth(request, _handler)
+    return _auth(_handler)
 
 
 def _plain_error():
@@ -160,6 +139,8 @@ def _page_not_found():
         html.header(_("Page not found"))
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
+
+    return html.response
 
 
 def _ensure_general_access():
@@ -200,13 +181,14 @@ def _handle_not_authenticated():
     if html.myfile != 'login':
         raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
                            (config.url_prefix(), html.urlencode(html.makeuri([]))))
-    else:
-        # This either displays the login page or validates the information submitted
-        # to the login form. After successful login a http redirect to the originally
-        # requested page is performed.
-        login_page = login.LoginPage()
-        login_page.set_no_html_output(_plain_error())
-        login_page.handle_page()
+    # This either displays the login page or validates the information submitted
+    # to the login form. After successful login a http redirect to the originally
+    # requested page is performed.
+    login_page = login.LoginPage()
+    login_page.set_no_html_output(_plain_error())
+    login_page.handle_page()
+
+    return html.response
 
 
 def _load_all_plugins():
@@ -220,7 +202,7 @@ def _load_all_plugins():
 
 def _localize_request():
     previous_language = cmk.gui.i18n.get_current_language()
-    user_language = html.get_ascii_input("lang", config.user.language)
+    user_language = html.request.get_ascii_input("lang", config.user.language)
 
     html.set_language_cookie(user_language)
     cmk.gui.i18n.localize(user_language)
@@ -245,6 +227,8 @@ def _render_exception(e, title=""):
         html.show_error(e)
         html.footer()
 
+    return html.response
+
 
 def profiling_middleware(func):
     """Wrap an WSGI app in a profiling context manager"""
@@ -258,90 +242,85 @@ def profiling_middleware(func):
     return profiler
 
 
-@contextlib.contextmanager
-def cleanup_locks():
-    """Release all memorized locks at the end of the block.
-
-    This is a hack which should be removed. In order to make this happen, every lock shall
-    only be used as a context-manager.
-    """
-    try:
-        yield
-    finally:
-        try:
-            store.release_all_locks()
-        except Exception:
-            logger.exception("error releasing locks after WSGI request")
-            raise
-
-
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
-        self.wsgi_app = profiling_middleware(self.wsgi_app)
+        # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.
+        self.wsgi_app = profiling_middleware(self._wsgi_app)
 
     def __call__(self, environ, start_response):
-        return self.wsgi_app(environ, start_response)
-
-    def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
-        """Is called by the WSGI server to serve the current page"""
-        request = cmk.gui.http.Request(environ)
-        response = cmk.gui.http.Response(is_secure=request.is_secure)
-        with AppContext(self), RequestContext(cmk.gui.htmllib.html(request, response)),\
-                cleanup_locks():
-            self._process_request(request, response)
-            return response(environ, start_response)
-
-    def _process_request(self, request, response):  # pylint: disable=too-many-branches
-        try:
+        req = http.Request(environ)
+        with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
             config.initialize()
             html.init_modes()
+            return self.wsgi_app(environ, start_response)
 
-            # Make sure all plugins are available as early as possible. At least
-            # we need the plugins (i.e. the permissions declared in these) at the
-            # time before the first login for generating auth.php.
-            _load_all_plugins()
+    def _wsgi_app(self, environ, start_response):
+        """Is called by the WSGI server to serve the current page"""
+        with cmk.utils.store.cleanup_locks():
+            return _process_request(environ, start_response)
 
-            page_handler = get_and_wrap_page(request, html.myfile)
-            page_handler()
-            # If page_handler didn't raise we assume everything is OK.
-            response.status_code = httplib.OK
 
-        except HTTPRedirect as e:
-            response.status_code = e.status
-            response.headers["Location"] = e.url
+def _process_request(environ, start_response):  # pylint: disable=too-many-branches
+    try:
+        config.initialize()
+        html.init_modes()
 
-        except FinalizeRequest as e:
-            response.status_code = e.status
+        # Make sure all plugins are available as early as possible. At least
+        # we need the plugins (i.e. the permissions declared in these) at the
+        # time before the first login for generating auth.php.
+        _load_all_plugins()
 
-        except livestatus.MKLivestatusNotFoundError as e:
-            _render_exception(e, title=_("Data not found"))
+        page_handler = get_and_wrap_page(html.myfile)
+        response = page_handler()
+        # If page_handler didn't raise we assume everything is OK.
+        response.status_code = six.moves.http_client.OK
+    except HTTPRedirect as e:
+        # This can't be a new Response as it can have already cookies set/deleted by the pages.
+        # We can't return the response because the Exception has been raised instead.
+        # TODO: Remove all HTTPRedirect exceptions from all pages. Making the Exception a subclass
+        #       of Response may also work as it can then be directly returned from here.
+        response = html.response
+        response.status_code = e.status
+        response.headers["Location"] = e.url
 
-        except MKUserError as e:
-            _render_exception(e, title=_("Invalid user Input"))
+    except FinalizeRequest as e:
+        # This doesn't seem to serve much purpose anymore.
+        # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.
+        #       It may be necessary to rewire the control-flow a bit as this exception could have
+        #       been used to short-circuit some code and jump directly to the response. This
+        #       needs to be changed as well.
+        response = html.response
+        response.status_code = e.status
 
-        except MKAuthException as e:
-            _render_exception(e, title=_("Permission denied"))
+    except livestatus.MKLivestatusNotFoundError as e:
+        response = _render_exception(e, title=_("Data not found"))
 
-        except livestatus.MKLivestatusException as e:
-            _render_exception(e, title=_("Livestatus problem"))
-            response.status_code = httplib.BAD_GATEWAY
+    except MKUserError as e:
+        response = _render_exception(e, title=_("Invalid user Input"))
 
-        except MKUnauthenticatedException as e:
-            _render_exception(e, title=_("Not authenticated"))
-            response.status_code = httplib.UNAUTHORIZED
+    except MKAuthException as e:
+        response = _render_exception(e, title=_("Permission denied"))
 
-        except MKConfigError as e:
-            _render_exception(e, title=_("Configuration error"))
-            logger.error("MKConfigError: %s", e)
+    except livestatus.MKLivestatusException as e:
+        response = _render_exception(e, title=_("Livestatus problem"))
+        response.status_code = six.moves.http_client.BAD_GATEWAY
 
-        except MKGeneralException as e:
-            _render_exception(e, title=_("General error"))
-            logger.error("MKGeneralException: %s", e)
+    except MKUnauthenticatedException as e:
+        response = _render_exception(e, title=_("Not authenticated"))
+        response.status_code = six.moves.http_client.UNAUTHORIZED
 
-        except Exception:
-            crash = crash_reporting.GUICrashReport.from_exception()
-            crash_reporting.CrashReportStore().save(crash)
+    except MKConfigError as e:
+        response = _render_exception(e, title=_("Configuration error"))
+        logger.error("MKConfigError: %s", e)
 
-            logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-            crash_reporting.show_crash_dump_message(crash, _plain_error(), _fail_silently())
+    except MKGeneralException as e:
+        response = _render_exception(e, title=_("General error"))
+        logger.error("MKGeneralException: %s", e)
+
+    except Exception:
+        crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())
+        # This needs to be cleaned up.
+        response = html.response
+
+    return response(environ, start_response)

@@ -10,4 +10,7 @@ description:
  "failed" or "below threshold" and {OK} if no problem is detected.
 
 item:
- One service for each battery will be created
+ Index of the Raid Controller
+
+inventory:
+ One service is created for each Raid Controller.

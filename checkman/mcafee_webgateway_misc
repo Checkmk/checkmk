@@ -1,4 +1,4 @@
-title: McAfee web gateway: miscellaneous
+title: McAfee Web Gateway: Miscellaneous
 agents: snmp
 catalog: app/mcafee
 license: GPL
@@ -9,9 +9,6 @@ description:
 
  No default levels are set. Upper levels for clients and open network sockets
  are configurable.
-
-item:
- No item.
 
 inventory:
  One service is created.

@@ -1,0 +1,38 @@
+From c440dfa6000b8c608147cce98d163ead19e63643 Mon Sep 17 00:00:00 2001
+From: Robert Schweikert <rjschwei@suse.com>
+Date: Fri, 30 Jan 2015 12:40:40 -0500
+Subject: [PATCH] - Fix the version check for the presence of the trailers   +
+ Currently the minor version of the version check is set such that     for
+ version 2.4.10 (minor 37) the entries trailers_in and trailers_out     are
+ expected in the request_rec struct. However these members of the     struct
+ do not show up until 2.4.12 (minor 41).   + This fixes a compile error when
+ building against 2.4.10
+
+---
+ src/server/mod_wsgi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/server/mod_wsgi.c b/src/server/mod_wsgi.c
+index 30ddbe5..4813af8 100644
+--- a/src/server/mod_wsgi.c
++++ b/src/server/mod_wsgi.c
+@@ -11440,7 +11440,7 @@ static int wsgi_hook_daemon_handler(conn_rec *c)
+
+     int queue_timeout_occurred = 0;
+
+-#if ! (AP_MODULE_MAGIC_AT_LEAST(20120211, 37) || \
++#if ! (AP_MODULE_MAGIC_AT_LEAST(20120211, 41) || \
+     (AP_SERVER_MAJORVERSION_NUMBER == 2 && \
+      AP_SERVER_MINORVERSION_NUMBER <= 2 && \
+      AP_MODULE_MAGIC_AT_LEAST(20051115, 36)))
+@@ -11539,7 +11539,7 @@ static int wsgi_hook_daemon_handler(conn_rec *c)
+     r->proto_input_filters = c->input_filters;
+     r->input_filters = r->proto_input_filters;
+
+-#if AP_MODULE_MAGIC_AT_LEAST(20120211, 37) || \
++#if AP_MODULE_MAGIC_AT_LEAST(20120211, 41) || \
+     (AP_SERVER_MAJORVERSION_NUMBER == 2 && \
+      AP_SERVER_MINORVERSION_NUMBER <= 2 && \
+      AP_MODULE_MAGIC_AT_LEAST(20051115, 36))
+-- 
+1.8.4.5

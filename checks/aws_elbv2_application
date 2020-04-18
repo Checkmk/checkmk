@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_aws_elbv2_application(info):
@@ -51,7 +31,7 @@ def parse_aws_elbv2_application(info):
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name
     try:
-        return metrics.values()[-1]
+        return list(metrics.values())[-1]
     except IndexError:
         return {}
 
@@ -147,52 +127,13 @@ check_info['aws_elbv2_application.connections'] = {
 
 
 def check_aws_elbv2_application_http_elb(item, params, parsed):
-    now = time.time()
-    request_count = parsed.get('RequestCount')
-    if request_count is not None:
-        request_rate = get_rate('aws_elb_statistics', now, request_count)
-        yield 0, 'Requests: %s/s' % request_rate, [('requests_per_second', request_rate)]
-    else:
-        request_rate = 0
-
-    for http_errors_nr in ["4", "5"]:
-        http_errors = parsed.get('HTTPCode_ELB_%sXX_Count' % http_errors_nr)
-        if http_errors is None:
-            continue
-
-        http_errors_rate = get_rate('aws_elbv2_http_elb.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
-               [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
-
-        try:
-            http_errors_perc = 100.0 * http_errors_rate / request_rate
-        except ZeroDivisionError:
-            pass
-        else:
-            yield check_levels(http_errors_perc,
-                               'http_%sxx_perc' % http_errors_nr,
-                               params.get('levels_http_%sxx_perc' % http_errors_nr),
-                               human_readable_func=get_percent_human_readable,
-                               infoname="%sXX-Errors of total requests" % http_errors_nr)
-
-    http_backend_3xx = parsed.get('HTTPCode_ELB_3XX_Count')
-    if http_backend_3xx is not None:
-        yield 0, '3XX-Requests: %s/s' % get_rate('aws_elbv2_http_elb.3xx', now, http_backend_3xx)
-
-    for http_500_errors_nr in ["0", "2", "3", "4"]:
-        http_500_errors = parsed.get('HTTPCode_ELB_50%s_Count' % http_500_errors_nr)
-        if http_500_errors is None:
-            continue
-
-        http_500_errors_rate = get_rate('aws_elbv2_http_elb.50%s' % http_500_errors_nr, now,
-                                        http_500_errors)
-        yield 0, '50%s-Errors: %s/s' % (http_500_errors_nr, http_500_errors_rate)
+    return check_aws_http_elb(params.get("levels_load_balancers", params), parsed,
+                              ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                              'HTTPCode_ELB_%s_Count', 'aws_elbv2_http_elb')
 
 
 check_info['aws_elbv2_application.http_elb'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p, [
-        'RequestCount', 'HTTPCode_ELB_3XX_Count', 'HTTPCode_ELB_4XX_Count', 'HTTPCode_ELB_5XX_Count'
-    ]),
+    'inventory_function': lambda p: inventory_aws_generic_single(p, ['RequestCount']),
     'check_function': check_aws_elbv2_application_http_elb,
     'service_description': 'AWS/ApplicationELB HTTP ELB',
     'includes': ['aws.include'],

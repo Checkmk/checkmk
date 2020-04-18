@@ -1,32 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import six
 
 import cmk
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.render
 
 import cmk.gui.i18n
 import cmk.gui.sites as sites
@@ -200,7 +182,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
         log.init_logging()  # NOTE: We run in a subprocess!
-        self._logger = log.logger.getChild("background_process")
+        self._logger = log.logger.getChild("background-job")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
@@ -341,7 +323,7 @@ class GUIBackgroundStatusSnapshot(object):
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
 
-        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.iteritems():
+        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.items():
             if hasattr(value, "__call__"):
                 self._job_status[name] = getattr(job, name)()
 
@@ -358,7 +340,7 @@ class GUIBackgroundStatusSnapshot(object):
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self):
         super(GUIBackgroundJobManager,
-              self).__init__(logger=log.logger.getChild("background_job_manager"))
+              self).__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(self, job_class):
         job_ids = super(GUIBackgroundJobManager, self).get_running_job_ids(job_class)
@@ -399,13 +381,13 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         if not job_info:
             raise MKGeneralException("Background job with id <i>%s</i> not found" % job_id)
 
-        job_id, job_status = job_info.items()[0]
+        job_id, job_status = list(job_info.items())[0]
         JobRenderer.show_job_details(job_id, job_status)
 
     def show_job_details_from_snapshot(self, job_snapshot):
         if job_snapshot.exists():
             job_info = job_snapshot.get_status_as_dict()
-            job_id, job_status = job_info.items()[0]
+            job_id, job_status = list(job_info.items())[0]
             JobRenderer.show_job_details(job_id, job_status)
         else:
             raise MKGeneralException("Background job with id <i>%s</i> not found" %
@@ -493,12 +475,12 @@ class JobRenderer(object):
 
         # Dynamic data
         loginfo = job_status.get("loginfo")
-        runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
+        runtime_info = six.ensure_text(cmk.utils.render.timespan(job_status.get("duration", 0)))
         if job_status["state"] == background_job.JobStatusStates.RUNNING \
             and job_status.get("estimated_duration") is not None:
-            runtime_info += " (%s: %s)" % (_("estimated duration"),
-                                           cmk.utils.render.timespan(
-                                               job_status["estimated_duration"]))
+            runtime_info += u" (%s: %s)" % (
+                _("estimated duration"),
+                six.ensure_text(cmk.utils.render.timespan(job_status["estimated_duration"])))
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), job_status["pid"] or ""),
@@ -561,7 +543,9 @@ class JobRenderer(object):
 
             cls.show_job_row_headers()
             odd = "even"
-            for job_id, job_status in sorted(jobs_info.items(), reverse=True):
+            for job_id, job_status in sorted(jobs_info.items(),
+                                             key=lambda x: x[1]["started"],
+                                             reverse=True):
                 cls.render_job_row(job_id, job_status, odd, **kwargs)
                 odd = "even" if odd == "odd" else "odd"
 
@@ -724,14 +708,14 @@ class ActionHandler(object):
 
         html.header("Interuption of job")
         if self.confirm_dialog_opened() and not job.is_active():
-            html.message(_("No longer able to stop job. Background job just finished."))
+            html.show_message(_("No longer able to stop job. Background job just finished."))
             return
 
         c = html.confirm(_("Stop job %s%s?") % (job_id, self._get_extra_info(job)))
         if c and job.may_stop():
             job.stop()
             self._did_stop_job = True
-            html.message(_("Background job has been stopped"))
+            html.show_message(_("Background job has been stopped"))
 
     def delete_job(self):
         job_id = html.request.var(self.delete_job_var)
@@ -747,7 +731,7 @@ class ActionHandler(object):
         if c and job.may_delete():
             job.delete()
             self._did_delete_job = True
-            html.message(_("Background job has been deleted"))
+            html.show_message(_("Background job has been deleted"))
 
     def _get_extra_info(self, job):
         job_status = job.get_status()

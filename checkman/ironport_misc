@@ -1,10 +1,11 @@
-title: IronPort Appliances: Hardware sensors
+title: IronPort Appliances: Hardware Sensors
 agents: snmp
-catalog: hw/network/cisco
+catalog: hw/environment/cisco
 license: GPL
 distribution: check_mk
 description:
  This check polls various SNMP variables of Ironport Appliances.
+
 inventory:
- Fully supported.
+ No service is created because this check is no longer supported.
 

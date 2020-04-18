@@ -1,4 +1,4 @@
-title: Didactum devices: Voltage
+title: Didactum Devices: Voltage
 agents: snmp
 catalog: hw/environment/didactum
 license: GPL
@@ -14,4 +14,4 @@ item:
  The sensor identifier.
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

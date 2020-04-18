@@ -1,95 +1,109 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
-from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+from typing import Iterator, Any, Union, Optional, Text, List, Dict  # pylint: disable=unused-import
+
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore[import]
+except ImportError:
+    from collections import MutableMapping
+
 import six
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import Labels, CheckPluginName  # pylint: disable=unused-import
+
+HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
+DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object)):
     def __init__(self, *args):
+        # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()
-        self._labels = {}
+        self._labels = {}  # type: Dict[Text, Any]
         for entry in args:
             self.add_label(entry)
 
     @abc.abstractmethod
     def add_label(self, label):
+        # type: (ABCLabel) -> None
         raise NotImplementedError()
 
     def is_empty(self):
+        # type: () -> bool
         return not self._labels
 
     def __getitem__(self, key):
+        # type: (Text) -> Any
         return self._labels[key]
 
     def __setitem__(self, key, value):
+        # type: (Text, Any) -> None
         self._labels[key] = value
 
     def __delitem__(self, key):
+        # type: (Text) -> None
         del self._labels[key]
 
     def __iter__(self):
+        # type: () -> Iterator
         return iter(self._labels)
 
     def __len__(self):
+        # type: () -> int
         return len(self._labels)
 
     def to_dict(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> Dict
         return self._labels
 
 
-class DiscoveredHostLabels(ABCDiscoveredLabels):
+class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
     @classmethod
     def from_dict(cls, dict_labels):
+        # type: (DiscoveredHostLabelsDict) -> DiscoveredHostLabels
         labels = cls()
-        for k, v in dict_labels.iteritems():
+        for k, v in dict_labels.items():
             labels.add_label(HostLabel.from_dict(k, v))
         return labels
 
-    def add_label(self, label):
+    def __init__(self, *args):
         # type: (HostLabel) -> None
+        self._labels = {}  # type: Dict[Text, HostLabel]
+        super(DiscoveredHostLabels, self).__init__(*args)
+
+    def add_label(self, label):
+        # type: (ABCLabel) -> None
+        assert isinstance(label, HostLabel)
         self._labels[label.name] = label
 
     def to_dict(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> DiscoveredHostLabelsDict
         return {
             label.name: label.to_dict()
-            for label in sorted(self._labels.itervalues(), key=lambda x: x.name)
+            for label in sorted(self._labels.values(), key=lambda x: x.name)
         }
 
     def to_list(self):
-        return [label for label in sorted(self._labels.itervalues(), key=lambda x: x.name)]
+        # type: () -> List[HostLabel]
+        return sorted(self._labels.values(), key=lambda x: x.name)
 
     def __add__(self, other):
+        # type: (DiscoveredHostLabels) -> DiscoveredHostLabels
         if not isinstance(other, DiscoveredHostLabels):
             raise TypeError('%s not type DiscoveredHostLabels' % other)
         data = self.to_dict().copy()
@@ -97,16 +111,12 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         return DiscoveredHostLabels.from_dict(data)
 
     def __repr__(self):
-        return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
+        # type: () -> str
+        return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
 
 
-class ABCLabel(object):
-    """Representing a service label in Checkmk
-
-    This class is meant to be exposed to the check API. It will be usable in
-    the discovery function to create a new label like this:
-
-    yield ServiceLabel(u"my_label_key", u"my_value")
+class ABCLabel(object):  # pylint: disable=useless-object-inheritance
+    """Representing a label in Checkmk
     """
 
     __slots__ = ["_name", "_value"]
@@ -124,19 +134,37 @@ class ABCLabel(object):
 
     @property
     def name(self):
+        # type: () -> Text
         return self._name
 
     @property
     def value(self):
+        # type: () -> Text
         return self._value
 
     @property
     def label(self):
+        # type: () -> Text
         return "%s:%s" % (self._name, self._value)
+
+    def __repr__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self._name, self._value)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise TypeError("cannot compare %s to %s" % (type(self), type(other)))
+        return self.__dict__ == other.__dict__
 
 
 class ServiceLabel(ABCLabel):
-    pass
+    # This docstring is exposed by the agent_based API!
+    """Representing a service label in Checkmk
+
+    This class creates a service label that can be passed to a 'Service' object.
+    It can be used in the discovery function to create a new label like this:
+
+    my_label = ServiceLabel(u"my_label_key", u"my_value")
+    """
 
 
 class HostLabel(ABCLabel):
@@ -148,10 +176,17 @@ class HostLabel(ABCLabel):
 
     @classmethod
     def from_dict(cls, name, dict_label):
-        return cls(name, dict_label["value"], dict_label["plugin_name"])
+        # type: (Text, HostLabelValueDict) -> HostLabel
+        value = dict_label["value"]
+        assert isinstance(value, six.text_type)
+
+        plugin_name = dict_label["plugin_name"]
+        assert isinstance(plugin_name, str) or plugin_name is None
+
+        return cls(name, value, plugin_name)
 
     def __init__(self, name, value, plugin_name=None):
-        # type: (Text, Text, Optional[str]) -> None
+        # type: (Text, Text, Optional[CheckPluginName]) -> None
         super(HostLabel, self).__init__(name, value)
         self._plugin_name = plugin_name
 
@@ -166,26 +201,36 @@ class HostLabel(ABCLabel):
         self._plugin_name = plugin_name
 
     def to_dict(self):
+        # type: () -> HostLabelValueDict
         return {
             "value": self.value,
             "plugin_name": self.plugin_name,
         }
 
     def __repr__(self):
+        # type: () -> str
         return "HostLabel(%r, %r, plugin_name=%r)" % (self.name, self.value, self.plugin_name)
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, HostLabel):
             raise TypeError('%s not type HostLabel' % other)
         return (self.name == other.name and self.value == other.value and
                 self.plugin_name == other.plugin_name)
 
     def __ne__(self, other):
+        # type: (Any) -> bool
         return not self.__eq__(other)
 
 
-class DiscoveredServiceLabels(ABCDiscoveredLabels):
+class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
-    def add_label(self, label):
+    def __init__(self, *args):
         # type: (ServiceLabel) -> None
+        self._labels = {}  # type: Labels
+        super(DiscoveredServiceLabels, self).__init__(*args)
+
+    def add_label(self, label):
+        # type: (ABCLabel) -> None
+        assert isinstance(label, ServiceLabel)
         self._labels[label.name] = label.value

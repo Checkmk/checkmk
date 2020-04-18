@@ -1,8 +1,15 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import ast
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import ast
-import pytest  # type: ignore
+
+import pytest  # type: ignore[import]
+
 from testlib import import_module
 
 
@@ -11,14 +18,21 @@ def mk_filestats():
     return import_module("agents/plugins/mk_filestats.py")
 
 
+@pytest.fixture
+def lazyfile(mk_filestats):
+    mylazyfile = mk_filestats.FileStat(__file__)
+
+    # Overwrite the path to be reproducable...
+    mylazyfile.path = "test_mk_filestats.py"
+    return mylazyfile
+
+
 def test_lazy_file(mk_filestats):
-    lfile = mk_filestats.FileStat("no such file")
-    assert lfile.path == "no such file"
+    lfile = mk_filestats.FileStat("/bla/no such file.txt")
+    assert lfile.path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
-
-    assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
     lfile = mk_filestats.FileStat(__file__)  # this should exist...
     assert lfile.path == __file__
@@ -112,7 +126,24 @@ def test_get_ouput_aggregator_invalid(mk_filestats, config):
         mk_filestats.get_output_aggregator(config)
 
 
-@pytest.mark.parametrize("output_value", ["count_only", "file_stats"])
+@pytest.mark.parametrize("output_value", ["count_only", "file_stats", "single_file"])
 def test_get_ouput_aggregator(mk_filestats, output_value):
     aggr = mk_filestats.get_output_aggregator({"output": output_value})
     assert aggr is getattr(mk_filestats, "output_aggregator_%s" % output_value)
+
+
+@pytest.mark.parametrize("group_name, expected", [
+    ("myService", "[[[single_file myService]]]"),
+    ("myservice %s", "[[[single_file myservice test_mk_filestats.py]]]"),
+    ("myservice %s %s", "[[[single_file myservice test_mk_filestats.py %s]]]"),
+    ("%s", "[[[single_file test_mk_filestats.py]]]"),
+    ("%s %s", "[[[single_file test_mk_filestats.py %s]]]"),
+    ("%s%s", "[[[single_file test_mk_filestats.py%s]]]"),
+    ("%s%s %s %s", "[[[single_file test_mk_filestats.py%s %s %s]]]"),
+    ("%s myService", "[[[single_file test_mk_filestats.py myService]]]"),
+    ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
+])
+def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group_name, expected):
+
+    actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
+    assert expected == list(actual)[0]

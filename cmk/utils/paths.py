@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module serves the path structure of the Check_MK environment
 to all components of Check_MK."""
 
@@ -50,13 +30,14 @@ def _omd_path(path):
 
 
 def _local_path(global_path):
-    # type: (Union[str, Path]) -> str
-    return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
+    # type: (Union[str, Path]) -> Path
+    return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 
 # TODO: Add active_checks_dir and use it in code
 
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
+opt_root = _path("/opt" + omd_root)
 
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
@@ -101,6 +82,7 @@ discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 crash_dir = Path(var_dir, "crashes")
+diagnostics_dir = Path(var_dir, "diagnostics")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")
@@ -117,16 +99,22 @@ lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
 optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 
-local_share_dir = Path(_local_path(share_dir))
-local_checks_dir = Path(_local_path(checks_dir))
-local_notifications_dir = Path(_local_path(notifications_dir))
-local_inventory_dir = Path(_local_path(inventory_dir))
-local_check_manpages_dir = Path(_local_path(check_manpages_dir))
-local_agents_dir = Path(_local_path(agents_dir))
-local_web_dir = Path(_local_path(web_dir))
-local_pnp_templates_dir = Path(_local_path(pnp_templates_dir))
-local_doc_dir = Path(_local_path(doc_dir))
-local_locale_dir = Path(_local_path(locale_dir))
-local_bin_dir = Path(_local_path(bin_dir))
-local_lib_dir = Path(_local_path(lib_dir))
-local_mib_dir = Path(_local_path(mib_dir))
+_base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
+agent_based_plugins_dir = _base_plugins_dir / "agent_based"
+
+local_share_dir = _local_path(share_dir)
+local_checks_dir = _local_path(checks_dir)
+local_notifications_dir = _local_path(notifications_dir)
+local_inventory_dir = _local_path(inventory_dir)
+local_check_manpages_dir = _local_path(check_manpages_dir)
+local_agents_dir = _local_path(agents_dir)
+local_web_dir = _local_path(web_dir)
+local_pnp_templates_dir = _local_path(pnp_templates_dir)
+local_doc_dir = _local_path(doc_dir)
+local_locale_dir = _local_path(locale_dir)
+local_bin_dir = _local_path(bin_dir)
+local_lib_dir = _local_path(lib_dir)
+local_mib_dir = _local_path(mib_dir)
+
+_local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
+local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"

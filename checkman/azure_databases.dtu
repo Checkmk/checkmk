@@ -1,4 +1,4 @@
-title: Microsoft Azure SQL Databases: Throughput units
+title: Microsoft Azure SQL Databases: Throughput Units
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -11,5 +11,6 @@ item:
  The name of the resource.
 
 inventory:
- One service per database.
+ One service is creaed for each database if all required metrics
+ (average_dtu_consumption_percent) are given.
 

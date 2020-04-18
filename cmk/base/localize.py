@@ -1,35 +1,21 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import os
 import subprocess
 import sys
-from typing import Text  # pylint: disable=unused-import
-from pathlib2 import Path
+from typing import Optional, List, Text  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
+import six
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
@@ -38,6 +24,8 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException
 
 logger = logging.getLogger("cmk.base.localize")
+
+LanguageName = str
 
 
 # TODO: Inherit from MKGeneralException?
@@ -81,7 +69,8 @@ def _alias_file(lang):
     return Path(_locale_base(), lang, "alias")
 
 
-def _localize_usage(err=''):
+def _localize_usage():
+    # type: () -> None
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
@@ -104,19 +93,24 @@ Available commands are:
 
 
 def do_localize(args):
+    # type: (List[str]) -> None
     if len(args) == 0:
         _localize_usage()
         sys.exit(1)
 
     command = args[0]
-    if len(args) > 1:
-        lang = args[1]
-    else:
-        lang = None
 
-    alias = None
+    try:
+        lang = args[1]  # type: LanguageName
+    except IndexError:
+        raise LocalizeException('No language given')
+
+    if not lang:
+        raise LocalizeException('No language given')
+
+    alias = None  # type: Optional[Text]
     if len(args) > 2:
-        alias = args[2].decode("utf-8")
+        alias = six.ensure_text(args[2])
 
     commands = {
         "update": _localize_update,
@@ -142,7 +136,7 @@ def do_localize(args):
 
 
 def _write_alias(lang, alias):
-    # type: (str, Text) -> None
+    # type: (LanguageName, Optional[Text]) -> None
     if not alias:
         return
 
@@ -156,18 +150,21 @@ def _write_alias(lang, alias):
 
 
 def _check_binaries():
-    # Are the xgettext utils available?
+    # type: () -> None
+    """Are the xgettext utils available?"""
     for b in ['xgettext', 'msgmerge', 'msgfmt']:
         if subprocess.call(['which', b], stdout=open(os.devnull, "wb")) != 0:
             raise LocalizeException('%s binary not found in PATH\n' % b)
 
 
 def _get_languages():
+    # type: () -> List[LanguageName]
     return [l for l in os.listdir(_locale_base()) if os.path.isdir(_locale_base() + '/' + l)]
 
 
 def _localize_update_po(lang):
-    # Merge the current .pot file with a given .po file
+    # type: (LanguageName) -> None
+    """Merge the current .pot file with a given .po file"""
     logger.log(VERBOSE, "Merging translations...")
     if subprocess.call(
         ['msgmerge', '-U', _po_file(lang), _pot_file()], stdout=open(os.devnull, "wb")) != 0:
@@ -177,6 +174,7 @@ def _localize_update_po(lang):
 
 
 def _localize_init_po(lang):
+    # type: (LanguageName) -> None
     if subprocess.call(
         ['msginit', '-i',
          _pot_file(), '--no-translator', '-l', lang, '-o',
@@ -185,8 +183,9 @@ def _localize_init_po(lang):
         logger.error('Failed!\n')
 
 
-# Dig into the source code and generate a new .pot file
 def _localize_sniff():
+    # type: () -> None
+    """Dig into the source code and generate a new .pot file"""
     logger.info('Sniffing source code...')
 
     paths = [
@@ -212,29 +211,9 @@ def _localize_sniff():
                        stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
     else:
-        header = r'''# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+        header = r'''# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 msgid ""
 msgstr ""
 "Project-Id-Version: Check_MK Multisite translation 0.1\n"
@@ -256,6 +235,7 @@ msgstr ""
 
 
 def _localize_edit(lang):
+    # type: (LanguageName) -> None
     _localize_update(lang)
 
     editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi"))
@@ -268,11 +248,9 @@ def _localize_edit(lang):
         logger.error("Aborted.")
 
 
-# Start translating in a new language
 def _localize_update(lang):
-    if not lang:
-        raise LocalizeException('No language given')
-
+    # type: (LanguageName) -> None
+    """Start translating in a new language"""
     po_file = _po_file(lang)
     _initialize_local_po_file(lang)
     _localize_sniff()
@@ -285,10 +263,9 @@ def _localize_update(lang):
         _localize_update_po(lang)
 
 
-# Create a .mo file from the given .po file
 def _localize_compile(lang):
-    if not lang:
-        raise LocalizeException('No language given')
+    # type: (LanguageName) -> None
+    """Create a .mo file from the given .po file"""
     if lang not in _get_languages():
         raise LocalizeException('Invalid language given. Available: %s' %
                                 ' '.join(_get_languages()))
@@ -306,11 +283,11 @@ def _localize_compile(lang):
 
 
 def _initialize_local_po_file(lang):
-    # type: (str) -> None
+    # type: (LanguageName) -> None
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
 
-    store.makedirs(po_file)
+    store.makedirs(Path(po_file).parent)
 
     builtin_po_file = _builtin_po_file(lang)
     if not os.path.exists(po_file) and builtin_po_file.exists():

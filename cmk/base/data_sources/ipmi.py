@@ -1,30 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Set, List  # pylint: disable=unused-import
+from logging import Logger  # pylint: disable=unused-import
+from types import TracebackType  # pylint: disable=unused-import
+from typing import cast, Optional, Set, Type, List  # pylint: disable=unused-import
+
+import six
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -32,14 +16,19 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName, ServiceCheckResult  # pylint: disable=unused-import
+from cmk.base.config import IPMICredentials  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
+)
 
-from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
+from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, management_board_ipaddress
 
 
 def _handle_false_positive_warnings(reading):
+    # type: (ipmi_sdr.SensorReading) -> RawAgentData
     """This is a workaround for a pyghmi bug
     (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 
@@ -57,35 +46,198 @@ def _handle_false_positive_warnings(reading):
     The health warning is set, but only due to the lookup errors. We remove the lookup
     errors, and see whether the remaining states are meaningful.
     """
-    states = [s for s in reading.states if not s.startswith("Unknown state ")]
+    states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
 
     if not states:
-        return "no state reported"
+        return b"no state reported"
 
-    if any("non-critical" in s for s in states):
-        return "WARNING"
+    if any(b"non-critical" in s for s in states):
+        return b"WARNING"
 
     # just keep all the available info. It should be dealt with in
     # ipmi_sensors.include (freeipmi_status_txt_mapping),
     # where it will default to 2(CRIT)
-    return ', '.join(states)
+    return b', '.join(states)
 
 
-class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
+def _parse_sensor_reading(number, reading):
+    # type: (int, ipmi_sdr.SensorReading) -> List[RawAgentData]
+    # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
+    #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
+    #  'value': 25.0, 'unavailable': 0}]]
+    health_txt = b"N/A"
+    if reading.health >= ipmi_const.Health.Failed:
+        health_txt = b"FAILED"
+    elif reading.health >= ipmi_const.Health.Critical:
+        health_txt = b"CRITICAL"
+    elif reading.health >= ipmi_const.Health.Warning:
+        # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
+        health_txt = _handle_false_positive_warnings(reading)
+    elif reading.health == ipmi_const.Health.Ok:
+        health_txt = b"OK"
+
+    return [
+        b"%d" % number,
+        six.ensure_binary(reading.name),
+        six.ensure_binary(reading.type),
+        (b"%0.2f" % reading.value) if reading.value else b"N/A",
+        six.ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
+        health_txt,
+    ]
+
+
+class IPMIDataFetcher(AbstractDataFetcher):
+    def __init__(self, ipaddress, username, password, logger):
+        super(IPMIDataFetcher, self).__init__()
+        self._ipaddress = ipaddress  # type: HostAddress
+        self._username = username  # type: str
+        self._password = password  # type: str
+        self._logger = logger  # type: Logger
+        self._command = None  # type: Optional[ipmi_cmd.Command]
+
+    def __enter__(self):
+        # type: () -> IPMIDataFetcher
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> bool
+        self.close()
+        if exc_type is IpmiException and not str(exc_value):
+            # Raise a more specific exception
+            raise MKAgentError("IPMI communication failed: %r" % exc_type)
+        if not cmk.utils.debug.enabled():
+            return False
+        return True
+
+    def data(self):
+        # type: () -> RawAgentData
+        if self._command is None:
+            raise MKAgentError("Not connected")
+
+        output = b""
+        output += self._sensors_section()
+        output += self._firmware_section()
+        return output
+
+    def open(self):
+        # type: () -> None
+        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._ipaddress,
+                           self._username)
+        self._command = ipmi_cmd.Command(bmc=self._ipaddress,
+                                         userid=self._username,
+                                         password=self._password,
+                                         privlevel=2)
+
+    def close(self):
+        # type: () -> None
+        if self._command is None:
+            return
+
+        self._logger.debug("Closing connection to %s:623", self._command.bmc)
+        self._command.ipmi_session.logout()
+
+    def _sensors_section(self):
+        # type: () -> RawAgentData
+        if self._command is None:
+            raise MKAgentError("Not connected")
+
+        self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
+
+        try:
+            sdr = ipmi_sdr.SDR(self._command)
+        except NotImplementedError as e:
+            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
+            self._logger.debug("Exception", exc_info=True)
+            return b""
+
+        sensors = []
+        has_no_gpu = not self._has_gpu()
+        for number in sdr.get_sensor_numbers():
+            rsp = self._command.raw_command(command=0x2d, netfn=4, data=(number,))
+            if 'error' in rsp:
+                continue
+
+            reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
+            if reading is not None:
+                # sometimes (wrong) data for GPU sensors is reported, even if
+                # not installed
+                if "GPU" in reading.name and has_no_gpu:
+                    continue
+                sensors.append(_parse_sensor_reading(number, reading))
+
+        return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
+            [b"|".join(sensor) + b"\n" for sensor in sensors])
+
+    def _firmware_section(self):
+        # type: () -> RawAgentData
+        if self._command is None:
+            raise MKAgentError("Not connected")
+
+        self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
+        try:
+            firmware_entries = self._command.get_firmware()
+        except Exception as e:
+            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
+            self._logger.debug("Exception", exc_info=True)
+            return b""
+
+        output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        for entity_name, attributes in firmware_entries:
+            for attribute_name, value in attributes.items():
+                output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
+                output += b"\n"
+
+        return output
+
+    def _has_gpu(self):
+        # type: () -> bool
+        if self._command is None:
+            return False
+
+        # helper to sort out not installed GPU components
+        self._logger.debug("Fetching inventory information via UDP from %s:623", self._command.bmc)
+        try:
+            inventory_entries = self._command.get_inventory_descriptions()
+        except Exception as e:
+            self._logger.log(VERBOSE, "Failed to fetch inventory information: %r", e)
+            self._logger.debug("Exception", exc_info=True)
+            # in case of connection problems, we don't want to ignore possible
+            # GPU entries
+            return True
+
+        return any("GPU" in line for line in inventory_entries)
+
+
+# NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
+class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
+    _for_mgmt_board = True
+
+    def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
+        super(IPMIManagementBoardDataSource, self).__init__(hostname,
+                                                            management_board_ipaddress(hostname))
+        self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
+
     def id(self):
+        # type: () -> str
         return "mgmt_ipmi"
 
     def title(self):
+        # type: () -> str
         return "Management board - IPMI"
 
     def describe(self):
-        return "%s (Address: %s, User: %s)" % (
-            self.title(),
-            self._ipaddress,
-            self._credentials["username"],
-        )
+        # type: () -> str
+        items = []
+        if self._ipaddress:
+            items.append("Address: %s" % self._ipaddress)
+        if self._credentials:
+            items.append("User: %s" % self._credentials["username"])
+        return "%s (%s)" % (self.title(), ", ".join(items))
 
     def _cpu_tracking_id(self):
+        # type: () -> str
         return self.id()
 
     def _gather_check_plugin_names(self):
@@ -93,112 +245,24 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return {"mgmt_ipmi_sensors"}
 
     def _execute(self):
-        connection = None
-        try:
-            connection = self._create_ipmi_connection()
+        # type: () -> RawAgentData
+        if not self._credentials:
+            raise MKAgentError("Missing credentials")
 
-            output = ""
-            output += self._fetch_ipmi_sensors_section(connection)
-            output += self._fetch_ipmi_firmware_section(connection)
+        if self._ipaddress is None:
+            raise MKAgentError("Missing IP address")
 
-            return output
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-
-            # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
-            if isinstance(e, IpmiException) and "%s" % e == "None":
-                raise MKAgentError("IPMI communication failed: %r" % e)
-            else:
-                raise
-        finally:
-            if connection:
-                connection.ipmi_session.logout()
-
-    def _create_ipmi_connection(self):
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
-        credentials = self._credentials
-
-        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
-                           (self._ipaddress, credentials["username"]))
-        return ipmi_cmd.Command(bmc=self._ipaddress,
-                                userid=credentials["username"],
-                                password=credentials["password"],
-                                privlevel=2)
-
-    def _fetch_ipmi_sensors_section(self, connection):
-        self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
-
-        try:
-            sdr = ipmi_sdr.SDR(connection)
-        except NotImplementedError as e:
-            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
-            self._logger.debug("Exception", exc_info=e)
-            return ""
-
-        sensors = []
-        for number in sdr.get_sensor_numbers():
-            rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
-            if 'error' in rsp:
-                continue
-
-            reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
-            if reading is not None:
-                sensors.append(self._parse_sensor_reading(number, reading))
-
-        output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
-               + "".join([ "|".join(sensor) + "\n"  for sensor in sensors ])
-
-        return output
-
-    @staticmethod
-    def _parse_sensor_reading(number, reading):
-        # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
-        #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
-        #  'value': 25.0, 'unavailable': 0}]]
-        health_txt = "N/A"
-        if reading.health >= ipmi_const.Health.Failed:
-            health_txt = "FAILED"
-        elif reading.health >= ipmi_const.Health.Critical:
-            health_txt = "CRITICAL"
-        elif reading.health >= ipmi_const.Health.Warning:
-            health_txt = "WARNING"
-            # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-            health_txt = _handle_false_positive_warnings(reading)
-        elif reading.health == ipmi_const.Health.Ok:
-            health_txt = "OK"
-
-        return [
-            "%d" % number,
-            reading.name,
-            reading.type,
-            ("%0.2f" % reading.value) if reading.value else "N/A",
-            reading.units if reading.units != "\xc2\xb0C" else "C",
-            health_txt,
-        ]
-
-    def _fetch_ipmi_firmware_section(self, connection):
-        self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
-        try:
-            firmware_entries = connection.get_firmware()
-        except Exception as e:
-            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
-            self._logger.debug("Exception", exc_info=True)
-            return ""
-
-        output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
-        for entity_name, attributes in firmware_entries:
-            for attribute_name, value in attributes.items():
-                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
-
-        return output
+        with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
+                             self._credentials["password"], self._logger) as fetcher:
+            return fetcher.data()
+        raise MKAgentError("Failed to read data")
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
     def _get_ipmi_version(self):
+        # type: () -> ServiceDetails
         if self._host_sections is None:
             return "unknown"
 

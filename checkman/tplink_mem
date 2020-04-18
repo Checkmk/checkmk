@@ -1,4 +1,4 @@
-title: TP-LINK switches: Memory utilization
+title: TP-LINK Switches: Memory Utilization
 agents: snmp
 catalog: hw/network/tplink
 license: GPL
@@ -7,5 +7,6 @@ description:
  This check monitors the memory utilization on TP-LINK switches.
 
  Warning and critical levels can be configured in WATO.
+
 inventory:
  One service is created.

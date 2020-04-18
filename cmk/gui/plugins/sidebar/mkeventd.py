@@ -1,32 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
+
+from typing import Optional, Dict, Text, Any, List, Tuple  # pylint: disable=unused-import
+
+from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
+from cmk.gui.htmllib import HTMLContent  # pylint: disable=unused-import
+from cmk.gui.sites import SiteId  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -41,32 +27,38 @@ from cmk.gui.plugins.sidebar import (
 class SidebarSnapinCustomers(SidebarSnapin):
     @staticmethod
     def type_name():
+        # type: () -> str
         return "mkeventd_performance"
 
     @classmethod
     def title(cls):
+        # type: () -> Text
         return _("Event Console Performance")
 
     @classmethod
     def description(cls):
+        # type: () -> Text
         return _("Monitor the performance of the Event Console")
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[PermissionName]
         return ["admin"]
 
     @classmethod
     def refresh_regularly(cls):
+        # type: () -> bool
         return True
 
     def show(self):
+        # type: () -> None
         only_sites = snapin_site_choice("mkeventd_performance",
                                         config.get_event_console_site_choices())
 
         try:
             entries = self._mkeventd_performance_entries(only_sites)
         except Exception as e:
-            html.show_error(e)
+            html.show_error("%s" % e)
             return
 
         html.open_table(class_=["mkeventd_performance"])
@@ -75,8 +67,9 @@ class SidebarSnapinCustomers(SidebarSnapin):
         html.close_table()
 
     def _mkeventd_performance_entries(self, only_sites):
+        # type: (Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
-        entries = []
+        entries = []  # type: List[Tuple[float, HTMLContent, HTMLContent]]
 
         # TODO: Reorder these values and create a useful order.
         # e.g. Client connects and Time per client request after
@@ -112,14 +105,13 @@ class SidebarSnapinCustomers(SidebarSnapin):
         for index, title, name in time_columns:
             value = status.get("status_average_%s_time" % name)
             if value:
-                entries.append((index, title, "%.3f ms" % (value * 1000)))
+                entries.append((index, title, u"%.3f ms" % (value * 1000)))
             elif name != "sync":
                 entries.append((index, title, _("-.-- ms")))
 
         # Load
-        entries.append((6, "Processing load", "%.0f%%" % (min(
+        entries.append((6, "Processing load", u"%.0f%%" % (min(
             100.0, status["status_average_processing_time"] *
             status["status_average_message_rate"] * 100.0))))
 
-        entries.sort()
-        return entries
+        return sorted(entries)

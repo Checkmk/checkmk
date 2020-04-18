@@ -1,7 +1,12 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
@@ -22,5 +27,5 @@ def test_discovered_host_labels_store_file_path(discovered_host_labels_dir):
 
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir):
     store = DiscoveredHostLabelsStore("host")
-    assert not store.file_path.exists()  # pylint: disable=no-member
+    assert not store.file_path.exists()
     assert store.load() == {}

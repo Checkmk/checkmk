@@ -12,6 +12,6 @@ item:
  Example: "2.6" A smoke sensor(type 6) on port 2
 
 inventory:
- The inventory creates a service for each smoke sensor found
+ One service is created for each smoke sensor.
 
 

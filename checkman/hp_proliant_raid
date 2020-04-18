@@ -1,4 +1,4 @@
-title: HP Proliant Servers: Raid status`
+title: HP Proliant Servers: Raid Status
 agents: snmp
 catalog: hw/server/hp
 license: GPL
@@ -12,5 +12,8 @@ description:
 
  The check monitors the state of all logical and physical devices
 
+item:
+ The {{Drive Array Logical Drive Index}} followed by the {{Logical Drive OS Name}}.
+
 inventory:
- One check is automatically created for each logical device.
+ One service is created for each logical device.

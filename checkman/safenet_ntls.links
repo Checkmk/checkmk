@@ -1,4 +1,4 @@
-title: Safenet HSM: NTLS links
+title: Safenet HSM: NTLS Links
 agents: snmp
 catalog: hw/network/safenet
 license: GPL
@@ -7,4 +7,4 @@ description:
  This check monitors the number of NTLS links.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

@@ -1,3 +1,7 @@
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 include Makefile.omd
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
@@ -17,6 +21,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     openssl \
     libgsf \
+    postgresql \
     perl-modules \
     Python \
     Python3 \
@@ -25,11 +30,14 @@ PACKAGES := \
     python-modules \
     python3-modules \
     rrdtool \
+    python2-rrdtool \
     msitools \
     net-snmp \
+    python2-net-snmp \
     apache-omd \
     mod_fcgid \
     mod_wsgi \
+    python3-mod_wsgi \
     check_mk \
     check_multi \
     check_mysql_health \
@@ -130,6 +138,7 @@ install-clean:
 
 # Prepare clean install environment
 $(PRE_INSTALL):
+	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 # The default physical base for OMD is /opt/omd. This may be changed by
 # the user locally, but the logical path for OMD is always /omd. We use
@@ -321,6 +330,7 @@ $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 clean: install-clean
 	$(RM) -r $(BUILD_HELPER_DIR)
 	$(RM) -r $(BUILD_BASE_DIR)
+	$(RM) -r $(PACKAGE_BUILD_DIR)
 
 setup:
 	@echo "Please run the build in a docker container."

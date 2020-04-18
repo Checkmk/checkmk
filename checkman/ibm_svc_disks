@@ -10,4 +10,4 @@ description:
  You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
 
 inventory:
- Configures one check on each device.
+ One service is created on each device.

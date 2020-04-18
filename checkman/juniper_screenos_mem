@@ -7,5 +7,5 @@ description:
  This check monitors the current memory usage Juniper ScreenOS devices.
 
 inventory:
- One service will be created
+ One service is created.
 

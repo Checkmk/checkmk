@@ -1,6 +1,6 @@
-﻿# Windows Bonding interfaces
-# you need this agent plugin if you want to monitor bonding interfaces
-# on windows configured on operating system level
+﻿## Windows Bonding interfaces
+## you need this agent plugin if you want to monitor bonding interfaces
+## on windows configured on operating system level
 
 try {
 	$teams = Get-NetLbfoTeam

@@ -1,26 +1,6 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import * as ajax from "ajax";
 import * as selection from "selection";
@@ -85,7 +65,6 @@ export function execute_javascript_by_object(obj)
                 eval(aScripts[i].text);
                 current_script = null;
             } catch(e) {
-                //console.log(e);
                 alert(aScripts[i].text + "\nError:" + e.message);
             }
         }
@@ -224,11 +203,11 @@ export function get_url_param(name, url) {
  * - Can add/overwrite parameters
  * - Removes _* parameters
  */
-export function makeuri(addvars, url) {
+export function makeuri(addvars, url, filename) {
     url = (typeof(url) === "undefined") ? window.location.href : url;
 
     var tmp = url.split("?");
-    var base = tmp[0];
+    var base = (typeof(filename) === "undefined") ? tmp[0] : filename;
     if(tmp.length > 1) {
         // Remove maybe existing anchors
         tmp = tmp[1].split("#");
@@ -260,58 +239,26 @@ export function makeuri(addvars, url) {
     return base + "?" + params.join("&");
 }
 
+export function makeuri_contextless(vars, filename)
+{
+    var params = [];
+    // Add new params
+    for (var key in vars) {
+        params.push(encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]));
+    }
+
+    return filename + "?" + params.join("&");
+}
+
 // Returns timestamp in seconds incl. subseconds as decimal
 export function time() {
     return (new Date()).getTime() / 1000;
 }
 
-var g_sidebar_reload_timer = null;
-
 // reload sidebar, but preserve quicksearch field value and focus
 export function reload_sidebar()
 {
-    if (!parent || !parent.frames[0]) {
-        return;
-    }
-
-    var val = "";
-    var focused = false;
-    var field = parent.frames[0].document.getElementById("mk_side_search_field");
-    if (field) {
-        val = field.value;
-        focused = parent.frames[0].document.activeElement == field;
-    }
-
-    parent.frames[0].document.reloading = 1;
-    parent.frames[0].document.location.reload();
-
-    if (!field) {
-        return;
-    }
-
-    g_sidebar_reload_timer = setInterval(function (value, has_focus) {
-        return function() {
-            if (!parent.frames[0].document.reloading
-                && parent.frames[0].document.readyState === "complete") {
-                var field = parent.frames[0].document.getElementById("mk_side_search_field");
-                if (field) {
-                    field.value = value;
-                    if (has_focus) {
-                        field.focus();
-
-                        // Move caret to end
-                        if (field.setSelectionRange !== undefined)
-                            field.setSelectionRange(value.length, value.length);
-                    }
-                }
-
-                clearInterval(g_sidebar_reload_timer);
-                g_sidebar_reload_timer = null;
-            }
-        };
-    }(val, focused), 50);
-
-    field = null;
+    window.top.cmk.sidebar.reset_sidebar_scheduler();
 }
 
 //#.

@@ -1,4 +1,4 @@
-title: IBM tape library: Media access devices
+title: IBM Tape Library: Media Access Devices
 agents: snmp
 catalog: hw/storagehw/ibm
 license: GPL
@@ -10,7 +10,7 @@ description:
  The device sends its state itself.
 
 item:
- The media access device name.
+ The name of the media access device
 
 inventory:
- One service for each device is created.
+ One service is created for each device.

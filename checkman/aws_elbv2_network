@@ -1,4 +1,4 @@
-title: AWS/NetworkELB LCUs
+title: AWS NetworkELB: LCUs
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -6,10 +6,11 @@ distribution: check_mk
 description:
  This check monitors the number of load balancer capacity units
  of AWS/NetworkELB services.
+
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
  No default levels are set. Upper levels can be configured.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (ConsumedLCUs) are given.

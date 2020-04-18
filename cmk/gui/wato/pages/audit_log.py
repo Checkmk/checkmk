@@ -1,32 +1,13 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Handling of the audit logfiles"""
 
 import re
 import time
+from typing import List, Text, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.render as render
 
@@ -102,7 +83,7 @@ class ModeAuditLog(WatoMode):
         audit = self._parse_audit_log()
 
         if not audit:
-            html.show_info(_("The audit log is empty."))
+            html.show_message(_("The audit log is empty."))
 
         elif self._options["display"] == "daily":
             self._display_daily_audit_log(audit)
@@ -158,8 +139,8 @@ class ModeAuditLog(WatoMode):
             log_today, times = self._paged_log_from(log, start)
             if len(log) == 0 or len(log_today) > 0:
                 return log_today, times
-            else:  # No entries today, but log not empty -> go back in time
-                start -= 24 * 3600
+            # No entries today, but log not empty -> go back in time
+            start -= 24 * 3600
 
     def _get_start_date(self):
         if self._options["start"] == "now":
@@ -192,9 +173,7 @@ class ModeAuditLog(WatoMode):
             if t >= end_time:
                 # This log is too new
                 continue
-            elif first_log_index is None \
-                  and t < end_time \
-                  and t >= start_time:
+            if first_log_index is None and start_time <= t < end_time:
                 # This is a log for this day. Save the first index
                 if first_log_index is None:
                     first_log_index = index
@@ -310,7 +289,7 @@ class ModeAuditLog(WatoMode):
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -320,12 +299,12 @@ class ModeAuditLog(WatoMode):
 
         newpath = self.log_path.with_name(self.log_path.name + time.strftime(".%Y-%m-%d"))
         # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-        if newpath.exists():  # pylint: disable=no-member
+        if newpath.exists():
             n = 1
             while True:
                 n += 1
                 with_num = newpath.with_name(newpath.name + "-%d" % n)
-                if not with_num.exists():  # pylint: disable=no-member
+                if not with_num.exists():
                     newpath = with_num
                     break
 
@@ -379,7 +358,7 @@ class ModeAuditLog(WatoMode):
             if linkinfo == '-':
                 linkinfo = ''
 
-            if self._filter_entry(user, action, text):
+            if self._filter_entry(user, action, text):  # TODO: Already filtered?!
                 continue
 
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
@@ -387,6 +366,7 @@ class ModeAuditLog(WatoMode):
         return False
 
     def _parse_audit_log(self):
+        # type: () -> List[Tuple[int, Text, Text, Text, Text]]
         if not self.log_path.exists():
             return []
 
@@ -394,18 +374,11 @@ class ModeAuditLog(WatoMode):
         with self.log_path.open(encoding="utf-8") as fp:
             for line in fp:
                 splitted = line.rstrip().split(None, 4)
-
                 if len(splitted) == 5 and splitted[0].isdigit():
-                    splitted[0] = int(splitted[0])
-
-                    user, action, text = splitted[2:]
-                    if self._filter_entry(user, action, text):
-                        continue
-
-                    entries.append(splitted)
-
+                    t, linkinfo, user, action, text = splitted
+                    if not self._filter_entry(user, action, text):
+                        entries.append((int(t), linkinfo, user, action, text))
         entries.reverse()
-
         return entries
 
     def _filter_entry(self, user, action, text):

@@ -1,29 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 The things in this module specify the official Check_MK check API. Meaning all
 variables, functions etc. and default modules that are available to checks.
@@ -85,7 +64,7 @@ Global variables:
                          function. See get_rate() documentation for details
     ZERO                 Used as value for the "onwrap" argument of the get_rate()
                          function. See get_rate() documentation for details
-""" # # pylint: disable=pointless-string-statement
+"""  # pylint: disable=pointless-string-statement
 
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
@@ -94,21 +73,22 @@ Global variables:
 
 # TODO: Move imports directly to checks?
 from __future__ import division  # pylint: disable=misplaced-future
-import collections  # pylint: disable=unused-import
-import enum  # pylint: disable=unused-import
-import fnmatch  # pylint: disable=unused-import
+import collections  # noqa: F401 # pylint: disable=unused-import
+import enum  # noqa: F401 # pylint: disable=unused-import
+import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
-import math  # pylint: disable=unused-import
+import math  # noqa: F401 # pylint: disable=unused-import
 import os
-import re  # pylint: disable=unused-import
-import socket  # pylint: disable=unused-import
+import re  # noqa: F401 # pylint: disable=unused-import
+import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # pylint: disable=unused-import
+import pprint  # noqa: F401 # pylint: disable=unused-import
+import calendar
 
 from typing import (  # pylint: disable=unused-import
-    Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union,
+    Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union,
 )
 
 import six
@@ -117,7 +97,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex  # pylint: disable=unused-import
+from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
 import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
@@ -126,15 +106,25 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # check context.
 import cmk.utils as _cmk_utils
 import cmk.base.config as _config
-import cmk.base.console as _console  # pylint: disable=unused-import
+import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 import cmk.base.check_api_utils as _check_api_utils
-from cmk.base.utils import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, ServiceName, CheckPluginName, MetricName,
+)
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    ServiceState, ServiceDetails, ServiceCheckResult,
+)
+
+Warn = Union[None, int, float]
+Crit = Union[None, int, float]
+Levels = Tuple  # Has length 2 or 4
 
 
 def get_check_api_context():
+    # type: () -> _config.CheckContext
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
@@ -158,8 +148,9 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY = _snmp_utils.BINARY
-CACHED_OID = _snmp_utils.CACHED_OID
+# backwards compatibility: allow to pass integer.
+BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
+CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
 
 OID_END = _snmp_utils.OID_END
 OID_STRING = _snmp_utils.OID_STRING
@@ -177,13 +168,17 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
-from cmk.base.discovered_labels import (  # pylint: disable=unused-import
+from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
     HostLabel,
 )
 Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
+
+# The class 'as_float' has been moved to the cmk.base.api domain.
+# import it here under the old name
+from cmk.base.api.agent_based.checking_types import MetricFloat as as_float  # pylint: disable=unused-import
 
 
 def saveint(i):
@@ -214,35 +209,27 @@ def savefloat(f):
         return 0.0
 
 
-class as_float(float):
-    """Extends the float representation for Infinities in such way that
-    they can be parsed by eval"""
-    def __repr__(self):
-        # type: () -> str
-        if self > sys.float_info.max:
-            return '1e309'
-        if self < -1 * sys.float_info.max:
-            return '-1e309'
-        return super(as_float, self).__repr__()
-
-
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
 def service_extra_conf(hostname, service, ruleset):
+    # type: (HostName, ServiceName, _config.Ruleset) -> List
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
 def host_extra_conf(hostname, ruleset):
+    # type: (HostName, _config.Ruleset) -> List
     return _config.get_config_cache().host_extra_conf(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
 def in_binary_hostlist(hostname, ruleset):
+    # type: (HostName, _config.Ruleset) -> bool
     return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
 def host_extra_conf_merged(hostname, conf):
+    # type: (HostName, _config.Ruleset) -> Dict[str, Any]
     return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
 
 
@@ -257,9 +244,10 @@ hosttags_match_taglist = _tuple_rulesets.hosttags_match_taglist
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+def all_matching_hosts(condition, with_foreign_hosts):
+    # type: (Dict[str, Any], bool) -> Set[HostName]
     return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        tags, hostlist, with_foreign_hosts)
+        condition, with_foreign_hosts)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
@@ -288,6 +276,7 @@ quote_shell_string = _cmk_utils.quote_shell_string
 
 
 def get_checkgroup_parameters(group, deflt=None):
+    # type: (str, Optional[str]) -> Optional[str]
     return _config.checkgroup_parameters.get(group, deflt)
 
 
@@ -303,7 +292,7 @@ def get_filesize_human_readable(size):
     get_bytes_human_readable()."""
     if size < 4 * 1024 * 1024:
         return "%d B" % int(size)
-    elif size < 4 * 1024 * 1024 * 1024:
+    if size < 4 * 1024 * 1024 * 1024:
         return "%.2f MB" % (float(size) / (1024 * 1024))
     return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
 
@@ -351,6 +340,7 @@ MKCounterWrapped = _item_state.MKCounterWrapped
 
 
 def _normalize_levels(levels):
+    # type: (Levels) -> Levels
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
         warn_lower, crit_lower = None, None
@@ -363,6 +353,7 @@ def _normalize_levels(levels):
 
 
 def _do_check_levels(value, levels, human_readable_func, unit_info):
+    # type: (Union[int, float], Levels, Callable, Text) -> Tuple[ServiceState, ServiceDetails]
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -379,17 +370,19 @@ def _do_check_levels(value, levels, human_readable_func, unit_info):
 
 
 def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
-    return " (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
-                                                   human_readable_func(crit), unit_info)
+    # type: (Text, Warn, Crit, Callable, Text) -> Text
+    return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
+                                                    human_readable_func(crit), unit_info)
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
+    # type: (Union[None, MetricName], Union[int, float], Callable, Levels, Optional[Tuple], Union[None, int, float]) -> List
     if not dsname:
         return []
 
     perf_list = [dsname, value, levels[0], levels[1]]
     if isinstance(boundaries, tuple) and len(boundaries) == 2:
-        perf_list.extend(map(scale_value, boundaries))
+        perf_list.extend([scale_value(v) for v in boundaries])
     perfdata = [tuple(perf_list)]
     if ref_value:
         perfdata.append(('predict_' + dsname, ref_value))
@@ -406,6 +399,7 @@ def check_levels(value,
                  human_readable_func=None,
                  infoname=None,
                  boundaries=None):
+    # type: (Union[int, float], Union[None, MetricName], Any, Text, Union[int, float], Union[int, float], bool, Optional[Callable], Optional[Text], Optional[Tuple]) -> ServiceCheckResult
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -450,24 +444,25 @@ def check_levels(value,
     infoname: Perf value name for infotext like a title.
     boundaries: Add minimum and maximum to performance data.
     """
-    unit_info = ""
     if unit.startswith('/'):
-        unit_info = unit
+        unit_info = unit  # type: Text
     elif unit:
         unit_info = " %s" % unit
+    else:
+        unit_info = ""
 
     if human_readable_func is None:
         human_readable_func = lambda x: "%.2f" % (x / scale)
 
     def scale_value(v):
+        # type: (Union[None, int, float]) -> Union[None, int, float]
         if v is None:
             return None
         return v * factor * scale
 
+    infotext = "%s%s" % (human_readable_func(value), unit_info)
     if infoname:
-        infotext = "%s: %s%s" % (infoname, human_readable_func(value), unit_info)
-    else:
-        infotext = "%s%s" % (human_readable_func(value), unit_info)
+        infotext = "%s: %s" % (infoname, infotext)
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
@@ -477,17 +472,22 @@ def check_levels(value,
         return 0, infotext, perf
 
     # Pair of numbers -> static levels
-    elif isinstance(params, tuple):
-        levels = map(scale_value, _normalize_levels(params))
+    if isinstance(params, tuple):
+        levels = tuple(scale_value(v) for v in _normalize_levels(params))
         ref_value = None
 
     # Dictionary -> predictive levels
     else:
-        try:
-            ref_value, levels = \
-                      _prediction.get_levels(host_name(), service_description(),
-                                dsname, params, "MAX", levels_factor=factor * scale)
+        if not dsname:
+            raise TypeError("Metric name is empty/None")
 
+        try:
+            ref_value, levels = _prediction.get_levels(host_name(),
+                                                       service_description(),
+                                                       dsname,
+                                                       params,
+                                                       "MAX",
+                                                       levels_factor=factor * scale)
             if ref_value:
                 predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
             else:
@@ -495,7 +495,7 @@ def check_levels(value,
 
         except MKGeneralException as e:
             ref_value = None
-            levels = [None, None, None, None]
+            levels = (None, None, None, None)
             predictive_levels_msg = "no reference for prediction (%s)" % e
 
         except Exception as e:
@@ -517,6 +517,7 @@ def check_levels(value,
 
 
 def get_effective_service_level():
+    # type: () -> ServiceState
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
@@ -532,13 +533,14 @@ def get_effective_service_level():
 
 
 def utc_mktime(time_struct):
+    # type: (time.struct_time) -> int
     """Works like time.mktime() but assumes the time_struct to be in UTC,
     not in local time."""
-    import calendar
     return calendar.timegm(time_struct)
 
 
 def passwordstore_get_cmdline(fmt, pw):
+    # type: (str, Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
     if not isinstance(pw, tuple):
@@ -551,6 +553,7 @@ def passwordstore_get_cmdline(fmt, pw):
 
 
 def get_http_proxy(http_proxy):
+    # type: (Tuple[str, str]) -> Optional[str]
     """Returns proxy URL to be used for HTTP requests
 
     Pass a value configured by the user using the HTTPProxyReference valuespec to this function
@@ -561,6 +564,7 @@ def get_http_proxy(http_proxy):
 
 
 def get_agent_data_time():
+    # type: () -> Optional[float]
     """Use this function to get the age of the agent data cache file
     of tcp or snmp hosts or None in case of piggyback data because
     we do not exactly know the latest agent data. Maybe one time
@@ -569,13 +573,16 @@ def get_agent_data_time():
 
 
 def _agent_cache_file_age(hostname, check_plugin_name):
+    # type: (HostName, CheckPluginName) -> Optional[float]
     host_config = _config.get_config_cache().get_host_config(hostname)
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    import cmk.base.check_utils
+    # TODO 'import-outside-toplevel' not available in pylint for Python 2
+    import cmk.base.check_utils  # pylint: disable-all
     if cmk.base.check_utils.is_snmp_check(check_plugin_name):
-        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[0]
+        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[
+            0]  # type: Optional[str]
     elif cmk.base.check_utils.is_tcp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname
     else:
@@ -588,6 +595,7 @@ def _agent_cache_file_age(hostname, check_plugin_name):
 
 
 def get_parsed_item_data(check_function):
+    # type: (Callable) -> Callable
     """Use this decorator to determine the parsed item data outside
     of the respective check function.
 
@@ -606,6 +614,8 @@ def get_parsed_item_data(check_function):
     """
     @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
+        # TODO
+        # type: (Text, Any, Any) -> Any
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
         if item not in parsed or not parsed[item]:
@@ -624,19 +634,18 @@ def discover_single(info):
 
 
 def validate_filter(filter_function):
-    # type: (Callable) -> Callable
+    # type: (Any) -> Callable
     """Validate function argument is a callable and return it"""
-
-    if hasattr(filter_function, '__call__'):
+    if callable(filter_function):
         return filter_function
-    elif filter_function is not None:
-        raise ValueError("Filtering function is not a callable,"
-                         " a {} has been given.".format(type(filter_function)))
-    return lambda *entry: entry[0]
+    if filter_function is None:
+        return lambda *entry: entry[0]
+    raise ValueError("Filtering function is not a callable, a {} has been given.".format(
+        type(filter_function)))
 
 
 def discover(selector=None, default_params=None):
-    # type (Callable, Union[dict, str]) -> Callable
+    # type: (Optional[Callable], Union[None, Dict[Any, Any], str]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -695,45 +704,31 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-    def roller(parsed):
-        if isinstance(parsed, dict):
-            return parsed.iteritems()
-        elif isinstance(parsed, (list, tuple)):
-            return parsed
-        raise ValueError("Discovery function only works with dictionaries,"
-                         " lists, and tuples you gave a {}".format(type(parsed)))
-
     def _discovery(filter_function):
-        # type (Callable) -> Callable
+        # type: (Callable) -> Callable
         @functools.wraps(filter_function)
         def discoverer(parsed):
-            # type (Union[dict,list]) -> Iterable[Tuple]
-
+            # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
             params = default_params if isinstance(default_params, six.string_types +
                                                   (dict,)) else {}
-            filterer = validate_filter(filter_function)
-            from_dict = isinstance(parsed, dict)
-
-            for entry in roller(parsed):
-                if from_dict:
-                    key, value = entry
-                    name = filterer(key, value)
-                else:
-                    name = filterer(entry)
-
-                if isinstance(name, six.string_types):
-                    yield (name, params)
-                elif name is True and from_dict:
-                    yield (key, params)
-                elif name is True and not from_dict:
-                    yield (entry[0], params)
-                elif name and hasattr(name, '__iter__'):
-                    for new_name in name:
-                        yield (new_name, params)
+            if isinstance(parsed, dict):
+                filterer = validate_filter(filter_function)
+                for key, value in parsed.items():
+                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                        yield (n, params)
+            elif isinstance(parsed, (list, tuple)):
+                filterer = validate_filter(filter_function)
+                for entry in parsed:
+                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                        yield (n, params)
+            else:
+                raise ValueError(
+                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}"
+                    .format(type(parsed)))
 
         return discoverer
 
-    if hasattr(selector, '__call__'):
+    if callable(selector):
         return _discovery(selector)
 
     if selector is None and default_params is None:
@@ -742,8 +737,20 @@ def discover(selector=None, default_params=None):
     return _discovery
 
 
+def _get_discovery_iter(name, get_name):
+    # type: (Any, Callable[[], str]) -> Iterable[str]
+    if isinstance(name, six.string_types):
+        return iter((six.ensure_str(name),))
+    if name is True:
+        return iter((get_name(),))
+    try:
+        return iter(name)
+    except TypeError:
+        return iter(())
+
+
 # NOTE: Currently this is not really needed, it is just here to keep any start
 # import in sync with our intended API.
 # TODO: Do we really need this? Is there code which uses a star import for this
 # module?
-__all__ = get_check_api_context().keys()
+__all__ = list(get_check_api_context())

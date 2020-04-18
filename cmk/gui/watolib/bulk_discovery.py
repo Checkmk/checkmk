@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
@@ -33,10 +13,11 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
-    RadioChoice,
+    DropdownChoice,
     Tuple,
     Integer,
 )
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
@@ -44,10 +25,16 @@ from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
-                                             ("host_name", str)])
-DiscoveryTask = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
-                                             ("host_names", list)])
+DiscoveryHost = NamedTuple("DiscoveryHost", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_name", str),
+])
+DiscoveryTask = NamedTuple("DiscoveryTask", [
+    ("site_id", str),
+    ("folder_path", str),
+    ("host_names", list),
+])
 
 
 def get_tasks(hosts_to_discover, bulk_size):
@@ -71,15 +58,10 @@ def get_tasks(hosts_to_discover, bulk_size):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    if render_form:
-        render = "form"
-    else:
-        render = None
+    selection_elements = []  # type: List[ValueSpec]
 
     if include_subfolders:
-        selection_elements = [Checkbox(label=_("Include all subfolders"), default_value=True)]
-    else:
-        selection_elements = []
+        selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
 
     selection_elements += [
         Checkbox(label=_("Only include hosts that failed on previous discovery"),
@@ -90,12 +72,11 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 
     return Dictionary(
         title=_("Bulk discovery"),
-        render=render,
+        render="form" if render_form else "normal",
         elements=[
             ("mode",
-             RadioChoice(
+             DropdownChoice(
                  title=_("Mode"),
-                 orientation="vertical",
                  default_value="new",
                  choices=[
                      ("new", _("Add unmonitored services and new host labels")),
@@ -114,9 +95,11 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
                    ])),
             ("error_handling",
-             Checkbox(title=_("Error handling"),
-                      label=_("Ignore errors in single check plugins"),
-                      default_value=True)),
+             Checkbox(
+                 title=_("Error handling"),
+                 label=_("Ignore errors in single check plugins"),
+                 default_value=True,
+             )),
         ],
         optional_keys=[],
     )
@@ -208,7 +191,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         counts, failed_hosts = check_mk_automation(task.site_id,
                                                    "inventory",
                                                    arguments,
-                                                   timeout=timeout)
+                                                   timeout=timeout,
+                                                   non_blocking_http=True)
 
         return counts, failed_hosts
 

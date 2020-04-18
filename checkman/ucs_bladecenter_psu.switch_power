@@ -12,5 +12,5 @@ item:
  The component where the fans are located, e.g chassis or switch
 
 inventory:
- Creates on service per switch module
+ One service is created for each switch module.
 

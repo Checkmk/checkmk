@@ -1,4 +1,8 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import threading
@@ -7,13 +11,12 @@ import os
 import stat
 import six
 
-# Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
+    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module
 
 import cmk.utils.store as store
@@ -106,7 +109,7 @@ def test_load_data_from_not_permitted_file(tmp_path, path_type):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path, path_type):
     locked_file = tmp_path / "test"
-    locked_file.write_bytes(repr({"1": 2, "ä": u"ß"}))
+    locked_file.write_bytes(six.ensure_binary(repr({"1": 2, "ä": u"ß"})))
 
     data = store.load_object_from_file(path_type(locked_file))
     assert isinstance(data, dict)
@@ -118,7 +121,7 @@ def test_load_data_from_file_dict(tmp_path, path_type):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_mk_file(tmp_path, path_type):
     locked_file = tmp_path / "test"
-    locked_file.write_bytes("# encoding: utf-8\nabc = 'äbc'\n")
+    locked_file.write_bytes(b"# encoding: utf-8\nabc = '\xc3\xa4bc'\n")
 
     config = store.load_mk_file(path_type(locked_file), default={})
     assert config["abc"] == "äbc"

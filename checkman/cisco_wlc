@@ -1,8 +1,12 @@
-title: Cisco Wireless LAN Controller (WLC): Connected WLAN accesspoints
+title: Cisco Wireless LAN Controller (WLC): Connected WLAN Accesspoints
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the WLC
+
 description:
  This check automatically detects all online accesspoints and checks for the current status.
  If an accesspoint is not longer reachable, the checks also triggers a critical state.
@@ -10,5 +14,5 @@ description:
  with the model 5508.
 
 inventory:
- One check for each online accesspoint is created
+ One service is created for each online accesspoint.
 

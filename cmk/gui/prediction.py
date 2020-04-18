@@ -1,33 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import os
 import time
 import json
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import livestatus
 import cmk.utils.paths
@@ -45,17 +26,17 @@ graph_size = 2000, 700
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = html.request.var("host")
-    service = html.request.var("service")
-    dsname = html.request.var("dsname")
+    host = html.request.get_str_input_mandatory("host")
+    service = html.request.get_str_input_mandatory("service")
+    dsname = html.request.get_str_input_mandatory("dsname")
 
     html.header(_("Prediction for %s - %s - %s") % (host, service, dsname))
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = prediction.predictions_dir(host, service, dsname, create=False)
-    if pred_dir is None:
+    pred_dir = prediction.predictions_dir(host, service, dsname)
+    if not os.path.exists(pred_dir):
         raise MKGeneralException(
             _("There is currently no prediction information "
               "available for this service."))
@@ -63,20 +44,20 @@ def page_graph():
     # Load all prediction information, sort by time of generation
     tg_name = html.request.var("timegroup")
     timegroup = None
-    timegroups = []
+    timegroups = []  # type: List[prediction.PredictionInfo]
     now = time.time()
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
-
-        tg_info = prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
+        tg_info = prediction.retrieve_data_for_prediction(
+            pred_dir + "/" + f, "<unknown>" if timegroup is None else timegroup)
         if tg_info is None:
             continue
 
         tg_info["name"] = f[:-5]
         timegroups.append(tg_info)
-        if tg_info["name"] == tg_name or \
-            (tg_name is None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
+        if tg_info["name"] == tg_name or (tg_name is None and
+                                          (tg_info["range"][0] <= now <= tg_info["range"][1])):
             timegroup = tg_info
             tg_name = tg_info["name"]
 
@@ -85,11 +66,12 @@ def page_graph():
     choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
 
     if not timegroup:
-        if timegroups:
-            timegroup = timegroups[0]
-            tg_name = choices[0][0]
-        else:
+        if not timegroups:
             raise MKGeneralException(_("Missing prediction information."))
+        timegroup = timegroups[0]
+        tg_name = choices[0][0]
+    if tg_name is None:
+        raise Exception("should not happen")
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))
@@ -145,7 +127,7 @@ def page_graph():
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
     now = time.time()
-    if now >= from_time and now <= until_time:
+    if from_time <= now <= until_time:
         timeseries = prediction.get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
         rrd_data = timeseries.values
 
@@ -178,8 +160,8 @@ def compute_vertical_scala(low, high):
         letter = 'P'
         factor = 1024.0**5
 
-    v = 0
-    vert_scala = []
+    v = 0.0
+    vert_scala = []  # type: List[List[Any]]
     steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
@@ -225,7 +207,7 @@ def get_current_perfdata(host, service, dsname):
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
-    swapped = dict([(c, []) for c in columns])
+    swapped = {c: [] for c in columns}  # type: Dict[Any, List[Any]]
     for step in tg_data["points"]:
         row = dict(zip(columns, step))
         for k, v in row.items():
@@ -251,7 +233,7 @@ def stack(apoints, bpoints, scale):
 
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
-    for points in swapped.itervalues():
+    for points in swapped.values():
         mmax = max(mmax, max(points)) or 0.0  # convert None into 0.0
         mmin = min(mmin, min(points)) or 0.0
     return mmin, mmax

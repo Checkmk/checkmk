@@ -1,47 +1,34 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import base64
 import tarfile
-import StringIO
+import io
 import time
 import pprint
 import traceback
 import json
 from typing import Dict, Text, Optional  # pylint: disable=unused-import
 import six
+
 import livestatus
+
+import cmk.utils.version as cmk_version
+import cmk.utils.crash_reporting
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.i18n
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
+from cmk.gui.log import logger
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -51,9 +38,17 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-import cmk.utils.crash_reporting
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
+
+
+def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_silently=False):
+    # type: (Optional[Dict], bool, bool) -> None
+    crash = GUICrashReport.from_exception(details=details)
+    CrashReportStore().save(crash)
+
+    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+    show_crash_dump_message(crash, plain_error, fail_silently)
 
 
 def show_crash_dump_message(crash, plain_text, fail_silently):
@@ -84,7 +79,7 @@ def show_crash_dump_message(crash, plain_text, fail_silently):
 
     if plain_text:
         html.set_output_format("text")
-        html.write("%s\n" % html.strip_tags(message))
+        html.write("%s\n" % escaping.strip_tags(message))
         return
 
     if fail_silently:
@@ -122,13 +117,8 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.get_unicode_input("crash_id")
-        if not self._crash_id:
-            raise MKUserError("crash_id", _("The parameter \"%s\" is missing.") % "crash_id")
-
-        self._site_id = html.get_unicode_input("site")
-        if not self._site_id:
-            raise MKUserError("site", _("The parameter \"%s\" is missing.") % "site")
+        self._crash_id = html.request.get_unicode_input_mandatory("crash_id")
+        self._site_id = html.request.get_unicode_input_mandatory("site")
 
     def _get_crash_info(self, row):
         return json.loads(row["crash_info"])
@@ -145,7 +135,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def _get_crash_report_row(self, crash_id, site_id):
         # type: (Text, Text) -> Optional[Dict[Text, Text]]
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(bytes(site_id))],
+            only_sites=[config.SiteId(six.ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -154,7 +144,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def _get_serialized_crash_report(self):
         return {
             k: v
-            for k, v in self._get_crash_row().iteritems()
+            for k, v in self._get_crash_row().items()
             if k not in ["site", "crash_id", "crash_type"]
         }
 
@@ -226,10 +216,10 @@ class PageCrash(ABCCrashReportPage):
                  base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
             ])
             html.open_div(id_="pending_msg", style="display:none")
-            html.message(_("Submitting crash report..."))
+            html.show_message(_("Submitting crash report..."))
             html.close_div()
             html.open_div(id_="success_msg", style="display:none")
-            html.message(
+            html.show_message(
                 _("Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
                   "it is very important for the quality of Checkmk.<br><br>"
                   "Please note:"
@@ -248,10 +238,12 @@ class PageCrash(ABCCrashReportPage):
                   "checkmk_support_contract.html\" target=\"_blank\">our website</a>."))
             html.close_div()
             html.open_div(id_="fail_msg", style="display:none")
-            report_url = html.makeuri([
-                ("subject", "Checkmk Crash Report - " + self._get_version()),
-            ],
-                                      filename="mailto:" + self._get_crash_report_target())
+            report_url = html.makeuri_contextless(
+                [
+                    ("subject", "Checkmk Crash Report - " + self._get_version()),
+                ],
+                filename="mailto:" + self._get_crash_report_target(),
+            )
             html.show_error(
                 _("Failed to send the crash report. Please download it manually and send it "
                   "to <a href=\"%s\">%s</a>") % (report_url, self._get_crash_report_target()))
@@ -265,11 +257,11 @@ class PageCrash(ABCCrashReportPage):
         return details
 
     def _get_version(self):
-        # type: () -> Text
-        return cmk.__version__
+        # type: () -> str
+        return cmk_version.__version__
 
     def _get_crash_report_target(self):
-        # type: () -> Text
+        # type: () -> str
         return config.crash_report_target
 
     def _vs_crash_report(self):
@@ -297,9 +289,9 @@ class PageCrash(ABCCrashReportPage):
                     files.append(filepath)
 
             if files:
-                warn_text = _(
-                    "The following files located in the local hierarchy of your site are involved in this exception:"
-                )
+                warn_text = HTML(
+                    _("The following files located in the local hierarchy of your site are involved in this exception:"
+                     ))
                 warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
                 warn_text += _("Maybe these files are not compatible with your current Checkmk "
                                "version. Please verify and only report this crash when you think "
@@ -322,6 +314,9 @@ class PageCrash(ABCCrashReportPage):
 
     def _add_gui_user_infos_to_details(self, details):
         users = userdb.load_users()
+        if config.user.id is None:
+            details.update({"name": None, "mail": None})
+            return
         user = users.get(config.user.id, {})
         details.setdefault("name", user.get("alias"))
         details.setdefault("mail", user.get("mail"))
@@ -354,7 +349,7 @@ class PageCrash(ABCCrashReportPage):
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
 
         joined_paths = "<br>".join(
-            [html.attrencode(p) for p in info.get("python_paths", [_("Unknown")])])
+            [escaping.escape_attribute(p) for p in info.get("python_paths", [_("Unknown")])])
         _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
         html.close_table()
@@ -531,7 +526,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return base64.b64decode(local_vars)
+    return ensure_unicode(base64.b64decode(local_vars))
 
 
 def format_params(params):
@@ -541,7 +536,7 @@ def format_params(params):
 def _show_output_box(title, content):
     html.h3(title)
     html.open_div(class_="log_output")
-    html.write(html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
+    html.write(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
     html.close_div()
 
 
@@ -559,14 +554,17 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
 
 def _pack_crash_report(serialized_crash_report):
-    # type: (Dict) -> Text
+    # type: (Dict[str, Optional[bytes]]) -> bytes
     """Returns a byte string representing the current crash report in tar archive format"""
-    buf = StringIO.StringIO()
+    buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-        for key, content in serialized_crash_report.iteritems():
+        for key, content in serialized_crash_report.items():
+            if content is None:
+                continue
+
             tar_info = tarfile.TarInfo(name="crash.info" if key == "crash_info" else key)
             tar_info.size = len(content)
 
-            tar.addfile(tar_info, StringIO.StringIO(content))
+            tar.addfile(tar_info, io.BytesIO(content))
 
     return buf.getvalue()

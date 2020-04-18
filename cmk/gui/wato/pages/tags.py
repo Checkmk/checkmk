@@ -1,32 +1,12 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Set, Text, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
 import abc
 from enum import Enum
 import six
@@ -108,12 +88,12 @@ class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
     def _get_tags_using_aux_tag(self, aux_tag):
         # type: (cmk.utils.tags.AuxTag) -> Set[cmk.utils.tags.GroupedTag]
-        used_tags = set()
-        for tag_group in self._effective_config.tag_groups:
-            for tag in tag_group.tags:
-                if aux_tag.id in tag.aux_tag_ids:
-                    used_tags.add(tag)
-        return used_tags
+        return {
+            tag  #
+            for tag_group in self._effective_config.tag_groups
+            for tag in tag_group.tags
+            if aux_tag.id in tag.aux_tag_ids
+        }
 
 
 @mode_registry.register
@@ -151,15 +131,19 @@ class ModeTags(ABCTagMode):
     def _delete_tag_group(self):
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
-        message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
-        if message is True:  # no confirmation yet
-            c = wato_confirm(
-                _("Confirm deletion of the tag group '%s'") % del_id,
-                _("Do you really want to delete the tag group '%s'?") % del_id)
-            if c is False:
-                return ""
-            elif c is None:
-                return None
+        if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
+                del_id):
+            message = _("Transformed the user tag group \"%s\" to builtin.") % del_id
+        else:
+            message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
+            if message is True:  # no confirmation yet
+                c = wato_confirm(
+                    _("Confirm deletion of the tag group '%s'") % del_id,
+                    _("Do you really want to delete the tag group '%s'?") % del_id)
+                if c is False:
+                    return ""
+                if c is None:
+                    return None
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -169,7 +153,32 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
+
+    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
+        """The "Agent type" tag group was user defined in previous versions
+
+        Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
+        for further information
+
+        In case a user wants to remove such a "agent" tag group do not perform the
+        usual validations since this is not a real delete operation because it just
+        replaces a custom group with a builtin one.
+        """
+        if del_id != "agent":
+            return False
+
+        builtin_tg = self._builtin_config.get_tag_group("agent")
+        if builtin_tg is None:
+            return False
+
+        user_tg = self._tag_config.get_tag_group("agent")
+        if user_tg is None:
+            return False
+
+        # When the tag choices are matching the builtin tag group choices
+        # simply allow removal without confirm
+        return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self):
         del_id = html.get_item_input("_del_aux",
@@ -191,7 +200,7 @@ class ModeTags(ABCTagMode):
                 _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
             if c is False:
                 return ""
-            elif c is None:
+            if c is None:
                 return None
 
         if message:
@@ -205,8 +214,8 @@ class ModeTags(ABCTagMode):
             return "tags", message if message is not True else None
 
     def _move_tag_group(self):
-        move_nr = html.get_integer_input("_move")
-        move_to = html.get_integer_input("_index")
+        move_nr = html.request.get_integer_input_mandatory("_move")
+        move_to = html.request.get_integer_input_mandatory("_index")
 
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
@@ -303,6 +312,7 @@ class ModeTags(ABCTagMode):
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self):
+        # type: () -> None
         with table_element("auxtags",
                            _("Auxiliary tags"),
                            help=_(
@@ -323,8 +333,10 @@ class ModeTags(ABCTagMode):
                 table.text_cell(_("Title"), _u(aux_tag.title))
                 table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
                 table.text_cell(
-                    _("Tags using this auxiliary tag"),
-                    ", ".join(sorted([tag.id for tag in self._get_tags_using_aux_tag(aux_tag)])))
+                    _("Tags using this auxiliary tag"), ", ".join(
+                        sorted(tag.id
+                               for tag in self._get_tags_using_aux_tag(aux_tag)
+                               if tag.id is not None)))
 
     def _show_aux_tag_icons(self, aux_tag):
         # type: (cmk.utils.tags.AuxTag) -> None
@@ -436,6 +448,9 @@ class ModeTagUsage(ABCTagMode):
         self._show_tag_group_icons(tag_group)
 
         table.text_cell(_("Tag group"), _u(tag_group.choice_title))
+        # TODO: This check shouldn't be necessary if we get our types right.
+        if tag.title is None or tag.id is None or tag_group.id is None:
+            raise Exception("uninitialized tag/tag group")
         table.text_cell(_("Tag"), _u(tag.title))
 
         operation = OperationReplaceGroupedTags(tag_group.id,
@@ -487,6 +502,9 @@ class ModeTagUsage(ABCTagMode):
         table.text_cell(_("Used by tags"))
         _show_aux_tag_used_by_tags(self._get_tags_using_aux_tag(aux_tag))
 
+        # TODO: This check shouldn't be necessary if we get our types right.
+        if aux_tag.id is None:
+            raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(aux_tag.id)
         affected_folders, affected_hosts, affected_rulesets = \
             _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
@@ -597,13 +615,14 @@ class ModeEditTagGroup(ABCEditTagMode):
         return "edit_tag"
 
     def __init__(self):
+        # type: () -> None
         super(ModeEditTagGroup, self).__init__()
 
-        self._untainted_tag_group = self._tag_config.get_tag_group(self._id)
-        if not self._untainted_tag_group:
-            self._untainted_tag_group = cmk.utils.tags.TagGroup()
+        tg = self._tag_config.get_tag_group(self._id)
+        self._untainted_tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
 
-        self._tag_group = self._tag_config.get_tag_group(self._id) or cmk.utils.tags.TagGroup()
+        tg = self._tag_config.get_tag_group(self._id)
+        self._tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
 
     def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -651,7 +670,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             raise MKUserError(None, "%s" % e)
 
         remove_tag_ids, replace_tag_ids = [], {}
-        new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
+        new_by_title = {tag.title: tag.id for tag in changed_tag_group.tags}
 
         for former_tag in self._untainted_tag_group.tags:
             # Detect renaming
@@ -668,14 +687,17 @@ class ModeEditTagGroup(ABCEditTagMode):
                 # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
                 remove_tag_ids.append(former_tag.id)
 
-        operation = OperationReplaceGroupedTags(self._tag_group.id, remove_tag_ids, replace_tag_ids)
+        tg_id = self._tag_group.id
+        if tg_id is None:
+            raise Exception("tag group ID not set")
+        operation = OperationReplaceGroupedTags(tg_id, remove_tag_ids, replace_tag_ids)
 
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(operation)
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
 
         return "tags"
 
@@ -718,13 +740,17 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(
-                            title=_("Tag ID"),
-                            size=16,
-                            regex="^[-a-z0-9A-Z_]*$",
-                            none_is_empty=True,
-                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                          "0-9, _ and - are allowed."),
+                        Transform(
+                            TextAscii(
+                                title=_("Tag ID"),
+                                size=16,
+                                regex="^[-a-z0-9A-Z_]*$",
+                                regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                              "0-9, _ and - are allowed."),
+                                allow_empty=True,
+                            ),
+                            forth=lambda x: "" if x is None else x,
+                            back=lambda x: None if not x else x,
                         ),
                         TextUnicode(
                             title=_("Title") + "*",
@@ -835,7 +861,7 @@ def _rename_tags_after_confirmation(operation):
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
             (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
-    message = ""
+    message = u""
     affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
@@ -870,7 +896,7 @@ def _rename_tags_after_confirmation(operation):
               "Removed tag groups will be removed from hosts and folders, removed tags will be "
               "replaced with the default value for the tag group (for hosts and folders). What "
               "rules concern, you have to decide how to proceed."))
-        html.begin_form("confirm")
+        html.begin_form("confirm", method="POST")
 
         if affected_rulesets and _is_removing_tags(operation):
             html.br()
@@ -995,7 +1021,7 @@ def _change_host_tags_in_folders(operation, mode, folder):
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
                 operation, mode, subfolder)
             affected_folders += aff_folders
@@ -1010,7 +1036,7 @@ def _change_host_tags_in_folders(operation, mode, folder):
 
 def _change_host_tags_in_hosts(operation, mode, folder):
     affected_hosts = []
-    for host in folder.hosts().itervalues():
+    for host in folder.hosts().values():
         aff_hosts = _change_host_tags_in_host_or_folder(operation, mode, host)
         affected_hosts += aff_hosts
 
@@ -1024,7 +1050,7 @@ def _change_host_tags_in_hosts(operation, mode, folder):
 
 
 def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected = []
+    affected = []  # type: List[Union[watolib.CREHost, watolib.CREFolder]]
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()
@@ -1047,10 +1073,10 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     if current in operation.remove_tag_ids or current in operation.replace_tag_ids:
         affected.append(host_or_folder)
         if mode != TagCleanupMode.CHECK:
-            new_tag = operation[current]
             if current in operation.remove_tag_ids:
                 del attributes[attrname]
             elif current in operation.replace_tag_ids:
+                new_tag = operation.replace_tag_ids[current]
                 attributes[attrname] = new_tag
             else:
                 raise NotImplementedError()
@@ -1073,7 +1099,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
     rulesets = watolib.FolderRulesets(folder)
     rulesets.load()
 
-    for ruleset in rulesets.get_rulesets().itervalues():
+    for ruleset in rulesets.get_rulesets().values():
         for _folder, _rulenr, rule in ruleset.get_rules():
             affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
 
@@ -1084,7 +1110,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets = set()
+    affected_rulesets = set()  # type: Set[watolib.FolderRulesets]
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 
@@ -1105,7 +1131,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map = operation.replace_tag_ids.items()
+    tag_map = list(operation.replace_tag_ids.items())  # type: List[_Tuple[str, Any]]
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices
@@ -1117,7 +1143,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             continue
 
         current_value = rule.conditions.host_tags[operation.tag_group_id]
-        if old_tag != current_value and {"$ne": old_tag} != current_value:
+        if current_value not in (old_tag, {'$ne': old_tag}):
             continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)

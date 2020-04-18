@@ -24,4 +24,4 @@ item:
  The ID of the enclosure.
 
 inventory:
- Creates one service for every enclosure.
+ One service is created for each enclosure.

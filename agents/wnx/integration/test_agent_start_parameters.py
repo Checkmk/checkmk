@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset: 4 -*-
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from builtins import range
 from builtins import object
 try:
@@ -89,6 +93,7 @@ def expected_output(request, testconfig):
             r'# MK_SPOOLDIR=\.?',
             r'# MK_INSTALLDIR=\.?',
             r'# MK_MSI_PATH=\.?',
+            r'# MK_MODULESDIR=\.?',
             r'# Loaded Config Files:',
             r'# system: \.?',
             r'# bakery: \.?',

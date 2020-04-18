@@ -13,7 +13,7 @@ description:
  These levels are configurable.
 
 inventory:
- One service per RCM phase is created.
+ One service is created for each RCM phase.
 
 item:
  The RCM phase identifier.

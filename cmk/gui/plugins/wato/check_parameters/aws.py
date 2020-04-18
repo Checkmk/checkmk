@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Text, Type, Optional  # pylint: disable=unused-import
 from cmk.gui.i18n import _
@@ -39,6 +19,7 @@ from cmk.gui.valuespec import (
     Filesize,
     ListOf,
     CascadingDropdown,
+    Transform,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -126,27 +107,18 @@ def _vs_cpu_credits_balance():
                         ]))
 
 
-def _vs_elements_http_errors():
-    return [
-        ('levels_http_4xx_perc',
-         Tuple(
-             title=_("Upper percentual levels for HTTP 400 errors"),
-             help=_("Specify levels for HTTP 400 errors in percentage "
-                    "which refer to the total number of requests"),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ],
-         )),
-        ('levels_http_5xx_perc',
-         Tuple(title=_("Upper percentual levels for HTTP 500 errors"),
-               help=_("Specify levels for HTTP 500 errors in percentage "
-                      "which refer to the total number of requests"),
-               elements=[
-                   Percentage(title=_("Warning at")),
-                   Percentage(title=_("Critical at")),
-               ])),
-    ]
+def _vs_elements_http_errors(http_err_codes, title_add=lambda http_err_code: ""):
+    return [('levels_http_%s_perc' % http_err_code,
+             Tuple(
+                 title=_("Upper percentual levels for HTTP %s errors" % http_err_code.upper() +
+                         title_add(http_err_code)),
+                 help=_("Specify levels for HTTP %s errors in percent "
+                        "which refer to the total number of requests." % http_err_code.upper()),
+                 elements=[
+                     Percentage(title=_("Warning at")),
+                     Percentage(title=_("Critical at")),
+                 ],
+             )) for http_err_code in http_err_codes]
 
 
 def _vs_latency():
@@ -619,8 +591,36 @@ rulespec_registry.register(
     ))
 
 
+def _transform_aws_elb_http(p):
+
+    if "levels_load_balancers" in p:
+        return p
+    else:
+        p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
+
+    for http_err_code in ['4xx', '5xx']:
+        levels_key = "levels_http_%s_perc" % http_err_code
+        if levels_key in p:
+            p_trans["levels_backend_targets"][levels_key] = p[levels_key]
+
+    return p_trans
+
+
 def _parameter_valuespec_aws_elb_http():
-    return Dictionary(elements=_vs_elements_http_errors())
+    return Transform(Dictionary(
+        title=_("Upper levels for HTTP errors"),
+        elements=[(
+            "levels_load_balancers",
+            Dictionary(
+                title=_("Upper levels for Load Balancers"),
+                elements=_vs_elements_http_errors(
+                    ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                    title_add=lambda http_err_code: ""
+                    if http_err_code in ['4xx', '5xx'] else " (Application Load Balancers only)"))),
+                  ("levels_backend_targets",
+                   Dictionary(title=_("Upper levels for Backend"),
+                              elements=_vs_elements_http_errors(['2xx', '3xx', '4xx', '5xx'])))]),
+                     forth=_transform_aws_elb_http)
 
 
 rulespec_registry.register(
@@ -757,6 +757,39 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elbv2_lcu,
         title=lambda: _("AWS/ELBv2 LCU"),
+    ))
+
+
+def _parameter_valuespec_aws_elbv2_application_target_errors():
+    return Dictionary(title=_("Upper levels for HTTP & Lambda user errors"),
+                      elements=[("levels_http",
+                                 Dictionary(title=_("Upper levels for HTTP errors"),
+                                            elements=_vs_elements_http_errors(
+                                                ['2xx', '3xx', '4xx', '5xx']))),
+                                ("levels_lambda",
+                                 Tuple(
+                                     title=_("Upper percentual levels for Lambda user errors"),
+                                     help=_("Specify levels for Lambda user errors in percent "
+                                            "which refer to the total number of requests."),
+                                     elements=[
+                                         Percentage(title=_("Warning at")),
+                                         Percentage(title=_("Critical at")),
+                                     ],
+                                 ))])
+
+
+def _item_spec_aws_elbv2_target_errors():
+    return TextAscii(title=_("Target group name"))
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_elbv2_target_errors",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_elbv2_target_errors,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_elbv2_application_target_errors,
+        title=lambda: _("AWS/ELBApplication Target Errors"),
     ))
 
 #.

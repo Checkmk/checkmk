@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="cpp-all" ToolsVersion="16.0">
+  <Include Path="cppcorecheckarithmeticrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckboundsrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckclassrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckconcurrencyrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckconstrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckdeclrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckenumrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckexperimentalrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckfuncrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckgslrules.ruleset" Action="Default" />
+  <Include Path="cppcorechecklifetimerules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckownerpointerrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckrawpointerrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckrules.ruleset" Action="Default" />
+  <Include Path="cppcorechecksharedpointerrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckstlrules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckstylerules.ruleset" Action="Default" />
+  <Include Path="cppcorechecktyperules.ruleset" Action="Default" />
+  <Include Path="cppcorecheckuniquepointerrules.ruleset" Action="Default" />
+</RuleSet>

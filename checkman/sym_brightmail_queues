@@ -1,6 +1,6 @@
-title: Symantec brightmail scanners: Mail Queues
+title: Symantec Brightmail Scanners: Mail Queues
 agents: snmp
-catalog: hw/network/symantec
+catalog: app/symantec
 license: GPL
 distribution: check_mk
 description:
@@ -15,5 +15,5 @@ item:
 
 
 inventory:
- The check creates one item per queue found.
+ One service is created for each queue.
 

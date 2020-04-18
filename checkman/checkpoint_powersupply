@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
 distribution: check_mk
+
+item:
+ Index of the power supply
+
 description:
  This check monitors the health of the power supplies in checkpoint firewalls.
  The status of this check is translated directly from a device status.
@@ -10,5 +14,5 @@ description:
  any other state will be treated as {CRIT}.
 
 inventory:
- One service per power supply will be discovered.
+ One service is created for each power supply.
 

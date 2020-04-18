@@ -1,24 +1,52 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # mypy_path in mypy.ini doesn't support relative paths, so use this wrapper to
 # tell mypy about the relevant paths using the MYPYPATH environment variable
 set -e
 
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+PYTHON_VERSION=3.7
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and
 # displays and error that mypy could not be executed.
-VENV_MYPY_PATH="$REPO_PATH/virtual-envs/3.7/.venv/bin/mypy"
+VENV_MYPY_PATH="$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv/bin/mypy"
 if [ ! -f "$VENV_MYPY_PATH" ]; then
-    for LAST_ARG; do :; done
-    echo "$LAST_ARG:1: error: Could not find $VENV_MYPY_PATH"
-    exit 1
+    # Try to fix this first
+    rm -rf "$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv"
+    make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
+
+    if [ ! -f "$VENV_MYPY_PATH" ]; then
+        for LAST_ARG; do :; done
+        echo "$LAST_ARG:1: error: Could not find $VENV_MYPY_PATH"
+        exit 1
+    fi
 fi
+
+PYTHON_VERSION_TO_TEST=$("$REPO_PATH/scripts/detect-python-version" "$@")
+case $PYTHON_VERSION_TO_TEST in
+    2.*)
+        ADDITIONAL_MYPY_OPTIONS="--check-untyped-defs"
+        ;;
+    3.*)
+        ADDITIONAL_MYPY_OPTIONS=""
+        ;;
+    *)
+        echo "Huh??? Invalid Python version $PYTHON_VERSION_TO_TEST detected" >&2
+        exit 1
+        ;;
+esac
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
     exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
-    --python-version $("$REPO_PATH/scripts/detect-python-version" "$@") \
+    --python-version ${PYTHON_VERSION_TO_TEST} \
     --scripts-are-modules \
+    --show-error-codes \
+    ${ADDITIONAL_MYPY_OPTIONS} \
+    ${JUNIT_XML} \
     "$@"

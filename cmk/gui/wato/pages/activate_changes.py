@@ -1,39 +1,19 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed WATO."""
 
 import ast
 import tarfile
 import os
-from typing import NamedTuple, List
+from typing import Dict, NamedTuple, List, Optional, Text  # pylint: disable=unused-import
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.multitar as multitar
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.utils.render as render
@@ -51,6 +31,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
+from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
 
 
 @mode_registry.register
@@ -146,24 +127,22 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         home_button()
         html.end_context_buttons()
 
-        html.message(_("Successfully discarded all pending changes."))
+        html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
 
         return False
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _extract_snapshot(self, snapshot_file):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
                                 watolib.backup_domains)
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
-        if isinstance(elements, list):
-            multitar.extract(tarfile.open(filename, "r"), elements)
+        # type: (str, Dict[str, cmk.gui.watolib.snapshots.DomainSpec]) -> None
+        if not isinstance(elements, dict):
+            raise NotImplementedError()
 
-        elif isinstance(elements, dict):
-            multitar.extract_domains(tarfile.open(filename, "r"), elements)
+        cmk.gui.watolib.snapshots.extract_snapshot(tarfile.open(filename, "r"), elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
@@ -196,7 +175,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg", style="display:none")
-        html.show_info("")
+        html.show_message("")
         html.close_div()
 
     def _activation_form(self):
@@ -205,7 +184,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         if not self._changes:
-            html.show_info(_("Currently there are no changes to activate."))
+            html.show_message(_("Currently there are no changes to activate."))
             return
 
         if not config.user.may("wato.activateforeign") \
@@ -250,31 +229,29 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.end_form()
 
     def _vs_activation(self):
+        elements = [
+            ("comment",
+             TextAreaUnicode(
+                 title=_("Comment (optional)"),
+                 cols=40,
+                 try_max_width=True,
+                 rows=3,
+                 help=_("You can provide an optional comment for the current activation. "
+                        "This can be useful to document the reason why the changes you "
+                        "activate have been made."),
+             )),
+        ]  # type: List[DictionaryEntry]
+
         if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
-            foreign_changes_elements = [
-                ("foreign",
-                 Checkbox(
-                     title=_("Activate foreign changes"),
-                     label=_("Activate changes of other users"),
-                 )),
-            ]
-        else:
-            foreign_changes_elements = []
+            elements.append(("foreign",
+                             Checkbox(
+                                 title=_("Activate foreign changes"),
+                                 label=_("Activate changes of other users"),
+                             )))
 
         return Dictionary(
             title=self.title(),
-            elements=[
-                ("comment",
-                 TextAreaUnicode(
-                     title=_("Comment (optional)"),
-                     cols=40,
-                     try_max_width=True,
-                     rows=3,
-                     help=_("You can provide an optional comment for the current activation. "
-                            "This can be useful to document the reason why the changes you "
-                            "activate have been made."),
-                 )),
-            ] + foreign_changes_elements,
+            elements=elements,
             optional_keys=[],
             render="form_part",
         )
@@ -455,19 +432,21 @@ class ModeAjaxStartActivation(AjaxPage):
         manager = watolib.ActivateChangesManager()
         manager.load()
 
-        affected_sites = request.get("sites", "").strip()
-        if not affected_sites:
+        affected_sites_request = six.ensure_str(request.get("sites", "").strip())
+        if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
-            affected_sites = affected_sites.split(",")
+            affected_sites = affected_sites_request.split(",")
 
-        comment = request.get("comment", "").strip()
+        comment = request.get("comment", "").strip()  # type: Optional[Text]
         if comment == "":
             comment = None
 
         activate_foreign = request.get("activate_foreign", "0") == "1"
 
-        activation_id = manager.start(affected_sites, activate_until, comment, activate_foreign)
+        activation_id = manager.start(affected_sites, six.ensure_str(activate_until),
+                                      None if comment is None else six.ensure_str(comment),
+                                      activate_foreign)
 
         return {
             "activation_id": activation_id,
@@ -504,14 +483,14 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = html.request.var("site_id")
+        site_id = html.request.get_ascii_input_mandatory("site_id")
         self._verify_slave_site_config(site_id)
 
         try:
-            domains = ast.literal_eval(html.request.var("domains"))
+            domains = ast.literal_eval(html.request.get_ascii_input_mandatory("domains"))
         except SyntaxError:
             raise watolib.MKAutomationException(
-                _("Invalid request: %r") % html.request.var("domains"))
+                _("Invalid request: %r") % html.request.get_ascii_input_mandatory("domains"))
 
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 

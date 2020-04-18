@@ -1,15 +1,17 @@
+// builds windows agent
+
 properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     pipelineTriggers([pollSCM('H/2 * * * *')])
 ])
 
 node ('windows') {
     stage('git checkout') {
         checkout(scm)
+        windows = load 'buildscripts/scripts/lib/windows.groovy'
+        
     }
-    stage('windows agent build') {
-        bat 'cd agents\\wnx && call build_release.cmd'
-        dir('artefacts') {
-            archiveArtifacts "*"
-        }
-    }
+    windows.build(
+        TARGET: 'agent'
+    )
 }

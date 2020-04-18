@@ -1,4 +1,4 @@
-title: SNMP Management board: Uptime
+title: SNMP Management Board: Uptime
 agents: snmp
 catalog: os/misc
 license: GPL
@@ -11,5 +11,5 @@ description:
  The check uses the SNMP OID {DISMAN-EVENT-MIB::sysUpTime}.
 
 inventory:
- One check per system is created if the host provides that information.
+ One service is created for each system.
 

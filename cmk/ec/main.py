@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.
@@ -35,7 +15,7 @@ import abc
 import ast
 import errno
 import json
-import logging
+from logging import Logger, getLogger
 import os
 from pathlib import Path
 import pprint
@@ -47,16 +27,14 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from types import FrameType  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
-import cmk
+import six
+
+import cmk.utils.version as cmk_version
 import cmk.utils.daemon
 import cmk.utils.defines
-import cmk.ec.actions
-import cmk.ec.export
-import cmk.ec.history
-import cmk.ec.settings
-import cmk.ec.snmp
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
@@ -67,11 +45,15 @@ import cmk.utils.debug
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 import cmk.utils.store as store
-from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
-from cmk.ec.query import MKClientError, Query
+import livestatus
 
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
+from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
+from .crash_reporting import ECCrashReport, CrashReportStore
+from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
+from .query import MKClientError, Query, QueryGET
+from .rule_packs import load_config as load_config_using
+from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
+from .snmp import SNMPTrapEngine
 
 
 class SyslogPriority:
@@ -87,8 +69,9 @@ class SyslogPriority:
     }
 
     def __init__(self, value):
+        # type: (int) -> None
         super().__init__()
-        self.value = int(value)
+        self.value = value
 
     def __repr__(self):
         return "SyslogPriority(%d)" % self.value
@@ -130,6 +113,7 @@ class SyslogFacility:
     }
 
     def __init__(self, value):
+        # type: (int) -> None
         super().__init__()
         self.value = int(value)
 
@@ -144,7 +128,8 @@ class SyslogFacility:
 
 
 def scrub_and_decode(s):
-    return convert_to_unicode(cmk.ec.history.scrub_string(s))
+    # type: (AnyStr) -> str
+    return convert_to_unicode(scrub_string(s))
 
 
 #.
@@ -162,13 +147,14 @@ def scrub_and_decode(s):
 
 class ECLock:
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger
         self._lock = threading.Lock()
 
     def acquire(self, blocking=True):
+        # type: (bool) -> bool
         self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
-
         # Suppression due to https://github.com/PyCQA/pylint/issues/3212,
         # already fixed in astroid, but no released version yet. :-/
         ret = self._lock.acquire(blocking)  # pylint: disable=assignment-from-no-return
@@ -176,14 +162,15 @@ class ECLock:
             self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
         else:
             self._logger.debug("[%s] Non-blocking aquire failed", threading.current_thread().name)
-
         return ret
 
     def release(self):
+        # type: () -> None
         self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
         self._lock.release()
 
     def __enter__(self):
+        # type: () -> None
         self.acquire()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -194,10 +181,12 @@ class ECLock:
 class ECServerThread(threading.Thread):
     @abc.abstractmethod
     def serve(self):
+        # type: () -> None
         raise NotImplementedError()
 
     def __init__(self, name, logger, settings, config, slave_status, profiling_enabled,
                  profile_file):
+        # type: (Any, Logger, Settings, Dict[str, Any], Dict[str, Any], bool, Path) -> None
         super().__init__(name=name)
         self.settings = settings
         self._config = config
@@ -208,8 +197,8 @@ class ECServerThread(threading.Thread):
         self._logger = logger
 
     def run(self):
+        # type: () -> None
         self._logger.info("Starting up")
-
         while not self._terminate_event.is_set():
             try:
                 with cmk.utils.profile.Profile(enabled=self._profiling_enabled,
@@ -220,25 +209,28 @@ class ECServerThread(threading.Thread):
                 if self.settings.options.debug:
                     raise
                 time.sleep(1)
-
         self._logger.info("Terminated")
 
     def terminate(self):
+        # type: () -> None
         self._terminate_event.set()
 
 
 def terminate(terminate_main_event, event_server, status_server):
+    # type: (threading.Event, EventServer, StatusServer) -> None
     terminate_main_event.set()
     status_server.terminate()
     event_server.terminate()
 
 
 def bail_out(logger, reason):
+    # type: (Logger, str) -> None
     logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
 
 
 def process_exists(pid):
+    # type: (int) -> bool
     try:
         os.kill(pid, 0)
         return True
@@ -357,6 +349,7 @@ def replace_groups(text, origtext, match_groups):
 
 class MKSignalException(MKException):
     def __init__(self, signum):
+        # type: (int) -> None
         MKException.__init__(self, "Got signal %d" % signum)
         self._signum = signum
 
@@ -376,17 +369,19 @@ class MKSignalException(MKException):
 
 class TimePeriods:
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger
-        self._periods = None
+        self._periods = None  # type: Optional[Dict[str, Tuple[str, bool]]]
         self._last_update = 0
 
     def _update(self):
+        # type: () -> None
         if self._periods is not None and int(time.time() / 60.0) == self._last_update:
             return  # only update once a minute
         try:
             table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
-            periods = {}
+            periods = {}  # type: Dict[str, Tuple[str, bool]]
             for tpname, alias, isin in table:
                 periods[tpname] = (alias, bool(isin))
             self._periods = periods
@@ -396,6 +391,7 @@ class TimePeriods:
             raise
 
     def check(self, tpname):
+        # type: (str) -> bool
         self._update()
         if not self._periods:
             self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
@@ -422,9 +418,10 @@ class TimePeriods:
 
 class HostConfig:
     def __init__(self, logger):
+        # type: (Logger) -> None
         self._logger = logger
         self._lock = threading.Lock()
-        self._hosts_by_name = {}
+        self._hosts_by_name = {}  # type: Dict[str, Dict[str, Any]]
         self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
@@ -446,6 +443,7 @@ class HostConfig:
             return self._hosts_by_designation.get(event_host_name.lower(), "")
 
     def _update_cache(self):
+        # type: () -> None
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
@@ -462,11 +460,13 @@ class HostConfig:
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
 
     def _get_host_configs(self):
+        # type: () -> List[Dict[str, Any]]
         return livestatus.LocalConnection().query_table_assoc(
             "GET hosts\n"
             "Columns: name alias address custom_variables contacts contact_groups")
 
     def _get_config_timestamp(self):
+        # type: () -> livestatus.LivestatusColumn
         return livestatus.LocalConnection().query_value("GET status\n"  #
                                                         "Columns: program_start")
 
@@ -509,24 +509,27 @@ class Perfcounters:
 
     # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._lock = ECLock(logger)
 
         # Initialize counters
         self._counters = {n: 0 for n in self._counter_names}
-        self._old_counters = {}
-        self._rates = {}
-        self._average_rates = {}
-        self._times = {}
-        self._last_statistics = None
+        self._old_counters = {}  # type: Dict[str, int]
+        self._rates = {}  # type: Dict[str, float]
+        self._average_rates = {}  # type: Dict[str, float]
+        self._times = {}  # type: Dict[str, float]
+        self._last_statistics = None  # type: Optional[float]
 
         self._logger = logger.getChild("Perfcounters")
 
     def count(self, counter):
+        # type: (str) -> None
         with self._lock:
             self._counters[counter] += 1
 
     def count_time(self, counter, ptime):
+        # type: (str, float) -> None
         with self._lock:
             if counter in self._times:
                 self._times[counter] = lerp(ptime, self._times[counter], self._weights[counter])
@@ -534,6 +537,7 @@ class Perfcounters:
                 self._times[counter] = ptime
 
     def do_statistics(self):
+        # type: () -> None
         with self._lock:
             now = time.time()
             if self._last_statistics:
@@ -543,7 +547,7 @@ class Perfcounters:
             for name, value in self._counters.items():
                 if duration:
                     delta = value - self._old_counters[name]
-                    rate = delta / duration  # fixed: true-divsion
+                    rate = delta / duration
                     self._rates[name] = rate
                     if name in self._average_rates:
                         # We could make the weight configurable
@@ -570,8 +574,9 @@ class Perfcounters:
         return columns
 
     def get_status(self):
+        # type: () -> List[float]
         with self._lock:
-            row = []
+            row = []  # type: List[float]
             # Please note: status_columns() and get_status() need to produce lists with exact same column order
             for name in self._counter_names:
                 row.append(self._counters[name])
@@ -615,6 +620,7 @@ class EventServer(ECServerThread):
 
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_columns):
+        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, List[Tuple[str, Any]]) -> None
         super().__init__(name="EventServer",
                          logger=logger,
                          settings=settings,
@@ -622,11 +628,12 @@ class EventServer(ECServerThread):
                          slave_status=slave_status,
                          profiling_enabled=settings.options.profile_event,
                          profile_file=settings.paths.event_server_profile.value)
-        self._syslog = None
-        self._syslog_tcp = None
-        self._snmptrap = None
+        self._syslog = None  # type: Optional[socket.socket]
+        self._syslog_tcp = None  # type: Optional[socket.socket]
+        self._snmptrap = None  # type: Optional[socket.socket]
 
-        self._rules = []
+        # TODO: Improve type!
+        self._rules = []  # type: List[Any]
         self._hash_stats = []
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -637,7 +644,7 @@ class EventServer(ECServerThread):
         self._history = history
         self._event_status = event_status
         self._event_columns = event_columns
-        self._message_period = cmk.ec.history.ActiveHistoryPeriod()
+        self._message_period = ActiveHistoryPeriod()
         self._rule_matcher = RuleMatcher(self._logger, config)
         self._event_creator = EventCreator(self._logger, config)
 
@@ -646,9 +653,8 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config,
-                                                            self._logger.getChild("snmp"),
-                                                            self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
+                                                self._logger.getChild("snmp"), self.handle_snmptrap)
 
     @classmethod
     def status_columns(cls):
@@ -747,12 +753,12 @@ class EventServer(ECServerThread):
     def open_syslog(self):
         endpoint = self.settings.options.syslog_udp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._syslog = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
                 os.close(endpoint.value)
                 self._logger.info("Opened builtin syslog server on inherited filedescriptor %d" %
                                   endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._syslog.bind(("0.0.0.0", endpoint.value))
@@ -763,14 +769,14 @@ class EventServer(ECServerThread):
     def open_syslog_tcp(self):
         endpoint = self.settings.options.syslog_tcp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._syslog_tcp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_STREAM)
                 self._syslog_tcp.listen(20)
                 os.close(endpoint.value)
                 self._logger.info(
                     "Opened builtin syslog-tcp server on inherited filedescriptor %d" %
                     endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
@@ -783,12 +789,12 @@ class EventServer(ECServerThread):
     def open_snmptrap(self):
         endpoint = self.settings.options.snmptrap_udp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._snmptrap = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
                 os.close(endpoint.value)
                 self._logger.info("Opened builtin snmptrap server on inherited filedescriptor %d" %
                                   endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._snmptrap.bind(("0.0.0.0", endpoint.value))
@@ -819,6 +825,7 @@ class EventServer(ECServerThread):
         self.process_event(self._event_creator.create_event_from_trap(trap, ipaddress))
 
     def serve(self):
+        # type: () -> None
         pipe_fragment = b''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -857,13 +864,13 @@ class EventServer(ECServerThread):
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections
@@ -976,8 +983,8 @@ class EventServer(ECServerThread):
     def process_raw_lines(self, data, address=None):
         # type: (bytes, Optional[Any]) -> None
         lines = data.splitlines()
-        for line in lines:
-            line = scrub_and_decode(line.rstrip())
+        for line_bytes in lines:
+            line = scrub_and_decode(line_bytes.rstrip())
             if line:
                 try:
 
@@ -990,6 +997,7 @@ class EventServer(ECServerThread):
                                            e)
 
     def do_housekeeping(self):
+        # type: () -> None
         with self._event_status.lock:
             with self._lock_configuration:
                 self.hk_handle_event_timeouts()
@@ -1001,6 +1009,7 @@ class EventServer(ECServerThread):
     # whether or not it is still in downtime. In case the downtime has ended
     # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self):
+        # type: () -> None
         host_downtimes = {}  # type: Dict[str, bool]
 
         for event in self._event_status.events():
@@ -1021,6 +1030,7 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(event)
 
     def hk_handle_event_timeouts(self):
+        # type: () -> None
         # 1. Automatically delete all events that are in state "counting"
         #    and have not reached the required number of hits and whose
         #    time is elapsed.
@@ -1098,9 +1108,8 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     self._history.add(event, "DELAYOVER")
                     if rule:
-                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config,
-                                                        self._logger, self, self._event_columns,
-                                                        rule, event)
+                        event_has_opened(self._history, self.settings, self._config, self._logger,
+                                         self, self._event_columns, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             self._history.add(event, "AUTODELETE")
@@ -1127,6 +1136,7 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(events[nr])
 
     def hk_check_expected_messages(self):
+        # type: () -> None
         now = time.time()
         # "Expecting"-rules are rules that require one or several
         # occurrances of a message within a defined time period.
@@ -1251,18 +1261,18 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, {})
             self._event_status.new_event(event)
             self._history.add(event, "COUNTFAILED")
-            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config,
-                                            self._logger, self, self._event_columns, rule, event)
+            event_has_opened(self._history, self.settings, self._config, self._logger, self,
+                             self._event_columns, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 self._history.add(event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
     def reload_configuration(self, config):
+        # type: (Dict[str, Any]) -> None
         self._config = config
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config,
-                                                            self._logger.getChild("snmp"),
-                                                            self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
+                                                self._logger.getChild("snmp"), self.handle_snmptrap)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
 
@@ -1272,7 +1282,7 @@ class EventServer(ECServerThread):
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
-        self._rule_hash = {}  # type: Dict[int, Dict[str, Any]]
+        self._rule_hash = {}  # type: Dict[int, Dict[int, Any]]
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
@@ -1516,10 +1526,9 @@ class EventServer(ECServerThread):
                             existing_event["delay_until"] = time.time() + rule["delay"]
                             existing_event["phase"] = "delayed"
                         else:
-                            cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                            self._config, self._logger, self,
-                                                            self._event_columns, rule,
-                                                            existing_event)
+                            event_has_opened(self._history, self.settings, self._config,
+                                             self._logger, self, self._event_columns, rule,
+                                             existing_event)
 
                         self._history.add(existing_event, "COUNTREACHED")
 
@@ -1542,9 +1551,8 @@ class EventServer(ECServerThread):
 
                     if self.new_event_respecting_limits(event):
                         if event["phase"] == "open":
-                            cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                            self._config, self._logger, self,
-                                                            self._event_columns, rule, event)
+                            event_has_opened(self._history, self.settings, self._config,
+                                             self._logger, self, self._event_columns, rule, event)
                             if rule.get("autodelete"):
                                 event["phase"] = "closed"
                                 self._history.add(event, "AUTODELETE")
@@ -1717,14 +1725,15 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            with cmk.ec.history.get_logfile(self._config, self.settings.paths.messages_dir.value,
-                                            self._message_period).open(mode='ab') as f:
-                f.write("%s %s %s%s: %s\n" % (
-                    time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
-                    event["host"],
-                    event["application"],
-                    event["pid"] and ("[%s]" % event["pid"]) or "",
-                    event["text"]))
+            with get_logfile(self._config, self.settings.paths.messages_dir.value,
+                             self._message_period).open(mode='ab') as f:
+                f.write(
+                    six.ensure_binary("%s %s %s%s: %s\n" % (
+                        time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
+                        event["host"],
+                        event["application"],
+                        event["pid"] and ("[%s]" % event["pid"]) or "",
+                        event["text"])))
         except Exception:
             if self.settings.options.debug:
                 raise
@@ -1824,7 +1833,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            cmk.ec.actions.do_notify(self, self._logger, overflow_event)
+            do_notify(self, self._logger, overflow_event)
 
         return False
 
@@ -1911,6 +1920,7 @@ class EventServer(ECServerThread):
 
 class EventCreator:
     def __init__(self, logger, config):
+        # type: (Logger, Dict[str, Any]) -> None
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2209,6 +2219,7 @@ class EventCreator:
 
 class RuleMatcher:
     def __init__(self, logger, config):
+        # type: (Logger, Dict[str, Any]) -> None
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2328,7 +2339,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_site(self, rule, event):
-        return "match_site" not in rule or cmk.omd_site() in rule["match_site"]
+        return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
 
     def event_rule_matches_host(self, rule, event):
         if match(rule.get("match_host"), event["host"], complete=True) is False:
@@ -2447,6 +2458,7 @@ class RuleMatcher:
 
 class Queries:
     def __init__(self, status_server, sock, logger):
+        # type: (StatusServer, socket.socket, Logger) -> None
         super().__init__()
         self._status_server = status_server
         self._socket = sock
@@ -2454,9 +2466,11 @@ class Queries:
         self._buffer = b""
 
     def _query(self, request):
+        # type: (bytes) -> Query
         return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
 
     def __iter__(self):
+        # type: () -> Iterator[Query]
         while True:
             parts = self._buffer.split(b"\n\n", 1)
             if len(parts) > 1:
@@ -2517,24 +2531,20 @@ class StatusTable:
     # columns of the table
     @abc.abstractmethod
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         raise NotImplementedError()
 
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger.getChild("status_table.%s" % self.prefix)
-        self._populate_column_views()
-
-    def _populate_column_views(self):
-        self.column_names = [c[0] for c in self.columns]
         self.column_defaults = dict(self.columns)
-
-        self.column_types = {}
-        for name, def_val in self.columns:
-            self.column_types[name] = type(def_val)
-
+        self.column_names = [name for name, _def_val in self.columns]
+        self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
     def query(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         requested_column_indexes = query.requested_column_indexes()
 
         # Output the column headers
@@ -2545,19 +2555,14 @@ class StatusTable:
         for row in self._enumerate(query):
             if query.limit is not None and num_rows >= query.limit:
                 break  # The maximum number of rows has been reached
-
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
-            if query.filters and query.table_name != "history":
-                matched = query.filter_row(row)
-                if not matched:
-                    continue
-
-            yield self._build_result_row(row, requested_column_indexes)
-            num_rows += 1
+            if query.table_name == "history" or query.filter_row(row):
+                yield self._build_result_row(row, requested_column_indexes)
+                num_rows += 1
 
     def _build_result_row(self, row, requested_column_indexes):
-        # type: (List[Any], List[int]) -> List[Any]
+        # type: (List[Any], List[Optional[int]]) -> List[Any]
         return [
             (None if index is None else row[index])  #
             for index in requested_column_indexes
@@ -2595,10 +2600,12 @@ class StatusTableEvents(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
+        # type: (Logger, EventStatus) -> None
         super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
@@ -2627,10 +2634,12 @@ class StatusTableHistory(StatusTable):
     ] + StatusTableEvents.columns
 
     def __init__(self, logger, history):
+        # type: (Logger, History) -> None
         super().__init__(logger)
         self._history = history
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._history.get(query)
 
 
@@ -2642,10 +2651,12 @@ class StatusTableRules(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
+        # type: (Logger, EventStatus) -> None
         super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._event_status.get_rule_stats()
 
 
@@ -2654,10 +2665,12 @@ class StatusTableStatus(StatusTable):
     columns = EventServer.status_columns()
 
     def __init__(self, logger, event_server):
+        # type: (Logger, EventServer) -> None
         super().__init__(logger)
         self._event_server = event_server
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._event_server.get_status()
 
 
@@ -2677,6 +2690,7 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_server, terminate_main_event):
+        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, EventServer, threading.Event) -> None
         super().__init__(name="StatusServer",
                          logger=logger,
                          settings=settings,
@@ -2684,8 +2698,8 @@ class StatusServer(ECServerThread):
                          slave_status=slave_status,
                          profiling_enabled=settings.options.profile_status,
                          profile_file=settings.paths.status_server_profile.value)
-        self._socket = None
-        self._tcp_socket = None
+        self._socket = None  # type: Optional[socket.socket]
+        self._tcp_socket = None  # type: Optional[socket.socket]
         self._reopen_sockets = False
 
         self._table_events = StatusTableEvents(logger, event_status)
@@ -2704,6 +2718,7 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def table(self, name):
+        # type: (str) -> StatusTable
         if name == "events":
             return self._table_events
         if name == "history":
@@ -2716,6 +2731,7 @@ class StatusServer(ECServerThread):
                             name)
 
     def open_unix_socket(self):
+        # type: () -> None
         path = self.settings.paths.unix_socket.value
         if path.exists():
             path.unlink()
@@ -2728,6 +2744,7 @@ class StatusServer(ECServerThread):
         self._unix_socket_queue_len = self._config['socket_queue_len']  # detect changes in config
 
     def open_tcp_socket(self):
+        # type: () -> None
         if self._config["remote_status"]:
             try:
                 self._tcp_port, self._tcp_allow_commands = self._config["remote_status"][:2]
@@ -2754,16 +2771,19 @@ class StatusServer(ECServerThread):
             self._tcp_access_list = None
 
     def close_unix_socket(self):
+        # type: () -> None
         if self._socket:
             self._socket.close()
             self._socket = None
 
     def close_tcp_socket(self):
+        # type: () -> None
         if self._tcp_socket:
             self._tcp_socket.close()
             self._tcp_socket = None
 
     def reopen_sockets(self):
+        # type: () -> None
         if self._unix_socket_queue_len != self._config["socket_queue_len"]:
             self._logger.info("socket_queue_len has changed. Reopening UNIX socket.")
             self.close_unix_socket()
@@ -2777,6 +2797,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = True
 
     def serve(self):
+        # type: () -> None
         while not self._terminate_event.is_set():
             try:
                 client_socket = None
@@ -2838,12 +2859,16 @@ class StatusServer(ECServerThread):
             client_socket = None  # close without danger of exception
 
     def handle_client(self, client_socket, allow_commands, client_ip):
+        # type: (socket.socket, bool, str) -> Any
         for query in Queries(self, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
                 if query.method == "GET":
-                    response = self.table(query.table_name).query(query)
+                    if not isinstance(query, QueryGET):
+                        raise NotImplementedError()  # make mypy happy
+                    response = self.table(query.table_name).query(
+                        query)  # type: Optional[Iterable[List[Any]]]
 
                 elif query.method == "REPLICATE":
                     response = self.handle_replicate(query.method_arg, client_ip)
@@ -2870,14 +2895,16 @@ class StatusServer(ECServerThread):
     # Only GET queries have customizable output formats. COMMAND is always
     # a dictionay and COMMAND is always None and always output as "python"
     def _answer_query(self, client_socket, query, response):
+        # type: (socket.socket, Query, Optional[Iterable[List[Any]]]) -> None
         if query.method != "GET":
             self._answer_query_python(client_socket, response)
             return
+        if response is None:
+            raise NotImplementedError()  # Make mypy happy
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall(b"\t".join([cmk.ec.history.quote_tab(c) for c in row]) +
-                                      b"\n")
+                client_socket.sendall(b"\t".join([quote_tab(c) for c in row]) + b"\n")
 
         elif query.output_format == "json":
             client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))
@@ -3021,11 +3048,7 @@ class StatusServer(ECServerThread):
             event["owner"] = user
 
         if action_id == "@NOTIFY":
-            cmk.ec.actions.do_notify(self._event_server,
-                                     self._logger,
-                                     event,
-                                     user,
-                                     is_cancelling=False)
+            do_notify(self._event_server, self._logger, event, user, is_cancelling=False)
         else:
             with self._lock_configuration:
                 if action_id not in self._config["action"]:
@@ -3033,8 +3056,8 @@ class StatusServer(ECServerThread):
                         "The action '%s' is not defined. After adding new commands please "
                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger,
-                                           self._event_columns, action, event, user)
+            do_event_action(self._history, self.settings, self._config, self._logger,
+                            self._event_columns, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3076,6 +3099,7 @@ class StatusServer(ECServerThread):
 
 def run_eventd(terminate_main_event, settings, config, lock_configuration, history, perfcounters,
                event_status, event_server, status_server, slave_status, logger):
+    # type: (Any, Settings, Dict[str, Any], ECLock, History, Perfcounters, EventStatus, EventServer, StatusServer, Dict[str, Any], Logger) -> None
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3154,6 +3178,7 @@ def run_eventd(terminate_main_event, settings, config, lock_configuration, histo
 
 class EventStatus:
     def __init__(self, settings, config, perfcounters, history, logger):
+        # type: (Settings, Dict[str, Any], Perfcounters, History, Logger) -> None
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
@@ -3163,13 +3188,17 @@ class EventStatus:
         self.flush()
 
     def reload_configuration(self, config):
+        # type: (Dict[str, Any]) -> None
         self._config = config
 
     def flush(self):
-        self._events = []
+        # type: () -> None
+        # TODO: Improve types!
+        self._events = []  # type: List[Any]
         self._next_event_id = 1
-        self._rule_stats = {}
-        self._interval_starts = {}  # needed for expecting rules
+        self._rule_stats = {}  # type: Dict[str, int]
+        # needed for expecting rules
+        self._interval_starts = {}  # type: Dict[str, int]
         self._initialize_event_limit_status()
 
         # TODO: might introduce some performance counters, like:
@@ -3178,6 +3207,8 @@ class EventStatus:
         # - number of rule misses
 
     def events(self):
+        # type: () -> List[Any]
+        # TODO: Improve type!
         return self._events
 
     def event(self, eid):
@@ -3405,15 +3436,15 @@ class EventStatus:
                                     "Do not execute cancelling actions, event %s's phase "
                                     "is not 'open' but '%s'" % (event["id"], previous_phase))
                             else:
-                                cmk.ec.actions.do_event_actions(self._history,
-                                                                self.settings,
-                                                                self._config,
-                                                                self._logger,
-                                                                event_server,
-                                                                event_columns,
-                                                                actions,
-                                                                event,
-                                                                is_cancelling=True)
+                                do_event_actions(self._history,
+                                                 self.settings,
+                                                 self._config,
+                                                 self._logger,
+                                                 event_server,
+                                                 event_columns,
+                                                 actions,
+                                                 event,
+                                                 is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -3601,11 +3632,13 @@ class EventStatus:
 
 
 def is_replication_slave(config):
+    # type: (Dict[str, Any]) -> bool
     repl_settings = config["replication"]
     return repl_settings and not repl_settings.get("disabled")
 
 
 def replication_allow_command(config, command, slave_status):
+    # type: (Dict[str, Any], str, Dict[str, Any]) -> None
     if is_replication_slave(config) and slave_status["mode"] == "sync" \
        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]:
         raise MKClientError("This command is not allowed on a replication slave "
@@ -3613,6 +3646,7 @@ def replication_allow_command(config, command, slave_status):
 
 
 def replication_send(config, lock_configuration, event_status, last_update):
+    # type: (Dict[str, Any], ECLock, EventStatus, int) -> Dict[str, Any]
     response = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -3626,6 +3660,7 @@ def replication_send(config, lock_configuration, event_status, last_update):
 
 def replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server,
                      slave_status, logger):
+    # type: (Settings, Dict[str, Any], ECLock, Perfcounters, EventStatus, EventServer, Dict[str, Any], Logger) -> None
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -3702,7 +3737,7 @@ def replication_pull(settings, config, lock_configuration, perfcounters, event_s
 
 
 def replication_update_state(settings, config, event_status, event_server, new_state):
-
+    # type: (Settings, Dict[str, Any], EventStatus, EventServer, Dict[str, Any]) -> None
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
         save_master_config(settings, new_state)
@@ -3714,24 +3749,26 @@ def replication_update_state(settings, config, event_status, event_server, new_s
 
 
 def save_master_config(settings, new_state):
+    # type: (Settings, Dict[str, Any]) -> None
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + '.new')
-    path_new.write_bytes(
-        repr({
-            "rules": new_state["rules"],
-            "rule_packs": new_state["rule_packs"],
-            "actions": new_state["actions"],
-        }) + "\n")
+    path_new.write_text(repr({
+        "rules": new_state["rules"],
+        "rule_packs": new_state["rule_packs"],
+        "actions": new_state["actions"],
+    }) + "\n",
+                        encoding="utf-8")
     path_new.rename(path)
 
 
 def load_master_config(settings, config, logger):
+    # type: (Settings, Dict[str, Any], Logger) -> None
     path = settings.paths.master_config_file.value
     try:
-        config = ast.literal_eval(path.read_text(encoding="utf-8"))
-        config["rules"] = config["rules"]
-        config["rule_packs"] = config.get("rule_packs", [])
-        config["actions"] = config["actions"]
+        master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
+        config["rules"] = master_config["rules"]
+        config["rule_packs"] = master_config.get("rule_packs", [])
+        config["actions"] = master_config["actions"]
         logger.info("Replication: restored %d rule packs and %d actions from %s" %
                     (len(config["rule_packs"]), len(config["actions"]), path))
     except Exception:
@@ -3740,6 +3777,7 @@ def load_master_config(settings, config, logger):
 
 
 def get_state_from_master(config, slave_status):
+    # type: (Dict[str, Any], Dict[str, Any]) -> Any
     repl_settings = config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -3768,10 +3806,12 @@ def get_state_from_master(config, slave_status):
 
 
 def save_slave_status(settings, slave_status):
-    settings.paths.slave_status_file.value.write_bytes(repr(slave_status) + "\n")
+    # type: (Settings, Dict[str, Any]) -> None
+    settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
 
 
 def default_slave_status_master():
+    # type: () -> Dict[str, Any]
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3781,6 +3821,7 @@ def default_slave_status_master():
 
 
 def default_slave_status_sync():
+    # type: () -> Dict[str, Any]
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3790,6 +3831,7 @@ def default_slave_status_sync():
 
 
 def update_slave_status(slave_status, settings, config):
+    # type: (Dict[str, Any], Settings, Dict[str, Any]) -> None
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
@@ -3817,7 +3859,8 @@ def update_slave_status(slave_status, settings, config):
 
 
 def load_configuration(settings, logger, slave_status):
-    config = cmk.ec.export.load_config(settings)
+    # type: (Settings, Logger, Dict[str, Any]) -> Dict[str, Any]
+    config = load_config_using(settings)
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:
@@ -3852,6 +3895,7 @@ def load_configuration(settings, logger, slave_status):
 
 def reload_configuration(settings, logger, lock_configuration, history, event_status, event_server,
                          status_server, slave_status):
+    # type: (Settings, Logger, ECLock, History, EventStatus, EventServer, StatusServer, Dict[str, Any]) -> None
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
         history.reload_configuration(config)
@@ -3876,10 +3920,11 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 
 def main():
+    # type: () -> None
     os.unsetenv("LANG")
-    logger = logging.getLogger("cmk.mkeventd")
-    settings = cmk.ec.settings.settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
-                                        Path(cmk.utils.paths.default_config_dir), sys.argv)
+    logger = getLogger("cmk.mkeventd")
+    settings = create_settings(cmk_version.__version__, Path(cmk.utils.paths.omd_root),
+                               Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:
@@ -3891,12 +3936,12 @@ def main():
             log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting", cmk.__version__)
+        logger.info("mkeventd version %s starting", cmk_version.__version__)
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
-        history = cmk.ec.history.History(settings, config, logger, StatusTableEvents.columns,
-                                         StatusTableHistory.columns)
+        history = History(settings, config, logger, StatusTableEvents.columns,
+                          StatusTableHistory.columns)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():
@@ -3939,6 +3984,7 @@ def main():
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
+            # type: (int, Optional[FrameType]) -> None
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 
@@ -3981,7 +4027,7 @@ def main():
                 settings.options.snmptrap_udp
         ]:
             try:
-                if isinstance(fd, cmk.ec.settings.FileDescriptor):
+                if isinstance(fd, FileDescriptor):
                     os.close(fd.value)
             except Exception:
                 pass

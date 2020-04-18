@@ -21,4 +21,4 @@ item:
  The name of the sensor as reported by OpenHardwareMonitor
 
 inventory:
- All available sensors are automatically inventorized.
+ One service is created for each available sensor with the sensor type ("Fan").

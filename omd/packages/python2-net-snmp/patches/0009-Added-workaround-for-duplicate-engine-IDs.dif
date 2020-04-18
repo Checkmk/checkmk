@@ -1,0 +1,40 @@
+From 205cc66a5122d5e3c6ac7d6863c85b9fe387c99d Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 14:12:31 +0100
+Subject: [PATCH 09/11] Added workaround for duplicate engine IDs.
+
+---
+ python/netsnmp/client_intf.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index f468760..cbe23f3 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -19,6 +19,8 @@ typedef int Py_ssize_t;
+ #include <netdb.h>
+ #include <stdlib.h>
+ 
++#include <net-snmp/library/lcd_time.h>
++
+ #ifdef HAVE_REGEX_H
+ #include <regex.h>
+ #endif
+@@ -1423,6 +1425,14 @@ netsnmp_delete_session(PyObject *self, PyObject *args)
+ 
+   ss = (SnmpSession *)py_netsnmp_attr_void_ptr(session, "sess_ptr");
+ 
++  /*
++   * HACK: In the wild, we see different devices with the same SNMPv3 engine ID.
++   * This confuses net-snmp, because it uses the engine ID as a key for a cache
++   * of <engine_time, engineboot> values. As a workaround, we clear the whole
++   * cache each time a session is deleted.
++   */
++  free_etimelist();
++
+   snmp_sess_close(ss);
+   return (Py_BuildValue(""));
+ }
+-- 
+2.7.4
+

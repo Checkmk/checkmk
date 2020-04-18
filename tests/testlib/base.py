@@ -1,9 +1,93 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
+KNOWN_AUTO_MIGRATION_FAILURES = [
+    # this is a list of auto conversions currently
+    # failing. These are used in various tests, to predict the
+    # expected console output. In an ideal world, this list will (!)
+    # be empty. If that is the case, please remove it entirely.
+    ('section', 'aix_diskiod'),
+    ('section', 'bluecat_dhcp'),
+    ('section', 'bluecat_dns'),
+    ('section', 'cisco_mem_asa'),
+    ('section', 'cisco_mem_asa64'),
+    ('section', 'cisco_wlc'),
+    ('section', 'diskstat'),
+    ('section', 'domino_tasks'),
+    ('section', 'f5_bigip_cluster'),
+    ('section', 'f5_bigip_cluster_status'),
+    ('section', 'f5_bigip_cluster_status.v11_2'),
+    ('section', 'f5_bigip_cluster_status_v11_2'),
+    ('section', 'f5_bigip_cluster_v11'),
+    ('section', 'f5_bigip_vcmpfailover'),
+    ('section', 'f5_bigip_vcmpguests'),
+    ('section', 'if'),
+    ('section', 'if64'),
+    ('section', 'if64adm'),
+    ('section', 'if_brocade'),
+    ('section', 'if_fortigate'),
+    ('section', 'if_lancom'),
+    ('section', 'infoblox_node_services'),
+    ('section', 'infoblox_services'),
+    ('section', 'job'),
+    ('section', 'juniper_trpz_aps'),
+    ('section', 'juniper_trpz_aps_sessions'),
+    ('section', 'lnx_if'),
+    ('section', 'local'),
+    ('section', 'logwatch'),
+    ('section', 'mssql_counters'),
+    ('section', 'netscaler_sslcertificates'),
+    ('section', 'netscaler_vserver'),
+    ('section', 'omd_status'),
+    ('section', 'oracle_asm_diskgroup'),
+    ('section', 'oracle_rman'),
+    ('section', 'oracle_tablespaces'),
+    ('section', 'printer_pages'),
+    ('section', 'ps'),
+    ('section', 'ps_lnx'),
+    ('section', 'pulse_secure_users'),
+    ('section', 'sap_hana_backup'),
+    ('section', 'sap_hana_data_volume'),
+    ('section', 'sap_hana_license'),
+    ('section', 'sap_hana_status'),
+    ('section', 'services'),
+    ('section', 'site_object_status'),
+    ('section', 'site_object_counts'),
+    ('section', 'tsm_stagingpools'),
+    ('section', 'veritas_vcs'),
+    ('section', 'winperf_phydisk'),
+    ('check', 'chrony'),
+    ('check', 'diskstat'),
+    ('check', 'docker_container_status'),
+    ('check', 'ipmi'),
+    ('check', 'liebert_humidity_air'),
+    ('check', 'liebert_temp_air'),
+    ('check', 'livestatus_status'),
+    ('check', 'mssql_datafiles'),
+    ('check', 'mssql_transactionlogs'),
+    ('check', 'netapp_api_vf_stats'),
+    ('check', 'omd_status'),
+    ('check', 'ps'),
+    ('check', 'ps_perf'),
+]
 
-class Scenario(object):
+KNOWN_AUTO_MIGRATION_FAILURES_INV = [
+    # this is a sorted (!) list of auto conversions currently
+    # failing. These are used in various tests, to predict the
+    # expected console output. In an ideal world, this list will (!)
+    # be empty. If that is the case, please remove it entirely.
+    ('section', 'inv_if'),
+]
+
+
+class Scenario(object):  # pylint: disable=useless-object-inheritance
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
         super(Scenario, self).__init__()
@@ -76,7 +160,8 @@ class Scenario(object):
         }
         tag_config.update(tags)
 
-        for tg_id, tag_id in tag_config.items():
+        # NOTE: tag_config is modified within loop!
+        for tg_id, tag_id in list(tag_config.items()):
             if tg_id == "site":
                 continue
 
@@ -110,12 +195,15 @@ class Scenario(object):
         self.config_cache.initialize()
 
         if self._autochecks:
+            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
             monkeypatch.setattr(self.config_cache._autochecks_manager,
                                 "_raw_autochecks",
-                                {e[0]: e[1] for e in self._autochecks.iteritems()},
+                                dict(self._autochecks.items()),
                                 raising=False)
 
-            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_of",
-                                lambda self, hostname: self._raw_autochecks.get(hostname, []))
+            monkeypatch.setattr(
+                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
+                lambda self, hostname, service_description, get_check_variables: self.
+                _raw_autochecks.get(hostname, []))
 
         return self.config_cache

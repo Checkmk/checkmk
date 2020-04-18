@@ -1,6 +1,6 @@
-title: Skype For Business - Mobile
+title: Skype for Business: Mobile Usage
 agents: windows
-catalog: os/services
+catalog: app/skype
 license: GPL
 distribution: check_mk
 description:
@@ -12,5 +12,5 @@ description:
  set on the number of requests in processing.
 
 inventory:
- Exactly one item is discovered.
+ One service is created.
 

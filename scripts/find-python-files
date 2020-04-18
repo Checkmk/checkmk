@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Find and print the absolute paths of all Python 2/3 source code files
 set -e
 
@@ -21,6 +25,7 @@ PRUNE=
 SEARCH+=" active_checks"
 SEARCH+=" agents"
 SEARCH+=" bin"
+PRUNE+=" -path $(realpath bin)/cmk -prune -o"
 SEARCH+=" checks"
 SEARCH+=" cmk"
 SEARCH+=" doc"
@@ -29,6 +34,8 @@ if [ -d "$REPO_PATH/enterprise" ]; then
     SEARCH+=" enterprise/alert_handlers"
     SEARCH+=" enterprise/bin"
     SEARCH+=" enterprise/cmk"
+    SEARCH+=" enterprise/core/src/test"
+    PRUNE+=" -path $(realpath enterprise/agents/bakery) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/cee) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/gui/cee) -prune -o"
     PRUNE+=" -path $(realpath enterprise/cmk/base/automations/cee.py) -prune -o"
@@ -61,12 +68,14 @@ REAL_SEARCH=$(realpath $SEARCH)
 # NOTE 1: while read F is used to deal with files containing whitespaces
 # NOTE 2: We explicitly filter out the targets of symbolic links, too, otherwise
 # we would see files twice.
-find $REAL_SEARCH \
+find -L \
+     $REAL_SEARCH \
     -name .mypy_cache -prune -o \
     -name .venv -prune -o \
     -name test_docker_parse_node_images.py -prune -o \
     -name typeshed -prune -o \
     -name run-clang-tidy.py -prune -o \
+    -name iwyu_tool -prune -o \
     -name chroot -prune -o \
     -name conftest.py -prune -o \
     $PRUNE \

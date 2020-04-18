@@ -1,4 +1,9 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
@@ -6,7 +11,7 @@ import os
 import sys
 import tempfile
 import shutil
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
 import testlib.pylint_cmk as pylint_cmk
@@ -59,8 +64,10 @@ def _get_files_to_check(pylint_test_dir):
         rel_path = fname[len(repo_path()) + 1:]
 
         # Can currently not be checked alone. Are compiled together below
-        if rel_path.startswith("checks/") or rel_path.startswith("inventory/") \
-            or rel_path.startswith("enterprise/agents/bakery/"):
+        if rel_path.startswith("checks/") or \
+           rel_path.startswith("inventory/") or \
+           rel_path.startswith("agents/bakery/") or \
+           rel_path.startswith("enterprise/agents/bakery/"):
             continue
 
         # TODO: We should also test them...
@@ -88,7 +95,7 @@ def _get_files_to_check(pylint_test_dir):
         _compile_bakery_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3
-    if sys.version_info[0] == 2:
+    if sys.version_info[0] == 3:
         files += [
             pylint_test_dir,
         ]
@@ -124,7 +131,6 @@ def inv_tree(path, default_value=None):
         node = default_value
     else:
         node = {}
-
     return node
 """)
 
@@ -147,13 +153,13 @@ def inv_tree(path, default_value=None):
 
 def _compile_bakery_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
+        # This pylint warning is incompatible with our "concatenation technology".
+        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
         pylint_cmk.add_file(
             f,
             os.path.realpath(
                 os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
         # Also add bakery plugins
         for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):

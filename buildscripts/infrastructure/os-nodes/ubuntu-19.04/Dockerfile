@@ -7,7 +7,8 @@ ENV LANG=C.UTF-8
 
 ARG PACKAGES
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     gdebi \
     git \
@@ -37,6 +38,15 @@ RUN apt-get update \
 
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN apt-get update \
+    && apt-get install -y \
+    joe \
+    iputils-ping \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

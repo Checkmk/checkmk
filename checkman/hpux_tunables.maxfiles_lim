@@ -1,4 +1,4 @@
-title: Kernel tunables: Number of open files
+title: Kernel Tunables: Number of Open Files
 agents: hpux
 catalog: os/kernel
 license: GPL
@@ -14,6 +14,6 @@ description:
  percentage.
 
 inventory:
- {hpux_tunables} generates one check per host for each of the supported
- tunables.
+ All hpux_tunable checks are combined in one service.
+ One {hpux_tunable} service is created for each supported tunable.
 

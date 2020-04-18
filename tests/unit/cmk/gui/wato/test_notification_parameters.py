@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils as utils
@@ -6,6 +12,7 @@ import cmk.gui.watolib.rulespecs as rulespecs
 
 expected_plugins = [
     'asciimail',
+    'cisco_webex_teams',
     'jira_issues',
     'mail',
     'mkeventd',

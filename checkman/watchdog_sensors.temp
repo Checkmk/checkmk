@@ -1,4 +1,4 @@
-title: GEIST watchdog: Temperature Sensor
+title: GEIST Watchdog: Temperature Sensor
 agents: snmp
 catalog: hw/environment/geist
 license: GPL
@@ -8,7 +8,7 @@ description:
  located.
 
 item:
- One item per sensor will be created.
+ Name of the watchdog device
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor.

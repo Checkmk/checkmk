@@ -22,5 +22,5 @@ item:
  the IP-address of the real server.
 
 inventory:
- One service for each real server is created
+ One service is created for each real server.
 

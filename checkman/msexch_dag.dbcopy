@@ -1,4 +1,4 @@
-title: MS Exchange DAG DBCopy State
+title: MS Exchange: DAG DBCopy State
 agents: windows
 catalog: app/exchange
 license: GPL
@@ -16,8 +16,8 @@ description:
  inventory.  It is {WARN} otherwise.
 
 inventory:
- One check per database on the Mailbox Server is created. The DBCopy {Status} is
- saved as check parameter.
+ One service is created for each database on the Mailbox Server.
+ The DBCopy {Status} is saved as check parameter.
 
 item:
  The database name on the Mailbox Server

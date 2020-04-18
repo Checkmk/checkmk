@@ -1,4 +1,4 @@
-title: Tomcat number of threads in thread pool
+title: Java Virtual Machine: Tomcat Threads
 agents: linux
 license: GPL
 catalog: app/java
@@ -16,5 +16,5 @@ item:
  The name of the application server instance as configured by the agent.
 
 inventory:
- One check is created per thread pool sent by the Jolokia agent.
+ One service is created for each thread pool sent by the Jolokia agent.
 

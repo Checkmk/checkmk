@@ -1,4 +1,4 @@
-title: Usage of Vmalloc address space
+title: Usage of Vmalloc Address Space
 agents: linux
 catalog: os/kernel
 license: GPL
@@ -19,11 +19,9 @@ description:
  chunk (indicating the degree of fragmentation).
 
 inventory:
- A check is created if {VmallocTotal} is available in
- {/proc/meminfo} and only if the total size of the vmalloc
- area is less then 4 GB. This is generally only possible
- for 32 bit architectures.
+ One service is created if {VmallocTotal} is available in {/proc/meminfo}
+ and only if the total size of the vmalloc area is less then 4 GB.
+ This is generally only possible for 32 bit architectures.
 
- Please add {mem.vmalloc} to {ignored_checktypes}
- if you do not need this check.
+ Please add {mem.vmalloc} to {ignored_checktypes} if you do not need this check.
 

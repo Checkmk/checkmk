@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the form.
+
 description:
  This check performs HTTP requests with some advanced features like
  a) Detecting, populating and submitting HTML forms

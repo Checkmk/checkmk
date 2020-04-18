@@ -1,4 +1,4 @@
-title: SAP router certificate: validity age
+title: SAP: Router Certificate
 agents: linux
 catalog: app/sap
 license: GPL
@@ -11,9 +11,6 @@ description:
  If not it is OK.
  Otherwise if there's no or a broken PSE file or the credentials are false than
  the check goes UNKNOWN and diplays the related error message.
-
-item:
- No item.
 
 inventory:
  One service is created.

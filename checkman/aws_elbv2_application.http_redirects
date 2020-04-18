@@ -1,13 +1,20 @@
-title: AWS/ApplicationELB HTTP Redirects
+title: AWS ApplicationELB: HTTP Redirects
 agents: aws
 catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors redirect and fixed-response actions of
- AWS/ApplicationELB services.
+ This check monitors
+
+ - redirect
+
+ - fixed-response
+
+ actions of AWS/ApplicationELB services.
+
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service will be created.
+ One service is created if all required metrics (HTTP_Redirect_Count,
+ HTTP_Redirect_Url_Limit_Exceeded_Count) are given.

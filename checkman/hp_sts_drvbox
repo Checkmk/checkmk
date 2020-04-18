@@ -20,5 +20,4 @@ item:
  Comination of the controller index and the bus index separated by "/".
 
 inventory:
- One check is automatically created for each connected drive box which is
- provided in the SNMP output.
+ One service is created for each connected drive box.

@@ -9,7 +9,7 @@ description:
  lower levels are configurable.
 
 item:
- Battery.
+ The fixed statement {{Battery}}.
 
 inventory:
  One service is created.

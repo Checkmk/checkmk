@@ -1,26 +1,7 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Needed for S_ISSOCK
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -37,6 +18,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <atomic>
+#include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <cstdlib>
@@ -214,39 +196,27 @@ void *main_thread(void *data) {
             update_status();
             last_update_status = now;
         }
-        Poller poller;
-        poller.addFileDescriptor(g_unix_socket, PollEvents::in);
-        int retval = poller.poll(2500ms);
-        if (retval > 0 &&
-            poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
-#if HAVE_ACCEPT4
-            int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
-#else
-            int cc = accept(g_unix_socket, nullptr, nullptr);
-#endif
-            if (cc == -1) {
-                generic_error ge("cannot accept client connection");
-                Warning(logger) << ge;
+        if (!Poller{}.wait(2500ms, g_unix_socket, PollEvents::in, logger)) {
+            if (errno == ETIMEDOUT) {
                 continue;
             }
-#if !HAVE_ACCEPT4
-            if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
-                generic_error ge(
-                    "cannot set close-on-exec bit on client socket");
-                Alert(logger) << ge;
-                break;
-            }
-#endif
-            if (cc > g_max_fd_ever) {
-                g_max_fd_ever = cc;
-            }
-            if (!fl_client_queue->try_push(cc)) {
-                generic_error ge("cannot enqueue client socket");
-                Warning(logger) << ge;
-            }
-            g_num_queued_connections++;
-            counterIncrement(Counter::connections);
+            break;
         }
+        int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+        if (cc == -1) {
+            generic_error ge("cannot accept client connection");
+            Warning(logger) << ge;
+            continue;
+        }
+        if (cc > g_max_fd_ever) {
+            g_max_fd_ever = cc;
+        }
+        if (!fl_client_queue->try_push(cc)) {
+            generic_error ge("cannot enqueue client socket");
+            Warning(logger) << ge;
+        }
+        g_num_queued_connections++;
+        counterIncrement(Counter::connections);
     }
     Notice(logger) << "socket thread has terminated";
     return voidp;
@@ -446,8 +416,8 @@ bool open_unix_socket() {
         return false;
     }
 
-    // Make writable group members (fchmod didn't do nothing for me. Don't know
-    // why!)
+    // Make writable group members (fchmod didn't do nothing for me. Don't
+    // know why!)
     if (0 != chmod(fl_paths._socket.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
                          fl_paths._socket + " to 0660");
@@ -519,7 +489,8 @@ int broker_log(int event_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
-    // NOTE: We use logging very early, even before the core is instantiated!
+    // NOTE: We use logging very early, even before the core is
+    // instantiated!
     if (fl_core != nullptr) {
         fl_core->triggers().notify_all(Triggers::Kind::log);
     }
@@ -559,8 +530,8 @@ int broker_program(int event_type __attribute__((__unused__)),
 
 void livestatus_log_initial_states() {
     extern scheduled_downtime *scheduled_downtime_list;
-    // It's a bit unclear if we need to log downtimes of hosts *before* their
-    // corresponding service downtimes, so let's play safe...
+    // It's a bit unclear if we need to log downtimes of hosts *before*
+    // their corresponding service downtimes, so let's play safe...
     for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
         if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
             Informational(fl_logger_nagios)
@@ -739,7 +710,8 @@ std::string check_path(const std::string &name, const std::string &path) {
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
-        // set default path to our logfile to be in the same path as nagios.log
+        // set default path to our logfile to be in the same path as
+        // nagios.log
         extern char *log_file;
         std::string lf{log_file};
         auto slash = lf.rfind('/');

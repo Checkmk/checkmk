@@ -1,4 +1,4 @@
-title: State of network interfaces of Linux hosts
+title: Linux: State of Network Interfaces
 agents: linux
 catalog: os/networking
 license: GPL
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces of a Linux host using
- data sent by the Check_MK agent. This check replaces the old checks
+ data sent by the Checkmk agent. This check replaces the old checks
  {netctr}, {netif.link} and {netif.counters} that have been in use up to
  and including version 1.1.10. As opposed to the old checks {lnx_if} is
  fully compatible with {if} and {if64} and shares all of its features,
@@ -37,12 +37,12 @@ item:
  There are three allowed ways to specify a port: {1}: the last component of
  the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
  the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Check_MK does not check for uniqueness.
+ by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
 
 inventory:
- The inventory creates one service for each port that fulfills configurable conditions.
- Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
- {32} (frameRelay) or {117} (gigabitEthernet).
+ One service is created for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types
+ {6} (ethernetCsmacd), {32} (frameRelay) or {117} (gigabitEthernet).
 
  {Grouping:} In some situations you do not want to monitor a single
  interface but a group of interfaces that together form a pool.

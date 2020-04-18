@@ -8,4 +8,4 @@ description:
  Check always returns {OK}.
 
 inventory:
- Finds exactly one service on each EMC Isilon System, named Isilon Info.
+ One service is created for each EMC Isilon System, named Isilon Info.

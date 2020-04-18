@@ -1,4 +1,4 @@
-title: CPU load (by statgrab)
+title: CPU Load (by statgrab)
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL
@@ -18,6 +18,6 @@ description:
  in percent).
 
 inventory:
- One check per host is created if the agent contains a {statgrab_load}
- section.
+ One service is created for each host
+ if the agent output contains a {statgrab_load} section.
 

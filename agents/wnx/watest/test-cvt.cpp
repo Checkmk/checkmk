@@ -3,10 +3,9 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
+#include "common/yaml.h"
 #include "cvt.h"
 #include "lwa/types.h"
 #include "providers/logwatch_event.h"

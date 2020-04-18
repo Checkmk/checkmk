@@ -1,4 +1,4 @@
-title: Brocade NetIron MLX devices: Traffic Manager Statistics
+title: Brocade NetIron MLX Devices: Traffic Manager Statistics
 agents: snmp
 catalog: hw/network/brocade
 license: GPL
@@ -11,5 +11,5 @@ item:
  The name of the network interface
 
 inventory:
- Finds one item per network interface
+ One service is created for each network interface
 

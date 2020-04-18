@@ -24,6 +24,7 @@ sudo rsync -arxR \
       htdocs/css \
       htdocs/images \
       htdocs/jquery \
+      htdocs/openapi \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}.map; done) \
       htdocs/sounds \

@@ -14,6 +14,5 @@ item:
  Index number of the fan (as string)
 
 inventory:
- All present fans are detected automatically and parameterized with
- levels at 50 (WARN) and 40 (CRIT) percent of maximum speed.
+ One service is created for each detected fan.
 

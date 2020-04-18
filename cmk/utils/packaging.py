@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 import ast
 import logging
@@ -13,13 +19,13 @@ from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Option
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six  # pylint: disable=unused-import
 
-# It's OK to import centralized config load logic
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
@@ -27,6 +33,9 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
 from cmk.utils.encoding import ensure_unicode, ensure_bytestr
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Subclass MKGeneralException()?
@@ -36,75 +45,60 @@ class PackageException(MKException):
 
 logger = logging.getLogger("cmk.utils.packaging")
 
-# order matters! See function _get_permissions
-PERM_MAP = (
-    (cmk.utils.paths.checks_dir, 0o644),
-    (str(cmk.utils.paths.local_checks_dir), 0o644),
-    (str(cmk.utils.paths.notifications_dir), 0o755),
-    (str(cmk.utils.paths.local_notifications_dir), 0o755),
-    (cmk.utils.paths.inventory_dir, 0o644),
-    (str(cmk.utils.paths.local_inventory_dir), 0o644),
-    (cmk.utils.paths.check_manpages_dir, 0o644),
-    (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
-    (cmk.utils.paths.agents_dir, 0o755),
-    (str(cmk.utils.paths.local_agents_dir), 0o755),
-    (cmk.utils.paths.web_dir, 0o644),
-    (str(cmk.utils.paths.local_web_dir), 0o644),
-    (str(cmk.utils.paths.pnp_templates_dir), 0o644),
-    (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
-    (str(cmk.utils.paths.doc_dir), 0o644),
-    (str(cmk.utils.paths.local_doc_dir), 0o644),
-    (str(cmk.utils.paths.locale_dir), 0o644),
-    (str(cmk.utils.paths.local_locale_dir), 0o644),
-    (str(cmk.utils.paths.local_bin_dir), 0o755),
-    (str(cmk.utils.paths.local_lib_dir / "nagios" / "plugins"), 0o755),
-    (str(cmk.utils.paths.local_lib_dir), 0o644),
-    (str(cmk.utils.paths.local_mib_dir), 0o644),
-    (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-    (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
-    (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
-)
-
 
 def _get_permissions(path):
+    # type: (str) -> int
     """Determine permissions by the first matching beginning of 'path'"""
-    for path_begin, perm in PERM_MAP:
+
+    # order matters! See function _get_permissions
+    perm_map = (
+        (cmk.utils.paths.checks_dir, 0o644),
+        (str(cmk.utils.paths.local_checks_dir), 0o644),
+        (str(cmk.utils.paths.notifications_dir), 0o755),
+        (str(cmk.utils.paths.local_notifications_dir), 0o755),
+        (cmk.utils.paths.inventory_dir, 0o644),
+        (str(cmk.utils.paths.local_inventory_dir), 0o644),
+        (cmk.utils.paths.check_manpages_dir, 0o644),
+        (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
+        (cmk.utils.paths.agents_dir, 0o755),
+        (str(cmk.utils.paths.local_agents_dir), 0o755),
+        (cmk.utils.paths.web_dir, 0o644),
+        (str(cmk.utils.paths.local_web_dir), 0o644),
+        (str(cmk.utils.paths.pnp_templates_dir), 0o644),
+        (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
+        (str(cmk.utils.paths.doc_dir), 0o644),
+        (str(cmk.utils.paths.local_doc_dir), 0o644),
+        (str(cmk.utils.paths.locale_dir), 0o644),
+        (str(cmk.utils.paths.local_locale_dir), 0o644),
+        (str(cmk.utils.paths.local_bin_dir), 0o755),
+        (str(cmk.utils.paths.local_lib_dir / "nagios" / "plugins"), 0o755),
+        (str(cmk.utils.paths.local_lib_dir), 0o644),
+        (str(cmk.utils.paths.local_mib_dir), 0o644),
+        (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
+        (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
+        (str(ec.mkp_rule_pack_dir()), 0o644),
+    )
+    for path_begin, perm in perm_map:
         if path.startswith(path_begin):
             return perm
     raise PackageException("could not determine permissions for %r" % path)
 
 
+PackageName = str
+PartName = str
+PartPath = str
+
 PackagePart = NamedTuple("PackagePart", [
-    ("ident", str),
-    ("title", str),
-    ("path", str),
+    ("ident", PartName),
+    ("title", Text),
+    ("path", PartPath),
 ])
 
 PackageInfo = Dict
-
-_package_parts = [
-    PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
-    PackagePart("notifications", "Notification scripts",
-                str(cmk.utils.paths.local_notifications_dir)),
-    PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
-    PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
-    PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
-    PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
-    PackagePart("pnp-templates", "PNP4Nagios templates",
-                str(cmk.utils.paths.local_pnp_templates_dir)),
-    PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
-    PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
-    PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
-    PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
-    PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
-    PackagePart("alert_handlers", "Alert handlers",
-                str(cmk.utils.paths.local_share_dir / "alert_handlers")),
-]
-
-_config_parts = [
-    PackagePart("ec_rule_packs", "Event Console rule packs",
-                str(cmk.ec.export.mkp_rule_pack_dir())),
-]
+Packages = Dict[PackageName, PackageInfo]
+PartFiles = List[str]
+PackageFiles = Dict[PartName, PartFiles]
+PackagePartInfo = Dict[PartName, Any]
 
 package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],
@@ -118,20 +112,45 @@ def package_dir():
 
 def get_config_parts():
     # type: () -> List[PackagePart]
-    return _config_parts
+    return [
+        PackagePart("ec_rule_packs", _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())),
+    ]
 
 
 def get_package_parts():
     # type: () -> List[PackagePart]
-    return _package_parts
+    return [
+        PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
+                    str(cmk.utils.paths.local_agent_based_plugins_dir)),
+        PackagePart("checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)),
+        PackagePart("inventory", _("Legacy inventory plugins"),
+                    str(cmk.utils.paths.local_inventory_dir)),
+        PackagePart("checkman", _("Checks' man pages"),
+                    str(cmk.utils.paths.local_check_manpages_dir)),
+        PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
+        PackagePart("notifications", _("Notification scripts"),
+                    str(cmk.utils.paths.local_notifications_dir)),
+        PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+        PackagePart("pnp-templates", _("PNP4Nagios templates"),
+                    str(cmk.utils.paths.local_pnp_templates_dir)),
+        PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
+        PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
+        PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
+        PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
+        PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
+        PackagePart("alert_handlers", _("Alert handlers"),
+                    str(cmk.utils.paths.local_share_dir / "alert_handlers")),
+    ]
 
 
 def release_package(pacname):
-    # type: (Text) -> None
+    # type: (PackageName) -> None
     if not pacname or not _package_exists(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
     package = read_package_info(pacname)
+    if package is None:
+        raise PackageException("Package %s not installed or corrupt." % pacname)
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
@@ -140,13 +159,13 @@ def release_package(pacname):
             for f in filenames:
                 logger.log(VERBOSE, "    %s", f)
             if part.ident == 'ec_rule_packs':
-                cmk.ec.export.release_packaged_rule_packs(filenames)
+                ec.release_packaged_rule_packs(filenames)
     _remove_package_info(pacname)
 
 
 def create_mkp_file(package, file_object=None):
     # type: (PackageInfo, BinaryIO) -> None
-    package["version.packaged"] = cmk.__version__
+    package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
     def create_tar_info(filename, size):
@@ -187,13 +206,14 @@ def create_mkp_file(package, file_object=None):
 
 
 def get_initial_package_info(pacname):
+    # type: (str) -> PackageInfo
     return {
         "title": "Title of %s" % pacname,
         "name": pacname,
         "description": "Please add a description here",
         "version": "1.0",
-        "version.packaged": cmk.__version__,
-        "version.min_required": cmk.__version__,
+        "version.packaged": cmk_version.__version__,
+        "version.min_required": cmk_version.__version__,
         "version.usable_until": None,
         "author": "Add your name here",
         "download_url": "http://example.com/%s/" % pacname,
@@ -220,7 +240,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    (package_dir() / package["name"]).unlink()  # pylint: disable=no-member
+    (package_dir() / package["name"]).unlink()
 
 
 def create_package(pkg_info):
@@ -234,7 +254,7 @@ def create_package(pkg_info):
 
 
 def edit_package(pacname, new_package_info):
-    # type: (Text, PackageInfo) -> None
+    # type: (PackageName, PackageInfo) -> None
     if not _package_exists(pacname):
         raise PackageException("No such package")
 
@@ -289,7 +309,7 @@ def install_package(file_object):
         keep = []  # type: List[Text]
         keep_files[part.ident] = keep
 
-        if update:
+        if update and old_package is not None:
             old_files = old_package["files"].get(part.ident, [])
 
         for fn in package["files"].get(part.ident, []):
@@ -347,10 +367,10 @@ def install_package(file_object):
                     os.chmod(path, desired_perm)
 
             if part.ident == 'ec_rule_packs':
-                cmk.ec.export.add_rule_pack_proxies(filenames)
+                ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
-    if update:
+    if update and old_package is not None:
         for part in get_package_parts() + get_config_parts():
             filenames = old_package["files"].get(part.ident, [])
             keep = keep_files.get(part.ident, [])
@@ -382,7 +402,7 @@ def _remove_packaged_rule_packs(file_names, delete_export=True):
     if not file_names:
         return
 
-    rule_packs = cmk.ec.export.load_rule_packs()
+    rule_packs = ec.load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
@@ -390,9 +410,9 @@ def _remove_packaged_rule_packs(file_names, delete_export=True):
         index = rule_pack_ids.index(id_)
         del rule_packs[index]
         if delete_export:
-            cmk.ec.export.remove_exported_rule_pack(id_)
+            ec.remove_exported_rule_pack(id_)
 
-    cmk.ec.export.save_rule_packs(rule_packs)
+    ec.save_rule_packs(rule_packs)
 
 
 def _get_package_info_from_package(file_object):
@@ -401,14 +421,17 @@ def _get_package_info_from_package(file_object):
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")
-    return parse_package_info(package_info_file.read())
+    return parse_package_info(six.ensure_str(package_info_file.read()))
 
 
 def _validate_package_files(pacname, files):
+    # type: (PackageName, PackageFiles) -> None
     """Packaged files must either be unpackaged or already belong to that package"""
-    packages = {}
+    packages = {}  # type: Packages
     for package_name in all_package_names():
-        packages[package_name] = read_package_info(package_name)
+        package_info = read_package_info(package_name)
+        if package_info is not None:
+            packages[package_name] = package_info
 
     for part in get_package_parts():
         _validate_package_files_part(packages, pacname, part.ident, part.path,
@@ -416,6 +439,7 @@ def _validate_package_files(pacname, files):
 
 
 def _validate_package_files_part(packages, pacname, part, directory, rel_paths):
+    # type: (Packages, PackageName, PartName, PartPath, PartFiles) -> None
     for rel_path in rel_paths:
         path = os.path.join(directory, rel_path)
         if not os.path.exists(path):
@@ -429,32 +453,31 @@ def _validate_package_files_part(packages, pacname, part, directory, rel_paths):
 
 
 def _verify_check_mk_version(package):
+    # type: (PackageInfo) -> None
     """Checks whether or not the minimum required Check_MK version is older than the
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
     min_version = package["version.min_required"]
-    cmk_version = cmk.__version__
+    version = str(cmk_version.__version__)
 
     if cmk.utils.misc.is_daily_build_version(min_version):
         min_branch = cmk.utils.misc.branch_of_daily_build(min_version)
         if min_branch == "master":
             return  # can not check exact version
-        else:
-            # use the branch name (e.g. 1.2.8 as min version)
-            min_version = min_branch
+        # use the branch name (e.g. 1.2.8 as min version)
+        min_version = min_branch
 
-    if cmk.utils.misc.is_daily_build_version(cmk_version):
-        branch = cmk.utils.misc.branch_of_daily_build(cmk_version)
+    if cmk.utils.misc.is_daily_build_version(version):
+        branch = cmk.utils.misc.branch_of_daily_build(version)
         if branch == "master":
             return  # can not check exact version
-        else:
-            # use the branch name (e.g. 1.2.8 as min version)
-            cmk_version = branch
+        # use the branch name (e.g. 1.2.8 as min version)
+        version = branch
 
     compatible = True
     try:
         compatible = cmk.utils.werks.parse_check_mk_version(min_version) \
-                        <= cmk.utils.werks.parse_check_mk_version(cmk_version)
+                        <= cmk.utils.werks.parse_check_mk_version(version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.utils.debug.enabled():
@@ -463,10 +486,11 @@ def _verify_check_mk_version(package):
 
     if not compatible:
         raise PackageException("The package requires Check_MK version %s, "
-                               "but you have %s installed." % (min_version, cmk_version))
+                               "but you have %s installed." % (min_version, version))
 
 
 def get_all_package_infos():
+    # type: () -> Packages
     packages = {}
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
@@ -480,7 +504,7 @@ def get_all_package_infos():
 
 
 def get_optional_package_infos():
-    # type: () -> Dict[Text, Dict]
+    # type: () -> Dict[Text, PackageInfo]
     optional = {}
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
@@ -498,6 +522,7 @@ def _get_optional_package_paths():
 
 
 def unpackaged_files():
+    # type: () -> Dict[PackageName, List[str]]
     unpackaged = {}
     for part in get_package_parts() + get_config_parts():
         unpackaged[part.ident] = unpackaged_files_in_dir(part.ident, part.path)
@@ -505,7 +530,8 @@ def unpackaged_files():
 
 
 def package_part_info():
-    part_info = {}
+    # type: () -> PackagePartInfo
+    part_info = {}  # type: PackagePartInfo
     for part in get_package_parts() + get_config_parts():
         try:
             files = os.listdir(part.path)
@@ -523,6 +549,7 @@ def package_part_info():
 
 
 def read_package_info(pacname):
+    # type: (PackageName) -> Optional[PackageInfo]
     pkg_info_path = package_dir() / pacname
     try:
         with pkg_info_path.open("r", encoding="utf-8") as f:
@@ -541,6 +568,7 @@ def read_package_info(pacname):
 
 
 def _files_in_dir(part, directory, prefix=""):
+    # type: (str, str, str) -> List[str]
     if directory is None or not os.path.exists(directory):
         return []
 
@@ -569,11 +597,13 @@ def _files_in_dir(part, directory, prefix=""):
 
 
 def unpackaged_files_in_dir(part, directory):
+    # type: (PartName, str) -> List[str]
     packaged = set(_packaged_files_in_dir(part))
     return [f for f in _files_in_dir(part, directory) if f not in packaged]
 
 
 def _packaged_files_in_dir(part):
+    # type: (PartName) -> List[str]
     result = []  # type: List[str]
     for pacname in all_package_names():
         package = read_package_info(pacname)
@@ -583,24 +613,29 @@ def _packaged_files_in_dir(part):
 
 
 def all_package_names():
+    # type: () -> List[str]
     return sorted([p.name for p in package_dir().iterdir()])
 
 
 def _package_exists(pacname):
-    return (package_dir() / pacname).exists()  # pylint: disable=no-member
+    # type: (PackageName) -> bool
+    return (package_dir() / pacname).exists()
 
 
 def write_package_info(package):
+    # type: (PackageInfo) -> None
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
         f.write(ensure_unicode(pprint.pformat(package) + "\n"))
 
 
 def _remove_package_info(pacname):
-    (package_dir() / pacname).unlink()  # pylint: disable=no-member
+    # type: (PackageName) -> None
+    (package_dir() / pacname).unlink()
 
 
 def parse_package_info(python_string):
+    # type: (str) -> PackageInfo
     package_info = ast.literal_eval(python_string)
     package_info.setdefault("version.usable_until", None)
     return package_info

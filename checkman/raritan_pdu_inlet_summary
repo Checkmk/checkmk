@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU inlet sensor state
+title: Raritan PX-2000 Family: PDU Inlet Sensor State (summary)
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL
@@ -9,8 +9,8 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- One item named Summary.
+ The fixed statement {{Summary}}
 
 inventory:
- One check per phase is created.
+ One service is created for each phase.
 

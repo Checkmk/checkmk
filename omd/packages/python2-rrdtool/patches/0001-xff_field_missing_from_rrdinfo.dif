@@ -1,0 +1,17 @@
+--- a/bindings/python/rrdtoolmodule.c.orig	2018-06-25 18:25:52.726510964 +0200
++++ b/bindings/python/rrdtoolmodule.c	2018-06-25 18:26:11.341983601 +0200
+@@ -213,11 +213,9 @@
+
+         switch (data->type) {
+             case RD_I_VAL:
+-                if (isnan(data->value.u_val)) {
+-                    Py_INCREF(Py_None);
+-                    val = Py_None;
+-                } else
+-                    PyFloat_FromDouble(data->value.u_val);
++                val = isnan(data->value.u_val)
++                    ? (Py_INCREF(Py_None), Py_None)
++                    : PyFloat_FromDouble(data->value.u_val);
+                 break;
+
+             case RD_I_CNT:

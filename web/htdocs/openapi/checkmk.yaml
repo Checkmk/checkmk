@@ -1,0 +1,1490 @@
+components:
+  parameters:
+    Accept:
+      description: Media type(s) that is/are acceptable for the response.
+      example: application/json
+      in: header
+      name: Accept
+      schema:
+        type: string
+    hostname:
+      description: A hostname.
+      example: example.com
+      in: path
+      name: hostname
+      required: true
+      schema:
+        pattern: '[a-zA-Z0-9-.]+'
+        type: string
+    ident:
+      description: The identifier for this object. It's a 128bit uuid represented
+        in hexadecimal (32 characters). There are no fixed parts or parts derived
+        from the current hardware in this number.
+      example: 49167bd012b44719a67956cf3ef7b3dd
+      in: path
+      name: ident
+      required: true
+      schema:
+        pattern: '[a-fA-F0-9]{32}'
+        type: string
+    name:
+      description: A name used as an identifier. Can be of arbitrary (sensible) length.
+      example: pathname
+      in: path
+      name: name
+      required: true
+      schema:
+        pattern: '[a-zA-Z][a-zA-Z0-9_-]+'
+        type: string
+  schemas:
+    ApiError:
+      properties:
+        code:
+          description: The HTTP status code.
+          example: 404
+          format: int32
+          type: integer
+        errors:
+          description: Optionally a list of errors used for debugging.
+          example: null
+          items:
+            type: string
+          nullable: true
+          type: array
+        message:
+          description: Detailed information on what exactly went wrong.
+          example: The resource could not be found.
+          type: string
+        title:
+          description: A summary of the problem.
+          example: Not found
+          type: string
+      required:
+      - code
+      - message
+      - title
+      type: object
+    ContactGroup:
+      properties:
+        domainType:
+          default: contact_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    CreateHost:
+      properties:
+        attributes:
+          example: {}
+          type: object
+        folder:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+        hostname:
+          description: The hostname itself. Only characters valid in FQDNs are allowed.
+          example: example.com
+          pattern: '[a-zA-Z][a-zA-Z-]+'
+          type: string
+      required:
+      - folder
+      - hostname
+      type: object
+    DomainObject:
+      properties:
+        domainType:
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    DomainObjectCollection:
+      properties:
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        value:
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+      required:
+      - links
+      type: object
+    Folder:
+      properties:
+        domainType:
+          default: folder
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    Host:
+      properties:
+        domainType:
+          default: host
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    HostGroup:
+      properties:
+        domainType:
+          default: host_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    InputAttribute:
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required:
+      - key
+      - value
+      type: object
+    InputContactGroup:
+      properties:
+        alias:
+          example: Not on Sundays.
+          type: string
+        name:
+          example: OnCall
+          type: string
+      required:
+      - name
+      type: object
+    InputFolder:
+      properties:
+        attributes:
+          example:
+            foo: bar
+          type: object
+        name:
+          description: The name of the folder.
+          example: production
+          type: string
+        parent:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+        title:
+          example: Production Hosts
+          type: string
+      required:
+      - name
+      - parent
+      - title
+      type: object
+    InputHostGroup:
+      properties:
+        alias:
+          example: Windows Servers
+          type: string
+        name:
+          example: windows
+          type: string
+      required:
+      - name
+      type: object
+    InputServiceGroup:
+      properties:
+        alias:
+          example: Environment Sensors
+          type: string
+        name:
+          example: environment
+          type: string
+      required:
+      - name
+      type: object
+    InstalledVersions:
+      properties:
+        demo:
+          description: Whether this is a demo version or not.
+          example: false
+          type: boolean
+        edition:
+          description: The Checkmk edition.
+          example: raw
+          type: string
+        group:
+          description: The Apache WSGI application group this call was made on.
+          example: de
+          type: string
+        site:
+          description: The site where this API call was made on.
+          example: production
+          type: string
+        versions:
+          description: Some version numbers
+          example:
+            checkmk: 1.8.0p1
+          type: object
+      type: object
+    Link:
+      properties:
+        arguments:
+          description: map that may be used as the basis for any data (arguments or
+            properties) required to follow the link.
+          nullable: true
+          type: object
+        href:
+          description: The (absolute) address of the related resource. Any characters
+            that are invalid in URLs must be URL encoded.
+          example: https://.../api_resource
+          type: string
+        method:
+          description: The HTTP method to use to traverse the link (get, post, put
+            or delete)
+          example: get
+          pattern: get|put|post|delete
+          type: string
+        rel:
+          description: Indicates the nature of the relationship of the related resource
+            to the resource that generated this representation
+          example: self
+          type: string
+        title:
+          description: string that the consuming application may use to render the
+            link without having to traverse the link in advance
+          example: The object itself
+          nullable: true
+          type: string
+        type:
+          description: The media type that the linked resource will return
+          example: application/json
+          type: string
+      required:
+      - href
+      - method
+      - rel
+      - type
+      type: object
+    ObjectActionMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          example: invalid
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: action
+          type: string
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    ObjectCollectionMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          example: invalid
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: collection
+          type: string
+        value:
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    ObjectMember:
+      discriminator:
+        mapping:
+          action: '#/components/schemas/ObjectActionMember'
+          collection: '#/components/schemas/ObjectCollectionMember'
+          property: '#/components/schemas/ObjectPropertyMember'
+        propertyName: memberType
+      oneOf:
+      - $ref: '#/components/schemas/ObjectActionMember'
+      - $ref: '#/components/schemas/ObjectPropertyMember'
+      - $ref: '#/components/schemas/ObjectCollectionMember'
+      properties: {}
+      type: object
+    ObjectMemberDict:
+      additionalProperties:
+        $ref: '#/components/schemas/ObjectMember'
+      properties: {}
+      type: object
+    ObjectPropertyMember:
+      properties:
+        disabledReason:
+          description: Provides the reason (or the literal "disabled") why an object
+            property or collection is un-modifiable, or, in the case of an action,
+            unusable (and hence no links to mutate that member's state, or invoke
+            the action, are provided).
+          nullable: true
+          type: string
+        id:
+          type: string
+        invalidReason:
+          description: Provides the reason (or the literal "invalid") why a proposed
+            value for a property, collection or action argument is invalid. Appears
+            within an argument representation 2.9 returned as a response.
+          example: invalid
+          nullable: true
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        memberType:
+          default: property
+          type: string
+        x-ro-invalidReason:
+          description: Provides the reason why a SET OF proposed values for properties
+            or arguments is invalid.
+          nullable: true
+          type: string
+      required:
+      - id
+      - links
+      type: object
+    ServiceGroup:
+      properties:
+        domainType:
+          default: service_group
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        members:
+          $ref: '#/components/schemas/ObjectMemberDict'
+        title:
+          type: string
+      required:
+      - domainType
+      - links
+      type: object
+    UpdateFolder:
+      properties:
+        attributes:
+          example:
+          - key: foo
+            value: bar
+          items:
+            $ref: '#/components/schemas/InputAttribute'
+          type: array
+        title:
+          example: Virtual Servers.
+          type: string
+      required:
+      - title
+      type: object
+    UpdateHost:
+      properties:
+        attributes:
+          example: {}
+          type: object
+      type: object
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: username password
+      description: 'The format of the header-value is "Bearer $automation_user $automation_user_password"
+
+
+        Example: `Bearer hansdampf miezekatze123`'
+      in: header
+      scheme: bearer
+      type: http
+      x-bearerInfoFunc: cmk.gui.wsgi.auth.bearer_auth
+externalDocs:
+  description: The Checkmk Handbook
+  url: https://checkmk.com/cms.html
+info:
+  contact:
+    email: feedback@checkmk.com
+    name: Contact the Checkmk Team
+    url: https://checkmk.com/contact.php
+  description: "API for Checkmk.\n\nThis is the docstring which will be the description\
+    \ of the API.\n\n# Introduction\n\nThis API is documented in **OpenAPI format**.\
+    \ This means there is a formal specification for the\nwhole API surface. This\
+    \ documentation is generated from this specification.\n\n# Authentication\n\n\
+    To use this API you have to create an *Automation User* via WATO. The resulting\
+    \ username and\npassword have to be sent in the `Authentication` HTTP-Header in\
+    \ the *Bearer* format. Example here:\n\n## Security definitions\n\n<SecurityDefinitions\
+    \ />\n\n# How does it work?\n\nThis API follows the [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)\
+    \ principle. While it can be\nused in a traditional way, using the elements that\
+    \ enable HATEOAS make it way more powerful and\nflexible.\n\n## Text and payload\
+    \ encoding\n\nAs specified by the `Content-Type` of `application/json`, the response\
+    \ payload is serialized with\nJSON and encoded in UTF-8. Other formats are possible\
+    \ in principle but currently not supported.\n\n## Links\n\n* Every response comes\
+    \ with a collection of `links`. These links are used to provide the consumer\n\
+    \  of the API with follow-up actions. For example a Folder response can have links\
+    \ to resources for\n  editing, deleting, moving the folder. The client doesn't\
+    \ have to know about the URL structure,\n  it just needs to follow the link.\n\
+    * (TBD) Every `Action` comes with an endpoint which describes all possible parameters\
+    \ to itself.\n\n## Response format\n\n* Every response is well-formed according\
+    \ to the\n  [Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects)\
+    \ and can be treated in\n  the same way.\n* There are a limited number key concepts\
+    \ in the standard (e.g. object, action, collection, etc.)\n  which enables the\
+    \ use of this API without having to understand the details of the implementation\n\
+    \  of each endpoint.\n\n# Client compatibility issues\n\n## Overriding Request\
+    \ Methods\n\nIf you have a client which can't do the HTTP PUT or DELETE methods,\
+    \ then you can use the\n`X-HTTP-Method-Override` HTTP Header to force the server\
+    \ into believing the client actually sent\nsuch a method. In these cases the HTTP\
+    \ method to use has to be POST. You can't override from GET."
+  license:
+    name: GNU General Public License version 2
+    url: https://checkmk.com/gpl.html
+  title: Checkmk REST API
+  version: 1.0.0
+openapi: 3.0.2
+paths:
+  /collections/folder:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.list_folders
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List folders
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+    post:
+      description: This is the long description of the endpoint.
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputFolder'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a new folder
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\
+          \ \n          \"name\": \"production\", \n          \"parent\": \"root\"\
+          , \n          \"title\": \"Production Hosts\"\n        }' \\\n    /collections/folder"
+      - lang: httpie
+        source: "http POST /collections/folder \\\n    'Authorization: Bearer username\
+          \ password' \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
+          \ \\\n    parent='root' \\\n    title='Production Hosts'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/folder\",\n\
+          \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"attributes\": {\n            \"foo\": \"bar\"\n        }, \n\
+          \        \"name\": \"production\", \n        \"parent\": \"root\", \n  \
+          \      \"title\": \"Production Hosts\"\n    },\n)\nresp.raise_for_status()"
+  /objects/folder/{ident}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.delete
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a folder
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.show_folder
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show a folder
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+    put:
+      description: Title and attributes can be updated, but there is no checking of
+        the attributes done.
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.update
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFolder'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a folder
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"attributes\": [\n            {\n              \"value\": \"\
+          bar\", \n              \"key\": \"foo\"\n            }\n          ], \n\
+          \          \"title\": \"Virtual Servers.\"\n        }' \\\n    /objects/folder/49167bd012b44719a67956cf3ef7b3dd"
+      - lang: httpie
+        source: "http PUT /objects/folder/49167bd012b44719a67956cf3ef7b3dd \\\n  \
+          \  'Authorization: Bearer username password' \\\n    attributes='[{'value':\
+          \ 'bar', 'key': 'foo'}]' \\\n    title='Virtual Servers.'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"attributes\": [\n            {\n                \"key\": \"foo\"\
+          , \n                \"value\": \"bar\"\n            }\n        ], \n   \
+          \     \"title\": \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()"
+  /objects/folder/{ident}/actions/move/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.folder.move
+      parameters:
+      - $ref: '#/components/parameters/ident'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Move a folder
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.folder
+  /collections/host:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host.create_host
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"attributes\": {}, \n          \"folder\": \"root\", \n    \
+          \      \"hostname\": \"example.com\"\n        }' \\\n    /collections/host"
+      - lang: httpie
+        source: "http POST /collections/host \\\n    'Authorization: Bearer username\
+          \ password' \\\n    attributes='{}' \\\n    folder='root' \\\n    hostname='example.com'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/host\",\n\
+          \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"attributes\": {}, \n        \"folder\": \"root\", \n        \"\
+          hostname\": \"example.com\"\n    },\n)\nresp.raise_for_status()"
+  /objects/host/{hostname}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host.delete
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host.show_host
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+      summary: Show a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host.update_host
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Host'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"attributes\": {}\n        }' \\\n    /objects/host/example.com"
+      - lang: httpie
+        source: "http PUT /objects/host/example.com \\\n    'Authorization: Bearer\
+          \ username password' \\\n    attributes='{}'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/host/example.com\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"attributes\": {}\n    },\n)\nresp.raise_for_status()"
+  /collections/host_group:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a host-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Windows Servers\", \n          \"name\": \"windows\"\
+          \n        }' \\\n    /collections/host_group"
+      - lang: httpie
+        source: "http POST /collections/host_group \\\n    'Authorization: Bearer\
+          \ username password' \\\n    alias='Windows Servers' \\\n    name='windows'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/host_group\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Windows Servers\", \n        \"name\": \"windows\"\
+          \n    },\n)\nresp.raise_for_status()"
+  /objects/host_group/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a host-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.get
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show a host-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputHostGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a host-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Windows Servers\", \n          \"name\": \"windows\"\
+          \n        }' \\\n    /objects/host_group/pathname"
+      - lang: httpie
+        source: "http PUT /objects/host_group/pathname \\\n    'Authorization: Bearer\
+          \ username password' \\\n    alias='Windows Servers' \\\n    name='windows'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/host_group/pathname\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Windows Servers\", \n        \"name\": \"windows\"\
+          \n    },\n)\nresp.raise_for_status()"
+  /version:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.version.search
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstalledVersions'
+          description: ''
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.version
+  /collections/contact_group:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.list_group
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List contact-groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a new contact group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /collections/contact_group"
+      - lang: httpie
+        source: "http POST /collections/contact_group \\\n    'Authorization: Bearer\
+          \ username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/contact_group\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
+  /objects/contact_group/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.show
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputContactGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a contact-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
+          \n        }' \\\n    /objects/contact_group/pathname"
+      - lang: httpie
+        source: "http PUT /objects/contact_group/pathname \\\n    'Authorization:\
+          \ Bearer username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/contact_group/pathname\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
+          \    },\n)\nresp.raise_for_status()"
+  /collections/service_group:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.list_groups
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObjectCollection'
+          description: ''
+      summary: List service-groups
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputServiceGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Create a service-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Environment Sensors\", \n          \"name\": \"\
+          environment\"\n        }' \\\n    /collections/service_group"
+      - lang: httpie
+        source: "http POST /collections/service_group \\\n    'Authorization: Bearer\
+          \ username password' \\\n    alias='Environment Sensors' \\\n    name='environment'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.post(\"/collections/service_group\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Environment Sensors\", \n        \"name\": \"environment\"\
+          \n    },\n)\nresp.raise_for_status()"
+  /objects/service_group/{name}:
+    delete:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.delete
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+      summary: Delete a service-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.show_group
+      parameters:
+      - $ref: '#/components/parameters/name'
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Show a service-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group
+    put:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.service_group.update
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - description: The ETag of the object to be modified.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputServiceGroup'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceGroup'
+          description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Update a service-group
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.service_group
+      x-code-samples:
+      - lang: curl
+        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
+          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
+          \          \"alias\": \"Environment Sensors\", \n          \"name\": \"\
+          environment\"\n        }' \\\n    /objects/service_group/pathname"
+      - lang: httpie
+        source: "http PUT /objects/service_group/pathname \\\n    'Authorization:\
+          \ Bearer username password' \\\n    alias='Environment Sensors' \\\n   \
+          \ name='environment'"
+      - lang: requests
+        source: "import requests\n\nresp = requests.put(\"/objects/service_group/pathname\"\
+          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
+          \        \"alias\": \"Environment Sensors\", \n        \"name\": \"environment\"\
+          \n    },\n)\nresp.raise_for_status()"
+security:
+- BearerAuth: []
+tags:
+- name: cmk.gui.plugins.openapi.endpoints.folder
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputFolder" showReadOnly={true}
+    showWriteOnly={true} />
+  name: InputFolder
+- description: <SchemaDefinition schemaRef="#/components/schemas/UpdateFolder" showReadOnly={true}
+    showWriteOnly={true} />
+  name: UpdateFolder
+- name: cmk.gui.plugins.openapi.endpoints.host
+- description: <SchemaDefinition schemaRef="#/components/schemas/CreateHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: CreateHost
+  x-displayName: Schema for creating a new host
+- description: <SchemaDefinition schemaRef="#/components/schemas/UpdateHost" showReadOnly={true}
+    showWriteOnly={true} />
+  name: UpdateHost
+- name: cmk.gui.plugins.openapi.endpoints.host_group
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputHostGroup" showReadOnly={true}
+    showWriteOnly={true} />
+  name: InputHostGroup
+- name: cmk.gui.plugins.openapi.endpoints.version
+- name: cmk.gui.plugins.openapi.endpoints.contact_group
+- description: 'Schema for submitting Contact Group information.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup" showReadOnly={true}
+    showWriteOnly={true} />'
+  name: InputContactGroup
+  x-displayName: InputContactGroup
+- name: cmk.gui.plugins.openapi.endpoints.service_group
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"
+    showReadOnly={true} showWriteOnly={true} />
+  name: InputServiceGroup
+x-ignoredHeaderParameters:
+- User-Agent
+- X-Test-Header
+x-logo:
+  altText: CheckMK
+  url: https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png
+x-tagGroups:
+- name: Endpoints
+  tags:
+  - cmk.gui.plugins.openapi.endpoints.folder
+  - cmk.gui.plugins.openapi.endpoints.host
+  - cmk.gui.plugins.openapi.endpoints.host_group
+  - cmk.gui.plugins.openapi.endpoints.version
+  - cmk.gui.plugins.openapi.endpoints.contact_group
+  - cmk.gui.plugins.openapi.endpoints.service_group
+- name: Response Schemas
+  tags: []
+- name: Request Schemas
+  tags:
+  - InputFolder
+  - UpdateFolder
+  - CreateHost
+  - UpdateHost
+  - InputHostGroup
+  - InputContactGroup
+  - InputServiceGroup

@@ -1,33 +1,14 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import getopt
 import os
 import sys
 import time
+from typing import Any, Dict, List, NoReturn, Optional, Text  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -89,8 +70,7 @@ def encode_row(row):
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
-g_connection = None
-opt_socket = None
+g_connection = None  # type: Optional[livestatus.SingleSiteConnection]
 
 
 def connect():
@@ -99,10 +79,18 @@ def connect():
     # TODO: Fix the code and remove the pragma below!
     if not opt_socket and not omd_root():  # pylint: disable=used-before-assignment
         bail_out("Please specify the URL of the livestatus socket.")
-    elif omd_root():
+    if omd_root():
         opt_socket = "unix:%s/tmp/run/live" % omd_root()
-
+    elif opt_socket is None:
+        bail_out("No socket specified")
     g_connection = livestatus.SingleSiteConnection(opt_socket)
+
+
+def run_query(query):
+    # type: (livestatus.QueryTypes) -> List[Dict[Text, Any]]
+    if g_connection is None:
+        bail_out("No connection")
+    return g_connection.query_table_assoc(query)
 
 
 def livedump_config():
@@ -125,7 +113,7 @@ def livedump_config():
          "max_check_attempts contacts contact_groups\n" + \
          opt_host_headers + \
          opt_host_only_headers
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
         sys.stdout.write("define host {\n" "  use                livedump-host\n")
@@ -159,7 +147,7 @@ def livedump_config():
          "max_check_attempts contacts\n" + \
          opt_host_headers + \
          opt_service_headers
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         prepare_row(row)
         if row["groups"]:
             row["groupstring"] = "service_groups " + ",".join(row["groups"])
@@ -190,7 +178,7 @@ def livedump_state():
         + opt_host_headers \
         + opt_host_only_headers
 
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         encode_row(row)
         row["now"] = now
 
@@ -217,7 +205,7 @@ output=%(plugin_output)s|%(perf_data)s
         + opt_host_headers \
         + opt_service_headers
 
-    for row in g_connection.query_table_assoc(query):
+    for row in run_query(query):
         row["now"] = now
         encode_row(row)
 
@@ -267,6 +255,7 @@ def verbose(x):
 
 
 def bail_out(x):
+    # type: (str) -> NoReturn
     sys.stderr.write("%s\n" % x)
     sys.exit(1)
 
@@ -337,7 +326,7 @@ long_options = [
 
 opt_verbose = False
 opt_debug = False
-opt_socket = None
+opt_socket = None  # type: Optional[str]
 opt_mark_mode = False
 opt_prefix = ""
 opt_host_headers = ""
@@ -406,4 +395,4 @@ try:
 except Exception as e:
     if opt_debug:
         raise
-    bail_out(e)
+    bail_out(str(e))

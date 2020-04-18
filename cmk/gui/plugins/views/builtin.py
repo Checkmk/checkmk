@@ -1,31 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional as _Optional, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import Any, List, Optional, Tuple  # pylint: disable=unused-import
 
+import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
 
 from . import (
@@ -41,9 +22,9 @@ service_view_painters = [
     ('svc_state_age', None),
     ('svc_check_age', None),
     ('perfometer', None),
-]
+]  # type: List[Tuple[Optional[str], ...]]
 
-_host_host_painter = ('host', 'host')  # type: _Tuple[str, _Optional[str]]
+_host_host_painter = ('host', 'host')  # type: Tuple[Optional[str], ...]
 
 # Same as list of services, but extended by the hostname
 host_service_view_painters = service_view_painters[:]
@@ -4823,10 +4804,10 @@ multisite_builtin_views["vpshere_vms"] = _simple_host_view(
         'description': _('Overall state of all vSphere based virtual machines.'),
         'add_context_to_title': False,
         'painters': host_view_painters + [
-            ('svc_plugin_output', None, None, u'ESX Hostsystem', u'Server'),
+            ('svc_plugin_output', None, None, 'ESX Hostsystem', 'Server'),
             ('perfometer', None, '', 'CPU utilization'),
             ('perfometer', None, '', 'ESX Memory'),
-            ('svc_plugin_output', None, None, u'ESX Guest Tools', u'Guest tools'),
+            ('svc_plugin_output', None, None, 'ESX Guest Tools', 'Guest tools'),
         ],
     },
     add_context={
@@ -4863,8 +4844,171 @@ multisite_builtin_views['crash_reports'] = {
         ('crash_exception', None, None),
     ],
     'play_sounds': False,
-    'public': False,
     'single_infos': [],
     'sorters': [('sitealias', False), ('crash_time', True)],
+    'user_sortable': True,
+}
+
+multisite_builtin_views['cmk_servers'] = {
+    'add_context_to_title': False,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_labels': {
+            'host_label': '[{"value":"cmk/check_mk_server:yes"}]'
+        }
+    },
+    'datasource': 'hosts',
+    'description': u'Displaying the overall state of Checkmk servers\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': False,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk servers',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_servers',
+    'num_columns': 1,
+    'painters': [
+        (('host', {
+            'color_choices': [
+                'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
+                'colorize_downtime'
+            ]
+        }), 'host', 'host_addresses'),
+        (('inv_software_os_name', {
+            'use_short': True
+        }), None, None),
+        (('inv_hardware_cpu_cores', {
+            'use_short': True
+        }), None, None),
+        (('inv_hardware_memory_total_ram_usable', {
+            'use_short': True
+        }), None, None),
+        ('perfometer', None, None, u'CPU utilization'),
+        ('perfometer', None, None, u'CPU load'),
+        ('perfometer', None, None, u'Memory'),
+        ('perfometer', None, None, u'Disk IO SUMMARY'),
+    ],
+    'play_sounds': False,
+    'single_infos': [],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk servers',
+    'topic': u'Applications',
+    'user_sortable': True
+}
+
+
+def cmk_sites_painters():
+    service_painters = []  # type: List[Any]
+    if not cmk_version.is_raw_edition():
+        service_painters += [
+            ('invcmksites_cmc', None, None),
+            ('invcmksites_dcd', None, None),
+            ('invcmksites_liveproxyd', None, None),
+            ('invcmksites_mknotifyd', None, None),
+        ]
+    else:
+        service_painters += [
+            ('invcmksites_nagios', None, None),
+        ]
+
+    service_painters += [
+        ('invcmksites_mkeventd', None, None),
+        ('invcmksites_apache', None, None),
+        ('invcmksites_rrdcached', None, None),
+        ('invcmksites_xinetd', None, None),
+        ('invcmksites_crontab', None, None),
+        ('invcmksites_stunnel', None, None),
+    ]
+
+    if cmk_version.is_raw_edition():
+        service_painters += [
+            ('invcmksites_npcd', None, None),
+        ]
+
+    return [
+        (('host', {
+            'color_choices': [
+                'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
+                'colorize_downtime'
+            ]
+        }), 'host', 'host_addresses'),
+        ('invcmksites_site', None, None),
+        ('invcmksites_used_version', None, None),
+        ('invcmksites_num_hosts', None, None),
+        ('invcmksites_num_services', None, None),
+        ('invcmksites_check_helper_usage', None, None),
+        ('invcmksites_check_mk_helper_usage', None, None),
+        ('invcmksites_livestatus_usage', None, None),
+    ] + service_painters
+
+
+multisite_builtin_views['cmk_sites'] = {
+    'add_context_to_title': False,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_labels': {
+            'host_label': '[{"value":"cmk/check_mk_server:yes"}]'
+        },
+        'invcmksites_autostart': {
+            'invcmksites_autostart_from': '1',
+            'invcmksites_autostart_to': '1'
+        }
+    },
+    'datasource': 'invcmksites',
+    'description': u'Displaying the state of Checkmk sites\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': False,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk sites',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_sites',
+    'num_columns': 1,
+    'painters': cmk_sites_painters(),
+    'play_sounds': False,
+    'single_infos': [],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk sites',
+    'topic': u'Applications',
+    'user_sortable': True,
+}
+
+multisite_builtin_views['cmk_sites_of_host'] = {
+    'add_context_to_title': True,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'invcmksites_autostart': {
+            'invcmksites_autostart_from': '1',
+            'invcmksites_autostart_to': '1'
+        }
+    },
+    'datasource': 'invcmksites',
+    'description': u'Displaying the state of Checkmk sites of the given host\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': True,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk sites',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_sites',
+    'num_columns': 1,
+    'painters': cmk_sites_painters(),
+    'play_sounds': False,
+    'single_infos': ['host'],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk sites of host',
+    'topic': u'Applications',
     'user_sortable': True,
 }

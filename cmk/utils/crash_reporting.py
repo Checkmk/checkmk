@@ -1,46 +1,25 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module contains functions that can be used in all Check_MK components
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
 import abc
-import errno
 import base64
 import contextlib
 import inspect
-import os
 import pprint
 import sys
-import time
 import traceback
 import json
 import uuid
 from itertools import islice
-from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Iterator, Optional, Text, Tuple, Type,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -49,11 +28,11 @@ else:
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.encoding import ensure_unicode
 
 
 @contextlib.contextmanager
@@ -84,8 +63,16 @@ class CrashReportStore(object):
 
         for key, value in crash.serialize().items():
             fname = "crash.info" if key == "crash_info" else key
-            store.save_file(str(crash.crash_dir() / fname),
-                            json.dumps(value, cls=RobustJSONEncoder) + "\n")
+
+            if value is None:
+                continue
+
+            if fname == "crash.info":
+                store.save_text_to_file(
+                    crash.crash_dir() / fname,
+                    six.text_type(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
+            else:
+                store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
@@ -129,16 +116,25 @@ class CrashReportStore(object):
     def load_from_directory(self, crash_dir):
         # type: (Path) -> ABCCrashReport
         """Populate the crash info from the given crash directory"""
-        return ABCCrashReport.deserialize(self.load_serialized_from_directory(crash_dir))
+        return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
+
+    def _load_decoded_from_directory(self, crash_dir):
+        # type: (Path) -> Dict[str, Any]
+        serialized = self.load_serialized_from_directory(crash_dir)
+        serialized["crash_info"] = json.loads(serialized["crash_info"])
+        return serialized
 
     def load_serialized_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, Any]
-        """Load the raw serialized crash report from the given directory"""
+        # type: (Path) -> Dict[str, bytes]
+        """Load the raw serialized crash report from the given directory
+
+        Nothing is decoded here, the plain files are read into a dictionary. This creates a
+        data structure similar to CrashReportsRowTable() in the GUI code."""
         serialized = {}
         for file_path in crash_dir.iterdir():
-            with file_path.open(encoding="utf-8") as f:
-                key = "crash_info" if file_path.name == "crash.info" else file_path.name
-                serialized[key] = json.load(f)
+            key = "crash_info" if file_path.name == "crash.info" else file_path.name
+            with file_path.open(mode="rb") as f:
+                serialized[key] = f.read()
         return serialized
 
 
@@ -216,7 +212,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / self.type() / ident_text  # type: ignore
+        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
 
     def local_crash_report_url(self):
         # type: () -> Text
@@ -244,7 +240,7 @@ def _get_generic_crash_info(type_name, details):
     # exception.
     # Re-raising exceptions will be much easier with Python 3.x.
     if exc_type and exc_value and exc_type.__name__ == "MKParseFunctionError":
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore[attr-defined]
 
     # Unify different string types from exception messages to a unicode string
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
@@ -261,68 +257,18 @@ def _get_generic_crash_info(type_name, details):
     else:
         exc_txt = six.text_type(exc_value.args)
 
-    return {
+    infos = cmk_version.get_general_version_infos()
+    infos.update({
         "id": str(uuid.uuid1()),
         "crash_type": type_name,
-        "time": time.time(),
-        "os": _get_os_info(),
-        "version": cmk.__version__,
-        "edition": cmk.edition_short(),
-        "core": _current_monitoring_core(),
-        "python_version": sys.version,
-        "python_paths": sys.path,
         "exc_type": exc_type.__name__ if exc_type else None,
         "exc_value": exc_txt,
-        "exc_traceback": tb_list,
+        # Py3: Make traceback.FrameSummary serializable
+        "exc_traceback": [tuple(e) for e in tb_list],
         "local_vars": _get_local_vars_of_last_exception(),
         "details": details,
-    }
-
-
-def _get_os_info():
-    # type: () -> Text
-    if "OMD_ROOT" in os.environ:
-        return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
-            "=", 1)[1].strip()
-    elif os.path.exists("/etc/redhat-release"):
-        return open("/etc/redhat-release").readline().strip()
-    elif os.path.exists("/etc/SuSE-release"):
-        return open("/etc/SuSE-release").readline().strip()
-
-    info = {}
-    for f in ["/etc/os-release", "/etc/lsb-release"]:
-        if os.path.exists(f):
-            for line in open(f).readlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip("\"")
-            break
-
-    if "PRETTY_NAME" in info:
-        return info["PRETTY_NAME"]
-    elif info:
-        return "%s" % info
-
-    return "UNKNOWN"
-
-
-def _current_monitoring_core():
-    # type: () -> Text
-    try:
-        p = subprocess.Popen(
-            ["omd", "config", "show", "CORE"],
-            close_fds=True,
-            stdin=open(os.devnull),
-            stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),
-            encoding="utf-8",
-        )
-        return p.communicate()[0]
-    except OSError as e:
-        # Allow running unit tests on systems without omd installed (e.g. on travis)
-        if e.errno != errno.ENOENT:
-            raise
-        return "UNKNOWN"
+    })
+    return infos
 
 
 def _get_local_vars_of_last_exception():
@@ -338,7 +284,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return six.text_type(
+    return ensure_unicode(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

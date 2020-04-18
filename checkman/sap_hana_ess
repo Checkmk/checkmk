@@ -1,4 +1,4 @@
-title: SAP HANA Statistics Server
+title: SAP HANA: Statistics Server
 agents: linux
 catalog: app/sap_hana
 license: GPL
@@ -15,7 +15,7 @@ description:
  If there are no startet threads the check goes CRIT.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
- One service is created per instance.
+ One service is created for each instance.

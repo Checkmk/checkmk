@@ -1,33 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
 import glob
 import os
 import subprocess
+import six
 
 import cmk.utils
 
@@ -92,7 +73,7 @@ def _git_add_files():
 
 
 def _git_command(args):
-    command = ["git"] + [a.encode("utf-8") for a in args]
+    command = ["git"] + [six.ensure_str(a) for a in args]
     logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
                  subprocess.list2cmdline(command))
     try:
@@ -105,26 +86,26 @@ def _git_command(args):
             raise MKGeneralException(
                 _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
                 (subprocess.list2cmdline(command), e))
-        else:
-            raise
+        raise
 
     status = p.wait()
     if status != 0:
+        out = u"" if p.stdout is None else six.ensure_text(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-            (subprocess.list2cmdline(command), p.stdout.read().replace("\n", "<br>\n")))
+            (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))
 
 
 def _git_has_pending_changes():
     try:
-        return subprocess.Popen(["git", "status", "--porcelain"],
-                                cwd=cmk.utils.paths.default_config_dir,
-                                stdout=subprocess.PIPE).stdout.read() != ""
+        p = subprocess.Popen(["git", "status", "--porcelain"],
+                             cwd=cmk.utils.paths.default_config_dir,
+                             stdout=subprocess.PIPE)
+        return p.stdout is not None and p.stdout.read() != ""
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False  # ignore missing git command
-        else:
-            raise
+        raise
 
 
 # TODO: Use cmk.store

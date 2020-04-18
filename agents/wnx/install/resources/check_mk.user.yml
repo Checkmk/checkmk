@@ -324,6 +324,9 @@ mrpe:
         # Path below is equal to '$CUSTOM_AGENT_PATH$\plugins\your_check.com'
         # - check = Console 'plugins\your_check.com' CON CP /STATUS
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
+        # Special case with cache time and add or not cache time info to the output
+        #       Description (max_age:add_info) command line  
+        # - check = Checker (100:yes) 'c:\windows\system32\mode.com' 
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
@@ -335,3 +338,10 @@ system:
     #    port: auto # allowed all or auto
 
     #cleanup_uninstall: smart # allowed none, smart and all
+
+    #service:
+    #    restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
+    #                           # no may be used if you have serious problems with crasghing and starting
+    #    error_mode: log        # ignore or log
+    #    start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
+    #                           # disabled - service cannot be started manually and should be enabled

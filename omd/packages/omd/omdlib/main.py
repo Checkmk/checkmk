@@ -45,12 +45,11 @@ import io
 import logging
 from pathlib import Path
 from typing import (  # pylint: disable=unused-import
-    NoReturn, IO, Any, cast, Iterable, Union, Pattern, Iterator, Tuple, Optional, Callable, List,
-    NamedTuple, Dict,
+    NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional, Callable, List, NamedTuple, Dict,
 )
 import six
-from passlib.hash import sha256_crypt  # type: ignore
-import psutil  # type: ignore
+from passlib.hash import sha256_crypt  # type: ignore[import]
+import psutil  # type: ignore[import]
 
 import cmk.utils.log
 import cmk.utils.tty as tty
@@ -64,15 +63,13 @@ import omdlib.backup
 from omdlib.utils import chdir, is_dockerized
 from omdlib.version_info import VersionInfo
 from omdlib.dialog import (  # pylint: disable=unused-import
-    DialogResult, dialog_menu, dialog_regex, dialog_yesno, dialog_message, user_confirms,
-    ask_user_choices,
+    dialog_menu, dialog_regex, dialog_yesno, dialog_message, user_confirms, ask_user_choices,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext  # pylint: disable=unused-import
 from omdlib.type_defs import Config, CommandOptions, Replacements  # pylint: disable=unused-import
 from omdlib.skel_permissions import (  # pylint: disable=unused-import
-    Permissions, read_skel_permissions, load_skel_permissions, load_skel_permissions_from,
-    skel_permissions_file_path,
+    Permissions, read_skel_permissions, skel_permissions_file_path,
 )
 from omdlib.config_hooks import (  # pylint: disable=unused-import
     create_config_environment, save_site_conf, load_config_hooks, load_hook_dependencies,
@@ -198,9 +195,11 @@ def is_root():
 
 def all_sites():
     # type: () -> Iterable[str]
-    l = sorted(
-        [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
-    return l
+    return sorted([
+        s  #
+        for s in os.listdir("/omd/sites")  #
+        if os.path.isdir(os.path.join("/omd/sites/", s))
+    ])
 
 
 def start_site(version_info, site):
@@ -443,7 +442,7 @@ def patch_skeleton_files(conflict_mode, old_site, new_site):
                 src = dirpath + "/" + fn
                 dst = targetdir + "/" + fn
                 if os.path.isfile(src) and not os.path.islink(src) \
-                    and os.path.exists(dst): # not deleted by user
+                    and os.path.exists(dst):  # not deleted by user
                     try:
                         patch_template_file(conflict_mode, src, dst, old_site, new_site)
                     except MKTerminate:
@@ -745,12 +744,10 @@ def file_status(site, source_path, target_path):
 
     changed_type = source_type != target_type
     # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
-    changed_content = (source_type == "file" \
-                       and target_type == "file" \
-                       and source_content != target_content) or \
-                      (source_type == "link" \
-                       and target_type == "link" \
-                       and os.readlink(source_path) != os.readlink(target_path))
+    changed_content = ((source_type == "file" and target_type == "file" and
+                        source_content != target_content) or
+                       (source_type == "link" and target_type == "link" and
+                        os.readlink(source_path) != os.readlink(target_path)))
     changed = changed_type or changed_content
 
     return (changed_type, changed_content, changed)
@@ -1322,8 +1319,8 @@ def add_to_fstab(site, tmpfs_size=None):
         if complete_last_line:
             fstab.write("\n")
 
-        fstab.write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
-        (mountpoint, site.name, site.name, sizespec))
+        fstab.write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" %
+                    (mountpoint, site.name, site.name, sizespec))
 
 
 def remove_from_fstab(site):
@@ -1351,7 +1348,8 @@ def initialize_site_ca(site):
         ca_name="Site '%s' local CA" % site.name,
     )
     ca.initialize()
-    ca.create_site_certificate(site.name)
+    if not ca.site_certificate_path(site.name).exists():
+        ca.create_site_certificate(site.name)
 
 
 def config_change(version_info, site, config_hooks):
@@ -1408,8 +1406,8 @@ def validate_config_change_commands(config_hooks, settings):
         if isinstance(hook["choices"], list):
             choices = [var for (var, _descr) in hook["choices"]]
             if value not in choices:
-                bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
-                        (value, key, ", ".join(choices)))
+                bail_out("Invalid value %r for %r. Allowed are: %s\n" %
+                         (value, key, ", ".join(choices)))
         elif isinstance(hook["choices"], Pattern):
             if not hook["choices"].match(value):
                 bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
@@ -1441,8 +1439,8 @@ def config_set(site, config_hooks, args):
     if isinstance(hook["choices"], list):
         choices = [var for (var, _descr) in hook["choices"]]
         if value not in choices:
-            sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
-                    (value, ", ".join(choices)))
+            sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" %
+                             (value, ", ".join(choices)))
             return
     elif isinstance(hook["choices"], Pattern):
         if not hook["choices"].match(value):
@@ -1554,28 +1552,19 @@ def config_configure(site, global_opts, config_hooks):
 
         # Handle main menu
         if not menu_open:
-            change, current_menu = \
-                dialog_menu("Configuration of site %s" % site.name,
-                        "Interactive setting of site configuration variables. You "
-                        "can change values only while the site is stopped.",
-                        [ (e, "") for e in menu_choices ],
-                        current_menu,
-                        "Enter",
-                        "Exit")
+            change, current_menu = dialog_menu(
+                "Configuration of site %s" % site.name,
+                "Interactive setting of site configuration variables. You "
+                "can change values only while the site is stopped.",
+                [(e, "") for e in menu_choices], current_menu, "Enter", "Exit")
             if not change:
                 return
             current_hook_name = None
             menu_open = True
 
         else:
-            change, current_hook_name = \
-                dialog_menu(
-                    current_menu,
-                    "",
-                    menu[current_menu],
-                    current_hook_name,
-                    "Change",
-                    "Main menu")
+            change, current_hook_name = dialog_menu(current_menu, "", menu[current_menu],
+                                                    current_hook_name, "Change", "Main menu")
             if change:
                 try:
                     config_configure_hook(site, global_opts, config_hooks, current_hook_name)
@@ -1686,7 +1675,7 @@ def putenv(key, value):
 
 def getenv(key, default=None):
     # type: (str, Optional[str]) -> Optional[str]
-    if not key in os.environ:
+    if key not in os.environ:
         return default
     return os.environ[key]
 
@@ -2097,10 +2086,10 @@ def welcome_message(site, admin_password):
         "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n" %
         (tty.bold, tty.normal, tty.bold, admin_password, tty.normal))
     sys.stdout.write(
-        "  (It can be changed with 'htpasswd -m ~/etc/htpasswd cmkadmin' as site user.\n)")
-    sys.stdout.write("\n")
-    sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
-                     (tty.bold, site.name, tty.normal))
+        "  For command line administration of the site, log in with %s'omd su %s'%s.\n" %
+        (tty.bold, site.name, tty.normal))
+    sys.stdout.write("  After logging in, you can change the password for cmkadmin with "
+                     "%s'htpasswd etc/htpasswd cmkadmin'%s.\n" % (tty.bold, tty.normal))
     sys.stdout.write("\n")
 
 
@@ -2214,10 +2203,10 @@ def finalize_site(version_info, site, what, apache_reload):
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_size_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
+            finalize_site_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
-            bail_out("%s" % e)
+            bail_out("Failed to finalize site: %s" % e)
     else:
         _wpid, status = os.waitpid(pid, 0)
         if status:
@@ -2232,7 +2221,7 @@ def finalize_site(version_info, site, what, apache_reload):
         restart_apache(version_info)
 
 
-def finalize_size_as_user(version_info, site, what, ignored_hooks=None):
+def finalize_site_as_user(version_info, site, what, ignored_hooks=None):
     # type: (VersionInfo, SiteContext, str, Optional[List[str]]) -> None
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -2559,6 +2548,8 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
                                      close_fds=True,
                                      shell=False)
                 p.communicate(source_content)
+                if p.stdin is None:
+                    raise Exception("Huh? stdin vanished...")
                 p.stdin.close()
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
@@ -2831,8 +2822,7 @@ def main_init_action(version_info, site, global_opts, command, args, options):
         site.load_config()
 
         # Handle non autostart sites
-        if command in [ "start", "restart", "reload" ] or \
-            ( "auto" in options and command == "status" ):
+        if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
             if not global_opts.force and not site.is_autostart():
                 if bare:
                     continue
@@ -3120,7 +3110,7 @@ def prepare_restore_as_root(version_info, site, options):
     sitename_must_be_valid(site, reuse)
 
     if reuse:
-        if not site.is_stopped() and not "kill" in options:
+        if not site.is_stopped() and "kill" not in options:
             bail_out("Cannot restore '%s' while it is running." % (site.name))
         else:
             os.system('omd stop %s' % site.name)  # nosec
@@ -3140,7 +3130,7 @@ def prepare_restore_as_root(version_info, site, options):
 
 def prepare_restore_as_site_user(site, global_opts, options):
     # type: (SiteContext, GlobalOptions, CommandOptions) -> None
-    if not site.is_stopped() and not "kill" in options:
+    if not site.is_stopped() and "kill" not in options:
         bail_out("Cannot restore site while it is running.")
 
     verify_directory_write_access(site)
@@ -3300,7 +3290,7 @@ def postprocess_restore_as_site_user(version_info, site, options, orig_apache_po
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf(site)
 
-    finalize_size_as_user(version_info, site, "restore")
+    finalize_site_as_user(version_info, site, "restore")
 
 
 def main_cleanup(version_info, site, global_opts, args, options):

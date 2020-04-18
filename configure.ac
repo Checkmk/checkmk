@@ -1,26 +1,6 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -37,12 +17,12 @@ AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
 
 # Checks for programs.
-AC_PROG_CC([gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
+AC_PROG_CC([gcc-10 clang-10 gcc-9 clang-9 clang-8 gcc-8 clang-7 gcc-7 clang-6.0 clang-5.0 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
+AC_PROG_CXX([g++-10 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
 AC_DEFINE_UNQUOTED([BUILD_CXX], ["`$CXX --version | head -n1`"], [C++ compiler])
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 AC_PROG_RANLIB
@@ -137,7 +117,7 @@ AC_TYPE_UINT64_T
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([accept4 memmove select socket strerror strtoul])
+AC_CHECK_FUNCS([memmove select socket strerror strtoul])
 
 AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
     CPPFLAGS="${CFLAGS} -DNAGIOS4"

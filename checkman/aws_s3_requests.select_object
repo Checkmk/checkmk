@@ -1,4 +1,4 @@
-title: AWS/S3 SELECT Object
+title: AWS S3: SELECT Object
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -6,13 +6,19 @@ distribution: check_mk
 description:
  This check monitors the number of bytes of data scanned or
  returned with AWS SELECT object requests.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- This check is always OK.
+ The service  is always {OK}.
 
  You have to enable requests metrics in AWS/S3 console. This
  is a paid feature
 
+item:
+ Name of the instance
+
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (SelectScannedBytes, SelectReturnedBytes) are given.
+

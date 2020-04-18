@@ -3,12 +3,12 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cap.h"
 #include "cfg.h"
+#include "cma_core.h"
+#include "common/yaml.h"
 #include "lwa/types.h"
 #include "read_file.h"
 #include "test_tools.h"
@@ -17,15 +17,7 @@
 #include "tools/_tgt.h"
 
 namespace cma::cfg::cap {
-
 TEST(CapTest, CheckAreFilesSame) {
-    EXPECT_TRUE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
-
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     auto [file1, file2] = tst::CreateInOut();
@@ -35,7 +27,7 @@ TEST(CapTest, CheckAreFilesSame) {
     {
         tst::ConstructFile(file1 / name, "abcde0");
         tst::ConstructFile(file2 / name, "abcde1");
-        EXPECT_FALSE(AreFilesSame(file1 / name, file2 / name));
+        EXPECT_FALSE(cma::tools::AreFilesSame(file1 / name, file2 / name));
         EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
     }
 }
@@ -449,6 +441,85 @@ TEST(CapTest, Check) {
     EXPECT_EQ(out, expected_path.lexically_normal());
 }
 
+TEST(CapTest, IsAllowedToKill) {
+    using namespace cma::cfg;
+    cma::OnStartTest();
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
+
+    EXPECT_FALSE(IsAllowedToKill(L"smss_log.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    auto yaml = cma::cfg::GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] =
+        YAML::Load(values::kTryKillNo);
+    EXPECT_FALSE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] = YAML::Load("aaa");
+    EXPECT_FALSE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_FALSE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+
+    yaml[groups::kGlobal][vars::kTryKillPluginProcess] =
+        YAML::Load(values::kTryKillAll);
+    EXPECT_TRUE(IsAllowedToKill(L"smss_log.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_LOGWATCH.exe"));
+    EXPECT_TRUE(IsAllowedToKill(L"MK_JOLOKIA.exe"));
+}
+
+TEST(CapTest, GetProcessToKill) {
+    cma::OnStartTest();
+    EXPECT_TRUE(GetProcessToKill(L"").empty());
+    EXPECT_TRUE(GetProcessToKill(L"smss.exe").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss.com").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss").empty());
+    EXPECT_TRUE(GetProcessToKill(L"aaaaasmss").empty());
+    EXPECT_TRUE(GetProcessToKill(L"c:\\windows\\system32\\ping.exe").empty());
+    EXPECT_TRUE(GetProcessToKill(L"c:\\windows\\system32\\a_the_ping.eXe") ==
+                L"a_the_ping.eXe");
+}
+
+TEST(CapTest, StoreFileAgressive) {
+    ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
+
+    using namespace std::chrono;
+    namespace fs = std::filesystem;
+    if (!cma::ConfigLoaded()) cma::OnStartTest();
+
+    tst::SafeCleanTempDir();
+    auto [work, _] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    fs::path ping(R"(c:\windows\system32\ping.exe)");
+    if (!fs::exists(ping))
+        GTEST_SKIP() << "there is no notepad to test something";
+    fs::path cmk_test_ping = work / "cmk-update-aGent.exe";
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
+    cma::tools::sleep(200ms);
+    ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
+                              fs::copy_options::overwrite_existing));
+    ASSERT_TRUE(cma::tools::RunDetachedCommand(cmk_test_ping.u8string() +
+                                               " -t 8.8.8.8"));
+    cma::tools::sleep(200ms);
+    std::vector<char> buf = {'_', '_'};
+    ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
+    ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
+    ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
+                              fs::copy_options::overwrite_existing));
+    ASSERT_TRUE(cma::tools::RunDetachedCommand(cmk_test_ping.u8string() +
+                                               " -t 8.8.8.8"));
+    cma::tools::sleep(200ms);
+
+    std::error_code ec;
+    fs::remove(cmk_test_ping, ec);
+    ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
+    ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
+}
+
 TEST(CapTest, CheckValid) {
     namespace fs = std::filesystem;
     fs::path cap = cma::cfg::GetUserDir();
@@ -610,27 +681,26 @@ TEST(CapTest, Names) {
 
 // This is complicated test, rather Functional/Business
 // We are checking three situation
-// Legacy check_mk.install.yml is absent
 // Build  check_mk.install.yml is present, but not installed
 // Build  check_mk.install.yml is present and installed
 TEST(CapTest, ReInstallRestore) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
-    enum class Mode { legacy, build, wato };
-    for (auto mode : {Mode::legacy, Mode::build, Mode::wato}) {
+    enum class Mode { build, wato };
+    for (auto mode : {Mode::build, Mode::wato}) {
         XLOG::SendStringToStdio("*\n", XLOG::Colors::yellow);
 
         cma::OnStartTest();
         tst::SafeCleanTempDir();
-        auto [r, u] = tst::CreateInOut();
+        fs::path r;
+        fs::path u;
+        std::tie(r, u) = tst::CreateInOut();
         auto root = r.wstring();
         auto user = u.wstring();
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
         auto old_user = cma::cfg::GetUserDir();
 
-        fs::path ini_base = old_user;
-        ini_base /= "check_mk.ps.test.ini";
         fs::path cap_base = old_user;
         cap_base /= "plugins.test.cap";
         fs::path yml_b_base = old_user;
@@ -642,7 +712,6 @@ TEST(CapTest, ReInstallRestore) {
         try {
             // Prepare installed files
             fs::create_directory(r / dirs::kInstall);
-            fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
             fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
             tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
 
@@ -671,22 +740,18 @@ TEST(CapTest, ReInstallRestore) {
         };
 
         // Main Function
-        cma::cfg::cap::ReInstall();
+        EXPECT_TRUE(cma::cfg::cap::ReInstall());
 
-        auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
-        auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
         auto bakery = cma::tools::ReadFileInString(
             (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
         auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
         auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
         auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
         auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
-        ASSERT_TRUE(user_ini);
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
-        ASSERT_TRUE(bakery);
+        ASSERT_TRUE(bakery.has_value() == (mode == Mode::wato));
         EXPECT_TRUE(user_dat == root_dat);
-        EXPECT_TRUE(user_ini == root_ini);
 
         // bakery check
         auto y = YAML::Load(*bakery);
@@ -694,7 +759,7 @@ TEST(CapTest, ReInstallRestore) {
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_NO_THROW(y["ps"].IsMap());
+            EXPECT_TRUE(y.IsNull());
         }
 
         // now damage files
@@ -706,25 +771,21 @@ TEST(CapTest, ReInstallRestore) {
             }
         };
 
-        destroy_file(user_gen(L"check_mk.ini"));
         destroy_file(user_gen(files::kInstallYmlFileW));
         destroy_file(user_gen(L"plugins.cap"));
         destroy_file(user_gen(L"checkmk.dat"));
         destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
 
         // main Function again
-        cma::cfg::cap::ReInstall();
+        EXPECT_TRUE(cma::cfg::cap::ReInstall());
 
-        user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
         bakery = cma::tools::ReadFileInString(
             (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
         user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
         user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
-        ASSERT_TRUE(user_ini);
         ASSERT_EQ(user_cap_size, root_cap_size);
         ASSERT_TRUE(user_dat);
         EXPECT_TRUE(user_dat == root_dat);
-        EXPECT_TRUE(user_ini == root_ini);
 
         // bakery check
         y = YAML::Load(*bakery);
@@ -732,7 +793,7 @@ TEST(CapTest, ReInstallRestore) {
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_NO_THROW(y["ps"].IsMap());
+            EXPECT_TRUE(y.IsNull());
         }
     }
 }

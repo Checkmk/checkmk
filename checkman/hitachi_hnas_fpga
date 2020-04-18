@@ -15,5 +15,5 @@ item:
  E. g.: 1.0 wlog
 
 inventory:
- Finds one item per FPGA
+ One service is created for each FPGA.
 

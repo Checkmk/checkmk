@@ -1,4 +1,4 @@
-title: Number of JVM sessions
+title: Java Virtual Machine: Number of Sessions
 agents: linux
 catalog: app/java
 license: GPL
@@ -18,7 +18,7 @@ item:
  followed by the name of the application. I.e. tomcat7 /examples
 
 inventory:
- One check is created for each application running inside an Jolokia
+ One service is created for each application running inside an Jolokia
  instance sent by the agent.
 
 

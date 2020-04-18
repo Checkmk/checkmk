@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # parsed = {
 #     "ESTABLISHED" : 6,
@@ -51,11 +31,11 @@ map_counter_keys = {
 def empty_stats():
     # we require all states from map_counter_keys due to the omit_zero_metrics option
     # concerning the perfdata
-    return {value: 0 for value in map_counter_keys.itervalues()}
+    return {value: 0 for value in map_counter_keys.values()}
 
 
 def inventory_tcp_connections(parsed):
-    if any(value != 0 for value in parsed.itervalues()):
+    if any(value != 0 for value in parsed.values()):
         return [(None, 'tcp_conn_stats_default_levels')]
 
 
@@ -65,7 +45,7 @@ def check_tcp_connections(item, params, parsed):
         return
 
     perfdata = []
-    for tcp_state, tcp_count in sorted(parsed.iteritems()):
+    for tcp_state, tcp_count in sorted(parsed.items()):
         warn, crit = params.get(tcp_state, (None, None))
 
         # We must append all states (regardless of their value --> even if 0) to the perfdata list

@@ -1,4 +1,4 @@
-title: AWS/S3 Traffic Stats
+title: AWS S3: Traffic Stats
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -7,13 +7,19 @@ description:
  This check monitors number bytes downloaded and uploaded,
  that contain a request body, for requests made to an
  AWS S3 bucket.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- This check is always OK.
+ The service is always {OK}.
 
  You have to enable requests metrics in AWS/S3 console. This
  is a paid feature
 
+item:
+ Name of the instance
+
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (BytesDownloaded, BytesUploaded) are given.
+

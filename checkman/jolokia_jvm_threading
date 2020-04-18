@@ -1,4 +1,4 @@
-title: Number of JVM threads
+title: Java Virtual Machine: Number of Threads
 agents: linux
 catalog: app/java
 license: GPL
@@ -17,6 +17,6 @@ item:
  The name of the application server instance as configured by the agent.
 
 inventory:
- One check is created per JVM sent by the Jolokia agent.
+ One service is created for each JVM sent by the Jolokia agent.
 
 

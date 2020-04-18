@@ -1,4 +1,4 @@
-title: VMWare ESX host systems: Datastore throughput
+title: VMWare ESX Host Systems: Datastore Throughput
 agents: vsphere
 catalog: os/storage
 license: GPL
@@ -8,7 +8,12 @@ description:
  latency for each datastore on an ESX host system.
  You can configure levels for the read, write and latency values.
 
+item:
+ Name of the instance
+
 inventory:
- Depending on the configuration, creates a summary check or one
- check per datastore.
+ Either one summary service is created for all datastores
+ if the configuration is set to {"Summary"} or
+ one service is created for each datastore if the configuration
+ is set to {"Single"}.
 

@@ -1,42 +1,29 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import errno
 import logging
 import os
 import re
 import signal
 import traceback
-from pathlib2 import Path
+from typing import Any, Dict  # pylint: disable=unused-import
 
-import cmk
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.paths
 
-import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -107,7 +94,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk.is_raw_edition() and config.liveproxyd_enabled
+        return not cmk_version.is_raw_edition() and config.liveproxyd_enabled
 
     def config_dir(self):
         return liveproxyd_config_dir()
@@ -125,7 +112,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             try:
                 pid = int(open(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
-            except IOError as e:
+            except IOError as e:  # NOTE: In Python 3 IOError has been merged into OSError!
                 # No liveproxyd running: No reload needed.
                 if e.errno != errno.ENOENT:
                     raise
@@ -181,7 +168,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return config.mkeventd_enabled
 
     def config_dir(self):
-        return str(cmk.ec.export.rule_pack_dir())
+        return str(ec.rule_pack_dir())
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
@@ -192,7 +179,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
                 hooks.call("mkeventd-activate-changes")
 
     def default_globals(self):
-        return cmk.ec.defaults.default_config()
+        return ec.default_config()
 
 
 @config_domain_registry.register
@@ -303,13 +290,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def _get_certificates_from_file(self, path):
         try:
-            return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
+            return [
+                match.group(0) for match in self._PEM_RE.finditer(open("%s" % path, "rb").read())
+            ]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
                 return []
-            else:
-                raise
+            raise
 
     def default_globals(self):
         return {
@@ -325,7 +313,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root)
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()
@@ -416,7 +404,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
     def _from_omd_config(self, omd_config):
-        settings = {}
+        settings = {}  # type: Dict[str, Any]
 
         for key, value in omd_config.items():
             if value == "on":
@@ -463,7 +451,7 @@ class ConfigDomainOMD(ABCConfigDomain):
                 settings["MKEVENTD"] = None
 
         # Convert from OMD key (to lower, add "site_" prefix)
-        settings = dict([("site_%s" % key.lower(), val) for key, val in settings.items()])
+        settings = {"site_%s" % key.lower(): val for key, val in settings.items()}
 
         return settings
 
@@ -471,7 +459,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, settings):
         # Convert to OMD key
-        settings = dict([(key.upper()[5:], val) for key, val in settings.items()])
+        settings = {key.upper()[5:]: val for key, val in settings.items()}
 
         if "LIVESTATUS_TCP" in settings:
             if settings["LIVESTATUS_TCP"] is not None:

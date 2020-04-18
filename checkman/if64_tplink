@@ -1,10 +1,25 @@
-title: TP-LINK switches: Network Interfaces
+title: TP-LINK Switches: Network Interfaces
 agents: snmp
 catalog: hw/network/tplink
 license: GPL
 distribution: check_mk
+
+item:
+ There are three allowed ways to specify a port: {1}: the last component of
+ the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
+ the port. If you are using the alias, you have to make sure that it is unique
+ by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
+
+
 description:
  This check is a copy if {if64} but fixes two bugs of TP-LINK in their
  MIB implementation that lead to wrong interface speed and wrong
  alias names of ports. Both issues have been worked around in this
  check plugin. Please refer to {if64} for the complete manual page.
+
+inventory:
+ One service is created for each port that fulfills configurable conditions.
+ Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
+ {32} (frameRelay), {117} (gigabitEthernet) or several others.
+
+ For further details look at {if64} manpage.

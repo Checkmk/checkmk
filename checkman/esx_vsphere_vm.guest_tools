@@ -1,4 +1,4 @@
-title: Virtual Machine under ESX: Guest Tools version status
+title: Virtual Machine under ESX: Guest Tools Version Status
 agents: vsphere
 catalog: os/ps
 license: GPL
@@ -18,5 +18,5 @@ description:
  The actual state of this check can be modified by parameters
 
 inventory:
- On each VM one check is generated.
+ One service is created for each Virtual Machine.
 

@@ -6,14 +6,16 @@ distribution: check_mk
 description:
  This check monitors the system status of a Eltek Valere USV.
  The check is CRIT if the status is
- - float, voltage regulated
- - battery boost
- - battery test
- The check is OK if the status is
- - float, temperature regulated
 
-item:
- No item.
+ - float, voltage regulated
+
+ - battery boost
+
+ - battery test
+
+ The check is OK if the status is
+
+ - float, temperature regulated
 
 inventory:
  One service is created.

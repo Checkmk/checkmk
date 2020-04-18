@@ -3,8 +3,6 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cap.h"
@@ -14,6 +12,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "install_api.h"
 #include "providers/mrpe.h"
 #include "read_file.h"
@@ -275,6 +274,23 @@ TEST(CmaCfg, InstallProtocol) {
     EXPECT_TRUE(name.empty());
 }
 
+TEST(CmaCfg, Modules) {
+    ASSERT_TRUE(!cma::cfg::GetUserModulesDir().empty());
+    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kUserModules) == L"modules");
+    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kInstalledModules) == L"modules");
+    ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
+    auto all_dir = details::AllDirTable();
+
+    ASSERT_TRUE(std::any_of(
+        std::begin(all_dir), std::end(all_dir),
+        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+
+    auto removable_dir = details::AllDirTable();
+    ASSERT_TRUE(std::any_of(
+        std::begin(removable_dir), std::end(removable_dir),
+        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+}
+
 TEST(CmaCfg, ProcessPluginEnvironment) {
     //
     cma::OnStartTest();
@@ -284,7 +300,7 @@ TEST(CmaCfg, ProcessPluginEnvironment) {
             pairs.emplace_back(std::string(name), std::string(value));
         });
 
-    EXPECT_EQ(pairs.size(), 9);
+    EXPECT_EQ(pairs.size(), 10) << "Count of environment variables";
     auto ret = std::none_of(pairs.begin(), pairs.end(),
                             [](std::pair<std::string, std::string> p) {
                                 return p.first.empty() || p.second.empty();

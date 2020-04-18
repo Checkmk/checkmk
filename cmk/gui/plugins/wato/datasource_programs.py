@@ -1,28 +1,10 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
@@ -47,6 +29,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Float,
     HTTPUrl,
+    Hostname,
     Integer,
     ListChoice,
     ListOf,
@@ -63,6 +46,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato.utils import (
     PasswordFromStore,)
 from cmk.utils import aws_constants
+from cmk.gui.plugins.metrics.utils import MetricName
 
 
 @rulespec_group_registry.register
@@ -107,12 +91,12 @@ rulespec_registry.register(
 def _valuespec_special_agents_ddn_s2a():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", Password(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8008)),
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", Password(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8008)),
         ],
         optional_keys=["port"],
-        title=_(u"DDN S2A"),
+        title=_("DDN S2A"),
     )
 
 
@@ -121,6 +105,26 @@ rulespec_registry.register(
         group=RulespecGroupDatasourcePrograms,
         name="special_agents:ddn_s2a",
         valuespec=_valuespec_special_agents_ddn_s2a,
+    ))
+
+
+def _valuespec_special_agents_proxmox():
+    return Dictionary(
+        elements=[
+            ("username", TextAscii(title=_("Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            ("port", Integer(title=_("Port"), default_value=8006)),
+        ],
+        optional_keys=["port"],
+        title=_("Proxmox"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:proxmox",
+        valuespec=_valuespec_special_agents_proxmox,
     ))
 
 
@@ -169,7 +173,7 @@ def _valuespec_special_agents_kubernetes():
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
                 ("port",
-                 Integer(title=_(u"Port"),
+                 Integer(title=_("Port"),
                          help=_("If no port is given a default value of 443 will be used."),
                          default_value=443)),
                 ("url-prefix",
@@ -189,7 +193,7 @@ def _valuespec_special_agents_kubernetes():
                      allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
-            title=_(u"Kubernetes"),
+            title=_("Kubernetes"),
             help=_(
                 "This rule selects the Kubenetes special agent for an existing Checkmk host. "
                 "If you want to monitor multiple Kubernetes clusters "
@@ -210,70 +214,236 @@ rulespec_registry.register(
     ))
 
 
+def _check_not_empty_exporter_dict(value, _varprefix):
+    if not value:
+        raise MKUserError("dict_selection", _("Please select at least one element"))
+
+
 def _valuespec_generic_metrics_prometheus():
     return Dictionary(
-        elements=[("port",
-                   Integer(
-                       title=_('API-Port'),
-                       help=_("If no port is given a default vaulue of 443 will be used."),
-                       default_value=443,
-                   )),
-                  ("promql_checks",
-                   ListOf(
-                       Dictionary(elements=[
-                           ("service_description",
-                            TextAscii(
-                                title=_('Service description: '),
-                                allow_empty=False,
-                            )),
-                           ("metric_components",
-                            ListOf(Dictionary(
-                                title=_('PromQL query'),
-                                elements=[
-                                    ("metric_label",
-                                     TextAscii(title=_('Metric Label: '),
-                                               allow_empty=False,
-                                               help="The Metric Label is displayed alongside the "
-                                               "queried value within the resulting service. "
-                                               "The metric name will be taken as label if "
-                                               "nothing was specified.")),
-                                    ("metric_name",
-                                     TextAscii(title=_('Metric Name: '),
-                                               allow_empty=False,
-                                               help="Feel free to specify any naming. However, "
-                                               "providing a fitting metric name results in the "
-                                               "generation of a suitable graph display of the "
-                                               "metric. One can refer to other existing check "
-                                               "plug-ins in order to inspect existing metric "
-                                               "names and examples. Otherwise one can also "
-                                               "refer to the \"Guidelines for coding check "
-                                               "plug-ins\" section in the Offical Guide for "
-                                               "further details.")),
-                                    ("promql_query",
-                                     TextAscii(title=_('PromQL query: '),
-                                               allow_empty=False,
-                                               size=80)),
-                                ],
-                                optional_keys=["metric_label"],
-                            ),
-                                   title=_('PromQL queries for Service'),
+        elements=[
+            ("port", Integer(
+                title=_('API-Port'),
+                default_value=443,
+            )),
+            ("exporter",
+             ListOf(
+                 CascadingDropdown(choices=[
+                     ("node_exporter", _("Node Exporter"),
+                      Dictionary(
+                          elements=[
+                              (
+                                  "entities",
+                                  ListChoice(choices=[
+                                      ("df", _("Filesystems")),
+                                      ("diskstat", _("Disk IO")),
+                                      ("mem", _("Memory")),
+                                      ("kernel", _("CPU utilization & Kernel performance")),
+                                  ],
+                                             default_value=["df", "diskstat", "mem", "kernel"],
+                                             allow_empty=False,
+                                             title=_("Retrieve information about..."),
+                                             help=
+                                             _("For your respective kernel select the hardware or OS entity "
+                                               "you would like to retrieve information about.")),
+                              ),
+                          ],
+                          title=_(
+                              "Node Exporter metrics"),
+                          optional_keys=[],
+                      )),
+                     ("kube_state", _("Kube-state-metrics"),
+                      Dictionary(
+                          elements=[
+                              ("cluster_name",
+                               Hostname(
+                                   title=_(
+                                       'Cluster name'),
                                    allow_empty=False,
-                                   magic='@;@',
-                                   validate=_validate_prometheus_service_metrics)),
-                           ("host_name",
-                            TextAscii(title=_('Assign service to following host: '),
+                                   help
+                                   =_("You must specify a name for your Kubernetes cluster. The provided name"
+                                      " will be used to create a piggyback host for the cluster related services."
+                                     ),
+                               )),
+                              ("entities",
+                               ListChoice(
+                                   choices=[
+                                       ("cluster", _("Cluster")),
+                                       ("nodes", _("Nodes")),
+                                       ("services", _("Services")),
+                                       ("pods", _("Pods")),
+                                       ("daemon_sets", _("Daemon sets")),
+                                   ],
+                                   default_value=[
+                                       "cluster", "nodes", "services", "pods", "daemon_sets"
+                                   ],
+                                   allow_empty=False,
+                                   title=_("Retrieve information about..."),
+                                   help=
+                                   _("For your Kubernetes cluster select for which entity levels "
+                                     "you would like to retrieve information about. Piggyback hosts "
+                                     "for the respective entities will be created."))),
+                          ],
+                          title=_("Kube state metrics"),
+                          optional_keys=[],
+                      )),
+                     ("cadvisor", _("cAdvisor"),
+                      Dictionary(
+                          elements=[
+                              ("entity_level",
+                               CascadingDropdown(
+                                   title=_("Entity level used to create Checkmk piggyback hosts"),
+                                   help=
+                                   _("The retrieved information from the cAdvisor will be aggregated according"
+                                     " to the selected entity level. Resulting services will be allocated to the created"
+                                     " Checkmk piggyback hosts."),
+                                   choices=[
+                                       ("container",
+                                        _("Container - Display the information on container level"),
+                                        Dictionary(
+                                            elements=
+                                            [("container_id",
+                                              DropdownChoice(
+                                                  title=_("Host name used for containers"),
+                                                  help=
+                                                  _("For Containers - Choose which identifier is used for the monitored containers."
+                                                    " This will affect the name used for the piggyback host"
+                                                    " corresponding to the container, as well as items for"
+                                                    " services created on the node for each container."
+                                                   ),
+                                                  choices=[
+                                                      ("short",
+                                                       _("Short - Use the first 12 characters of the docker container ID"
+                                                        )),
+                                                      ("long",
+                                                       _("Long - Use the full docker container ID")
+                                                      ),
+                                                      ("name",
+                                                       _("Name - Use the containers' name")),
+                                                  ],
+                                              ))],
+                                            optional_keys=[],
+                                        )),
+                                       ("pod", _("Pod - Display the information for pod level"),
+                                        Dictionary(elements=[])),
+                                       ("both",
+                                        _("Both - Display the information for both, pod and container, levels"
+                                         ),
+                                        Dictionary(
+                                            elements=
+                                            [("container_id",
+                                              DropdownChoice(
+                                                  title=_("Host name used for containers"),
+                                                  help=
+                                                  _("For Containers - Choose which identifier is used for the monitored containers."
+                                                    " This will affect the name used for the piggyback host"
+                                                    " corresponding to the container, as well as items for"
+                                                    " services created on the node for each container."
+                                                   ),
+                                                  choices=[
+                                                      ("short",
+                                                       _("Short - Use the first 12 characters of the docker container ID"
+                                                        )),
+                                                      ("long",
+                                                       _("Long - Use the full docker container ID")
+                                                      ),
+                                                      ("name",
+                                                       _("Name - Use the containers' name")),
+                                                  ],
+                                              ))],
+                                            optional_keys=[],
+                                        )),
+                                   ],
+                               )),
+                              (
+                                  "entities",
+                                  ListChoice(
+                                      choices=[
+                                          ("diskio", _("Disk IO")),
+                                          ("cpu", _("CPU utilization")),
+                                          ("df", _("Filesystem")),
+                                          ("if", _("Network")),
+                                          ("memory", _("Memory")),
+                                      ],
+                                      default_value=["diskio", "cpu", "df", "if", "memory"],
                                       allow_empty=False,
-                                      help="Specify the host to which the resulting "
-                                      "service will be assigned to. The host "
-                                      "should be configured to allow Piggyback "
-                                      "data")),
-                       ],
-                                  optional_keys=["host_name"]),
-                       title=_("Service creation using PromQL queries"),
-                       allow_empty=False,
-                   ))],
+                                      title=_("Retrieve information about..."),
+                                      help=
+                                      _("For your respective kernel select the hardware or OS entity "
+                                        "you would like to retrieve information about.")),
+                              ),
+                          ],
+                          title=_("CAdvisor"),
+                          validate=_check_not_empty_exporter_dict,
+                          optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                      )),
+                 ]),
+                 add_label=_("Add new Scrape Target"),
+                 title=
+                 _("Prometheus Scrape Targets (include Prometheus Exporters) to fetch information from"
+                  ),
+                 help=_("You can specify which Scrape Targets including Exporters "
+                        "are connected to your Prometheus instance. The Prometheus "
+                        "Special Agent will automatically generate services for the "
+                        "selected monitoring information. You can create your own "
+                        "defined services with the custom PromQL query option below "
+                        "if one of the Scrape Target types are not listed here."),
+             )),
+            ("promql_checks",
+             ListOf(
+                 Dictionary(elements=[
+                     ("service_description", TextUnicode(
+                         title=_('Service name'),
+                         allow_empty=False,
+                     )),
+                     ("host_name",
+                      Hostname(
+                          title=_('Assign service to following host'),
+                          allow_empty=False,
+                          help=_("Specify the host to which the resulting "
+                                 "service will be assigned to. The host "
+                                 "should be configured to allow Piggyback "
+                                 "data"),
+                      )),
+                     ("metric_components",
+                      ListOf(
+                          Dictionary(
+                              title=_('PromQL query'),
+                              elements=[
+                                  ("metric_label",
+                                   TextAscii(
+                                       title=_('Metric label'),
+                                       allow_empty=False,
+                                       help=_(
+                                           "The metric label is displayed alongside the "
+                                           "queried value in the status detail the resulting service. "
+                                           "The metric name will be taken as label if "
+                                           "nothing was specified."),
+                                   )),
+                                  ("metric_name", MetricName()),
+                                  ("promql_query",
+                                   TextAscii(
+                                       title=_('PromQL query (only single return value permitted)'),
+                                       allow_empty=False,
+                                       size=80,
+                                       help=_("Example PromQL query: up{job=\"node_exporter\"}"))),
+                              ],
+                              optional_keys=["metric_name"],
+                          ),
+                          title=_('PromQL queries for Service'),
+                          add_label=_("Add new PromQL query"),
+                          allow_empty=False,
+                          magic='@;@',
+                          validate=_validate_prometheus_service_metrics,
+                      )),
+                 ],
+                            optional_keys=["host_name"]),
+                 title=_("Service creation using PromQL queries"),
+                 add_label=_("Add new Service"),
+             )),
+        ],
         title=_("Prometheus"),
-        optional_keys=["port"],
+        optional_keys=[],
     )
 
 
@@ -282,9 +452,8 @@ def _validate_prometheus_service_metrics(value, _varprefix):
     for metric_details in value:
         metric_name = metric_details["metric_name"]
         if metric_name in used_metric_names:
-            raise MKUserError(metric_name, "Each metric name must be unique for a service")
-        else:
-            used_metric_names.append(metric_name)
+            raise MKUserError(metric_name, _("Each metric must be unique for a service"))
+        used_metric_names.append(metric_name)
 
 
 rulespec_registry.register((HostRulespec(
@@ -354,16 +523,6 @@ def _valuespec_special_agents_vsphere():
                  default_value=60,
                  minvalue=1,
                  unit=_("seconds"),
-             )),
-            ("use_pysphere",
-             Checkbox(
-                 title=_("Compatibility mode"),
-                 label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                 true_label=_("Support 4.1"),
-                 false_label=_("fast"),
-                 help=_("The current very performant implementation of the ESX special agent "
-                        "does not support older ESX versions than 5.0. Please use the slow "
-                        "compatibility mode for those old hosts."),
              )),
             ("infos",
              Transform(
@@ -461,6 +620,7 @@ def _valuespec_special_agents_vsphere():
             "snapshot_display",
             "vm_piggyname",
         ],
+        ignored_keys=["use_pysphere"],
     ),
                      title=_("Check state of VMWare ESX via vSphere"),
                      help=_(
@@ -992,7 +1152,7 @@ def _valuespec_special_agents_hivemanager_ng():
                 allow_empty=False,
             )),
         ],
-        optional_keys=None,
+        optional_keys=False,
     )
 
 
@@ -1074,7 +1234,7 @@ rulespec_registry.register(
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
-    valuetypes = {}
+    valuetypes = {}  # type: Dict[Any, Any]
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:
@@ -2201,7 +2361,7 @@ def _valuespec_special_agents_splunk():
     return Dictionary(
         title=_("Check state of Splunk"),
         help=_("Requests data from a Splunk instance."),
-        optional_keys=["port"],
+        optional_keys=["instance", "port"],
         elements=[
             ("instance",
              TextAscii(
@@ -2455,7 +2615,7 @@ def _valuespec_special_agents_graylog():
                  ],
                  default_value=[
                      "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
-                     "messages", "nodes", "sidecars", "streams"
+                     "messages", "nodes", "sidecars", "sources", "streams"
                  ],
                  allow_empty=False,
              )),
@@ -2538,4 +2698,251 @@ rulespec_registry.register(
         group=RulespecGroupDatasourcePrograms,
         name="special_agents:couchbase",
         valuespec=_valuespec_special_agents_couchbase,
+    ))
+
+
+def _factory_default_special_agents_jira():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _vs_jira_projects(title):
+    return ListOf(
+        Tuple(
+            orientation="horizontal",
+            elements=[
+                TextAscii(
+                    title=_("Project"),
+                    help=_('Enter the full name of the '
+                           'project here. You can find '
+                           'the name in Jira within '
+                           '"Projects" - "View all '
+                           'projects" - column: "Project". '
+                           'This field is case '
+                           'insensitive'),
+                    allow_empty=False,
+                    regex="^[^']*$",
+                    regex_error=_("Single quotes are not allowed here."),
+                ),
+                ListOfStrings(
+                    title=_("Workflows"),
+                    help=_('Enter the workflow name for the project here. E.g. "in progress".'),
+                    valuespec=TextAscii(
+                        allow_empty=False,
+                        regex="^[^']*$",
+                        regex_error=_("Single quotes are not allowed here."),
+                    ),
+                    orientation="horizontal",
+                ),
+            ],
+        ),
+        add_label=_("Add new project"),
+        movable=False,
+        title=title,
+        validate=_validate_aws_tags,
+    )
+
+
+def _valuespec_special_agents_jira():
+    return Dictionary(
+        title=_("Check statistics of Jira"),
+        help=_("Use Jira Query Language (JQL) to get statistics out of your "
+               "Jira instance."),
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("Jira instance to query"),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_jira.com. If not set, the "
+                        "assigned host is used as instance."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "Jira API."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            (
+                "project_workflows",
+                _vs_jira_projects(
+                    _("Monitor the number of issues for given projects and their "
+                      "workflows. This results in a service for each project with "
+                      "the number of issues per workflow."),),
+            ),
+            ("jql",
+             ListOf(Dictionary(
+                 elements=[
+                     ("service_description",
+                      TextAscii(
+                          title=_('Service description: '),
+                          help=_("The resulting service will get this entry as "
+                                 "service description"),
+                          allow_empty=False,
+                      )),
+                     (
+                         "query",
+                         TextAscii(
+                             title=_('JQL query: '),
+                             help=_('E.g. \'project = my_project and result = '
+                                    '\"waiting for something\"\''),
+                             allow_empty=False,
+                             size=80,
+                         ),
+                     ),
+                     ("result",
+                      CascadingDropdown(
+                          title=_("Type of result"),
+                          help=_("Here you can define, what search result "
+                                 "should be used. You can show the number of search "
+                                 "results (count) or the summed up or average values "
+                                 "of a given numeric field."),
+                          choices=[
+                              ('count', _("Number of "
+                                          "search results")),
+                              ('sum', _("Summed up values of "
+                                        "the following numeric field:"),
+                               Tuple(elements=[
+                                   TextAscii(
+                                       title=_("Field Name: "),
+                                       allow_empty=False,
+                                   ),
+                                   Integer(
+                                       title=_("Limit number of processed search results"),
+                                       help=_("Here you can define, how many search results "
+                                              "should be processed. The max. internal limit "
+                                              "of Jira is 1000 results. If you want to "
+                                              "ignore any limit, set -1 here. Default is 50."),
+                                       default_value=50,
+                                   ),
+                               ],)),
+                              ('average', _("Average value "
+                                            "of the following numeric field: "),
+                               Tuple(elements=[
+                                   TextAscii(
+                                       title=_("Field Name: "),
+                                       allow_empty=False,
+                                   ),
+                                   Integer(
+                                       title=_("Limit number of processed search results"),
+                                       default_value=50,
+                                   ),
+                               ],)),
+                          ],
+                          sorted=False,
+                      )),
+                 ],
+                 optional_keys=[],
+             ),
+                    title=_('Custom search query'))),
+        ],
+        optional_keys=[
+            "jql",
+            "project_workflows",
+            "instance",
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_jira(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:jira",
+        valuespec=_valuespec_special_agents_jira,
+    ))
+
+
+def _factory_default_special_agents_rabbitmq():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_rabbitmq():
+    return Dictionary(
+        title=_("Check state of RabbitMQ"),
+        help=_("Requests data from a RabbitMQ instance."),
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("RabbitMQ instance to query"),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_rabbitmq.com. If not set, the "
+                        "assigned host is used as instance."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "RabbitMQ API."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            ("port",
+             Integer(
+                 title=_("Port"),
+                 default_value=15672,
+                 help=_("The port that is used for the api call."),
+             )),
+            ("sections",
+             ListChoice(
+                 title=_("Informations to query"),
+                 help=_("Defines what information to query. You can choose "
+                        "between the cluster, nodes, vhosts and queues."),
+                 choices=[
+                     ("cluster", _("Clusterwide")),
+                     ("nodes", _("Nodes")),
+                     ("vhosts", _("Vhosts")),
+                     ("queues", _("Queues")),
+                 ],
+                 default_value=["cluster", "nodes", "vhosts", "queues"],
+                 allow_empty=False,
+             )),
+        ],
+        optional_keys=[
+            "instance",
+            "port",
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_rabbitmq(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:rabbitmq",
+        valuespec=_valuespec_special_agents_rabbitmq,
     ))

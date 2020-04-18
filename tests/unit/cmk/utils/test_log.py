@@ -1,8 +1,11 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import logging
-import pytest  # type: ignore
 import cmk.utils.log as log
 
 from testlib import on_time
@@ -83,8 +86,11 @@ def test_set_verbosity():
     assert l.isEnabledFor(log.VERBOSE) is True
     assert l.isEnabledFor(logging.DEBUG) is True
 
-    with pytest.raises(ValueError):
-        log.logger.setLevel(log.verbosity_to_log_level(3))
+    # Use debug level (highest supported)
+    log.logger.setLevel(log.verbosity_to_log_level(3))
+    assert l.getEffectiveLevel() == logging.DEBUG
+    assert l.isEnabledFor(log.VERBOSE) is True
+    assert l.isEnabledFor(logging.DEBUG) is True
 
     # Reset verbosity for next test run.
     log.logger.setLevel(log.verbosity_to_log_level(0))

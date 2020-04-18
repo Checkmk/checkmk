@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Tool for updating Checkmk configuration files after version updates
 
 This command is normally executed automatically at the end of "omd update" on
@@ -30,24 +10,15 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.",
 """
 
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-)
-
-import sys
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
-
+import re
+import os
+from pathlib import Path
+import subprocess
 import errno
 from typing import List  # pylint: disable=unused-import
 import argparse
 import logging
+
 from werkzeug.test import create_environ
 
 # This special script needs persistence and conversion code from different
@@ -55,6 +26,7 @@ from werkzeug.test import create_environ
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -69,17 +41,17 @@ import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.http import Request, Response  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Better make our application available?
-class DummyApplication(object):
+class DummyApplication:
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response
 
 
-class UpdateConfig(object):
+class UpdateConfig:
     def __init__(self, logger, arguments):
         # type: (logging.Logger, argparse.Namespace) -> None
         super(UpdateConfig, self).__init__()
@@ -98,7 +70,7 @@ class UpdateConfig(object):
         self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
 
-        this_html = htmllib.html(Request(environ), Response(is_secure=False))
+        this_html = htmllib.html(Request(environ))
         # Currently the htmllib.html constructor enables the timeout by default. This side effect
         # should really be cleaned up.
         this_html.disable_request_timeout()
@@ -121,7 +93,33 @@ class UpdateConfig(object):
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
+            (self._update_fs_used_name, "Migrating fs_used name"),
         ]
+
+    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
+    def _update_fs_used_name(self):
+        # Test if User migrated during 1.6 to new name fs_used. If so delete marker flag file
+        old_config_flag = os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk')
+        if os.path.exists(old_config_flag):
+            self._logger.log(VERBOSE, 'remove flag %s' % old_config_flag)
+            os.remove(old_config_flag)
+
+        check_df_includes_use_new_metric()
+
+        # TODO: Inline update_rrd_fs_names once GUI and this script have been migrated to Python 3
+        ps = subprocess.Popen(
+            [
+                'python3',
+                os.path.join(cmk.utils.paths.lib_dir, 'python3/cmk/update_rrd_fs_names.py')
+            ],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        if ps.stderr is None or ps.stdout is None:
+            raise Exception("Huh? Missing stderr/stdout.")
+        for line in iter(ps.stderr.readline, b''):
+            self._logger.log(VERBOSE, line.strip())
+        self._logger.log(VERBOSE, ps.stdout.read())
 
     def _rewrite_wato_tag_config(self):
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
@@ -137,7 +135,8 @@ class UpdateConfig(object):
     def _rewrite_autochecks(self):
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
-            autochecks = cmk.base.autochecks.parse_autochecks_file(hostname)
+            autochecks = cmk.base.autochecks.parse_autochecks_file(
+                hostname, cmk.base.config.service_description)
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
     def _rewrite_wato_rulesets(self):
@@ -212,3 +211,23 @@ def parse_arguments(args):
                    help='Verbose mode (use multiple times for more output)')
 
     return p.parse_args(args)
+
+
+# RRD migration cleaups
+
+
+def check_df_includes_use_new_metric():
+    "Check that df.include files can return fs_used metric name"
+    df_file = cmk.utils.paths.local_checks_dir / 'df.include'
+    if df_file.exists():
+        with df_file.open('r') as fid:
+            r = fid.read()
+            mat = re.search('fs_used', r, re.M)
+            if not mat:
+                msg = ('source: %s\n Returns the wrong perfdata\n' % df_file +
+                       'Checkmk 1.7 requires Filesystem check plugins to deliver '
+                       '"Used filesystem space" perfdata under the metric name fs_used. '
+                       'Your local extension pluging seems to be using the old convention '
+                       'of mountpoints as the metric name. Please update your include file '
+                       'to match our reference implementation.')
+                raise RuntimeError(msg)

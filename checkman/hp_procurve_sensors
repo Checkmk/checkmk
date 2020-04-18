@@ -13,8 +13,8 @@ description:
  own service.
 
 item:
- Number of the sensor (as string, not int).
+ Number of the sensor
 
 inventory:
- All sensors which are in another state than "notPresent" are automatically
- inventorized.
+ One service is created for each sensor if they are in another state
+ than "notPresent".

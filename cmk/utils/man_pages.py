@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module handles the manual pages of Check_MK checks. These man
 pages are meant to document the individual checks of Check_MK and are
 used as base for the list of supported checks and catalogs of checks.
@@ -36,7 +16,7 @@ import re
 import sys
 from io import StringIO
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 import six  # pylint: disable=unused-import
 
@@ -53,6 +33,9 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
+ManPage = Dict[six.text_type, Any]
+ManPageCatalogPath = Tuple[str, ...]
+
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
         "environment" : "Environmental sensors",
@@ -68,6 +51,7 @@ catalog_titles = {
             "didactum"     : "Didactum",
             "eaton"        : "Eaton",
             "emerson"      : "EMERSON",
+            "emka"         : "EMKA Electronic Locking & Monitoring",
             "eltek"        : "ELTEK",
             "epson"        : "Epson",
             "hwg"          : "HW group",
@@ -84,19 +68,18 @@ catalog_titles = {
             "socomec"      : "Socomec",
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
+            "tinkerforge"  : "Tinkerforge",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
-            "emka"         : "EMKA Electronic Locking & Monitoring",
-            "tinkerforge"  : "Tinkerforge",
-        "other"       : "Other devices",
         "time"        : "Clock Devices",
-            "meinberg"   : "Meinberg",
             "hopf"       : "Hopf",
+            "meinberg"   : "Meinberg",
         "network"     : "Networking (Switches, Routers, etc.)",
             "aerohive"    : "Aerohive Networking",
             "adva"        : "ADVA Optical Networking",
             "alcatel"     : "Alcatel",
             "arbor"       : "Arbor",
+            "arista"      : "Arista Networks",
             "arris"       : "ARRIS",
             "aruba"       : "Aruba Networks",
             "avaya"       : "Avaya",
@@ -110,7 +93,9 @@ catalog_titles = {
             "cisco"       : "Cisco Systems (also IronPort)",
             "decru"       : "Decru",
             "dell"        : "DELL",
+            "docsis"      : "DOCSIS",
             "enterasys"   : "Enterasys Networks",
+            "ewon"        : "Ewon",
             "f5"          : "F5 Networks",
             "fireeye"     : "FireEye",
             "fortinet"    : "Fortinet",
@@ -156,21 +141,24 @@ catalog_titles = {
             "gude"       : "Gude",
             "janitza"    : "Janitza electronics",
         "printer"     : "Printers",
+        "mail"        : "Mail appliances",
+            "artec"         : "ARTEC",
         "server"      : "Server hardware, blade enclosures",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "atto"       : "ATTO",
             "brocade"    : "Brocade",
             "bdt"        : "BDT",
+            "ddn_s2a"    : "DDN S2A",
+            "emc"        : "EMC",
             "fastlta"    : "FAST LTA",
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
             "nimble"     : "Nimble Storage",
             "hitachi"    : "Hitachi",
-            "emc"        : "EMC",
+            "oraclehw"   : "Oracle",
             "qlogic"     : "QLogic",
             "quantum"    : "Quantum",
-            "oraclehw"   : "ORACLE",
             "synology"   : "Synology Inc.",
         "phone"       : "Telephony",
 
@@ -178,52 +166,60 @@ catalog_titles = {
         "ad"            : "Active Directory",
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
-        "artec"         : "ARTEC",
+        "barracuda"     : "Barracuda",
+        "checkmk"       : "Checkmk Monitoring System",
+        "citrix"        : "Citrix",
         "couchbase"     : "Couchbase",
         "db2"           : "IBM DB2",
+        "dotnet"        : "dotNET",
         "elasticsearch" : "Elasticsearch",
-        "graylog"       : "Graylog",
-        "jenkins"       : "Jenkins",
-        "splunk"        : "Splunk",
-        "mongodb"       : "MongoDB",
-        "citrix"        : "Citrix",
-        "netscaler"     : "Citrix Netscaler",
+        "entersekt"     : "Entersekt",
         "exchange"      : "Microsoft Exchange",
+        "graylog"       : "Graylog",
         "haproxy"       : "HAProxy Loadbalancer",
         "informix"      : "IBM Informix",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
+        "jenkins"       : "Jenkins",
+        "jira"          : "Jira",
+        "kaspersky"     : "Kaspersky Lab",
         "libelle"       : "Libelle Business Shadow",
         "lotusnotes"    : "IBM Lotus Domino",
+        "mongodb"       : "MongoDB",
         "mailman"       : "Mailman",
+        "mcafee"        : "McAfee",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",
         "msoffice"      : "MS Office",
+        "netscaler"     : "Citrix Netscaler",
         "nginx"         : "NGINX",
         "nullmailer"    : "Nullmailer",
         "nutanix"       : "Nutanix",
-        "omd"           : "Open Monitoring Distribution (OMD)",
-        "check_mk"      : "Check_MK Monitoring System",
+        "cmk"           : "Checkmk",
         "oracle"        : "ORACLE Database",
         "plesk"         : "Plesk",
         "pfsense"       : "pfsense",
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
         "prometheus"    : "Prometheus",
+        "proxmox"       : "Proxmox",
         "qmail"         : "qmail",
+        "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
+        "sansymphony"   : "Datacore SANsymphony",
+        "silverpeak"    : "Silver Peak",
+        "skype"         : "Skype",
+        "splunk"        : "Splunk",
+        "sshd"          : "SSH Daemon",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
-        "sansymphony"   : "Datacore SANsymphony",
-        "sshd"          : "SSH Daemon",
-        "kaspersky"     : "Kaspersky Lab",
-        "mcafee"        : "McAfee",
-        "barracuda"     : "Barracuda",
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
         "zerto"         : "Zerto",
+        "ibm_mq"        : "IBM MQ",
+        "pulse_secure"  : "Pulse Secure",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",
@@ -253,6 +249,7 @@ catalog_titles = {
         "aws"         : "Amazon Web Services",
         "quanta"      : "Quanta Cloud Technology",
     "containerization" : "Containerization",
+        "cadvisor"     : "cAdvisor",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",
         "lxc"          : "Linux Container",
@@ -276,7 +273,7 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
+_manpage_catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
 
 
 def man_page_exists(name):
@@ -313,18 +310,19 @@ def all_man_pages():
 
 def print_man_page_table():
     # type: () -> None
-    table = []  # type: List[Tuple[str, str]]
+    table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append((name, _get_title_from_man_page(Path(path))))
+            table.append([name, six.ensure_str(get_title_from_man_page(Path(path)))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
-    tty.print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
+    tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
-def _get_title_from_man_page(path):
-    with path.open(encoding="utf-8") as fp:
+def get_title_from_man_page(path):
+    # type: (Path) -> Text
+    with path.open(encoding=six.ensure_str("utf-8")) as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()
@@ -336,8 +334,8 @@ def man_page_catalog_titles():
 
 
 def load_man_page_catalog():
-    # type: () -> Dict[Tuple[str,...], List[Dict]]
-    catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
+    # type: () -> Dict[ManPageCatalogPath, List[Dict]]
+    catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -354,7 +352,7 @@ def load_man_page_catalog():
 
 
 def print_man_page_browser(cat=()):
-    # typxe: (Tuple[str]) -> None
+    # typxe: (ManPageCatalogPath) -> None
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 
@@ -520,12 +518,12 @@ def _parse_man_page_header(name, path):
 
 
 def load_man_page(name):
-    # type: (str) -> Optional[Dict[six.text_type, Any]]
+    # type: (str) -> Optional[ManPage]
     path = man_page_path(name)
     if path is None:
         return None
 
-    man_page = {}  # type: Dict[six.text_type, Any]
+    man_page = {}  # type: ManPage
     current_section = []  # type: List[Tuple[str, str]]
     current_variable = None
     man_page['header'] = current_section
@@ -657,18 +655,19 @@ def _console_stream():
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    _tty_color = tty.white + tty.bold
-    _normal_color = tty.normal + tty.colorset(7, 4)
-    _title_color_left = tty.colorset(0, 7, 1)
-    _title_color_right = tty.colorset(0, 7)
-    _subheader_color = tty.colorset(7, 4, 1)
-    _header_color_left = tty.colorset(0, 2)
-    _header_color_right = tty.colorset(7, 2, 1)
-
     def __init__(self, name):
         super(ConsoleManPageRenderer, self).__init__(name)
         self.__output = _console_stream()
+        # NOTE: We must use instance variables for the TTY stuff because TTY-related
+        # stuff might have been changed since import time, consider e.g. pytest.
         self.__width = tty.get_size()[1]
+        self._tty_color = tty.white + tty.bold
+        self._normal_color = tty.normal + tty.colorset(7, 4)
+        self._title_color_left = tty.colorset(0, 7, 1)
+        self._title_color_right = tty.colorset(0, 7)
+        self._subheader_color = tty.colorset(7, 4, 1)
+        self._header_color_left = tty.colorset(0, 2)
+        self._header_color_right = tty.colorset(7, 2, 1)
 
     def _flush(self):
         self.__output.flush()

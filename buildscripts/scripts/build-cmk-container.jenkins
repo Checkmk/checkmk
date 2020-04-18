@@ -2,14 +2,25 @@ import java.text.SimpleDateFormat
 
 currentBuild.description = '\nBuilding the CMK docker container\n'
 
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
 properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
 ])
 
+// TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
+// the copy&paste below can be removed. First we'll have to clean up the
+// DAILY_DATA directories below. All that stuff needs to be moved to the
+// workspace.
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
@@ -32,17 +43,19 @@ def get_cmk_version(BRANCH, VERSION) {
     def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
     def DATE = new Date()
 
-    if(BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE)
+    if (BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
+    } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }
 }
 
 
-node {
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
         COMMON_IMAGE.pull()
@@ -51,7 +64,7 @@ node {
                 withCredentials([usernamePassword(credentialsId: '11fb3d5f-e44e-4f33-a651-274227cc48ab', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh """
                         cd ${DAILY_DATA}/git/
-                        ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
+                        ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${DEMO}
                     """
                 }
                 withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {

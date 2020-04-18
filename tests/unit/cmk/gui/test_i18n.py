@@ -1,9 +1,14 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import subprocess
 import gettext
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 from pathlib2 import Path
 from testlib import cmk_path
@@ -23,7 +28,7 @@ def compile_builtin_po_files(locale_paths):
     builtin_dir = cmk.utils.paths.locale_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
-    if po_file.exists() and not mo_file.exists():  # pylint: disable=no-member
+    if po_file.exists() and not mo_file.exists():
         subprocess.call(['msgfmt', str(po_file), '-o', str(mo_file)])
 
 
@@ -37,14 +42,14 @@ def local_translation():
 
 def _add_local_translation(lang, alias, texts):
     local_dir = cmk.utils.paths.local_locale_dir / lang / "LC_MESSAGES"
-    local_dir.mkdir(parents=True)  # pylint: disable=no-member
+    local_dir.mkdir(parents=True)
     po_file = local_dir / "multisite.po"
     mo_file = local_dir / "multisite.mo"
 
-    with (local_dir.parent / "alias").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with (local_dir.parent / "alias").open("w", encoding="utf-8") as f:
         f.write(u"%s\n" % alias)
 
-    with po_file.open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with po_file.open(mode="w", encoding="utf-8") as f:
         f.write(u'''
 msgid ""
 msgstr ""

@@ -1,9 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
 # pylint: disable=redefined-outer-name
 import copy
-import pytest # type: ignore
+import pytest  # type: ignore[import]
 import six
 import cmk.gui.config as config
+
+import cmk.utils.version as cmk_version
 
 # Make it load all plugins (CEE + CME)
 import cmk.gui.views  # pylint: disable=unused-import
@@ -12,11 +20,13 @@ import cmk.gui.default_permissions
 from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
+from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.type_defs import PainterSpec
 
 @pytest.fixture()
 def view(register_builtin_html, load_plugins):
     view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
@@ -31,13 +41,8 @@ def test_registered_painter_options():
         'show_internal_tree_paths',
         'ts_date',
         'ts_format',
-    ]
-
-    if not cmk.is_raw_edition():
-        expected += [
-
         'graph_render_options',
-        ]
+    ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
@@ -307,7 +312,7 @@ def test_registered_commands():
         },
     }
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected.update({'edit_downtimes': {
             'permission': 'action.downtimes',
             'tables': ['downtime'],
@@ -4035,20 +4040,14 @@ def test_registered_painters():
         painter = painter_class()
         spec = expected[painter.ident]
 
-        if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert hasattr(painter.title, '__call__')
-        else:
-            assert painter.title == spec["title"]
+        assert painter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
             assert hasattr(painter.columns, '__call__')
         else:
             assert painter.columns == spec["columns"]
 
-        if isinstance(spec.get("short"), tuple) and spec["short"][0] == "func":
-            assert hasattr(painter.short_title, '__call__')
-        else:
-            assert painter.short_title == spec.get("short", spec["title"])
+        assert painter.short_title == spec.get("short", spec["title"])
 
         assert painter.sorter == spec.get("sorter")
         assert painter.painter_options == spec.get("options", [])
@@ -4076,10 +4075,11 @@ def test_legacy_register_painter(monkeypatch):
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), PainterSpec(painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
-    assert painter.title == "A B C"
-    assert painter.short_title == "ABC"
+    assert painter.title(dummy_cell) == "A B C"
+    assert painter.short_title(dummy_cell) == "ABC"
     assert painter.columns == ["x"]
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
@@ -5735,10 +5735,6 @@ def test_register_sorter(monkeypatch):
 
 
 def test_get_needed_regular_columns(view):
-    view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
     assert sorted(columns) == sorted([
@@ -5780,7 +5776,7 @@ def test_get_needed_regular_columns(view):
 
 def test_get_needed_join_columns(view):
     view_spec = copy.deepcopy(view.spec)
-    view_spec["painters"].append(('service_description', None, None, u'CPU load'))
+    view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
@@ -6057,9 +6053,33 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.check_mk.agent_version',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',
+    '.software.applications.check_mk.num_hosts',
+    '.software.applications.check_mk.num_services',
     '.software.applications.check_mk.host_labels:',
     '.software.applications.check_mk.host_labels:*.plugin_name',
     '.software.applications.check_mk.host_labels:*.label',
+    '.software.applications.check_mk.versions:',
+    '.software.applications.check_mk.versions:*.demo',
+    '.software.applications.check_mk.sites:',
+    '.software.applications.check_mk.sites:*.autostart',
+    '.software.applications.check_mk.sites:*.apache',
+    '.software.applications.check_mk.sites:*.cmc',
+    '.software.applications.check_mk.sites:*.crontab',
+    '.software.applications.check_mk.sites:*.dcd',
+    '.software.applications.check_mk.sites:*.liveproxyd',
+    '.software.applications.check_mk.sites:*.mkeventd',
+    '.software.applications.check_mk.sites:*.mknotifyd',
+    '.software.applications.check_mk.sites:*.rrdcached',
+    '.software.applications.check_mk.sites:*.stunnel',
+    '.software.applications.check_mk.sites:*.xinetd',
+    '.software.applications.check_mk.sites:*.nagios',
+    '.software.applications.check_mk.sites:*.npcd',
+    '.software.applications.check_mk.sites:*.check_helper_usage',
+    '.software.applications.check_mk.sites:*.check_mk_helper_usage',
+    '.software.applications.check_mk.sites:*.livestatus_usage',
+    '.software.applications.check_mk.sites:*.num_hosts',
+    '.software.applications.check_mk.sites:*.num_services',
+    '.software.applications.check_mk.sites:*.used_version',
     '.software.applications.citrix.',
     '.software.applications.citrix.controller.',
     '.software.applications.citrix.controller.controller_version',
@@ -6099,6 +6119,23 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
     '.software.applications.docker.version',
+    '.software.applications.ibm_mq.',
+    '.software.applications.ibm_mq.channels:',
+    '.software.applications.ibm_mq.channels:*.name',
+    '.software.applications.ibm_mq.channels:*.qmgr',
+    '.software.applications.ibm_mq.channels:*.status',
+    '.software.applications.ibm_mq.channels:*.type',
+    '.software.applications.ibm_mq.managers:',
+    '.software.applications.ibm_mq.managers:*.instname',
+    '.software.applications.ibm_mq.managers:*.instver',
+    '.software.applications.ibm_mq.managers:*.name',
+    '.software.applications.ibm_mq.managers:*.standby',
+    '.software.applications.ibm_mq.managers:*.status',
+    '.software.applications.ibm_mq.queues:',
+    '.software.applications.ibm_mq.queues:*.maxdepth',
+    '.software.applications.ibm_mq.queues:*.maxmsgl',
+    '.software.applications.ibm_mq.queues:*.name',
+    '.software.applications.ibm_mq.queues:*.qmgr',
     '.software.applications.kubernetes.assigned_pods:',
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',
@@ -6143,6 +6180,11 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.oracle.dataguard_stats:*.role',
     '.software.applications.oracle.dataguard_stats:*.sid',
     '.software.applications.oracle.dataguard_stats:*.switchover',
+    '.software.applications.oracle.systemparameter:',
+    '.software.applications.oracle.systemparameter:*.sid',
+    '.software.applications.oracle.systemparameter:*.name',
+    '.software.applications.oracle.systemparameter:*.value',
+    '.software.applications.oracle.systemparameter:*.isdefault',
     '.software.applications.oracle.instance:',
     '.software.applications.oracle.instance:*.db_creation_time',
     '.software.applications.oracle.instance:*.db_uptime',
@@ -6154,6 +6196,21 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.oracle.recovery_area:',
     '.software.applications.oracle.recovery_area:*.flashback',
     '.software.applications.oracle.recovery_area:*.sid',
+    ".software.applications.oracle.pga:",
+    ".software.applications.oracle.pga:*.aggregate_pga_auto_target",
+    ".software.applications.oracle.pga:*.aggregate_pga_target_parameter",
+    ".software.applications.oracle.pga:*.bytes_processed",
+    ".software.applications.oracle.pga:*.extra_bytes_read_written",
+    ".software.applications.oracle.pga:*.global_memory_bound",
+    ".software.applications.oracle.pga:*.maximum_pga_allocated",
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas",
+    ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas",
+    ".software.applications.oracle.pga:*.sid",
+    ".software.applications.oracle.pga:*.total_freeable_pga_memory",
+    ".software.applications.oracle.pga:*.total_pga_allocated",
+    ".software.applications.oracle.pga:*.total_pga_inuse",
+    ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas",
+    ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas",
     '.software.applications.oracle.sga:',
     '.software.applications.oracle.sga:*.buf_cache_size',
     '.software.applications.oracle.sga:*.data_trans_cache_size',

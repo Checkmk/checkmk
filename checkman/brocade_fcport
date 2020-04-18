@@ -38,6 +38,6 @@ item:
  off.
 
 inventory:
-  The inventory creates checks for all operational ports. What this exactly means
+  One service is created for each operational port. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).
 

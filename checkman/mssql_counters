@@ -1,4 +1,4 @@
-title: MSSQL Databases
+title: MS SQL Database: Dummy
 agents: windows
 catalog: app/mssql
 license: GPL

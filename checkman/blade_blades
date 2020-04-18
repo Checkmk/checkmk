@@ -16,5 +16,4 @@ item:
  Number of the blade (as string, not int).
 
 inventory:
- All blades that are powered on are automatically
- inventorized.
+ One service is created for each powered blade.

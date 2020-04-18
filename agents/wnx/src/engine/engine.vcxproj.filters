@@ -228,6 +228,15 @@
     <ClInclude Include="..\common\wtools_user_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -461,6 +470,15 @@
     <ClCompile Include="..\common\cma_yml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\wtools_service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="modules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="unpack_packs.cmd">
@@ -480,6 +498,9 @@
     </None>
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml">
       <Filter>data</Filter>
+    </None>
+    <None Include=".clang-tidy">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

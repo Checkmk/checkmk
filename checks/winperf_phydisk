@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -112,27 +92,27 @@ def winperf_phydisk_convert(info):
                         disk_id = "%s_%s" % (disk_id[-1], disk_id[0])
                     current_disks.append(disk_id)
             elif line[1] == '-14':
-                current_disk_read_bytes = map(int, line[2:-2])
+                current_disk_read_bytes = list(map(int, line[2:-2]))
             elif line[1] == '-12':
-                current_disk_write_bytes = map(int, line[2:-2])
+                current_disk_write_bytes = list(map(int, line[2:-2]))
             elif line[1] == '-20':
-                current_disk_reads = map(int, line[2:-2])
+                current_disk_reads = list(map(int, line[2:-2]))
             elif line[1] == '-18':
-                current_disk_writes = map(int, line[2:-2])
+                current_disk_writes = list(map(int, line[2:-2]))
             elif line[1] == '1168':  # Average Disk Read Queue Length
-                current_disk_readq_ctrs = map(int, line[2:-2])
+                current_disk_readq_ctrs = list(map(int, line[2:-2]))
             elif line[1] == '1170':  # Average Disk Read Queue Length
-                current_disk_writeq_ctrs = map(int, line[2:-2])
+                current_disk_writeq_ctrs = list(map(int, line[2:-2]))
             elif line[1] == '-24':
                 if line[-1] == 'average_base':
-                    current_disk_seconds_per_write_base = map(int, line[2:-2])
+                    current_disk_seconds_per_write_base = list(map(int, line[2:-2]))
                 else:
-                    current_disk_seconds_per_write = map(int, line[2:-2])
+                    current_disk_seconds_per_write = list(map(int, line[2:-2]))
             elif line[1] == '-26':
                 if line[-1] == 'average_base':
-                    current_disk_seconds_per_read_base = map(int, line[2:-2])
+                    current_disk_seconds_per_read_base = list(map(int, line[2:-2]))
                 else:
-                    current_disk_seconds_per_read = map(int, line[2:-2])
+                    current_disk_seconds_per_read = list(map(int, line[2:-2]))
     except StopIteration:
         if current_node != "":
             entries.extend(finalize_block(current_node))

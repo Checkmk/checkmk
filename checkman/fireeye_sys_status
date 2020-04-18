@@ -1,4 +1,4 @@
-title: FireEye Appliances: System status
+title: FireEye Appliances: System Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -9,9 +9,6 @@ description:
 
  The check is OK if the the system status is good.
  Otherwise it is WARN.
-
-item:
- No item.
 
 inventory:
  One service is created.

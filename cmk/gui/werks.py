@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Functions for parsing Werks and showing the users a browsable change
 # log
@@ -31,7 +11,11 @@ import itertools
 import os
 import re
 import time
+from typing import Any, Dict, Union  # pylint: disable=unused-import
 
+import six
+
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
 import cmk.utils.werks
@@ -56,12 +40,12 @@ from cmk.gui.valuespec import (
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
-g_werks = None
+g_werks = {}  # type: Dict[int, Dict[str, Any]]
 
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Checkmk %s Release Notes") % cmk.__version__)
+    html.header(_("Checkmk %s Release Notes") % cmk_version.__version__)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -70,14 +54,14 @@ def page_version():
 
 def handle_acknowledgement():
     if html.request.var("_werk_ack") and html.check_transaction():
-        werk_id = html.get_integer_input("_werk_ack")
+        werk_id = html.request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
 
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
-            html.message(
+            html.show_message(
                 _("Werk %s - %s has been acknowledged.") %
                 (render_werk_id(werk, with_link=True), render_werk_title(werk)))
             html.reload_sidebar()
@@ -88,7 +72,7 @@ def handle_acknowledgement():
                         method="GET"):
             num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
-            html.message(_("%d incompatible Werks have been acknowledged.") % num)
+            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
             html.reload_sidebar()
             load_werks()  # reload ack states after modification
 
@@ -98,7 +82,7 @@ def handle_acknowledgement():
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
-    werk_id = html.get_integer_input("werk")
+    werk_id = html.request.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
@@ -146,7 +130,7 @@ def page_werk():
 
 def load_werks():
     global g_werks
-    if g_werks is None:
+    if not g_werks:
         g_werks = cmk.utils.werks.load()
 
     ack_ids = load_acknowledgements()
@@ -218,14 +202,12 @@ def _werk_table_option_entries():
             choices=sorted(translator.levels()),
         ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
-        ("id", "single",
-         TextAscii(
-             title=_("Werk ID"),
-             label="#",
-             regex="[0-9]{4}",
-             allow_empty=True,
-             size=4,
-         ), ""),
+        ("id", "single", TextAscii(
+            title=_("Werk ID"),
+            label="#",
+            regex="^[0-9]{1,5}$",
+            size=7,
+        ), ""),
         ("compatibility", "single",
          DropdownChoice(title=_("Compatibility"),
                         choices=[
@@ -314,7 +296,7 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week").encode("utf-8"),
+        lambda werk: time.strftime("%s %%U - %%Y" % six.ensure_str(_("Week")),
                                    time.localtime(werk["date"]))  #
     ),
     None: (
@@ -364,13 +346,21 @@ def render_werks_table_row(table, translator, werk):
 
 
 def werk_matches_options(werk, werk_table_options):
-    if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
-           werk["level"] in werk_table_options["levels"] and \
-           werk["class"] in werk_table_options["classes"] and \
-           werk["compatible"] in werk_table_options["compatibility"] and \
-           werk_table_options["component"] in ( None, werk["component" ]) and \
-           werk["date"] >= werk_table_options["date_range"][0] and \
-           werk["date"] <= werk_table_options["date_range"][1]):
+    # TODO: Fix this silly typing chaos below!
+    # check if werk id is int because valuespec is TextAscii
+    # else, set empty id to return all results beside input warning
+    try:
+        werk_to_match = int(werk_table_options["id"])  # type: Union[int, str]
+    except ValueError:
+        werk_to_match = ""
+
+    if not ((not werk_to_match or werk["id"] == werk_to_match) and
+            werk["level"] in werk_table_options["levels"] and
+            werk["class"] in werk_table_options["classes"] and
+            werk["compatible"] in werk_table_options["compatibility"] and
+            werk_table_options["component"] in (None, werk["component"]) and
+            werk["date"] >= werk_table_options["date_range"][0] and
+            werk["date"] <= werk_table_options["date_range"][1]):
         return False
 
     if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:
@@ -398,7 +388,8 @@ def werk_matches_options(werk, werk_table_options):
 
 def _default_werk_table_options():
     werk_table_options = {
-        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()
+        name: default_value  #
+        for name, _height, _vs, default_value in _werk_table_option_entries()
     }
     werk_table_options["date_range"] = (1, time.time())
     werk_table_options["compatibility"] = ["incomp_unack"]
@@ -406,7 +397,7 @@ def _default_werk_table_options():
 
 
 def _render_werk_table_options():
-    werk_table_options = {}
+    werk_table_options = {}  # type: Dict[str, Any]
 
     for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value

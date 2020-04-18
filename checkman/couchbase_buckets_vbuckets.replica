@@ -1,0 +1,16 @@
+title: Couchbase vBuckets: Replica
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the item memory ratio and the total
+ number of replica vBuckets per Couchbase bucket.
+ Levels can be configured in the WATO rule "Couchbase vBuckets".
+
+inventory:
+ One service is created for each bucket.
+
+item:
+ The name of the bucket.

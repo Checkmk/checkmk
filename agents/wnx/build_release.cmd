@@ -6,7 +6,7 @@ rem build before owm build start.
 rem this is for command line only
 rem In GUI we should do Batch Rebuild of everything
 rem variables to set OPTOIONALLY, when you are using the same git checkout multiple times
-rem REMOTE_MACHINE - final artefacts
+rem REMOTE_MACHINE - final artefacts, expected bz build script
 rem LOCAL_IMAGES_EXE - exe
 rem LOCAL_IMAGE_PDB - pdb
 rem WNX_BUILD - in the future this is name of subfloder to build out
@@ -15,12 +15,14 @@ SETLOCAL EnableDelayedExpansion
 
 rem CHECK FOR CHOCO
 rem if choco is absent then build is not possible(we can't dynamically control environment)
+powershell Write-Host "Looking for choco..." -Foreground White
 @choco -v > nul
 @if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed!" -Foreground Red && exit /b 55
 powershell Write-Host "[+] choco" -Foreground Green
 
 rem CHECK FOR make
 rem if make is absent then we try to install it using choco. Failure meand build fail, make is mandatory
+powershell Write-Host "Looking for make..." -Foreground White
 for /f %%i in ('where make') do set make_exe=%%i
 if "!make_exe!" == "" (
 powershell Write-Host "make not found, try to install" -Foreground Yellow 
@@ -34,6 +36,13 @@ rem read version from the C++ agent
 set /p wnx_version_raw=<src\common\wnx_version.h
 rem parse version
 set wnx_version=%wnx_version_raw:~30,40%
+
+rem check that version is minimally ok
+set wnx_version_mark=%wnx_version_raw:~0,29%
+if not "%wnx_version_mark%" == "#define CMK_WIN_AGENT_VERSION" powershell Write-Host "wnx_version.h is invalid" -Foreground Red && exit /b 67
+powershell Write-Host "wnx_version.h is ok" -Foreground Green
+
+rem #define CMK_WIN_AGENT_VERSION "
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
@@ -55,21 +64,19 @@ if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Gr
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 
 @rem CHECK for line ending
-@py -2 check_crlf.py 
+@py -3 check_crlf.py 
 @if errorlevel 1 powershell Write-Host "Line Encoding Error`r`n`tPlease check how good repo was checked out" -Foreground Red && exit /b 113
 
 call %cur_dir%\clean_artefacts.cmd 
 
-pushd %cur_dir%\src\engine
-call unpack_packs.cmd watest
-popd
+call scripts\unpack_packs.cmd
 
-
-powershell Write-Host "Building MSI..." -Foreground Green
+powershell Write-Host "Looking for MSVC 2019..." -Foreground White
 set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "MSBUILD not found, trying Visual Professional" -Foreground Yellow && set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install MSBUILD, please" -Foreground Red && exit /b 99
+if not exist %msbuild% powershell Write-Host "Install Visual Studio 2019, please" -Foreground Red && exit /b 8
 
+powershell Write-Host "[+] Found MSVC 2019" -Foreground Green
+powershell Write-Host "Building MSI..." -Foreground White
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
@@ -118,6 +125,11 @@ copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Fail
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
 popd
+
+set build_dir=.\build
+copy %build_dir%\watest\Win32\Release\watest32.exe %REMOTE_MACHINE% /y	
+copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y	
+
 
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36

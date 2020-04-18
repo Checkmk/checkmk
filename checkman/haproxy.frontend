@@ -17,4 +17,4 @@ item:
  The name of the frontend.
 
 inventory:
- One service for each frontend is created.
+ One service is created for each frontend.

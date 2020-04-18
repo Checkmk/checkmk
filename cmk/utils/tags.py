@@ -1,33 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
 import re
 import abc
-from typing import Any, Dict, List, Set  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text  # pylint: disable=unused-import
 import six
 
 from cmk.utils.i18n import _
@@ -68,8 +48,18 @@ def _validate_tag_id(tag_id):
 class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(ABCTag, self).__init__()
-        self._initialize()
+        # TODO: See below, this was self._initialize()
+        # NOTE: All the Optionals below are probably just plain wrong and just
+        # an artifact of our broken 2-stage initialization.
+        self.id = None  # type: Optional[str]
+        self.title = None  # type: Optional[Text]
+        self.topic = None  # type: Optional[Text]
 
+    # TODO: We *really* have to nuke these _initialize methods everywhere, they
+    # either effectively blocking sane typing or lead to code duplication. The
+    # solution is actually quite easy and standard: The parse_config method
+    # should *not* be an instance method at all, it should just be a factory
+    # method/function.
     def _initialize(self):
         self.id = None
         self.title = None
@@ -330,6 +320,7 @@ class TagConfig(object):
         super(TagConfig, self).__init__()
         self._initialize()
 
+    # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
     def _initialize(self):
         self.tag_groups = []
         self.aux_tag_list = AuxTagList()
@@ -368,9 +359,11 @@ class TagConfig(object):
         return self.get_tag_group(tag_group_id) is not None
 
     def get_tag_group(self, tag_group_id):
+        # type: (str) -> Optional[TagGroup]
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
+        return None
 
     def remove_tag_group(self, tag_group_id):
         group = self.get_tag_group(tag_group_id)
@@ -474,7 +467,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()   # type: Set[six.text_type]
+        seen_ids = set()  # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)

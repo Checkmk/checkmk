@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
 import os
@@ -31,7 +11,10 @@ import time
 import abc
 import logging
 import sys
-from typing import AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text  # pylint: disable=unused-import
+from types import TracebackType  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Type, TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
+)
 import six
 
 import cmk.utils.log  # TODO: Remove this!
@@ -49,7 +32,6 @@ from cmk.utils.encoding import (
     ensure_bytestr,
 )
 
-import cmk.base.utils
 import cmk.base.agent_simulator
 import cmk.base.console as console
 import cmk.base.config as config
@@ -60,16 +42,74 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKIPAddressLookupError
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    PersistedSections, SectionName, SectionContent, ServiceState, ServiceDetails,
-    ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData,
-    AgentSectionCacheInfo,
+    PersistedAgentSections, SectionName, AgentSectionContent, ServiceState, ServiceDetails,
+    ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData, SectionCacheInfo,
+    RawAgentData, BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
 )
-from cmk.base.utils import HostName, HostAddress, RawAgentData  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, HostAddress,
+)
 
-from .host_sections import HostSections
+from .host_sections import AbstractHostSections
 
 
-class DataSource(six.with_metaclass(abc.ABCMeta, object)):
+class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, PersistedAgentSections,
+                                             AgentSectionContent]):
+    def __init__(self,
+                 sections=None,
+                 cache_info=None,
+                 piggybacked_raw_data=None,
+                 persisted_sections=None):
+        # type: (Optional[AgentSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[PersistedAgentSections]) -> None
+        super(AgentHostSections, self).__init__(
+            sections=sections if sections is not None else {},
+            cache_info=cache_info if cache_info is not None else {},
+            piggybacked_raw_data=piggybacked_raw_data if piggybacked_raw_data is not None else {},
+            persisted_sections=persisted_sections if persisted_sections is not None else {},
+        )
+
+    def _extend_section(self, section_name, section_content):
+        # type: (SectionName, AgentSectionContent) -> None
+        self.sections.setdefault(section_name, []).extend(section_content)
+
+
+class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):
+    """Interface to the data fetchers."""
+    @abc.abstractmethod
+    def __enter__(self):
+        # type: () -> AbstractDataFetcher
+        """Prepare the data source."""
+
+    @abc.abstractmethod
+    def __exit__(self, exc_type, exc_value, traceback):
+        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> Optional[bool]
+        """Destroy the data source."""
+
+    @abc.abstractmethod
+    def data(self):
+        # type: () -> RawAgentData
+        """Return the data from the source."""
+
+
+BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
+
+
+# Abstract methods:
+#
+# def _execute(self):
+# def _empty_raw_data(self):
+# def _empty_host_sections(self):
+# def _from_cache_file(self, raw_data):
+# def _to_cache_file(self, raw_data):
+# def _convert_to_sections(self, raw_data):
+# def _gather_check_plugin_names(self):
+# def _cpu_tracking_id(self):
+# def id(self):
+# def describe(self):
+class DataSource(
+        six.with_metaclass(
+            abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                                 BoundedAbstractPersistedSections, BoundedAbstractHostSections])):
     """Abstract base class for all data source classes"""
 
     _for_mgmt_board = False
@@ -104,8 +144,8 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None  # type: Optional[Exception]
-        self._host_sections = None  # type: Optional[HostSections]
-        self._persisted_sections = None  # type: Optional[PersistedSections]
+        self._host_sections = None  # type: Optional[BoundedAbstractHostSections]
+        self._persisted_sections = None  # type: Optional[BoundedAbstractPersistedSections]
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self._hostname)
@@ -121,9 +161,9 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         self._logger.addHandler(handler)
 
     def run(self, hostname=None, ipaddress=None):
-        # type: (Optional[HostName], Optional[HostAddress]) -> HostSections
+        # type: (Optional[HostName], Optional[HostAddress]) -> AbstractHostSections
         result = self._run(hostname, ipaddress, get_raw_data=False)
-        if not isinstance(result, HostSections):
+        if not isinstance(result, AbstractHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
@@ -139,7 +179,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return result
 
     def _run(self, hostname, ipaddress, get_raw_data):
-        # type: (Optional[HostName], Optional[HostAddress], bool) -> Union[RawAgentData, HostSections]
+        # type: (Optional[HostName], Optional[HostAddress], bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -174,7 +214,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             raw_data, is_cached_data = self._get_raw_data()
 
             self._host_sections = host_sections = self._convert_to_sections(raw_data)
-            assert isinstance(host_sections, HostSections)
+            assert isinstance(host_sections, AbstractHostSections)
 
             if get_raw_data:
                 return raw_data
@@ -198,11 +238,11 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             cpu_tracking.pop_phase()
 
         if get_raw_data:
-            return ""
-        return HostSections()
+            return self._empty_raw_data()
+        return self._empty_host_sections()
 
     def _get_raw_data(self):
-        # type: () -> Tuple[RawAgentData, bool]
+        # type: () -> Tuple[BoundedAbstractRawData, bool]
         """Returns the current raw data of this data source
 
         It either uses previously cached raw data of this data source or
@@ -217,7 +257,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
 
-        elif raw_data is None and config.simulation_mode:
+        if raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.log(VERBOSE, "Execute data source")
@@ -227,7 +267,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def _execute(self):
-        # type: () -> RawAgentData
+        # type: () -> BoundedAbstractRawData
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
         later converted by self._convert_to_sections() to a HostSection().
@@ -238,7 +278,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def _read_cache_file(self):
-        # type: () -> Optional[RawAgentData]
+        # type: () -> Optional[BoundedAbstractRawData]
         assert self._max_cachefile_age is not None
 
         cachefile = self._cache_file_path()
@@ -264,7 +304,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
-        result = open(cachefile).read()
+        result = open(cachefile, 'rb').read()
         if not result:
             self._logger.debug("Not using cache (Empty)")
             return None
@@ -273,7 +313,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return self._from_cache_file(result)
 
     def _write_cache_file(self, raw_data):
-        # type: (RawAgentData) -> None
+        # type: (BoundedAbstractRawData) -> None
         if self.is_agent_cache_disabled():
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
@@ -298,18 +338,29 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         except Exception as e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
-    def _from_cache_file(self, raw_data):
-        # type: (RawAgentData) -> RawAgentData
-        return raw_data
+    @abc.abstractmethod
+    def _empty_raw_data(self):
+        # type: () -> BoundedAbstractRawData
+        raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _empty_host_sections(self):
+        # type: () -> BoundedAbstractHostSections
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _from_cache_file(self, raw_data):
+        # type: (bytes) -> BoundedAbstractRawData
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def _to_cache_file(self, raw_data):
-        # type: (RawAgentData) -> RawAgentData
-        # TODO: This does not seem to be needed
-        return ensure_bytestr(raw_data)
+        # type: (BoundedAbstractRawData) -> bytes
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _convert_to_sections(self, raw_data):
-        # type: (RawAgentData) -> HostSections
+        # type: (BoundedAbstractRawData) -> BoundedAbstractHostSections
         """See _execute() for details"""
         raise NotImplementedError()
 
@@ -323,11 +374,11 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     def _persisted_sections_file_path(self):
         # type: () -> str
-        return _persisted_sections_file_path(self._persisted_sections_dir(), self._hostname)
+        return os.path.join(self._persisted_sections_dir(), self._hostname)
 
     def _persisted_sections_dir(self):
         # type: () -> str
-        return _persisted_sections_dir(self.id())
+        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
     def get_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
@@ -347,7 +398,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def enforce_check_plugin_names(self, check_plugin_names):
-        # type: (Set[CheckPluginName]) -> None
+        # type: (Optional[Set[CheckPluginName]]) -> None
         """
         Returns a subset of beforehand gathered check plugin names which are
         supported by the data source.
@@ -391,15 +442,6 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
-    def _verify_ipaddress(self):
-        # type: () -> None
-        if not self._ipaddress:
-            raise MKIPAddressLookupError("Host as no IP address configured.")
-
-        if self._ipaddress in ["0.0.0.0", "::"]:
-            raise MKIPAddressLookupError(
-                "Failed to lookup IP address and no explicit IP address configured")
-
     def set_max_cachefile_age(self, max_cachefile_age):
         # type: (int) -> None
         self._max_cachefile_age = max_cachefile_age
@@ -424,8 +466,6 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         # type: (bool) -> None
         cls._may_use_cache_file = state
 
-    # TODO: Refactor the returned data of this method and self._summary_result()
-    # to some wrapped object like CheckResult(...)
     def get_summary_result_for_discovery(self):
         # type: () -> ServiceCheckResult
         return self._get_summary_result(for_checking=False)
@@ -496,7 +536,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     #   '----------------------------------------------------------------------'
 
     def _store_persisted_sections(self, persisted_sections):
-        # type: (PersistedSections) -> None
+        # type: (BoundedAbstractPersistedSections) -> None
         if not persisted_sections:
             return
 
@@ -510,11 +550,11 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
                 raise
 
         store.save_object_to_file(file_path, persisted_sections, pretty=False)
-        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
+        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections)))
 
     def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
                                              is_cached_data):
-        # type: (PersistedSections, HostSections, bool) -> HostSections
+        # type: (BoundedAbstractPersistedSections, BoundedAbstractHostSections, bool) -> BoundedAbstractHostSections
         persisted_sections = persisted_sections_from_disk
         persisted_sections_from_raw = host_sections.persisted_sections
 
@@ -541,8 +581,11 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
                                                  persisted_until)
         return host_sections
 
+    # TODO: This is not race condition free when modifying the data. Either remove
+    # the possible write here and simply ignore the outdated sections or lock when
+    # reading and unlock after writing
     def _load_persisted_sections(self):
-        # type: () -> PersistedSections
+        # type: () -> BoundedAbstractPersistedSections
         file_path = self._persisted_sections_file_path()
 
         persisted_sections = store.load_object_from_file(file_path, default={})
@@ -557,14 +600,10 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
         return filtered_persisted_sections
 
-    # TODO: This is not race condition free when modifying the data. Either remove
-    # the possible write here and simply ignore the outdated sections or lock when
-    # reading and unlock after writing
     def _filter_outdated_persisted_sections(self, persisted_sections):
-        # type: (PersistedSections) -> PersistedSections
-        filtered_persisted_sections = {}
+        # type: (BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections
         now = time.time()
-        for section_name, entry in persisted_sections.iteritems():
+        for section_name, entry in list(persisted_sections.items()):
             if len(entry) == 2:
                 persisted_until = entry[0]
             else:
@@ -573,9 +612,8 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             if not self._use_outdated_persisted_sections and now > persisted_until:
                 self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
                                    (section_name, now - persisted_until))
-                continue
-            filtered_persisted_sections[section_name] = entry
-        return filtered_persisted_sections
+                del persisted_sections[section_name]
+        return persisted_sections
 
     @classmethod
     def use_outdated_persisted_sections(cls):
@@ -588,7 +626,15 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         cls._use_outdated_cache_file = state
 
 
-class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
+# Abstract methods:
+#
+# def _execute(self):
+# def id(self):
+# def describe(self):
+class CheckMKAgentDataSource(
+        six.with_metaclass(
+            abc.ABCMeta, DataSource[RawAgentData, AgentSections, PersistedAgentSections,
+                                    AgentHostSections])):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -623,6 +669,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return "agent"
 
     def _cache_dir(self):
+        # type: () -> str
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return cmk.utils.paths.tcp_cache_dir
@@ -630,20 +677,41 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return super(CheckMKAgentDataSource, self)._cache_dir()
 
     def _persisted_sections_dir(self):
+        # type: () -> str
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return os.path.join(cmk.utils.paths.var_dir, "persisted")
 
         return super(CheckMKAgentDataSource, self)._persisted_sections_dir()
 
+    def _empty_raw_data(self):
+        # type: () -> RawAgentData
+        return b""
+
+    def _empty_host_sections(self):
+        # type: () -> AgentHostSections
+        return AgentHostSections()
+
+    def _from_cache_file(self, raw_data):
+        # type: (bytes) -> RawAgentData
+        return raw_data
+
+    def _to_cache_file(self, raw_data):
+        # type: (RawAgentData) -> bytes
+        raw_data = cast(RawAgentData, raw_data)
+        # TODO: This does not seem to be needed
+        return ensure_bytestr(raw_data)
+
     def _convert_to_sections(self, raw_data):
+        # type: (RawAgentData) -> AgentHostSections
+        raw_data = cast(RawAgentData, raw_data)
         if config.agent_simulator:
             raw_data = cmk.base.agent_simulator.process(raw_data)
 
-        return self._parse_info(raw_data.split("\n"))
+        return self._parse_host_section(raw_data)
 
-    def _parse_info(self, lines):
-        # type: (List[bytes]) -> HostSections
+    def _parse_host_section(self, raw_data):
+        # type: (RawAgentData) -> AgentHostSections
         """Split agent output in chunks, splits lines by whitespaces.
 
         Returns a HostSections() object.
@@ -658,29 +726,29 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
 
         # handle sections with option persist(...)
-        persisted_sections = {}  # type: PersistedSections
-        section_content = []  # type: SectionContent
+        persisted_sections = {}  # type: PersistedAgentSections
+        section_content = []  # type: AgentSectionContent
         section_options = {}  # type: Dict[str, Optional[str]]
-        agent_cache_info = {}  # type: AgentSectionCacheInfo
+        agent_cache_info = {}  # type: SectionCacheInfo
         separator = None  # type: Optional[str]
         encoding = None
-        for line in lines:
-            line = line.rstrip("\r")
+        for line in raw_data.split(b"\n"):
+            line = line.rstrip(b"\r")
             stripped_line = line.strip()
-            if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
+            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
                 piggybacked_hostname =\
                     self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
             elif piggybacked_hostname:  # processing data for an other host
-                if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                     line = self._add_cached_info_to_piggybacked_section_header(
                         stripped_line, piggybacked_cached_at, piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-            elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
-                section_header = stripped_line[3:-3]
+            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
+                section_header = six.ensure_str(stripped_line[3:-3])
                 headerparts = section_header.split(":")
                 section_name = headerparts[0]
                 section_options = {}
@@ -701,42 +769,47 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                 else:
                     section_content = content
 
-                try:
-                    separator = chr(int(cast(str, section_options["sep"])))
-                except Exception:
+                raw_separator = section_options.get("sep")
+                if raw_separator is None:
                     separator = None
+                else:
+                    separator = chr(int(raw_separator))
 
                 # Split of persisted section for server-side caching
-                if "persist" in section_options:
-                    until = int(cast(str, section_options["persist"]))
+                raw_persist = section_options.get("persist")
+                if raw_persist is not None:
+                    until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
                     persisted_sections[section_name] = (cached_at, until, section_content)
 
-                if "cached" in section_options:
-                    cache_times = map(int, cast(str, section_options["cached"]).split(","))
+                raw_cached = section_options.get("cached")
+                if raw_cached is not None:
+                    cache_times = list(map(int, raw_cached.split(",")))
                     agent_cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
                 encoding = section_options.get("encoding")
 
-            elif stripped_line != '':
-                if "nostrip" not in section_options:
+            elif stripped_line != b'':
+                raw_nostrip = section_options.get("nostrip")
+                if raw_nostrip is None:
                     line = stripped_line
 
                 if encoding:
-                    decoded_line = convert_to_unicode(line, std_encoding=encoding)
+                    decoded_line = convert_to_unicode(line, std_encoding=six.ensure_str(encoding))
                 else:
                     decoded_line = convert_to_unicode(line)
 
                 section_content.append(decoded_line.split(separator))
 
-        return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
+        return AgentHostSections(sections, agent_cache_info, piggybacked_raw_data,
+                                 persisted_sections)
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
-        # type: (str) -> Optional[HostName]
-        piggybacked_hostname = orig_piggyback_header[4:-4]
+        # type: (bytes) -> Optional[HostName]
+        piggybacked_hostname = six.ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 
@@ -752,15 +825,17 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
     def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
                                                        cache_age):
-        # type: (str, int, int) -> str
-        if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
+        # type: (bytes, int, int) -> bytes
+        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
-        return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
+        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
+                                            six.ensure_binary("%d" % cached_at),
+                                            six.ensure_binary("%d" % cache_age))
 
     # TODO: refactor
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult
-        assert isinstance(self._host_sections, HostSections)
+        assert isinstance(self._host_sections, AgentHostSections)
 
         cmk_section = self._host_sections.sections.get("check_mk")
         agent_info = self._get_agent_info(cmk_section)
@@ -789,22 +864,23 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return status, ", ".join(output), perfdata
 
     def _get_agent_info(self, cmk_section):
+        # type: (Optional[AgentSectionContent]) -> Dict[str, Optional[Text]]
         agent_info = {
             "version": u"unknown",
             "agentos": u"unknown",
-        }
+        }  # type: Dict[str, Optional[Text]]
 
         if self._host_sections is None or not cmk_section:
             return agent_info
 
         for line in cmk_section:
             value = " ".join(line[1:]) if len(line) > 1 else None
-            agent_info[line[0][:-1].lower()] = value
+            agent_info[str(line[0][:-1].lower())] = value
         return agent_info
 
     def _sub_result_version(self, agent_info):
-        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
-        agent_version = cast(str, agent_info["version"])
+        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
+        agent_version = str(agent_info["version"])
         expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
@@ -829,7 +905,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
-        elif config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
+        if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
@@ -838,7 +914,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return None
 
     def _sub_result_only_from(self, agent_info):
-        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
+        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
         agent_only_from = agent_info.get("onlyfrom")
         if agent_only_from is None:
             return None
@@ -875,7 +951,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
             if isinstance(expected_version, six.string_types) and expected_version != agent_version:
                 return False
 
-            elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 spec = cast(Dict[str, str], expected_version[1])
                 if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))
@@ -907,91 +983,67 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                 (agent_version, expected_version, e))
 
 
-class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
-    """Abstract base class for all data sources that work with the management board configuration"""
+def management_board_ipaddress(hostname):
+    # type: (HostName) -> Optional[HostAddress]
+    mgmt_ipaddress = config.get_config_cache().get_host_config(hostname).management_address
 
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
+    if mgmt_ipaddress is None:
+        return None
 
-    # pylint: disable=abstract-method
-
-    _for_mgmt_board = True
-
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
-        self._ipaddress = self._management_board_ipaddress(hostname)
-        self._credentials = self._host_config.management_credentials
-
-    def _management_board_ipaddress(self, hostname):
-        # type: (HostName) -> Optional[HostAddress]
-        mgmt_ipaddress = self._host_config.management_address
-
-        if mgmt_ipaddress is None:
+    if not _is_ipaddress(mgmt_ipaddress):
+        try:
+            return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+        except MKIPAddressLookupError:
             return None
-
-        if not self._is_ipaddress(mgmt_ipaddress):
-            try:
-                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
-            except MKIPAddressLookupError:
-                return None
-        else:
-            return mgmt_ipaddress
-
-    # TODO: Why is it used only here?
-    @staticmethod
-    def _is_ipaddress(address):
-        # type: (HostAddress) -> bool
-        if address is None:
-            return False
-
-        try:
-            socket.inet_pton(socket.AF_INET, address)
-            return True
-        except socket.error:
-            # not a ipv4 address
-            pass
-
-        try:
-            socket.inet_pton(socket.AF_INET6, address)
-            return True
-        except socket.error:
-            # no ipv6 address either
-            return False
+    else:
+        return mgmt_ipaddress
 
 
-def has_persisted_agent_sections(datasource_id, hostname):
-    # type: (str, str) -> bool
-    return os.path.exists(_persisted_sections_file_path(datasource_id, hostname))
+def verify_ipaddress(address):
+    # type: (Optional[HostAddress]) -> None
+    if not address:
+        raise MKIPAddressLookupError("Host as no IP address configured.")
+
+    if address in ["0.0.0.0", "::"]:
+        raise MKIPAddressLookupError(
+            "Failed to lookup IP address and no explicit IP address configured")
 
 
-def _persisted_sections_file_path(datasource_id, hostname):
-    # type: (str, str) -> str
-    return os.path.join(_persisted_sections_dir(datasource_id), hostname)
+def _is_ipaddress(address):
+    # type: (HostAddress) -> bool
+    if address is None:
+        return False
 
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+        return True
+    except socket.error:
+        # not a ipv4 address
+        pass
 
-def _persisted_sections_dir(datasource_id):
-    # type: (str) -> str
-    return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", datasource_id)
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+        return True
+    except socket.error:
+        # no ipv6 address either
+        return False
 
 
 def _normalize_ip_addresses(ip_addresses):
-    # type: (Union[AnyStr, List[AnyStr]]) -> List[AnyStr]
+    # type: (Union[AnyStr, List[AnyStr]]) -> List[Text]
     '''factorize 10.0.0.{1,2,3}'''
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()
 
-    expanded = [word for word in ip_addresses if '{' not in word]
-    for word in ip_addresses:
+    decoded_ip_addresses = [six.ensure_text(word) for word in ip_addresses]
+    expanded = [word for word in decoded_ip_addresses if '{' not in word]
+    for word in decoded_ip_addresses:
         if word in expanded:
             continue
         try:
             prefix, tmp = word.split('{')
             curly, suffix = tmp.split('}')
             expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except:
+        except Exception:
             raise MKGeneralException("could not expand %r" % word)
     return expanded

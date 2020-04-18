@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 #Example Sidebar:
 #Heading1:
@@ -63,19 +43,16 @@ class Wiki(SidebarSnapin):
         return _("Shows the Wiki Navigation of the OMD Site")
 
     def show(self):
+        # type: () -> None
         filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
-        html.javascript("""
-        function wiki_search()
-        {
-            var oInput = document.getElementById('wiki_search_field');
-            top.frames["main"].location.href =
-               "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
-        }
-        """ % config.omd_site())
 
-        html.open_form(id_="wiki_search", onsubmit="wiki_search();")
+        html.open_form(id_="wiki_search",
+                       onsubmit="cmk.sidebar.wiki_search('%s');" % config.omd_site())
         html.input(id_="wiki_search_field", type_="text", name="wikisearch")
-        html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
+        html.icon_button("#",
+                         _("Search"),
+                         "wikisearch",
+                         onclick="cmk.sidebar.wiki_search('%s');" % config.omd_site())
         html.close_form()
         html.div('', id_="wiki_side_clear")
 
@@ -136,9 +113,11 @@ class Wiki(SidebarSnapin):
             if ul_started:
                 html.close_ul()
         except IOError:
-            sidebar = html.render_a("sidebar",
-                                    href="/%s/wiki/doku.php?id=%s" %
-                                    (config.omd_site(), _("sidebar")),
-                                    target="main")
-            html.write_html("<p>To get a navigation menu, you have to create a %s in your wiki first.</p>"\
-                                                                               % sidebar)
+            html.write_html(
+                html.render_p(
+                    html.render_text("To get a navigation menu, you have to create a ") +
+                    html.render_a("sidebar",
+                                  href="/%s/wiki/doku.php?id=%s" %
+                                  (config.omd_site(), _("sidebar")),
+                                  target="main") +  #
+                    html.render_text(" in your wiki first.")))

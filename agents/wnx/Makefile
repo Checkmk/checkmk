@@ -1,3 +1,7 @@
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 #
 # Build script for the Windows Frozen Binaries
 # Expected 32-bits Python 2.7 installed in the certain folder
@@ -56,7 +60,7 @@ mklogwatch: $(MKLOGWATCH_EXE_BUILD)
 $(MSI_STATE_FILE): $(MSI_AGENT_FILE) $(MSI_PATCH_FILE)
 	@powershell Write-Host "Patching '$(MSI_AGENT_FILE)'" -Foreground Green
 	@del $(MSI_STATE_FILE)  2> nul
-	py -2 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
+	py -3 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
 
 msi_patch: $(MSI_STATE_FILE)
 	@if NOT exist "$(MSI_STATE_FILE)" powershell Write-Host "Patch of '$(MSI_AGENT_FILE)' failed" -Foreground Red && exit /b 1

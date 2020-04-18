@@ -1,4 +1,4 @@
-title: Microsoft Azure SQL Databases: CPU utilization
+title: Microsoft Azure SQL Databases: CPU Utilization
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -11,5 +11,6 @@ item:
  The name of the resource.
 
 inventory:
- One service per database.
+ One service is created for each database if all required metrics
+ (average_cpu_percent) are given.
 

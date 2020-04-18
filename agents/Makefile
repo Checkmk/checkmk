@@ -1,26 +1,6 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 include ../defines.make
 
@@ -32,7 +12,6 @@ RPM_TOPDIR := $$(pwd)/.rpm.topdir
 RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
-WIN_PACKAGE := windows/check_mk_agent.msi
 usage:
 	@echo "make waitmax  -- compile waitmax.c"
 	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
@@ -61,21 +40,10 @@ setversion:
 	        sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' $$agent; \
 	    fi ; \
 	done
-	package="Check_MK Windows Agent" ; \
-	mail=feedback@checkmk.com; \
-	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
-	    windows/configure.ac
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/"\
 		wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
-
-$(WIN_PACKAGE):
-	cd windows && sudo \
-		CHROOT_NAME=$$CHROOT_NAME \
-		CHROOT_BASE_PATH=$$CHROOT_BASE_PATH \
-		CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
-		./make-agent
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

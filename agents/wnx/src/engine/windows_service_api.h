@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // provides basic api to start and stop service
 
@@ -11,6 +14,7 @@
 #include <cstdint>  // wchar_t when compiler options set weird
 #include <functional>
 
+#include "common/wtools_service.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
@@ -63,6 +67,11 @@ int ServiceAsService(std::wstring_view app_name,
                          InternalCallback) noexcept;  // service execution
 
 void ProcessFirewallConfiguration(std::wstring_view app_name);
+[[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
+
+// Converter API from YML language to wtools
+wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view text);
+wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
 constexpr const wchar_t* kServiceName = L"CheckMkService";

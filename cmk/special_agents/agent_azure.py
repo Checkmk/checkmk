@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
@@ -35,11 +15,16 @@ import sys
 import argparse
 import logging
 from multiprocessing import Process, Lock, Queue
-from Queue import Empty as QueueEmpty
-import adal  # type: ignore
+from typing import Any, List, Tuple  # pylint: disable=unused-import
+import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path
+    from queue import Empty as QueueEmpty
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+    from Queue import Empty as QueueEmpty  # pylint: disable=import-error
 
 from cmk.utils.paths import tmp_dir
 
@@ -563,7 +548,8 @@ class AzureResource(object):
         self.metrics = []
 
     def dumpinfo(self):
-        lines = [("Resource",), (json.dumps(self.info),)]
+        # TODO: Hmmm, should the variable-length tuples actually be lists?
+        lines = [("Resource",), (json.dumps(self.info),)]  # type: List[Tuple]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -676,7 +662,7 @@ class UsageClient(DataCache):
             # (mo) I am unable to get the filter for usage_end working :-(
             unfiltered_usages = self._client.usagedetails()
         except ApiError as exc:
-            if self.offerid_has_no_consuption_api(exc.message):
+            if self.offerid_has_no_consuption_api(exc.args[0]):
                 return []
             raise
         LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
@@ -741,7 +727,9 @@ def gather_metrics(mgmt_client, resource, debug=False):
                                                resource.info['id'],
                                                err,
                                                use_cache=cache.cache_interval > 60)
-        except () if debug else ApiError as exc:
+        except ApiError as exc:
+            if debug:
+                raise
             err.add("exception", resource.info['id'], str(exc))
             LOGGER.exception(exc)
     return err
@@ -812,8 +800,9 @@ def get_mapper(debug, sequential, timeout):
             for args in args_iter:
                 try:
                     yield func(args)
-                except () if debug else Exception:
-                    pass
+                except Exception:
+                    if debug:
+                        raise
 
         return sequential_mapper
 
@@ -830,13 +819,13 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()
+        queue = Queue()  # type: Queue[Tuple[Any, bool, Any]]
         jobs = {}
 
         def produce(id_, args):
             try:
                 queue.put((id_, True, func(args)))
-            except Exception as _e:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 queue.put((id_, False, None))
                 if debug:
                     raise
@@ -867,7 +856,9 @@ def main_graph_client(args):
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
@@ -881,7 +872,9 @@ def main_subscription(args, selector, subscription):
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
         monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         write_exception_to_agent_info_section(exc, "Management client")
         return
 

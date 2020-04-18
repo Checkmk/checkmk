@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
@@ -47,6 +27,10 @@ class ABCViewDashlet(IFrameDashlet):
     def initial_size(cls):
         return (40, 20)
 
+    @classmethod
+    def has_context(cls):
+        return True
+
     def _show_view_as_dashlet(self, view_spec):
         is_reload = html.request.has_var("_reload")
 
@@ -68,6 +52,10 @@ class ABCViewDashlet(IFrameDashlet):
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
         views.show_view(view, view_renderer)
+
+    def _get_infos_from_view_spec(self, view_spec):
+        ds_name = view_spec["datasource"]
+        return views.data_source_registry[ds_name]().infos
 
 
 @dashlet_registry.register
@@ -108,6 +96,15 @@ class ViewDashlet(ABCViewDashlet):
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
 
+    def infos(self):
+        # Hack for create mode of dashlet editor. The user first selects a datasource and then the
+        # single contexts, the dashlet editor needs to use these information.
+        if html.myfile == "edit_dashlet" and html.request.has_var("datasource"):
+            ds_name = html.request.var('datasource')
+            return views.data_source_registry[ds_name]().infos
+
+        return self._get_infos_from_view_spec(self._dashlet_spec)
+
 
 @dashlet_registry.register
 class LinkedViewDashlet(ABCViewDashlet):
@@ -143,6 +140,12 @@ class LinkedViewDashlet(ABCViewDashlet):
             ),
         ]
 
+    @classmethod
+    def add_url(cls):
+        return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
+            (html.urlencode(html.request.var('name')),
+             html.urlencode(html.makeuri([('edit', '1')])))
+
     def _get_view_spec(self):
         view_name = self._dashlet_spec["name"]
         view_spec = views.get_permitted_views().get(view_name)
@@ -156,10 +159,11 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]
-        view = self._get_view_spec()
-        return html.makeuri_contextless([('view_name', view_name)] +
-                                        visuals.get_singlecontext_vars(view).items(),
+        return html.makeuri_contextless([('view_name', view_name)] + self._dashlet_context_vars(),
                                         filename='view.py')
 
     def update(self):
         self._show_view_as_dashlet(self._get_view_spec())
+
+    def infos(self):
+        return self._get_infos_from_view_spec(self._get_view_spec())

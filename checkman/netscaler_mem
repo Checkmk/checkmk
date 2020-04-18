@@ -1,4 +1,4 @@
-title: Citrix Netscaler Memory Utilization
+title: Citrix Netscaler: Memory Utilization
 agents: snmp
 catalog: app/netscaler
 license: GPL
@@ -12,5 +12,5 @@ description:
  Warning and critical levels can be configured for the check.
 
 inventory:
- One service per appliance will be created.
+ One service is created for each appliance.
 

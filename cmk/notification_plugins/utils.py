@@ -1,36 +1,20 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+from email.utils import formataddr
 import os
+from quopri import encodestring
 import re
+import socket
 import sys
-from html import escape as html_escape  # type: ignore
-from typing import (  # pylint: disable=unused-import
-    AnyStr, Dict, List, Optional, Text, Tuple)
+from html import escape as html_escape  # type: ignore[import]
+from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
+import six
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
@@ -41,7 +25,7 @@ import cmk.utils.cmk_subprocess as subprocess
 def collect_context():
     # type: () -> Dict[str, Text]
     return {
-        var[7:]: value.decode("utf-8")
+        var[7:]: six.ensure_text(value)
         for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_")
     }
@@ -50,6 +34,33 @@ def collect_context():
 def format_link(template, url, text):
     # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
     return template % (url, text) if url else text
+
+
+def format_address(display_name, email_address):
+    # type: (Text, Text) -> Text
+    """
+    Returns an email address with an optional display name suitable for an email header like From or Reply-To.
+    The function handles the following cases:
+
+      * If an empty display name is given, only the email address is returned.
+      * If a display name is given a, string of the form "display_name <email_address>" is returned.
+      * If the display name contains non ASCII characters, it is converted to an encoded word (see RFC2231).
+      * If the display_name contains special characters like e.g. '.' the display string is enclosed in quotes.
+      * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
+    """
+    if not email_address:
+        return ''
+
+    try:
+        display_name.encode('ascii')
+    except UnicodeEncodeError:
+        display_name = u'=?utf-8?q?%s?=' % encodestring(
+            display_name.encode('utf-8')).decode('ascii')
+    return formataddr((display_name, email_address))
+
+
+def default_from_address():
+    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
 
 
 def _base_url(context):
@@ -104,9 +115,11 @@ def html_escape_context(context):
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
         'PARAMETER_FROM',
+        'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
-    for variable, value in context.iteritems():
+    for variable, value in context.items():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
 
@@ -198,6 +211,8 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
+# TODO: Why do we return Dict[str, str] below while collect_context() returns a
+# Dict[str, Text]???
 def read_bulk_contexts():
     # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}
@@ -277,8 +292,14 @@ def post_request(message_constructor, success_code=200):
     context = collect_context()
 
     url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+    proxy_url = context.get("PARAMETER_PROXY_URL")
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
-    r = requests.post(url=url, json=message_constructor(context))
+    try:
+        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+    except requests.exceptions.ProxyError:
+        sys.stderr.write(six.ensure_str("Cannot connect to proxy: %s\n" % proxy_url))
+        sys.exit(2)
 
     if r.status_code == success_code:
         sys.exit(0)

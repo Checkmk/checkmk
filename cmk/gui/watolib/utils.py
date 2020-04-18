@@ -1,36 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import re
 import pprint
 import base64
 import pickle
+from typing import Any, Text, Union  # pylint: disable=unused-import
 
-import cmk
+import six
+
+from livestatus import SiteId  # pylint: disable=unused-import
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
@@ -111,36 +95,37 @@ def host_attribute_matches(crit, value):
 # slave sites, we don't know the site ID of the master site. We set this explicit
 # to false to configure that this host is monitored by another site (that we don't
 # know about).
-# TODO: Find a better place later
+# TODO: Find a better place later. Find a less depressing return type.
 def default_site():
+    # type: () -> Union[bool, None, SiteId]
     if config.is_wato_slave_site():
         return False
     return config.default_site()
 
 
 def format_config_value(value):
-    format_func = pprint.pformat if config.wato_pprint_config else repr
-    return format_func(value)
+    # type: (Any) -> str
+    return pprint.pformat(value) if config.wato_pprint_config else repr(value)
 
 
-def mk_repr(s):
-    if not config.wato_legacy_eval:
-        return base64.b64encode(repr(s))
-    return base64.b64encode(pickle.dumps(s))
+def mk_repr(x):
+    # type: (Any) -> bytes
+    r = pickle.dumps(x) if config.wato_legacy_eval else six.ensure_binary(repr(x))
+    return base64.b64encode(r)
 
 
 # TODO: Deprecate this legacy format with 1.4.0 or later?!
 def mk_eval(s):
+    # type: (Union[bytes, Text]) -> Any
     try:
-        if not config.wato_legacy_eval:
-            return ast.literal_eval(base64.b64decode(s))
-        return pickle.loads(base64.b64decode(s))
-    except:
+        d = base64.b64decode(s)
+        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(six.ensure_text(d))
+    except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
 
 def has_agent_bakery():
-    return not cmk.is_raw_edition()
+    return not cmk_version.is_raw_edition()
 
 
 def site_neutral_path(path):

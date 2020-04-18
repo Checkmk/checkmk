@@ -7,7 +7,6 @@
 #include <shlobj.h>  // known path
 #include <versionhelpers.h>
 #include <windows.h>
-#include <yaml-cpp/yaml.h>
 
 #include <atomic>
 #include <filesystem>
@@ -21,6 +20,7 @@
 #include "common/object_repo.h"
 #include "common/version.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "logger.h"
 #include "read_file.h"
 #include "tools/_misc.h"     // setenv
@@ -324,6 +324,11 @@ std::wstring GetRootDir() noexcept { return GetCfg().getRootDir(); }
 std::wstring GetRootInstallDir() noexcept {
     auto root = GetCfg().getRootDir();
     return root / dirs::kFileInstallDir;
+}
+
+std::wstring GetUserModulesDir() noexcept {
+    auto user = GetCfg().getUserDir();
+    return user / dirs::kUserModules;
 }
 
 std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
@@ -700,7 +705,7 @@ static void RemoveOwnGeneratedFile() {
     XLOG::l.i("Removing yml files.");
     fs::path user_yml = GetUserDir();
     user_yml /= files::kUserYmlFile;
-    if (cap::AreFilesSame(target_yml_example, user_yml)) {
+    if (cma::tools::AreFilesSame(target_yml_example, user_yml)) {
         XLOG::l.i("Removing user yml files.");
         fs::remove(user_yml, ec);
     }
@@ -759,12 +764,13 @@ bool CleanDataFolder(CleanMode mode) {
 std::vector<std::wstring_view> AllDirTable() {
     return {//
             // may not contain user content
-            dirs::kBakery,   // config file(s)
-            dirs::kUserBin,  // placeholder for ohm
-            dirs::kBackup,   // backed up files
-            dirs::kTemp,     //
-            dirs::kInstall,  // for installing data
-            dirs::kUpdate,   // for incoming MSI
+            dirs::kBakery,       // config file(s)
+            dirs::kUserBin,      // placeholder for ohm
+            dirs::kBackup,       // backed up files
+            dirs::kTemp,         //
+            dirs::kInstall,      // for installing data
+            dirs::kUpdate,       // for incoming MSI
+            dirs::kUserModules,  // for all modules
 
             // may contain user content
             dirs::kState,          // state folder
@@ -778,13 +784,14 @@ std::vector<std::wstring_view> AllDirTable() {
 
 std::vector<std::wstring_view> RemovableDirTable() {
     return {
-        dirs::kBakery,   // config file(s)
-        dirs::kUserBin,  // placeholder for ohm
-        dirs::kBackup,   // backed up files
-        dirs::kTemp,     //
-        dirs::kInstall,  // for installing data
-        dirs::kUpdate    // for incoming MSI
-    };                   //
+        dirs::kBakery,       // config file(s)
+        dirs::kUserBin,      // placeholder for ohm
+        dirs::kBackup,       // backed up files
+        dirs::kTemp,         //
+        dirs::kInstall,      // for installing data
+        dirs::kUpdate,       // for incoming MSI
+        dirs::kUserModules,  // for all modules
+    };                       //
 }
 
 //
@@ -1060,8 +1067,8 @@ std::vector<std::string> StringToTable(const std::string& WholeValue) {
 }
 
 // gets string from the yaml and split it in table using space as divider
-std::vector<std::string> GetInternalArray(const std::string& Section,
-                                          const std::string& Name,
+std::vector<std::string> GetInternalArray(std::string_view Section,
+                                          std::string_view Name,
                                           int* ErrorOut) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -1081,26 +1088,26 @@ std::vector<std::string> GetInternalArray(const std::string& Section,
 }
 
 // opposite operation for the GetInternalArray
-void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+void PutInternalArray(YAML::Node Yaml, std::string_view name,
                       std::vector<std::string>& Arr, int* ErrorOut) noexcept {
     try {
-        auto section = Yaml[Name];
+        auto section = Yaml[name];
         if (Arr.empty()) {
-            section.remove(Name);
+            section.remove(name);
             return;
         }
 
         auto result = cma::tools::JoinVector(Arr, " ");
         if (result.back() == ' ') result.pop_back();
-        Yaml[Name] = result;
+        Yaml[name] = result;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
     }
 }
 
 // opposite operation for the GetInternalArray
-void PutInternalArray(const std::string& Section, const std::string& Name,
+void PutInternalArray(std::string_view section_name, std::string_view key,
                       std::vector<std::string>& Arr, int* ErrorOut) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -1108,18 +1115,18 @@ void PutInternalArray(const std::string& Section, const std::string& Name,
         return;
     }
     try {
-        auto section = yaml[Section];
-        PutInternalArray(section, Name, Arr, ErrorOut);
+        auto section = yaml[section_name];
+        PutInternalArray(section, key, Arr, ErrorOut);
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
+                key, e.what());
     }
 }
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
-                                          const std::string& name) noexcept {
+                                          std::string_view name) noexcept {
     try {
         auto val = yaml_node[name];
         if (!val.IsDefined() || val.IsNull()) {
@@ -1211,6 +1218,7 @@ void ProcessPluginEnvironment(
             {envs::kMkSpoolDirName, &cma::cfg::GetSpoolDir},
             {envs::kMkInstallDirName, &cma::cfg::GetUserInstallDir},
             {envs::kMkMsiPathName, &cma::cfg::GetUpdateDir},
+            {envs::kMkModulesDirName, &cma::cfg::GetUserModulesDir},
             //
         };
 
@@ -1831,12 +1839,11 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
 
 // LOOOONG operation
 // when failed old config retained
-bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
+bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     namespace fs = std::filesystem;
     int error = 0;
-    auto file = FullPath;
 
-    fs::path fpath = file;
+    const fs::path& fpath = file;
     std::error_code ec;
     if (!fs::exists(fpath, ec)) {
         XLOG::l("File {} not found, code = [{}] '{}'", fpath.u8string(),
@@ -1847,16 +1854,14 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
 
     // we will load when error happens, or time changed or name changed
     bool load_required =
-        ec.value() || ftime != root_yaml_time_ || file != root_yaml_path_;
+        ec.value() != 0 || ftime != root_yaml_time_ || file != root_yaml_path_;
 
     if (!load_required) {
         return ok_;
     }
 
     auto new_yaml = LoadAndCheckYamlFile(file, FallbackPolicy::kNone, &error);
-    if (!new_yaml.size()) {
-        return false;
-    }
+    if (0 == new_yaml.size()) return false;
 
     std::lock_guard lk(lock_);
     root_yaml_time_ = ftime;
@@ -1865,12 +1870,11 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
     XLOG::d.t("Loaded Config from  {}", file.u8string());
 
     // setting up paths  to the other files
-    user_yaml_path_ = FullPath;
-    root_yaml_time_ = std::filesystem::last_write_time(FullPath);
+    user_yaml_path_ = file;
+    root_yaml_time_ = std::filesystem::last_write_time(file);
     user_yaml_path_.clear();
     user_yaml_time_ = decltype(user_yaml_time_)::min();
     bakery_yaml_path_.clear();
-    user_yaml_time_ = user_yaml_time_;
     aggregated_ = false;
     ok_ = true;
     uniq_id_++;
@@ -1881,8 +1885,6 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
 
 namespace cma::cfg {
 bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
-    namespace fs = std::filesystem;
-
     auto data = cma::tools::ReadFileInVector(filename);
     if (!data.has_value()) return false;
 
@@ -1890,16 +1892,17 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
     if (data->size() < base.length()) return false;
 
     auto content = data->data();
-    return !memcmp(content, base.data(), base.length());
+    return 0 == memcmp(content, base.data(), base.length());
 }
 
 // generates standard agent time string
 std::string ConstructTimeString() {
     using namespace std::chrono;
+    constexpr uint32_t k1000 = 1000;
     auto cur_time = system_clock::now();
     auto in_time_t = system_clock::to_time_t(cur_time);
     std::stringstream sss;
-    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % 1000;
+    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % k1000;
     auto loc_time = std::localtime(&in_time_t);
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
@@ -1911,7 +1914,7 @@ std::string ConstructTimeString() {
 // makes the name of install.protocol file
 // may return empty path
 std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir) noexcept {
+    const std::filesystem::path& dir) {
     namespace fs = std::filesystem;
     if (dir.empty()) {
         XLOG::d("Attempt to create install protocol in current folder");
@@ -1924,9 +1927,7 @@ std::filesystem::path ConstructInstallFileName(
 
 bool IsNodeNameValid(std::string_view name) {
     if (name.empty()) return true;
-    if (name[0] == '_') return false;
-
-    return true;
+    return name[0] != '_';
 }
 
 int RemoveInvalidNodes(YAML::Node node) {
@@ -1988,9 +1989,9 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 // "marker\\any\\relative\\path"
 // return false if yaml is not suitable for patching
 // normally used only by cvt
-bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
-                       const std::string& key_name,
-                       std::string_view subkey_name, std::string_view marker) {
+bool PatchRelativePath(YAML::Node Yaml, std::string_view group_name,
+                       std::string_view key_name, std::string_view subkey_name,
+                       std::string_view marker) {
     namespace fs = std::filesystem;
     if (group_name.empty() || key_name.empty() || subkey_name.empty() ||
         marker.empty()) {
@@ -2027,12 +2028,13 @@ bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
 
 constexpr std::string_view kWmicUninstallCommand =
     "wmic product where name=\"{}\" call uninstall /nointeractive";
-std::string CreateWmicCommand(std::string_view product_name) noexcept {
+
+std::string CreateWmicCommand(std::string_view product_name) {
     return fmt::format(kWmicUninstallCommand, product_name);
 }
 
 std::filesystem::path CreateWmicUninstallFile(
-    std::filesystem::path temp_dir, std::string_view product_name) noexcept {
+    const std::filesystem::path& temp_dir, std::string_view product_name) {
     auto file = temp_dir / "exec_uninstall.cmd";
     try {
         std::ofstream ofs(file.u8string());

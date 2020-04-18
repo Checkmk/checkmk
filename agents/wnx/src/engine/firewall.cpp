@@ -106,21 +106,6 @@ long Policy::getRulesCount() {
     return rule_count;
 }
 
-class Bstr {
-public:
-    Bstr(const Bstr &) = delete;
-    Bstr(Bstr &&) = delete;
-    Bstr &operator=(const Bstr &) = delete;
-    Bstr &operator=(Bstr &&) = delete;
-
-    Bstr(std::wstring_view str) { data_ = ::SysAllocString(str.data()); }
-    ~Bstr() { ::SysFreeString(data_); }
-    operator BSTR() { return data_; }
-
-public:
-    BSTR data_;
-};
-
 void Check(BSTR bstr) {
     //
     XLOG::l("x");
@@ -439,13 +424,14 @@ bool CreateInboundRule(std::wstring_view rule_name,
     auto rule = CreateRule();
 
     // Populate the Firewall Rule object
-    rule->put_Name(Bstr(rule_name));
-    rule->put_Description(Bstr(kRuleDescription));
-    rule->put_ApplicationName(Bstr(app_name));
+    rule->put_Name(wtools::Bstr(rule_name));
+    rule->put_Description(wtools::Bstr(kRuleDescription));
+    rule->put_ApplicationName(wtools::Bstr(app_name));
     rule->put_Protocol(NET_FW_IP_PROTOCOL_TCP);
-    rule->put_LocalPorts(Bstr(port == -1 ? L"*" : std::to_wstring(port)));
+    rule->put_LocalPorts(
+        wtools::Bstr(port == -1 ? L"*" : std::to_wstring(port)));
     rule->put_Direction(NET_FW_RULE_DIR_IN);
-    rule->put_Grouping(Bstr(kRuleGroup));
+    rule->put_Grouping(wtools::Bstr(kRuleGroup));
     rule->put_Profiles(bit_mask);
     rule->put_Action(NET_FW_ACTION_ALLOW);
     rule->put_Enabled(VARIANT_TRUE);
@@ -489,7 +475,7 @@ bool RemoveRule(std::wstring_view rule_name) {
     auto rules = p.getRules();
     if (rules == nullptr) return false;
 
-    auto hr = rules->Remove(Bstr(rule_name));
+    auto hr = rules->Remove(wtools::Bstr(rule_name));
     if (FAILED(hr)) {
         XLOG::l("Firewall Rule REMOVE failed: [{:#X}]", hr);
         return false;
@@ -541,7 +527,7 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
                 // rule by this random name
                 {
                     new_name = GenerateRandomRuleName();
-                    fw_rule->put_Name(Bstr(new_name));
+                    fw_rule->put_Name(wtools::Bstr(new_name));
                     XLOG::t("Rule '{}' renamed to '{}' for deletion",
                             wtools::ConvertToUTF8(name),
                             wtools::ConvertToUTF8(new_name));

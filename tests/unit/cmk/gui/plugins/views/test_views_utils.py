@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.gui.plugins.views.utils import (
-    SorterEntry,
+    SorterSpec,
     _parse_url_sorters,
     _encode_sorter_url,
 )
@@ -15,6 +21,6 @@ from cmk.gui.plugins.views.utils import (
                                                    ('site', False)]),
 ])
 def test_url_sorters_parse_encode(url, sorters):
-    sorters = [SorterEntry(*s) for s in sorters]
+    sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url

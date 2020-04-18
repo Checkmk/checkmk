@@ -1,26 +1,7 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "TableLog.h"
 #include <bitset>
@@ -55,7 +36,13 @@
 #include "nagios.h"
 #endif
 
-class LogRow : TableCommands::IRow {
+namespace {
+
+class LogRow :
+#ifndef CMC
+    public TableContacts::IRow,
+#endif
+    public TableCommands::IRow {
 public:
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
            Command command_)
@@ -65,15 +52,19 @@ public:
         , ctc{ctc_}
         , command{std::move(command_)} {};
 
+#ifndef CMC
+    [[nodiscard]] const contact *getContact() const override { return ctc; }
+#endif
+    [[nodiscard]] Command getCommand() const override { return command; }
+
     LogEntry *entry;
     host *hst;
     service *svc;
-    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
-    // cppcheck-suppress unusedStructMember
     const contact *ctc;
     Command command;
-    [[nodiscard]] Command getCommand() const override { return command; }
 };
+
+}  // namespace
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
@@ -160,9 +151,12 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableServices::addColumns(this, "current_service_",
                               DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
+#ifdef CMC
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogRow, ctc));
-
+#else
+    TableContacts::addColumns(this, "current_contact_");
+#endif
     TableCommands::addColumns(this, "current_command_");
 }
 
@@ -243,7 +237,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             core()->find_command(entry->_command_name)};
-        if (!query->processDataset(Row(&lr))) {
+        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&lr)})) {
             return false;
         }
     }

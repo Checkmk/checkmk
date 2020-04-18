@@ -1,4 +1,4 @@
-Title: hp_fan, hp_psu: Support for 5412rzl2 devices
+Title: hp_fan, hp_psu: Support for Aruba 5400R ZL2 switch series
 Class: feature
 Compatible: compat
 Component: checks

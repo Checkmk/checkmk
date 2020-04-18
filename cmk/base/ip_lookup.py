@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
 import errno
@@ -36,27 +16,30 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTimeout, MKTerminate
 
-import cmk.base
+from cmk.base.caching import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
-from cmk.base.utils import (  # pylint: disable=unused-import
-    HostName,)
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, HostAddress)
 from cmk.base.exceptions import MKIPAddressLookupError
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
+UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
-_fake_dns = None  # type: Optional[str]
+_fake_dns = None  # type: Optional[HostAddress]
 _enforce_localhost = False
 
 
 def enforce_fake_dns(address):
+    # type: (HostAddress) -> None
     global _fake_dns
     _fake_dns = address
 
 
 def enforce_localhost():
+    # type: () -> None
     global _enforce_localhost
     _enforce_localhost = True
 
@@ -119,7 +102,7 @@ def lookup_ip_address(hostname, family=None):
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(hostname, family):
     # type: (HostName, int) -> Optional[str]
-    cache = cmk.base.config_cache.get_dict("cached_dns_lookup")
+    cache = _config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -165,18 +148,19 @@ def cached_dns_lookup(hostname, family):
         if cached_ip:
             cache[cache_id] = cached_ip
             return cached_ip
-        else:
-            cache[cache_id] = None
-            raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
-                                         (family, hostname, e))
+        cache[cache_id] = None
+        raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
+                                     (family, hostname, e))
 
 
 class IPLookupCache(cmk.base.caching.DictCache):
     def __init__(self):
+        # type: () -> None
         super(IPLookupCache, self).__init__()
         self.persist_on_update = True
 
     def load_persisted(self):
+        # type: () -> None
         try:
             self.update(_load_ip_lookup_cache(lock=False))
         except (MKTerminate, MKTimeout):
@@ -221,17 +205,18 @@ class IPLookupCache(cmk.base.caching.DictCache):
             store.release_lock(_cache_path())
 
     def save_persisted(self):
+        # type: () -> None
         store.save_object_to_file(_cache_path(), self, pretty=False)
 
 
 def _get_ip_lookup_cache():
     # type: () -> IPLookupCache
     """A file based fall-back DNS cache in case resolution fails"""
-    if cmk.base.config_cache.exists("ip_lookup"):
+    if _config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
-        return cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
+        return cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
 
-    cache = cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
+    cache = cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
     cache.load_persisted()
     return cache
 
@@ -249,7 +234,7 @@ def _convert_legacy_ip_lookup_cache(cache):
         return {}
 
     # New version has (hostname, ip family) as key
-    if isinstance(cache.keys()[0], tuple):
+    if isinstance(list(cache)[0], tuple):
         return cast(NewIPLookupCache, cache)
 
     cache = cast(LegacyIPLookupCache, cache)
@@ -261,10 +246,12 @@ def _convert_legacy_ip_lookup_cache(cache):
 
 
 def _cache_path():
+    # type: () -> str
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
 def update_dns_cache():
+    # type: () -> UpdateDNSCacheResult
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()

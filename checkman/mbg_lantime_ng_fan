@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Fans (NG MIB)
+title: Meinberg LANTIME Devices: Fans (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL
@@ -12,7 +12,7 @@ description:
  or having an error flag set, are reported as being {CRITICAL}.
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.
 
 item:
  The index number of the fan.

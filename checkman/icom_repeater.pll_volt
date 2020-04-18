@@ -7,8 +7,8 @@ description:
  This check monitors the RX and TX PLL lock voltage
 
 item:
- "RX" or "TX"
+ {{RX}} or {{TX}}
 
 inventory:
- One check per PLL is created.
+ One service is created for each PLL.
 

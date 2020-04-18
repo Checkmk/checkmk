@@ -1,33 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def parse_sap_hana_data_volume(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).items():
         for line in lines:
             if len(line) < 8:
                 continue
@@ -56,21 +36,34 @@ def parse_sap_hana_data_volume(info):
                     inst[key] = float(line[index]) / 1048576.0
                 except ValueError:
                     pass
+
+            inst = parsed.setdefault("%s - %s %s Disk Net Data" % (sid_instance, line[0], line[2]),
+                                     {}).setdefault(node, {})
+
+            for key, index in [
+                ("size", 5),
+                ("used", 6),
+            ]:
+                try:
+                    inst[key] = float(line[index]) / 1048576.0
+                except ValueError:
+                    pass
+
     return parsed
 
 
 def inventory_sap_hana_data_volume(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 
 @get_parsed_item_data
 def check_sap_hana_data_volume(item, params, node_data):
-    nodes = [n for n in node_data.keys() if n]
+    nodes = [n for n in node_data if n]
     if nodes:
         yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-    for data in node_data.itervalues():
+    for data in node_data.values():
         size = data['size']
         used = data['used']
         avail = size - used

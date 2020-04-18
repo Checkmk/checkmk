@@ -1,4 +1,4 @@
-title: HP-UX Serviveguard
+title: HP-UX Serviceguard: General Information
 agents: hpux
 catalog: os/services
 license: GPL
@@ -16,6 +16,6 @@ item:
  package {ADBP}.
 
 inventory:
- One separate service for the overal state, for each node
- and for each package is created.
+ One service is created for the overall state, for each node
+ and for each package.
 

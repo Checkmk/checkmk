@@ -41,7 +41,7 @@ description:
    unknown
 
 inventory:
-  All server racks included in the agent plugin output are found automatically.
+ One service is created for each server rack included in the agent plugin output.
 
 item:
-  One item per server rack PSU.
+ {{Rack unit}} followed by the index of the rack followed by {{PSU}} and the index of the PSU

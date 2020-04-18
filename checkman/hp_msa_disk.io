@@ -14,4 +14,4 @@ item:
  The disk summary.
 
 inventory:
- One service is created
+ One service is created.

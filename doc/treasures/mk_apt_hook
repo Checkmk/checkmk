@@ -1,4 +1,9 @@
 #
 # retrigger mk-apt
 #
+# If you want use this hook, copy this file to:
+# /etc/apt/apt.conf.d/98mk-apt.
+#
+# For further details please consult the check manual page of apt.
+
 DPkg::Post-Invoke {"touch -t 197012181200 /var/lib/check_mk_agent/cache/*mk_apt.cache"; };

@@ -1,4 +1,4 @@
-title: CPU utilization
+title: CPU Utilization
 agents: linux
 catalog: os/kernel
 license: GPL
@@ -9,8 +9,9 @@ description:
  specifically on the disk wait (IO wait).
 
 inventory:
- One check per host is created if the agent contains a {kernel}
- section containing cpu information. The inventory creates the
- check with the parameter {kernel_util_default_levels}, which is
- preset to {None} thus imposing no levels and making the check always OK.
+ One service is created for each host if the agent contains a {kernel}
+ section containing CPU information.
+
+ The inventory creates the service with the parameter {kernel_util_default_levels},
+ which is preset to {None} thus imposing no levels and making the service always {OK}.
 

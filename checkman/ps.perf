@@ -1,4 +1,4 @@
-title: State and Count of Processes (with additional performance data)
+title: State and Count of Processes (with additional Performance Data)
 agents: linux
 catalog: os/ps
 license: GPL
@@ -11,8 +11,11 @@ description:
  the plugin {psperf.bat} into the {plugins} directory of you Windows agent.
  Do not use {wmicchecks.bat}. This is obsolete.
 
-inventory:
- {ps.perf} supports inventory in exactly the same way as {ps}, just
- that the variable {inventory_processes_perf} is used instead of
- {inventory_processes}.
+item:
+ Name of the process
 
+inventory:
+ One service is created for each configured process on the monitored system.
+ Since Checkmk cannot know which processes are of relevance to you,
+ some configuration is needed. The configuration is done via the ruleset
+ {inventory_processes_perf}.

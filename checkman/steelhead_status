@@ -10,4 +10,4 @@ description:
  it is {critical}.
 
 inventory:
- One check for each Riverbed Steelhead appliance will be created.
+ One service is created for each Riverbed Steelhead appliance.

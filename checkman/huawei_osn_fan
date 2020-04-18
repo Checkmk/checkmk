@@ -10,4 +10,4 @@ item:
  The fan board slot ID.
 
 inventory:
- One service for each fan is created
+ One service is created for each fan.

@@ -1,9 +1,14 @@
-# encoding: utf-8
-# yapf: disable
-import pytest  # type: ignore
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk
-from cmk.gui.exceptions import MKGeneralException
+# yapf: disable
+import pytest  # type: ignore[import]
+
+import cmk.utils.version as cmk_version
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
@@ -55,7 +60,7 @@ def _expected_visual_types():
     },
     }
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_visual_types.update({
         'reports': {
         'add_visual_handler': 'popup_add_element',
@@ -3479,7 +3484,6 @@ def test_registered_filters(load_plugins):
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
 
-
 expected_infos = {
     'aggr': {
         'single_spec': [('aggr_name', 'TextUnicode')],
@@ -3709,7 +3713,7 @@ def test_registered_info_attributes():
 ])
 def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expected_vars):
     with html.stashed_vars():
-        visuals.add_context_to_uri_vars(visual, only_count)
+        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"], only_count)
         assert sorted(list(html.request.itervars())) == sorted(expected_vars)
 
 
@@ -3733,7 +3737,7 @@ def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expe
         [("host", "abc"), ("service", u"äää")]),
 ])
 def test_get_context_uri_vars(register_builtin_html, visual, only_count, expected_vars):
-    context_vars = visuals.get_context_uri_vars(visual)
+    context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
 @pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
@@ -3745,6 +3749,8 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     (["host"], ["host"], [], {}),
     # Single host context -> empty set
     (["host"], ["host"], [("host", "")], {"host": ""}),
+    # Single host context with non-ascii char
+    (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
     # Single host context, multiple services
     (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
         'serviceregex': {'service_regex': 'äbc'}}),
@@ -3794,7 +3800,7 @@ def test_verify_single_infos_has_context():
 
 def test_verify_single_infos_missing_context():
     visual = {"single_infos": ["host"], "context": {},}
-    with pytest.raises(MKGeneralException, match="Missing context information"):
+    with pytest.raises(MKUserError, match="Missing context information"):
         visuals.verify_single_infos(visual, visual["context"])
 
 def test_context_uri_vars(register_builtin_html):
@@ -3818,7 +3824,8 @@ def test_context_uri_vars(register_builtin_html):
     html.request.set_var("bla", "blub")
     assert html.request.var("bla") == "blub"
 
-    with visuals.context_uri_vars(visual), visuals.context_uri_vars(visual2):
+    with visuals.context_uri_vars(visual["context"], visual["single_infos"]), \
+         visuals.context_uri_vars(visual2["context"], visual2["single_infos"]):
         assert html.request.var("bla") == "blub"
         assert html.request.var("host") == "abc"
         assert html.request.var("ag") == "1"

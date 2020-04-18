@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -43,10 +47,11 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
+        'single_metric',
         'snapin',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
         ]
@@ -72,7 +77,7 @@ def _expected_intervals():
         ('linked_view', False),
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected += [
             ('custom_graph', 60),
         ]
@@ -81,15 +86,18 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval):
+def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval,
+                                   monkeypatch):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
     dashlet_spec = {
         "type": type_name,
     }
-    if dashlet_type.has_context:
+    if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+
+    monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 
     dashlet = dashlet_type(dashboard_name="main",
                            dashboard=dashboard._add_context_to_dashboard({}),
@@ -267,7 +275,6 @@ def test_old_dashlet_settings():
 
 
 def test_dashlet_type_defaults(register_builtin_html):
-    assert dashboard.Dashlet.infos() == []
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True
@@ -290,6 +297,7 @@ def test_dashlet_defaults():
                            dashboard={},
                            dashlet_id=1,
                            dashlet={"xyz": "abc"})
+    assert dashlet.infos() == []
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"xyz": "abc"}
     assert dashlet.dashboard_name == "main"
@@ -414,6 +422,7 @@ def test_dashlet_context_inheritance(register_builtin_html):
         'title': u'Host Statistics',
         'refresh': 60,
         'add_context_to_title': True,
+        'link_from': {},
         'position': (61, 1),
         'size': (30, 18),
     }
@@ -432,5 +441,4 @@ def test_dashlet_context_inheritance(register_builtin_html):
         },
     }
 
-    assert sorted(dashlet._dashlet_context_vars().iteritems()) == sorted([('host', 'bla'),
-                                                                          ('wato_folder', '')])
+    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('wato_folder', '')])

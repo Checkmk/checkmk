@@ -16,4 +16,4 @@ item:
  The internal name of the input or output ports
 
 inventory:
- All input and output ports are inventorized
+ One service is created for each input and output port.

@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 from pathlib2 import Path
-import pytest  # type: ignore
-from mockldap import MockLdap, LDAPObject  # type: ignore
+import pytest  # type: ignore[import]
+from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 import six
 
 # userdb is needed to make the module register the post-config-load-hooks
@@ -189,6 +193,16 @@ def _ldap_tree():
             "cn": ["out-of-scope"],
             "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
         },
+        "cn=selfref,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=selfref,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["selfref"],
+            "member": [
+                "cn=selfref,ou=users,dc=check-mk,dc=org",
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
+        },
     }
 
     tree.update(users)
@@ -223,13 +237,13 @@ def encode_to_byte_strings(inp):
 def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)
-    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:
         f.write(u"%r" % {
             "alias": u"admin",
             "connector": "default",
         })
 
-    Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)
     with open(cmk.utils.paths.htpasswd_file, "w") as f:
         f.write(
             "automation:$5$rounds=535000$eDIHah5PgsY2widK$tiVBvDgq0Nwxy5zd/oNFRZ8faTlOPA2T.tx.lTeQoZ1\n"
@@ -458,10 +472,10 @@ def test_get_group_memberships_not_existing(mocked_ldap, nested):
 
 
 def test_get_group_memberships_nested(mocked_ldap):
-    memberships = mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "level2"],
-                                                    nested=True)
+    memberships = mocked_ldap.get_group_memberships(
+        ["empty", "top-level", "level1", "level2", "selfref"], nested=True)
 
-    assert len(memberships) == 4
+    assert len(memberships) == 5
 
     needed_groups = [
         (u'cn=empty,ou=groups,dc=check-mk,dc=org', {
@@ -489,6 +503,10 @@ def test_get_group_memberships_nested(mocked_ldap):
                 u"cn=härry,ou=users,dc=check-mk,dc=org",
                 u"cn=sync-user,ou=users,dc=check-mk,dc=org",
             ],
+        }),
+        (u'cn=selfref,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'selfref',
+            'members': [u"cn=admin,ou=users,dc=check-mk,dc=org",],
         }),
     ]
 

@@ -1,4 +1,4 @@
-title: Raritan PX-2000 family PDU outlet count
+title: Raritan PX-2000 Family: PDU Outlet Count
 agents: snmp
 catalog: hw/environment/raritan
 license: GPL
@@ -12,5 +12,5 @@ description:
  the value is outside the given ranges.
 
 inventory:
- Creates exactly one check per host called Outlet Count.
+ One service is created for each host called Outlet Count.
 

@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import abc
@@ -34,6 +14,7 @@ import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
@@ -59,6 +40,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MenuItem,
 )
 
+from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -79,15 +61,18 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         raise NotImplementedError()
 
     def __init__(self):
+        # type: () -> None
         super(ModeGroups, self).__init__()
         self._groups = self._load_groups()
 
     def buttons(self):
+        # type: () -> None
         global_buttons()
 
     def action(self):
+        # type: () -> ActionResult
         if html.request.var('_delete'):
-            delname = html.request.var("_delete")
+            delname = html.request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
 
             if usages:
@@ -112,6 +97,7 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         return None
 
     def _page_no_groups(self):
+        # type: () -> None
         html.div(_("No groups are defined yet."), class_="info")
 
     def _collect_additional_data(self):
@@ -128,21 +114,19 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), html.attrencode(name))
-        table.cell(_("Alias"), html.attrencode(group['alias']))
+        table.cell(_("Name"), escaping.escape_attribute(name))
+        table.cell(_("Alias"), escaping.escape_attribute(group['alias']))
 
     def page(self):
+        # type: () -> None
         if not self._groups:
             self._page_no_groups()
             return
 
-        sorted_groups = self._groups.items()
-        sorted_groups.sort(key=lambda x: x[1]['alias'])
-
         self._collect_additional_data()
 
         with table_element(self.type_name + "groups") as table:
-            for name, group in sorted_groups:
+            for name, group in sorted(self._groups.items(), key=lambda x: x[1]['alias']):
                 table.row()
                 self._show_row_cells(table, name, group)
 
@@ -167,11 +151,12 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         super(ModeEditGroup, self).__init__()
 
     def _from_vars(self):
-        self._name = html.request.var("edit")  # missing -> new group
+        # type: () -> None
+        self._name = html.request.get_ascii_input("edit")  # missing -> new group
         self._new = self._name is None
 
         if self._new:
-            clone_group = html.request.var("clone")
+            clone_group = html.request.get_ascii_input("clone")
             if clone_group:
                 self._name = clone_group
 
@@ -190,27 +175,27 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
             raise MKUserError(None, _("This group does not exist."))
 
     def buttons(self):
+        # type: () -> None
         html.context_button(
             _("All groups"),
             watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
     def _determine_additional_group_data(self):
+        # type: () -> None
         pass
 
     def action(self):
+        # type: () -> ActionResult
         if not html.check_transaction():
             return "%s_groups" % self.type_name
 
-        alias = html.get_unicode_input("alias").strip()
-        if not alias:
-            raise MKUserError("alias", _("Please specify an alias name."))
-
+        alias = html.request.get_unicode_input_mandatory("alias").strip()
         self.group = {"alias": alias}
 
         self._determine_additional_group_data()
 
         if self._new:
-            self._name = html.request.var("name").strip()
+            self._name = html.request.get_ascii_input_mandatory("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
             watolib.edit_group(self._name, self.type_name, self.group)
@@ -221,6 +206,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         pass
 
     def page(self):
+        # type: () -> None
         html.begin_form("group")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new)
@@ -228,7 +214,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
             _("The name of the group is used as an internal key. It cannot be "
               "changed later. It is also visible in the status GUI."))
         if self._new:
-            html.text_input("name", self._name)
+            html.text_input("name")
             html.set_focus("name")
         else:
             html.write_text(self._name)

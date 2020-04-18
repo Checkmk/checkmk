@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 from __future__ import division
 
@@ -30,16 +10,25 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union,
+)
+
+import six
 
 import cmk.utils.regex
+from cmk.utils.memoize import MemoizeCache
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.valuespec import DropdownChoice
+
+LegacyPerfometer = Tuple[str, Any]
+Perfometer = Dict[str, Any]
+TranslatedMetrics = Dict[str, Dict[str, Any]]
 
 
 class AutomaticDict(OrderedDict):
@@ -59,7 +48,7 @@ class AutomaticDict(OrderedDict):
 unit_info = {}  # type: Dict[str, Any]
 metric_info = {}  # type: Dict[str, Dict[str, Any]]
 check_metrics = {}  # type: Dict[str, Dict[str, Any]]
-perfometer_info = []  # type: List[Dict[str, Any]]
+perfometer_info = []  # type: List[Union[LegacyPerfometer, Perfometer]]
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -110,8 +99,6 @@ scale_symbols = {
     P: "P",
 }
 
-MAX_CORES = 128
-
 # Colors:
 #
 #                   red
@@ -157,24 +144,21 @@ def indexed_color(idx, total):
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
         tone = ((idx // 4) % 6) + 1
-        if idx % 8 < 4:
-            shade = "a"
-        else:
-            shade = "b"
+        shade = "a" if idx % 8 < 4 else "b"
         return "%d%d/%s" % (base_col, tone, shade)
-    else:
-        # generate distinct rgb values. these may be ugly ; also, they
-        # may overlap with the colors from the wheel
-        idx = idx - _COLOR_WHEEL_SIZE
-        base_color = idx % 7  # red, green, blue, red+green, red+blue,
-        # green+blue, red+green+blue
-        delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
-        offset = int(255 - (delta * ((idx / 7.0) + 1)))
 
-        red = int(base_color in [0, 3, 4, 6])
-        green = int(base_color in [1, 3, 5, 6])
-        blue = int(base_color in [2, 4, 5, 6])
-        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+    # generate distinct rgb values. these may be ugly ; also, they
+    # may overlap with the colors from the wheel
+    idx = idx - _COLOR_WHEEL_SIZE
+    base_color = idx % 7  # red, green, blue, red+green, red+blue,
+    # green+blue, red+green+blue
+    delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
+    offset = int(255 - (delta * ((idx / 7.0) + 1)))
+
+    red = int(base_color in [0, 3, 4, 6])
+    green = int(base_color in [1, 3, 5, 6])
+    blue = int(base_color in [2, 4, 5, 6])
+    return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -211,14 +195,12 @@ def split_unit(value_text):
 
 
 def parse_perf_data(perf_data_string, check_command=None):
-    """ Convert perf_data_string into perf_data, extract check_command
-
-This methods must not return None or anything else. It must strictly
-return a tuple of perf_data list and the check_command. In case of
-errors during parsing it returns an empty list for the perf_data.
-"""
+    # type: (str, Optional[str]) -> Tuple[List, str]
+    """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
-    if hasattr(check_command, 'split'):
+    if check_command is None:
+        check_command = ""
+    elif hasattr(check_command, 'split'):
         check_command = check_command.split("!")[0]
 
     # Split the perf data string into parts. Preserve quoted strings!
@@ -268,24 +250,22 @@ def _float_or_int(val):
             return None
 
 
+# TODO: Slightly funny typing, fix this when we use Python 3.
 def _split_perf_data(perf_data_string):
+    # type: (AnyStr) -> List[AnyStr]
     "Split the perf data string into parts. Preserve quoted strings!"
-    try:  # python3
-        return shlex.split(perf_data_string)
-    except UnicodeEncodeError:
-        # In python 2 shlex.split can not deal with unicode strings. But we always
-        # have unicode strings. So encode and decode again.
-        return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
+    parts = shlex.split(six.ensure_str(perf_data_string))
+    if isinstance(perf_data_string, six.binary_type):
+        return [six.ensure_binary(s) for s in parts]
+    return [six.ensure_text(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
-    translation_entry = {}  # Default: no translation necessary
+    translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
 
-    if perfvar_name in cm:
-        translation_entry = cm[perfvar_name]
-    else:
+    if not translation_entry:
         for orig_varname, te in cm.items():
             if orig_varname[0] == "~" and cmk.utils.regex.regex(
                     orig_varname[1:]).match(perfvar_name):  # Regex entry
@@ -316,10 +296,10 @@ def normalize_perf_data(perf_data, check_command):
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry = {
-        "orig_name": perf_data[0],
+        "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
         "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
-        "scale": translation_entry["scale"],  # needed for graph recipes
+        "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
     }
@@ -345,6 +325,7 @@ def get_metric_info(metric_name, color_index):
 
 
 def translate_metrics(perf_data, check_command):
+    # type: (List[Tuple], str) -> TranslatedMetrics
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -352,20 +333,22 @@ def translate_metrics(perf_data, check_command):
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics = {}
+    translated_metrics = {}  # type: Dict[str, Dict[str, Any]]
     color_index = 0
     for entry in perf_data:
 
         metric_name, new_entry = normalize_perf_data(entry, check_command)
-        if metric_name in translated_metrics:
-            continue  # ignore duplicate value
 
         mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
 
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
-        translated_metrics[metric_name] = new_entry
+        if metric_name in translated_metrics:
+            translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
+            translated_metrics[metric_name]["scale"].extend(new_entry["scale"])
+        else:
+            translated_metrics[metric_name] = new_entry
     return translated_metrics
 
 
@@ -424,8 +407,10 @@ def evaluate(expression, translated_metrics):
 
 
 def _evaluate_rpn(expression, translated_metrics):
+    # type: (str, Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
     parts = expression.split(",")
-    stack = []  # stack tuples of (value, unit, color)
+    # stack of (value, unit, color)
+    stack = []  # type: List[Tuple[float, Dict[str, Any], Optional[str]]]
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
@@ -465,9 +450,7 @@ rpn_operators = {
 # TODO: real unit computation!
 def _unit_mult(u1, u2):
     # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
-    if u1 == unit_info[""] or u1 == unit_info["count"]:
-        return u2
-    return u1
+    return u2 if u1 in (unit_info[''], unit_info['count']) else u1
 
 
 _unit_div = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
@@ -478,7 +461,7 @@ _unit_sub = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[
 def _choose_operator_color(a, b):
     if a is None:
         return b
-    elif b is None:
+    if b is None:
         return a
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
@@ -508,14 +491,13 @@ def _evaluate_literal(expression, translated_metrics):
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
-    elif isinstance(expression, float):
+    if isinstance(expression, float):
         return expression, unit_info[""], None
 
-    elif expression[0].isdigit() or expression[0] == '-':
+    if expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(
-            ".average"):
+    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
         expression = expression.rsplit(".", 1)[0]
 
     color = None
@@ -602,10 +584,9 @@ def get_graph_template_choices():
 def get_graph_template(template_id):
     if template_id.startswith("METRIC_"):
         return generic_graph_template(template_id[7:])
-    elif template_id in graph_info:
+    if template_id in graph_info:
         return graph_info[template_id]
-    else:
-        raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
+    raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
 
 
 def generic_graph_template(metric_name):
@@ -623,43 +604,40 @@ def get_graph_templates(translated_metrics):
     if not translated_metrics:
         return []
 
-    explicit_templates = _get_explicit_graph_templates(translated_metrics)
+    explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
     already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = _get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
+    implicit_templates = list(
+        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
     return explicit_templates + implicit_templates
 
 
 def _get_explicit_graph_templates(translated_metrics):
-    templates = []
     for graph_template in graph_info.values():
         if _graph_possible(graph_template, translated_metrics):
-            templates.append(graph_template)
+            yield graph_template
         elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            templates.append(
-                _graph_without_missing_optional_metrics(graph_template, translated_metrics))
-    return templates
+            yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
 def _get_graphed_metrics(graph_templates):
-    graphed_metrics = set([])
+    # type: (List) -> Set
+    graphed_metrics = set()  # type: Set
     for graph_template in graph_templates:
         graphed_metrics.update(_metrics_used_by_graph(graph_template))
     return graphed_metrics
 
 
 def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
-    templates = []
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            templates.append(generic_graph_template(metric_name))
-    return templates
+            yield generic_graph_template(metric_name)
 
 
 def _metrics_used_by_graph(graph_template):
-    used_metrics = []
+    # type: (Any) -> Iterator
     for metric_definition in graph_template["metrics"]:
-        used_metrics += list(_metrics_used_in_definition(metric_definition[0]))
-    return used_metrics
+        for metric in _metrics_used_in_definition(metric_definition[0]):
+            yield metric
 
 
 def _metrics_used_in_definition(metric_definition):
@@ -803,7 +781,7 @@ def get_palette_color_by_index(i, shading='a'):
 
 
 def get_next_random_palette_color():
-    keys = _cmk_color_palette.keys()
+    keys = list(_cmk_color_palette.keys())
     if 'random_color_index' in g:
         last_index = g.random_color_index
     else:
@@ -814,11 +792,12 @@ def get_next_random_palette_color():
 
 
 def get_n_different_colors(n):
+    # type: (int) -> List[str]
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
     total_weight = sum([x[1] for x in _hsv_color_distribution])
 
-    colors = []
+    colors = []  # type: List[str]
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
@@ -827,6 +806,7 @@ def get_n_different_colors(n):
 
 
 def _get_hue_by_weight_index(weight_index):
+    # type: (float) -> float
     section_begin = 0.0
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
@@ -835,6 +815,7 @@ def _get_hue_by_weight_index(weight_index):
             return hue
         weight_index -= section_weight
         section_begin = section_end
+    return 0.0  # Hmmm...
 
 
 # 23/c -> #ff8040
@@ -845,20 +826,14 @@ def parse_color_into_hexrgb(color_string):
 
     if "/" in color_string:
         cmk_color_index, color_shading = color_string.split("/")
-        hsv = list(_cmk_color_palette[cmk_color_index])
+        hsv = _cmk_color_palette[cmk_color_index]
 
         # Colors of the yellow ("2") and green ("3") area need to be darkened (in third place of the hsv tuple),
         # colors of the red and blue area need to be brightened (in second place of the hsv tuple).
         # For both shadings we need different factors.
-        cmk_color_nuance_index = 1
-        cmk_color_nuance_factor = 0.6
-
-        if cmk_color_index[0] in ["2", "3"]:
-            cmk_color_nuance_index = 2
-            cmk_color_nuance_factor = 0.8
-
         if color_shading == 'b':
-            hsv[cmk_color_nuance_index] *= cmk_color_nuance_factor
+            factors = (1.0, 1.0, 0.8) if cmk_color_index[0] in ["2", "3"] else (1.0, 0.6, 1.0)
+            hsv = _pointwise_multiplication(hsv, factors)
 
         color_hexrgb = hsv_to_hexrgb(hsv)
         return color_hexrgb
@@ -866,11 +841,19 @@ def parse_color_into_hexrgb(color_string):
     return "#808080"
 
 
+def _pointwise_multiplication(c1, c2):
+    # type: (Tuple[float, float, float], Tuple[float, float, float]) -> Tuple[float, float, float]
+    components = list(x * y for x, y in zip(c1, c2))
+    return components[0], components[1], components[2]
+
+
 def hsv_to_hexrgb(hsv):
+    # type: (Tuple[float, float, float]) -> str
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
 def render_color(color_rgb):
+    # type: (Tuple[float, float, float]) -> str
     return "#%02x%02x%02x" % (
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
@@ -880,8 +863,12 @@ def render_color(color_rgb):
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
+    # type: (str) -> Tuple[float, float, float]
+    def _hex_to_float(a):
+        return int(color[a:a + 2], 16) / 255.0
+
     try:
-        return tuple([int(color[a:a + 2], 16) / 255.0 for a in (1, 3, 5)])
+        return _hex_to_float(1), _hex_to_float(3), _hex_to_float(5)
     except Exception:
         raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
@@ -925,7 +912,48 @@ def render_color_icon(color):
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name):
     "Return all known perf data names that are translated into canonical_name"
-    return set([
-        metric for trans in check_metrics.values()
-        for metric, options in trans.items() if options.get('name', '') == canonical_name
-    ] + [canonical_name])
+    return [canonical_name] + list({
+        metric for trans in check_metrics.values() for metric, options in trans.items()
+        if options.get('name', '') == canonical_name and not options.get("deprecated")
+    })
+
+
+def MetricName():
+    """Factory of a Dropdown menu from all known metric names"""
+    def _require_metric(value, varprefix):
+        if value is None:
+            raise MKUserError(varprefix, _("You need to select a metric"))
+
+    choices = [(None, "")]  # type: List[Tuple[Any, Text]]
+    choices += [
+        (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
+    ]
+    return DropdownChoice(
+        title=_("Metric"),
+        sorted=True,
+        default_value=None,
+        validate=_require_metric,
+        choices=choices,
+    )
+
+
+#.
+#   .--Definitions---------------------------------------------------------.
+#   |            ____        __ _       _ _   _                            |
+#   |           |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___            |
+#   |           | | | |/ _ \ |_| | '_ \| | __| |/ _ \| '_ \/ __|           |
+#   |           | |_| |  __/  _| | | | | | |_| | (_) | | | \__ \           |
+#   |           |____/ \___|_| |_|_| |_|_|\__|_|\___/|_| |_|___/           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+MAX_CORES = 128
+
+MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
+
+skype_mobile_devices = [
+    ("android", "Android", "33/a"),
+    ("iphone", "iPhone", "42/a"),
+    ("ipad", "iPad", "45/a"),
+    ("mac", "Mac", "23/a"),
+]

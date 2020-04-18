@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import struct
@@ -31,13 +11,14 @@ import threading
 import time
 from logging import Logger  # pylint: disable=unused-import
 from pathlib import Path  # pylint: disable=unused-import
-from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
-from cmk.ec.actions import quote_shell_string
-from cmk.ec.query import QueryGET
-from cmk.ec.settings import Settings  # pylint: disable=unused-import
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
+
+from .actions import quote_shell_string
+from .query import QueryGET
+from .settings import Settings  # pylint: disable=unused-import
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
@@ -78,9 +59,8 @@ class History:
         else:
             _add_files(self, event, what, who, addinfo)
 
-    # TODO: We can't use Query in the type because of cyclic imports... :-/
     def get(self, query):
-        # type: (QueryGET) -> List[Any]
+        # type: (QueryGET) -> Iterable[Any]
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
         return _get_files(self, self._logger, query)
@@ -240,7 +220,7 @@ def _log_event(config, logger, event, what, who, addinfo):
 
 
 def _get_mongodb(history, query):
-    # type: (History, QueryGET) -> List[Any]
+    # type: (History, QueryGET) -> Iterable[Any]
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -458,7 +438,7 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
 
 
 def _get_files(history, logger, query):
-    # type: (History, Logger, QueryGET) -> List[Any]
+    # type: (History, Logger, QueryGET) -> Iterable[Any]
     filters, limit = query.filters, query.limit
     history_entries = []  # type: List[Any]
     if not history._settings.paths.history_dir.value.exists():
@@ -562,6 +542,8 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
+    if grep.stdout is None:
+        raise Exception("Huh? stdout vanished...")
 
     for line in grep.stdout:
         line_no += 1

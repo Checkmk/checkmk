@@ -1,9 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Managing the available automation calls"""
 
 import abc
+from typing import (  # pylint: disable=unused-import
+    Dict, Type, Any, Text, Union,
+)
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
@@ -21,6 +29,7 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def get_request(self):
+        # type: () -> Any
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -29,13 +38,11 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def execute(self, request):
+        # type: (Any) -> Any
         raise NotImplementedError()
 
     def _verify_slave_site_config(self, site_id):
         # type: (str) -> None
-        if not site_id:
-            raise MKGeneralException(_("Missing variable siteid"))
-
         our_id = config.omd_site()
 
         if not config.is_single_local_site():
@@ -62,9 +69,11 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
 class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[AutomationCommand]
         return AutomationCommand
 
     def plugin_name(self, plugin_class):
+        # type: (Type[AutomationCommand]) -> str
         return plugin_class().command_name()
 
 
@@ -74,13 +83,16 @@ automation_command_registry = AutomationCommandRegistry()
 @automation_command_registry.register
 class AutomationPing(AutomationCommand):
     def command_name(self):
+        # type: () -> str
         return "ping"
 
     def get_request(self):
+        # type: () -> None
         return None
 
     def execute(self, _unused_request):
+        # type: (None) -> Dict[str, Union[str, Text]]
         return {
-            "version": cmk.__version__,
-            "edition": cmk.edition_short(),
+            "version": cmk_version.__version__,
+            "edition": cmk_version.edition_short(),
         }

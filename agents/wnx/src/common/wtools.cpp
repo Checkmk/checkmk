@@ -30,17 +30,59 @@
 #include "upgrade.h"
 
 namespace wtools {
-
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
                            FALSE, pid);
-    if (!h) return {0, GetLastError()};
+    if (nullptr == h) return {0, GetLastError()};
 
     ON_OUT_OF_SCOPE(::CloseHandle(h));
     DWORD exit_code = 0;
     auto success = ::GetExitCodeProcess(h, &exit_code);
-    if (!success) return {-1, GetLastError()};
+    if (FALSE == success) return {-1, GetLastError()};
+
     return {exit_code, 0};
+}
+
+std::wstring GetProcessPath(uint32_t pid) noexcept {
+    auto h =
+        ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (h == nullptr) return {};
+    ON_OUT_OF_SCOPE(::CloseHandle(h));
+
+    wchar_t buffer[MAX_PATH];
+    if (::GetModuleFileNameEx(h, 0, buffer, MAX_PATH)) return buffer;
+
+    return {};
+}
+
+// returns count of killed processes
+int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
+    namespace fs = std::filesystem;
+    constexpr size_t kMinimumPathLen = 16;  // safety
+
+    if (dir.empty()) return -1;
+
+    if (dir.u8string().size() < kMinimumPathLen) return -1;
+
+    int killed_count = 0;
+
+    ScanProcessList([dir, &killed_count,
+                     kMinimumPathLen](const PROCESSENTRY32W& entry) -> bool {
+        auto pid = entry.th32ProcessID;
+        auto exe = wtools::GetProcessPath(pid);
+        if (exe.length() < kMinimumPathLen) return true;  // skip short path
+
+        fs::path p{exe};
+
+        auto shift = p.lexically_relative(dir).u8string();
+        if (!shift.empty() && shift[0] != '.') {
+            KillProcess(pid);
+            killed_count++;
+        }
+        return true;  // continue, we want to scan all process in the system
+    });
+
+    return killed_count;
 }
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -218,8 +260,8 @@ ServiceController::StopType ServiceController::registerAndRun(
         if (!ret) {
             auto error = GetLastError();
 
-            // this normal situation when we are starting service from command
-            // line without parameters
+            // this normal situation when we are starting service from
+            // command line without parameters
             if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
                 return StopType::no_connect;
 
@@ -899,8 +941,8 @@ const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
     auto object = FindFirstObject(data_block);
 
     for (DWORD i = 0; i < data_block->NumObjectTypes; ++i) {
-        // iterate to the object we requested since apparently there can be more
-        // than that in the buffer returned
+        // iterate to the object we requested since apparently there can be
+        // more than that in the buffer returned
         if (object->ObjectNameTitleIndex == counter_index) {
             return object;
         } else {
@@ -1024,9 +1066,9 @@ static uint64_t GetCounterValueFromBlock(
             return 0;
         case PERF_SIZE_VARIABLE_LEN:
         default: {
-            // handle other data generically. This is wrong in some situation.
-            // Once upon a time in future we might implement a conversion as
-            // described in
+            // handle other data generically. This is wrong in some
+            // situation. Once upon a time in future we might implement a
+            // conversion as described in
             // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
             int size = Counter.CounterSize;
             if (size == 4) return static_cast<uint64_t>(dwords[0]);
@@ -1514,7 +1556,7 @@ bool WmiWrapper::impersonate() noexcept {
 
     if (SUCCEEDED(hres)) return true;
 
-    XLOG::l.e("Failed blanker/impersonation locator wmI {X}", hres);
+    XLOG::l.e("Failed blanker/impersonation locator wmI {:X}", hres);
     return false;  // Program has failed.
 }
 
@@ -1670,9 +1712,9 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
         dllpath_expanded.resize(required - 1);
     }
 
-    // load the library as a datafile without loading referenced dlls. This is
-    // quicker but most of all it prevents problems if dependent dlls can't be
-    // loaded.
+    // load the library as a datafile without loading referenced dlls. This
+    // is quicker but most of all it prevents problems if dependent dlls
+    // can't be loaded.
     return LoadLibraryExW(
         dllpath_expanded.c_str(), nullptr,
         DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
@@ -1715,29 +1757,53 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept {
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept {
     HKEY hkey = nullptr;
-    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
     if (ERROR_SUCCESS == ret && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         DWORD type = REG_DWORD;
-        uint32_t buffer;
+        uint32_t buffer = dflt;
         DWORD count = sizeof(buffer);
-        ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                               reinterpret_cast<LPBYTE>(&buffer), &count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                 reinterpret_cast<LPBYTE>(&buffer), &count);
         if (ret == ERROR_SUCCESS && 0 != count && type == REG_DWORD) {
             return buffer;
         }
     }
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]",
-              ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()), ret);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ConvertToUTF8(path),
+              ConvertToUTF8(value_name), ret);
+    return dflt;
+}
+
+bool DeleteRegistryValue(std::wstring_view path,
+                         std::wstring_view value_name) noexcept {
+    HKEY hkey = nullptr;
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS == ret && nullptr != hkey) {
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+        ret = ::RegDeleteValue(hkey, value_name.data());
+        if (ret == ERROR_SUCCESS) return true;
+        if (ret == ERROR_FILE_NOT_FOUND) {
+            XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name));
+            return true;
+        }
+
+        XLOG::l(XLOG_FLINE + "Failed to delete {}\\{} error [{}]",
+                ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return false;
+    }
+    //  here
+    XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ConvertToUTF8(path),
+              ConvertToUTF8(value_name));
+    return true;
 }
 
 // returns true on success
-bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value) {
     HKEY hKey;
     auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
@@ -1745,84 +1811,78 @@ bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
                               &hKey, NULL);
     if (ERROR_SUCCESS != ret) return false;
 
-    /** Set full application path with a keyname to registry */
-    ret = RegSetValueEx(hKey, key.data(), 0, REG_SZ,
+    // Set full application path with a keyname to registry
+    ret = RegSetValueEx(hKey, value_name.data(), 0, REG_SZ,
                         reinterpret_cast<const BYTE*>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
     return ERROR_SUCCESS == ret;
 }
 
 // returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept {
-    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
-                              REG_DWORD, &Data, 4);
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t value) noexcept {
+    auto ret = ::RegSetKeyValue(HKEY_LOCAL_MACHINE, path.data(),
+                                value_name.data(), REG_DWORD, &value, 4);
     if (ret != 0) XLOG::d("Bad with reg set value {}", ret);
 
     return ret == ERROR_SUCCESS;
 }
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept {
+std::wstring GetRegistryValue(std::wstring_view path,
+                              std::wstring_view value_name,
+                              std::wstring_view dflt) noexcept {
     HKEY hkey = nullptr;
-    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS != result || nullptr == hkey) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Cannot open Key '{}' query return code [{}]",
+                  ConvertToUTF8(path), result);
+        return dflt.data();
+    }
+
+    ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+    DWORD type = REG_SZ;
+    wchar_t buffer[512];
+    DWORD count = sizeof(buffer);
+    auto ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                  reinterpret_cast<LPBYTE>(buffer), &count);
+
+    // check for errors
+    auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+    if (count == 0 || !type_ok) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Can't open '{}\\{}' query returns [{}]",
+                  ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return dflt.data();
+    }
+
+    if (ret == ERROR_SUCCESS) return buffer;
+
+    if (ret == ERROR_MORE_DATA) {
+        // realloc required
         DWORD type = REG_SZ;
-        wchar_t buffer[512];
-        DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                                    reinterpret_cast<LPBYTE>(buffer), &count);
-
-        // check for errors
-        auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-        if (count == 0 || !type_ok) {
-            // failure here
-            XLOG::t.t(XLOG_FLINE + "Absent on {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
-        }
-
-        if (ret == ERROR_SUCCESS) {
-            return buffer;
-        }
-
-        if (ret == ERROR_MORE_DATA) {
-            // realloc required
-            DWORD type = REG_SZ;
-            auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
-            ON_OUT_OF_SCOPE(delete[] buffer_big);
-            DWORD count = sizeof(count);
-            ret =
-                RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
+        auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
+        ON_OUT_OF_SCOPE(delete[] buffer_big);
+        DWORD count = sizeof(count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
-            // check for errors
-            type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-            if (count == 0 || !type_ok) {
-                // failure here
-                XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
-                          ConvertToUTF8(Key.c_str()),
-                          ConvertToUTF8(Value.c_str()), ret);
-                return Default;
-            }
-
-            if (ret == ERROR_SUCCESS) {
-                return buffer_big;
-            }
+        // check for errors
+        type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+        if (count == 0 || !type_ok) {
             // failure here
-            XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
+            XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+            return dflt.data();
         }
+
+        if (ret == ERROR_SUCCESS) return buffer_big;
     }
+
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Cannot open Key {} query return code {}",
-              ConvertToUTF8(Key.c_str()), result);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
+              ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+    return dflt.data();
 }
 
 // process terminators
@@ -1910,7 +1970,7 @@ static std::string MakeWmiTailForData(StatusColumn status_column,
 // Total,1500
 // AFter
 // Name,Freq,WMIStatus
-// Total,1500,OK
+// Total, 500, OK
 // Empty or quite short strings are replaced with WMIStatus\nTimeout\n
 std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
                            char separator) {
@@ -2402,8 +2462,8 @@ std::wstring GenerateRandomString(size_t max_length) noexcept {
         0, static_cast<int>(possible_characters.size()) - 1);
     std::wstring ret;
     for (size_t i = 0; i < max_length; i++) {
-        int random_index = dist(
-            generator);  // get index between 0 and possible_characters.size()-1
+        int random_index = dist(generator);  // get index between 0 and
+                                             // possible_characters.size()-1
         ret += possible_characters[random_index];
     }
 
@@ -2439,7 +2499,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
 
     if (false) {
         wchar_t group_comment[] = L"Check MK Group created group";
-        add_group_status = primary_dc.LocalGroupAdd(group, group_comment);
+        add_group_status = primary_dc.localGroupAdd(group, group_comment);
     }
 
     if (add_group_status == uc::Status::error) return {};
@@ -2451,33 +2511,33 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
 
     auto pwd = GenerateRandomString(12);
 
-    primary_dc.UserDel(name);
-    auto add_user_status = primary_dc.UserAdd(name, pwd);
+    primary_dc.userDel(name);
+    auto add_user_status = primary_dc.userAdd(name, pwd);
     if (add_user_status != uc::Status::success) {
         XLOG::l("Can't add user '{}'", n);
         if (add_group_status == uc::Status::success)
-            primary_dc.LocalGroupDel(group);
+            primary_dc.localGroupDel(group);
         return {};
     }
 
     // Now add the user to the local group.
     auto add_user_to_group_status =
-        primary_dc.LocalGroupAddMembers(group, name);
+        primary_dc.localGroupAddMembers(group, name);
     if (add_user_to_group_status != uc::Status::error) return {name, pwd};
 
     // Fail situation processing
     XLOG::l("Can't add user '{}' to group '{}'", n, g);
-    if (add_user_status == uc::Status::success) primary_dc.UserDel(name);
+    if (add_user_status == uc::Status::success) primary_dc.userDel(name);
 
     if (add_group_status == uc::Status::success)
-        primary_dc.LocalGroupDel(group);
+        primary_dc.localGroupDel(group);
 
     return {};
 }
 
 bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     uc::LdapControl primary_dc;
-    return primary_dc.UserDel(user_name) != uc::Status::error;
+    return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
 }  // namespace wtools

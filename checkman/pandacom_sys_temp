@@ -11,7 +11,7 @@ description:
  Upper and lower levels are configurable.
 
 item:
- System.
+ The fixed statement {{System}}
 
 inventory:
  One service is created.

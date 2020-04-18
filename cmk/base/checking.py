@@ -1,48 +1,29 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
 import os
 import signal
-import tempfile
+from random import Random
 import time
 import copy
+import errno
+from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    cast, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
+    cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
 )
 
 import six
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
-from cmk.utils.encoding import make_utf8
 
 import cmk.base.utils
 import cmk.base.core
@@ -62,18 +43,19 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
     CheckPluginName, Item, SectionName, CheckParameters,
 )
-from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
     import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
-    keepalive = None  # type: ignore
-    inline_snmp = None  # type: ignore
+    keepalive = None  # type: ignore[assignment]
+    inline_snmp = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
-_nagios_command_pipe = None  # Filedescriptor to open nagios command pipe.
+# Filedescriptor to open nagios command pipe.
+_nagios_command_pipe = None  # type: Union[bool, IO[bytes], None]
 _checkresult_file_fd = None
 _checkresult_file_path = None
 
@@ -81,7 +63,7 @@ _submit_to_core = True
 _show_perfdata = False
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
-UncleanPerfValue = Optional[Union[str, float]]
+UncleanPerfValue = Union[None, str, float]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -100,7 +82,7 @@ UncleanPerfValue = Optional[Union[str, float]]
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n" % cmk.__version__)
+    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -278,11 +260,11 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         else:
             missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
 
-    import cmk.base.inventory as inventory
+    import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
                                                        ipaddress)
 
-    missing_section_list = sorted(list(missing_sections))
+    missing_section_list = sorted(missing_sections)
     return num_success, missing_section_list
 
 
@@ -298,10 +280,11 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
     period = config_cache.check_period_of_service(hostname, description)
     if period is not None:
         if not cmk.base.core.check_timeperiod(period):
-            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" %
-                            (description, period))
+            console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
+                            six.ensure_str(description), period)
             return None
-        console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
+        console.vverbose("Service %s: timeperiod %s is currently active.\n",
+                         six.ensure_str(description), period)
 
     section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
 
@@ -320,15 +303,19 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
             # exception which need to lead to a skipped check instead of a crash
-            raise x[0], x[1], x[2]
+            # TODO CMK-3729, PEP-3109
+            new_exception = x[0](x[1])
+            new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
+            raise new_exception
 
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type
             return False
 
         # In case of SNMP checks but missing agent response, skip this check.
-        # Special checks which still need to be called even with empty data
-        # may declare this.
+        # TODO: This feature predates the 'parse_function', and is not needed anymore.
+        # # Special checks which still need to be called even with empty data
+        # # may declare this.
         if not section_content and cmk.base.check_utils.is_snmp_check(check_plugin_name) \
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return False
@@ -350,7 +337,8 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         # handle check implementations that do not yet support the
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
-        console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
+        console.verbose("%-20s PEND - Cannot compute check result: %s\n",
+                        six.ensure_str(description), e)
         dont_submit = True
 
     except MKTimeout:
@@ -374,16 +362,24 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             # type: (Optional[int], Optional[int]) -> Optional[int]
             if a is None:
                 return b
-            elif b is None:
+            if b is None:
                 return a
             return min(a, b)
+
+        def maxn(a, b):
+            # type: (Optional[int], Optional[int]) -> Optional[int]
+            if a is None:
+                return b
+            if b is None:
+                return a
+            return max(a, b)
 
         for host_sections in multi_host_sections.get_host_sections().values():
             section_entries = host_sections.cache_info
             if section_name in section_entries:
                 cached_at, cache_interval = section_entries[section_name]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
-                largest_interval = max(largest_interval, cache_interval)
+                largest_interval = maxn(largest_interval, cache_interval)
 
         _submit_check_result(hostname,
                              description,
@@ -411,6 +407,12 @@ def determine_check_params(entries):
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries = {}  # type: Dict[str, Any]
     for entry in entries[::-1]:
+        if not isinstance(entry, dict):
+            # Ignore (old) default parameters like
+            #   'NAME_default_levels' = (80.0, 85.0)
+            # A rule with a timespecifc parameter settings always has an
+            # implicit default parameter set, even if no timeperiod matches.
+            continue
         timespecific_entries.update(_evaluate_timespecific_entry(entry))
 
     return timespecific_entries
@@ -457,11 +459,11 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
-    # type: (Optional[Union[ServiceCheckResult, Tuple, Iterable]], bool) -> ServiceCheckResult
+    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
-    elif result is None:
+    if result is None:
         return _item_not_found(is_snmp)
 
     return _sanitize_yield_check_result(result, is_snmp)
@@ -536,7 +538,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if isinstance(infotext, str):
+    if isinstance(infotext, six.binary_type):
         return infotext.decode('utf-8')
 
     return infotext
@@ -544,8 +546,8 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 def _convert_perf_data(p):
     # type: (List[UncleanPerfValue]) -> str
-    # replace None with "" and fill up to 7 values
-    normalized = (map(_convert_perf_value, p) + ['', '', '', ''])[0:6]
+    # replace None with "" and fill up to 6 values
+    normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 
 
@@ -553,9 +555,9 @@ def _convert_perf_value(x):
     # type: (UncleanPerfValue) -> str
     if x is None:
         return ""
-    elif isinstance(x, six.string_types):
+    if isinstance(x, six.string_types):
         return x
-    elif isinstance(x, float):
+    if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
 
     return str(x)
@@ -590,7 +592,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
         infotext = defines.short_service_state_name(state) + " - " + infotext
 
     # make sure that plugin output does not contain a vertical bar. If that is the
-    # case then replace it with a Uniocode "Light vertical bar
+    # case then replace it with a Uniocode "Light vertical bar"
     if isinstance(infotext, six.text_type):
         # regular check results are unicode...
         infotext = infotext.replace(u"|", u"\u2758")
@@ -628,6 +630,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
 
 
 def _output_check_result(servicedesc, state, infotext, perftexts):
+    # type: (ServiceName, ServiceState, ServiceDetails, List[str]) -> None
     if _show_perfdata:
         infotext_fmt = "%-56s"
         p = ' (%s)' % (" ".join(perftexts))
@@ -635,11 +638,13 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", servicedesc.encode('utf-8'), tty.bold,
-                    tty.states[state], make_utf8(infotext.split('\n')[0]), tty.normal, make_utf8(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", six.ensure_str(servicedesc), tty.bold,
+                    tty.states[state], six.ensure_str(infotext.split('\n')[0]), tty.normal,
+                    six.ensure_str(p))
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails, Optional[int], Optional[int]) -> None
     if _in_keepalive_mode():
         # Regular case for the CMC - check helpers are running in keepalive mode
         keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
@@ -658,12 +663,14 @@ def _do_submit_to_core(host, service, state, output, cached_at=None, cache_inter
 
 
 def _submit_via_check_result_file(host, service, state, output):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
     output = output.replace("\n", "\\n")
     _open_checkresult_file()
     if _checkresult_file_fd:
         now = time.time()
         os.write(
-            _checkresult_file_fd, """host_name=%s
+            _checkresult_file_fd,
+            six.ensure_binary("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -674,61 +681,134 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, make_utf8(service), now, now, state, make_utf8(output)))
+""" % (six.ensure_str(host), six.ensure_str(service), now, now, state, six.ensure_str(output))))
 
 
 def _open_checkresult_file():
+    # type: () -> None
     global _checkresult_file_fd
     global _checkresult_file_path
     if _checkresult_file_fd is None:
         try:
-            _checkresult_file_fd, _checkresult_file_path = \
-                tempfile.mkstemp('', 'c', cmk.utils.paths.check_result_path)
+            _checkresult_file_fd, _checkresult_file_path = _create_nagios_check_result_file()
         except Exception as e:
             raise MKGeneralException("Cannot create check result file in %s: %s" %
                                      (cmk.utils.paths.check_result_path, e))
 
 
+def _create_nagios_check_result_file():
+    # type: () -> Tuple[int, str]
+    """Create some temporary file for storing the checkresults.
+    Nagios expects a seven character long file starting with "c". Since Python3 we can not
+    use tempfile.mkstemp anymore since it produces file names with 9 characters length.
+
+    Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
+    """
+
+    base_dir = cmk.utils.paths.check_result_path
+
+    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+
+    names = _get_candidate_names()
+    for _seq in range(os.TMP_MAX):
+        name = next(names)
+        filepath = os.path.join(base_dir, "c" + name)
+        try:
+            fd = os.open(filepath, flags, 0o600)
+        except FileExistsError:
+            continue  # try again
+        return (fd, os.path.abspath(filepath))
+
+    raise FileExistsError(errno.EEXIST, "No usable temporary file name found")
+
+
+_name_sequence = None  # type: Optional[_RandomNameSequence]
+
+
+def _get_candidate_names():
+    # type: () -> _RandomNameSequence
+    global _name_sequence
+    if _name_sequence is None:
+        _name_sequence = _RandomNameSequence()
+    return _name_sequence
+
+
+class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
+    """An instance of _RandomNameSequence generates an endless
+    sequence of unpredictable strings which can safely be incorporated
+    into file names.  Each string is eight characters long.  Multiple
+    threads can safely use the same instance at the same time.
+
+    _RandomNameSequence is an iterator."""
+
+    characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+
+    @property
+    def rng(self):
+        # type: () -> Random
+        cur_pid = os.getpid()
+        if cur_pid != getattr(self, '_rng_pid', None):
+            self._rng = Random()
+            self._rng_pid = cur_pid
+        return self._rng
+
+    def __iter__(self):
+        # type: () -> _RandomNameSequence
+        return self
+
+    def __next__(self):
+        # type: () -> str
+        c = self.characters
+        choose = self.rng.choice
+        letters = [choose(c) for dummy in range(6)]
+        return ''.join(letters)
+
+
 def _close_checkresult_file():
+    # type: () -> None
     global _checkresult_file_fd
-    if _checkresult_file_fd is not None:
+    if _checkresult_file_fd is not None and _checkresult_file_path is not None:
         os.close(_checkresult_file_fd)
-        open(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
+
+        with open(_checkresult_file_path + ".ok", "w"):
+            pass
 
 
 def _submit_via_command_pipe(host, service, state, output):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
     output = output.replace("\n", "\\n")
     _open_command_pipe()
-    if _nagios_command_pipe:
+    if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write(
-            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-            (int(time.time()), host, make_utf8(service), state, make_utf8(output)))
+        msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
+                                                                   state, output)
+        _nagios_command_pipe.write(six.ensure_binary(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
 
 
 def _open_command_pipe():
+    # type: () -> None
     global _nagios_command_pipe
     if _nagios_command_pipe is None:
         if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
             _nagios_command_pipe = False  # False means: tried but failed to open
             raise MKGeneralException("Missing core command pipe '%s'" %
                                      cmk.utils.paths.nagios_command_pipe_path)
-        else:
-            try:
-                signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
-                signal.alarm(3)  # three seconds to open pipe
-                _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
-                signal.alarm(0)  # cancel alarm
-            except Exception as e:
-                _nagios_command_pipe = False
-                raise MKGeneralException("Error writing to command pipe: %s" % e)
+        try:
+            signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
+            signal.alarm(3)  # three seconds to open pipe
+            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'wb')
+            signal.alarm(0)  # cancel alarm
+        except Exception as e:
+            _nagios_command_pipe = False
+            raise MKGeneralException("Error writing to command pipe: %s" % e)
 
 
 def _core_pipe_open_timeout(signum, stackframe):
+    # type: (int, Optional[FrameType]) -> None
     raise IOError("Timeout while opening pipe")
 
 
@@ -746,16 +826,19 @@ def _core_pipe_open_timeout(signum, stackframe):
 
 
 def show_perfdata():
+    # type: () -> None
     global _show_perfdata
     _show_perfdata = True
 
 
 def disable_submit():
+    # type: () -> None
     global _submit_to_core
     _submit_to_core = False
 
 
 def _in_keepalive_mode():
+    # type: () -> bool
     if keepalive:
         return keepalive.enabled()
     return False

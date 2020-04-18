@@ -1,19 +1,17 @@
-title: Stormshield Routes
+title: Stormshield: Routes
 agents: snmp
 catalog: app/stormshield
 license: GPL
 distribution: check_mk
 description:
- This check uses the {STORMSHIELD-POLICY-MIB} for checking if the policies sync
- on your Stormshield-firewall is working.
+ This check uses the {STORMSHIELD-ROUTE-MIB} for checking the route
+ of the router on your Stormshield-firewall.
 
  Depending on the state of the route the service can
  be {OK}, {CRIT} or {UNKNOWN}.
 
 item:
- The description of the service as provided by
- the device (ID).
+ The index of the route
 
 inventory:
- One check for each service is created by the inventory
- which is on "up"-state.
+ One service is created for each route if it is on "up"-state.

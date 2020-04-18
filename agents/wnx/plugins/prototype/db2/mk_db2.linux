@@ -1,0 +1,126 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Agent plugin to monitor DB/2 databases on Linux.
+#
+# Note: The script has to be accessible and executable by the DB/2
+#       instance users to function properly.
+#
+# The script is called in two different modes. Without arguments it:
+#
+#    - outputs the db2_version section,
+#    - collects all db2 instances and databases, and
+#    - runs the script for each database as an instance user
+#
+# With arguments the script queries the information for each database and
+# outputs the corresponding sections.
+
+if [ $# -eq 0 ]; then
+    if type timeout >/dev/null 2>&1 ; then
+        function waitmax () {
+            timeout "$@"
+        }
+    fi
+
+    INSTANCES=$(ps -ef | grep "[d]b2sysc" | awk '{print $1 }')
+
+    for INSTANCE in $INSTANCES; do
+        NOW=$(perl -e "print time();")
+
+        echo ""
+        echo '<<<db2_version:sep(1)>>>'
+        DBVERSION=$(su - "${INSTANCE}" -c "db2 get snapshot for dbm" | grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print $2}' | sed 'N;s/\n/,/g' | sed 's/ //g')
+        echo "$INSTANCE" "$DBVERSION"
+        VERSION_NUMBER=$(echo "$DBVERSION" | sed  -e 's/DB2v\(.*\),.*/\1/' | awk -v FS="." '{print $1"."$2}')
+
+        DBS=$(su - "${INSTANCE}" -c "db2 list db directory" | grep -B6 -i 'indirect\|home' | grep 'Database name' | awk '{ print $NF }')
+
+        DB_PORT='port 0'
+        GET_PORT=1
+        for DB in $DBS; do
+            if [ 1 -eq $GET_PORT ] ; then
+                # Each database in an instance has the same port information
+                db2_tcp_service=$(su - "${INSTANCE}" -c "db2 -x get dbm cfg" | grep "TCP/IP Service" | awk -v FS='=' '{print $2}' | tr -d ' ')
+                if ( grep "$db2_tcp_service" /etc/services | grep -q "^$db2_tcp_service " ); then
+                    DB_PORT='port '$(grep "$db2_tcp_service" /etc/services | grep "^$db2_tcp_service " | awk '{print $2}' | awk -v FS="/" '{print $1}')
+                fi
+                GET_PORT=0
+            fi
+            SCRIPT=$(readlink -f "$0")
+            waitmax -s 9 10 su - "${INSTANCE}" -c "\"${SCRIPT}\" \"${INSTANCE}\" \"${DB}\" \"${VERSION_NUMBER}\" \"${NOW}\" \"${DB_PORT}\""
+        done
+    done
+else
+    INSTANCE=$1
+    DB=$2
+    VERSION_NUMBER=$3
+    NOW=$4
+    DB_PORT=$5
+
+    function compare_version_greater_equal {
+        GREATER_ONE=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
+        if [ "$GREATER_ONE" == "$1" ] ; then
+            return 0
+        else
+            return 1
+        fi
+        return 0
+    }
+
+    millis_before=$(date +"%s%3N")
+    if db2 +o connect to "$DB"; then
+        millis_after=$(date +"%s%3N")
+        millis_diff=$(( millis_after - millis_before ))
+        echo "<<<db2_connections>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        echo "$DB_PORT"
+        echo "connections " | tr -d '\n'
+        db2 -x "SELECT count(*)-1 FROM TABLE(mon_get_connection(CAST(NULL AS BIGINT), -2)) AS t"
+        echo "latency ${millis_diff}"
+
+        echo "<<<db2_tablespaces>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        SQL="SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)"
+        db2 "${SQL}" | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7}' | sed -e '/^[ ]*$/d' -e '/^-/d' -e '/selected/d'
+
+        echo "<<<db2_counters>>>"
+        echo "TIMESTAMP $NOW"
+        echo "$INSTANCE:$DB deadlocks " | tr -d '\n'
+        db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
+        echo "$INSTANCE:$DB lockwaits " | tr -d '\n'
+        db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
+        echo "$INSTANCE:$DB sortoverflows " | tr -d '\n'
+        db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
+
+        echo "<<<db2_logsizes>>>"
+        echo "TIMESTAMP $NOW"
+        echo "[[[$INSTANCE:$DB]]]"
+        echo "usedspace " | tr -d '\n'
+        db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
+        db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
+
+        echo "<<<db2_bp_hitratios>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        db2 "SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO" | grep -v "selected." | sed -e '/^$/d' -e '/^-/d'
+
+        echo "<<<db2_sort_overflow>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        db2 -x "get snapshot for database on $DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
+
+        echo "<<<db2_backup>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        if compare_version_greater_equal "$VERSION_NUMBER" 10.5; then
+          # MON_GET_DATBASE(-2) gets information of all active members
+          db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
+        else
+          db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
+        fi
+
+        # disconnect from database
+        db2 connect reset > /dev/null
+    fi
+fi
+
+exit 0

@@ -1,39 +1,19 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import time
-import imaplib
 import email
 import email.utils
+from getpass import getpass
+import imaplib
+from optparse import OptionParser  # pylint: disable=deprecated-module
 import re
 import socket
+import sys
+import time
 import traceback
-from getpass import getpass
-from optparse import OptionParser  # pylint: disable=deprecated-module
 
 import cmk.utils.render
 import cmk.utils.password_store
@@ -52,7 +32,8 @@ class Mail:
         if self.__mail is None:
             msg = self.__conn.fetch(self.__mail_id, "(RFC822)")
             self.__mail = email.message_from_string(msg[1][0][1])
-            self.__timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(self.__mail["DATE"]))
+            parsed = email.utils.parsedate_tz(self.__mail["DATE"])
+            self.__timestamp = int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
 
     def timestamp(self):
         if self.__timestamp is None:
@@ -89,10 +70,7 @@ class LoginError(MKException):
 
 class ImapWrapper:
     def __init__(self, host, user, password, use_ssl):
-        if use_ssl:
-            self.__conn = imaplib.IMAP4_SSL(host)
-        else:
-            self.__conn = imaplib.IMAP4(host)
+        self.__conn = imaplib.IMAP4_SSL(host) if use_ssl else imaplib.IMAP4(host)
         res = self.__conn.login(user, password)
         if res[0].lower() != 'ok':
             raise LoginError("Login as user \"%s\" failed" % user)
@@ -100,7 +78,13 @@ class ImapWrapper:
     def mailboxes(self):
         mb_list = self.__conn.list()[1]
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        return [pattern.search(mb.decode("utf-8")).group(3).strip("\"") for mb in mb_list]
+        return [
+            match.group(3).strip("\"")  #
+            for mb in mb_list  #
+            if isinstance(mb, bytes)  #
+            for match in [pattern.search(mb.decode("utf-8"))]  #
+            if match is not None
+        ]
 
     def __format_date(self, timestamp):
         return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
@@ -249,11 +233,11 @@ def main(options):
         if options.crit_count and options.warn_count:
             count = len(imap.mails(mb))
             if count >= options.crit_count:
-                messages.append((2, "%s has %d messages (warn/crit at %d/%d)" % \
-                                (mb, count, options.warn_count, options.crit_count)))
+                messages.append((2, "%s has %d messages (warn/crit at %d/%d)" %
+                                 (mb, count, options.warn_count, options.crit_count)))
             elif count >= options.warn_count:
-                messages.append((1, "%s has %d messages (warn/crit at %d/%d)" % \
-                                (mb, count, options.warn_count, options.crit_count)))
+                messages.append((1, "%s has %d messages (warn/crit at %d/%d)" %
+                                 (mb, count, options.warn_count, options.crit_count)))
 
         if options.crit_age and options.warn_age:
             # we want to filter mails by their age in at least minute precision,
@@ -279,10 +263,9 @@ def main(options):
 
                 if status > 0:
                     messages.append(
-                            (status,
-                             "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
-                             (mb, report_age, status_icon,
-                             cmk.utils.render.Age(options.warn_age), cmk.utils.render.Age(options.crit_age))))
+                        (status, "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %
+                         (mb, report_age, status_icon, cmk.utils.render.Age(
+                             options.warn_age), cmk.utils.render.Age(options.crit_age))))
 
         if options.crit_new and options.warn_new:
             new_mails = imap.mails(mb, after=(now - options.crit_new))
@@ -305,8 +288,9 @@ def main(options):
 
             if status > 0:
                 messages.append(
-                    (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
-                     (mb, report_age, status_icon, cmk.utils.render.Age(options.warn_new), cmk.utils.render.Age(options.crit_new))))
+                    (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %
+                     (mb, report_age, status_icon, cmk.utils.render.Age(
+                         options.warn_new), cmk.utils.render.Age(options.crit_new))))
 
     if messages:
         status = max([m[0] for m in messages])

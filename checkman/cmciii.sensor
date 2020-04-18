@@ -12,8 +12,5 @@ description:
  If the Rittal device returns {Closed}, the check is {OK}. Otherwise
  the check is {CRIT}.
 
-item:
- None
-
 inventory:
- None
+ One service is created for each sensor.

@@ -15,5 +15,5 @@ item:
  The chassis description, e.g. Chassis 1
 
 inventory:
- Creates one service per chassis module
+ One service is created for each chassis module.
 

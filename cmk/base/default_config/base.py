@@ -1,30 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict as _Dict, List as _List, Optional as _Optional, Text as _Text,
+)
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -173,13 +155,13 @@ service_label_rules = []  # type: _List
 host_paths = {}  # type: _Dict
 snmp_hosts = [
     (['snmp'], _ALL_HOSTS),
-]
+]  # type: _List
 tcp_hosts = [
     (['tcp'], _ALL_HOSTS),
     (_NEGATE, ['snmp'], _ALL_HOSTS),
     # Match all those that don't have ping and don't have no-agent set
     (['!ping', '!no-agent'], _ALL_HOSTS),
-]
+]  # type: _List
 bulkwalk_hosts = []  # type: _List
 snmpv2c_hosts = []  # type: _List
 snmp_without_sys_descr = []  # type: _List
@@ -205,7 +187,7 @@ host_contactgroups = []  # type: _List
 parents = []  # type: _List
 define_hostgroups = None
 define_servicegroups = None
-define_contactgroups = None
+define_contactgroups = None  # type: _Optional[_Dict[str, _Text]]
 contactgroup_members = {}  # type: _Dict
 contacts = {}  # type: _Dict
 # needed for WATO

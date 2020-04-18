@@ -1,4 +1,4 @@
-title: Citrix Netscaler CPU Utilization
+title: Citrix Netscaler: CPU Utilization
 agents: snmp
 catalog: app/netscaler
 license: GPL
@@ -11,7 +11,7 @@ description:
  Warning and critical levels can be configured for the check.
 
 inventory:
- One service per detected CPU will be created.
+ One service is created for each detected CPU.
 
 item:
  The name of the CPU

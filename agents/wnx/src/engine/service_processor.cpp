@@ -4,7 +4,6 @@
 #include "service_processor.h"
 
 #include <shlobj_core.h>
-#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
@@ -12,10 +11,13 @@
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/wtools_service.h"
+#include "common/yaml.h"
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
+#include "windows_service_api.h"
 
 namespace cma::srv {
 extern bool global_stop_signaled;  // semi-hidden global variable for global
@@ -255,6 +257,7 @@ void ServiceProcessor::preStartBinaries() {
     ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
+    plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
@@ -481,6 +484,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto ipv6 = groups::global.ipv6();
     auto port = groups::global.port();
     auto uniq_cfg_id = GetCfg().uniqId();
+    ProcessServiceConfiguration(kServiceName);
+
     while (1) {
         using namespace std::chrono;
 
@@ -504,6 +509,17 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.t("Stop request is set");
             break;  // signaled stop
         }
+
+        if (SERVICE_DISABLED ==
+            wtools::WinService::ReadUint32(cma::srv::kServiceName,
+                                           wtools::WinService::kRegStart)) {
+            XLOG::l("Service is disabled in config, leaving...");
+
+            cma::tools::RunDetachedCommand(std::string("net stop ") +
+                                           wtools::ConvertToUTF8(kServiceName));
+            break;
+        }
+
         restartBinariesIfCfgChanged(uniq_cfg_id);
     }
     XLOG::l.t("main Wait Loop END");
@@ -551,6 +567,13 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // preparation if any
         ReloadConfigInServiceMode();
+
+        // module commander loading(and install if service)
+        if (cma::IsService()) {
+            mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
+        } else
+            mc_.LoadDefault();
+
         preStartBinaries();
         // *******************
 

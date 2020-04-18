@@ -1,4 +1,9 @@
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
@@ -29,9 +34,9 @@ def test_render_help_text(register_builtin_html):
                         HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
 
 
-def test_render_help_visible(register_builtin_html):
-    assert html.help_visible is False
-    html.help_visible = True
+def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):
+    monkeypatch.setattr(config.LoggedInUser, "show_help", property(lambda s: True))
+    assert config.user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))
 

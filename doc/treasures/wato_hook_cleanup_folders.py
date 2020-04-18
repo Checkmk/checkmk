@@ -1,29 +1,10 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
 
@@ -37,7 +18,7 @@ import cmk.utils.paths
 # level and one site per customer with exactly the same name
 def pre_activate_changes_cleanup(_unused):
     log = open('%s/tmp/hook.log' % cmk.utils.paths.omd_root, 'w')
-    log.write('omd_site: %s, omd_root: %s\n' % (cmk.omd_site(), cmk.utils.paths.omd_root))
+    log.write('omd_site: %s, omd_root: %s\n' % (cmk_version.omd_site(), cmk.utils.paths.omd_root))
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.utils.paths.omd_root
     for dirname, dirnames, filenames in os.walk(confd):
         for subdirname in dirnames:

@@ -1,4 +1,4 @@
-title: AWS/S3 Requests
+title: AWS S3: Requests
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -9,6 +9,7 @@ description:
  bucket and  per-request time from the complete request being
  received by an Amazon S3 bucket to when the response starts
  to be returned.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
@@ -17,5 +18,10 @@ description:
  You have to enable requests metrics in AWS/S3 console. This
  is a paid feature
 
+item:
+ Name of the instance
+
 inventory:
- One service per bucket will be created.
+ One service is created for each bucket if all required metrics
+ (TotalRequestLatency) are given.
+

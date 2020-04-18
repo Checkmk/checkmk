@@ -26,6 +26,6 @@ item:
  The name of the fqdd variable for the device
 
 inventory:
- All network devices of the device are detected
+ One service is created for each network device.
 
 

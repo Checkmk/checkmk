@@ -20,9 +20,7 @@
 #include "common/version.h"
 #include "onlyfrom.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 // According to requirements from check only_from
 // 10.2.3.1  -> 10.2.3.1/32
@@ -38,7 +36,7 @@ static std::string AddressV4ToCheckMkNetworkV4(std::string_view addr) {
 // Based on integration tests from Legacy Windows Agent
 
 // asio::ip::address_v6 -> to hex word represntation
-static std::string AddressV6ToHex(asio::ip::address_v6 addr) {
+static std::string AddressV6ToHex(const asio::ip::address_v6& addr) {
     auto bytes = addr.to_bytes();  // network order raw of bytes
 
     // bytes to words without changing order:
@@ -187,7 +185,6 @@ std::string CheckMk::makeBody() {
     out += makeOnlyFrom();
     out += '\n';
     return out;
-}  // namespace provider
+}
 
-}  // namespace provider
-};  // namespace cma
+};  // namespace cma::provider

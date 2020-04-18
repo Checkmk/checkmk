@@ -1,4 +1,4 @@
-title: Generic UPS Device: In frequency
+title: Generic UPS Device: In Frequency
 agents: snmp
 catalog: hw/power/generic
 license: GPL
@@ -10,5 +10,5 @@ item:
  ID of the phase
 
 inventory:
- One service per phase will be created
+ One service is created for each phase.
 

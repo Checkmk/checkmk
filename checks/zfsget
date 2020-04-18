@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output from agent (sizes are in bytes). Note: the part
 # [df] in this check is duplicated. We need this information because
@@ -103,7 +83,7 @@ def _parse_zfs(lines):
     # several device names per mount point, and we know only
     # later which one to take
     parsed = {}
-    for entry in data.itervalues():
+    for entry in data.values():
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = "/" not in entry["name"]
             if entry["available"] != 0 and entry["type"] == "filesystem":
@@ -129,10 +109,10 @@ def _parse_df(lines, parsed_zfs):
                 # 'first' contians all elements from the beginning until the first kbytes item
                 # we compare 'first' to zfs mountpoint names and take the device name with the highest similarity
                 matches = []
-                for name in parsed_zfs.keys():
+                for name in parsed_zfs:
                     matches.append(_get_similarity_of_strings(name, _first))
                 if matches and max(matches) > 0.5:
-                    device = parsed_zfs.keys()[matches.index(max(matches))]
+                    device = list(parsed_zfs)[matches.index(max(matches))]
                 else:
                     # TODO: fix special case that will fail here if not zfs item exists
                     # white space in name and fs_type ("/foo", "bar", "zfs")
@@ -193,7 +173,7 @@ def parse_zfsget(info):
     parsed_df = _parse_df(info_df, parsed_zfs)
 
     # parsed_df and parsed_final have the mount point as key
-    for mountpoint, entry_df in parsed_df.iteritems():
+    for mountpoint, entry_df in parsed_df.items():
         # for every mount point in the df section, if the device name
         # is also present in the "parsed" variable, we take those data
         for name, entry_zfs in parsed_zfs.items():
@@ -210,7 +190,7 @@ def parse_zfsget(info):
 
 def inventory_zfsget(parsed):
     mplist = []
-    for mountpoint in parsed.iterkeys():
+    for mountpoint in parsed:
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
     return df_inventory(mplist)

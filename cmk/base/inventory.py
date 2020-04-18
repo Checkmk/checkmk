@@ -1,38 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Currently this module manages the inventory tree which is built
 while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
-import inspect
 import os
-from typing import Tuple, Optional  # pylint: disable=unused-import
+from typing import Set, Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
 
-import cmk
+import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -40,7 +19,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
 import cmk.utils.debug
 
-import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.check_api_utils as check_api_utils
@@ -50,6 +28,13 @@ import cmk.base.data_sources as data_sources
 import cmk.base.cleanup
 import cmk.base.decorator
 import cmk.base.check_api as check_api
+from cmk.base.data_sources.snmp import SNMPHostSections
+
+from cmk.utils.type_defs import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
+from cmk.base.snmp_utils import SNMPHostConfig  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    ServiceState, ServiceDetails, ServiceAdditionalDetails, Metric,
+)
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -65,6 +50,7 @@ import cmk.base.check_api as check_api
 
 
 def do_inv(hostnames):
+    # type: (List[HostName]) -> None
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
@@ -109,21 +95,23 @@ def _show_inventory_results_on_console(inventory_tree, status_data_tree):
 @cmk.base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
                                                  "Check_MK HW/SW Inventory")
 def do_inv_check(hostname, options):
+    # type: (HostName, Dict[str, int]) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], Metric]
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status",
-                                   1)  # State in case of an error (default: WARN)
 
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.get_host_config(hostname)  # type: config.HostConfig
 
     if host_config.is_cluster:
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    status, infotexts, long_infotexts, perfdata = 0, [], [], []
+    status = 0
+    infotexts = []  # type: List[Text]
+    long_infotexts = []  # type: List[Text]
+    perfdata = []  # type: List[Tuple]
 
     sources = data_sources.DataSources(hostname, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
@@ -186,7 +174,7 @@ def do_inv_check(hostname, options):
 
 
 def _all_sources_fail(host_config, sources):
-    # type (config.HostConfig, data_sources.DataSources) -> bool
+    # type: (config.HostConfig, data_sources.DataSources) -> bool
     """We want to check if ALL data sources of a host fail:
     By default a host has the auto-piggyback data source. We remove it if
     it's not a pure piggyback host and there's no piggyback data available
@@ -202,11 +190,11 @@ def _all_sources_fail(host_config, sources):
        and not host_config.has_piggyback_data:
         del exceptions_by_source["piggyback"]
 
-    return all(exception is not None for exception in exceptions_by_source.itervalues())
+    return all(exception is not None for exception in exceptions_by_source.values())
 
 
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> None
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress]) -> None
     hostname = host_config.hostname
     do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
@@ -217,7 +205,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
 
     config_cache = config.get_config_cache()
@@ -233,7 +221,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
 
 
 def _cleanup_status_data(hostname):
-    # type: (str) -> None
+    # type: (HostName) -> None
     filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
     if os.path.exists(filepath):  # Remove empty status data files.
         os.remove(filepath)
@@ -242,7 +230,7 @@ def _cleanup_status_data(hostname):
 
 
 def _do_inv_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> Tuple[StructuredDataTree, StructuredDataTree]
+    # type: (data_sources.DataSources, Optional[data_sources.MultiHostSections], config.HostConfig, Optional[HostAddress]) -> Tuple[StructuredDataTree, StructuredDataTree]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -277,6 +265,7 @@ def _do_inv_for_cluster(host_config, inventory_tree):
 
 def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
                          inventory_tree, status_data_tree):
+    # type: (config.HostConfig, data_sources.DataSources, Optional[data_sources.MultiHostSections], HostName, Optional[HostAddress], StructuredDataTree, StructuredDataTree) -> None
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -290,8 +279,9 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 source.enforce_check_plugin_names(None)
-                host_sections = multi_host_sections.add_or_get_host_sections(hostname, ipaddress)
-                source.set_fetched_check_plugin_names(host_sections.sections.keys())
+                host_sections = multi_host_sections.add_or_get_host_sections(
+                    hostname, ipaddress, deflt=SNMPHostSections())
+                source.set_fetched_check_plugin_names(set(host_sections.sections))
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 
@@ -299,15 +289,13 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         multi_host_sections = sources.get_host_sections()
 
     console.step("Executing inventory plugins")
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(hostname,
                                                                   ipaddress,
                                                                   section_name,
                                                                   for_discovery=False)
-        # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
-        #       like it is done in checking.execute_check()? Standardize this!
         if not section_content:  # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
@@ -323,31 +311,23 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
         inv_function = plugin["inv_function"]
-        inv_function_args = inspect.getargspec(inv_function).args
-
-        kwargs = {}
-        for dynamic_arg_name, dynamic_arg_value in [
-            ("inventory_tree", inventory_tree),
-            ("status_data_tree", status_data_tree),
-        ]:
-            if dynamic_arg_name in inv_function_args:
-                inv_function_args.remove(dynamic_arg_name)
-                kwargs[dynamic_arg_name] = dynamic_arg_value
-
-        if len(inv_function_args) == 2:
-            params = host_config.inventory_parameters(section_name)
-            args = [section_content, params]
-        else:
-            args = [section_content]
+        kwargs = cmk.utils.misc.make_kwargs_for(inv_function,
+                                                inventory_tree=inventory_tree,
+                                                status_data_tree=status_data_tree)
+        non_kwargs = set(cmk.utils.misc.getfuncargs(inv_function)) - set(kwargs)
+        args = [section_content]
+        if len(non_kwargs) == 2:
+            args += [host_config.inventory_parameters(section_name)]
         inv_function(*args, **kwargs)
     console.verbose("\n")
 
 
-def _gather_snmp_check_plugin_names_inventory(host_config,
+def _gather_snmp_check_plugin_names_inventory(snmp_host_config,
                                               on_error,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
-    return snmp_scan.gather_snmp_check_plugin_names(host_config,
+    # type: (SNMPHostConfig, str, bool, bool) -> Set[CheckPluginName]
+    return snmp_scan.gather_snmp_check_plugin_names(snmp_host_config,
                                                     on_error,
                                                     do_snmp_scan,
                                                     for_inventory=True,
@@ -370,22 +350,25 @@ g_inv_tree = StructuredDataTree()  # TODO Remove one day. Deprecated with versio
 
 
 def _initialize_inventory_tree():  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: () -> None
     global g_inv_tree
     g_inv_tree = StructuredDataTree()
 
 
 # Dict based
 def inv_tree(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: (str) -> Dict
     return g_inv_tree.get_dict(path)
 
 
 # List based
 def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: (str) -> List
     return g_inv_tree.get_list(path)
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    # type: (str, StructuredDataTree) -> Optional[StructuredDataTree]
+    # type: (HostName, StructuredDataTree) -> Optional[StructuredDataTree]
     store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
@@ -416,13 +399,15 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 
 def _save_status_data_tree(hostname, status_data_tree):
+    # type: (HostName, StructuredDataTree) -> None
     if status_data_tree and not status_data_tree.is_empty():
         store.makedirs(cmk.utils.paths.status_data_dir)
         status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(host_config, inventory_tree):
-    import cmk.base.inventory_plugins as inventory_plugins
+    # type: (config.HostConfig, StructuredDataTree) -> None
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     hooks = host_config.inventory_export_hooks
 
     if not hooks:
@@ -459,6 +444,7 @@ from cmk.base.discovered_labels import HostLabel
 
 
 def get_inventory_context():
+    # type: () -> config.InventoryContext
     return {
         "inv_tree_list": inv_tree_list,
         "inv_tree": inv_tree,

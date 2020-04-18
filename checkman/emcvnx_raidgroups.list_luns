@@ -15,4 +15,4 @@ item:
  The RAID Group ID.
 
 inventory:
- Automatically configures one check for every RAID Group listed in the agent output.
+ One service is created for each RAID Group listed in the agent output.

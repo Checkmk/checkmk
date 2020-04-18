@@ -1,35 +1,15 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
 import abc
 import functools
 import re
-from typing import Dict, Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -375,7 +355,6 @@ class ABCHostAttribute(six.with_metaclass(abc.ABCMeta, object)):
     def validate_input(self, value, varprefix):
         """Check if the value entered by the user is valid.
         This method may raise MKUserError in case of invalid user input."""
-        pass
 
     def to_nagios(self, value):
         """If this attribute should be present in Nagios as a host custom
@@ -564,7 +543,7 @@ def _declare_host_attribute_topic(ident, topic_title):
 
 def undeclare_host_attribute(attrname):
     if attrname in host_attribute_registry:
-        del host_attribute_registry[attrname]
+        host_attribute_registry.unregister(attrname)
 
 
 def undeclare_host_tag_attribute(tag_id):
@@ -576,8 +555,8 @@ def _update_config_based_host_attributes():
     def _compute_config_hash():
         return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
 
-    if hasattr(_update_config_based_host_attributes, "_config_hash") \
-       and _update_config_based_host_attributes._config_hash == _compute_config_hash():
+    if getattr(_update_config_based_host_attributes, "_config_hash",
+               None) == _compute_config_hash():
         return  # No re-register needed :-)
 
     _clear_config_based_host_attributes()
@@ -587,7 +566,7 @@ def _update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder
     Folder.invalidate_caches()
 
-    _update_config_based_host_attributes._config_hash = _compute_config_hash()
+    setattr(_update_config_based_host_attributes, "._config_hash", _compute_config_hash())
 
 
 # Make the config module initialize the host attributes after loading the config
@@ -642,7 +621,7 @@ def _tag_attribute_sort_index(tag_group):
 
 def _create_tag_group_attribute(tag_group):
     if tag_group.is_checkbox_tag_group:
-        base_class = ABCHostAttributeHostTagCheckbox
+        base_class = ABCHostAttributeHostTagCheckbox  # type: Type
     else:
         base_class = ABCHostAttributeHostTagList
 
@@ -752,7 +731,7 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     host = {}
     for attr in host_attribute_registry.attributes():
         attrname = attr.name()
-        if not html.request.var(for_what + "_change_%s" % attrname, False):
+        if not html.request.var(for_what + "_change_%s" % attrname, ""):
             continue
 
         value = attr.from_html_vars(varprefix)
@@ -792,7 +771,7 @@ class ABCHostAttributeText(six.with_metaclass(abc.ABCMeta, ABCHostAttribute)):
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.get_unicode_input(varprefix + "attr_" + self.name())
+        value = html.request.get_unicode_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()
@@ -1024,7 +1003,7 @@ def TextAttribute(name,
             "name": lambda self: self._name,
             "_title": title,
             "title": lambda self: self._title,
-            "_help": help,
+            "_help": help_txt,
             "help": lambda self: self._help,
             "_default_value": default_value,
             "default_value": lambda self: self._default_value,

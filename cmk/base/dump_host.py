@@ -1,36 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Optional  # pylint: disable=unused-import
+
+import six
 
 import cmk.utils.tty as tty
 import cmk.utils.render
-from cmk.utils.encoding import make_utf8
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.console as console
@@ -38,16 +19,22 @@ import cmk.base.data_sources as data_sources
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 import cmk.base.checking as checking
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckParameters  # pylint: disable=unused-import
 
 
 def dump_host(hostname):
+    # type: (HostName) -> None
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
     console.output("\n")
     if host_config.is_cluster:
+        nodes = host_config.nodes
+        if nodes is None:
+            raise RuntimeError()
         color = tty.bgmagenta
-        add_txt = " (cluster of " + (", ".join(host_config.nodes)) + ")"
+        add_txt = " (cluster of " + (", ".join(nodes)) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
@@ -56,7 +43,7 @@ def dump_host(hostname):
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
-    addresses = ""
+    addresses = ""  # type: Optional[str]
     if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
@@ -78,26 +65,26 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.iteritems())]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
-    labels = [
-        (tag_template % ":".join(l)).encode("utf-8") for l in sorted(host_config.labels.iteritems())
-    ]
+    labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
     console.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
         parents_list = host_config.nodes
+        if parents_list is None:
+            raise RuntimeError()
     else:
         parents_list = host_config.parents
     if len(parents_list) > 0:
         console.output(tty.yellow + "Parents:                " + tty.normal +
                        ", ".join(parents_list) + "\n")
     console.output(tty.yellow + "Host groups:            " + tty.normal +
-                   make_utf8(", ".join(host_config.hostgroups)) + "\n")
+                   ", ".join(host_config.hostgroups) + "\n")
     console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   make_utf8(", ".join(host_config.contactgroups)) + "\n")
+                   ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)
@@ -127,19 +114,19 @@ def dump_host(hostname):
                           key=lambda s: s.description):
         table_data.append([
             service.check_plugin_name,
-            make_utf8(service.item),
+            six.ensure_str("None" if service.item is None else service.item),
             _evaluate_params(service.parameters),
-            make_utf8(service.description),
-            make_utf8(",".join(config_cache.servicegroups_of_service(hostname,
-                                                                     service.description)))
+            six.ensure_str(service.description),
+            ",".join(config_cache.servicegroups_of_service(hostname, service.description))
         ])
 
     tty.print_table(headers, colors, table_data, "  ")
 
 
 def _evaluate_params(params):
+    # type: (CheckParameters) -> str
     if not isinstance(params, cmk.base.config.TimespecificParamList):
-        return params
+        return "%r" % (params,)
 
     current_params = checking.determine_check_params(params)
     return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
@@ -147,6 +134,7 @@ def _evaluate_params(params):
 
 
 def _ip_address_for_dump_host(host_config, family=None):
+    # type: (config.HostConfig, Optional[int]) -> Optional[str]
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config.hostname, family)

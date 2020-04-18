@@ -3,13 +3,12 @@
 
 #include "upgrade.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <cstdint>
 #include <filesystem>
 #include <string>
 #include <string_view>
 
+#include "common/yaml.h"
 #include "cvt.h"
 #include "glob_match.h"
 #include "install_api.h"

@@ -1,10 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import copy
 import itertools
 import shutil
 import struct
 import uuid
-import pytest  # type: ignore
+from typing import Any, Dict  # pylint: disable=unused-import
+
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export, CrashReportStore
@@ -54,7 +62,7 @@ def test_format_var_for_export_strip_nested_dict():
                 },
             },
         },
-    }
+    }  # type: Dict[str, Any]
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)
@@ -90,7 +98,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
                 "c": [{}],
             },
         },
-    }
+    }  # type: Dict[str, Any]
 
     var = copy.deepcopy(orig_var)
     formated = _format_var_for_export(var)
@@ -104,10 +112,10 @@ def test_format_var_for_export_strip_nested_dict_with_list():
 
 @pytest.fixture
 def crash_dir():
-    dir = cmk.utils.paths.crash_dir / "test"
-    yield dir
+    d = cmk.utils.paths.crash_dir / "test"
+    yield d
     try:
-        shutil.rmtree(str(dir))
+        shutil.rmtree(str(d))
     except OSError:
         pass
 

@@ -1,35 +1,15 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
 import errno
 import os
 import tempfile
 from typing import (  # pylint: disable=unused-import
-    Optional, Dict, Set, Iterator, List, Tuple, NamedTuple, Text,
+    Optional, Dict, Iterator, List, Tuple, NamedTuple, Text,
 )
 import logging
 
@@ -68,6 +48,8 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
     ('raw_data', bytes),
 ])
 
+PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
+
 # ***** Terminology *****
 # "piggybacked_host_folder":
 # - tmp/check_mk/piggyback/HOST
@@ -87,7 +69,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
 
 
 def get_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackRawDataInfo]
+    # type: (str, PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -155,7 +137,7 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def get_source_and_piggyback_hosts(time_settings):
-    # type: (List[Tuple[Optional[str], str, int]]) -> Iterator[Tuple[str, str]]
+    # type: (PiggybackTimeSettings) -> Iterator[Tuple[str, str]]
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
@@ -170,7 +152,7 @@ def get_source_and_piggyback_hosts(time_settings):
 
 
 def has_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> bool
+    # type: (str, PiggybackTimeSettings) -> bool
     for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
         if file_info.successfully_processed:
             return True
@@ -178,7 +160,7 @@ def has_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackFileInfo]
+    # type: (str, PiggybackTimeSettings) -> List[PiggybackFileInfo]
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -207,7 +189,7 @@ def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
 
 
 def _get_matching_time_settings(source_hostnames, piggybacked_hostname, time_settings):
-    # type: (List[str], str, List[Tuple[Optional[str], str, int]]) -> Dict[Tuple[Optional[str], str], int]
+    # type: (List[str], str, PiggybackTimeSettings) -> Dict[Tuple[Optional[str], str], int]
     matching_time_settings = {}  # type: Dict[Tuple[Optional[str], str], int]
     for expr, key, value in time_settings:
         # expr may be

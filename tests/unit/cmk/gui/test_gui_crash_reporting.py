@@ -1,4 +1,10 @@
-import StringIO
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import io
 import tarfile
 
 import cmk.utils.crash_reporting
@@ -20,6 +26,6 @@ def test_gui_crash_report_get_packed(register_builtin_html):
         crash_dir = crash.crash_dir()
 
     tgz = crash_reporting._pack_crash_report(store.load_serialized_from_directory(crash_dir))
-    buf = StringIO.StringIO(tgz)
+    buf = io.BytesIO(tgz)
     with tarfile.open(mode="r:gz", fileobj=buf) as tar:
         assert tar.getnames() == ["crash.info"]

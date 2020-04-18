@@ -13,7 +13,7 @@ NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
 #NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
 
-$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
+$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
 	cd $(NET_SNMP_BUILD_DIR) \
@@ -42,13 +42,13 @@ $(NET_SNMP_INSTALL_BASE): $(NET_SNMP_BUILD)
 $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd $(NET_SNMP_BUILD_DIR)/python && \
-		export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH):$(DESTDIR)$(OMD_ROOT)/lib/python" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install --basedir=.. --home=$(DESTDIR)$(OMD_ROOT) \
+		export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH):$(DESTDIR)$(OMD_ROOT)/lib/python" ; \
+	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) setup.py install --basedir=.. --home=$(DESTDIR)$(OMD_ROOT) \
 		--prefix='' \
-		--install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-		--install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+		--install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python3 \
+		--install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python3 \
 		--root=/ \
 		--single-version-externally-managed
 	$(TOUCH) $@

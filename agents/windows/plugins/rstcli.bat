@@ -1,6 +1,9 @@
 @ECHO off & setlocal EnableDelayedExpansion
+REM ***
+REM * plugin to to monitor Intel RST raids
+REM * customize StorCli path to your needs
+REM ***
 
-REM customize rstcli to your needs
 SET "rstcli=!ProgramFiles!\rstcli\rstcli64.exe"
 SET "rstcli_x86=!ProgramFiles!\rstcli\rstcli.exe"
 

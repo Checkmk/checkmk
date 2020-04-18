@@ -1,4 +1,4 @@
-title: AWS/RDS Replica Lag
+title: AWS RDS: Replica Lag
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -6,11 +6,18 @@ distribution: check_mk
 description:
  This check monitors the time a read replica DB instance lags
  behind the source DB instance.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set. Upper levels are configurable for the
+ No default levels are set.
+
+ Upper levels are configurable for the
  replica lag age and oldest replication slot lag size.
 
+item:
+ Name of the instance
+
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (ReplicaLag) are given.

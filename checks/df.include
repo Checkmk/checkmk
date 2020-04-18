@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # If the size_trend function is not provided via size_trend.include raise
 # an exception to provide an error message to the user. If dependencies
@@ -44,7 +24,6 @@ filesystem_default_levels = {}  # can also be dropped some day in future
 # will indeed not be sent on Linux beginning with 1.6.0
 # TODO: Check other agents
 inventory_df_exclude_mountpoints = ['/dev']
-df_use_fs_used_as_metric_name = False
 
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
@@ -295,7 +274,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
             block_info[metric] for (mp, block_info) in info.items() if mp in mountpoints_group)
 
     patterns = params["patterns"]
-    matching_mountpoints = mountpoints_in_group(blocks_info.keys(), patterns)
+    matching_mountpoints = mountpoints_in_group(blocks_info, patterns)
     count = len(matching_mountpoints)
     if count == 0:
         return 3, "No filesystem matching the patterns"
@@ -367,8 +346,8 @@ def df_check_filesystem_single(mountpoint,
     elif used_mb >= warn_mb:
         status = 1
 
-    perf_var = "fs_used" if df_use_fs_used_as_metric_name else mountpoint.replace(" ", "_")
-    perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb), ('fs_size', size_mb)]
+    perfdata = [("fs_used", used_mb, warn_mb, crit_mb, 0, size_mb), ('fs_size', size_mb),
+                ("fs_used_percent", 100.0 * used_mb / size_mb)]
 
     if show_levels == "always" or \
         (show_levels == "onproblem" and status > 0) or \

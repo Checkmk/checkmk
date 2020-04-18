@@ -1,4 +1,4 @@
-title: Splunk: System messages
+title: Splunk: System Messages
 agents: splunk
 catalog: app/splunk
 license: GPL
@@ -11,5 +11,5 @@ description:
  Please note that you have to clear such messages within Splunk.
 
 inventory:
- One service for will be created
+ One service is created.
 

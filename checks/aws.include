@@ -1,36 +1,12 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.aws_constants as agent_aws_types
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
-
-factory_settings['aws_cpu_credits'] = {
-    'balance_levels_lower': (10, 5),
-}
 
 
 def parse_aws(info):
@@ -75,7 +51,7 @@ def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=Non
 
 
 def inventory_aws_generic(parsed, required_metrics):
-    for instance_name, instance in parsed.iteritems():
+    for instance_name, instance in parsed.items():
         if all(required_metric in instance for required_metric in required_metrics):
             yield instance_name, {}
 
@@ -110,7 +86,7 @@ def check_aws_elb_summary_generic(item, params, load_balancers):
         long_output.append("Balancer: %s, Availability zones: %s"\
                            % (balancer_name, ", ".join(avail_zones_txt)))
 
-    for avail_zone, balancers in sorted(balancers_by_avail_zone.iteritems()):
+    for avail_zone, balancers in sorted(balancers_by_avail_zone.items()):
         yield 0, "%s: %s" % (avail_zone, len(balancers))
 
     if long_output:
@@ -190,9 +166,63 @@ def check_aws_limits(aws_service, params, parsed):
         long_output.append(infotext)
 
     if levels_reached:
-        yield max_state, 'Levels reached: %s' % ", ".join(levels_reached), perfdata
+        yield max_state, 'Levels reached: %s' % ", ".join(sorted(levels_reached)), perfdata
     else:
         yield 0, 'No levels reached', perfdata
 
     if long_output:
         yield 0, "\n%s" % "\n".join(sorted(long_output))
+
+
+def check_aws_request_rate(request_count, rate_name):
+    now = time.time()
+    request_rate = get_rate(rate_name, now, request_count, is_rate=True)
+    return request_rate, (0,
+                          'Requests: %s/s' % get_number_with_precision(request_rate, precision=3), [
+                              ('requests_per_second', request_rate)
+                          ])
+
+
+def check_aws_error_rate(error_count, request_rate, rate_name, metric_name_rate, metric_name_perc,
+                         levels, display_text):
+
+    now = time.time()
+    error_rate = get_rate(rate_name, now, error_count, is_rate=True)
+
+    yield (0, '%s: %s/s' % (display_text, get_number_with_precision(error_rate, precision=3)),
+           [(metric_name_rate, error_rate)])
+
+    try:
+        errors_perc = 100.0 * error_rate / request_rate
+    except ZeroDivisionError:
+        errors_perc = 0
+
+    yield check_levels(errors_perc,
+                       metric_name_perc,
+                       levels,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="%s of total requests" % display_text)
+
+
+def check_aws_http_elb(params, parsed, http_err_codes, cloudwatch_metrics_format, rate_id):
+
+    request_count = parsed.get('RequestCount')
+    if request_count is not None:
+        request_rate, result = check_aws_request_rate(request_count, '%s.requests' % rate_id)
+        yield result
+    else:
+        request_rate = 0
+
+    for http_err_code in http_err_codes:
+
+        http_errors = parsed.get(cloudwatch_metrics_format % http_err_code.upper())
+        if http_errors is None:
+            http_errors = 0  # CloudWatch only reports HTTPCode_... if the value is nonzero
+
+        for result in check_aws_error_rate(http_errors, request_rate,
+                                           '%s.%s' % (rate_id, http_err_code),
+                                           'aws_http_%s_rate' % http_err_code,
+                                           'aws_http_%s_perc' % http_err_code,
+                                           params.get('levels_http_%s_perc' % http_err_code),
+                                           "%s-Errors" % http_err_code.upper()):
+            yield result

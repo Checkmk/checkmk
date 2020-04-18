@@ -1,4 +1,4 @@
-title: Windows Services
+title: Windows: Services
 agents: windows
 catalog: os/services
 license: GPL
@@ -20,3 +20,6 @@ parameters(dict):  A dictionary with the following keys:
 
  {"state_if_stopped"}: int: The monitoring state that should be applied if
  stopped services are found
+
+inventory:
+ One summary service is created.

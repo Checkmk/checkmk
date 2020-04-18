@@ -1,37 +1,24 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing folders"""
 
 import abc
 import json
+import operator
+from typing import (  # pylint: disable=unused-import
+    List, Tuple, Text, Dict,
+)
 import six
+
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
@@ -55,9 +42,8 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    TextUnicode,
-    TextAscii,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    TextUnicode, TextAscii, ValueSpec,
 )
 
 
@@ -139,7 +125,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return
 
-        ### Operations on SUBFOLDERS
+        # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.transaction_valid():
@@ -153,7 +139,7 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
-        ### Operations on HOSTS
+        # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")
@@ -224,7 +210,7 @@ class ModeFolder(WatoMode):
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
-            self._folder.delete_subfolder(subfolder_name)  # pylint: disable=no-member
+            self._folder.delete_subfolder(subfolder_name)
             return "folder"
         elif c is False:  # not yet confirmed
             return ""
@@ -234,7 +220,7 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(
+            html.show_message(
                 html.render_icon("autherr", cssclass="authicon") + " " +
                 self._folder.reason_why_may_not("read"))
 
@@ -245,7 +231,7 @@ class ModeFolder(WatoMode):
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
-                html.message(_("No matching hosts found."))
+                html.show_message(_("No matching hosts found."))
             elif not self._folder.has_subfolders() and self._folder.may("write"):
                 self._show_empty_folder_menu()
 
@@ -275,7 +261,8 @@ class ModeFolder(WatoMode):
         if self._folder.has_subfolders():
             html.open_div(
                 class_="folders")  # This won't hurt even if there are no visible subfolders
-            for subfolder in self._folder.visible_subfolders_sorted_by_title():  # pylint: disable=no-member
+            for subfolder in sorted(self._folder.subfolders(only_visible=True),
+                                    key=operator.methodcaller('title')):
                 self._show_subfolder(subfolder)
             html.close_div()
             html.open_div(class_=["floatfolder", "unlocked", "newfolder"],
@@ -302,7 +289,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
+            html.icon(escaping.strip_tags(subfolder.reason_why_may_not("read")),
                       "autherr",
                       class_=["autherr"])
             html.div('', class_="hoverarea")
@@ -404,8 +391,7 @@ class ModeFolder(WatoMode):
 
         show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
-        hostnames = self._folder.hosts().keys()
-        hostnames.sort(key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom
@@ -460,7 +446,7 @@ class ModeFolder(WatoMode):
             contact_group_names = load_contact_group_information()
 
             host_errors = self._folder.host_validation_errors()
-            rendered_hosts = []
+            rendered_hosts = []  # type: List[HostName]
 
             # Now loop again over all hosts and display them
             for hostname in hostnames:
@@ -551,7 +537,7 @@ class ModeFolder(WatoMode):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
+                table.cell(attr.title(), escaping.escape_attribute(tdcontent), css=tdclass)
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")
@@ -560,7 +546,7 @@ class ModeFolder(WatoMode):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(reason)
+            title = escaping.strip_tags(reason)
 
         table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 
@@ -596,10 +582,10 @@ class ModeFolder(WatoMode):
             html.a(host.folder().alias_path(), href=host.folder().url())
 
     def _limit_labels(self, labels):
-        show_all, limit = "", 3
+        show_all, limit = HTML(""), 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
-            show_all = " %s" % html.render_a("... (%s)" % _("show all"),
-                                             href=html.makeuri([("_show_all", "1")]))
+            show_all = HTML(" ") + html.render_a("... (%s)" % _("show all"),
+                                                 href=html.makeuri([("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
@@ -696,21 +682,24 @@ class ModeFolder(WatoMode):
     # FIXME: Cleanup
     def _host_bulk_move_to_folder_combo(self, top):
         choices = self._folder.choices_for_moving_host()
-        if len(choices):
-            choices = [("@", _("(select target folder)"))] + choices
-            html.button("_bulk_move", _("Move to:"))
-            html.write("&nbsp;")
-            field_name = 'bulk_moveto'
-            if top:
-                field_name = '_top_bulk_moveto'
-                if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                    html.request.var('bulk_moveto', ''))
-            html.dropdown(field_name,
-                          choices,
-                          deflt="@",
-                          onchange="cmk.selection.update_bulk_moveto(this.value)",
-                          class_='bulk_moveto')
+        if not choices:
+            return
+
+        choices.insert(0, ("@", _("(select target folder)")))
+
+        html.button("_bulk_move", _("Move to:"))
+        html.write("&nbsp;")
+        field_name = 'bulk_moveto'
+        if top:
+            field_name = '_top_bulk_moveto'
+            if html.request.has_var('bulk_moveto'):
+                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                html.request.var('bulk_moveto', ''))
+        html.dropdown(field_name,
+                      choices,
+                      deflt="@",
+                      onchange="cmk.selection.update_bulk_moveto(this.value)",
+                      class_='bulk_moveto')
 
     def _move_to_imported_folders(self, host_names_to_move):
         c = wato_confirm(
@@ -725,7 +714,7 @@ class ModeFolder(WatoMode):
             return None  # browser reload
 
         # Create groups of hosts with the same target folder
-        target_folder_names = {}
+        target_folder_names = {}  # type: Dict[str, List[HostName]]
         for host_name in host_names_to_move:
             host = self._folder.host(host_name)
             imported_folder_name = host.attribute('imported_folder')
@@ -757,9 +746,9 @@ class ModeFolder(WatoMode):
             parts = aliaspath.strip("/").split("/")
             folder = watolib.Folder.root_folder()
             while len(parts) > 0:
-                # Look in current folder for subfolder with the target name
+                # Look in the current folder for a subfolder with the target title
                 subfolder = folder.subfolder_by_title(parts[0])
-                if subfolder:
+                if subfolder is not None:
                     folder = subfolder
                 else:
                     name = _create_wato_foldername(parts[0], folder)
@@ -814,7 +803,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
             "_host_move_%s" % self._ident,
             choices=choices,
             deflt="@",
-            size='10',
+            size=10,
             onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;" %
             (self._back_url, self._ident, self._what),
         )
@@ -896,7 +885,7 @@ class FolderMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         # title
         basic_attributes = [
             ("title", TextUnicode(title=_("Title")), self._folder.title()),
-        ]
+        ]  # type: List[Tuple[str, ValueSpec, Text]]
         html.set_focus("title")
 
         # folder name (omit this for root folder)
@@ -971,7 +960,7 @@ class ModeCreateFolder(FolderMode):
 
     def _save(self, title, attributes):
         if not config.wato_hide_filenames:
-            name = html.request.var("name", "").strip()
+            name = html.request.get_ascii_input_mandatory("name", "").strip()
             watolib.check_wato_foldername("name", name)
         else:
             name = _create_wato_foldername(title)

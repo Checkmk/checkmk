@@ -1,9 +1,9 @@
-title: Number of http errors for Entersekt EMR
+title: Entersekt EMR: Number of HTTP Errors
 agents: snmp
-catalog: os/networking
+catalog: app/entersekt
 license: GPL
 distribution: check_mk
 description:
- This checks verifies the number of HTTP errors for Entersekt EMR
+ This checks verifies the number of HTTP errors for Entersekt EMR.
 inventory:
- One service for Entersekt EMR Errors
+ One service is created for all Entersekt EMR Errors.

@@ -1,8 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import logging
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import on_time
-import cmk.ec.defaults
+import cmk.ec.export as ec
 import cmk.ec.main
 
 
@@ -10,7 +16,7 @@ import cmk.ec.main
 def event_creator():
     logger = logging.getLogger("cmk.mkeventd")
 
-    config = cmk.ec.defaults.default_config()
+    config = ec.default_config()
     config["debug_rules"] = True
 
     return cmk.ec.main.EventCreator(logger, config)

@@ -1,40 +1,24 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Any, Optional, Text, Tuple  # pylint: disable=unused-import
+
 import livestatus
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age
+from cmk.gui.valuespec import Age, AbsoluteDate, Seconds  # pylint: disable=unused-import
 
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -135,7 +119,7 @@ class CommandReschedule(Command):
     def render(self, what):
         html.button("_resched_checks", _("Reschedule"))
         html.write_text(" " + _("and spread over") + " ")
-        html.number_input("_resched_spread", 0, size=3)
+        html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
         html.write_text(" " + _("minutes") + " ")
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
@@ -221,7 +205,7 @@ class CommandNotifications(Command):
         if html.request.var("_enable_notifications"):
             return ("ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>enable notifications</b> for"))
-        elif html.request.var("_disable_notifications"):
+        if html.request.var("_disable_notifications"):
             return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>disable notifications</b> for"))
 
@@ -291,7 +275,7 @@ class CommandToggleActiveChecks(Command):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_enable_checks"):
             return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
-        elif html.request.var("_disable_checks"):
+        if html.request.var("_disable_checks"):
             return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>disable active checks</b> for"))
 
 
@@ -338,7 +322,7 @@ class CommandTogglePassiveChecks(Command):
         if html.request.var("_enable_passive_checks"):
             return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>enable passive checks</b> for"))
-        elif html.request.var("_disable_passive_checks"):
+        if html.request.var("_disable_passive_checks"):
             return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>disable passive checks</b> for"))
 
@@ -526,10 +510,10 @@ class CommandFakeCheckResult(Command):
         for s in [0, 1, 2, 3]:
             statename = html.request.var("_fake_%d" % s)
             if statename:
-                pluginoutput = html.get_unicode_input("_fake_output").strip()
+                pluginoutput = html.request.get_unicode_input_mandatory("_fake_output").strip()
                 if not pluginoutput:
-                    pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename),
-                                                                    config.user.id)
+                    pluginoutput = _("Manually set to %s by %s") % (
+                        escaping.escape_attribute(statename), config.user.id)
                 perfdata = html.request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
@@ -537,8 +521,8 @@ class CommandFakeCheckResult(Command):
                     cmdtag = "SERVICE"
                 command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s,
                                                                 livestatus.lqencode(pluginoutput))
-                title = _("<b>manually set check results to %s</b> for") % html.attrencode(
-                    statename)
+                title = _("<b>manually set check results to %s</b> for"
+                         ) % escaping.escape_attribute(statename)
                 return command, title
 
 
@@ -612,7 +596,7 @@ class CommandCustomNotification(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_customnotification"):
-            comment = html.get_unicode_input("_cusnot_comment")
+            comment = html.request.get_unicode_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
             command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
@@ -732,11 +716,12 @@ class CommandAcknowledge(Command):
                 specs.append((site, spec, cmdtag))
 
         if html.request.var("_acknowledge"):
-            comment = html.get_unicode_input("_ack_comment")
+            comment = html.request.get_unicode_input("_ack_comment")
             if not comment:
                 raise MKUserError("_ack_comment", _("You need to supply a comment."))
             if ";" in comment:
                 raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
+            non_empty_comment = comment
 
             sticky = 2 if html.request.var("_ack_sticky") else 0
             sendnot = 1 if html.request.var("_ack_notify") else 0
@@ -749,29 +734,32 @@ class CommandAcknowledge(Command):
             else:
                 expire_text = ""
 
-            def make_command(spec, cmdtag):
+            def make_command_ack(spec, cmdtag):
                 return "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % (
                     spec, sticky, sendnot, perscomm, config.user.id) + (
-                        ";%s" % livestatus.lqencode(comment)) + expire_text
+                        ";%s" % livestatus.lqencode(non_empty_comment)) + expire_text
 
             if "aggr_tree" in row:  # BI mode
-                commands = [(site, make_command(spec, cmdtag)) for (site, spec, cmdtag) in specs]
+                commands = [
+                    (site, make_command_ack(spec_, cmdtag_)) for site, spec_, cmdtag_ in specs
+                ]
             else:
-                commands = [make_command(spec, cmdtag)]
+                commands = [make_command_ack(spec, cmdtag)]
 
             title = _("<b>acknowledge the problems%s</b> of") % (
                 expire_text and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
             return commands, title
 
-        elif html.request.var("_remove_ack"):
+        if html.request.var("_remove_ack"):
 
-            def make_command(spec, cmdtag):
+            def make_command_rem(spec, cmdtag):
                 return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
 
             if "aggr_tree" in row:  # BI mode
-                commands = [(site, make_command(spec, cmdtag)) for (site, spec, cmdtag) in specs]
+                commands = [(site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
+                           ]
             else:
-                commands = [make_command(spec, cmdtag)]
+                commands = [make_command_rem(spec, cmdtag)]
             title = _("<b>remove acknowledgements</b> from")
             return commands, title
 
@@ -842,7 +830,7 @@ class CommandAddComment(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_add_comment"):
-            comment = html.get_unicode_input("_comment")
+            comment = html.request.get_unicode_input("_comment")
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -951,7 +939,11 @@ class CommandScheduleDowntimes(Command):
         html.hr()
         html.button("_down_from_now", _("From now for"))
         html.nbsp()
-        html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
+        html.text_input("_down_minutes",
+                        default_value="60",
+                        size=4,
+                        submit="_down_from_now",
+                        cssclass="number")
         html.write_text("&nbsp; " + _("minutes"))
         html.hr()
         for time_range in config.user_downtime_timeranges:
@@ -970,13 +962,12 @@ class CommandScheduleDowntimes(Command):
             html.hr()
 
         html.button("_down_custom", _("Custom time range"))
-        html.datetime_input("_down_from", time.time(), submit="_down_custom")
+        self._vs_down_from().render_input("_down_from", time.time())
         html.write_text("&nbsp; " + _('to') + " &nbsp;")
-        html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
+        self._vs_down_to().render_input("_down_to", time.time() + 7200)
         html.hr()
         html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))
-        html.time_input("_down_duration", 2, 0)
-        html.write_text(" " + _('(HH:MM)'))
+        self._vs_duration().render_input("_down_duration", 7200)
         if what == "host":
             html.hr()
             html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
@@ -1001,57 +992,58 @@ class CommandScheduleDowntimes(Command):
 
             recurring_selections = [
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
-            ]
+            ]  # type: Choices
             html.dropdown("_down_recurring", recurring_selections, deflt="3")
             html.write_text(_("(This only works when using CMC)"))
 
     # TODO: Clean this up!
     def action(self, cmdtag, spec, row, row_index, num_rows):
+        # type: (Any, Any, Any, Any, Any) -> Any
         down_from = int(time.time())
         down_to = None
 
         if self._has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module
-            recurring_type = int(html.request.var("_down_recurring"))
-            title_start = _("schedule a periodic downtime every %s") % recurring_downtimes_types(
-            )[recurring_type]
+            recurring_type = html.request.get_integer_input_mandatory("_down_recurring")
+            title_start = (_("schedule a periodic downtime every %s") %
+                           recurring_downtimes_types()[recurring_type])
         else:
             title_start = _("schedule an immediate downtime")
 
         rangebtns = (varname for varname, _value in html.request.itervars(prefix="_downrange"))
 
         def resolve_end(name):
+            # type: (str) -> Tuple[float, Text]
             now = time.localtime(down_from)
             if name == "next_day":
-                return time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
-                    _("<b>%s until 24:00:00</b> on") % title_start
-            elif name == "next_week":
+                return (time.mktime(
+                    (now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1,
+                        _("<b>%s until 24:00:00</b> on") % title_start)
+            if name == "next_week":
                 wday = now.tm_wday
                 days_plus = 6 - wday
                 res = time.mktime(
                     (now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
                 res += days_plus * 24 * 3600
                 return res, _("<b>%s until sunday night</b> on") % title_start
-            elif name == "next_month":
+            if name == "next_month":
                 new_month = now.tm_mon + 1
                 if new_month == 13:
                     new_year = now.tm_year + 1
                     new_month = 1
                 else:
                     new_year = now.tm_year
-                return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst)), \
-                    _("<b>%s until end of month</b> on") % title_start
-            elif name == "next_year":
-                return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
-                    _("<b>%s until end of %d</b> on") % (title_start, now.tm_year)
-            else:
-                duration = int(name)
-                return down_from + duration, \
-                    _("<b>%s of %s length</b> on") %\
-                    (title_start, self._get_duration_human_readable(duration))
+                return (time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst)),
+                        _("<b>%s until end of month</b> on") % title_start)
+            if name == "next_year":
+                return (time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1,
+                        _("<b>%s until end of %d</b> on") % (title_start, now.tm_year))
+            duration = int(name)
+            return (down_from + duration, _("<b>%s of %s length</b> on") %
+                    (title_start, self._get_duration_human_readable(duration)))
 
         try:
-            rangebtn = next(rangebtns)
+            rangebtn = next(rangebtns)  # type: Optional[str]
         except StopIteration:
             rangebtn = None
 
@@ -1060,8 +1052,8 @@ class CommandScheduleDowntimes(Command):
             down_to, title = resolve_end(end)
         elif html.request.var("_down_from_now"):
             try:
-                minutes = int(html.request.var("_down_minutes", ""))
-            except ValueError:
+                minutes = html.request.get_integer_input_mandatory("_down_minutes", 0)
+            except MKUserError:
                 minutes = 0
 
             if minutes <= 0:
@@ -1076,8 +1068,18 @@ class CommandScheduleDowntimes(Command):
             title = _("<b>%s for the next %d minutes</b> on") % (title_start, minutes)
 
         elif html.request.var("_down_custom"):
-            down_from = html.get_datetime_input("_down_from")
-            down_to = html.get_datetime_input("_down_to")
+            maybe_down_from = self._vs_down_from().from_html_vars("_down_from")
+            if maybe_down_from is None:
+                raise Exception("impossible: _down_from is None")
+            down_from = int(maybe_down_from)
+            self._vs_down_from().validate_value(down_from, "_down_from")
+
+            maybe_down_to = self._vs_down_to().from_html_vars("_down_to")
+            if maybe_down_to is None:
+                raise Exception("impossible: _down_to is None")
+            down_to = maybe_down_to
+            self._vs_down_to().validate_value(down_to, "_down_to")
+
             if down_to < time.time():
                 raise MKUserError(
                     "_down_to",
@@ -1113,16 +1115,18 @@ class CommandScheduleDowntimes(Command):
             return commands, title
 
         if down_to:
+            down_to_not_none = down_to
             if html.request.var("_down_adhoc"):
                 comment = config.adhoc_downtime.get("comment", "")
             else:
-                comment = html.get_unicode_input("_down_comment")
+                comment = html.request.get_unicode_input("_down_comment")
             if not comment:
                 raise MKUserError("_down_comment",
                                   _("You need to supply a comment for your downtime."))
             if html.request.var("_down_flexible"):
                 fixed = 0
-                duration = html.get_time_input("_down_duration", _("the duration"))
+                duration = self._vs_duration().from_html_vars("_down_duration")  # type: Seconds
+                self._vs_duration().validate_value(duration, "_down_duration")
             else:
                 fixed = 1
                 duration = 0
@@ -1135,14 +1139,14 @@ class CommandScheduleDowntimes(Command):
             def make_command(spec, cmdtag):
                 return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) + ("%d;%d;%d;0;%d;%s;" % (
                     down_from,
-                    down_to,
+                    down_to_not_none,
                     fixed_and_recurring,
                     duration,
                     config.user.id,
                 )) + livestatus.lqencode(comment)
 
             if "aggr_tree" in row:  # BI mode
-                commands = []
+                commands_aggr = []
                 for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
                     if service:
                         spec = "%s;%s" % (host, service)
@@ -1150,22 +1154,43 @@ class CommandScheduleDowntimes(Command):
                     else:
                         spec = host
                         cmdtag = "HOST"
-                    commands.append((site, make_command(spec, cmdtag)))
+                    commands_aggr.append((site, make_command(spec, cmdtag)))
+                return commands_aggr, title
+
+            if html.request.var("_include_childs"):  # only for hosts
+                specs = [spec] + self._get_child_hosts(
+                    row["site"], [spec], recurse=bool(html.request.var("_include_childs_recurse")))
+            elif html.request.var("_on_hosts"):  # set on hosts instead of services
+                specs = [spec.split(";")[0]]
+                title += " the hosts of"
+                cmdtag = "HOST"
             else:
-                if html.request.var("_include_childs"):  # only for hosts
-                    specs = [spec] + self._get_child_hosts(
-                        row["site"], [spec],
-                        recurse=bool(html.request.var("_include_childs_recurse")))
-                elif html.request.var("_on_hosts"):  # set on hosts instead of services
-                    specs = [spec.split(";")[0]]
-                    title += " the hosts of"
-                    cmdtag = "HOST"
-                else:
-                    specs = [spec]
+                specs = [spec]
+            return [make_command(spec_, cmdtag) for spec_ in specs], title
 
-                commands = [make_command(spec, cmdtag) for spec in specs]
+    def _vs_down_from(self):
+        # type: () -> AbsoluteDate
+        return AbsoluteDate(
+            title=_("From"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
 
-            return commands, title
+    def _vs_down_to(self):
+        # type: () -> AbsoluteDate
+        return AbsoluteDate(
+            title=_("Until"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
+
+    def _vs_duration(self):
+        # type: () -> Age
+        return Age(
+            display=["hours", "minutes"],
+            title=_("Duration"),
+            cssclass="inline",
+        )
 
     def _get_duration_human_readable(self, secs):
         days, rest = divmod(secs, 86400)
@@ -1189,21 +1214,20 @@ class CommandScheduleDowntimes(Command):
         for h in hosts:
             query += "Filter: parents >= %s\n" % h
         query += "Or: %d\n" % len(hosts)
-        childs = sites.live().query_column(query)
+        children = sites.live().query_column(query)
         sites.live().set_only_sites(None)
 
         # Recursion, but try to avoid duplicate work
-        childs = set(childs)
-        new_childs = childs.difference(hosts)
-        if new_childs and recurse:
-            rec_childs = self._get_child_hosts(site, new_childs, True)
-            new_childs.update(rec_childs)
-        return list(new_childs)
+        new_children = set(children) - hosts
+        if new_children and recurse:
+            rec_childs = self._get_child_hosts(site, new_children, True)
+            new_children.update(rec_childs)
+        return list(new_children)
 
     def _has_recurring_downtimes(self):
         try:
             # The suppression below is OK, we just want to check if the module is there.
-            import cmk.gui.cee.plugins.wato.cmc  # pylint: disable=unused-variable
+            import cmk.gui.cee.plugins.wato.cmc  # noqa: F401 # pylint: disable=unused-variable
             return True
         except ImportError:
             return False

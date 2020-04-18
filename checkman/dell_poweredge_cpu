@@ -18,4 +18,4 @@ item:
  The name of the location variable configured for the CPU
 
 inventory:
- All CPUs of the device are detected
+ One service is created for each CPU of the device.

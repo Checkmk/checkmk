@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // API "Internal transport"
 
@@ -158,7 +161,7 @@ public:
     virtual ~CoreCarrier() {}
 
     // BASE API
-    bool establishCommunication(const std::string& CarrierName);
+    bool establishCommunication(const std::string& internal_port);
     bool sendData(const std::string& PeerName, uint64_t Marker,
                   const void* Data, size_t Length);
     bool sendLog(const std::string& PeerName, const void* Data, size_t Length);
@@ -236,8 +239,8 @@ private:
                             uint64_t Marker, const void* Data, size_t Length);
     bool mailSlotSend(DataType Type, const std::string& PeerName,
                       uint64_t Marker, const void* Data, size_t Length);
-    bool dumpSlotSend(DataType Type, const std::string& PeerName,
-                      uint64_t Marker, const void* Data, size_t Length);
+    bool dumpSlotSend(DataType type, const std::string& peer_name,
+                      uint64_t marker, const void* data_in, size_t length);
     bool fileSlotSend(DataType Type, const std::string& PeerName,
                       uint64_t Marker, const void* Data, size_t Length);
     bool nullSlotSend(DataType Type, const std::string& PeerName,

@@ -1,6 +1,6 @@
-title: Brocade NetIron MLX / FGS / ICX devices: Temperature Sensors
+title: Brocade NetIron MLX / FGS / ICX Devices: Temperature Sensors
 agents: snmp
-catalog: hw/network/brocade
+catalog: hw/environment/brocade
 license: GPL
 distribution: check_mk
 description:
@@ -15,5 +15,5 @@ item:
  The description of the module together with its ID as provided by SNMP.
 
 inventory:
- Finds one item per module
+ One service is created for each module
 

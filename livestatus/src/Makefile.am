@@ -1,32 +1,13 @@
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
+CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
-IWYU_TOOL ?= iwyu_tool
+IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
 RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
@@ -36,7 +17,7 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-14-0
+ASIO_VERSION := asio-asio-1-16-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.1
@@ -64,6 +45,7 @@ bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
 
 unixcat_SOURCES = unixcat.cc
+$(unixcat_SOURCES): $(ASIO_INCLUDE)
 unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \
@@ -291,7 +273,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
@@ -310,12 +292,12 @@ iwyu: compile_commands.json
 
 # NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
 cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --error-exitcode=2
 
 # We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
 cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
-	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" cppcheck-result.xml
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
+	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
 
 documentation:
 	$(DOXYGEN) doc/Doxyfile
@@ -328,4 +310,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json cppcheck-result.xml test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)
+	rm -rf *~ compile_commands.json $(CPPCHECK_NEB_RESULT) test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

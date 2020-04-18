@@ -1,4 +1,4 @@
-title: Used space in ZFS pools and filesystems
+title: ZFS Pools/Filesystems: Used Space
 agents: linux, solaris, freebsd
 catalog: os/storage
 license: GPL
@@ -32,3 +32,9 @@ description:
  Filesystems with a {quota} are handled differently, however. Here the quota
  is reported as the total size. If A has a quota of 5GB, we report
  2GB out of 5GB used.
+
+item:
+ The mountpoint of the filesystem
+
+inventory:
+ One service is created for each mountpoint.

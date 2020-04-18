@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 // core common functionaliaty
 // probably "file" is better name
 
@@ -23,6 +27,10 @@ namespace cma {
 wtools::InternalUser ObtainInternalUser(std::wstring_view group);
 void KillAllInternalUsers();
 }  // namespace cma
+
+namespace cma::srv {
+class ServiceProcessor;
+}
 
 namespace cma {
 namespace tools {
@@ -66,6 +74,9 @@ T ReadFromHandle(HANDLE Handle) {
     }
     return buf;
 }
+
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src);
 
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
@@ -119,15 +130,17 @@ inline std::wstring FindPowershellExe() noexcept {
     // file not found on path
     auto powershell_path =
         cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
-    fs::path ps(powershell_path);
-    ps /= L"WindowsPowerShell";
-    ps /= L"v1.0";
-    ps /= powershell_name;
+
     try {
+        fs::path ps(powershell_path);
+        ps /= L"WindowsPowerShell";
+        ps /= L"v1.0";
+        ps /= powershell_name;
         if (fs::exists(ps)) return ps;
         XLOG::l("Not found powershell");
     } catch (const std::exception& e) {
-        XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
+        XLOG::l("malformed name {} e:{}",
+                wtools::ConvertToUTF8(powershell_path), e.what());
     }
     return {};
 }
@@ -237,16 +250,15 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
-    bool startEx(std::wstring_view Id, std::filesystem::path ExeFile,
-                 StartMode start_mode, wtools::InternalUser internal_user);
-    bool start(std::wstring_view Id, std::filesystem::path ExeFile,
-
-               StartMode start_mode) {
-        return startEx(Id, ExeFile, start_mode, {});
+    bool startEx(std::wstring_view Id, std::wstring exec, StartMode start_mode,
+                 wtools::InternalUser internal_user);
+    bool startStd(std::wstring_view Id, std::wstring exec,
+                  StartMode start_mode) {
+        return startEx(Id, exec, start_mode, {});
     }
 
     // strange?
-    uint32_t getProcessId() {
+    [[nodiscard]] uint32_t getProcessId() {
         uint32_t proc_id;
         std::unique_lock lk(lock_);
         proc_id = process_->processId();
@@ -255,7 +267,7 @@ public:
     }
 
     // really obtained proc id. Safe function
-    uint32_t startedProcId() const { return proc_id_; }
+    [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
         if (Buf.size() == 0) return true;
@@ -277,7 +289,7 @@ public:
         return false;
     }
 
-    bool const failed() const noexcept { return failed_; }
+    [[nodiscard]] bool const failed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
@@ -345,7 +357,8 @@ private:
         if (buf.size()) appendResult(read_handle, buf);
     }
 
-    static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
+    static std::string formatProcessInLog(uint32_t pid,
+                                          const std::wstring_view name) {
         return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
                            pid);
     }
@@ -375,7 +388,7 @@ private:
         return true;
     }
 
-    bool isExecValid(const std::filesystem::path& FileExec) const {
+    static inline bool isExecValid(const std::filesystem::path& FileExec) {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
         auto execute_string = ConstructCommandToExec(FileExec);
@@ -513,6 +526,9 @@ public:
     // which plugin
     std::filesystem::path path() const { return path_; }
 
+    // which plugin
+    void setCmdLine(std::wstring_view name);
+
     // stored data from plugin
     std::vector<char> data() const {
         std::lock_guard lk(data_lock_);
@@ -587,6 +603,8 @@ public:
 
     static int threadCount() noexcept { return thread_count_.load(); }
 
+    std::wstring cmdLine() const noexcept { return cmd_line_; }
+
 protected:
     void fillInternalUser();
     void resetData() {
@@ -634,7 +652,7 @@ private:
 
     std::vector<char> data_;                           // cache
     std::chrono::steady_clock::time_point data_time_;  // when
-    time_t legacy_time_;                               // I'm nice guy
+    time_t legacy_time_ = 0;                           // I'm nice guy
 
     mutable std::mutex lock_;  // thread control
     std::unique_ptr<std::thread> main_thread_;
@@ -642,6 +660,8 @@ private:
     bool data_is_going_old_ = false;  // when plugin finds data obsolete
 
     static std::atomic<int> thread_count_;
+
+    std::wstring cmd_line_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
@@ -651,6 +671,8 @@ private:
     FRIEND_TEST(PluginTest, Async0DataPickup);
     FRIEND_TEST(PluginTest, AsyncLocal);
     FRIEND_TEST(PluginTest, SyncLocal);
+
+    FRIEND_TEST(PluginTest, Entry);
 #endif
 };
 wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
@@ -692,6 +714,8 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
                      const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
                      bool CheckExists = true);
 
+void UpdatePluginMapCmdLine(PluginMap& Out, cma::srv::ServiceProcessor* sp);
+
 // API call to exec all plugins and get back data and count
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
@@ -713,7 +737,8 @@ using StringSet = std::set<std::string>;
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
                                   const std::string& value) noexcept;
 // returns true if string added
-bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
+bool AddUniqStringToSetAsIs(StringSet& cache,
+                            const std::string& value) noexcept;
 }  // namespace tools
 
 // finds piggyback template <<<<name>>>>, if found returns 'name'
@@ -721,4 +746,5 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
+
 }  // namespace cma

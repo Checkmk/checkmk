@@ -1,4 +1,9 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 
 import pytest
@@ -10,27 +15,11 @@ from importlib import import_module
 from testlib import cmk_path
 
 REQUIRED_ARGUMENTS = {
-    'agent_aws': [
-        '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
-        '--hostname', 'HOSTNAME'
-    ],
     'agent_azure': [
         '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
         'SECRET'
     ],
-    'agent_elasticsearch': ['HOSTNAME'],
-    'agent_graylog': ['HOSTNAME'],
-    'agent_jenkins': ['HOSTNAME'],
-    'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
-    'agent_splunk': ['HOSTNAME'],
-    'agent_vsphere': ['HOSTNAME'],
 }
-
-
-def test_all_agents_tested():
-    for agent_file in glob("%s/cmk/special_agents/agent_*.py" % cmk_path()):
-        name = os.path.basename(os.path.splitext(agent_file)[0])
-        assert name in REQUIRED_ARGUMENTS, "Please add a test case for special agent: %r" % name
 
 
 @pytest.mark.parametrize("agent_name, required_args", REQUIRED_ARGUMENTS.items())

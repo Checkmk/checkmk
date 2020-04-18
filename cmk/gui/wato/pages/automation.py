@@ -1,35 +1,21 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
 import traceback
 
-import cmk
+import six
+
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
+from cmk.utils.type_defs import UserId
+
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -67,11 +53,11 @@ class ModeAutomationLogin(AjaxPage):
             response = _get_login_secret(create_on_demand=True)
         else:
             response = {
-                "version": cmk.__version__,
-                "edition_short": cmk.edition_short(),
+                "version": cmk_version.__version__,
+                "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
-        html.write_html(repr(response))
+        html.write(repr(response))
 
 
 @page_registry.register_page("noauth:automation")
@@ -115,29 +101,25 @@ class ModeAutomation(AjaxPage):
         # we request the lock in all cases.
         with store.lock_checkmk_configuration():
             watolib.init_wato_datastructures(with_wato_lock=False)
-
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
                 self._execute_cmk_automation()
                 return
-
-            elif self._command == "push-profile":
+            if self._command == "push-profile":
                 self._execute_push_profile()
                 return
-
             try:
                 automation_command = watolib.automation_command_registry[self._command]
             except KeyError:
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-
             self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
-        cmk_command = html.request.var("automation")
-        args = watolib.mk_eval(html.request.var("arguments"))
-        indata = watolib.mk_eval(html.request.var("indata"))
-        stdin_data = watolib.mk_eval(html.request.var("stdin_data"))
-        timeout = watolib.mk_eval(html.request.var("timeout"))
+        cmk_command = html.request.get_str_input_mandatory("automation")
+        args = watolib.mk_eval(html.request.get_str_input_mandatory("arguments"))
+        indata = watolib.mk_eval(html.request.get_str_input_mandatory("indata"))
+        stdin_data = watolib.mk_eval(html.request.get_str_input_mandatory("stdin_data"))
+        timeout = watolib.mk_eval(html.request.get_str_input_mandatory("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         html.write(repr(result))
@@ -145,7 +127,7 @@ class ModeAutomation(AjaxPage):
     def _execute_push_profile(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(watolib.mk_repr(self._automation_push_profile()))
+            html.write(six.ensure_str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if config.debug:
@@ -173,8 +155,7 @@ class ModeAutomation(AjaxPage):
             raise MKGeneralException(_('Invalid call: The profile is missing.'))
 
         users = userdb.load_users(lock=True)
-        profile = watolib.mk_eval(profile)
-        users[user_id] = profile
+        users[UserId(user_id)] = watolib.mk_eval(profile)
         userdb.save_users(users)
 
         return True
@@ -188,8 +169,7 @@ class ModeAutomation(AjaxPage):
             logger.exception("error executing automation command")
             if config.debug:
                 raise
-            html.write_text(_("Internal automation error: %s\n%s") % \
-                            (e, traceback.format_exc()))
+            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
 
 def _get_login_secret(create_on_demand=False):

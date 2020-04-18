@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for creating and editing hosts"""
 
 import abc
@@ -85,6 +65,31 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                     "nodes_%d" % nr,
                     _("The node <b>%s</b> does not exist "
                       " (must be a host that is configured with WATO)") % cluster_node)
+
+            attributes = watolib.collect_attributes("cluster", new=False)
+            cluster_agent_ds_type = attributes.get("tag_agent", "cmk-agent")
+            cluster_snmp_ds_type = attributes.get("tag_snmp_ds", "no-snmp")
+
+            node_agent_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "agent")
+            node_snmp_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "snmp_ds")
+
+            if node_agent_ds_type != cluster_agent_ds_type or \
+                    node_snmp_ds_type != cluster_snmp_ds_type:
+                raise MKUserError(
+                    "nodes_%d" % nr,
+                    _("Cluster and nodes must have the same "
+                      "datasource! The node <b>%s</b> has datasources "
+                      "<b>%s</b> and <b>%s</b> while the cluster has datasources "
+                      "<b>%s</b> and <b>%s</b>.") % (
+                          cluster_node,
+                          node_agent_ds_type,
+                          node_snmp_ds_type,
+                          cluster_agent_ds_type,
+                          cluster_snmp_ds_type,
+                      ))
+
         return cluster_nodes
 
     # TODO: Extract cluster specific parts from this method
@@ -99,7 +104,7 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         if errors:
             html.open_div(class_="info")
-            html.open_table(class_="validationerror", boder=0, cellspacing=0, cellpadding=0)
+            html.open_table(class_="validationerror", boder="0", cellspacing="0", cellpadding="0")
             html.open_tr()
 
             html.open_td(class_="img")
@@ -124,13 +129,14 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
             html.close_table()
             html.close_div()
 
-        lock_message = ""
-        if watolib.Folder.current().locked_hosts():
-            if watolib.Folder.current().locked_hosts() is True:
+        lock_message = u""
+        locked_hosts = watolib.Folder.current().locked_hosts()
+        if locked_hosts:
+            if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
-            else:
-                lock_message = watolib.Folder.current().locked_hosts()
-        if len(lock_message) > 0:
+            elif isinstance(locked_hosts, six.text_type):
+                lock_message = locked_hosts
+        if lock_message:
             html.div(lock_message, class_="info")
 
         html.begin_form("edit_host", method="POST")
@@ -197,7 +203,7 @@ class ModeEditHost(HostMode):
         return ["hosts"]
 
     def _init_host(self):
-        hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
+        hostname = html.request.get_ascii_input_mandatory("host")
 
         if not watolib.Folder.current().has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -252,17 +258,16 @@ class ModeEditHost(HostMode):
 
     def action(self):
         if html.request.var("_update_dns_cache"):
-            if html.check_transaction():
-                config.user.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = watolib.check_mk_automation(
-                    self._host.site_id(), "update-dns-cache", [])
-                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
-                if failed_hosts:
-                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
-                              + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
-                return None, infotext
-            else:
+            if not html.check_transaction():
                 return None
+            config.user.need_permission("wato.update_dns_cache")
+            num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
+                                                                    "update-dns-cache", [])
+            infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
+            if failed_hosts:
+                infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
+                          + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
+            return None, infotext
 
         if html.request.var("delete"):  # Delete this host
             if not html.transaction_valid():
@@ -277,7 +282,7 @@ class ModeEditHost(HostMode):
 
         if html.request.var("services"):
             return "inventory"
-        elif html.request.var("diag_host"):
+        if html.request.var("diag_host"):
             html.request.set_var("_try", "1")
             return "diag_host"
         return "folder"
@@ -312,19 +317,16 @@ class CreateHostMode(HostMode):
             self._mode = "new"
 
     def _init_host(self):
-        clonename = html.get_ascii_input("clone")
-        if clonename:
-            if not watolib.Folder.current().has_host(clonename):
-                raise MKUserError("host", _("You called this page with an invalid host name."))
-
-            if not config.user.may("wato.clone_hosts"):
-                raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
-
-            host = watolib.Folder.current().host(clonename)
-            self._verify_host_type(host)
-            return host
-        else:
+        clonename = html.request.get_ascii_input("clone")
+        if not clonename:
             return self._init_new_host_object()
+        if not watolib.Folder.current().has_host(clonename):
+            raise MKUserError("host", _("You called this page with an invalid host name."))
+        if not config.user.may("wato.clone_hosts"):
+            raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
+        host = watolib.Folder.current().host(clonename)
+        self._verify_host_type(host)
+        return host
 
     def action(self):
         if not html.transaction_valid():
@@ -333,7 +335,7 @@ class CreateHostMode(HostMode):
         attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = html.request.var("host")
+        hostname = html.request.get_ascii_input_mandatory("host")
         Hostname().validate_value(hostname, "host")
 
         if html.check_transaction():
@@ -347,12 +349,10 @@ class CreateHostMode(HostMode):
             ("_scan", "1"),
         ])
 
-        if not self._host.is_ping_host():
-            create_msg = _('Successfully created the host. Now you should do a '
-                           '<a href="%s">service discovery</a> in order to auto-configure '
-                           'all services to be checked on this host.') % inventory_url
-        else:
-            create_msg = None
+        create_msg = None if self._host.is_ping_host() else (
+            _('Successfully created the host. Now you should do a '
+              '<a href="%s">service discovery</a> in order to auto-configure '
+              'all services to be checked on this host.') % inventory_url)
 
         if html.request.var("services"):
             raise HTTPRedirect(inventory_url)

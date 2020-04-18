@@ -1,54 +1,35 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
 import abc
 import json
 import copy
-import urllib
-import urlparse
 from typing import (  # pylint: disable=unused-import
-    Optional, Any, Dict, Union, Tuple, Text, List, Callable)
+    Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
 
 import six
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
-from cmk.gui.plugins.visuals.utils import VisualContext  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
+    transform_painter_spec,
 )
+from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -104,10 +85,10 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
-        """Return a list of the supported infos (for the visual context) of this dashlet"""
-        return []
+    def has_context(cls):
+        # type: () -> bool
+        """Whether or not this dashlet is context sensitive."""
+        return False
 
     @classmethod
     def single_infos(cls):
@@ -152,7 +133,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def vs_parameters(cls):
-        # type: () -> Optional[Union[List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]]
+        # type: () -> Union[None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
         return None
@@ -193,6 +174,15 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
                             filename='edit_dashlet.py')
 
+    @classmethod
+    def default_settings(cls):
+        """Overwrite specific default settings for dashlets by returning a dict
+            return { key: default_value, ... }
+        e.g. to have a dashlet default to not showing its title
+            return { "show_title": False }
+        """
+        return {}
+
     def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
         # type: (DashboardName, DashboardConfig, DashletId, DashletConfig) -> None
         super(Dashlet, self).__init__()
@@ -202,9 +192,14 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         self._dashlet_spec = dashlet
         self._context = self._get_context()  # type: Optional[Dict]
 
+    def infos(self):
+        # type: () -> List[str]
+        """Return a list of the supported infos (for the visual context) of this dashlet"""
+        return []
+
     def _get_context(self):
         # type: () -> Optional[Dict]
-        if not self.has_context:
+        if not self.has_context():
             return None
 
         return visuals.get_merged_context(
@@ -214,14 +209,10 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         )
 
     @property
-    def has_context(self):
-        # type: () -> bool
-        """Whether or not this dashlet is context sensitive."""
-        return False
-
-    @property
     def context(self):
-        # type: () -> Optional[Dict]
+        # type: () -> Dict
+        if self._context is None:
+            raise Exception("Missing context")
         return self._context
 
     @property
@@ -269,7 +260,8 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> None
         """Called by the ajax call to update dashlet contents
 
-        This is normally equivalent to the .show() method. Differs only for iframe dashlets.
+        This is normally equivalent to the .show() method. Differs only for
+        iframe and single metric dashlets.
         """
         self.show()
 
@@ -282,28 +274,23 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     def _add_context_vars_to_url(self, url):
         # type: (str) -> str
         """Adds missing context variables to the given URL"""
-        if not self.has_context:
+        if not self.has_context():
             return url
 
-        context_vars = self._dashlet_context_vars()
+        context_vars = dict([
+            (k, six.ensure_str("%s" % v)) for k, v in self._dashlet_context_vars() if v is not None
+        ])
 
-        parts = urlparse.urlparse(url)
-        url_vars = dict(urlparse.parse_qsl(parts.query, keep_blank_values=True))
+        parts = six.moves.urllib.parse.urlparse(url)
+        url_vars = dict(six.moves.urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
         url_vars.update(context_vars)
 
-        new_qs = urllib.urlencode(url_vars)
-        return urlparse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
+        new_qs = six.moves.urllib.parse.urlencode(url_vars)
+        return six.moves.urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self):
-        # type: () -> Dict[str, str]
-        # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
-        # attributes without
-        return dict(
-            visuals.get_context_uri_vars({
-                "single_infos": self.single_infos(),
-                "infos": self.infos(),
-                "context": self.context,
-            }))
+        # type: () -> HTTPVariables
+        return visuals.get_context_uri_vars(self.context, self.single_infos())
 
     def size(self):
         # type: () -> DashletSize
@@ -485,7 +472,7 @@ def save_all_dashboards():
 
 
 def get_all_dashboards():
-    # type: () -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    # type: () -> Dict[Tuple[Optional[UserId], DashboardName], DashboardConfig]
     return DashboardStore.get_instance().all
 
 
@@ -504,12 +491,16 @@ def get_permitted_dashboards():
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def _transform_dashboards(boards):
     # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
-    for dashboard in boards.itervalues():
+    for dashboard in boards.values():
         visuals.transform_old_visual(dashboard)
 
         # Also transform dashlets
         for dashlet in dashboard['dashlets']:
             visuals.transform_old_visual(dashlet)
+
+            if dashlet['type'] == 'view':
+                # abusing pass by reference to mutate dashlet
+                transform_painter_spec(dashlet)
 
             if dashlet['type'] == 'pnpgraph':
                 if 'service' not in dashlet['single_infos']:
@@ -594,7 +585,7 @@ def _transform_builtin_dashboards():
                 raise MKGeneralException(
                     _('Unable to transform dashlet %d of dashboard %s. '
                       'You will need to migrate it on your own. Definition: %r') %
-                    (nr, name, html.attrencode(dashlet)))
+                    (nr, name, escaping.escape_attribute(dashlet)))
 
             dashlet.setdefault('context', {})
             dashlet.setdefault('single_infos', [])
@@ -628,7 +619,7 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (_u, n), this_view in get_all_views().iteritems():
+        for (_u, n), this_view in get_all_views().items():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view
@@ -649,8 +640,15 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
 
     # Overwrite the views default title with the context specific title
     dashlet['title'] = visuals.visual_title('view', view)
-    dashlet['title_url'] = html.makeuri_contextless([('view_name', view_name)] +
-                                                    visuals.get_singlecontext_vars(view).items(),
+    # TODO: Shouldn't we use the self._dashlet_context_vars() here?
+    name_part = [('view_name', view_name)]  # type: HTTPVariables
+    singlecontext_vars = cast(
+        HTTPVariables,
+        visuals.get_singlecontext_vars(
+            view["context"],
+            view["single_infos"],
+        ).items())
+    dashlet['title_url'] = html.makeuri_contextless(name_part + singlecontext_vars,
                                                     filename='view.py')
 
     dashlet['type'] = 'view'

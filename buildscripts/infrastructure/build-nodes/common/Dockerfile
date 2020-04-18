@@ -12,6 +12,8 @@ RUN apt-get update \
     bison \
     build-essential \
     chrpath \
+    joe \
+    vim \
     clang-7 \
     clang-format-7 \
     clang-tidy-7 \
@@ -117,4 +119,5 @@ RUN apt-get update \
 RUN apt-get update \
     && apt-get install -y \
     libssl-dev \
+    ping \
     && rm -rf /var/lib/apt/lists/*

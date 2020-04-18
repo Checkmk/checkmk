@@ -1,34 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 import logging
+from typing import (  # pylint: disable=unused-import
+    Dict, List,
+)
 
-import cmk
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
+from cmk.utils.tags import TagGroup  # pylint: disable=unused-import
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -38,35 +22,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-    TextUnicode,
-    HTTPUrl,
-    DropdownChoice,
-    Tuple,
-    ListOf,
-    Integer,
-    Float,
-    Transform,
-    ListOfStrings,
-    IPNetwork,
-    CascadingDropdown,
-    MonitoringState,
-    RegExpUnicode,
-    IconSelector,
-    PasswordSpec,
-    ListOfTimeRanges,
-    Age,
-    FixedValue,
-    Optional,
-    Alternative,
-    ListChoice,
-    Checkbox,
-    ID,
-    ListOfCAs,
-    LogLevelChoice,
-    Labels,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Dictionary, TextAscii, TextUnicode, HTTPUrl, DropdownChoice, Tuple, ListOf, Integer, Float,
+    Transform, ListOfStrings, IPNetwork, CascadingDropdown, MonitoringState, RegExpUnicode,
+    IconSelector, PasswordSpec, ListOfTimeRanges, Age, FixedValue, Optional, Alternative,
+    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoice,
 )
 
 from cmk.gui.plugins.wato import (
@@ -197,7 +157,11 @@ class ConfigVariableLogLevels(ConfigVariable):
                "details for each executed compilation.")),
             ("cmk.web.automations", _("Automation calls"),
              _("Communication between different components of Check_MK (e.g. GUI and check engine) "
-               "will be logged in this log level."))
+               "will be logged in this log level.")),
+            ("cmk.web.background-job", _("Background jobs"),
+             _("Some long running tasks are executed as executed in so called background jobs. You "
+               "can use this log level to individually enable more detailed logging for the "
+               "background jobs.")),
         ]:
             elements.append((level_id,
                              LogLevelChoice(
@@ -650,7 +614,6 @@ class ConfigVariableCrashReportURL(ConfigVariable):
         return HTTPUrl(
             title=_("Crash report HTTP URL"),
             help=_("By default crash reports will be sent to our crash reporting server."),
-            size=80,
             show_as_link=False,
         )
 
@@ -780,7 +743,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - consist only of checkbox tags
         #  - contain at least two entries
         choices = []
-        by_topic = {}
+        by_topic = {}  # type: Dict[str, List[TagGroup]]
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
             by_topic.setdefault(tag_group.topic, []).append(tag_group)
@@ -2187,12 +2150,11 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         )
 
     def _default_user_profile_elements(self):
-        elements = []
-
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-            elements += managed.customer_choice_element()
-
+            elements = managed.customer_choice_element()
+        else:
+            elements = []
         return elements + [
             ('roles',
              ListChoice(
@@ -2293,66 +2255,92 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 "existing installations. Here you can switch to the new descriptions for "
                 "selected check types"),
             choices=[
+                ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
+                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
+                ("brocade_sys.mem", _("Main memory usage for Brocade fibre channel switches")),
+                ("casa_cpu_temp", _("Casa module: CPU temperature")),
+                ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
+                ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
+                ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
+                ("cmciii.psm_current", _("Rittal CMC-III Units: Current")),
+                ("cmciii.temp", _("Rittal CMC-III Units: Temperatures")),
+                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
+                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
+                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
+                ("cmk-inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("dbd2_mem", _("Memory levels for DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
                 ("df_netapp32", _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
+                ("docker_container_mem", _("Memory usage of Docker containers")),
+                ("enterasys_temp", _("Enterasys Switch: Temperature")),
                 ("esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
+                ("esx_vsphere_hostsystem.mem_usage", _("Main memory usage of ESX host system")),
+                ("esx_vsphere_hostsystem.mem_usage_cluster", _("Memory Usage of ESX Clusters")),
+                ("etherbox.temp", _("Etherbox / MessPC: Sensor Temperature")),
+                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
+                ("fortigate_memory_base",
+                 _("Memory usage of Fortigate devices (fortigate_memory_base)")),
+                ("fortigate_node.memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
-                ("vms_diskstat.df", _("Disk space on OpenVMS")),
-                ("zfsget", _("Used space in ZFS pools and filesystems")),
-                ("ps", _("State and Count of Processes")),
-                ("ps.perf", _("State and Count of Processes (with additional performance data)")),
-                ("wmic_process", _("Resource consumption of windows processes")),
-                ("services", _("Windows Services")),
-                ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch.groups", _("Check logfile groups")),
-                ("cmk-inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("hr_mem", _("HR: Used memory via SNMP")),
+                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                ("huawei_switch_mem", _("Memory percentage used of devices with modules (Huawei)")),
                 ("hyperv_vms", _("Hyper-V Server: State of VMs")),
                 ("ibm_svc_mdiskgrp",
                  _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps")),
                 ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
+                ("ibm_svc_systemstats.cache", _("IBM SVC / V7000: Cache Usage in Total")),
+                ("ibm_svc_systemstats.disk_latency",
+                 _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total")),
                 ("ibm_svc_systemstats.diskio",
                  _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total")),
                 ("ibm_svc_systemstats.iops",
                  _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.disk_latency",
-                 _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cmciii.temp", _("Rittal CMC-III Units: Temperatures")),
-                ("cmciii.psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
-                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
-                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                ("etherbox.temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-                ("nvidia.temp", _("Temperatures of NVIDIA graphics card")),
-                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+                ("innovaphone_mem", _("Innovaphone Memory Usage")),
                 ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
-                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+                ("juniper_mem", _("Juniper Memory Usage (%s)") % "juniper_mem"),
+                ("juniper_screenos_mem", _("Juniper Memory Usage (%s)") % "juniper_screenos_mem"),
+                ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
+                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
+                ("logwatch", _("Check logfiles for relevant new messages")),
+                ("logwatch.groups", _("Check logfile groups")),
+                ("mem.used", _("Main memory usage (UNIX / Other Devices)")),
+                ("mem.win", _("Memory usage for %s hosts") % "Windows"),
                 ("mknotifyd", _("Notification Spooler")),
                 ("mknotifyd.connection", _("Notification Spooler Connection")),
-                ("postfix_mailq", _("Postfix: Mail Queue")),
-                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("qmail_stats", _("Qmail: Mail Queue")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
                 ("mssql_backup", _("MSSQL Backup")),
+                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
                 ("mssql_counters.cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters.transactions", _("MSSQL Transactions")),
-                ("mssql_counters.locks", _("MSSQL Locks")),
-                ("mssql_counters.sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters.pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters.locks_per_batch", _("MSSQL Locks per Batch")),
                 ("mssql_counters.file_sizes", _("MSSQL File Sizes")),
+                ("mssql_counters.locks", _("MSSQL Locks")),
+                ("mssql_counters.locks_per_batch", _("MSSQL Locks per Batch")),
+                ("mssql_counters.pageactivity", _("MSSQL Page Activity")),
+                ("mssql_counters.sqlstats", _("MSSQL SQL Stats")),
+                ("mssql_counters.transactions", _("MSSQL Transactions")),
                 ("mssql_databases", _("MSSQL Database")),
                 ("mssql_datafiles", _("MSSQL Datafile")),
                 ("mssql_tablespaces", _("MSSQL Tablespace")),
                 ("mssql_transactionlogs", _("MSSQL Transactionlog")),
                 ("mssql_versions", _("MSSQL Version")),
-                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
+                ("netscaler_mem", _("Netscaler Memory Usage")),
+                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+                ("nvidia.temp", _("Temperatures of NVIDIA graphics card")),
+                ("postfix_mailq", _("Postfix: Mail Queue")),
+                ("ps", _("State and Count of Processes")),
+                ("ps.perf", _("State and Count of Processes (with additional performance data)")),
+                ("qmail_stats", _("Qmail: Mail Queue")),
+                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
+                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+                ("services", _("Windows Services")),
+                ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
+                ("sophos_memory", _("Sophos Memory utilization")),
+                ("statgrab_mem", _("Statgrab Memory Usage")),
+                ("tplink_mem", _("TP Link: Used memory via SNMP")),
+                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+                ("vms_diskstat.df", _("Disk space on OpenVMS")),
+                ("wmic_process", _("Resource consumption of windows processes")),
+                ("zfsget", _("Used space in ZFS pools and filesystems")),
             ],
             render_orientation="vertical",
         )
@@ -2654,7 +2642,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                          )),
                         ("proxy_url", HTTPProxyInput()),
                     ],
-                    optional_keys=None,
+                    optional_keys=False,
                 ),
                 title=_("HTTP proxies"),
                 movable=False,
@@ -3117,13 +3105,7 @@ rulespec_registry.register(
 
 
 def _host_check_commands_host_check_command_choices():
-    if config.user.may('wato.add_or_modify_executables'):
-        custom_choice = [
-            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
-        ]
-    else:
-        custom_choice = []
-    return [
+    choices = [
         ("ping", _("PING (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Check_MK Micro Core)")),
         ("tcp", _("TCP Connect"),
@@ -3138,7 +3120,11 @@ def _host_check_commands_host_check_command_choices():
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
-    ] + custom_choice
+    ]  # type: List[CascadingDropdownChoice]
+    if config.user.may('wato.add_or_modify_executables'):
+        return choices + [
+            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
+        ]
 
 
 def _valuespec_host_check_commands():
@@ -4682,13 +4668,13 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed.") \
-            + _("If you are using the Agent bakery, the configuration will be "
-                "used for restricting network access to the baked agents. Even "
-                "if you don't use the bakery, the configured IP address "
-                "restrictions of a host will be verified against the allowed "
-                "IP addresses reported by the agent. This is done during "
-                "monitoring by the Check_MK service."),
+               "access the agent. IPv6 addresses and networks are also allowed.") +
+        _("If you are using the Agent bakery, the configuration will be "
+          "used for restricting network access to the baked agents. Even "
+          "if you don't use the bakery, the configured IP address "
+          "restrictions of a host will be verified against the allowed "
+          "IP addresses reported by the agent. This is done during "
+          "monitoring by the Check_MK service."),
     )
 
 

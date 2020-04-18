@@ -1,4 +1,4 @@
-title: Prometheus Custom Check
+title: Prometheus: Custom Check
 agents: linux
 catalog: app/prometheus
 license: GPL
@@ -12,5 +12,8 @@ description:
  respective service. Further details are displayed for the user in case the PromQL
  query was invalid or faulty.
 
+item:
+ Name configured by user
+
 inventory:
- One item for each service is discovered
+ One service is created for each request.

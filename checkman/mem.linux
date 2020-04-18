@@ -1,4 +1,4 @@
-title: Detailed usage of RAM, Swap, VMalloc and other memory areas on Linux
+title: Linux: Detailed Usage of RAM, Swap, VMalloc and other Memory Areas
 agents: linux
 catalog: os/kernel
 license: GPL
@@ -37,9 +37,6 @@ description:
  {Do not impose levels} the check status is always {OK} independent of a
  possible RAM corruption.
 
-item:
- {None}
-
 inventory:
- One item per Linux host is being created.
+ One service is created for each Linux host.
 

@@ -1,31 +1,11 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
-
 #   .--agent output--------------------------------------------------------.
 #   |                           _                 _               _        |
 #   |     __ _  __ _  ___ _ __ | |_    ___  _   _| |_ _ __  _   _| |_      |
@@ -34,7 +14,6 @@
 #   |    \__,_|\__, |\___|_| |_|\__|  \___/ \__,_|\__| .__/ \__,_|\__|     |
 #   |          |___/                                 |_|                   |
 #   '----------------------------------------------------------------------'
-
 # <<<varnish>>>
 # client_conn           13687134         4.41 Client connections accepted
 # client_drop                  0         0.00 Connection dropped, no sess/wrk
@@ -234,7 +213,6 @@
 # VBE.default(127.0.0.1,,81).happy           0          .   Happy health probes
 # VBE.name(xxx.xxx.xxx.xxx,,80).vcls            1          .   VCL references
 # VBE.name(xxx.xxx.xxx.xxx,,80).happy           0          .   Happy health probes
-
 # Newer agent output has MAIN and MGT prefix keys at the beginning
 # and provide addtional sections MEMPOOL:
 # (LCK, SMA, VBE has the same structure)
@@ -280,7 +258,6 @@
 # MEMPOOL.req0.toosmall Too
 # MEMPOOL.req0.surplus Too
 # ...
-
 #.
 #   .--common--------------------------------------------------------------.
 #   |                                                                      |
@@ -290,8 +267,6 @@
 #   |              \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 def parse_varnish(info):
     parsed = {}
     for line in info:
@@ -301,25 +276,21 @@ def parse_varnish(info):
             value = int(line[1])
         except ValueError:
             value = None
-
         if line[3].lower() in line[0]:
             descr = " ".join(line[4:])
         else:
             descr = " ".join(line[3:])
-
         perf_var_name = "varnish_%s_rate" % parsed_path[-1]
         if perf_var_name.startswith("varnish_n_wrk"):
             perf_var_name = perf_var_name.replace("n_wrk", "worker")
         elif perf_var_name.startswith("varnish_n_"):
             perf_var_name = perf_var_name.replace("n_", "objects_")
-
         instance.update({
             "value": value,
             "descr": descr.replace("/", " "),
             "perf_var_name": perf_var_name,
             "params_var_name": parsed_path[-1].split("_", 1)[-1],
         })
-
     # Newer output has MAIN or MGT prefix keys,
     # see above in 'agent output'
     for key in ["MAIN", "MGT"]:
@@ -396,8 +367,6 @@ def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
 #   +----------------------------------------------------------------------+
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
-
-
 def inventory_varnish_uptime(parsed):
     if "uptime" in parsed:
         return [(None, None)]
@@ -416,7 +385,6 @@ check_info["varnish"] = {
     "has_perfdata": True,
     "includes": ["uptime.include"],
 }
-
 #.
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
@@ -426,8 +394,6 @@ check_info["varnish"] = {
 #   |                      \___\__,_|\___|_| |_|\___|                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.cache"] = {
     "inventory_function"      : lambda parsed: \
         inventory_varnish(parsed, ["cache_miss"]),
@@ -441,7 +407,6 @@ check_info["varnish.cache"] = {
     "group"                   : "varnish_cache",
     "has_perfdata"            : True,
 }
-
 #.
 #   .--client--------------------------------------------------------------.
 #   |                            _ _            _                          |
@@ -451,8 +416,6 @@ check_info["varnish.cache"] = {
 #   |                       \___|_|_|\___|_| |_|\__|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.client"] = {
     "inventory_function"  : lambda parsed: \
         inventory_varnish(parsed, ["client_req"]),
@@ -467,7 +430,6 @@ check_info["varnish.client"] = {
     "group"               : "varnish_client",
     "has_perfdata"        : True,
 }
-
 #.
 #   .--backend-------------------------------------------------------------.
 #   |                _                _                  _                 |
@@ -477,8 +439,6 @@ check_info["varnish.client"] = {
 #   |               |_.__/ \__,_|\___|_|\_\___|_| |_|\__,_|                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.backend"] = {
     "inventory_function"  : lambda parsed: \
         inventory_varnish(parsed, ["backend_fail", "backend_unhealthy", "backend_busy"]),
@@ -498,7 +458,6 @@ check_info["varnish.backend"] = {
     "group"               : "varnish_backend",
     "has_perfdata"        : True,
 }
-
 #.
 #   .--fetch---------------------------------------------------------------.
 #   |                        __      _       _                             |
@@ -508,8 +467,6 @@ check_info["varnish.backend"] = {
 #   |                      |_|  \___|\__\___|_| |_|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.fetch"] = {
     "inventory_function"  : lambda parsed: \
         inventory_varnish(parsed, ["fetch_1xx", "fetch_204", "fetch_304",
@@ -534,7 +491,6 @@ check_info["varnish.fetch"] = {
     "group"               : "varnish_fetch",
     "has_perfdata"        : True,
 }
-
 #.
 #   .--ESI-----------------------------------------------------------------.
 #   |                           _____ ____ ___                             |
@@ -544,10 +500,7 @@ check_info["varnish.fetch"] = {
 #   |                          |_____|____/___|                            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 factory_settings["varnish_esi_default_levels"] = {'errors': (1.0, 2.0)}
-
-
 check_info["varnish.esi"] = {
     "inventory_function"      : lambda parsed: \
         inventory_varnish(parsed, ["esi_errors"]),
@@ -561,7 +514,6 @@ check_info["varnish.esi"] = {
     "group"                   : "varnish_esi",
     "has_perfdata"            : True,
 }
-
 #.
 #   .--objects-------------------------------------------------------------.
 #   |                         _     _           _                          |
@@ -571,8 +523,6 @@ check_info["varnish.esi"] = {
 #   |                   \___/|_.__// |\___|\___|\__|___/                   |
 #   |                            |__/                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.objects"] = {
     "inventory_function"  : lambda parsed: \
         inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
@@ -586,7 +536,6 @@ check_info["varnish.objects"] = {
     "group"               : "varnish_objects",
     "has_perfdata"        : True,
 }
-
 #.
 #   .--worker--------------------------------------------------------------.
 #   |                                     _                                |
@@ -596,8 +545,6 @@ check_info["varnish.objects"] = {
 #   |                   \_/\_/ \___/|_|  |_|\_\___|_|                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
 check_info["varnish.worker"] = {
     "inventory_function"  : lambda parsed: \
         inventory_varnish(parsed, ["n_wrk_failed", "n_wrk_queued"]),
@@ -615,7 +562,6 @@ check_info["varnish.worker"] = {
     "group"               : "varnish_worker",
     "has_perfdata"        : True,
 }
-
 #.
 #   .--cache hit ratio-----------------------------------------------------.
 #   |                  _            _     _ _               _   _          |
@@ -625,10 +571,7 @@ check_info["varnish.worker"] = {
 #   |   \___\__,_|\___|_| |_|\___| |_| |_|_|\__| |_|  \__,_|\__|_|\___/    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 factory_settings["varnish_cache_hit_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
-
-
 check_info["varnish.cache_hit_ratio"] = {
     "inventory_function"      : lambda parsed: \
         inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
@@ -640,7 +583,6 @@ check_info["varnish.cache_hit_ratio"] = {
     "group"                   : "varnish_cache_hit_ratio",
     "has_perfdata"            : True,
 }
-
 #.
 #   .--backend success ratio-----------------------------------------------.
 #   |                _                _                  _                 |
@@ -656,10 +598,7 @@ check_info["varnish.cache_hit_ratio"] = {
 #   |      |___/\__,_|\___\___\___||___/___/ |_|  \__,_|\__|_|\___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 factory_settings["varnish_backend_success_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
-
-
 check_info["varnish.backend_success_ratio"] = {
     "inventory_function"      : lambda parsed: \
         inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
@@ -671,7 +610,6 @@ check_info["varnish.backend_success_ratio"] = {
     "group"                   : "varnish_backend_success_ratio",
     "has_perfdata"            : True,
 }
-
 #.
 #   .--worker thread ratio-------------------------------------------------.
 #   |                     _               _   _                        _   |
@@ -687,7 +625,6 @@ check_info["varnish.backend_success_ratio"] = {
 #   |                       |_|  \__,_|\__|_|\___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 factory_settings["varnish_worker_thread_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
 
 
@@ -700,8 +637,6 @@ def check_varnish_worker_thread_ratio(_no_item, params, parsed):
     return check_levels(ratio,
                         "varnish_worker_thread_ratio", (None, None, warn, crit),
                         human_readable_func=get_percent_human_readable)
-
-
 check_info["varnish.worker_thread_ratio"] = {
     "inventory_function"      : lambda parsed: \
         inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),

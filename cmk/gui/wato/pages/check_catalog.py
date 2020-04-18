@@ -1,32 +1,19 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import (  # pylint: disable=unused-import
+    Set, List, Dict, Any,
+)
+
+import six
 
 import cmk.utils.man_pages as man_pages
+from cmk.utils.man_pages import ManPageCatalogPath  # pylint: disable=unused-import
+from cmk.utils.type_defs import CheckPluginName  # pylint: disable=unused-import
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -77,7 +64,7 @@ class ModeCheckPlugins(WatoMode):
 
     def _from_vars(self):
         self._search = get_search_expression()
-        self._topic = html.get_ascii_input("topic")
+        self._topic = html.request.get_ascii_input("topic")
         if self._topic and not self._search:
             if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
                 raise MKUserError("topic", _("Invalid topic"))
@@ -107,7 +94,7 @@ class ModeCheckPlugins(WatoMode):
         if self._topic and not self._search:
             heading = "%s - %s" % (_("Catalog of Check Plugins"), self._topic_title)
         elif self._search:
-            heading = html.render_text("%s: %s" % (_("Check plugins matching"), self._search))
+            heading = "%s: %s" % (_("Check plugins matching"), self._search)
         else:
             heading = _("Catalog of Check Plugins")
         return heading
@@ -154,19 +141,14 @@ class ModeCheckPlugins(WatoMode):
             menu.show()
 
     def _get_manpages_after_search(self):
-        collection = {}
-        handled_check_names = set([])
+        collection = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+        handled_check_names = set()  # type: Set[CheckPluginName]
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
             if isinstance(entry, dict):
-                name = entry.get("name", "")
-                if isinstance(name, str):
-                    name = name.decode("utf8")
-
-                title = entry.get("title", "")
-                if isinstance(title, str):
-                    title = title.decode("utf8")
+                name = six.ensure_text(entry.get("name", ""))
+                title = six.ensure_text(entry.get("title", ""))
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
 
@@ -188,10 +170,9 @@ class ModeCheckPlugins(WatoMode):
                         name = match.get("name")
                         if name and name in handled_check_names:
                             continue  # avoid duplicate
-                        else:
-                            collection[key].append(match)
-                            if name:
-                                handled_check_names.add(name)
+                        collection[key].append(match)
+                        if name:
+                            handled_check_names.add(name)
 
             elif isinstance(entries, dict):
                 for k, subentries in entries.items():
@@ -206,14 +187,14 @@ class ModeCheckPlugins(WatoMode):
         def path_prefix_matches(p, op):
             if op and not p:
                 return False
-            elif not op:
+            if not op:
                 return True
             return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
         def strip_manpage_entry(entry):
-            return dict([(k, v) for (k, v) in entry.items() if k in ["name", "agents", "title"]])
+            return {k: v for k, v in entry.items() if k in ["name", "agents", "title"]}
 
-        tree = {}
+        tree = {}  # type: Dict[str, Any]
         if len(self._path) > 0:
             only_path = tuple(self._path)
         else:
@@ -225,7 +206,7 @@ class ModeCheckPlugins(WatoMode):
             subtree = tree
             for component in path[:-1]:
                 subtree = subtree.setdefault(component, {})
-            subtree[path[-1]] = map(strip_manpage_entry, entries)
+            subtree[path[-1]] = list(map(strip_manpage_entry, entries))
 
         for p in only_path:
             try:
@@ -278,7 +259,7 @@ class ModeCheckPlugins(WatoMode):
             for subcat in subnode.values():
                 num_plugins += len(subcat)
 
-        text = ""
+        text = u""
         if num_cats > 1:
             text += "%d %s<br>" % (num_cats, _("sub categories"))
         text += "%d %s" % (num_plugins, _("check plugins"))
@@ -340,7 +321,7 @@ class ModeCheckManPage(WatoMode):
         return []
 
     def _from_vars(self):
-        self._check_type = html.get_ascii_input("check_type")
+        self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
         # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
         # As long as the old one is available, allow a minus here.

@@ -1,35 +1,21 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for renaming one or multiple existing hosts"""
 
 import os
 import socket
+from typing import (  # pylint: disable=unused-import
+    List, Dict, Tuple as _Tuple,
+)
+
+from livestatus import SiteId  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -72,7 +58,7 @@ from cmk.gui.plugins.wato import (
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
 except ImportError:
-    alert_handling = None  # type: ignore
+    alert_handling = None  # type: ignore[assignment]
 
 
 @gui_background_job.job_registry.register
@@ -203,7 +189,7 @@ class ModeBulkRenameHost(WatoMode):
             if target_name and host.may("write"):
                 entries.append((folder, host_name, target_name))
         if renaming_config["recurse"]:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
         return entries
 
@@ -363,7 +349,7 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     def _from_vars(self):
-        host_name = html.get_ascii_input("host")
+        host_name = html.request.get_ascii_input_mandatory("host")
 
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -479,7 +465,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
         if in_folder.rename_parent(oldname, newname):
             parents.append(in_folder.name())
 
-    for subfolder in in_folder.all_subfolders().values():
+    for subfolder in in_folder.subfolders():
         parents += rename_host_as_parent(oldname, newname, subfolder)
 
     return parents
@@ -508,7 +494,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
                        sites=folder.all_site_ids())
             rulesets.save()
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
     rename_host_in_folder_rules(watolib.Folder.root_folder())
@@ -535,7 +521,7 @@ def rename_host_in_event_rules(oldname, newname):
 
     users = userdb.load_users(lock=True)
     some_user_changed = False
-    for user in users.itervalues():
+    for user in users.values():
         if user.get("notification_rules"):
             rules = user["notification_rules"]
             num_changed = rename_in_event_rules(rules)
@@ -558,7 +544,7 @@ def rename_host_in_event_rules(oldname, newname):
                 alert_handling.save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifications also can have host conditions
-    for user in users.itervalues():
+    for user in users.values():
         method = user.get("notification_method")
         if method and isinstance(method, tuple) and method[0] == "flexible":
             channels_changed = 0
@@ -619,7 +605,8 @@ def rename_host_in_bi(oldname, newname):
 
 
 def rename_hosts_in_check_mk(renamings):
-    action_counts = {}
+    # type: (List[_Tuple[watolib.CREFolder, HostName, HostName]]) -> Dict[str, int]
+    action_counts = {}  # type: Dict[str, int]
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
@@ -641,7 +628,7 @@ def merge_action_counts(action_counts, new_counts):
 
 
 def group_renamings_by_site(renamings):
-    renamings_per_site = {}
+    renamings_per_site = {}  # type: Dict[SiteId, List[_Tuple[HostName, HostName]]]
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()

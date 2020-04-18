@@ -1,4 +1,4 @@
-title: NTP time synchronization using ntpd
+title: NTP Time Synchronization Using ntpd
 agents: linux
 catalog: os/services
 license: GPL
@@ -23,6 +23,6 @@ description:
  want to use {ntp}, which creates one individual check per NTP peer.
 
 inventory:
- If at least one peer is present, exactly one check is created, if
- {ntp_inventory_mode} is set to {"summary"} or {"both"}.
+ One service is created if at least one peer is present
+ if {ntp_inventory_mode} is set to {"summary"} or {"both"}.
 

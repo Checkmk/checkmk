@@ -1,4 +1,4 @@
-title: State of JVM applications
+title: Java Virtual Machine: State of Applications
 agents: linux
 catalog: app/java
 license: GPL
@@ -18,5 +18,5 @@ item:
 
 
 inventory:
- One check is created for each application running inside an Jolokia
+ One service is created for each application running inside an Jolokia
  instance sent by the agent.

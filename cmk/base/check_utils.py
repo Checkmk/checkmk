@@ -1,67 +1,62 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# .------------------------------------------------------------------------.
-# |                ____ _               _        __  __ _  __              |
-# |               / ___| |__   ___  ___| | __   |  \/  | |/ /              |
-# |              | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
-# |              | |___| | | |  __/ (__|   <    | |  | | . \               |
-# |               \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
-# |                                        |_____|                         |
-# |             _____       _                       _                      |
-# |            | ____|_ __ | |_ ___ _ __ _ __  _ __(_)___  ___             |
-# |            |  _| | '_ \| __/ _ \ '__| '_ \| '__| / __|/ _ \            |
-# |            | |___| | | | ||  __/ |  | |_) | |  | \__ \  __/            |
-# |            |_____|_| |_|\__\___|_|  | .__/|_|  |_|___/\___|            |
-# |                                     |_|                                |
-# |                     _____    _ _ _   _                                 |
-# |                    | ____|__| (_) |_(_) ___  _ __                      |
-# |                    |  _| / _` | | __| |/ _ \| '_ \                     |
-# |                    | |__| (_| | | |_| | (_) | | | |                    |
-# |                    |_____\__,_|_|\__|_|\___/|_| |_|                    |
-# |                                                                        |
-# | mathias-kettner.com                                 mathias-kettner.de |
-# '------------------------------------------------------------------------'
-#  This file is part of the Check_MK Enterprise Edition (CEE).
-#  Copyright by Mathias Kettner and Mathias Kettner GmbH.  All rights reserved.
-#
-#  Distributed under the Check_MK Enterprise License.
-#
-#  You should have  received  a copy of the Check_MK Enterprise License
-#  along with Check_MK. If not, email to mk@mathias-kettner.de
-#  or write to the postal address provided at www.mathias-kettner.de
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (  # pylint: disable=unused-import
-    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, NoReturn,
+    TYPE_CHECKING, Union, TypeVar, Text, Optional, Dict, Tuple, Any, List, NoReturn,
 )
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName, Item, CheckPluginName  # pylint: disable=unused-import
 
-import cmk.base
+from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
-from cmk.base.utils import HostName
 
-Item = Union[Text, None, int]
+if TYPE_CHECKING:
+    from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
+        RawSNMPData, SNMPSections, PersistedSNMPSections, SNMPSectionContent,
+    )
+
 CheckParameters = Union[None, Dict, Tuple, List, str]
-CheckPluginName = str
 RulesetName = str
 ServiceState = int
+HostState = int
 ServiceDetails = Text
 ServiceAdditionalDetails = Text
 # TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
 Metric = List
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
 
+RawAgentData = bytes
+
 SectionName = str
-SectionContent = List[List[Text]]
-PersistedSection = Tuple[int, int, SectionContent]
-PersistedSections = Dict[SectionName, PersistedSection]
-AgentSections = Dict[SectionName, SectionContent]
-AgentSectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+
+AgentSectionContent = List[List[Text]]
+PersistedAgentSection = Tuple[int, int, AgentSectionContent]
+PersistedAgentSections = Dict[SectionName, PersistedAgentSection]
+AgentSections = Dict[SectionName, AgentSectionContent]
+
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
+FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
+
+AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
+AbstractRawData = Union[RawAgentData, "RawSNMPData"]
+AbstractSections = Union[AgentSections, "SNMPSections"]
+AbstractPersistedSections = Union[PersistedAgentSections, "PersistedSNMPSections"]
+
+BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
+BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",
+                                        bound=AbstractSectionContent)
+BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSections)
+BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
+                                           bound=AbstractPersistedSections)
 
 
-class Service(object):
+class Service(object):  # pylint: disable=useless-object-inheritance
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
@@ -170,11 +165,11 @@ def section_name_of(check_plugin_name):
 
 def is_snmp_check(check_plugin_name):
     # type: (str) -> bool
-    cache = cmk.base.runtime_cache.get_dict("is_snmp_check")
+    cache = _runtime_cache.get_dict("is_snmp_check")
     try:
         return cache[check_plugin_name]
     except KeyError:
-        snmp_checks = cmk.base.runtime_cache.get_set("check_type_snmp")
+        snmp_checks = _runtime_cache.get_set("check_type_snmp")
         result = section_name_of(check_plugin_name) in snmp_checks
         cache[check_plugin_name] = result
         return result
@@ -182,11 +177,11 @@ def is_snmp_check(check_plugin_name):
 
 def is_tcp_check(check_plugin_name):
     # type: (str) -> bool
-    cache = cmk.base.runtime_cache.get_dict("is_tcp_check")
+    cache = _runtime_cache.get_dict("is_tcp_check")
     try:
         return cache[check_plugin_name]
     except KeyError:
-        tcp_checks = cmk.base.runtime_cache.get_set("check_type_tcp")
+        tcp_checks = _runtime_cache.get_set("check_type_tcp")
         result = section_name_of(check_plugin_name) in tcp_checks
         cache[check_plugin_name] = result
         return result

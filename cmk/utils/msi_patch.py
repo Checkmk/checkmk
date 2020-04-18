@@ -1,33 +1,14 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
 from typing import Optional, Tuple  # pylint: disable=unused-import
 
 import sys
+import re
 
 import uuid
 import yaml
@@ -41,6 +22,8 @@ else:
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
 MSI_PACKAGE_CODE_MARKER = "Intel;1033"
 MSI_PACKAGE_CODE_OFFSET = len("Intel;1033") + 10  #
+# UUID regex
+regex = re.compile('^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}', re.I)
 
 
 # used normally only in Windows build chain to patch
@@ -60,6 +43,12 @@ def parse_command_line(argv):
 def generate_uuid():
     # type: () -> str
     return ("{%s}" % uuid.uuid1()).upper()
+
+
+# converts any text to SHA-1 based uuid
+def generate_uuid_from_base(base):
+    # type: (str) -> str
+    return ("{%s}" % uuid.uuid5(uuid.NAMESPACE_DNS, base)).upper()
 
 
 def write_state_file(path_to_state, pos, code):
@@ -130,6 +119,12 @@ def patch_package_code_by_state_file(f_name, state_file, package_code=None):
     return patch_package_code(f_name, mask=id_, package_code=package_code)
 
 
+def valid_uuid(uuid_value):
+    # type: (str) -> bool
+    match = regex.match(uuid_value)
+    return bool(match)
+
+
 # engine to patch MSI file with new code
 # search for 'Intel;1033' marker, add offset and patch code
 def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
@@ -139,8 +134,10 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
     if not p.exists():
         return False
 
-    if package_code is None or len(package_code) == 0:
+    if package_code is None:
         package_code = generate_uuid()
+    elif not valid_uuid(package_code):
+        package_code = generate_uuid_from_base(package_code)
 
     data = p.read_bytes()  # type:ignore
     location = data.find(MSI_PACKAGE_CODE_MARKER.encode('ascii'))
@@ -149,7 +146,7 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
 
     location += MSI_PACKAGE_CODE_OFFSET
 
-    if data[location] != b"{":
+    if data[location:location + 1] != b"{":
         return False
 
     start = location
@@ -170,12 +167,12 @@ if __name__ == '__main__':
 
     if mode == "code":
         success = patch_package_code(f_name=file_name, mask=param)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     if mode == "1033":
         out_state_file = None if param == "" else Path(param)
         success = patch_package_code_by_marker(f_name=file_name, state_file=out_state_file)
-        exit(0 if success else 1)
+        sys.exit(0 if success else 1)
 
     print("Invalid mode '{}'".format(mode))
-    exit(1)
+    sys.exit(1)

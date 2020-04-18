@@ -1,44 +1,26 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from opsgenie.swagger_client import AlertApi  # type: ignore
-from opsgenie.swagger_client import configuration  # type: ignore
-from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore
-from opsgenie.swagger_client.rest import ApiException  # type: ignore
-from opsgenie.swagger_client.models import CloseAlertRequest  # type: ignore
-from opsgenie.swagger_client.models import CreateAlertRequest  # type: ignore
-from opsgenie.swagger_client.models import TeamRecipient  # type: ignore
+from typing import Optional, Text  # pylint: disable=unused-import
+import six
+from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
+from opsgenie.swagger_client import configuration  # pylint: disable=import-error
+from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import] # pylint: disable=import-error
+from opsgenie.swagger_client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
+from opsgenie.swagger_client.models import CloseAlertRequest  # pylint: disable=import-error
+from opsgenie.swagger_client.models import CreateAlertRequest  # pylint: disable=import-error
+from opsgenie.swagger_client.models import TeamRecipient  # pylint: disable=import-error
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 
 def main():
     context = utils.collect_context()
-    priority = 'P3'
+    priority = u'P3'  # type: Optional[Text]
     teams_list = []
     tags_list = None
     action_list = None
@@ -51,15 +33,16 @@ def main():
     note_created = 'Alert created by Check_MK' or context.get('PARAMETER_NOTE_CREATED')
     note_closed = 'Alert closed by Check_MK' or context.get('PARAMETER_NOTE_CLOSED')
     priority = context.get('PARAMETER_PRIORITY')
-    alert_source = None or context.get('PARAMETER_SOURCE')
-    owner = None or context.get('PARAMETER_OWNER')
-    entity_value = None or context.get('PARAMETER_ENTITY')
+    alert_source = context.get('PARAMETER_SOURCE')
+    owner = context.get('PARAMETER_OWNER')
+    entity_value = context.get('PARAMETER_ENTITY')
+    host_url = context.get("PARAMETER_URL")
 
     if context.get('PARAMETER_TAGSS'):
-        tags_list = None or context.get('PARAMETER_TAGSS').split(" ")
+        tags_list = None or context.get('PARAMETER_TAGSS', u'').split(" ")
 
     if context.get('PARAMETER_ACTIONSS'):
-        action_list = None or context.get('PARAMETER_ACTIONSS').split(" ")
+        action_list = None or context.get('PARAMETER_ACTIONSS', u'').split(" ")
 
     if context.get('PARAMETER_TEAMSS'):
         for team in context['PARAMETER_TEAMSS'].split(" "):
@@ -110,19 +93,23 @@ $LONGSERVICEOUTPUT$
             alias,
             owner,
             entity_value,
+            host_url,
         )
     elif context['NOTIFICATIONTYPE'] == 'RECOVERY':
-        handle_alert_deletion(key, owner, alias, alert_source, note_closed)
+        handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url)
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
-        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source)
+        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url)
     else:
-        sys.stdout.write('Noticication type %s not supported\n' % (context['NOTIFICATIONTYPE']))
+        sys.stdout.write(
+            six.ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
         return 0
 
 
-def configure_authorization(key):
+def configure_authorization(key, host_url):
     configuration.api_key['Authorization'] = key
     configuration.api_key_prefix['Authorization'] = 'GenieKey'
+    if host_url is not None:
+        configuration.host = '%s' % host_url
 
 
 def handle_alert_creation(
@@ -138,10 +125,11 @@ def handle_alert_creation(
     alias,
     owner,
     entity_value,
+    host_url,
 ):
-    configure_authorization(key)
+    configure_authorization(key, host_url)
 
-    body = CreateAlertRequest(  # type: ignore
+    body = CreateAlertRequest(
         note=note_created,
         actions=action_list,
         description=desc,
@@ -165,8 +153,8 @@ def handle_alert_creation(
         return 2
 
 
-def handle_alert_deletion(key, owner, alias, alert_source, note_closed):
-    configure_authorization(key)
+def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url):
+    configure_authorization(key, host_url)
 
     body = CloseAlertRequest(
         source=alert_source,
@@ -184,10 +172,10 @@ def handle_alert_deletion(key, owner, alias, alert_source, note_closed):
         return 2
 
 
-def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source):
-    configure_authorization(key)
+def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url):
+    configure_authorization(key, host_url)
 
-    body = AcknowledgeAlertRequest(  # type: ignore
+    body = AcknowledgeAlertRequest(
         source=alert_source,
         user=ack_author,
         note=ack_comment,

@@ -36,13 +36,13 @@ $(MODULEBUILDRC_PATH):
 
 $(RRDTOOL_CONFIGURE): $(RRDTOOL_PATCHING)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
-	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
-	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON3_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export top_builddir="."; \
-	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
-	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \
+	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0) -I$(PACKAGE_PYTHON3_INCLUDE_PATH)" ; \
 	cd $(RRDTOOL_BUILD_DIR) && \
         ./configure $(RRDTOOL_CONFIGUREOPTS)
 	$(TOUCH) $@
@@ -53,32 +53,32 @@ $(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE)
 # Build everything except the bindings (which have python and so on as
 # dependency which would take a long time to build)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
-	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
-	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON3_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export top_builddir="."; \
-	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
-	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \
+	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0) -I$(PACKAGE_PYTHON3_INCLUDE_PATH)" ; \
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/po all && \
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/src all && \
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/tests all && \
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/etc all
 	$(TOUCH) $@
 
-$(RRDTOOL_BUILD_BINDINGS): $(RRDTOOL_CONFIGURE) $(RRDTOOL_BUILD_LIBRARY) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON_MODULES_INTERMEDIATE_INSTALL) $(MODULEBUILDRC_PATH) $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(RRDTOOL_BUILD_BINDINGS): $(RRDTOOL_CONFIGURE) $(RRDTOOL_BUILD_LIBRARY) $(PYTHON3_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_INTERMEDIATE_INSTALL) $(MODULEBUILDRC_PATH) $(PERL_MODULES_INTERMEDIATE_INSTALL)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 	set -e ; \
 	unset DESTDIR MAKEFLAGS ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
-	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
-	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON3_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	export MODULEBUILDRC=$(MODULEBUILDRC_PATH); \
 	export top_builddir="."; \
-	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
+	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON3_LDFLAGS)" ; \
 	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/bindings all
 	$(TOUCH) $@
@@ -89,9 +89,9 @@ $(RRDTOOL_INSTALL): $(RRDTOOL_INSTALL_LIBRARY) $(RRDTOOL_INSTALL_BINDINGS)
 $(RRDTOOL_INSTALL_LIBRARY): $(RRDTOOL_BUILD_LIBRARY)
 	set -e ; \
 	unset DESTDIR MAKEFLAGS ; \
-	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
-	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
-	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON3_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/po install && \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/src install && \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/tests install && \
@@ -105,11 +105,11 @@ $(RRDTOOL_INSTALL_LIBRARY): $(RRDTOOL_BUILD_LIBRARY)
 $(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_INTERMEDIATE_INSTALL)
 	set -e ; \
 	unset DESTDIR MAKEFLAGS ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
-	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
-	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
-	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) ; \
+	export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON3_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/bindings install
 # clean up perl man pages which end up in wrong location

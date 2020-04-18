@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 import six
@@ -47,7 +27,6 @@ from cmk.gui.valuespec import (
     EmailAddress,
     ListOf,
     Checkbox,
-    RadioChoice,
     Password,
     Percentage,
     CascadingDropdown,
@@ -510,10 +489,11 @@ def _valuespec_active_checks_dns():
                         "expected_address",
                         Transform(
                             ListOfStrings(
-                                title=_("Expected answer (IP address or hostname)"),
+                                title=_("Expected DNS answers"),
                                 help=_("List all allowed expected answers here. If query for an "
                                        "IP address then the answer will be host names, that end "
-                                       "with a dot."),
+                                       "with a dot. Multiple IP addresses within one answer must "
+                                       "be separated by comma."),
                             ),
                             forth=lambda old: isinstance(old, six.string_types) and [old] or old,
                         ),
@@ -969,6 +949,11 @@ def _active_checks_http_transform_check_http(params):
     return transformed
 
 
+def _validate_active_check_http_name(value, varprefix):
+    if value.strip() == "^":
+        raise MKUserError(varprefix, _("Please provide a valid name"))
+
+
 def _valuespec_active_checks_http():
     return Transform(
         Dictionary(
@@ -987,7 +972,9 @@ def _valuespec_active_checks_http():
                          "Will be used in the service description. If the name starts with "
                          "a caret (<tt>^</tt>), the service description will not be prefixed with either "
                          "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
-                     allow_empty=False)),
+                     allow_empty=False,
+                     validate=_validate_active_check_http_name,
+                 )),
                 ("host", _active_checks_http_hostspec()),
                 ("proxy", _active_checks_http_proxyspec()),
                 ("mode",
@@ -1737,21 +1724,19 @@ def _valuespec_active_checks_bi_aggr():
                           default_value=60,
                       )),
                      ("in_downtime",
-                      RadioChoice(title=_("State, if BI aggregate is in scheduled downtime"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore downtime")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
+                      DropdownChoice(title=_("State, if BI aggregate is in scheduled downtime"),
+                                     choices=[
+                                         (None, _("Use normal state, ignore downtime")),
+                                         ("ok", _("Force to be OK")),
+                                         ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                     ])),
                      ("acknowledged",
-                      RadioChoice(title=_("State, if BI aggregate is acknowledged"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore acknowledgement")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
+                      DropdownChoice(title=_("State, if BI aggregate is acknowledged"),
+                                     choices=[
+                                         (None, _("Use normal state, ignore acknowledgement")),
+                                         ("ok", _("Force to be OK")),
+                                         ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                     ])),
                      ("track_downtimes",
                       Checkbox(
                           title=_("Track downtimes"),

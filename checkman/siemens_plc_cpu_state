@@ -1,4 +1,4 @@
-title: Siemens PLC: CPU state
+title: Siemens PLC: CPU State
 agents: siemens_plc
 catalog: hw/server/siemens
 license: GPL
@@ -15,4 +15,4 @@ description:
  ({UNKNOWN}).
 
 inventory:
- One check for each device is created automatically.
+ One service is created for each device.

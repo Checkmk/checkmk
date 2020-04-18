@@ -1,4 +1,4 @@
-title: Alcatel switches: Board and CPU Temperature
+title: Alcatel Switches: Board and CPU Temperature
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL
@@ -17,6 +17,12 @@ description:
 
  If the CPU Temperature is supported depends on the switch mode (not supported on Hawk models).
 
-inventory:
- One check is created
+ The check has configurable levels for {WARN}/{CRIT} (default: 45, 50)
 
+ The check uses the ALCATEL-IND1-CHASSIS-MIB.
+
+item:
+ The slot index and the name of the CPU. The slot index is optional
+
+inventory:
+ One service is created for each board and CPU

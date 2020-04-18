@@ -1,4 +1,4 @@
-title: UCS C-Series Rack Server: Memory utilization
+title: UCS C-Series Rack Server: Memory Utilization
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPL
@@ -41,7 +41,7 @@ description:
  The {warn} and {crit} level are configurable via WATO rule {Device Component Memory Utilization}.
 
 inventory:
-  All server racks included in the agent plugin output are found automatically.
+ One service is created for each server rack included in the agent plugin output.
 
 item:
-  One item per server rack.
+ {{Rack unit}} followed by the index of the rack

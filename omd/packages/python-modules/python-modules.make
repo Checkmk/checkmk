@@ -57,7 +57,13 @@ endif
 # Check_MK Edition specific
 PYTHON_MODULES_LIST += simplejson-3.16.0.tar.gz
 PYTHON_MODULES_LIST += mysqlclient-1.3.13.tar.gz  # needed by check_sql
+# Is built for python3 and only available there from now for el6
+# (had to remove the build dependency from the container)
+ifneq ($(DISTRO_CODE),el6)
 PYTHON_MODULES_LIST += psycopg2-2.6.2.tar.gz # needed by check_sql
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0007-psycopg-wrong-ifdef.patch
+PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0016-make-psycopg2-build-with-ubuntu-bionic.patch
+endif
 PYTHON_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
@@ -65,6 +71,7 @@ PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
+PYTHON_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 PYTHON_MODULES_LIST += npyscreen-4.10.5.tar.gz # needed for mkbench
 PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench
@@ -158,7 +165,7 @@ PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz
 PYTHON_MODULES_LIST += adal-1.2.0.tar.gz
 PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
-PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
+PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
 # Added for the GUI
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
@@ -190,7 +197,7 @@ PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
 # Added VCR + Dependencies for testing special agents (CMK-2414)
-PYTHON_MODULES_LIST += contextlib2-0.5.5.tar.gz
+PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
 PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
 PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
 PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
@@ -201,10 +208,8 @@ PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
 PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
 PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
 # required by zipp
-PYTHON_MODULES_LIST += more-itertools-8.0.1.tar.gz
+PYTHON_MODULES_LIST += more-itertools-5.0.0.tar.gz
 # required by importlib_metadata
-PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
-PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
 PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
 # required by jsonschema
 PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
@@ -223,8 +228,20 @@ PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
 # direct dependency
 PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
 # patched version without dependency on pathlib
-PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
-# PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
+# PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
+PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
+# For forecasting graphs
+PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
+
+PYTHON_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+PYTHON_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
+
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack
@@ -318,7 +335,7 @@ python-modules-dump-Pipfile:
 	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
-	@echo 'freezegun = "*"  # used by various unit tests'
+	@echo 'freezegun = "!=0.3.13"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'
 	@echo 'mock = "*"  # used in checktestlib in unit tests'
@@ -328,9 +345,11 @@ python-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
-	@echo 'webtest = "*"  # used for WSGI tests'
+	@echo 'pyfakefs = "*" # used for unit tests'
+	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
+	@echo 'flake8 = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

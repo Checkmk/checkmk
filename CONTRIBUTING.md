@@ -604,22 +604,68 @@ about the error diagnosis below, if it doesn't work.
 ## Shell scripts
 
 The Linux / Unix agents and several plugins are written in shell code for best
-portability and transparency. In case you want to change something respect the
-following things:
+portability and transparency. If you would like to change or contribute
+something, please respect the following things:
 
-- Bash scripts are written for Bash version 3.1 or newer
-- Set `set -e -o pipefail` at the top of your script
+- If you think you need to use more advanced shell capability for your plugin 
+  like associative arrays (e.g. `bash`, `zsh`), then you should probably
+  consider using another language like `python`
+
 - Use [shellcheck](https://www.shellcheck.net/) for your changes before
   submitting patches.
 
-  The best results are achieved with a direct integration into the editor, so
-  that you are immediately informed about possible problems during programming.
-  The agent itself is not clean at the moment, but we aim to clean this up in
-  the near future.
+  The best results are achieved with
+  [a direct integration](https://github.com/koalaman/shellcheck#user-content-in-your-editor)
+  into your preferred editor, so that you are immediately informed about
+  possible problems during programming.
+  
+  The various agent scripts are not clean at the moment, but we aim to clean
+  this up in the near future.
+
+  Do note that while Shellcheck is an excellent tool, it's not perfect.
+  Sometimes it alerts on code that may actually be desired.  In this scenario,
+  you must use a `disable` directive with a comment that justifies your reason
+  for this.  Preferably this will be a git commit hash where the reasoning is
+  given e.g.
+
+  ```
+  # See commit abcd3456
+  # shellcheck disable=SC2120
+  foo() {
+  ```
+
+- Existing scripts have been written using a variety of shells.  Scripts that
+  use `bash` have tended to be written for `bash` 3.x.
+  
+  In the future, we will attempt to make our shell code more portable, which
+  means reducing `bash`isms.  If you're making shell code now, try to approach
+  it with portability in mind. Your code may be used on older systems and/or
+  commercial unices (e.g. AIX, Solaris etc).
+  
+  `ksh` is a reasonable lowest common denominator to target as it's 
+  [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and
+  its syntax is almost directly runnable in `bash`, `zsh` and others.
+
+  Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
+  you some ideas on more portable scripting, and `dash` is a readily available
+  shell that you can test your code within.
+
+  The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
 
 - Format the code according to the [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml) with these exceptions:
   - Line length up to 100 characters is allowed
   - Use 4 spaces for indentation
+
+- [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md) 
+  offers extra guidance over and above Google's that you may like to consider.
+  Again, the above listed exceptions apply.
+
+- By long-established convention, UPPERCASE variables are for the shell's
+  de-facto global scope, so should generally be avoided to minimise the risk of
+  clobbering the environment.  As is the standard practice in other languages.
+  If you need a variable in the "global scope", prepend it with `MK_` e.g. `MK_VERSION`
+
+- `echo` is a portability nightmare.  Prefer `printf` instead.
 
 - You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
 
@@ -629,9 +675,9 @@ following things:
 
   Execute this in Checkmk git directory:
 
-```
+  ```
   sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
-```
+  ```
 
 ## Localization
 

@@ -5,13 +5,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+import shutil
+import sys
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 import pytest  # type: ignore[import]
+
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
+
+
+@pytest.fixture(autouse=True)
+def cleanup_after_test():
+    yield
+
+    # Ensure there is no file left over in the unit test fake site
+    # to prevent tests involving eachother
+    for entry in Path(cmk.utils.paths.omd_root).iterdir():
+        if entry.is_dir():
+            shutil.rmtree(str(entry))
+        else:
+            entry.unlink()
 
 
 # Unit tests should not be executed in site.

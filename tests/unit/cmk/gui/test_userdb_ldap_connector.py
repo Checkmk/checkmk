@@ -233,7 +233,7 @@ def encode_to_byte_strings(inp):
     return inp
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)

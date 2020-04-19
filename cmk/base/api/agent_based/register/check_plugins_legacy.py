@@ -36,7 +36,7 @@ CONSIDERED_KEYS = {
     "default_levels_variable",
     "extra_sections",
     "group",
-    "handle_empty_info",  # obsolete
+    "handle_empty_info",  # obsolete, and ineffective anyway due to new snmp data layout
     "handle_real_time_checks",  # obsolete
     "has_perfdata",  # obsolete
     "includes",
@@ -226,8 +226,6 @@ def _create_cluster_legacy_mode_from_hell(check_function):
 def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
     # type: (str, Dict[str, Any], List[PluginName]) -> CheckPlugin
 
-    if check_info_dict.get("handle_empty_info"):
-        raise NotImplementedError("[%s]: 'handle_empty_info' is obsolete" % check_plugin_name)
     if check_info_dict.get('extra_sections'):
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
                                   check_plugin_name)

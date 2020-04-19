@@ -1482,9 +1482,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     item_state.reset_wrapped_counters()
                     exitcode, output, perfdata = checking.sanitize_check_result(
                         check_function(discovered_service.item,
-                                       checking.determine_check_params(params), section_content),
-                        cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name),
-                    )
+                                       checking.determine_check_params(params), section_content))
                     item_state.raise_counter_wrap()
                 except item_state.MKCounterWrapped:
                     output = u"WAITING - Counter based check, cannot be done offline"

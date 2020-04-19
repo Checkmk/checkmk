@@ -77,6 +77,8 @@ UncleanPerfValue = Union[None, str, float]
 #   | Execute the Check_MK checks on hosts                                 |
 #   '----------------------------------------------------------------------'
 
+ITEM_NOT_FOUND = (3, "Item not found in monitoring data", [])  # type: ServiceCheckResult
+
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
@@ -327,8 +329,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         item_state.reset_wrapped_counters()
 
         raw_result = check_function(item, determine_check_params(params), section_content)
-        result = sanitize_check_result(raw_result,
-                                       cmk.base.check_utils.is_snmp_check(check_plugin_name))
+        result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
     except item_state.MKCounterWrapped as e:
@@ -342,7 +343,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
     except MKTimeout:
         raise
 
-    except Exception as e:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
@@ -456,26 +457,26 @@ def is_manual_check(hostname, check_plugin_name, item):
     return (check_plugin_name, item) in manual_checks
 
 
-def sanitize_check_result(result, is_snmp):
-    # type: (Union[None, ServiceCheckResult, Tuple, Iterable], bool) -> ServiceCheckResult
+def sanitize_check_result(result):
+    # type: (Union[None, ServiceCheckResult, Tuple, Iterable]) -> ServiceCheckResult
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
     if result is None:
-        return _item_not_found(is_snmp)
+        return ITEM_NOT_FOUND
 
-    return _sanitize_yield_check_result(result, is_snmp)
+    return _sanitize_yield_check_result(result)
 
 
 # The check function may return an iterator (using yield) since 1.2.5i5.
 # This function handles this case and converts them to tuple results
-def _sanitize_yield_check_result(result, is_snmp):
-    # type: (Iterable[Any], bool) -> ServiceCheckResult
+def _sanitize_yield_check_result(result):
+    # type: (Iterable[Any]) -> ServiceCheckResult
     subresults = list(result)
 
     # Empty list? Check returned nothing
     if not subresults:
-        return _item_not_found(is_snmp)
+        return ITEM_NOT_FOUND
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -495,14 +496,6 @@ def _sanitize_yield_check_result(result, is_snmp):
             perfdata += perf
 
     return status, ", ".join(infotexts), perfdata
-
-
-def _item_not_found(is_snmp):
-    # type: (bool) -> ServiceCheckResult
-    if is_snmp:
-        return 3, "Item not found in SNMP data", []
-
-    return 3, "Item not found in agent output", []
 
 
 # TODO: Cleanup return value: Factor "infotext: Optional[Text]" case out and then make Tuple values

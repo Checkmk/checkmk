@@ -352,9 +352,21 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
             params, description, section_content), []
 
-    # Now add information about the age of the data in the agent
-    # sections. This is in data_sources.g_agent_cache_info. For clusters we
-    # use the oldest of the timestamps, of course.
+    _submit_check_result(
+        hostname,
+        description,
+        result,
+        determine_cache_info(multi_host_sections, section_name),
+    )
+    return True
+
+
+def determine_cache_info(multi_host_sections, section_name):
+    """Aggregate information about the age of the data in the agent sections
+
+    This is in data_sources.g_agent_cache_info. For clusters we use the oldest
+    of the timestamps, of course.
+    """
     oldest_cached_at = None
     largest_interval = None
 
@@ -381,12 +393,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             oldest_cached_at = minn(oldest_cached_at, cached_at)
             largest_interval = maxn(largest_interval, cache_interval)
 
-    _submit_check_result(hostname,
-                         description,
-                         result,
-                         cached_at=oldest_cached_at,
-                         cache_interval=largest_interval)
-    return True
+    return oldest_cached_at, largest_interval
 
 
 def determine_check_params(entries):
@@ -570,8 +577,8 @@ def _convert_perf_value(x):
 # TODO: Put the core specific things to dedicated files
 
 
-def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interval=None):
-    # type: (HostName, ServiceDetails, ServiceCheckResult, Optional[int], Optional[int]) -> None
+def _submit_check_result(host, servicedesc, result, cache_info):
+    # type: (HostName, ServiceDetails, ServiceCheckResult, Tuple[Optional[int], Optional[int]]) -> None
     if not result:
         result = 3, "Check plugin did not return any result"
 
@@ -616,7 +623,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
             perftext = "|" + (" ".join(perftexts))
 
     if _submit_to_core:
-        _do_submit_to_core(host, servicedesc, state, infotext + perftext, cached_at, cache_interval)
+        _do_submit_to_core(host, servicedesc, state, infotext + perftext, *cache_info)
 
     _output_check_result(servicedesc, state, infotext, perftexts)
 

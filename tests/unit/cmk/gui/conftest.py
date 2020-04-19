@@ -8,18 +8,12 @@
 import ast
 import contextlib
 import json
-import os
-import sys
 import threading
 from cookielib import CookieJar
 from urllib import urlencode
 
-import webtest
+import webtest  # type: ignore[import]
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
@@ -97,20 +91,12 @@ def _mk_user_obj(username, password, automation=False):
 
 @contextlib.contextmanager
 def _create_and_destroy_user(automation=False):
-    contacts_mk = paths.omd_root + "/etc/check_mk/conf.d/wato/contacts.mk"
-    contact_existed = os.path.exists(contacts_mk)
-    _touch(paths.htpasswd_file)
-    _touch(paths.omd_root + '/etc/diskspace.conf')
-    _makepath(paths.var_dir + "/wato/auth")
-    _makepath(config.config_dir)
     username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
     password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     config.load_config()
     yield username, password
     delete_users([username])
-    if not contact_existed:
-        os.unlink(contacts_mk)
 
 
 @pytest.fixture(scope='function')
@@ -185,15 +171,6 @@ def inline_background_jobs(mocker):
 def with_automation_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=True) as user:
         yield user
-
-
-def _makepath(path):
-    Path(path).mkdir(parents=True, exist_ok=True)
-
-
-def _touch(path):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).touch()
 
 
 def get_link(resp, rel):
@@ -272,12 +249,6 @@ class WebTestAppForCMK(webtest.TestApp):
 
 @pytest.fixture(scope='function')
 def wsgi_app(monkeypatch, recreate_openapi_spec):
-    monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    store.makedirs(paths.omd_root + '/var/check_mk/web')
-    store.makedirs(paths.omd_root + '/var/check_mk/php-api')
-    store.makedirs(paths.omd_root + '/var/check_mk/wato/php-api')
-    store.makedirs(paths.omd_root + '/var/log')
-    store.makedirs(paths.omd_root + '/tmp/check_mk')
     wsgi_callable = make_app()
     cookies = CookieJar()
-    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)  # type: WebTestAppForCMK
+    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)

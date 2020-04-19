@@ -241,9 +241,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return ""  # unused, we override load and save below
 
     def load(self, site_specific=False):
-        cleanup_settings = {}  # type: Dict[str, Any]
-        exec(open(self.diskspace_config).read(), {}, cleanup_settings)
-
+        cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
         if not cleanup_settings:
             return {}
 

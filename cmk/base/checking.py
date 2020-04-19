@@ -206,15 +206,13 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
 
     check_api_utils.set_hostname(hostname)
 
-    filter_mode = None
-
     belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
-    if belongs_to_cluster:
-        filter_mode = "include_clustered"
 
-    services = check_table.get_precompiled_check_table(hostname,
-                                                       remove_duplicates=True,
-                                                       filter_mode=filter_mode)
+    services = check_table.get_precompiled_check_table(
+        hostname,
+        remove_duplicates=True,
+        filter_mode="include_clustered" if belongs_to_cluster else None,
+    )
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.

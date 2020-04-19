@@ -240,11 +240,12 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         only_check_plugins -= (pos_match - neg_match)
 
     for service in services:
-        if only_check_plugins is not None and service.check_plugin_name not in only_check_plugins:
+        if service.check_plugin_name not in only_check_plugins:
             continue
-
         if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
                 hostname, service.description):
+            continue
+        if _service_outside_check_period(config_cache, hostname, service.description):
             continue
 
         success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
@@ -252,11 +253,6 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
                                 service.description)
         if success:
             num_success += 1
-        elif success is None:
-            # If the service is in any timeperiod we do not want to
-            # - increase num_success or
-            # - add to missing sections
-            continue
         else:
             missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
 
@@ -268,23 +264,29 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     return num_success, missing_section_list
 
 
+def _service_outside_check_period(config_cache, hostname, description):
+    # type: (config.ConfigCache, HostName, ServiceName) -> bool
+    period = config_cache.check_period_of_service(hostname, description)
+    if period is None:
+        return False
+
+    if cmk.base.core.check_timeperiod(period):
+        console.vverbose("Service %s: timeperiod %s is currently active.\n",
+                         six.ensure_str(description), period)
+        return False
+
+    console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
+                    six.ensure_str(description), period)
+    return True
+
+
 def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
                   params, description):
-    # type: (config.ConfigCache, data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> Optional[bool]
+    # type: (config.ConfigCache, data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> bool
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)
     item_state.set_item_state_prefix(check_plugin_name, item)
-
-    # Skip checks that are not in their check period
-    period = config_cache.check_period_of_service(hostname, description)
-    if period is not None:
-        if not cmk.base.core.check_timeperiod(period):
-            console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
-                            six.ensure_str(description), period)
-            return None
-        console.vverbose("Service %s: timeperiod %s is currently active.\n",
-                         six.ensure_str(description), period)
 
     section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
 

@@ -288,7 +288,6 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
 
     section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
 
-    dont_submit = False
     section_content = None
     try:
         # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
@@ -338,7 +337,8 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         # Do not submit any check result in that case:
         console.verbose("%-20s PEND - Cannot compute check result: %s\n",
                         six.ensure_str(description), e)
-        dont_submit = True
+        # Don't submit to core - we're done.
+        return True
 
     except MKTimeout:
         raise
@@ -350,41 +350,40 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
             params, description, section_content), []
 
-    if not dont_submit:
-        # Now add information about the age of the data in the agent
-        # sections. This is in data_sources.g_agent_cache_info. For clusters we
-        # use the oldest of the timestamps, of course.
-        oldest_cached_at = None
-        largest_interval = None
+    # Now add information about the age of the data in the agent
+    # sections. This is in data_sources.g_agent_cache_info. For clusters we
+    # use the oldest of the timestamps, of course.
+    oldest_cached_at = None
+    largest_interval = None
 
-        def minn(a, b):
-            # type: (Optional[int], Optional[int]) -> Optional[int]
-            if a is None:
-                return b
-            if b is None:
-                return a
-            return min(a, b)
+    def minn(a, b):
+        # type: (Optional[int], Optional[int]) -> Optional[int]
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return min(a, b)
 
-        def maxn(a, b):
-            # type: (Optional[int], Optional[int]) -> Optional[int]
-            if a is None:
-                return b
-            if b is None:
-                return a
-            return max(a, b)
+    def maxn(a, b):
+        # type: (Optional[int], Optional[int]) -> Optional[int]
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return max(a, b)
 
-        for host_sections in multi_host_sections.get_host_sections().values():
-            section_entries = host_sections.cache_info
-            if section_name in section_entries:
-                cached_at, cache_interval = section_entries[section_name]
-                oldest_cached_at = minn(oldest_cached_at, cached_at)
-                largest_interval = maxn(largest_interval, cache_interval)
+    for host_sections in multi_host_sections.get_host_sections().values():
+        section_entries = host_sections.cache_info
+        if section_name in section_entries:
+            cached_at, cache_interval = section_entries[section_name]
+            oldest_cached_at = minn(oldest_cached_at, cached_at)
+            largest_interval = maxn(largest_interval, cache_interval)
 
-        _submit_check_result(hostname,
-                             description,
-                             result,
-                             cached_at=oldest_cached_at,
-                             cache_interval=largest_interval)
+    _submit_check_result(hostname,
+                         description,
+                         result,
+                         cached_at=oldest_cached_at,
+                         cache_interval=largest_interval)
     return True
 
 

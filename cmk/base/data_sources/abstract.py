@@ -91,6 +91,63 @@ class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):
         """Return the data from the source."""
 
 
+class SectionStore:
+    def __init__(self, path, logger):
+        # type: (str, logging.Logger) -> None
+        super(SectionStore, self).__init__()
+        self.path = path
+        self._logger = logger
+
+    def store(self, sections):
+        # type: (BoundedAbstractPersistedSections) -> None
+        if not sections:
+            return
+
+        try:
+            os.makedirs(os.path.dirname(self.path))
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
+        store.save_object_to_file(self.path, sections, pretty=False)
+        self._logger.debug("Stored persisted sections: %s" % (", ".join(sections)))
+
+    # TODO: This is not race condition free when modifying the data. Either remove
+    # the possible write here and simply ignore the outdated sections or lock when
+    # reading and unlock after writing
+    def load(self, keep_outdated):
+        # type: (bool) -> BoundedAbstractPersistedSections
+        sections = store.load_object_from_file(self.path, default={})
+        if not keep_outdated:
+            sections = self._filter(sections)
+
+        if not sections:
+            self._logger.debug("No persisted sections loaded")
+            try:
+                os.remove(self.path)
+            except OSError:
+                pass
+
+        return sections
+
+    def _filter(self, sections):
+        # type: (BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections
+        now = time.time()
+        for section_name, entry in list(sections.items()):
+            if len(entry) == 2:
+                persisted_until = entry[0]
+            else:
+                persisted_until = entry[1]
+
+            if now > persisted_until:
+                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
+                                   (section_name, now - persisted_until))
+                del sections[section_name]
+        return sections
+
+
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
 
 
@@ -204,11 +261,13 @@ class DataSource(
         self._exception = None
         self._host_sections = None
         self._persisted_sections = None
+        section_store = SectionStore(self._persisted_sections_file_path(), self._logger)
 
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
-            persisted_sections_from_disk = self._load_persisted_sections()
+            persisted_sections_from_disk = section_store.load(
+                self._use_outdated_persisted_sections)  # type: BoundedAbstractPersistedSections
             self._persisted_sections = persisted_sections_from_disk
 
             raw_data, is_cached_data = self._get_raw_data()
@@ -221,7 +280,8 @@ class DataSource(
 
             # Add information from previous persisted infos
             host_sections = self._update_info_with_persisted_sections(persisted_sections_from_disk,
-                                                                      host_sections, is_cached_data)
+                                                                      host_sections, is_cached_data,
+                                                                      section_store)
             self._persisted_sections = host_sections.persisted_sections
 
             return host_sections
@@ -535,32 +595,12 @@ class DataSource(
     #   | of sections that are not provided on each query.                     |
     #   '----------------------------------------------------------------------'
 
-    def _store_persisted_sections(self, persisted_sections):
-        # type: (BoundedAbstractPersistedSections) -> None
-        if not persisted_sections:
-            return
-
-        file_path = self._persisted_sections_file_path()
-        try:
-            os.makedirs(os.path.dirname(file_path))
-        except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
-                raise
-
-        store.save_object_to_file(file_path, persisted_sections, pretty=False)
-        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections)))
-
-    def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
-                                             is_cached_data):
-        # type: (BoundedAbstractPersistedSections, BoundedAbstractHostSections, bool) -> BoundedAbstractHostSections
-        persisted_sections = persisted_sections_from_disk
-        persisted_sections_from_raw = host_sections.persisted_sections
-
-        if persisted_sections_from_raw and not is_cached_data:
-            persisted_sections.update(persisted_sections_from_raw)
-            self._store_persisted_sections(persisted_sections)
+    def _update_info_with_persisted_sections(self, persisted_sections, host_sections,
+                                             is_cached_data, section_store):
+        # type: (BoundedAbstractPersistedSections, BoundedAbstractHostSections, bool, SectionStore) -> BoundedAbstractHostSections
+        if host_sections.persisted_sections and not is_cached_data:
+            persisted_sections.update(host_sections.persisted_sections)
+            section_store.store(persisted_sections)
 
         if not persisted_sections:
             return host_sections
@@ -580,43 +620,6 @@ class DataSource(
                 host_sections.add_cached_section(section_name, section_info, persisted_from,
                                                  persisted_until)
         return host_sections
-
-    # TODO: This is not race condition free when modifying the data. Either remove
-    # the possible write here and simply ignore the outdated sections or lock when
-    # reading and unlock after writing
-    def _load_persisted_sections(self):
-        # type: () -> BoundedAbstractPersistedSections
-        file_path = self._persisted_sections_file_path()
-
-        persisted_sections = store.load_object_from_file(file_path, default={})
-        filtered_persisted_sections = self._filter_outdated_persisted_sections(persisted_sections)
-
-        if not filtered_persisted_sections:
-            self._logger.debug("No persisted sections loaded")
-            try:
-                os.remove(self._persisted_sections_file_path())
-            except OSError:
-                pass
-
-        return filtered_persisted_sections
-
-    def _filter_outdated_persisted_sections(self, persisted_sections):
-        # type: (BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections
-        if self._use_outdated_persisted_sections:
-            return persisted_sections
-
-        now = time.time()
-        for section_name, entry in list(persisted_sections.items()):
-            if len(entry) == 2:
-                persisted_until = entry[0]
-            else:
-                persisted_until = entry[1]
-
-            if now > persisted_until:
-                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
-                                   (section_name, now - persisted_until))
-                del persisted_sections[section_name]
-        return persisted_sections
 
     @classmethod
     def use_outdated_persisted_sections(cls):

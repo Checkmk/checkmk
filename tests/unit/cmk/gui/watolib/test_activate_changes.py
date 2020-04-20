@@ -90,3 +90,34 @@ def test_add_replication_paths():
 
     assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
         "dir", "abc", "/path/to/abc", ["e1", "e2"])
+
+
+@pytest.mark.parametrize("expected, site_status", [
+    (False, {}),
+    (False, {
+        "livestatus_version": "1.8.0"
+    }),
+    (False, {
+        "livestatus_version": "1.8.0"
+    }),
+    (False, {
+        "livestatus_version": "1.7.0p2"
+    }),
+    (False, {
+        "livestatus_version": "1.7.0"
+    }),
+    (False, {
+        "livestatus_version": "1.7.0i1"
+    }),
+    (False, {
+        "livestatus_version": "1.7.0-2020.04.20"
+    }),
+    (True, {
+        "livestatus_version": "1.6.0p2"
+    }),
+    (True, {
+        "livestatus_version": "1.5.0p23"
+    }),
+])
+def test_is_pre_17_remote_site(site_status, expected):
+    assert activate_changes._is_pre_17_remote_site(site_status) == expected

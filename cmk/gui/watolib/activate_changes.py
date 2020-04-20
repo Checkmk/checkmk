@@ -35,6 +35,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -96,13 +97,17 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
-SnapshotSettings = NamedTuple("SnapshotSettings", [
-    ("snapshot_path", str),
-    ("work_dir", str),
-    ("snapshot_components", List[ReplicationPath]),
-    ("component_names", Set[str]),
-    ("site_config", SiteConfiguration),
-])
+SnapshotSettings = NamedTuple(
+    "SnapshotSettings",
+    [
+        ("snapshot_path", str),
+        ("work_dir", str),
+        ("snapshot_components", List[ReplicationPath]),
+        ("component_names", Set[str]),
+        ("site_config", SiteConfiguration),
+        # TODO: Remove with 1.8
+        ("create_pre_17_snapshot", bool),
+    ])
 
 
 def _replace_omd_root(new_root, rp):
@@ -625,6 +630,8 @@ class ActivateChangesManager(ActivateChanges):
         for site_id in self._sites:
             self._check_snapshot_creation_permissions(site_id)
 
+            site_config = config.sites[site_id]
+            site_status = self._get_site_status(site_id, site_config)[0]
             work_dir = self._get_site_tmp_dir(site_id)
 
             if cmk_version.is_managed_edition():
@@ -655,7 +662,8 @@ class ActivateChangesManager(ActivateChanges):
                 work_dir=work_dir,
                 snapshot_components=snapshot_components,
                 component_names=component_names,
-                site_config=config.sites[site_id],
+                site_config=site_config,
+                create_pre_17_snapshot=_is_pre_17_remote_site(site_status),
             )
 
         return snapshot_settings
@@ -1366,3 +1374,18 @@ def create_site_globals_file(site_id, tmp_dir, site_config):
     })
 
     store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
+
+
+def _is_pre_17_remote_site(site_status):
+    # type: (SiteStatus) -> bool
+    """Decide which snapshot format is pushed to the given site
+
+    The sync snapshot format was changed between 1.6 and 1.7. To support migrations with a
+    new central site and an old remote site, we detect that case here and create the 1.6
+    snapshots for the old sites.
+    """
+    version = site_status.get("livestatus_version")
+    if not version:
+        return False
+
+    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")

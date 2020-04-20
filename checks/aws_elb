@@ -119,7 +119,7 @@ check_info['aws_elb.latency'] = {
 
 def check_aws_elb_http_elb(item, params, parsed):
     return check_aws_http_elb(params.get("levels_load_balancers", params), parsed, ['4xx', '5xx'],
-                              'HTTPCode_ELB_%s', 'aws_elb_http_elb')
+                              'HTTPCode_ELB_%s')
 
 
 check_info['aws_elb.http_elb'] = {
@@ -143,9 +143,8 @@ check_info['aws_elb.http_elb'] = {
 
 
 def check_aws_elb_http_backend(item, params, parsed):
-    return check_aws_http_elb(params.get("levels_backend_targets",
-                                         params), parsed, ['2xx', '3xx', '4xx', '5xx'],
-                              'HTTPCode_Backend_%s', 'aws_elb_http_backend')
+    return check_aws_http_elb(params.get("levels_backend_targets", params), parsed,
+                              ['2xx', '3xx', '4xx', '5xx'], 'HTTPCode_Backend_%s')
 
 
 check_info['aws_elb.http_backend'] = {
@@ -229,12 +228,10 @@ check_info['aws_elb.healthy_hosts'] = {
 
 
 def check_aws_elb_backend_connection_errors(item, params, parsed):
-    now = time.time()
-    backend_connection_errors = parsed.get("BackendConnectionErrors")
-    if backend_connection_errors is not None:
-        yield check_levels(
-            get_rate('aws_elb_backend_connection_errors', now, backend_connection_errors),
-            'backend_connection_errors_rate', params.get('levels_backend_connection_errors_rate'))
+    backend_connection_error_rate = parsed.get("BackendConnectionErrors")
+    if backend_connection_error_rate is not None:
+        yield check_levels(backend_connection_error_rate, 'backend_connection_errors_rate',
+                           params.get('levels_backend_connection_errors_rate'))
 
 
 check_info['aws_elb.backend_connection_errors'] = {

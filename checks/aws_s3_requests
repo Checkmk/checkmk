@@ -39,9 +39,7 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
 
 @get_parsed_item_data
 def check_aws_s3_requests(item, params, metrics):
-    now = time.time()
-    all_requests_rate = get_rate('aws_s3_http_errors_all_requests.%s' % item, now,
-                                 metrics['AllRequests'])
+    all_requests_rate = metrics['AllRequests']
     yield 0, 'Total: %s/s' % all_requests_rate
 
     for key, perf_key, title in [
@@ -53,11 +51,10 @@ def check_aws_s3_requests(item, params, metrics):
         ("SelectRequests", "select_requests", "Select"),
         ("ListRequests", "list_requests", "List"),
     ]:
-        requests = metrics.get(key)
-        if requests is None:
+        requests_rate = metrics.get(key)
+        if requests_rate is None:
             continue
 
-        requests_rate = get_rate('aws_s3_%s.%s' % (perf_key, item), now, requests)
         yield 0, '%s: %s/s' % (title, requests_rate), [(perf_key, requests_rate)]
 
         try:
@@ -96,15 +93,13 @@ check_info['aws_s3_requests'] = {
 
 @get_parsed_item_data
 def check_aws_s3_http_errors(item, params, metrics):
-    now = time.time()
-    request_rate = get_rate('aws_s3_http_errors_all_requests', now, metrics['AllRequests'])
+    request_rate = metrics['AllRequests']
 
     for http_errors_nr in ["4", "5"]:
-        http_errors = metrics.get("%sxxErrors" % http_errors_nr)
-        if http_errors is None:
+        http_errors_rate = metrics.get("%sxxErrors" % http_errors_nr)
+        if http_errors_rate is None:
             continue
 
-        http_errors_rate = get_rate('aws_s3_http_%sxx_errors' % http_errors_nr, now, http_errors)
         yield (0, '%s00-Errors: %s/s' % (http_errors_nr, http_errors_rate),
                [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
 

@@ -438,15 +438,15 @@ class AWSSectionCloudwatch(AWSSection):
     def get_live_data(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
-        metrics = self._get_metrics(colleague_contents)
-        if not metrics:
+        metric_specs = self._get_metrics(colleague_contents)
+        if not metric_specs:
             return []
 
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
         raw_content = []
-        for chunk in _chunks(metrics):
+        for chunk in _chunks(metric_specs):
             if not chunk:
                 continue
             response = self._client.get_metric_data(
@@ -459,6 +459,9 @@ class AWSSectionCloudwatch(AWSSection):
             if not metrics:
                 continue
             raw_content.extend(metrics)
+
+        self._extend_metrics_by_period(metric_specs, raw_content)
+
         return raw_content
 
     @abc.abstractmethod
@@ -473,6 +476,22 @@ class AWSSectionCloudwatch(AWSSection):
         Regex: ^[a-z][a-zA-Z0-9_]*$
         """
         return "_".join(["id", str(index)] + list(args) + [metric_name])
+
+    def _extend_metrics_by_period(self, metrics, raw_content):
+        """
+        Extend the queried metric values by the corresponding time period. For metrics based on the
+        "Sum" statistics, we add the actual time period which can then be used by the check plugins
+        to compute a rate. For all other metrics, we add 'None', such that the metric values are
+        always 2-tuples (value, period), where period is either an actual time period such as 600 s
+        or None.
+        """
+        for metric_specs, metric_contents in zip(metrics, raw_content):
+            metric_stat = metric_specs['MetricStat']
+            if metric_stat['Stat'] == 'Sum':
+                period = metric_stat['Period']
+            else:
+                period = None
+            metric_contents['Values'] = [(v, period) for v in metric_contents['Values']]
 
 
 #.

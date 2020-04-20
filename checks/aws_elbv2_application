@@ -129,7 +129,7 @@ check_info['aws_elbv2_application.connections'] = {
 def check_aws_elbv2_application_http_elb(item, params, parsed):
     return check_aws_http_elb(params.get("levels_load_balancers", params), parsed,
                               ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
-                              'HTTPCode_ELB_%s_Count', 'aws_elbv2_http_elb')
+                              'HTTPCode_ELB_%s_Count')
 
 
 check_info['aws_elbv2_application.http_elb'] = {

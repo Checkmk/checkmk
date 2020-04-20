@@ -16,7 +16,7 @@ def parse_aws_elbv2_target_groups_http(info):
 @get_parsed_item_data
 def check_aws_application_elb_target_groups_http(item, params, data):
     return check_aws_http_elb(params.get("levels_http", {}), data, ['2xx', '3xx', '4xx', '5xx'],
-                              'HTTPCode_Target_%s_Count', 'aws_elbv2_http_target_group_' + item)
+                              'HTTPCode_Target_%s_Count')
 
 
 check_info['aws_elbv2_application_target_groups_http'] = {

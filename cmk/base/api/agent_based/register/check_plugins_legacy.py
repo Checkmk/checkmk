@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import functools
 import itertools
 
+from cmk.base import item_state
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
     management_board,
@@ -121,6 +122,8 @@ def _create_check_function(name, check_info_dict, ruleset_name):
         if "params" in kwargs:
             kwargs["params"] = unwrap_parameters(kwargs["params"])
 
+        item_state.reset_wrapped_counters()  # not supported by the new API!
+
         subresults = sig_function(**kwargs)
         if isinstance(subresults, tuple):  # just one result
             subresults = [subresults]
@@ -131,6 +134,8 @@ def _create_check_function(name, check_info_dict, ruleset_name):
         opt_newline = ""
         for subresult in subresults:
             opt_newline = yield from _create_new_result(opt_newline, *subresult)
+
+        item_state.raise_counter_wrap()
 
     return check_result_generator
 

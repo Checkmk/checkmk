@@ -5,48 +5,59 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Implements a first shot at the "value_store". Quite literally only an AP*I*
 """
-from typing import Any, Iterator  # pylint: disable=unused-import
-import collections
+from typing import Any, Iterator, MutableMapping  # pylint: disable=unused-import
+from contextlib import contextmanager
 from cmk.base.item_state import (
+    ItemStateKeyElement,  # for typing only
     set_item_state,  # for __setitem__
-    get_item_state,  # for __getitem__
     clear_item_state,  # for __delitem__
     get_all_item_states,  # for __len__, __iter__
-    get_item_state_prefix,  # for __repr__
+    get_item_state_prefix,  # for __repr__, context
+    set_item_state_prefix,  # for context
 )
+from cmk.utils.exceptions import MKGeneralException
 
 
-class _ValueStore(collections.abc.MutableMapping):
+class _ValueStore(MutableMapping[str, Any]):
     """_ValueStore objects are used to persist values across check intervals"""
+    @staticmethod
+    def _raise_for_scope_violation():
+        if not get_item_state_prefix():
+            raise MKGeneralException("accessing value store outside check function")
+
     def __getitem__(self, key):
         # type: (str) -> Any
-        if key not in self:
-            raise KeyError(key)
-        return get_item_state(key)
+        self._raise_for_scope_violation()
+        unique_key = get_item_state_prefix() + (key,)
+        return get_all_item_states()[unique_key]
 
-    @staticmethod
-    def __setitem__(key, value):
+    def __setitem__(self, key, value):
         # type: (str, Any) -> None
+        self._raise_for_scope_violation()
         if not isinstance(key, str):
             raise TypeError("key must be str")
         return set_item_state(key, value)
 
     def __delitem__(self, key):
         # type: (str) -> None
-        if key not in self:
+        self._raise_for_scope_violation()
+        unique_key = get_item_state_prefix() + (key,)
+        if unique_key not in get_all_item_states():
             raise KeyError(key)
         clear_item_state(key)
-        return self.__setitem__(key, None)
 
-    @staticmethod
-    def __len__():
+    def __len__(self):
         # type: () -> int
-        return len(get_all_item_states())
+        self._raise_for_scope_violation()
+        prefix = get_item_state_prefix()
+        return sum(unique_key[:2] == prefix for unique_key in get_all_item_states())
 
-    @staticmethod
-    def __iter__():
+    def __iter__(self):
         # type: () -> Iterator
-        return iter(unique_key[-1] for unique_key in get_all_item_states())
+        self._raise_for_scope_violation()
+        prefix = get_item_state_prefix()
+        return iter(
+            unique_key[-1] for unique_key in get_all_item_states() if unique_key[:2] == prefix)
 
     @staticmethod
     def __repr__():
@@ -55,3 +66,16 @@ class _ValueStore(collections.abc.MutableMapping):
 
 
 value_store = _ValueStore()
+
+
+@contextmanager
+def context(plugin, item):
+    # type: (ItemStateKeyElement, ItemStateKeyElement) -> Iterator[None]
+    """Set item state prefix"""
+    saved_prefix = get_item_state_prefix()
+    set_item_state_prefix(plugin, item)
+
+    try:
+        yield
+    finally:
+        set_item_state_prefix(*saved_prefix)

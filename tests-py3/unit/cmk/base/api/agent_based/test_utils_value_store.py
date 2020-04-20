@@ -8,7 +8,42 @@ from typing import Dict, Tuple
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.exceptions import MKGeneralException
+import cmk.base.api.agent_based.value_store as value_store
 from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
+
+
+def test_value_store():
+
+    store = value_store.value_store
+
+    with pytest.raises(MKGeneralException):
+        store["foo"] = 42
+
+    saved_prefix = value_store.get_item_state_prefix()
+
+    with value_store.context("plugin", "item"):
+
+        assert len(store) == 0
+        assert not store
+        assert "foo" not in store
+        assert store.get("foo") is None
+        with pytest.raises(KeyError):
+            _ = store["foo"]
+        with pytest.raises(TypeError):
+            store[2] = "key must be sting"
+
+        store["foo"] = 42
+        store["bar"] = 23
+
+        assert set(store) == {"foo", "bar"}
+        del store["bar"]
+        assert "foo" in store
+        assert len(store) == 1
+        assert bool(store)
+        assert store["foo"] == 42
+
+    assert value_store.get_item_state_prefix() == saved_prefix
 
 
 @pytest.mark.parametrize("pre_state,time,value,raise_of,errmsg", [

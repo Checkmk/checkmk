@@ -7,7 +7,7 @@
 
 These are meant to be exposed in the API
 """
-from typing import List, MutableMapping, TypeVar
+from typing import Any, List, MutableMapping, TypeVar
 import re
 import itertools
 from cmk.base.snmp_utils import SNMPTable
@@ -127,13 +127,13 @@ class GetRateError(IgnoreResultsError):
 
 
 def get_rate(value_store, key, time, value, raise_overflow=False):
-    # type: (MutableMapping, str, float, float, bool) -> float
+    # type: (MutableMapping[str, Any], str, float, float, bool) -> float
     # TODO (mo): unhack this CMK-3983
     # raise overflow is kwarg only
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 
-    if last_state is None:
+    if not last_state or len(last_state) != 2:
         raise GetRateError('Initialized: %r' % key)
     last_time, last_value = last_state
 
@@ -152,7 +152,7 @@ def get_rate(value_store, key, time, value, raise_overflow=False):
 
 
 def get_average(value_store, key, time, value, backlog_minutes):
-    # type: (MutableMapping, str, float, float, float) -> float
+    # type: (MutableMapping[str, Any], str, float, float, float) -> float
     """Return new average based on current value and last average
 
     value_store : the Mapping that holds the last value. Usually this will

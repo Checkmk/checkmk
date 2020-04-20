@@ -7,7 +7,6 @@
 # Copyright Gerd Stolz - SVA - 2016
 # (c) 2017 Heinlein Support GmbH, Robert Sander <r.sander@heinlein-support.de>
 
-
 display_usage () {
     cat <<USAGE
 
@@ -370,6 +369,38 @@ function sap_hana_replication_status () {
     echo "$result"
 }
 
+function sap_hana_internal_hostname() {
+    local sid="$1"
+    local instance="$2"
+    local instance_user="$3"
+    local col_hosts=2
+    local row_hosts_start=5
+    local cur_hostname
+    local cur_IP
+    local cur_row=1
+    local landscape
+
+    landscape=$(su - "${instance_user}" -c "python /usr/sap/${sid}/HDB${instance}/exe/python_support/landscapeHostConfiguration.py")
+
+    while read -r line; do
+        if [ $cur_row -ge $row_hosts_start ]; then
+
+            cur_hostname=$(echo "$line" | awk -F "|" '{print $col}' col=$col_hosts | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            cur_IP=$(nslookup "$cur_hostname" | grep "Address" | grep -v "127." | awk '{print $2}')
+
+            if [[ -z "$cur_IP" ]]; then
+                continue
+            fi
+
+            if ifconfig -a | grep -q "$cur_IP"; then
+                echo "$cur_hostname"
+            fi
+
+        fi
+        cur_row=$((cur_row+1))
+    done <<< "$landscape"
+
+}
 
 #.
 #   .--do query------------------------------------------------------------.
@@ -386,10 +417,11 @@ function do_query () {
     local SID="$1"
     local INSTANCE="$2"
     local INSTANCE_USER="$3"
+    local HOSTNAME
     local INSTANCE_NAME="[[${SID} ${INSTANCE}]]"
 
     if [ -z "$HOSTNAME" ]; then
-        HOSTNAME=$(hostname -f)
+        HOSTNAME=$(sap_hana_internal_hostname "$SID" "$INSTANCE" "$INSTANCE_USER")
     else
         HOSTNAME=$(hostname)
     fi

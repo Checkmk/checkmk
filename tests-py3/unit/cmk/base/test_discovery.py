@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import pytest  # type: ignore[import]
 
 import cmk.base.discovery as discovery
+from cmk.base.discovered_labels import ServiceLabel
 
 
 def test_discovered_service_init():
@@ -19,11 +18,13 @@ def test_discovered_service_init():
     assert s.parameters_unresolved == "None"
     assert s.service_labels == {}
 
-    s = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None", {u"läbel": u"lübel"})
+    s = discovery.DiscoveredService(
+        "abc", u"Item", u"ABC Item", "None",
+        discovery.DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
     assert s.service_labels == {u"läbel": u"lübel"}
 
     with pytest.raises(AttributeError):
-        s.xyz = "abc"  # pylint: disable=assigning-non-slot
+        s.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
 
 
 def test_discovered_service_eq():

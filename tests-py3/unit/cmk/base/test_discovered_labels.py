@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 try:
     # Python has a totally braindead history of changes in this area:
     #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
@@ -26,6 +24,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.base.discovered_labels import (
+    DiscoveredHostLabelsDict,
     DiscoveredHostLabels,
     HostLabel,
     DiscoveredServiceLabels,
@@ -33,8 +32,8 @@ from cmk.base.discovered_labels import (
 )
 
 
-@pytest.fixture(params=["host", "service"])
-def labels(request):
+@pytest.fixture(name="labels", params=["host", "service"])
+def labels_fixture(request):
     if request.param == "host":
         return DiscoveredHostLabels()
     return DiscoveredServiceLabels()
@@ -145,7 +144,7 @@ def test_discovered_host_labels_from_dict():
             "value": u"blä",
             "plugin_name": "plugin_2",
         },
-    }
+    }  # type: DiscoveredHostLabelsDict
     labels = DiscoveredHostLabels.from_dict(label_dict)
     assert labels.to_dict() == label_dict
 
@@ -187,8 +186,8 @@ def test_discovered_host_label_equal():
     assert HostLabel(u"äbc", u"123") == HostLabel(u"äbc", u"123")
 
 
-@pytest.fixture()
-def discovered_host_labels_dir(tmp_path, monkeypatch):
+@pytest.fixture(name="discovered_host_labels_dir")
+def discovered_host_labels_dir_fixture(tmp_path, monkeypatch):
     path = tmp_path / "var" / "check_mk" / "discovered_host_labels"
     monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", path)
     return path

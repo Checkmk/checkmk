@@ -17,10 +17,10 @@ from cmk.base.check_utils import Service
 
 def test_active_check_arguments(mocker):
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments("bla", "blub", 1)
+        core_config.active_check_arguments("bla", "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments("bla", "blub", (1, 2))
+        core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
     prepare_check_command = mocker.patch.object(config, "prepare_check_command")
     core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2")

@@ -4,10 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import ast
 import math
+import sys
+from typing import Any, Dict
+
 import pytest  # type: ignore[import]
+
 from testlib.base import Scenario
 
 from cmk.base import check_api
@@ -36,7 +39,7 @@ def check_foo(item, params, parsed_item_data):
 
 
 def test_get_parsed_item_data():
-    params = {}
+    params = {}  # type: Dict[Any, Any]
     parsed = {1: "one", 3: {}, 4: [], 5: ""}
     info = [[1, "one"], [2, "two"]]
     assert check_foo(1, params, parsed) == (2, "bar")

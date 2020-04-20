@@ -8,7 +8,7 @@ import cmk.base.caching
 
 
 def test_cache_manager():
-    _cache = cmk.base.caching.CacheManager()
+    cmk.base.caching.CacheManager()
 
 
 def test_create_dict_cache():
@@ -80,23 +80,23 @@ def test_clear_all():
 def test_populated():
     mgr = cmk.base.caching.CacheManager()
 
-    cache = mgr.get_set("test1")
-    assert not cache.is_populated()
-    cache.set_populated()
-    assert cache.is_populated()
-    cache.clear()
-    assert not cache.is_populated()
+    cache1 = mgr.get_set("test1")
+    assert not cache1.is_populated()
+    cache1.set_populated()
+    assert cache1.is_populated()
+    cache1.clear()
+    assert not cache1.is_populated()
 
-    cache = mgr.get_dict("test2")
-    assert not cache.is_populated()
-    cache.set_populated()
-    assert cache.is_populated()
-    cache.clear()
-    assert not cache.is_populated()
+    cache2 = mgr.get_dict("test2")
+    assert not cache2.is_populated()
+    cache2.set_populated()
+    assert cache2.is_populated()
+    cache2.clear()
+    assert not cache2.is_populated()
 
-    cache = mgr.get_list("test3")
-    assert not cache.is_populated()
-    cache.set_populated()
-    assert cache.is_populated()
-    cache.clear()
-    assert not cache.is_populated()
+    cache3 = mgr.get_list("test3")
+    assert not cache3.is_populated()
+    cache3.set_populated()
+    assert cache3.is_populated()
+    cache3.clear()
+    assert not cache3.is_populated()

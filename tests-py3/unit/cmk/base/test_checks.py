@@ -4,15 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import re
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
@@ -188,7 +181,7 @@ def test_filter_by_management_board_TCP_host_without_mgmt_board(monkeypatch, for
     ts.add_host("this_host")
     ts.apply(monkeypatch)
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("tcp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("tcp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -211,7 +204,7 @@ def test_filter_by_management_board_SNMP_host_without_mgmt_board(monkeypatch, fo
     ts.add_host("this_host", tags={"snmp_ds": "snmp-v1", "agent": "no-agent"})
     ts.apply(monkeypatch)
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("snmp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -269,7 +262,7 @@ def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(monkeypatch, f
     h = config_cache.get_host_config("this_host")
     h.has_management_board = True
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("tcp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("tcp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -277,7 +270,7 @@ def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(monkeypatch, f
                                              False,
                                              for_discovery=for_discovery) == set(host_result)
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("snmp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -302,7 +295,7 @@ def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(monkeypatch, 
     h = config_cache.get_host_config("this_host")
     h.has_management_board = True
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("snmp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -310,7 +303,7 @@ def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(monkeypatch, 
                                              False,
                                              for_discovery=for_discovery) == set(host_result)
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("snmp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -349,7 +342,7 @@ def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, 
                                              False,
                                              for_discovery=for_discovery) == set(host_result)
 
-    found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
+    found_check_plugins = set(c for c in _check_plugins() if c.startswith("snmp_"))
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",

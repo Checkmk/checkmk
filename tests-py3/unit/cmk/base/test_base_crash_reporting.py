@@ -4,12 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import six
 
@@ -23,8 +18,8 @@ from testlib.base import Scenario  # type: ignore[import]
 
 
 def test_base_crash_report_registry():
-    assert cmk.utils.crash_reporting.crash_report_registry["base"] \
-            == crash_reporting.CMKBaseCrashReport
+    assert (cmk.utils.crash_reporting.crash_report_registry["base"] ==
+            crash_reporting.CMKBaseCrashReport)
 
 
 def _check_generic_crash_info(crash):
@@ -164,6 +159,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
             text=u"Output",
         )
 
+    assert isinstance(crash, crash_reporting.CheckCrashReport)
     assert crash.agent_output == b"<<<abc>>>\nblablub\n"
     assert crash.snmp_info is None
 
@@ -194,5 +190,6 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
             text=u"Output",
         )
 
+    assert isinstance(crash, crash_reporting.CheckCrashReport)
     assert crash.agent_output is None
     assert crash.snmp_info == b"[]\n"

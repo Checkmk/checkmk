@@ -618,9 +618,18 @@ class EventServer(ECServerThread):
         "Dec": 12,
     }
 
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
-                 history, event_status, event_columns):
-        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, List[Tuple[str, Any]]) -> None
+    def __init__(self,
+                 logger,
+                 settings,
+                 config,
+                 slave_status,
+                 perfcounters,
+                 lock_configuration,
+                 history,
+                 event_status,
+                 event_columns,
+                 create_pipes_and_sockets=True):
+        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, List[Tuple[str, Any]], bool) -> None
         super().__init__(name="EventServer",
                          logger=logger,
                          settings=settings,
@@ -647,6 +656,11 @@ class EventServer(ECServerThread):
         self._message_period = ActiveHistoryPeriod()
         self._rule_matcher = RuleMatcher(self._logger, config)
         self._event_creator = EventCreator(self._logger, config)
+
+        # HACK for testing: The real fix would involve breaking up these huge
+        # class monsters.
+        if not create_pipes_and_sockets:
+            return
 
         self.create_pipe()
         self.open_eventsocket()

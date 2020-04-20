@@ -1944,7 +1944,7 @@ def use_update_alternatives():
 
 
 def main_version(version_info, site, global_opts, args, options):
-    # type: (VersionInfo, SiteContext, GlobalOptions, Arguments, CommandOptions) -> None
+    # type: (VersionInfo, AbstractSiteContext, GlobalOptions, Arguments, CommandOptions) -> None
     if len(args) > 0:
         site = SiteContext(args[0])
         if not site.exists():
@@ -1963,7 +1963,7 @@ def main_version(version_info, site, global_opts, args, options):
 
 
 def main_versions(version_info, site, global_opts, args, options):
-    # type: (VersionInfo, SiteContext, GlobalOptions, Arguments, CommandOptions) -> None
+    # type: (VersionInfo, AbstractSiteContext, GlobalOptions, Arguments, CommandOptions) -> None
     for v in omd_versions():
         if v == default_version() and "bare" not in options:
             sys.stdout.write("%s (default)\n" % v)
@@ -1992,7 +1992,7 @@ def version_exists(v):
 
 
 def main_sites(version_info, site, global_opts, args, options):
-    # type: (VersionInfo, SiteContext, GlobalOptions, Arguments, CommandOptions) -> None
+    # type: (VersionInfo, AbstractSiteContext, GlobalOptions, Arguments, CommandOptions) -> None
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for sitename in all_sites():

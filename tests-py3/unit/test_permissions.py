@@ -6,14 +6,18 @@
 
 import os
 from pathlib import Path
+from typing import Callable, List, Tuple  # pylint: disable=unused-import
+
 from testlib import cmk_path
 
 
 def is_executable(path):
+    # type: (Path) -> bool
     return path.is_file() and os.access(path, os.X_OK)
 
 
 def is_not_executable(path):
+    # type: (Path) -> bool
     return path.is_file() and not os.access(path, os.X_OK)
 
 
@@ -47,17 +51,16 @@ _PERMISSIONS = [
     ]),
     ('enterprise/alert_handlers/*', is_executable, []),
     ('enterprise/alert_handlers/*', is_executable, []),
-]
+]  # type: List[Tuple[str, Callable[[Path], bool], List[str]]]
 
 
 def test_permissions():
+    #type: () -> None
     for pattern, check_func, excludes in _PERMISSIONS:
         git_dir = Path(cmk_path())
         for f in git_dir.glob(pattern):
             if not f.is_file():
                 continue
-
             if f.name in excludes or f.name in _GLOBAL_EXCLUDES:
                 continue
-            assert check_func(f), "%s has wrong permissions (%r)" % \
-                                                        (f, check_func)
+            assert check_func(f), "%s has wrong permissions (%r)" % (f, check_func)

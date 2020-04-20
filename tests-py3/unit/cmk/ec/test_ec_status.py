@@ -87,12 +87,20 @@ def fixture_event_status(settings, config, perfcounters, history):
                                    logging.getLogger("cmk.mkeventd.EventStatus"))
 
 
+@pytest.fixture(name="event_server", scope="function")
+def fixture_event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
+                         event_status):
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config,
+                                   slave_status, perfcounters, lock_configuration, history,
+                                   event_status, cmk.ec.main.StatusTableEvents.columns, False)
+
+
 @pytest.fixture(name="status_server", scope="function")
 def fixture_status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
-                          event_status):
+                          event_status, event_server):
     return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings,
                                     config, slave_status, perfcounters, lock_configuration, history,
-                                    event_status, None, threading.Event())
+                                    event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):
@@ -107,12 +115,14 @@ def test_handle_client(status_server):
 
 def test_mkevent_check_query_perf(config, event_status, status_server):
     for num in range(10000):
-        event_status.new_event(CMKEventConsole.new_event({
-            "host": "heute-%d" % num,
-            "text": "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \
-                    " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@" % \
-                    (time.time(), num),
-        }))
+        event_status.new_event(
+            CMKEventConsole.new_event({
+                "host": "heute-%d" % num,
+                "text":
+                    "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
+                    " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@"
+                    % (time.time(), num),
+            }))
 
     assert len(event_status.events()) == 10000
 

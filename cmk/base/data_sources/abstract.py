@@ -602,6 +602,9 @@ class DataSource(
 
     def _filter_outdated_persisted_sections(self, persisted_sections):
         # type: (BoundedAbstractPersistedSections) -> BoundedAbstractPersistedSections
+        if self._use_outdated_persisted_sections:
+            return persisted_sections
+
         now = time.time()
         for section_name, entry in list(persisted_sections.items()):
             if len(entry) == 2:
@@ -609,7 +612,7 @@ class DataSource(
             else:
                 persisted_until = entry[1]
 
-            if not self._use_outdated_persisted_sections and now > persisted_until:
+            if now > persisted_until:
                 self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
                                    (section_name, now - persisted_until))
                 del persisted_sections[section_name]

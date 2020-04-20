@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from typing import Optional
+
 import pytest  # type: ignore[import]
 
-from cmk.base import snmp_utils
+import cmk.base.snmp_utils as snmp_utils
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])
@@ -54,7 +55,8 @@ def test_oidspec():
     assert str(oid_sum) == ".1.2.3.4.5"
 
 
-def oid_kea(_arg):
+def oid_kea(_arg, _decoded=None, _name=None):
+    # type: (snmp_utils.OID, Optional[snmp_utils.DecodedString], Optional[snmp_utils.CheckPluginName]) -> Optional[snmp_utils.DecodedString]
     """OID function of a Kea"""
     return "Kea"
 

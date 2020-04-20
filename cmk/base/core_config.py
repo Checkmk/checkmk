@@ -8,9 +8,8 @@ import abc
 import numbers
 import os
 import sys
-from typing import (  # pylint: disable=unused-import
-    Callable, Text, Optional, Union, List, Dict, AnyStr,
-)
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+
 import six
 
 import cmk.utils.version as cmk_version
@@ -315,15 +314,17 @@ def do_update(core, with_precompile):
 
 def active_check_arguments(hostname, description, args):
     # type: (HostName, ServiceName, Union[str, List[str]]) -> str
-    if not isinstance(
-            args,
-        (six.binary_type, six.text_type, list)):  # TODO: Check if six.binary_type is necessary
+    if isinstance(args, str):
+        cmd_args = args  # type: Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]]
+    elif isinstance(args, list):
+        cmd_args = [arg for arg in args if isinstance(arg, str)]
+    else:
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %
             (hostname, description))
 
-    return config.prepare_check_command(args, hostname, description)
+    return config.prepare_check_command(cmd_args, hostname, description)
 
 
 #.

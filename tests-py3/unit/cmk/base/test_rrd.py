@@ -4,11 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import unicode_literals
 import os
-# No stub file
 import pytest  # type: ignore[import]
-from cmk.base import rrd
+import cmk.base.rrd as rrd
 
 NAGIOS_SERVICE_XML_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <NAGIOS>

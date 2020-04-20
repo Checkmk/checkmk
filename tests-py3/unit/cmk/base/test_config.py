@@ -4,14 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
-from __future__ import print_function
-import sys
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 import six
@@ -585,8 +578,10 @@ def test_prepare_check_command_basics():
     assert config.prepare_check_command(["args", "1 2 3", "-d=2", "--hallo=eins", 9], "bla", "blub") \
         == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
 
+    # TODO Do we really need to test things dynamically which are already
+    # caught statically?
     with pytest.raises(NotImplementedError):
-        config.prepare_check_command((1, 2), "bla", "blub")
+        config.prepare_check_command((1, 2), "bla", "blub")  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", u"aädg"])
@@ -1178,8 +1173,8 @@ def test_service_depends_on(monkeypatch):
     assert config.service_depends_on("test-host", "svc1-abc") == ["dep1", "dep2-abc"]
 
 
-@pytest.fixture()
-def cluster_config(monkeypatch):
+@pytest.fixture(name="cluster_config")
+def cluster_config_fixture(monkeypatch):
     ts = Scenario().add_host("node1").add_host("host1")
     ts.add_cluster("cluster1", nodes=["node1"])
     return ts.apply(monkeypatch)
@@ -1782,8 +1777,8 @@ def test_load_config_folder_paths(folder_path_test_config):
         "lvl2-host", config.cmc_host_rrd_config) == ["LVL2", "LVL1", "LVL0", "MAIN"]
 
 
-@pytest.fixture()
-def folder_path_test_config(monkeypatch):
+@pytest.fixture(name="folder_path_test_config")
+def folder_path_test_config_fixture(monkeypatch):
     config_dir = Path(cmk.utils.paths.check_mk_config_dir)
     config_dir.mkdir(parents=True, exist_ok=True)
 

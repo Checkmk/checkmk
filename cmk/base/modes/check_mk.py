@@ -1477,7 +1477,7 @@ modes.register(
 
 
 def mode_check_discovery(hostname):
-    # type: (HostName) -> None
+    # type: (HostName) -> int
     return discovery.check_discovery(hostname, ipaddress=None)
 
 

@@ -1,12 +1,14 @@
-# pylint: disable=protected-access
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest  # type: ignore[import]
 
-from cmk.base import (
-    snmp,
-    snmp_utils,
-)
-
 import cmk.base.config as config
+import cmk.base.snmp as snmp
+import cmk.base.snmp_utils as snmp_utils
 from cmk.base.check_api import OID_END, BINARY
 
 from cmk.base.api.agent_based.section_types import (

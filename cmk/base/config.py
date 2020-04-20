@@ -61,7 +61,7 @@ import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
     OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
     ScanFunction, SNMPCredentials,
 )
@@ -1168,7 +1168,7 @@ def get_service_translations(hostname):
 
 
 def prepare_check_command(command_spec, hostname, description):
-    # type: (Union[str, List[str]], HostName, Optional[ServiceName]) -> str
+    # type: (Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]], HostName, Optional[ServiceName]) -> str
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as
@@ -1186,15 +1186,13 @@ def prepare_check_command(command_spec, hostname, description):
     passwords = []  # type: List[Tuple[str, str, str]]
     formated = []  # type: List[str]
     for arg in command_spec:
-        arg_type = type(arg)
-
-        if arg_type in [int, float]:
+        if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
 
-        elif isinstance(arg, six.string_types):
+        elif isinstance(arg, str):
             formated.append(cmk.utils.quote_shell_string(arg))
 
-        elif arg_type == tuple and len(arg) == 3:
+        elif isinstance(arg, tuple) and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
             try:
                 password = stored_passwords[pw_ident]["password"]

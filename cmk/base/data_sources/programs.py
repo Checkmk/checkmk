@@ -11,7 +11,7 @@ import signal
 import sys
 from logging import Logger  # pylint: disable=unused-import
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Dict, Optional, Set, Text, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
 import six
 
@@ -245,9 +245,13 @@ class SpecialAgentDataSource(ProgramDataSource):
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
-            cmd_arguments = agent_configuration.args
-        else:
+            cmd_arguments = agent_configuration.args  # type: Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]]
+        elif isinstance(agent_configuration, str):
             cmd_arguments = agent_configuration
+        elif isinstance(agent_configuration, list):
+            cmd_arguments = [arg for arg in agent_configuration if isinstance(arg, str)]
+        else:
+            raise Exception("invalid agent configuration %r" % (agent_configuration,))
 
         return config.prepare_check_command(cmd_arguments, self._hostname, description=None)
 

@@ -4,19 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 # These tests verify the behaviour of the Check_MK base methods
 # that do the actual checking/discovery/inventory work. Especially
 # the default caching and handling of global options affecting the
 # caching is checked
 
-from __future__ import print_function
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 
@@ -24,11 +17,14 @@ from testlib.base import Scenario
 from testlib import CheckManager, InventoryPluginManager
 from testlib.utils import get_standard_linux_agent_output
 
-import cmk.utils.paths
-import cmk.base.config as config
-import cmk.base.modes
 import cmk.base.automations
+import cmk.base.automations.check_mk
+import cmk.base.config as config
+import cmk.base.data_sources.abstract
 import cmk.base.inventory_plugins
+import cmk.base.modes
+import cmk.base.modes.check_mk
+import cmk.utils.paths
 from cmk.utils.log import logger
 
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
@@ -44,8 +40,8 @@ def load_plugins():
     InventoryPluginManager().load()
 
 
-@pytest.fixture()
-def test_cfg(monkeypatch):
+@pytest.fixture(name="test_cfg")
+def test_cfg_fixture(monkeypatch):
     test_hosts = ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]
 
     ts = Scenario()
@@ -424,7 +420,7 @@ def test_automation_discovery_caching(test_cfg, scan, cache, raise_errors, monke
 def test_automation_diag_host_caching(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch)
 
-    args = ["ds-test-host1", "agent", "127.0.0.1", None, 6557, 10, 5, 5, None]
+    args = ["ds-test-host1", "agent", "127.0.0.1", "", "6557", "10", "5", "5", ""]
     cmk.base.automations.check_mk.AutomationDiagHost().execute(args)
     assert _counter_run == 2
 

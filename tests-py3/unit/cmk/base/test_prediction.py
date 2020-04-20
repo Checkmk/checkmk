@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-from __future__ import division
 import math
 import time
 from pprint import pprint
@@ -70,7 +68,7 @@ def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result)
         timestamp = time.time()
         print(timestamp)
 
-        slices = prediction.time_slices(timestamp, horizon, period_info, timegroup)
+        slices = prediction.time_slices(int(timestamp), horizon, period_info, timegroup)
         pprint([('ontz', x, time.ctime(x), time.ctime(y)) for x, y in slices])
     pprint([('sys', x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result

@@ -21,7 +21,7 @@ discovery = {
     'diskio': [],
     'cpu': [(None, {})],
     'if': [],
-    'swap': [(None, {})],
+    'swap': [],
 }
 
 checks = {

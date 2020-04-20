@@ -29,7 +29,7 @@ discovery = {
     'if': [],
     'ramdisk': [],
     'uptime': [],
-    'swap': [(None, {})],
+    'swap': [],
 }
 
 

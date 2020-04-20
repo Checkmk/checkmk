@@ -10,7 +10,7 @@ checkname = 'esx_vsphere_counters'
 
 info = [
     ['mem.swapin', '', '0', 'kiloBytes'],
-    ['mem.swapout', '', '0', 'kiloBytes'],
+    ['mem.swapout', '', '', 'kiloBytes'],
     ['mem.swapused', '', '0', 'kiloBytes']
 ]
 
@@ -28,7 +28,7 @@ checks = {
     'swap': [
         (
             None, {}, [
-                (0, 'Swap in: 0.00 KB', []), (0, 'Swap out: 0.00 KB', []),
+                (0, 'Swap in: 0.00 KB', []), (0, 'Swap out: not available', []),
                 (0, 'Swap used: 0.00 KB', [])
             ]
         )

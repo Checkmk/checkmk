@@ -176,6 +176,15 @@ def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
     return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True)
 
 
+SPECIAL_COLUMNS = [
+    snmp_utils.OID_END,
+    snmp_utils.OID_STRING,
+    snmp_utils.OID_BIN,
+    snmp_utils.OID_END_BIN,
+    snmp_utils.OID_END_OCTET_STRING,
+]
+
+
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
@@ -200,13 +209,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
             # in later. If the column is OID_STRING or OID_BIN we do something
             # similar: we fill in the complete OID of the entry, either as
             # string or as binary UTF-8 encoded number string
-            if column in [
-                    snmp_utils.OID_END,
-                    snmp_utils.OID_STRING,
-                    snmp_utils.OID_BIN,
-                    snmp_utils.OID_END_BIN,
-                    snmp_utils.OID_END_OCTET_STRING,
-            ]:
+            if column in SPECIAL_COLUMNS:
                 if index_column >= 0 and index_column != colno:
                     raise MKGeneralException(
                         "Invalid SNMP OID specification in implementation of check. "

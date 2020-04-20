@@ -746,16 +746,23 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
         self._logger = logger.getChild(self.__class__.__name__)
 
     @abc.abstractmethod
-    def generate_snapshots(self):
-        # type: () -> None
+    def _get_data_collector(self):
+        # type: () -> ABCSnapshotDataCollector
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
+                                   data_collector):
+        # type: (SiteId, SnapshotSettings, SnapshotCreator, ABCSnapshotDataCollector) -> None
+        raise NotImplementedError()
 
-class CRESnapshotManager(ABCSnapshotManager):
     def generate_snapshots(self):
         # type: () -> None
+        if not self._site_snapshot_settings:
+            # Nothing to do
+            return
 
-        data_collector = CRESnapshotDataCollector(self._site_snapshot_settings)
+        data_collector = self._get_data_collector()
         data_collector.prepare_snapshot_files()
 
         generic_components = data_collector.get_generic_components()
@@ -764,9 +771,18 @@ class CRESnapshotManager(ABCSnapshotManager):
                 self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
                                                 data_collector)
 
+        for snapshot_settings in self._site_snapshot_settings.values():
+            shutil.rmtree(snapshot_settings.work_dir)
+
+
+class CRESnapshotManager(ABCSnapshotManager):
+    def _get_data_collector(self):
+        # type: () -> ABCSnapshotDataCollector
+        return CRESnapshotDataCollector(self._site_snapshot_settings)
+
     def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
                                    data_collector):
-        # type: (SiteId, SnapshotSettings, SnapshotCreator, CRESnapshotDataCollector) -> None
+        # type: (SiteId, SnapshotSettings, SnapshotCreator, ABCSnapshotDataCollector) -> None
         create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
         generic_site_components, custom_site_components = data_collector.get_site_components(
@@ -776,8 +792,6 @@ class CRESnapshotManager(ABCSnapshotManager):
                                            generic_components=generic_site_components,
                                            custom_components=custom_site_components,
                                            reuse_identical_snapshots=True)
-
-        shutil.rmtree(snapshot_settings.work_dir)
 
 
 class SnapshotManagerFactory(object):

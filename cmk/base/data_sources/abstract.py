@@ -235,13 +235,13 @@ class DataSource(
             raise TypeError("Got invalid type: %r" % result)
         return result
 
+    @cpu_tracking.track
     def _run(self, hostname, ipaddress, get_raw_data):
         # type: (Optional[HostName], Optional[HostAddress], bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
         b) Caching of raw data
-        c) CPU tracking
 
         Exceptions: All exceptions are caught and written to self._exception. The caller
         should use self.get_summary_result() to get the summary result of this data source
@@ -264,8 +264,6 @@ class DataSource(
         section_store = SectionStore(self._persisted_sections_file_path(), self._logger)
 
         try:
-            cpu_tracking.push_phase(self._cpu_tracking_id())
-
             persisted_sections_from_disk = section_store.load(
                 self._use_outdated_persisted_sections)  # type: BoundedAbstractPersistedSections
             self._persisted_sections = persisted_sections_from_disk
@@ -294,8 +292,6 @@ class DataSource(
             if cmk.utils.debug.enabled():
                 raise
             self._exception = e
-        finally:
-            cpu_tracking.pop_phase()
 
         if get_raw_data:
             return self._empty_raw_data()

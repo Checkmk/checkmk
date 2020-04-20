@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 import os
 import time
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Tuple  # pylint: disable=unused-import
 
 import cmk.base.console as console
 
@@ -84,3 +85,18 @@ def _time_snapshot():
     # type: () -> List[float]
     # TODO: Create a better structure for this data
     return list(os.times()[:4]) + [time.time()]
+
+
+def track(method):
+    # type: (Callable) -> Callable
+    """Decorator to track CPU in methods."""
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        # type: (Any, Tuple[Any], Dict[str, Any]) -> None
+        push_phase(self._cpu_tracking_id())
+        try:
+            return method(self, *args, **kwargs)
+        finally:
+            pop_phase()
+
+    return wrapper

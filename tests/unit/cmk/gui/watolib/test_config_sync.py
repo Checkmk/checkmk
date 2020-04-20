@@ -210,6 +210,9 @@ def test_generate_snapshot(edition_short, snapshot_manager_class, monkeypatch, t
 
         files = sorted(str(f.relative_to(subtar_unpack_dir)) for f in subtar_unpack_dir.iterdir())
 
+        assert sorted(expected_files[subtar.name]) == files, \
+            "Subtar %s has wrong files" % subtar.name
+
 
 @pytest.mark.parametrize("edition_short,snapshot_manager_class", editions())
 def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch, tmp_path,

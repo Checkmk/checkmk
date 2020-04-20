@@ -375,8 +375,6 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
-        return section_content
-
     def get_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
         # TODO: There is a function 'section_name_of' in check_utils.py

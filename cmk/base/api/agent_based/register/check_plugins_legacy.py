@@ -78,6 +78,8 @@ def _create_discovery_function(check_info_dict):
                 # these are dealt with in the host_label_function!
                 continue
             if isinstance(element, LegacyService):
+                # TODO: Is the assertion really always true? At leas mypy requires it!
+                assert isinstance(element.parameters, dict)
                 yield Service(
                     item=element.item,
                     parameters=element.parameters,

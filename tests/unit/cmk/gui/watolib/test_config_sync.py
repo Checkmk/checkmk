@@ -150,16 +150,20 @@ def test_generate_snapshot(edition_short, snapshot_manager_class, monkeypatch, t
         "auth.secret.tar",
         "auth.serials.tar",
         "check_mk.tar",
-        "dcd.tar",
         "diskspace.tar",
         "htpasswd.tar",
         "mkeventd_mkp.tar",
         "mkeventd.tar",
-        "mknotify.tar",
         "multisite.tar",
         "sitespecific.tar",
         "usersettings.tar",
     ]
+
+    if is_enterprise_repo():
+        expected_subtars += [
+            "dcd.tar",
+            "mknotify.tar",
+        ]
 
     if not cmk_version.is_raw_edition():
         expected_subtars.append("liveproxyd.tar")
@@ -242,17 +246,12 @@ def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch,
         'etc',
         'var',
         'etc/check_mk',
-        'etc/check_mk/mknotifyd.d',
         'etc/check_mk/conf.d',
-        # TODO: Why is dcd / mknotifyd in raw edition?
-        'etc/check_mk/dcd.d',
         'etc/check_mk/mkeventd.d',
         'etc/check_mk/multisite.d',
-        'etc/check_mk/mknotifyd.d/wato',
         'etc/check_mk/conf.d/wato',
         'etc/check_mk/conf.d/wato/hosts.mk',
         'etc/check_mk/conf.d/wato/contacts.mk',
-        'etc/check_mk/dcd.d/wato',
         'etc/check_mk/mkeventd.d/mkp',
         'etc/check_mk/mkeventd.d/wato',
         'etc/check_mk/mkeventd.d/mkp/rule_packs',
@@ -270,6 +269,16 @@ def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch,
         six.ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
         six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
     ]
+
+    # The paths are registered once the enterprise plugins are available, independent of the
+    # cmk_version.edition_short() value.
+    if is_enterprise_repo():
+        expected_paths += [
+            'etc/check_mk/dcd.d',
+            'etc/check_mk/mknotifyd.d',
+            'etc/check_mk/mknotifyd.d/wato',
+            'etc/check_mk/dcd.d/wato',
+        ]
 
     # TODO: Shouldn't we clean up these subtle differences?
     if cmk_version.is_managed_edition():

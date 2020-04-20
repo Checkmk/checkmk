@@ -20,10 +20,7 @@ def restore_orig_replication_paths():
     activate_changes._replication_paths = _orig_paths
 
 
-@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
-def test_get_replication_paths_defaults(edition_short, monkeypatch):
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-
+def _expected_replication_paths():
     expected = [
         ReplicationPath('dir', 'check_mk',
                         '%s/etc/check_mk/conf.d/wato/' % cmk.utils.paths.omd_root,
@@ -67,7 +64,38 @@ def test_get_replication_paths_defaults(edition_short, monkeypatch):
                         []),
     ]
 
+    return expected
+
+
+@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
+def test_get_replication_paths_defaults(edition_short, monkeypatch):
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
+
+
+@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
+@pytest.mark.parametrize("replicate_ec", [None, True, False])
+@pytest.mark.parametrize("replicate_mkps", [None, True, False])
+def test_get_replication_components(edition_short, monkeypatch, replicate_ec, replicate_mkps):
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+
+    partial_site_config = {}
+    if replicate_ec is not None:
+        partial_site_config["replicate_ec"] = replicate_ec
+    if replicate_mkps is not None:
+        partial_site_config["replicate_mkps"] = replicate_mkps
+
+    expected = _expected_replication_paths()
+
+    if not replicate_ec:
+        expected = [e for e in expected if e.ident not in ["mkeventd", "mkeventd_mkp"]]
+
+    if not replicate_mkps:
+        expected = [e for e in expected if e.ident not in ["local", "mkps"]]
+
+    assert sorted(
+        activate_changes._get_replication_components(partial_site_config)) == sorted(expected)
 
 
 def test_add_replication_paths_pre_17():

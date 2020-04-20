@@ -639,7 +639,7 @@ class ActivateChangesManager(ActivateChanges):
                 # These paths are then packed into the sync snapshot
                 snapshot_components = [
                     _replace_omd_root(work_dir, repl_comp)
-                    for repl_comp in self._get_replication_components(site_id)
+                    for repl_comp in _get_replication_components(site_config)
                 ]
 
                 # Add site-specific global settings
@@ -652,7 +652,7 @@ class ActivateChangesManager(ActivateChanges):
                     ))
 
             else:
-                snapshot_components = self._get_replication_components(site_id)
+                snapshot_components = _get_replication_components(site_config)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -692,20 +692,6 @@ class ActivateChangesManager(ActivateChanges):
                   "confirm to activate these changes. In order to proceed, you will "
                   "have to confirm the activation or ask you colleagues to activate "
                   "these changes in their own."))
-
-    def _get_replication_components(self, site_id):
-        # type: (SiteId) -> List[ReplicationPath]
-        paths = get_replication_paths()[:]
-        # Remove Event Console settings, if this site does not want it (might
-        # be removed in some future day)
-        if not config.sites[site_id].get("replicate_ec"):
-            paths = [e for e in paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
-
-        # Remove extensions if site does not want them
-        if not config.sites[site_id].get("replicate_mkps"):
-            paths = [e for e in paths if e.ident not in ["local", "mkps"]]
-
-        return paths
 
     def _start_activation(self):
         self._log_activation()
@@ -1389,3 +1375,18 @@ def _is_pre_17_remote_site(site_status):
         return False
 
     return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
+
+
+def _get_replication_components(site_config):
+    # type: (SiteConfiguration) -> List[ReplicationPath]
+    paths = get_replication_paths()[:]
+    # Remove Event Console settings, if this site does not want it (might
+    # be removed in some future day)
+    if not site_config.get("replicate_ec"):
+        paths = [e for e in paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
+
+    # Remove extensions if site does not want them
+    if not site_config.get("replicate_mkps"):
+        paths = [e for e in paths if e.ident not in ["local", "mkps"]]
+
+    return paths

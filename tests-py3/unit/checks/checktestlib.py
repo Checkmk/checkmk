@@ -4,12 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import os
 import types
-import copy
+from typing import List
+
 import mock
-import pytest  # type: ignore[import]
 import six
+import pytest  # type: ignore[import]
+
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.check_api_utils import Service
@@ -314,12 +317,17 @@ class DiscoveryResult(object):  # pylint: disable=useless-object-inheritance
     def __eq__(self, other):
         return self.entries == other.entries and self.labels == other.labels
 
+    # TODO: Very questionable __repr__ conversion, leading to even more
+    # interesting typing Kung Fu...
     def __repr__(self):
-        args = self.entries + [
+        # type: () -> str
+        entries = [o for o in self.entries if isinstance(o, object)]  # type: List[object]
+        host_labels = [
             HostLabel(six.text_type(k), six.text_type(self.labels[k])) for k in self.labels
-        ]
-        return "DiscoveryResult(%r)" % (args,)
+        ]  # type: List[object]
+        return "DiscoveryResult(%r)" % (entries + host_labels,)
 
+    # TODO: Very obscure and inconsistent __str__ conversion...
     def __str__(self):
         return "%s%s" % (map(tuple, self.entries), [self.labels[k].label for k in self.labels])
 
@@ -419,15 +427,11 @@ class MockItemState(object):  # pylint: disable=useless-object-inheritance
 
     def __init__(self, mock_state):
         self.context = None
-        self.get_val_function = None
 
         if hasattr(mock_state, '__call__'):
             self.get_val_function = mock_state
-            return
-
-        # in dict case check values
-        if isinstance(mock_state, dict):
-            self.get_val_function = mock_state.get
+        elif isinstance(mock_state, dict):
+            self.get_val_function = mock_state.get  # in dict case check values
         else:
             self.get_val_function = lambda key, default: mock_state
 
@@ -444,6 +448,7 @@ class MockItemState(object):  # pylint: disable=useless-object-inheritance
         return self.context.__enter__()
 
     def __exit__(self, *exc_info):
+        assert self.context is not None
         return self.context.__exit__(*exc_info)
 
 
@@ -538,6 +543,7 @@ class MockHostExtraConf(object):  # pylint: disable=useless-object-inheritance
         return self.context.__enter__()
 
     def __exit__(self, *exc_info):
+        assert self.context is not None
         return self.context.__exit__(*exc_info)
 
 
@@ -570,23 +576,20 @@ def assertEqual(first, second, descr=''):
     if first == second:
         return
 
-    assert isinstance(first, type(second)), "%sdiffering type: %r != %r for values %r and %r" \
-        % (descr, type(first), type(second), first, second)
+    assert isinstance(first, type(second)), ("%sdiffering type: %r != %r for values %r and %r" %
+                                             (descr, type(first), type(second), first, second))
 
     if isinstance(first, dict):
         remainder = set(second.keys())
         for k in first:
-            assert k in second, "%sadditional key %r in %r" \
-                % (descr, k, first)
+            assert k in second, "%sadditional key %r in %r" % (descr, k, first)
             remainder.remove(k)
             assertEqual(first[k], second[k], descr + " [%s]" % repr(k))
-        assert not remainder, "%smissing keys %r in %r" \
-            % (descr, list(remainder), first)
+        assert not remainder, "%smissing keys %r in %r" % (descr, list(remainder), first)
 
     if isinstance(first, (list, tuple)):
-        assert len(first) == len(second), "%svarying length: %r != %r" \
-            % (descr, first, second)
-        for c in enumerate(first):
-            assertEqual(first[c], second[c], descr + "[%d] " % c)
+        assert len(first) == len(second), "%svarying length: %r != %r" % (descr, first, second)
+        for (c, fst), snd in zip(enumerate(first), second):
+            assertEqual(fst, snd, descr + "[%d] " % c)
 
     raise AssertionError("%snot equal (%r): %r != %r" % (descr, type(first), first, second))

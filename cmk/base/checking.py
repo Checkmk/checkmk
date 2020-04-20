@@ -349,12 +349,12 @@ def execute_check(multi_host_sections, hostname, ipaddress, service):
         hostname,
         service.description,
         result,
-        determine_cache_info(multi_host_sections, section_name),
+        _legacy_determine_cache_info(multi_host_sections, section_name),
     )
     return True
 
 
-def determine_cache_info(multi_host_sections, section_name):
+def _legacy_determine_cache_info(multi_host_sections, section_name):
     """Aggregate information about the age of the data in the agent sections
 
     This is in data_sources.g_agent_cache_info. For clusters we use the oldest

@@ -100,7 +100,8 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         # It is introduced for the changed data handling with the migration
         # to 'agent_based' plugins.
         # It holy holds the result of individual calls of the parse_function.
-        self._parsed_renamed_sections = caching.DictCache()
+        self._parsed_sections = caching.DictCache()
+        self._parsed_to_raw_map = caching.DictCache()
 
     def add_or_get_host_sections(self, hostname, ipaddress, deflt):
         # type: (HostName, Optional[HostAddress], AbstractHostSections) -> AbstractHostSections
@@ -157,16 +158,10 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
     ):
         # type: (...) -> Optional[ParsedSectionContent]
         cache_key = (host_name, ip_address, section_name)
-        if cache_key in self._parsed_renamed_sections:
-            return self._parsed_renamed_sections[cache_key]
+        if cache_key in self._parsed_sections:
+            return self._parsed_sections[cache_key]
 
-        try:
-            hosts_raw_sections = self._multi_host_sections[(host_name, ip_address)].sections
-        except KeyError:
-            return self._parsed_renamed_sections.setdefault(cache_key, None)
-
-        available_raw_sections = [PluginName(n) for n in hosts_raw_sections]
-        section_def = config.get_parsed_section_creator(section_name, available_raw_sections)
+        section_def = self.get_raw_section(host_name, ip_address, section_name)
         if section_def is None:
             # no section creating the desired one was found, assume a 'default' section:
             raw_section_name = section_name
@@ -176,9 +171,10 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             parse_function = section_def.parse_function
 
         try:
+            hosts_raw_sections = self._multi_host_sections[(host_name, ip_address)].sections
             string_table = hosts_raw_sections[str(raw_section_name)]
         except KeyError:
-            return self._parsed_renamed_sections.setdefault(cache_key, None)
+            return self._parsed_sections.setdefault(cache_key, None)
 
         try:
             parsed = parse_function(string_table)
@@ -187,7 +183,29 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
                 raise
             raise MKParseFunctionError(*sys.exc_info())
 
-        return self._parsed_renamed_sections.setdefault(cache_key, parsed)
+        return self._parsed_sections.setdefault(cache_key, parsed)
+
+    def get_raw_section(self, host_name, ip_address, section_name):
+        # type: (HostName, Optional[HostAddress], PluginName) -> Union[AgentSectionPlugin, SNMPSectionPlugin]
+        """Get the raw sections name that will be parsed into the required section
+
+        Raw sections may get renamed once they are parsed, if they declare it. This function
+        deals with the task of determining which section we need to parse, in order to end
+        up with the desired parsed section.
+        This depends on the available raw sections, and thus on the host.
+        """
+        cache_key = (host_name, ip_address, section_name)
+        if cache_key in self._parsed_to_raw_map:
+            return self._parsed_to_raw_map[cache_key]
+
+        try:
+            hosts_raw_sections = self._multi_host_sections[(host_name, ip_address)].sections
+        except KeyError:
+            return self._parsed_to_raw_map.setdefault(cache_key, None)
+
+        available_raw_sections = [PluginName(n) for n in hosts_raw_sections]
+        section_def = config.get_parsed_section_creator(section_name, available_raw_sections)
+        return self._parsed_to_raw_map.setdefault(cache_key, section_def)
 
     def get_section_content(self,
                             hostname,

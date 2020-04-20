@@ -12,6 +12,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
+from cmk.base.snmp_utils import SNMPTable
 from testlib.base import Scenario
 
 
@@ -51,7 +52,8 @@ def test_disable_data_source_cache_no_write(mocker, monkeypatch):
     source.disable_data_source_cache()
 
     disabled_checker = mocker.patch.object(source, "is_agent_cache_disabled")
-    assert source._write_cache_file("X") is None
+    table = []  # type: SNMPTable
+    source._write_cache_file({"X": table})
     disabled_checker.assert_called_once()
 
 

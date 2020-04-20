@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict
+
 import pytest  # type: ignore[import]
 
 import cmk.base.config as config
@@ -50,7 +52,7 @@ def test_command_line_and_stdin(monkeypatch, info_func_result, expected):
     Scenario().add_host("testhost").apply(monkeypatch)
     special_agent_id = "bi"
     agent_prefix = "%s/special/agent_%s " % (cmk.utils.paths.agents_dir, special_agent_id)
-    ds = SpecialAgentDataSource("testhost", "127.0.0.1", special_agent_id, None)
+    ds = SpecialAgentDataSource("testhost", "127.0.0.1", special_agent_id, {})
     monkeypatch.setattr(config, "special_agent_info",
                         {special_agent_id: lambda a, b, c: info_func_result})
 
@@ -90,7 +92,7 @@ class TestSpecialAgentDataSource:
     def test_attribute_defaults(self, monkeypatch, ipaddress):
         the_id = "my_id"
         hostname = "testhost"
-        params = {}
+        params = {}  # type: Dict[Any, Any]
         Scenario().add_host(hostname).apply(monkeypatch)
         source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
@@ -102,13 +104,13 @@ class TestSpecialAgentDataSource:
     def test_unconfigured_command_line_raise_KeyError(self, monkeypatch, ipaddress):
         the_id = "my_id"
         hostname = "testhost"
-        params = {}
+        params = {}  # type: Dict[Any, Any]
         Scenario().add_host(hostname).apply(monkeypatch)
         source = SpecialAgentDataSource(hostname, ipaddress, the_id, params)
 
         # TODO(ml): Does this make sense?
         with pytest.raises(KeyError):
-            # pyflake pepole are highly ignorant regarding common practice...
+            # pyflake people are highly ignorant regarding common practice...
             # :-P See https://github.com/PyCQA/pyflakes/issues/393
             _ignore_me = source.source_cmdline  # noqa: F841
 

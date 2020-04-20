@@ -1010,7 +1010,7 @@ def verify_ipaddress(address):
 
 
 def _is_ipaddress(address):
-    # type: (HostAddress) -> bool
+    # type: (Optional[HostAddress]) -> bool
     if address is None:
         return False
 

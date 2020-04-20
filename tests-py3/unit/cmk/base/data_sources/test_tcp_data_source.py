@@ -9,8 +9,9 @@ import socket
 
 import pytest  # type: ignore[import]
 
-import cmk.base.data_sources.abstract as _abstract
+from cmk.base.check_utils import ServiceCheckResult
 from cmk.base.data_sources.tcp import TCPDataFetcher, TCPDataSource
+import cmk.base.data_sources.abstract as _abstract
 from cmk.base.exceptions import MKAgentError
 from testlib.base import Scenario
 
@@ -69,7 +70,7 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
 
     source._host_sections = _abstract.AgentHostSections()
 
-    defaults = (0, "Version: unknown, OS: unknown", [])
+    defaults = (0, "Version: unknown, OS: unknown", [])  # type: ServiceCheckResult
     assert source.get_summary_result_for_discovery() == defaults
     assert source.get_summary_result_for_inventory() == defaults
     assert source.get_summary_result_for_checking() == defaults

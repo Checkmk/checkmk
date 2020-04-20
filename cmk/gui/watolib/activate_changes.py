@@ -754,16 +754,22 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
 class CRESnapshotManager(ABCSnapshotManager):
     def generate_snapshots(self):
         # type: () -> None
-        with SnapshotCreator(self._activation_work_dir,
-                             get_replication_paths()) as snapshot_creator:
-            for site_id, snapshot_settings in self._site_snapshot_settings.items():
-                self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator)
 
-    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator):
-        # type: (SiteId, SnapshotSettings, SnapshotCreator) -> None
+        data_collector = CRESnapshotDataCollector(self._site_snapshot_settings)
+        data_collector.prepare_snapshot_files()
+
+        generic_components = data_collector.get_generic_components()
+        with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
+            for site_id, snapshot_settings in self._site_snapshot_settings.items():
+                self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
+                                                data_collector)
+
+    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
+                                   data_collector):
+        # type: (SiteId, SnapshotSettings, SnapshotCreator, CRESnapshotDataCollector) -> None
         create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
-        generic_site_components, custom_site_components = self._get_site_components(
+        generic_site_components, custom_site_components = data_collector.get_site_components(
             snapshot_settings)
 
         snapshot_creator.generate_snapshot(target_filepath=snapshot_settings.snapshot_path,
@@ -773,7 +779,64 @@ class CRESnapshotManager(ABCSnapshotManager):
 
         shutil.rmtree(snapshot_settings.work_dir)
 
-    def _get_site_components(self, snapshot_settings):
+
+class SnapshotManagerFactory(object):
+    @staticmethod
+    def factory(work_dir, site_snapshot_settings):
+        # type: (str, Dict[SiteId, SnapshotSettings]) -> ABCSnapshotManager
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
+            cls = managed_snapshots.CMESnapshotManager  # type: Type[ABCSnapshotManager]
+        else:
+            cls = CRESnapshotManager
+
+        return cls(work_dir, site_snapshot_settings)
+
+
+class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):
+    """Prepares files to be synchronized to the remote sites"""
+    def __init__(self, site_snapshot_settings):
+        # type: (Dict[SiteId, SnapshotSettings]) -> None
+        super(ABCSnapshotDataCollector, self).__init__()
+        self._site_snapshot_settings = site_snapshot_settings
+        self._logger = logger.getChild(self.__class__.__name__)
+
+    @abc.abstractmethod
+    def prepare_snapshot_files(self):
+        # type: () -> None
+        """Site independent preparation of files to be used for the sync snapshots
+        This will be called once before iterating over all sites.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_generic_components(self):
+        # type: () -> List[ReplicationPath]
+        """Return the site independent snapshot components
+        These will be collected by the SnapshotManager once when entering the context manager
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_site_components(self, snapshot_settings):
+        # type: (SnapshotSettings) -> Tuple[List[ReplicationPath], List[ReplicationPath]]
+        """Split the snapshot components into generic and site specific components
+
+        The generic components have the advantage that they only need to be created once for all
+        sites and can be shared between the sites to optimize processing."""
+        raise NotImplementedError()
+
+
+class CRESnapshotDataCollector(ABCSnapshotDataCollector):
+    # TODO: This will prepare the sites config sync directory in the future
+    def prepare_snapshot_files(self):
+        pass
+
+    def get_generic_components(self):
+        # type: () -> List[ReplicationPath]
+        return get_replication_paths()
+
+    def get_site_components(self, snapshot_settings):
         # type: (SnapshotSettings) -> Tuple[List[ReplicationPath], List[ReplicationPath]]
         generic_site_components = []
         custom_site_components = []
@@ -792,19 +855,6 @@ class CRESnapshotManager(ABCSnapshotManager):
                 generic_site_components.append(component)
 
         return generic_site_components, custom_site_components
-
-
-class SnapshotManagerFactory(object):
-    @staticmethod
-    def factory(work_dir, site_snapshot_settings):
-        # type: (str, Dict[SiteId, SnapshotSettings]) -> ABCSnapshotManager
-        if cmk_version.is_managed_edition():
-            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
-            cls = managed_snapshots.CMESnapshotManager  # type: Type[ABCSnapshotManager]
-        else:
-            cls = CRESnapshotManager
-
-        return cls(work_dir, site_snapshot_settings)
 
 
 @gui_background_job.job_registry.register

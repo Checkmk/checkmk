@@ -642,17 +642,17 @@ class ActivateChangesManager(ActivateChanges):
                     for repl_comp in _get_replication_components(site_config)
                 ]
 
-                # Add site-specific global settings
-                snapshot_components.append(
-                    ReplicationPath(
-                        ty="file",
-                        ident="sitespecific",
-                        path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
-                        excludes=[],
-                    ))
-
             else:
                 snapshot_components = _get_replication_components(site_config)
+
+            # Add site-specific global settings
+            snapshot_components.append(
+                ReplicationPath(
+                    ty="file",
+                    ident="sitespecific",
+                    path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
+                    excludes=[],
+                ))
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -781,22 +781,29 @@ class CRESnapshotManager(ABCSnapshotManager):
         # type: (SiteId, SnapshotSettings, SnapshotCreator) -> None
         create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
 
-        # Add site-specific global settings
-        site_specific_paths = [
-            ReplicationPath(
-                ty="file",
-                ident="sitespecific",
-                path=os.path.join(snapshot_settings.work_dir, "sitespecific.mk"),
-                excludes=[],
-            )
-        ]  # type: List[ReplicationPath]
+        generic_site_components, custom_site_components = self._get_site_components(
+            snapshot_settings)
 
         snapshot_creator.generate_snapshot(target_filepath=snapshot_settings.snapshot_path,
-                                           generic_components=snapshot_settings.snapshot_components,
-                                           custom_components=site_specific_paths,
+                                           generic_components=generic_site_components,
+                                           custom_components=custom_site_components,
                                            reuse_identical_snapshots=True)
 
         shutil.rmtree(snapshot_settings.work_dir)
+
+    def _get_site_components(self, snapshot_settings):
+        # type: (SnapshotSettings) -> Tuple[List[ReplicationPath], List[ReplicationPath]]
+        generic_site_components = []
+        custom_site_components = []
+
+        for component in snapshot_settings.snapshot_components:
+            if component.ident == "sitespecific":
+                # Only the site specific global files are individually handled in the non CME snapshot
+                custom_site_components.append(component)
+            else:
+                generic_site_components.append(component)
+
+        return generic_site_components, custom_site_components
 
 
 class SnapshotManagerFactory(object):
@@ -1351,7 +1358,8 @@ def create_distributed_wato_file(siteid, is_slave):
 
 def create_site_globals_file(site_id, tmp_dir, site_config):
     # type: (SiteId, str, SiteConfiguration) -> None
-    store.makedirs(tmp_dir)
+    site_globals_dir = os.path.join(tmp_dir, "site_globals")
+    store.makedirs(site_globals_dir)
 
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update({
@@ -1359,7 +1367,7 @@ def create_site_globals_file(site_id, tmp_dir, site_config):
         "userdb_automatic_sync": site_config.get("user_sync", user_sync_default_config(site_id)),
     })
 
-    store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
+    store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
 
 
 def _is_pre_17_remote_site(site_status):

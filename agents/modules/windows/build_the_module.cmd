@@ -1,6 +1,7 @@
 @rem Main buidling script for Python
 
 @echo off
+set artefact_dir=..\..\..\artefacts\
 @if "%1"=="python" goto python_reuse
 @if "%1"=="reuse" goto python_reuse
 @if "%1"=="build" goto python_build 
@@ -22,12 +23,14 @@ exit /b 11
 
 :python_build
 powershell Write-Host 'Building python...' -foreground Cyan
+if not exist "%artefact_dir%" powershell Write-Host 'Creating directory...' -foreground Cyan && mkdir "%artefact_dir%"
 make 
 goto exit
 
 :python_reuse
 powershell Write-Host 'Delivering prebuild python...' -foreground Cyan
-copy backup\python-3.8.zip ..\..\..\artefacts
+if not exist "%artefact_dir%" powershell Write-Host 'Creating directory...' -foreground Cyan && mkdir "%artefact_dir%"
+copy backup\python-3.8.zip "%artefact_dir%"
 goto exit
 
 :usage

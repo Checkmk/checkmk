@@ -1813,6 +1813,138 @@ class EC2DescribeTagsIB(InstanceBuilder):
 
 
 #.
+#   .--DynamoDB-------------------------------------------------------------
+
+
+class DynamoDBDescribeLimitsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Int('AccountMaxReadCapacityUnits'),
+            Int('AccountMaxWriteCapacityUnits'),
+            Int('TableMaxReadCapacityUnits'),
+            Int('TableMaxWriteCapacityUnits'),
+        ]
+
+
+class DynamoDBDescribeTableIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            List('AttributeDefinitions',
+                 [Str('AttributeName'),
+                  Choice('AttributeType', ['S', 'N', 'B'])]),
+            Str('TableName'),
+            List('KeySchema',
+                 [Str('AttributeName'), Choice('KeyType', ['HASH', 'RANGE'])]),
+            Choice('TableStatus', [
+                'CREATING', 'UPDATING', 'DELETING', 'ACTIVE', 'INACCESSIBLE_ENCRYPTION_CREDENTIALS',
+                'ARCHIVING', 'ARCHIVED'
+            ]),
+            Timestamp('CreationDateTime'),
+            Dict(
+                'ProvisionedThroughput',
+                [
+                    Timestamp('LastIncreaseDateTime'),
+                    Timestamp('LastDecreaseDateTime'),
+                    Int('NumberOfDecreasesToday'),
+                    # to also obtain on-demand tables with 0 provisioned throughput
+                    Choice('ReadCapacityUnits', [0, 100]),
+                    Choice('WriteCapacityUnits', [0, 100]),
+                ]),
+            Int('TableSizeBytes'),
+            Int('ItemCount'),
+            Str('TableArn'),
+            Str('TableId'),
+            Dict('BillingModeSummary', [
+                Choice('BillingMode', ['PROVISIONED', 'PAY_PER_REQUEST']),
+                Timestamp('LastUpdateToPayPerRequestDateTime'),
+            ]),
+            List('LocalSecondaryIndexes', [
+                Str('IndexName'),
+                List('KeySchema', [
+                    Str('AttributeName'),
+                    Choice('KeyType', ['HASH', 'RANGE']),
+                ]),
+                Dict('Projection', [
+                    Choice('ProjectionType', ['ALL', 'KEYS_ONLY', 'INCLUDE']),
+                    Enum('NonKeyAttributes'),
+                ]),
+                Int('IndexSizeBytes'),
+                Int('ItemCount'),
+                Str('IndexArn'),
+            ]),
+            List('GlobalSecondaryIndexes', [
+                Str('IndexName'),
+                List('KeySchema', [
+                    Str('AttributeName'),
+                    Choice('KeyType', ['HASH', 'RANGE']),
+                ]),
+                Dict('Projection', [
+                    Choice('ProjectionType', ['ALL', 'KEYS_ONLY', 'INCLUDE']),
+                    Enum('NonKeyAttributes'),
+                ]),
+                Choice('IndexStatus', ['CREATING', 'UPDATING', 'DELETING', 'ACTIVE']),
+                BoolChoice('Backfilling'),
+                Dict('ProvisionedThroughput', [
+                    Timestamp('LastIncreaseDateTime'),
+                    Timestamp('LastDecreaseDateTime'),
+                    Int('NumberOfDecreasesToday'),
+                    Int('ReadCapacityUnits'),
+                    Int('WriteCapacityUnits')
+                ]),
+                Int('IndexSizeBytes'),
+                Int('ItemCount'),
+                Str('IndexArn'),
+            ]),
+            Dict('StreamSpecification', [
+                BoolChoice('StreamEnabled'),
+                Choice('StreamViewType',
+                       ['NEW_IMAGE', 'OLD_IMAGE', 'NEW_AND_OLD_IMAGES', 'KEYS_ONLY'])
+            ]),
+            Str('LatestStreamLabel'),
+            Str('LatestStreamArn'),
+            Str('GlobalTableVersion'),
+            List('Replicas', [
+                Str('RegionName'),
+                Choice('ReplicaStatus',
+                       ['CREATING', 'CREATION_FAILED', 'UPDATING', 'DELETING', 'ACTIVE']),
+                Str('ReplicaStatusDescription'),
+                Str('ReplicaStatusPercentProgress'),
+                Str('KMSMasterKeyId'),
+                Dict('ProvisionedThroughputOverride', [Int('ReadCapacityUnits')]),
+                List('GlobalSecondaryIndexes', [
+                    Str('IndexName'),
+                    Dict('ProvisionedThroughputOverride', [Int('ReadCapacityUnits')]),
+                ])
+            ]),
+            Dict('RestoreSummary', [
+                Str('SourceBackupArn'),
+                Str('SourceTableArn'),
+                Timestamp('RestoreDateTime'),
+                BoolChoice('RestoreInProgress'),
+            ]),
+            Dict('SSEDescription', [
+                Choice('Status', ['ENABLING', 'ENABLED', 'DISABLING', 'DISABLED', 'UPDATING']),
+                Choice('SSEType', ['AES256', 'KMS']),
+                Str('KMSMasterKeyArn'),
+                Timestamp('InaccessibleEncryptionDateTime'),
+            ]),
+            Dict('ArchivalSummary', [
+                Timestamp('ArchivalDateTime'),
+                Str('ArchivalReason'),
+                Str('ArchivalBackupArn'),
+            ]),
+        ]
+
+
+class DynamoDBListTagsOfResourceIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str('Key'),
+            Str('Value'),
+        ]
+
+
+#.
 #.
 #   .--fake clients--------------------------------------------------------.
 #   |           __       _               _ _            _                  |

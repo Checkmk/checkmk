@@ -106,7 +106,7 @@ AWSStrings = Union[bytes, str]
 #     |
 #     |-- ELBv2TargetGroups
 #     |
-#     '-- ELBv2Application, ELBv2Network
+#     '-- ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda, ELBv2Network
 
 # EBSLimits,EC2Summary
 # |
@@ -123,6 +123,12 @@ AWSStrings = Union[bytes, str]
 # CloudwatchAlarmsLimits
 # |
 # '-- CloudwatchAlarms
+
+# DynamoDBLimits
+# |
+# '-- DynamoDBSummary
+#     |
+#     '-- DynamoDBTable
 
 #.
 #   .--helpers-------------------------------------------------------------.
@@ -151,6 +157,36 @@ def _get_ec2_piggyback_hostname(inst, region):
         return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
     except KeyError:
         return
+
+
+def _get_dynamodb_piggyback_hostname(table, region):
+    """
+    We add the region to the the hostname because a table might be replicated across multiple
+    regions (global table).
+    """
+    return "%s_%s" % (table['TableName'], region)
+
+
+def _describe_dynamodb_tables(client,
+                              get_response_content,
+                              table_names=None,
+                              catch_resource_not_found_excpts=False):
+
+    if table_names is None:
+        table_names = get_response_content(client.list_tables(), 'TableNames')
+
+    tables = []
+    for table_name in table_names:
+        try:
+            tables.append(get_response_content(client.describe_table(TableName=table_name),
+                                               'Table'))
+        except client.exceptions.ResourceNotFoundException:
+            if catch_resource_not_found_excpts:
+                logging.info("No table named %s in the current region", table_name)
+            else:
+                raise
+
+    return tables
 
 
 #.
@@ -2850,6 +2886,268 @@ class CloudwatchAlarms(AWSSectionGeneric):
 
 
 #.
+#   .--DynamoDB------------------------------------------------------------.
+#   |         ____                                    ____  ____           |
+#   |        |  _ \ _   _ _ __   __ _ _ __ ___   ___ |  _ \| __ )          |
+#   |        | | | | | | | '_ \ / _` | '_ ` _ \ / _ \| | | |  _ \          |
+#   |        | |_| | |_| | | | | (_| | | | | | | (_) | |_| | |_) |         |
+#   |        |____/ \__, |_| |_|\__,_|_| |_| |_|\___/|____/|____/          |
+#   |               |___/                                                  |
+#   '----------------------------------------------------------------------'
+
+
+class DynamoDBLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "dynamodb_limits"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, colleague_contents):
+        """
+        The AWS/DynamoDB API method 'describe_limits' provides limits only, but no usage data. We
+        therefore gather a list of tables using the method 'list_tables' and check the usage of each
+        table via 'describe_table'. See also
+        https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeLimits.html.
+        """
+        limits = self._client.describe_limits()
+        tables = _describe_dynamodb_tables(self._client, self._get_response_content)
+        return tables, limits
+
+    def _add_read_write_limits(self, piggyback_hostname, read_usage, write_usage, read_limit,
+                               write_limit):
+
+        self._add_limit(piggyback_hostname,
+                        AWSLimit(
+                            "read_capacity",
+                            "Read Capacity",
+                            read_limit,
+                            read_usage,
+                        ))
+
+        self._add_limit(piggyback_hostname,
+                        AWSLimit(
+                            "write_capacity",
+                            "Write Capacity",
+                            write_limit,
+                            write_usage,
+                        ))
+
+    def _compute_content(self, raw_content, colleague_contents):
+
+        tables, limits = raw_content.content
+        account_read_usage = 0
+        account_write_usage = 0
+
+        for table in tables:
+
+            key_usage = 'ProvisionedThroughput'
+            table_usage_read = table[key_usage]['ReadCapacityUnits']
+            table_usage_write = table[key_usage]['WriteCapacityUnits']
+
+            # in this case we have an on-demand table, which has no set values for read/write;
+            # provisioned tables have a minimum of 1 here
+            if table_usage_read == table_usage_write == 0:
+                continue
+
+            for global_sec_index in table.get('GlobalSecondaryIndexes', []):
+                table_usage_read += global_sec_index[key_usage]['ReadCapacityUnits']
+                table_usage_write += global_sec_index[key_usage]['WriteCapacityUnits']
+
+            account_read_usage += table_usage_read
+            account_write_usage += table_usage_write
+
+            self._add_read_write_limits(_get_dynamodb_piggyback_hostname(table, self._region),
+                                        table_usage_read, table_usage_write,
+                                        limits["TableMaxReadCapacityUnits"],
+                                        limits["TableMaxWriteCapacityUnits"])
+
+        self._add_limit(
+            "",
+            AWSLimit(
+                "number_of_tables",
+                "Number of tables",
+                256,  # describe_limits does not provide limits for this
+                len(tables),
+            ))
+        self._add_read_write_limits("", account_read_usage, account_write_usage,
+                                    limits["AccountMaxReadCapacityUnits"],
+                                    limits["AccountMaxWriteCapacityUnits"])
+
+        return AWSComputedContent(tables, raw_content.cache_timestamp)
+
+
+class DynamoDBSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(DynamoDBSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['dynamodb_names']
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config['dynamodb_tags'])
+
+    @property
+    def name(self):
+        return "dynamodb_summary"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('dynamodb_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, colleague_contents):
+
+        found_tables = []
+
+        for table in self._describe_tables(colleague_contents):
+            tags = self._get_table_tags(table)
+
+            if self._matches_tag_conditions(tags):
+                table['Region'] = self._region
+                found_tables.append(table)
+
+        return found_tables
+
+    def _get_table_tags(self, table):
+        tags = []
+        paginator = self._client.get_paginator('list_tags_of_resource')
+        response_iterator = paginator.paginate(ResourceArn=table['TableArn'])
+        for page in response_iterator:
+            tags.extend(self._get_response_content(page, 'Tags'))
+        return tags
+
+    def _describe_tables(self, colleague_contents):
+
+        if self._names is None:
+            if colleague_contents.content:
+                return colleague_contents.content
+            return _describe_dynamodb_tables(self._client, self._get_response_content)
+
+        if colleague_contents.content:
+            return [
+                table for table in colleague_contents.content if table['TableName'] in self._names
+            ]
+        return _describe_dynamodb_tables(self._client,
+                                         self._get_response_content,
+                                         table_names=self._names,
+                                         catch_resource_not_found_excpts=True)
+
+    def _matches_tag_conditions(self, tagging):
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}  # type: Dict[str, str]
+        for table in raw_content.content:
+            content_by_piggyback_hosts.setdefault(
+                _get_dynamodb_piggyback_hostname(table, self._region), table)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", list(computed_content.content.values()))]
+
+
+class DynamoDBTable(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "dynamodb_table"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('dynamodb_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+
+        metrics = []
+
+        for idx, (piggyback_hostname, table) in enumerate(colleague_contents.content.items()):
+
+            for metric_name, stat, operation_dim, unit in [
+                ('ConsumedReadCapacityUnits', 'Minimum', "", "Count"),
+                ('ConsumedReadCapacityUnits', 'Maximum', "", "Count"),
+                ('ConsumedReadCapacityUnits', 'Sum', "", "Count"),
+                ('ConsumedWriteCapacityUnits', 'Minimum', "", "Count"),
+                ('ConsumedWriteCapacityUnits', 'Maximum', "", "Count"),
+                ('ConsumedWriteCapacityUnits', 'Sum', "", "Count"),
+                ('SuccessfulRequestLatency', 'Maximum', 'Query', 'Milliseconds'),
+                ('SuccessfulRequestLatency', 'Average', 'Query', 'Milliseconds'),
+                ('SuccessfulRequestLatency', 'Maximum', 'GetItem', 'Milliseconds'),
+                ('SuccessfulRequestLatency', 'Average', 'GetItem', 'Milliseconds'),
+                ('SuccessfulRequestLatency', 'Maximum', 'PutItem', 'Milliseconds'),
+                ('SuccessfulRequestLatency', 'Average', 'PutItem', 'Milliseconds'),
+            ]:
+
+                dimensions = [{'Name': "TableName", 'Value': table['TableName']}]
+
+                if operation_dim:
+                    dimensions.append({"Name": "Operation", "Value": operation_dim})
+                    ident = self._create_id_for_metric_data_query(idx, metric_name, operation_dim,
+                                                                  stat)
+                else:
+                    ident = self._create_id_for_metric_data_query(idx, metric_name, stat)
+
+                metrics.append({
+                    'Id': ident,
+                    'Label': piggyback_hostname,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/DynamoDB',
+                            'MetricName': metric_name,
+                            'Dimensions': dimensions,
+                        },
+                        'Period': self.period,
+                        'Stat': stat,
+                        'Unit': unit,
+                    },
+                })
+
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+
+        content_by_piggyback_hosts = {}  # type: Dict[str, List[Dict]]
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+
+        key_provisioned_capacity = 'ProvisionedThroughput'
+        for piggyback_hostname, table in colleague_contents.content.items():
+            content_by_piggyback_hosts[piggyback_hostname].append({
+                'provisioned_ReadCapacityUnits': table[key_provisioned_capacity]
+                                                 ['ReadCapacityUnits'],
+                'provisioned_WriteCapacityUnits': table[key_provisioned_capacity]
+                                                  ['WriteCapacityUnits']
+            })
+
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.items()
+        ]
+
+
+#.
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -3015,6 +3313,7 @@ class AWSSectionsGeneric(AWSSections):
         glacier_client = self._init_client('glacier')
         rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
+        dynamodb_client = self._init_client('dynamodb')
 
         #---distributors----------------------------------------------------
         ec2_limits_distributor = ResultDistributor()
@@ -3035,6 +3334,9 @@ class AWSSectionsGeneric(AWSSections):
         rds_summary_distributor = ResultDistributor()
 
         cloudwatch_alarms_limits_distributor = ResultDistributor()
+
+        dynamodb_limits_distributor = ResultDistributor()
+        dynamodb_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor,
@@ -3067,6 +3369,11 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_alarms_limits = CloudwatchAlarmsLimits(cloudwatch_client, region, config,
                                                           cloudwatch_alarms_limits_distributor)
 
+        dynamodb_limits = DynamoDBLimits(dynamodb_client, region, config,
+                                         dynamodb_limits_distributor)
+        dynamodb_summary = DynamoDBSummary(dynamodb_client, region, config,
+                                           dynamodb_summary_distributor)
+
         #---sections--------------------------------------------------------
         ec2_labels = EC2Labels(ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
@@ -3093,6 +3400,8 @@ class AWSSectionsGeneric(AWSSections):
         glacier = Glacier(cloudwatch_client, region, config)
 
         cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
+
+        dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
         ec2_limits_distributor.add(ec2_summary)
@@ -3123,6 +3432,9 @@ class AWSSectionsGeneric(AWSSections):
         rds_summary_distributor.add(rds)
 
         cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
+
+        dynamodb_limits_distributor.add(dynamodb_summary)
+        dynamodb_summary_distributor.add(dynamodb_table)
 
         #---register sections for execution---------------------------------
         if 'ec2' in services:
@@ -3175,6 +3487,12 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(cloudwatch_alarms_limits)
             if 'cloudwatch_alarms' in config.service_config:
                 self._sections.append(cloudwatch_alarms)
+
+        if 'dynamodb' in services:
+            if config.service_config.get('dynamodb_limits'):
+                self._sections.append(dynamodb_limits)
+            self._sections.append(dynamodb_summary)
+            self._sections.append(dynamodb_table)
 
 
 #.
@@ -3250,6 +3568,12 @@ AWSServices = [
                          global_service=False,
                          filter_by_names=False,
                          filter_by_tags=False,
+                         limits=True),
+    AWSServiceAttributes(key="dynamodb",
+                         title="DynamoDB",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
                          limits=True),
 ]
 
@@ -3503,6 +3827,8 @@ def main(sys_argv=None):
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
         ("elbv2", args.elbv2_names, (args.elbv2_tag_key, args.elbv2_tag_values), args.elbv2_limits),
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
+        ("dynamodb", args.dynamodb_names, (args.dynamodb_tag_key, args.dynamodb_tag_values),
+         args.dynamodb_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

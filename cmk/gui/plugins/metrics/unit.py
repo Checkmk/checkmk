@@ -263,3 +263,17 @@ unit_info['EUR'] = {
     "symbol": u"€",
     "render": lambda v: u"%s €" % v,
 }
+
+unit_info['RCU'] = {
+    "title": _("RCU"),
+    "symbol": _("RCU"),
+    "description": _("Read Capacity Units"),
+    "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="RCU"),
+}
+
+unit_info['WCU'] = {
+    "title": _("WCU"),
+    "symbol": _("WCU"),
+    "description": _("Write Capacity Units"),
+    "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="WCU"),
+}

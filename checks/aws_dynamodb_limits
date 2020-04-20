@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+factory_settings['aws_dynamodb_limits_default_levels'] = {
+    'number_of_tables': (None, 80.0, 90.0),
+    'read_capacity': (None, 80.0, 90.0),
+    'write_capacity': (None, 80.0, 90.0),
+}
+
+
+def check_aws_dynamodb_limits(item, params, parsed):
+    return check_aws_limits("dynamodb", params, parsed)
+
+
+check_info['aws_dynamodb_limits'] = {
+    'parse_function': parse_aws_limits_generic,
+    'inventory_function': discover_single,
+    'check_function': check_aws_dynamodb_limits,
+    'service_description': 'AWS/DynamoDB Limits',
+    'includes': ['aws.include'],
+    'group': 'aws_dynamodb_limits',
+    'default_levels_variable': 'aws_dynamodb_limits_default_levels',
+    'has_perfdata': True,
+}

@@ -2237,8 +2237,20 @@ def _valuespec_special_agents_aws():
                           optional_keys=["alarms", "limits"],
                           default_keys=["alarms", "limits"],
                       )),
+                     ("dynamodb",
+                      Dictionary(
+                          title=_("DynamoDB"),
+                          elements=[
+                              _vs_element_aws_service_selection(),
+                              _vs_element_aws_limits(),
+                          ],
+                          optional_keys=["limits"],
+                          default_keys=["limits"],
+                      )),
                  ],
-                 default_keys=["ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch"],
+                 default_keys=[
+                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch", "dynamodb"
+                 ],
              )),
             ("overall_tags",
              _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),

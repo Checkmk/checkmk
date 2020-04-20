@@ -4,22 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Text, Type, Optional  # pylint: disable=unused-import
+from typing import Text, Type, Optional, List  # pylint: disable=unused-import
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    Integer,
-    Tuple,
-    Float,
-    Percentage,
-    Age,
-    FixedValue,
-    TextAscii,
-    Filesize,
-    ListOf,
-    CascadingDropdown,
-    Transform,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    ValueSpec, DictionaryEntry, Alternative, Dictionary, Integer, Tuple, Float, Percentage, Age,
+    FixedValue, TextAscii, Filesize, ListOf, CascadingDropdown, Transform,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -132,11 +121,15 @@ def _vs_latency():
             ))
 
 
-def _vs_limits(resource, default_limit, vs_limit_cls=None):
-    # type: (str, int, Optional[Type[Filesize]]) -> Alternative
+def _vs_limits(resource, default_limit, vs_limit_cls=None, unit=None):
+    # type: (str, int, Optional[Type[Filesize]], Optional[str]) -> Alternative
+
+    if unit is None:
+        unit = resource
+
     if vs_limit_cls is None:
         vs_limit = Integer(
-            unit=_("%s" % resource),
+            unit=_("%s" % unit),
             minvalue=1,
             default_value=default_limit,
         )
@@ -1046,4 +1039,128 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_cloudwatch_alarms_limits,
         title=lambda: _("AWS/Cloudwatch Alarms Limits"),
+    ))
+
+#.
+#   .--DynamoDB------------------------------------------------------------.
+#   |         ____                                    ____  ____           |
+#   |        |  _ \ _   _ _ __   __ _ _ __ ___   ___ |  _ \| __ )          |
+#   |        | | | | | | | '_ \ / _` | '_ ` _ \ / _ \| | | |  _ \          |
+#   |        | |_| | |_| | | | | (_| | | | | | | (_) | |_| | |_) |         |
+#   |        |____/ \__, |_| |_|\__,_|_| |_| |_|\___/|____/|____/          |
+#   |               |___/                                                  |
+#   '----------------------------------------------------------------------'
+
+
+def _parameter_valuespec_aws_dynamodb_limits():
+    return Dictionary(elements=[
+        ('number_of_tables', _vs_limits("Number of tables", 256, unit='tables')),
+        ('read_capacity', _vs_limits("Read capacity", 80000, unit='RCU')),
+        ('write_capacity', _vs_limits("Write capacity", 80000, unit='WCU')),
+    ])
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_dynamodb_limits",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_dynamodb_limits,
+        title=lambda: _("AWS/DynamoDB Limits"),
+    ))
+
+
+def _vs_aws_dynamodb_capacity(title, unit):
+
+    elements_extr = [
+        Float(title=_("Warning at"), unit=unit),
+        Float(title=_("Critical at"), unit=unit),
+    ]  # type: List[ValueSpec]
+
+    # mypy is unhappy without splitting into elements_avg and elements_single_minmmax
+    elements_avg = [
+        ('levels_average',
+         Dictionary(
+             title=_("Levels on average usage"),
+             elements=[
+                 (
+                     "limit",
+                     Integer(title=_("Limit at (otherwise from AWS API for provisioned tables)"),
+                             unit=unit,
+                             minvalue=1,
+                             default_value=1,
+                             help=_(
+                                 "Specify the limit value against which the average consumption is "
+                                 "compared to compute the average usage. If not set, the limit "
+                                 "will be fetched from the AWS API. However, this is not possible "
+                                 "for on-demand tables. Therefore, no average usage can be "
+                                 "computed for these tables if this value is not specified.")),
+                 ),
+                 ("levels_upper",
+                  Tuple(title=_("Upper levels in percentage of limit"),
+                        elements=[
+                            Percentage(title=_("Warning at"), default_value=80),
+                            Percentage(title=_("Critical at"), default_value=90),
+                        ])),
+                 ("levels_lower",
+                  Tuple(title=_("Lower levels in percentage of limit"),
+                        elements=[
+                            Percentage(title=_("Warning at")),
+                            Percentage(title=_("Critical at")),
+                        ])),
+             ])),
+    ]  # type: List[DictionaryEntry]
+
+    elements_single_minmmax = [
+        ('levels_%s' % extr,
+         Dictionary(title=_("Levels on %s single-request consumption" % extr),
+                    elements=[
+                        ("levels_upper", Tuple(title=_("Upper levels"), elements=elements_extr)),
+                        ("levels_lower", Tuple(title=_("Lower levels"), elements=elements_extr)),
+                    ])) for extr in ['minimum', 'maximum']
+    ]  # type: List[DictionaryEntry]
+
+    return Dictionary(title=_(title), elements=elements_avg + elements_single_minmmax)
+
+
+def _parameter_valuespec_aws_dynamodb_capacity():
+    return Dictionary(title=_("Levels on Read/Write Capacity"),
+                      elements=[('levels_read',
+                                 _vs_aws_dynamodb_capacity('Levels on read capacity', 'RCU')),
+                                ('levels_write',
+                                 _vs_aws_dynamodb_capacity('Levels on write capacity', 'WCU'))])
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_dynamodb_capacity",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_dynamodb_capacity,
+        title=lambda: _("AWS/DynamoDB Read/Write Capacity"),
+    ))
+
+
+def _parameter_valuespec_aws_dynamodb_latency():
+    return Dictionary(title=_("Levels on latency"),
+                      elements=[
+                          ("levels_seconds_%s_%s" % (operation.lower(), statistic),
+                           Tuple(title=_("Upper levels on %s latency of successful %s requests" %
+                                         (statistic, operation)),
+                                 elements=[
+                                     Float(title=_("Warning at"), unit='ms'),
+                                     Float(title=_("Critical at"), unit='ms'),
+                                 ]))
+                          for operation in ['Query', 'GetItem', 'PutItem']
+                          for statistic in ['average', 'maximum']
+                      ])
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_dynamodb_latency",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_dynamodb_latency,
+        title=lambda: _("AWS/DynamoDB Latency"),
     ))

@@ -2073,6 +2073,15 @@ msgstr "AWS/CE Kosten und Nutzung"
 msgid "AWS/Cloudwatch Alarms Limits"
 msgstr "Grenzwerte von AWS/Cloudwatch Alarme"
 
+msgid "AWS/DynamoDB Latency"
+msgstr "AWS/DynamoDB Lantenzzeit"
+
+msgid "AWS/DynamoDB Limits"
+msgstr "AWS/DynamoDB Grenzwerte"
+
+msgid "AWS/DynamoDB Read/Write Capacity"
+msgstr "AWS/DynamoDB Lese-/Schreibkapazität"
+
 msgid "AWS/EBS Burst Balance"
 msgstr "AWS/EBS Burst-Balance"
 
@@ -24382,6 +24391,9 @@ msgstr "Schwellwerte für die Anzahl Druckerjobs"
 msgid "Levels of folders to create"
 msgstr "Anzulegende Ordner-Ebenen"
 
+msgid "Levels on average usage"
+msgstr "Schwellwerte für die durchschnittliche Nutzung"
+
 msgid "Levels on CPU utilization of a single process"
 msgstr "Schwellwerte für die CPU Auslastung eines einzelnen Prozesses"
 
@@ -24402,6 +24414,21 @@ msgstr "Werte für den Gesundheitszustand in Prozent"
 
 msgid "Levels on ingress data in bytes"
 msgstr "Schwellwerte für die Eingangscontroller-Daten in Bytes"
+
+msgid "Levels on latency"
+msgstr "Schwellwerte für die Latenzzeit"
+
+msgid "Levels on maximum single-request consumption"
+msgstr "Schwellwerte für den maximalen Verbrauch einzelner Anfragen"
+
+msgid "Levels on minimum single-request consumption"
+msgstr "Schwellwerte für den minimalen Verbrauch einzelner Anfragen"
+
+msgid "Levels on Read/Write Capacity"
+msgstr "Schwellwerte für die Lese-/Schreibkapazität"
+
+msgid "Levels on read capacity"
+msgstr "Schwellwerte für die Lesekapazität"
 
 msgid "Levels on server latency in seconds"
 msgstr "Schwellwerte der Server-Latenzzeit in Sekunden"
@@ -24453,6 +24480,9 @@ msgstr "Schwellwerte für Trends in Grad Celsius pro Zeitspanne"
 msgid "Levels on used capacity in bytes"
 msgstr "Schwellwerte für benutzte Kapazität in Bytes"
 
+msgid "Levels on write capacity"
+msgstr "Schwellwerte für die Schreibkapazität"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
 "Schwellwerte über eine längere Zeit für die CPU-Auslastung des einzelnen Kerns"
@@ -24503,6 +24533,9 @@ msgstr "Begrenze die Pfadlänge in Service-Namen"
 msgid "Limit amount of current events"
 msgstr "Anzahl aktueller Ereignisse begrenzen"
 
+msgid "Limit at (otherwise from AWS API for provisioned tables)"
+msgstr "Grenzwert bei (ansonsten aus der AWS API für Tabellen mit bereitgestellter Kapazität)"
+
 msgid "Limit event lifetime"
 msgstr "Ereignislebensdauer begrenzen"
 
@@ -24510,7 +24543,7 @@ msgid "Limit for upper bound dynamic levels"
 msgstr "Obergrenzen für dynamische Schwellen"
 
 msgid "Limit from AWS API"
-msgstr ""
+msgstr "Grenzwert aus der AWS-API"
 
 msgid "Limit length of mail body"
 msgstr "Länge der Email-Inhalts begrenzen"
@@ -25469,6 +25502,9 @@ msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 
 msgid "Lower levels for unallocated space"
 msgstr "Untere Schwellen für unallozierten Speicher"
+
+msgid "Lower levels in percentage of limit"
+msgstr "Untere Schwellen in Prozent des Grenzwerts"
 
 msgid "Lower levels on Point-to-site bandwidth in bytes per second"
 msgstr "Unterer Level der Point-to-Site-Bandbreite in Bytes pro Sekunde"
@@ -36861,6 +36897,12 @@ msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 msgid "Set limits and levels for running on-demand vCPUs on instance Families"
 msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 
+msgid "Set limit and levels for Read Capacity Units"
+msgstr "Grenzwert und Pegel für Lesekapazitätseinheiten festlegen"
+
+msgid "Set limit and levels for Write Capacity Units"
+msgstr "Grenzwert und Pegel für Schreibkapazitätseinheiten festlegen"
+
 msgid "Set lower Levels"
 msgstr "Untere Schwellwerte setzen"
 
@@ -38608,6 +38650,19 @@ msgstr "Bestimmen Sie die Kontaktgruppen eines automatisch erzeugten Benutzers."
 
 msgid "Specify the initial roles of an automatically created user."
 msgstr "Bestimmen Sie die Rollen für einen automatisch erzeugten Benutzer."
+
+msgid ""
+"Specify the limit value against which the average consumption is compared to "
+"compute the average usage. If not set, the limit will be fetched from the AWS "
+"API. However, this is not possible for on-demand tables. Therefore, no average "
+"usage can be computed for these tables if this value is not specified."
+msgstr ""
+"Geben Sie den Grenzwert an, gegen den der Durchschnittsverbrauch verglichen "
+"wird, um die durchschnittliche Nutzung zu berechnen. Wird dieser Wert nicht "
+"gesetzt, dann wird ein Wert aus der AWS API geholt. Allerdings ist dies nicht "
+"möglich für On-demand-Tabellen. Daher kann für solche Tabellen keine "
+"Durchschnittsnutzung berechnet werden, falls dieser Wert nicht angegeben "
+"wird."
 
 msgid ""
 "Specify the logical name, e.g. the hostname, of the PLC. This name is used to "
@@ -50172,6 +50227,9 @@ msgstr "Obere Schwellen für die Gesamtzahl von DNS-Antworten"
 msgid "Upper Levels for Voltage"
 msgstr "Obere Schwellen für Spannung"
 
+msgid "Upper levels in percentage of limit"
+msgstr "Obere Schwellen in Prozent des Grenzwerts"
+
 msgid "Upper Temperature Levels"
 msgstr "Obere Temperaturschwellen"
 
@@ -50455,6 +50513,24 @@ msgstr "Obere Schwellwerte für tägliche Kosten"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Obere Grenzen für die Anzahl der Point-to-Site Verbindungen"
+
+msgid "Upper levels on average latency of successful Query requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher Query-Anfragen"
+
+msgid "Upper levels on maximum latency of successful Query requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher Query-Anfragen"
+
+msgid "Upper levels on average latency of successful GetItem requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher GetItem-Anfragen"
+
+msgid "Upper levels on maximum latency of successful GetItem requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher GetItem-Anfragen"
+
+msgid "Upper levels on average latency of successful PutItem requests"
+msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher PutItem-Anfragen"
+
+msgid "Upper levels on maximum latency of successful PutItem requests"
+msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher PutItem-Anfragen"
 
 msgid "Upper levels replica lag"
 msgstr "Obere Schwellen für die Replikaverzögerung"

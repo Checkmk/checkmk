@@ -596,6 +596,108 @@ metric_info['aws_elbv2_load_balancer_target_groups'] = {
     'color': '35/a',
 }
 
+metric_info['aws_dynamodb_number_of_tables'] = {
+    'title': _('Number of tables'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_dynamodb_read_capacity'] = {
+    'title': _('Read Capacity'),
+    'unit': 'RCU',
+    'color': '16/a',
+}
+
+metric_info['aws_dynamodb_write_capacity'] = {
+    'title': _('Write Capacity'),
+    'unit': 'WCU',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_consumed_rcu'] = {
+    'title': _('Average consumption'),
+    'unit': 'RCU',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_consumed_rcu_perc'] = {
+    'title': _('Average usage'),
+    'unit': '%',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_consumed_wcu'] = {
+    'title': _('Average consumption'),
+    'unit': 'RCU',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_consumed_wcu_perc'] = {
+    'title': _('Average usage'),
+    'unit': '%',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_minimum_consumed_rcu'] = {
+    'title': _('Minimum single-request consumption'),
+    'unit': 'RCU',
+    'color': '31/b',
+}
+
+metric_info['aws_dynamodb_maximum_consumed_rcu'] = {
+    'title': _('Maximum single-request consumption'),
+    'unit': 'RCU',
+    'color': '15/a',
+}
+
+metric_info['aws_dynamodb_minimum_consumed_wcu'] = {
+    'title': _('Minimum single-request consumption'),
+    'unit': 'RCU',
+    'color': '31/b',
+}
+
+metric_info['aws_dynamodb_maximum_consumed_wcu'] = {
+    'title': _('Maximum single-request consumption'),
+    'unit': 'RCU',
+    'color': '15/a',
+}
+
+metric_info['aws_dynamodb_query_average_latency'] = {
+    'title': _('Average latency of successful Query requests'),
+    'unit': 's',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_query_maximum_latency'] = {
+    'title': _('Maximum latency of successful Query requests'),
+    'unit': 's',
+    'color': '15/a',
+}
+
+metric_info['aws_dynamodb_getitem_average_latency'] = {
+    'title': _('Average latency of successful GetItem requests'),
+    'unit': 's',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_getitem_maximum_latency'] = {
+    'title': _('Maximum latency of successful GetItem requests'),
+    'unit': 's',
+    'color': '15/a',
+}
+
+metric_info['aws_dynamodb_putitem_average_latency'] = {
+    'title': _('Average latency of successful PutItem requests'),
+    'unit': 's',
+    'color': '41/a',
+}
+
+metric_info['aws_dynamodb_putitem_maximum_latency'] = {
+    'title': _('Maximum latency of successful PutItem requests'),
+    'unit': 's',
+    'color': '15/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -654,5 +756,45 @@ graph_info['aws_http_50x_errors_perc'] = {
         ('aws_http_502_perc', 'stack'),
         ('aws_http_503_perc', 'stack'),
         ('aws_http_504_perc', 'stack'),
+    ],
+}
+
+graph_info['aws_dynamodb_read_capacity_single'] = {
+    'title': _('Single-request consumption'),
+    'metrics': [
+        ('aws_dynamodb_minimum_consumed_rcu', 'line'),
+        ('aws_dynamodb_maximum_consumed_rcu', 'line'),
+    ],
+}
+
+graph_info['aws_dynamodb_write_capacity_single'] = {
+    'title': _('Single-request consumption'),
+    'metrics': [
+        ('aws_dynamodb_minimum_consumed_wcu', 'line'),
+        ('aws_dynamodb_maximum_consumed_wcu', 'line'),
+    ],
+}
+
+graph_info['aws_dynamodb_query_latency'] = {
+    'title': _('Latency of Query requests'),
+    'metrics': [
+        ('aws_dynamodb_query_average_latency', 'line'),
+        ('aws_dynamodb_query_maximum_latency', 'line'),
+    ],
+}
+
+graph_info['aws_dynamodb_getitem_latency'] = {
+    'title': _('Latency of GetItem requests'),
+    'metrics': [
+        ('aws_dynamodb_getitem_average_latency', 'line'),
+        ('aws_dynamodb_getitem_maximum_latency', 'line'),
+    ],
+}
+
+graph_info['aws_dynamodb_putitem_latency'] = {
+    'title': _('Latency of PutItem requests'),
+    'metrics': [
+        ('aws_dynamodb_putitem_average_latency', 'line'),
+        ('aws_dynamodb_putitem_maximum_latency', 'line'),
     ],
 }

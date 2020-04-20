@@ -634,25 +634,7 @@ class ActivateChangesManager(ActivateChanges):
             site_status = self._get_site_status(site_id, site_config)[0]
             work_dir = self._get_site_tmp_dir(site_id)
 
-            if cmk_version.is_managed_edition():
-                # Change all default replication paths to be in the site specific temporary directory
-                # These paths are then packed into the sync snapshot
-                snapshot_components = [
-                    _replace_omd_root(work_dir, repl_comp)
-                    for repl_comp in _get_replication_components(site_config)
-                ]
-
-            else:
-                snapshot_components = _get_replication_components(site_config)
-
-            # Add site-specific global settings
-            snapshot_components.append(
-                ReplicationPath(
-                    ty="file",
-                    ident="sitespecific",
-                    path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
-                    excludes=[],
-                ))
+            snapshot_components = _get_replication_components(work_dir, site_config)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -796,7 +778,13 @@ class CRESnapshotManager(ABCSnapshotManager):
         generic_site_components = []
         custom_site_components = []
 
-        for component in snapshot_settings.snapshot_components:
+        # TODO: Hack added to make the current state work. Will be replaced soon by new mechanic
+        snapshot_components = [
+            (_replace_omd_root(cmk.utils.paths.omd_root, c) if c.ident != "sitespecific" else c)
+            for c in snapshot_settings.snapshot_components
+        ]
+
+        for component in snapshot_components:
             if component.ident == "sitespecific":
                 # Only the site specific global files are individually handled in the non CME snapshot
                 custom_site_components.append(component)
@@ -1385,9 +1373,10 @@ def _is_pre_17_remote_site(site_status):
     return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
 
 
-def _get_replication_components(site_config):
-    # type: (SiteConfiguration) -> List[ReplicationPath]
+def _get_replication_components(work_dir, site_config):
+    # type: (str, SiteConfiguration) -> List[ReplicationPath]
     paths = get_replication_paths()[:]
+
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)
     if not site_config.get("replicate_ec"):
@@ -1396,5 +1385,18 @@ def _get_replication_components(site_config):
     # Remove extensions if site does not want them
     if not site_config.get("replicate_mkps"):
         paths = [e for e in paths if e.ident not in ["local", "mkps"]]
+
+    # Change all default replication paths to be in the site specific temporary directory
+    # These paths are then packed into the sync snapshot
+    paths = [_replace_omd_root(work_dir, repl_comp) for repl_comp in paths]
+
+    # Add site-specific global settings
+    paths.append(
+        ReplicationPath(
+            ty="file",
+            ident="sitespecific",
+            path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
+            excludes=[],
+        ))
 
     return paths

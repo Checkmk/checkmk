@@ -94,8 +94,18 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
 
-    assert sorted(
-        activate_changes._get_replication_components(partial_site_config)) == sorted(expected)
+    work_dir = cmk.utils.paths.omd_root
+    expected += [
+        ReplicationPath(
+            ty="file",
+            ident="sitespecific",
+            path="%s/site_globals/sitespecific.mk" % work_dir,
+            excludes=[],
+        )
+    ]
+
+    assert sorted(activate_changes._get_replication_components(
+        work_dir, partial_site_config)) == sorted(expected)
 
 
 def test_add_replication_paths_pre_17():

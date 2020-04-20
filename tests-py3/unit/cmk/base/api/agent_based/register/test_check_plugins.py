@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
@@ -24,7 +24,7 @@ MINIMAL_CREATION_KWARGS = {
     "check_function": dummy_generator,
     "cluster_check_function": dummy_generator,
     "forbidden_names": []
-}
+}  # type: Dict[str, Any]
 
 
 def dummy_function(section):  # pylint: disable=unused-argument
@@ -83,7 +83,7 @@ def test_requires_item(service_name, expected):
 ])
 def test_create_sections_invalid(sections):
     with pytest.raises((TypeError, ValueError)):
-        check_plugins._create_sections(sections, None)
+        check_plugins._create_sections(sections, None)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("sections, plugin_name, expected", [

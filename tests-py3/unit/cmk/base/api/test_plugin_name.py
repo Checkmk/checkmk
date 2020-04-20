@@ -18,7 +18,7 @@ def test_invalid_plugin_name(str_name):
 
 def test_forbidden_plugin_name():
     with pytest.raises(ValueError):
-        PluginName("Foo", forbidden_names=["Foo", "Bar"])
+        PluginName("Foo", forbidden_names=[PluginName("Foo"), PluginName("Bar")])
 
 
 def test_plugin_name_repr():

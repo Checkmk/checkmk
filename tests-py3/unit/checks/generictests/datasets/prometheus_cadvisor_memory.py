@@ -24,7 +24,7 @@ checks = {
                 ), (0, 'Resident size: 8812.0 kB', []),
                 (
                     0, 'Cache: 6160.0 kB',
-                    [('mem_linux_cached', 6307840.0, None, None, None, None)]
+                    [('mem_lnx_cached', 6307840.0, None, None, None, None)]
                 ),
                 (
                     0, 'Swap: 0.0 kB', [

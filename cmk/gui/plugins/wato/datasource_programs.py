@@ -223,7 +223,7 @@ def _valuespec_generic_metrics_prometheus():
     return Dictionary(
         elements=[
             ("port", Integer(
-                title=_('API-Port'),
+                title=_('TCP Port number'),
                 default_value=443,
             )),
             ("exporter",

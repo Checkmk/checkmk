@@ -1353,7 +1353,7 @@ class ApiData:
         cadvisor_grouping = cadvisor_options["grouping_option"]
         entities = cadvisor_options["entities"]
 
-        if "diskio" in cadvisor_options:
+        if "diskio" in entities:
             yield from self._output_cadvisor_summary("cadvisor_diskstat",
                                                      cadvisor_summaries["diskio"],
                                                      grouping_option[cadvisor_grouping])
@@ -1570,8 +1570,6 @@ def main(argv=None):
         # default cases always must be there
         api_client = PrometheusAPI(config_args["server_address"])
         api_data = ApiData(api_client, exporter_options)
-        print(api_data.server_info_section())
-        print(api_data.scrape_targets_section())
         print(api_data.promql_section(config_args["custom_services"]))
         if "cadvisor" in exporter_options:
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))

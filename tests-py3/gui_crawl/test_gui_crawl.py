@@ -4,16 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-from __future__ import division
-
-import os
 import logging
-import time
-import threading
+import os
 import queue
+import threading
+import time
 import traceback
+from typing import Set
 from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
+
 from bs4 import BeautifulSoup  # type: ignore[import]
 
 from testlib.site import get_site_factory
@@ -280,15 +279,14 @@ class Worker(threading.Thread):
         return urlunsplit(parsed)
 
 
-class SetQueue(queue.Queue):
+class SetQueue(queue.LifoQueue):
     def _init(self, maxsize):
-        self.queue = set()
+        self._visited = set()  # type: Set[Url]
 
     def _put(self, item):
-        self.queue.add(item)
-
-    def _get(self):
-        return self.queue.pop()
+        if item not in self._visited:
+            self._visited.add(item)
+            super()._put(item)
 
 
 class Crawler:

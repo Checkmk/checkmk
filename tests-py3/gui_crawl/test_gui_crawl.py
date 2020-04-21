@@ -283,6 +283,9 @@ class SetQueue(queue.Queue):
     def _init(self, maxsize):
         self._set = set()  # type: Set[Url]
 
+    def _qsize(self):
+        return len(self._set)
+
     def _put(self, item):
         self._set.add(item)
 

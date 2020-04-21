@@ -88,7 +88,7 @@ prediction_periods = {
         "groupby": group_by_everyhour,
         "valid": 24,
     },
-}
+}  # type: Dict[str, PeriodInfo]
 
 
 def get_prediction_timegroup(t, period_info):

@@ -4,9 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
 from datetime import datetime
 import time
 
@@ -17,11 +14,11 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.base import prediction
 
-from testlib import web, repo_path, create_linux_test_host, on_time  # pylint: disable=unused-import
+from testlib import web, repo_path, create_linux_test_host, on_time  # noqa: F401 # pylint: disable=unused-import
 
 
-@pytest.fixture(scope="module")
-def cfg_setup(request, web, site):
+@pytest.fixture(name="cfg_setup", scope="module")
+def cfg_setup_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
@@ -88,7 +85,7 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
     with on_time(utcdate, timezone):
         timestamp = time.time()
         _, from_time, until_time, _ = prediction.get_prediction_timegroup(
-            timestamp, prediction.prediction_periods[period])
+            int(timestamp), prediction.prediction_periods[period])
 
     timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
                                                    from_time, until_time)
@@ -158,8 +155,10 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
 
     period_info = prediction.prediction_periods[params['period']]
     with on_time(utcdate, timezone):
-        now = time.time()
-        timegroup = period_info["groupby"](now)[0]
+        now = int(time.time())
+        groupby = period_info["groupby"]
+        assert callable(groupby)
+        timegroup = groupby(now)[0]
         time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
                                               timegroup)
 
@@ -200,8 +199,10 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 
     period_info = prediction.prediction_periods[params['period']]
     with on_time(utcdate, timezone):
-        now = time.time()
-        timegroup = period_info["groupby"](now)[0]
+        now = int(time.time())
+        groupby = period_info["groupby"]
+        assert callable(groupby)
+        timegroup = groupby(now)[0]
 
         time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
                                               timegroup)
@@ -214,6 +215,7 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
     path = "%s/tests-py3/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
     reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
     data_points = data_for_pred.pop('points')
+    assert reference is not None
     ref_points = reference.pop('points')
     for cal, ref in zip(data_points, ref_points):
         assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
@@ -240,7 +242,7 @@ def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
 def test_get_rrd_data_fails(cfg_setup):
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
     _, from_time, until_time, _ = prediction.get_prediction_timegroup(
-        timestamp, prediction.prediction_periods["hour"])
+        int(timestamp), prediction.prediction_periods["hour"])
 
     # Fail to get data, because non-existent check
     with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):

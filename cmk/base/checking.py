@@ -40,7 +40,7 @@ import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
+    ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric, Service,
     CheckPluginName, Item, SectionName, CheckParameters,
 )
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
@@ -248,8 +248,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         if service_outside_check_period(config_cache, hostname, service.description):
             continue
 
-        success = execute_check(multi_host_sections, hostname, ipaddress, service.check_plugin_name,
-                                service.item, service.parameters, service.description)
+        success = execute_check(multi_host_sections, hostname, ipaddress, service)
         if success:
             num_success += 1
         else:
@@ -279,15 +278,14 @@ def service_outside_check_period(config_cache, hostname, description):
     return True
 
 
-def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,
-                  description):
-    # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> bool
+def execute_check(multi_host_sections, hostname, ipaddress, service):
+    # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
-    check_api_utils.set_service(check_plugin_name, description)
-    item_state.set_item_state_prefix(check_plugin_name, item)
+    check_api_utils.set_service(service.check_plugin_name, service.description)
+    item_state.set_item_state_prefix(service.check_plugin_name, service.item)
 
-    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+    section_name = cmk.base.check_utils.section_name_of(service.check_plugin_name)
 
     section_content = None
     try:
@@ -298,7 +296,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                 ipaddress,
                 section_name,
                 for_discovery=False,
-                service_description=description)
+                service_description=service.description)
         except MKParseFunctionError as e:
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
@@ -316,11 +314,11 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # TODO: This feature predates the 'parse_function', and is not needed anymore.
         # # Special checks which still need to be called even with empty data
         # # may declare this.
-        if not section_content and cmk.base.check_utils.is_snmp_check(check_plugin_name) \
-           and not config.check_info[check_plugin_name]["handle_empty_info"]:
+        if not section_content and cmk.base.check_utils.is_snmp_check(service.check_plugin_name) \
+           and not config.check_info[service.check_plugin_name]["handle_empty_info"]:
             return False
 
-        check_function = config.check_info[check_plugin_name].get("check_function")
+        check_function = config.check_info[service.check_plugin_name].get("check_function")
         if check_function is None:
             check_function = lambda item, params, section_content: (
                 3, 'UNKNOWN - Check not implemented')
@@ -328,7 +326,8 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(item, determine_check_params(params), section_content)
+        raw_result = check_function(service.item, determine_check_params(service.parameters),
+                                    section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
@@ -337,7 +336,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
         console.verbose("%-20s PEND - Cannot compute check result: %s\n",
-                        six.ensure_str(description), e)
+                        six.ensure_str(service.description), e)
         # Don't submit to core - we're done.
         return True
 
@@ -348,12 +347,13 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
-            params, description, section_content), []
+            hostname, service.check_plugin_name, service.item,
+            is_manual_check(hostname, service.check_plugin_name, service.item), service.parameters,
+            service.description, section_content), []
 
     _submit_check_result(
         hostname,
-        description,
+        service.description,
         result,
         determine_cache_info(multi_host_sections, section_name),
     )

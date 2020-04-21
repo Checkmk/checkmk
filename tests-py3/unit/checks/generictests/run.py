@@ -16,7 +16,8 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
 from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
 
-from cmk.gui.watolib.rulespecs import rulespec_registry
+# TODO CMK-4180
+#from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -118,34 +119,36 @@ def update_dataset_attrs_with_discovery(dataset, check, subcheck, discovery_resu
 def validate_discovered_params(check, params):
     """Validate params with respect to the rule's valuespec
     """
-    if not params:
-        return
+    # TODO CMK-4180
+    return
+    # if not params:
+    #     return
 
-    # get the rule's valuespec
-    rulespec_group = check.info.get("group")
-    if rulespec_group is None:
-        return
+    # # get the rule's valuespec
+    # rulespec_group = check.info.get("group")
+    # if rulespec_group is None:
+    #     return
 
-    key = "checkgroup_parameters:%s" % (rulespec_group,)
-    if key in rulespec_registry:
-        spec = rulespec_registry[key].valuespec
-    else:
-        # Static checks still don't work. For example the test for
-        # domino_tasks. For the moment just skip
-        # key_sc = "static_checks:%s" % (rulespec_group,)
-        return
+    # key = "checkgroup_parameters:%s" % (rulespec_group,)
+    # if key in rulespec_registry:
+    #     spec = rulespec_registry[key].valuespec
+    # else:
+    #     # Static checks still don't work. For example the test for
+    #     # domino_tasks. For the moment just skip
+    #     # key_sc = "static_checks:%s" % (rulespec_group,)
+    #     return
 
-    # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
-    # *may* be 'None'. However, this is deliberately not allowed by the valuespec,
-    # to force the user to make a choice. The 'Invalid Parameter' message in this
-    # case does make sense, as it encourages the user to open and update the
-    # parameters. See Werk 6646
-    if 'cpu_rescale_max' in params:
-        params = params.copy()
-        params.update(cpu_rescale_max=True)
+    # # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
+    # # *may* be 'None'. However, this is deliberately not allowed by the valuespec,
+    # # to force the user to make a choice. The 'Invalid Parameter' message in this
+    # # case does make sense, as it encourages the user to open and update the
+    # # parameters. See Werk 6646
+    # if 'cpu_rescale_max' in params:
+    #     params = params.copy()
+    #     params.update(cpu_rescale_max=True)
 
-    print("Loading %r with prams %r" % (key, params))
-    spec.validate_value(params, "")
+    # print("Loading %r with prams %r" % (key, params))
+    # spec.validate_value(params, "")
 
 
 def run_test_on_parse(check_manager, dataset, immu):

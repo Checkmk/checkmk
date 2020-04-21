@@ -279,14 +279,15 @@ class Worker(threading.Thread):
         return urlunsplit(parsed)
 
 
-class SetQueue(queue.LifoQueue):
+class SetQueue(queue.Queue):
     def _init(self, maxsize):
-        self._visited = set()  # type: Set[Url]
+        self._set = set()  # type: Set[Url]
 
     def _put(self, item):
-        if item not in self._visited:
-            self._visited.add(item)
-            super()._put(item)
+        self._set.add(item)
+
+    def _get(self):
+        return self._set.pop()
 
 
 class Crawler:

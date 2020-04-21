@@ -227,11 +227,11 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _execute(self):
         # type: () -> RawSNMPData
         verify_ipaddress(self._ipaddress)
-        check_plugin_names = self.get_check_plugin_names()
+        check_plugin_names = self._sort_check_plugin_names(self.get_check_plugin_names())
 
         snmp_config = self._snmp_config
         info = {}  # type: RawSNMPData
-        for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
+        for check_plugin_name in check_plugin_names:
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".

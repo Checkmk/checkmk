@@ -310,14 +310,6 @@ def execute_check(multi_host_sections, hostname, ipaddress, service):
         if section_content is None:  # No data for this check type
             return False
 
-        # In case of SNMP checks but missing agent response, skip this check.
-        # TODO: This feature predates the 'parse_function', and is not needed anymore.
-        # # Special checks which still need to be called even with empty data
-        # # may declare this.
-        if not section_content and cmk.base.check_utils.is_snmp_check(service.check_plugin_name) \
-           and not config.check_info[service.check_plugin_name]["handle_empty_info"]:
-            return False
-
         check_function = config.check_info[service.check_plugin_name].get("check_function")
         if check_function is None:
             check_function = lambda item, params, section_content: (

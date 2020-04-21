@@ -1840,8 +1840,8 @@ def convert_check_info():
         "group": None,
         "snmp_info": None,
         "snmp_scan_function": None,
-        # TODO: The 'handle_empty_info' feature predates the 'parse_function'
-        #        and is not needed anymore.
+        # The 'handle_empty_info' feature predates the 'parse_function'
+        # and is not needed nor used anymore.
         "handle_empty_info": False,
         "handle_real_time_checks": False,
         "default_levels_variable": None,
@@ -1873,8 +1873,8 @@ def convert_check_info():
                 # Sometimes the scan function is assigned to the check_plugin_name
                 # rather than to the base name.
                 "snmp_scan_function": scan_function,
-                # TODO: The 'handle_empty_info' feature predates the 'parse_function'
-                #        and is not needed anymore.
+                # The 'handle_empty_info' feature predates the 'parse_function'
+                # and is not needed nor used anymore.
                 "handle_empty_info": False,
                 "handle_real_time_checks": False,
                 "default_levels_variable": check_default_levels.get(check_plugin_name),

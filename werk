@@ -12,7 +12,7 @@ import sys
 import termios
 import time
 import tty
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Set, Tuple
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -67,18 +67,20 @@ grep_colors = [
 
 
 def get_tty_size():
+    # type: () -> Tuple[int, int]
     try:
-        ws = struct.pack("HHHH", 0, 0, 0, 0)
-        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
+        ws = bytearray(8)
+        fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
         lines, columns, _x, _y = struct.unpack("HHHH", ws)
         if lines > 0 and columns > 0:
             return lines, columns
-    except Exception:
+    except OSError:
         pass
     return (24, 99999)
 
 
 def bail_out(text):
+    # type: (str) -> NoReturn
     sys.stderr.write(text + "\n")
     sys.exit(1)
 
@@ -102,11 +104,20 @@ def goto_werksdir():
 g_last_werk = None  # type: Optional[int]
 
 
+def get_last_werk():
+    # type: () -> int
+    if g_last_werk is None:
+        bail_out("No last werk known. Please specify id.")
+    return g_last_werk
+
+
 def load_config():
     global g_last_werk
-    exec(open("config").read(), globals(), globals())
+    with open("config") as f_config:
+        exec(f_config.read(), globals(), globals())
     try:
-        g_last_werk = int(open(".last").read())
+        with open(".last") as f_last:
+            g_last_werk = int(f_last.read())
     except Exception:
         g_last_werk = None
 
@@ -350,11 +361,9 @@ def show_werk(werk):
 
 
 def main_list(args, fmt):
-    werks = g_werks.values()
-
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
-    filters = {}
+    filters = {}  # type: Dict[str, List]
 
     reverse = False
     for a in args:
@@ -388,7 +397,7 @@ def main_list(args, fmt):
 
     # Filter
     newwerks = []
-    for werk in werks:
+    for werk in g_werks.values():
         skip = False
         for tp, entries in filters.items():
             if werk[tp] not in entries:
@@ -415,11 +424,12 @@ def output_csv(werks):
 
     nr = 1
     for entry in components:
-        if len(entry) == 2:
+        if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
+        elif isinstance(entry, str):  # TODO: Hmmm...
+            name, alias = entry, entry
         else:
-            name = entry
-            alias = entry
+            bail_out("invalid component %r" % (entry,))
 
         line("", "", "", "", "")
 
@@ -454,9 +464,7 @@ def werk_effort(werk):
 def main_show(args):
     ids = args
     if len(ids) == 0:
-        if g_last_werk is None:
-            bail_out("No last werk known. Please specify id.")
-        ids = [g_last_werk]
+        ids = [get_last_werk()]
     elif ids[0] == 'all':
         ids = [wid for (wid, _werk) in g_werks.items()]
 
@@ -596,9 +604,7 @@ def main_new(args):
 
 def get_werk_arg(args):
     if len(args) == 0:
-        if g_last_werk is None:
-            bail_out("No last werk, please specify id.")
-        wid = g_last_werk
+        wid = get_last_werk()
     else:
         if len(args) != 1:
             usage()
@@ -623,9 +629,7 @@ def main_url(args):
 
 def main_delete(args):
     if len(args) == 0:
-        if g_last_werk is None:
-            bail_out("Please specify the werks to delete.")
-        args = [g_last_werk]
+        args = [get_last_werk()]
     for werk_id in args:
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
@@ -718,17 +722,13 @@ def main_knowledge(args):
 
 def main_edit(args):
     if len(args) == 0:
-        werkid = int(g_last_werk)
-        if werkid is None:
-            bail_out("No last werk. Please specify id.")
+        werkid = get_last_werk()
     else:
         try:
             werkid = int(args[0])
             args = args[1:]
         except Exception:
-            werkid = int(g_last_werk)
-            if werkid is None:
-                bail_out("No last werk. Please specify id.")
+            werkid = get_last_werk()
 
     edit_werk(werkid, args, commit=False)
     save_last_werkid(werkid)
@@ -893,13 +893,13 @@ def main_fetch_ids(args):
 #
 
 # default config
-editions = []  # type: List[Tuple[str,str]]
-components = []  # type: List[Tuple[str,str]]
-edition_components = {}  # type: Dict[str, List[Tuple[str,str]]]
-classes = []  # type: List[Tuple[str,str]]
-levels = []  # type: List[Tuple[str,str]]
-compatible = []  # type: List[Tuple[str,str]]
-knowledge = []  # type: List[Tuple[str,str]]
+editions = []  # type: List[Tuple[str, str]]
+components = []  # type: List[Tuple[str, str]]
+edition_components = {}  # type: Dict[str, List[Tuple[str, str]]]
+classes = []  # type: List[Tuple[str, str, str]]
+levels = []  # type: List[Tuple[str, str]]
+compatible = []  # type: List[Tuple[str, str]]
+knowledge = []  # type: List[Tuple[str, str]]
 online_url = ""
 
 versions = set([])  # type: Set[str]

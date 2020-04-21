@@ -2451,7 +2451,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}
+        content_by_piggyback_hosts = {}  # type: Dict[str, List[Any]]
         for row in raw_content.content:
             load_bal_dns, target_group_name = row['Label'].split(self._separator)
             row['Label'] = target_group_name

@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from typing import Dict, Tuple
+
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
@@ -63,7 +64,7 @@ def test_get_rate(pre_state, time, value, raise_of, expected):
     ]),
 ])
 def test_get_average(backlog_min, timeseries):
-    store = {}
+    store = {}  # type: Dict[str, Tuple[float, float, float]]
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(
             store,

@@ -50,7 +50,10 @@ def cleanup_after_test():
     # to prevent tests involving eachother
     for entry in Path(cmk.utils.paths.omd_root).iterdir():
         if entry.is_dir():
-            shutil.rmtree(str(entry))
+            # This randomly fails for some unclear reasons. Looks like a race condition, but I
+            # currently have no idea which triggers this since the tests are not executed in
+            # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
+            shutil.rmtree(str(entry), ignore_errors=True)
         else:
             entry.unlink()
 

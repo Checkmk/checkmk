@@ -572,11 +572,6 @@ def _convert_perf_value(x):
 
 def _submit_check_result(host, servicedesc, result, cache_info):
     # type: (HostName, ServiceDetails, ServiceCheckResult, Tuple[Optional[int], Optional[int]]) -> None
-    if not result:
-        result = 3, "Check plugin did not return any result"
-
-    if len(result) != 3:
-        raise MKGeneralException("Invalid check result: %s" % (result,))
     state, infotext, perfdata = result
 
     if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or

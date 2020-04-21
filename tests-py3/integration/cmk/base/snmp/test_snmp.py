@@ -4,16 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
-import subprocess
 import logging
 import os
 from pathlib import Path
+import subprocess
 
-import six
 import pytest  # type: ignore[import]
+import six
 from testlib import wait_until
 
 from cmk.utils.exceptions import MKGeneralException
@@ -44,8 +41,8 @@ def monkeymodule(request):
     mpatch.undo()
 
 
-@pytest.fixture(scope="module", autouse=True)
-def snmpsim(site, request, tmp_path_factory):
+@pytest.fixture(name="snmpsim", scope="module", autouse=True)
+def snmpsim_fixture(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
@@ -118,8 +115,8 @@ def snmpsim(site, request, tmp_path_factory):
 
 
 # Execute all tests for all SNMP backends
-@pytest.fixture(params=["inline_snmp", "classic_snmp", "stored_snmp"])
-def snmp_config(request, snmpsim, monkeypatch):
+@pytest.fixture(name="snmp_config", params=["inline_snmp", "classic_snmp", "stored_snmp"])
+def snmp_config_fixture(request, snmpsim, monkeypatch):
     backend_name = request.param
 
     if backend_name == "stored_snmp":

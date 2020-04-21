@@ -9,14 +9,15 @@
 
 import base64
 import copy
+from io import BytesIO
 import json
 import os
-from io import BytesIO
 import subprocess
 import sys
 import time
-import six
+from typing import Any, Dict, List
 
+import six
 import pytest  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 
@@ -389,7 +390,7 @@ def test_write_host_tags(web, site):
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-        }
+        }  # type: Dict[str, Any]
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
@@ -427,7 +428,7 @@ def test_write_host_labels(web, site):
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-        }
+        }  # type: Dict[str, Any]
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
@@ -845,6 +846,57 @@ def test_get_graph_notification_image(web, graph_test_config):
 
 
 def test_get_graph_hover(web, graph_test_config):
+    metrics = [{
+        u'color': u'#87f058',
+        u'line_type': u'stack',
+        u'expression': [
+            u'operator', u'+',
+            [[
+                u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'user_time',
+                None, 1
+            ],
+             [
+                 u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                 u'children_user_time', None, 1
+             ]]
+        ],
+        u'unit': u's',
+        u'title': u'CPU time in user space'
+    }, {
+        u'color': u'#ff8840',
+        u'line_type': u'stack',
+        u'expression': [
+            u'operator', u'+',
+            [[
+                u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'system_time',
+                None, 1
+            ],
+             [
+                 u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                 u'children_system_time', None, 1
+             ]]
+        ],
+        u'unit': u's',
+        u'title': u'CPU time in operating system'
+    }, {
+        u'color': u'#00b2ff',
+        u'line_type': u'stack',
+        u'expression': [
+            u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
+            None, 1
+        ],
+        u'unit': u's',
+        u'title': u'Time spent waiting for Check_MK agent'
+    }, {
+        u'color': u'#d080af',
+        u'line_type': u'line',
+        u'expression': [
+            u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'execution_time',
+            None, 1
+        ],
+        u'unit': u's',
+        u'title': u'Total execution time'
+    }]  # type: List[Dict[str, Any]]
     graph_context = {
         u'definition': {
             u'explicit_vertical_range': [None, None],
@@ -859,57 +911,7 @@ def test_get_graph_hover(web, graph_test_config):
                 }
             ],
             u'consolidation_function': u'max',
-            u'metrics': [{
-                u'color': u'#87f058',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'operator', u'+',
-                    [[
-                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                        u'user_time', None, 1
-                    ],
-                     [
-                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                         u'children_user_time', None, 1
-                     ]]
-                ],
-                u'unit': u's',
-                u'title': u'CPU time in user space'
-            }, {
-                u'color': u'#ff8840',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'operator', u'+',
-                    [[
-                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                        u'system_time', None, 1
-                    ],
-                     [
-                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                         u'children_system_time', None, 1
-                     ]]
-                ],
-                u'unit': u's',
-                u'title': u'CPU time in operating system'
-            }, {
-                u'color': u'#00b2ff',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                    u'cmk_time_agent', None, 1
-                ],
-                u'unit': u's',
-                u'title': u'Time spent waiting for Check_MK agent'
-            }, {
-                u'color': u'#d080af',
-                u'line_type': u'line',
-                u'expression': [
-                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                    u'execution_time', None, 1
-                ],
-                u'unit': u's',
-                u'title': u'Total execution time'
-            }],
+            u'metrics': metrics,
             u'omit_zero_metrics': False,
             u'unit': u's'
         },
@@ -954,7 +956,7 @@ def test_get_graph_hover(web, graph_test_config):
     assert "rendered_hover_time" in data
     assert len(data["curve_values"]) == 4
 
-    for index, metric in enumerate(graph_context["definition"]["metrics"][::-1]):
+    for index, metric in enumerate(metrics[::-1]):
         curve_value = data["curve_values"][index]
 
         assert curve_value["color"] == metric["color"]

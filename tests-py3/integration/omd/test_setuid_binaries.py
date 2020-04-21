@@ -32,6 +32,7 @@ def test_binary_capability(site, rel_path, expected_capability):
         raise Exception("Unable to find getcap")
 
     p = subprocess.Popen([getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8")
+    assert p.stdout
     stdout = p.stdout.read()
 
     assert oct(stat.S_IMODE(os.stat(path).st_mode)) == '0o750'

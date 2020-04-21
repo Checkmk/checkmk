@@ -4,25 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
-from __future__ import print_function
 import collections
-import uuid as _uuid
 import json as _json
 import time as _time
+import uuid as _uuid
+from typing import Dict, List
 
 import pytest  # type: ignore[import]
 import six
 
-from testlib import web, create_linux_test_host  # pylint: disable=unused-import
+from testlib import web, create_linux_test_host  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
 
-@pytest.fixture(scope="module", params=["nagios", "cmc"])
-def default_cfg(request, site, web):
+@pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])
+def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
@@ -37,7 +34,7 @@ def default_cfg(request, site, web):
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
 def test_tables(default_cfg, site):
-    columns_per_table = {}
+    columns_per_table = {}  # type: Dict[str, List[str]]
     for row in site.live.query_table_assoc("GET columns\n"):
         columns_per_table.setdefault(row["table"], []).append(row["name"])
     assert len(columns_per_table) > 5
@@ -125,8 +122,8 @@ def test_service_table(default_cfg, site):
     assert "Memory" in descriptions
 
 
-@pytest.fixture()
-def configure_service_tags(site, web, default_cfg):
+@pytest.fixture(name="configure_service_tags")
+def configure_service_tags_fixture(site, web, default_cfg):  # noqa: F811 # pylint: disable=redefined-outer-name
     web.set_ruleset(
         "service_tag_rules", {
             "ruleset": {

@@ -4,20 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-# flake8: noqa
-
 import collections
 import re
 import subprocess
+from typing import List
+
 import pytest  # type: ignore[import]
 
-from testlib import web  # pylint: disable=unused-import
+from testlib import web  # noqa: F401 # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output
 
 
-@pytest.fixture(scope="module")
-def test_cfg(web, site):
+@pytest.fixture(name="test_cfg", scope="module")
+def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
@@ -78,8 +77,8 @@ CommandOutput = collections.namedtuple('CommandOutput', [
 ])
 
 
-@pytest.fixture
-def execute(test_cfg, site):
+@pytest.fixture(name="execute")
+def execute_fixture(test_cfg, site):
     def _execute(command, cwd=None):
         p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         stdout, stderr = p.communicate()
@@ -677,7 +676,8 @@ def test_check_discovery(execute):
 
 
 def test_check(execute):
-    for opt in [["--check"], []]:
+    opts = [["--check"], []]  # type: List[List[str]]
+    for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
         assert p.returncode == 0
         assert p.stdout.startswith("OK - [agent] Version:")

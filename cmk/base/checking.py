@@ -245,7 +245,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
                 hostname, service.description):
             continue
-        if _service_outside_check_period(config_cache, hostname, service.description):
+        if service_outside_check_period(config_cache, hostname, service.description):
             continue
 
         success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
@@ -264,7 +264,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     return num_success, missing_section_list
 
 
-def _service_outside_check_period(config_cache, hostname, description):
+def service_outside_check_period(config_cache, hostname, description):
     # type: (config.ConfigCache, HostName, ServiceName) -> bool
     period = config_cache.check_period_of_service(hostname, description)
     if period is None:

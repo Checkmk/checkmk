@@ -237,7 +237,8 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
                 pos_match.add(service.check_plugin_name)
             else:
                 neg_match.add(service.check_plugin_name)
-        only_check_plugins -= (pos_match - neg_match)
+        only_check_plugins -= pos_match
+        only_check_plugins |= neg_match
 
     for service in services:
         if service.check_plugin_name not in only_check_plugins:

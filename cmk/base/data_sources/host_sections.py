@@ -196,12 +196,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, None)
 
-        try:
-            parsed = parse_function(string_table)
-        except Exception:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKParseFunctionError(*sys.exc_info())
+        parsed = parse_function(string_table)
 
         return self._parsed_sections.setdefault(cache_key, parsed)
 

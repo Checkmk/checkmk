@@ -10,6 +10,12 @@ import pytest  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+import cmk.base.snmp as snmp
+import cmk.base.snmp_utils as snmp_utils
+from cmk.base.api.agent_based.section_types import (
+    SNMPTree,
+    OIDEnd,
+)
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 from cmk.base.snmp_utils import SNMPTable
@@ -149,3 +155,27 @@ def test_describe_without_ipaddress_raises_exception(monkeypatch):
     # TODO: This does not seem to be the expected exception.
     with pytest.raises(NotImplementedError):
         source.describe()
+
+
+def test_execute_with_canned_responses(monkeypatch):
+    # Beginning of setup.
+    tree = SNMPTree(
+        base='.1.3.6.1.4.1.13595.2.2.3.1',
+        oids=[
+            OIDEnd(),
+            snmp_utils.OIDBytes("16"),
+        ],
+    )
+    name = "acme_agent_sessions"  # Must be in config.registered_snmp_sections
+
+    # Replace I/O with canned responses.
+    monkeypatch.setattr(SNMPDataSource, "get_check_plugin_names", lambda *args, **kwargs: {name})
+    monkeypatch.setattr(snmp, "get_snmp_table_cached", lambda *args: tree)
+
+    hostname = "testhost"
+    ipaddress = "127.0.0.1"
+    Scenario().add_host(hostname).apply(monkeypatch)
+    source = SNMPDataSource(hostname, ipaddress)
+    # End of setup.
+
+    assert source._execute() == {name: [tree]}

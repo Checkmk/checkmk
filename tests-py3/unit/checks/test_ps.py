@@ -7,22 +7,33 @@
 # yapf: disable
 from collections import namedtuple
 import datetime
+import itertools
+from typing import Any, Dict, List, Optional, Tuple
+
 from six.moves import zip_longest
 import pytest  # type: ignore[import]
+
 from cmk.base.check_api import MKGeneralException
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
-# No stub file
+
 from testlib import on_time  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
 
+def _optionalize(lst):
+    # type: (List[str]) -> List[Optional[str]]
+    return [x for x in lst]  # pylint: disable=unnecessary-comprehension
+
+
 def splitter(text, split_symbol=None, node=None):
-    return [[node] + line.split(split_symbol) for line in text.split("\n")]
+    # type: (str, Optional[str], Optional[str]) -> List[List[Optional[str]]]
+    return [[node] + _optionalize(line.split(split_symbol)) for line in text.split("\n")]
 
 
 def generate_inputs():
+    # type: () -> List[List[List[Optional[str]]]]
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)
@@ -587,10 +598,17 @@ PS_DISCOVERED_HOST_LABELS = [
 def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     check.set_check_api_utils_globals()  # needed for host name
-    info = sum(generate_inputs(), [])
+    info = list(itertools.chain.from_iterable(generate_inputs()))
     parsed = check.context['parse_ps'](info)[1]
-    assert check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
-                                                parsed) == PS_DISCOVERED_ITEMS + PS_DISCOVERED_HOST_LABELS
+
+    # Ugly contortions caused by horrible typing...
+    expected = []  # type: List[object]
+    for psdi in PS_DISCOVERED_ITEMS:
+        expected.append(psdi)
+    for psdhl in PS_DISCOVERED_HOST_LABELS:
+        expected.append(psdhl)
+
+    assert check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES, parsed) == expected
 
 
 @pytest.mark.parametrize("service_description, matches, result", [
@@ -706,7 +724,7 @@ check_results = [
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
-    parsed = sum([check.context['parse_ps'](info)[1] for info in generate_inputs()], [])
+    parsed = list(itertools.chain.from_iterable(check.context['parse_ps'](info)[1] for info in generate_inputs()))
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -826,7 +844,7 @@ def test_subset_patterns(check_manager):
         },
         'match': '~(main.*)\\b',
         'descr': '%s'
-    }, [], ["@all"], {})]
+    }, [], ["@all"], {})]  # type: List[Tuple[Dict, List, List, Dict]]
 
     discovered = [
         ('main', {
@@ -886,7 +904,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         'cpu_rescale_max': True,
         'levels': (1, 1, 99999, 99999),
         'single_cpulevels': (45.0, 80.0),
-    }
+    }  # type: Dict[str, Any]
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
         with on_time(check_time, "CET"):

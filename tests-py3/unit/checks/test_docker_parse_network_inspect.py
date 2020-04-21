@@ -163,5 +163,5 @@ regex = re.compile
     }]),
 ])
 def test_parse_legacy_docker_network_inspect(indata, outdata):
-    parsed = parse_legacy_docker_network_inspect(indata)  # pylint: disable=undefined-variable
+    parsed = parse_legacy_docker_network_inspect(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert parsed == outdata, "expected: %r, got %r" % (outdata, parsed)

@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import re  # pylint: disable=unused-import
+import re  # noqa: F401 # pylint: disable=unused-import
 import pytest  # type: ignore[import]
 
 from checktestlib import CheckResult, assertCheckResultsEqual
-from cmk.base.check_api import (  # pylint: disable=unused-import
+from cmk.base.check_api import (  # noqa: F401 # pylint: disable=unused-import
     get_bytes_human_readable, check_levels,
 )
 
@@ -44,7 +44,7 @@ exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/diskstat.incl
      ]))),
 ])
 def test_check_diskstat_line(args, expected_result):
-    actual_result = CheckResult(check_diskstat_line(*args))  # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_line(*args))  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assertCheckResultsEqual(actual_result, expected_result)
 
 
@@ -58,5 +58,5 @@ def test_check_diskstat_line(args, expected_result):
      ], CheckResult((3, 'summary mode not supported in a cluster', []))),
 ])
 def test_check_diskstat_generic_summary_clutster(info, expected_result):
-    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))  # pylint: disable=undefined-variable
+    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assertCheckResultsEqual(actual_result, expected_result)

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, List, Tuple
 import pytest  # type: ignore
 from cmk.base.check_api import MKCounterWrapped
 from test_ibm_mq_include import parse_info
@@ -152,7 +153,8 @@ def test_check(check_manager):
     }
 
     actual = list(check.run_check('QM1:CHAN1', params, parsed))
-    expected = [(1, u'Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q', [])]
+    expected = [(1, u'Status: RETRYING, Type: SDR, Xmitq: MY.XMIT.Q', [])
+               ]  # type: List[Tuple[int, str, List[Any]]]
     assert actual == expected
 
     actual = list(check.run_check('QM1:CHAN2', params, parsed))
@@ -193,7 +195,7 @@ def test_no_xmit_queue_defined(check_manager):
         },
     }
     actual = list(check.run_check('MQSWISSFPMP1:LXFPMS.TO.RESA', params, parsed))
-    expected = [(0, u'Status: INACTIVE, Type: SDR', [])]
+    expected = [(0, u'Status: INACTIVE, Type: SDR', [])]  # type: List[Tuple[int, str, List[Any]]]
     assert actual == expected
 
 

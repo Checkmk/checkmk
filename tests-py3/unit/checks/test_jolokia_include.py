@@ -18,7 +18,7 @@ exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/jolokia.inclu
     (list('AB'), 2, list("AB")),
 ])
 def test_jolokia_basic_split(line, length, result):
-    split_up = jolokia_basic_split(line, length)  # pylint: disable=undefined-variable
+    split_up = jolokia_basic_split(line, length)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert result == split_up
 
 
@@ -28,7 +28,7 @@ def test_jolokia_basic_split(line, length, result):
 ])
 def test_jolokia_basic_split_fail_value(line, length):
     with pytest.raises(ValueError):
-        jolokia_basic_split(line, length)  # pylint: disable=undefined-variable
+        jolokia_basic_split(line, length)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
 
 @pytest.mark.parametrize('line,length', [
@@ -36,4 +36,4 @@ def test_jolokia_basic_split_fail_value(line, length):
 ])
 def test_jolokia_basic_split_fail_notimplemented(line, length):
     with pytest.raises(NotImplementedError):
-        jolokia_basic_split(line, length)  # pylint: disable=undefined-variable
+        jolokia_basic_split(line, length)  # type: ignore[name-defined] # pylint: disable=undefined-variable

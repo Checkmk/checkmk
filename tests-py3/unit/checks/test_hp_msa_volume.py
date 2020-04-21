@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict, Tuple
 import pytest  # type: ignore[import]
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks
 
-###### hp_msa_volume (health) #########
+# ##### hp_msa_volume (health) #########
 
 
 def test_health_parse_yields_with_volume_name_as_items(check_manager):
@@ -68,12 +69,12 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item(check_manager):
     assert status_message_item_2nd == 'Status: OK, container name: B (RAID0)'
 
 
-###### hp_msa_volume.df ######
+# ##### hp_msa_volume.df ######
 
 
 def test_df_discovery_yields_volume_name_as_item(check_manager):
     parsed = {'Foo': {'durable-id': 'Bar'}}
-    expected_yield = ('Foo', {})
+    expected_yield = ('Foo', {})  # type: Tuple[str, Dict[Any, Any]]
     check = check_manager.get_check("hp_msa_volume.df")
     for item in check.run_discovery(parsed):
         assert item == expected_yield
@@ -110,7 +111,7 @@ def test_df_check(check_manager):
     assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))
 
 
-##### hp_msa_io.io  #####
+# #### hp_msa_io.io  #####
 
 
 def test_io_discovery_yields_summary(check_manager):

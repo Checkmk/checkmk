@@ -57,4 +57,4 @@ FALLBACK = '999'
     ("Switch 1 - FAN - T1 1, Normal", "Switch 1 - FAN - T1 1"),
 ])
 def test_cisco_sensor_item(status_description, expected_item):
-    assert cisco_sensor_item(status_description, FALLBACK) == expected_item  # pylint: disable=undefined-variable
+    assert cisco_sensor_item(status_description, FALLBACK) == expected_item  # type: ignore[name-defined] # pylint: disable=undefined-variable

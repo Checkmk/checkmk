@@ -17,5 +17,5 @@ exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/docker.includ
      "e3456c851a15"),
 ])
 def test_parse_short_id(indata, expected):
-    actual = docker_get_short_id(indata)  # pylint: disable=undefined-variable
+    actual = docker_get_short_id(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert actual == expected

@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict
 import pytest  # type: ignore[import]
-from cmk.base.check_api import MKCounterWrapped  # pylint: disable=unused-import
+from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
 from test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_managers"
 
-factory_settings = {}
+factory_settings = {}  # type: Dict[str, Any]
 factory_settings["ibm_mq_managers_default_levels"] = {
     "status": {
         "STARTING": 0,

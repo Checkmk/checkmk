@@ -425,8 +425,9 @@ def test_parse_legacy_docker_node_info(indata, outdata_subset):
             for r_key, r_value in value.items():
                 assert_contains(dic[key], r_key, r_value)
         else:
-            assert dic[key] == value, "expected: %r, got %r" % (value, parsed[key])
+            assert dic[key] == value, "expected: %r, got %r" % (value, parsed[key]
+                                                               )  # type: ignore[name-defined,misc]
 
-    parsed = parse_legacy_docker_node_info(indata)  # pylint: disable=undefined-variable
+    parsed = parse_legacy_docker_node_info(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     for k, v in outdata_subset.items():
         assert_contains(parsed, k, v)

@@ -79,6 +79,8 @@ UncleanPerfValue = Union[None, str, float]
 
 ITEM_NOT_FOUND = (3, "Item not found in monitoring data", [])  # type: ServiceCheckResult
 
+CHECK_NOT_IMPLEMENTED = (3, 'Check not implemented', [])  # type: ServiceCheckResult
+
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
@@ -280,6 +282,11 @@ def service_outside_check_period(config_cache, hostname, description):
 
 def execute_check(multi_host_sections, hostname, ipaddress, service):
     # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
+    check_function = config.check_info[service.check_plugin_name].get("check_function")
+    if check_function is None:
+        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, (None, None))
+        return True
+
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(service.check_plugin_name, service.description)
@@ -309,11 +316,6 @@ def execute_check(multi_host_sections, hostname, ipaddress, service):
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type
             return False
-
-        check_function = config.check_info[service.check_plugin_name].get("check_function")
-        if check_function is None:
-            check_function = lambda item, params, section_content: (
-                3, 'UNKNOWN - Check not implemented')
 
         # Call the actual check function
         item_state.reset_wrapped_counters()

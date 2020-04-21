@@ -37,10 +37,17 @@ factory_settings["f5_bigip_mem_default_levels"] = {"levels": ("perc_used", (80.0
 
 
 def parse_f5_bigip_mem(info):
-    parsed = {
-        "mem": (info[0][0], info[0][1]),
-        "tmm": (info[0][2], info[0][3]),
-    }
+    parsed = {}
+    try:
+        parsed[ "mem"] = (info[0][0], info[0][1])
+    except IndexError:
+        pass
+
+    try:
+        parsed["tmm"] = (info[0][2], info[0][3])
+    except IndexError:
+        pass
+
     return parsed
 
 

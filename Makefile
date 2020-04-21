@@ -406,6 +406,7 @@ setup:
 	    libmysqlclient-dev \
 	    pngcrush \
 	    valgrind \
+	    shellcheck \
 	    direnv \
 	    python-pip \
 	    python3.7-dev \

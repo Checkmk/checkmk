@@ -32,6 +32,7 @@ import livestatus
 
 import cmk.utils.plugin_registry
 
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
@@ -108,21 +109,7 @@ class QuicksearchSnapin(SidebarSnapin):
 # and then tries to verify it is a regex
 def _to_regex(s):
     s = s.replace('*', '.*')
-    try:
-        re.compile(s)
-    except re.error:
-        raise MKGeneralException(
-            _('You search statement is not valid. You need to provide a regular '
-              'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-              'if you like to search for a single backslash.'))
-
-    # livestatus uses re2 and re can not validate posix pattern, so we have to
-    # check for lookaheads here
-    lookahead_pattern = r'\((\?!|\?=|\?<)'
-
-    if re.search(lookahead_pattern, s):
-        raise MKGeneralException(
-            _('You search statement is not valid. You can not use a lookahead here.'))
+    cmk.gui.utils.validate_regex(s)
 
     return s
 

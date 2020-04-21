@@ -7,6 +7,7 @@
 import socket
 import shutil
 import sys
+import logging
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -17,6 +18,8 @@ import pytest  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -49,13 +52,16 @@ def cleanup_after_test():
     # Ensure there is no file left over in the unit test fake site
     # to prevent tests involving eachother
     for entry in Path(cmk.utils.paths.omd_root).iterdir():
-        if entry.is_dir():
-            # This randomly fails for some unclear reasons. Looks like a race condition, but I
-            # currently have no idea which triggers this since the tests are not executed in
-            # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
-            shutil.rmtree(str(entry), ignore_errors=True)
-        else:
-            entry.unlink()
+        # This randomly fails for some unclear reasons. Looks like a race condition, but I
+        # currently have no idea which triggers this since the tests are not executed in
+        # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
+        try:
+            if entry.is_dir():
+                shutil.rmtree(str(entry))
+            else:
+                entry.unlink()
+        except OSError as e:
+            logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
 
 
 # Unit tests should not be executed in site.

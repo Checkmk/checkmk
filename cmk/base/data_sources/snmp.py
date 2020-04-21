@@ -7,6 +7,7 @@
 import abc
 import ast
 import time
+from logging import Logger  # pylint: disable=unused-import
 from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 import six
@@ -228,8 +229,16 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: () -> RawSNMPData
         verify_ipaddress(self._ipaddress)
         check_plugin_names = self._sort_check_plugin_names(self.get_check_plugin_names())
-
         snmp_config = self._snmp_config
+
+        return self._fetch_raw_data(check_plugin_names, self._fetched_check_plugin_names,
+                                    self._persisted_sections, self._use_snmpwalk_cache, snmp_config,
+                                    self._logger)
+
+    @staticmethod
+    def _fetch_raw_data(check_plugin_names, fetched_check_plugin_names, persisted_sections,
+                        use_snmpwalk_cache, snmp_config, logger):
+        # type (List[CheckPluginName], Set[CheckPluginName], BoundedAbstractPersistedSections, bool, snmp_utils.SNMPHostConfig, Logger) -> RawSNMPData
         info = {}  # type: RawSNMPData
         for check_plugin_name in check_plugin_names:
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
@@ -238,7 +247,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             section_name = check_utils.section_name_of(check_plugin_name)
             oid_info, has_snmp_info = SNMPDataSource._oid_info_from_section_name(section_name)
 
-            if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
+            if not has_snmp_info and check_plugin_name in fetched_check_plugin_names:
                 continue
 
             if oid_info is None:
@@ -246,22 +255,20 @@ class SNMPDataSource(ABCSNMPDataSource):
 
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)",
-                                   check_plugin_name)
+            if persisted_sections and section_name in persisted_sections:
+                logger.debug("%s: Skip fetching data (persisted info exists)", check_plugin_name)
                 continue
 
             # Prevent duplicate data fetching of identical section in case of SNMP sub checks
             if section_name in info:
-                self._logger.debug("%s: Skip fetching data (section already fetched)",
-                                   check_plugin_name)
+                logger.debug("%s: Skip fetching data (section already fetched)", check_plugin_name)
                 continue
 
-            self._logger.debug("%s: Fetching data", check_plugin_name)
+            logger.debug("%s: Fetching data", check_plugin_name)
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
-            get_snmp = snmp.get_snmp_table_cached if self._use_snmpwalk_cache else snmp.get_snmp_table
+            get_snmp = snmp.get_snmp_table_cached if use_snmpwalk_cache else snmp.get_snmp_table
             if isinstance(oid_info, list):
                 check_info = []  # type: List[SNMPTable]
                 for entry in oid_info:

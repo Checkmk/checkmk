@@ -228,12 +228,15 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
 
+    def _is_not_of_host(host_name, service):
+        return hostname != config_cache.host_of_clustered_service(hostname, service.description)
+
     # Filter out check types which are not used on the node
     if belongs_to_cluster:
         pos_match = set()
         neg_match = set()
         for service in services:
-            if hostname != config_cache.host_of_clustered_service(hostname, service.description):
+            if _is_not_of_host(hostname, service):
                 pos_match.add(service.check_plugin_name)
             else:
                 neg_match.add(service.check_plugin_name)
@@ -243,8 +246,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     for service in services:
         if service.check_plugin_name not in only_check_plugins:
             continue
-        if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
-                hostname, service.description):
+        if belongs_to_cluster and _is_not_of_host(hostname, service):
             continue
         if service_outside_check_period(config_cache, hostname, service.description):
             continue

@@ -13,7 +13,7 @@ import copy
 import errno
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
+    cast, Callable, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
 )
 
 import six
@@ -250,7 +250,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         if service_outside_check_period(config_cache, hostname, service.description):
             continue
 
-        success = execute_check(multi_host_sections, hostname, ipaddress, service)
+        success = execute_check(multi_host_sections, host_config, ipaddress, service)
         if success:
             num_success += 1
         else:
@@ -280,15 +280,19 @@ def service_outside_check_period(config_cache, hostname, description):
     return True
 
 
-def execute_check(multi_host_sections, hostname, ipaddress, service):
+def execute_check(multi_host_sections, host_config, ipaddress, service):
+    # type: (data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
+    return _execute_check_legacy_mode(multi_host_sections, host_config.hostname, ipaddress, service)
+
+
+def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service):
     # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
     check_function = config.check_info[service.check_plugin_name].get("check_function")
     if check_function is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
-
     # Make a bit of context information globally available, so that functions
-    # called by checks now this context
+    # called by checks know this context
     check_api_utils.set_service(service.check_plugin_name, service.description)
     item_state.set_item_state_prefix(service.check_plugin_name, service.item)
 

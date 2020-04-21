@@ -233,15 +233,12 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
 
     # Filter out check types which are not used on the node
     if belongs_to_cluster:
-        pos_match = set()
-        neg_match = set()
-        for service in services:
-            if _is_not_of_host(hostname, service):
-                pos_match.add(service.check_plugin_name)
-            else:
-                neg_match.add(service.check_plugin_name)
-        only_check_plugins -= pos_match
-        only_check_plugins |= neg_match
+        removed_plugins = {
+            plugin for plugin in only_check_plugins if all(
+                _is_not_of_host(hostname, service) for service in services
+                if service.check_plugin_name == plugin)
+        }
+        only_check_plugins -= removed_plugins
 
     for service in services:
         if service.check_plugin_name not in only_check_plugins:

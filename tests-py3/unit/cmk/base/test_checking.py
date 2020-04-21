@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # No stub file
 import pytest  # type: ignore[import]
 import cmk.base.core
 import cmk.base.config
 import cmk.base.checking
+from cmk.base.api.agent_based.checking_types import Result, state, Metric
 
 
 @pytest.mark.parametrize(
@@ -188,9 +191,27 @@ def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expe
                         lambda tp: _check_timeperiod(tp, active_timeperiods))
 
     determined_check_params = cmk.base.checking.legacy_determine_check_params(rules)
-    assert expected_result == determined_check_params,\
-           "Determine params: Expected '%s' but got '%s'" % (expected_result, determined_check_params)
+    assert expected_result == determined_check_params, (
+        "Determine params: Expected '%s' but got '%s'" % (expected_result, determined_check_params))
 
 
 def _check_timeperiod(timeperiod, active_timeperiods):
     return timeperiod in active_timeperiods
+
+
+@pytest.mark.parametrize("subresults, aggregated_results", [
+    ([], cmk.base.checking.ITEM_NOT_FOUND),
+    ([
+        Result(state=state.OK, details="details"),
+    ], (0, "Everything looks OK - 1 detail available\ndetails", [])),
+    ([
+        Result(state=state.OK, summary="summary1", details="detailed info1"),
+        Result(state=state.WARN, summary="summary2", details="detailed info2"),
+    ], (1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", [])),
+    ([
+        Result(state=state.OK, summary="summary"),
+        Metric(name="name", value=42),
+    ], (0, "summary\nsummary", [("name", 42.0, None, None, None, None)])),
+])
+def test_aggregate_result(subresults, aggregated_results):
+    assert cmk.base.checking._aggregate_results(subresults) == aggregated_results

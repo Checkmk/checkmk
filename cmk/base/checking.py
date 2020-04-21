@@ -26,6 +26,13 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 import cmk.utils.debug
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based import checking_types, value_store
+from cmk.base.api.agent_based.register.check_plugins_legacy import (
+    CLUSTER_LEGACY_MODE_FROM_HELL,
+    maincheckify,
+    wrap_parameters,
+)
 import cmk.base.utils
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -282,7 +289,67 @@ def service_outside_check_period(config_cache, hostname, description):
 
 def execute_check(multi_host_sections, host_config, ipaddress, service):
     # type: (data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress], Service) -> bool
-    return _execute_check_legacy_mode(multi_host_sections, host_config.hostname, ipaddress, service)
+    # TODO (mo): centralize maincheckify: CMK-4295
+    plugin_name = PluginName(maincheckify(service.check_plugin_name))
+    plugin = config.registered_check_plugins.get(plugin_name)
+    if plugin is None:
+        _submit_check_result(host_config.hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        return True
+
+    check_function = (plugin.cluster_check_function
+                      if host_config.is_cluster else plugin.check_function)
+
+    if check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL:
+        return _execute_check_legacy_mode(multi_host_sections, host_config.hostname, ipaddress,
+                                          service)
+
+    kwargs = None
+    try:
+        kwargs = multi_host_sections.get_section_cluster_kwargs(
+            host_config.hostname,
+            plugin.sections,
+            service.description,
+        ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+            host_config.hostname,
+            ipaddress,
+            plugin.sections,
+        )
+
+        if not kwargs:
+            return False
+
+        if service.item is not None:
+            kwargs["item"] = service.item
+        if plugin.check_ruleset_name:
+            kwargs["params"] = determine_check_params(service.parameters)
+
+        with value_store.context(plugin.name, service.item):
+            result = _aggregate_results(check_function(**kwargs))
+
+    except (item_state.MKCounterWrapped, checking_types.IgnoreResultsError) as e:
+        msg = str(e) or "No service summary available"
+        # Do not submit any check result in this case.
+        console.verbose("%-20s PEND - %s\n", six.ensure_str(service.description), msg)
+        return True
+
+    except MKTimeout:
+        raise
+
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
+            host_config.hostname, service.check_plugin_name, service.item,
+            is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
+            service.parameters, service.description, kwargs), []
+
+    _submit_check_result(
+        host_config.hostname,
+        service.description,
+        result,
+        multi_host_sections.get_cache_info(plugin.sections),
+    )
+    return True
 
 
 def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service):
@@ -377,6 +444,18 @@ def _legacy_determine_cache_info(multi_host_sections, section_name):
     return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
+def determine_check_params(entries):
+    # type: (CheckParameters) -> checking_types.Parameters
+    # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
+    # around in the long run. This needs cleaning up, once we've gotten
+    # rid of tuple parameters.
+    params = legacy_determine_check_params(entries)
+    # wrap_parameters is a no-op for dictionaries.
+    # For auto-migrated plugins expecting tuples, they will be
+    # unwrapped by a decorator of the original check_function.
+    return checking_types.Parameters(wrap_parameters(params))
+
+
 def legacy_determine_check_params(entries):
     # type: (CheckParameters) -> CheckParameters
     if not isinstance(entries, cmk.base.config.TimespecificParamList):
@@ -446,6 +525,41 @@ def is_manual_check(hostname, check_plugin_name, item):
     return (check_plugin_name, item) in manual_checks
 
 
+def _aggregate_results(subresults):
+    # type: (Iterable[Union[checking_types.Metric, checking_types.Result, checking_types.IgnoreResults]]) -> ServiceCheckResult
+    perfdata = []  # type: List[Metric]
+    summaries = []  # type: List[str]
+    details = []  # type: List[str]
+    status = checking_types.state(0)
+
+    for subr in list(subresults):  # consume *everything* here, before we may raise!
+        if isinstance(subr, checking_types.IgnoreResults):
+            raise checking_types.IgnoreResultsError(str(subr))
+        if isinstance(subr, checking_types.Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+            continue
+
+        status = checking_types.state_worst(status, subr.state)
+        state_marker = check_api_utils.state_markers[int(subr.state)]
+
+        if subr.summary:
+            summaries.append(subr.summary + state_marker)
+
+        details.append(subr.details + state_marker)
+
+    # Empty list? Check returned nothing
+    if not details:
+        return ITEM_NOT_FOUND
+
+    if not summaries:
+        count = len(details)
+        summaries.append("Everything looks OK - %d detail%s available" %
+                         (count, "" if count == 1 else "s"))
+
+    all_text = [", ".join(summaries)] + details
+    return int(status), "\n".join(all_text).strip(), perfdata
+
+
 def sanitize_check_result(result):
     # type: (Union[None, ServiceCheckResult, Tuple, Iterable]) -> ServiceCheckResult
     if isinstance(result, tuple):
@@ -479,7 +593,7 @@ def _sanitize_yield_check_result(result):
         status = cmk.base.utils.worst_service_state(st, status)
 
         if text:
-            infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+            infotexts.append(text + check_api_utils.state_markers[st])
 
         if perf is not None:
             perfdata += perf

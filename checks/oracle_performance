@@ -248,8 +248,8 @@ def _check_oracle_memory_info(data, params, sticky_fields, fields):
                                              ga_field.metric,
                                              params,
                                              human_readable_func=get_bytes_human_readable)
-        if ga_field.metric in sticky_fields:
-            results.append((state, infotext, perf))
+        if ga_field.name in sticky_fields:
+            results.append((state, "%s: %s" % (ga_field.name, infotext), perf))
         else:
             results.append((0, "", perf))
     return results
@@ -322,13 +322,15 @@ def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
         _data_index, metric_suffix, field_name = field
         total = totals[i]
 
-        if unit == "bytes":
+        if unit == "bytes/s":
             total_readable = get_bytes_human_readable(total)
+            total_output = "%s/s" % total_readable
         else:
             total_readable = total
+            total_output = "%.2f %s" % (total_readable, unit)
 
-        yield 0, "%s: %s" % (field_name, total_readable), [("oracle_ios_f_total_%s" % metric_suffix,
-                                                            total)]
+        yield 0, "%s: %s" % (field_name, total_output), [("oracle_ios_f_total_%s" % metric_suffix,
+                                                          total)]
 
     # Output errors
     for result in error_results:

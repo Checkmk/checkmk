@@ -35,19 +35,14 @@ append new files)
 Note that this will only work, if the crash report contains the
 local variables 'parsed' or 'info'.
 """
-from __future__ import print_function
-import sys
 import base64
 import json
-import tarfile
+from pathlib import Path
 import pprint
-import pytest  # type: ignore[import]
+import tarfile
+from typing import Any, Dict
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+import pytest  # type: ignore[import]
 
 import generictests
 from generictests.regression import WritableDataset
@@ -72,7 +67,9 @@ class CrashDataset(WritableDataset):
         in a SKIP-state in the state file.
         '''
         with tarfile.open(crash_report_fn, "r:gz") as tar:
-            content = tar.extractfile('crash.info').read()
+            tar_entry = tar.extractfile('crash.info')
+            assert tar_entry is not None
+            content = tar_entry.read()
         crashinfo = json.loads(content)
 
         if crashinfo['crash_type'] != 'check':
@@ -99,8 +96,8 @@ class CrashDataset(WritableDataset):
             raise SkipReport("no local_vars")
 
         # can't use json.loads here :-(
-        exec_scope = {}
-        exec_command = 'local_vars = ' + base64.b64decode(local_vars_encoded)
+        exec_scope = {}  # type: Dict[str, Any]
+        exec_command = 'local_vars = ' + base64.b64decode(local_vars_encoded).decode('utf-8')
         try:
             exec(exec_command, exec_scope)  # pylint: disable=exec-used
         except Exception as exc:
@@ -117,7 +114,7 @@ class CrashDataset(WritableDataset):
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
         self.crash_id = crash_report_fn.split("/")[-1].replace(".gz", "").replace(".tar", "")
-        super(CrashDataset, self).__init__('%s_%s.py' % (checkname, self.crash_id), init_dict)
+        super(CrashDataset, self).__init__(init_dict)
 
     def _find_checkname_from_traceback(self, traceback):
         for line in traceback[::-1]:
@@ -178,7 +175,7 @@ def test_crashreport(check_manager, crashdata):
             else:
                 raw_result = check.run_check(item, params, crashdata.info)
             print(CheckResult(raw_result))
-    except:
+    except Exception:
         pprint.pprint(crashdata.__dict__)
         crashdata.write('/tmp')
         raise

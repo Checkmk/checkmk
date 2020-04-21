@@ -62,18 +62,15 @@ B. Update all or one selected test to match the current status quo
      * the regular "-k test-name-pattern"  option to py.test
 
 """
-import os
 import ast
+from importlib import import_module
+import os
+from pathlib import Path
 import sys
 import time
-from importlib import import_module
-import yapf  # type: ignore[import]
+from typing import Any, Iterable
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+import yapf  # type: ignore[import]
 
 import generictests.run
 
@@ -171,7 +168,7 @@ class WritableDataset(object):  # pylint: disable=useless-object-inheritance
             pass
 
         if isinstance(value, dict):
-            iterate = value.items()
+            iterate = value.items()  # type: Iterable[Any]
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:

@@ -248,9 +248,8 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         if service_outside_check_period(config_cache, hostname, service.description):
             continue
 
-        success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
-                                service.check_plugin_name, service.item, service.parameters,
-                                service.description)
+        success = execute_check(multi_host_sections, hostname, ipaddress, service.check_plugin_name,
+                                service.item, service.parameters, service.description)
         if success:
             num_success += 1
         else:
@@ -280,9 +279,9 @@ def service_outside_check_period(config_cache, hostname, description):
     return True
 
 
-def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
-                  params, description):
-    # type: (config.ConfigCache, data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> bool
+def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,
+                  description):
+    # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> bool
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)

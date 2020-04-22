@@ -134,6 +134,7 @@ class SnapshotCreationBase(object):
         # type: (str, List[ReplicationPath], List[ReplicationPath], bool) -> None
         generate_start_time = time.time()
         target_basename = os.path.basename(target_filepath)
+        store.makedirs(os.path.dirname(target_filepath))
 
         # Convert the tuple lists into a more managable format
         # TODO: Since the components are now named tuples we could clean this up

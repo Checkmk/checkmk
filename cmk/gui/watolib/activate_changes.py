@@ -23,6 +23,7 @@ import time
 import abc
 import multiprocessing
 import traceback
+import subprocess
 from typing import (  # pylint: disable=unused-import
     Dict, Set, List, Optional, Tuple, Union, NamedTuple,
 )
@@ -102,7 +103,9 @@ var_dir = cmk.utils.paths.var_dir + "/wato/"
 SnapshotSettings = NamedTuple(
     "SnapshotSettings",
     [
+        # TODO: Refactor to Path
         ("snapshot_path", str),
+        # TODO: Refactor to Path
         ("work_dir", str),
         ("snapshot_components", List[ReplicationPath]),
         ("component_names", Set[str]),
@@ -633,16 +636,16 @@ class ActivateChangesManager(ActivateChanges):
 
             site_config = config.sites[site_id]
             site_status = self._get_site_status(site_id, site_config)[0]
-            work_dir = self._get_site_tmp_dir(site_id)
+            work_dir = cmk.utils.paths.site_config_dir / site_id
 
-            snapshot_components = _get_replication_components(work_dir, site_config)
+            snapshot_components = _get_replication_components(str(work_dir), site_config)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
 
             snapshot_settings[site_id] = SnapshotSettings(
                 snapshot_path=self._site_snapshot_file(site_id),
-                work_dir=work_dir,
+                work_dir=str(work_dir),
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
@@ -650,12 +653,6 @@ class ActivateChangesManager(ActivateChanges):
             )
 
         return snapshot_settings
-
-    def _get_site_tmp_dir(self, site_id):
-        if self._activation_id is None:
-            raise Exception("activation ID is not set")
-        return os.path.join(self.activation_tmp_base_dir, self._activation_id,
-                            "sync-%s-specific-%.4f" % (site_id, time.time()))
 
     def _check_snapshot_creation_permissions(self, site_id):
         if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
@@ -797,16 +794,15 @@ class SnapshotManager(object):
             # Nothing to do
             return
 
+        # 1. Collect files to "var/check_mk/site_configs" directory
         self._data_collector.prepare_snapshot_files()
 
+        # 2. Create snapshot for synchronization
         generic_components = self._data_collector.get_generic_components()
         with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
             for site_id, snapshot_settings in self._site_snapshot_settings.items():
                 self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
                                                 self._data_collector)
-
-        for snapshot_settings in self._site_snapshot_settings.values():
-            shutil.rmtree(snapshot_settings.work_dir)
 
 
 class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):
@@ -844,11 +840,96 @@ class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):
 
 
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
-    # TODO: This will prepare the sites config sync directory in the future
     def prepare_snapshot_files(self):
+        """Collect the files to be synchronized for all sites
+
+        This is done by copying the things declared by the generic components together to a single
+        site_config for one site. This will result in a directory containing only hard links to
+        the original files.
+
+        This directory is then cloned recursively for all sites, again with the result of having
+        a single directory per site containing a lot of hard links to the original files.
+
+        As last step the site individual files will be added.
+        """
+        # Choose one site to create the first site config for
+        site_ids = list(self._site_snapshot_settings.keys())
+        first_site = site_ids.pop(0)
+
+        # Create first directory and clone it once for each destination site
+        self._prepare_site_config_directory(first_site)
+        self._clone_site_config_directories(first_site, site_ids)
+
+        # Generate site specific global settings file
         for site_id, snapshot_settings in self._site_snapshot_settings.items():
             create_site_globals_file(site_id, snapshot_settings.work_dir,
                                      snapshot_settings.site_config)
+
+    def _prepare_site_config_directory(self, site_id):
+        # type: (SiteId) -> None
+        """
+        Gather files to be synchronized to remote sites from etc hierarchy
+
+        - Iterate all files declared by snapshot components
+        - Synchronize site hierarchy with site_config directory
+          - Remove files that do not exist anymore
+          - Add hard links
+        """
+        self._logger.debug("Processing first site %s", site_id)
+        snapshot_settings = self._site_snapshot_settings[site_id]
+
+        # Currently we don't have an incremental sync on disk. The performance of some mkdir/link
+        # calls should be good enough
+        if os.path.exists(snapshot_settings.work_dir):
+            shutil.rmtree(snapshot_settings.work_dir)
+
+        for component in snapshot_settings.snapshot_components:
+            if component.ident == "sitespecific":
+                continue  # Will be created for each site individually later
+
+            source_path = component.path.replace(snapshot_settings.work_dir,
+                                                 cmk.utils.paths.omd_root)
+
+            if not os.path.exists(source_path):
+                continue  # Not existing things can simply be skipped
+
+            store.makedirs(os.path.dirname(component.path))
+
+            # Recursively hard link files (rsync --link-dest or cp -al)
+            # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
+            # please have a look at the performance before switching over...
+            #shutil.copytree(source_path, component.path, copy_function=os.link)
+            p = subprocess.Popen(["cp", "-al", source_path, component.path],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 stdin=open(os.devnull),
+                                 shell=False,
+                                 close_fds=True)
+            stdout = p.communicate()[0]
+            if p.returncode != 0:
+                self._logger.error("Failed to clone files from %s to %s: %s", source_path,
+                                   component.path, stdout)
+                raise MKGeneralException("Failed to create site config directory")
+
+        self._logger.debug("Finished site")
+
+    def _clone_site_config_directories(self, origin_site_id, site_ids):
+        # type: (SiteId, List[SiteId]) -> None
+        origin_site_work_dir = self._site_snapshot_settings[origin_site_id].work_dir
+
+        for site_id in site_ids:
+            self._logger.debug("Processing site %s", site_id)
+            snapshot_settings = self._site_snapshot_settings[site_id]
+
+            if os.path.exists(snapshot_settings.work_dir):
+                shutil.rmtree(snapshot_settings.work_dir)
+
+            p = subprocess.Popen(["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
+                                 shell=False,
+                                 close_fds=True)
+            p.wait()
+            assert p.returncode == 0
+            self._logger.debug("Finished site")
 
     def get_generic_components(self):
         # type: () -> List[ReplicationPath]
@@ -859,13 +940,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         generic_site_components = []
         custom_site_components = []
 
-        # TODO: Hack added to make the current state work. Will be replaced soon by new mechanic
-        snapshot_components = [
-            (_replace_omd_root(cmk.utils.paths.omd_root, c) if c.ident != "sitespecific" else c)
-            for c in snapshot_settings.snapshot_components
-        ]
-
-        for component in snapshot_components:
+        for component in snapshot_settings.snapshot_components:
             if component.ident == "sitespecific":
                 # Only the site specific global files are individually handled in the non CME snapshot
                 custom_site_components.append(component)

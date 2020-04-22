@@ -114,7 +114,7 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
 
     snapshot_manager.generate_snapshots()
     assert Path(snapshot_settings.snapshot_path).exists()
-    assert not Path(snapshot_settings.work_dir).exists()
+    assert Path(snapshot_settings.work_dir).exists()
 
     return snapshot_settings
 

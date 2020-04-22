@@ -138,6 +138,8 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.local_mib_dir", Path(tmp_dir, "local/share/snmp/mibs"))
     monkeypatch.setattr("cmk.utils.paths.diagnostics_dir",
                         Path(tmp_dir).joinpath("var/check_mk/diagnostics"))
+    monkeypatch.setattr("cmk.utils.paths.site_config_dir",
+                        Path(cmk.utils.paths.var_dir, "site_configs"))
 
 
 def import_module(pathname):

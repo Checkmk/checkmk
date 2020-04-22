@@ -83,6 +83,7 @@ piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
+site_config_dir = Path(var_dir, "site_configs")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

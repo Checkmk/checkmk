@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Place for common code shared among different Check_MK special agents"""
-from __future__ import print_function
 
 import abc
 import argparse
@@ -14,24 +13,19 @@ import errno
 import getopt
 import json
 import logging
+from pathlib import Path
 import pprint
 import sys
 import time
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Dict, List
 
 import requests
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 import six
 
 import cmk.utils.store as store
 
 
-class AgentJSON(object):
+class AgentJSON:
     def __init__(self, key, title):
         self._key = key
         self._title = title
@@ -201,7 +195,7 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         store.save_file(str(self._cache_file), json_dump)
 
 
-class _NullContext(object):
+class _NullContext:
     """A context manager that does nothing and is falsey"""
     def __call__(self, *_args, **_kwargs):
         return self
@@ -257,7 +251,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore[import]
+            import vcr  # type: ignore[import] # pylint: disable=import-outside-toplevel
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)

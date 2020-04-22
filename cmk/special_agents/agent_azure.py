@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,24 +7,20 @@
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
 import abc
-import json
-import time
-import datetime
-import string
-import sys
 import argparse
+import datetime
+import json
 import logging
 from multiprocessing import Process, Lock, Queue
-from typing import Any, List, Tuple  # pylint: disable=unused-import
+from pathlib import Path
+from queue import Empty as QueueEmpty
+import string
+import sys
+import time
+from typing import Any, List, Tuple
+
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path
-    from queue import Empty as QueueEmpty
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-    from Queue import Empty as QueueEmpty  # pylint: disable=import-error
 
 from cmk.utils.paths import tmp_dir
 
@@ -162,7 +158,7 @@ class ApiErrorMissingData(ApiError):
     pass
 
 
-class BaseApiClient(object):
+class BaseApiClient:
     __METACLASS__ = abc.ABCMeta
 
     AUTHORITY = 'https://login.microsoftonline.com'
@@ -298,7 +294,7 @@ class MgmtApiClient(BaseApiClient):
 # For now the passed commandline arguments are used to create it.
 
 
-class GroupConfig(object):
+class GroupConfig:
     def __init__(self, name):
         super(GroupConfig, self).__init__()
         if not name:
@@ -322,7 +318,7 @@ class GroupConfig(object):
         return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
-class ExplicitConfig(object):
+class ExplicitConfig:
     def __init__(self, raw_list=()):
         super(ExplicitConfig, self).__init__()
         self.groups = {}
@@ -361,7 +357,7 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
-class TagBasedConfig(object):
+class TagBasedConfig:
     def __init__(self, required, key_values):
         super(TagBasedConfig, self).__init__()
         self._required = required
@@ -384,7 +380,7 @@ class TagBasedConfig(object):
         return '\n'.join(lines)
 
 
-class Selector(object):
+class Selector:
     def __init__(self, args):
         super(Selector, self).__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
@@ -405,7 +401,7 @@ class Selector(object):
         return "\n".join(lines)
 
 
-class Section(object):
+class Section:
     LOCK = Lock()
 
     def __init__(self, name, piggytargets, separator, options):
@@ -463,7 +459,7 @@ class UsageSection(Section):
         self.add(usage_details.dumpinfo())
 
 
-class IssueCollecter(object):
+class IssueCollecter:
     def __init__(self):
         super(IssueCollecter, self).__init__()
         self._list = []
@@ -533,7 +529,7 @@ def get_attrs_from_uri(uri):
     return attrs
 
 
-class AzureResource(object):
+class AzureResource:
     def __init__(self, info):
         super(AzureResource, self).__init__()
         self.info = info

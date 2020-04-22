@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,13 +6,9 @@
 
 import ast
 from multiprocessing.pool import ThreadPool
+from pathlib import Path
 import sys
-from typing import Dict, Set  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Set
 
 import requests
 import urllib3  # type: ignore[import]
@@ -25,7 +21,7 @@ from cmk.utils.exceptions import MKException
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class AggregationData(object):
+class AggregationData:
     def __init__(self, bi_rawdata, config, error):
         super(AggregationData, self).__init__()
         self._bi_rawdata = bi_rawdata
@@ -111,7 +107,7 @@ class RawdataException(MKException):
     pass
 
 
-class AggregationRawdataGenerator(object):
+class AggregationRawdataGenerator:
     def __init__(self, config):
         super(AggregationRawdataGenerator, self).__init__()
         self._config = config
@@ -184,7 +180,7 @@ class AggregationRawdataGenerator(object):
         return rawdata["result"]
 
 
-class AggregationOutputRenderer(object):
+class AggregationOutputRenderer:
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
         connection_info = {

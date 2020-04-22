@@ -4,14 +4,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-from typing import Dict  # pylint: disable=unused-import
-from glob import glob
 from argparse import Namespace
-from importlib import import_module  # pylint: disable=import-error
+from glob import glob
+import os
+from typing import Dict, List
+from importlib import import_module
 
 import pytest  # type: ignore[import]
 from testlib import cmk_path
+
+# TODO: Actually fix this stuff.
+NOT_TESTED_YET = {
+    'agent_3par',
+    'agent_activemq',
+    'agent_appdynamics',
+    'agent_bi',
+    'agent_ddn_s2a',
+    'agent_emcvnx',
+    'agent_hp_msa',
+    'agent_innovaphone',
+    'agent_ipmi_sensors',
+    'agent_jolokia',
+    'agent_netapp',
+    'agent_prism',
+    'agent_random',
+    'agent_ruckus_spot',
+    'agent_salesforce',
+    'agent_siemens_plc',
+    'agent_storeonce',
+    'agent_tinkerforge',
+    'agent_ucs_bladecenter',
+    'agent_vnx_quotas',
+    'agent_zerto',
+}
 
 # TODO: Actually fix this stuff.
 AGENTS_WITHOUT_PARSE_ARGUMENTS = {
@@ -23,16 +48,15 @@ AGENTS_WITHOUT_PARSE_ARGUMENTS = {
 }
 
 REQUIRED_ARGUMENTS = {
-    # TODO: add these as we migrate to py3
     'agent_allnet_ip_sensoric': ['HOSTNAME'],
     'agent_aws': [
         '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
         '--hostname', 'HOSTNAME'
     ],
-    # 'agent_azure': [
-    #     '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
-    #     'SECRET'
-    # ],
+    'agent_azure': [
+        '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
+        'SECRET'
+    ],
     'agent_couchbase': ['HOSTNAME'],
     'agent_elasticsearch': ['HOSTNAME'],
     'agent_fritzbox': ['HOSTNAME'],
@@ -52,27 +76,16 @@ REQUIRED_ARGUMENTS = {
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
     'agent_proxmox': ['HOSTNAME'],
-}  # type: Dict
-
-
-# TODO: this can be removed once all agents are py3
-def _filter_python3_agents(agents):
-    agents3 = []
-    for agent_file in agents:
-        with open(agent_file) as handle:
-            shebang = next(handle)
-        if shebang.strip().endswith("python3"):
-            agents3.append(agent_file)
-
-    assert len(agents3) < len(agents), "This helper function can be removed now"
-    return agents3
+}  # type: Dict[str, List[str]]
 
 
 def test_all_agents_tested():
-    agent_files = glob("%s/cmk/special_agents/agent_*.py" % cmk_path())
-    for agent_file in _filter_python3_agents(agent_files):
-        name = os.path.basename(os.path.splitext(agent_file)[0])
-        assert name in REQUIRED_ARGUMENTS, "Please add a test case for special agent: %r" % name
+    agents = {
+        os.path.basename(os.path.splitext(agent_file)[0])
+        for agent_file in glob("%s/cmk/special_agents/agent_*.py" % cmk_path())
+    }
+    untested = agents - set(REQUIRED_ARGUMENTS) - NOT_TESTED_YET
+    assert not untested, "Please add test cases for special agents %s" % untested
 
 
 @pytest.mark.parametrize("agent_name, required_args", REQUIRED_ARGUMENTS.items())

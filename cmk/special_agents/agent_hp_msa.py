@@ -1,23 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-import sys
-from typing import Dict  # pylint: disable=unused-import
-import hashlib
 import argparse
+import hashlib
+from html.parser import HTMLParser
 import logging
+import sys
+from typing import Dict
+from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
-
-if sys.version_info[0] >= 3:
-    from html.parser import HTMLParser
-    from urllib.parse import urljoin  # pylint: disable=import-error,no-name-in-module
-else:
-    from HTMLParser import HTMLParser  # pylint: disable=import-error
-    from urlparse import urljoin  # pylint: disable=import-error
 
 import requests
 from requests.structures import CaseInsensitiveDict
@@ -126,7 +120,7 @@ class AuthError(RuntimeError):
     pass
 
 
-class HPMSAConnection(object):
+class HPMSAConnection:
     def __init__(self, hostaddress, opt_timeout, debug):
         self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host

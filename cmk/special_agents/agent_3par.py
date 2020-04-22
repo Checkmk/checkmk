@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 import getopt
 import json
 import sys
@@ -128,14 +127,13 @@ def main(sys_argv=None):
         sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
                          (req.status_code, requests.codes.CREATED))
         return 1
-    else:
-        try:
-            # As Response we get the key also in json format. We just need the
-            # key in our header for all further requests on the api.
-            data = json.loads(req.text)
-            headers["X-HP3PAR-WSAPI-SessionKey"] = data["key"]
-        except Exception:
-            raise Exception("No session key received")
+    try:
+        # As Response we get the key also in json format. We just need the
+        # key in our header for all further requests on the api.
+        data = json.loads(req.text)
+        headers["X-HP3PAR-WSAPI-SessionKey"] = data["key"]
+    except Exception:
+        raise Exception("No session key received")
 
     # Get the requested data. We put every needed value into an extra section
     # to get better performance in the checkplugin if less data is needed.

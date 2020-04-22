@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
-from typing import Any, Dict  # pylint: disable=unused-import
+import sys
+from typing import Any, Dict
 
 import cmk.utils.password_store
 
@@ -24,7 +24,7 @@ def parse_arguments(argv):
 
 def get_client_connection(args):
     try:
-        import paramiko  # type: ignore[import]
+        import paramiko  # type: ignore[import] # pylint: disable=import-outside-toplevel
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)

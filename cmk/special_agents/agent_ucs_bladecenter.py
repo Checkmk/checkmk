@@ -1,26 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
 import logging
-# opportunity to use lxml.etree as drop-in replacement for ET in the future
+import sys
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    StrResult = str
-else:
-    StrResult = Any
+from typing import Any, Dict, List, Tuple
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
 from cmk.utils.exceptions import MKException
 
-ElementAttributes = Dict[StrResult, StrResult]
+ElementAttributes = Dict[str, str]
 
 # TODO Add functionality in the future
 #import cmk.utils.password_store
@@ -198,7 +192,7 @@ class CommunicationException(MKException):
     pass
 
 
-class Server(object):
+class Server:
     def __init__(self, hostname, username, password, verify_ssl):
         self._url = "https://%s/nuova" % hostname
         self._username = username

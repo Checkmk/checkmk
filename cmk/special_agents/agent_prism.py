@@ -1,23 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-import ssl
 import csv
-import sys
-import os
+from http.client import HTTPConnection, HTTPSConnection
 import json
-from optparse import OptionParser
-
-if sys.version_info[0] >= 3:
-    from urllib.request import HTTPSHandler, Request, build_opener  # pylint: disable=import-error,no-name-in-module
-    from http.client import HTTPConnection, HTTPSConnection
-else:
-    from urllib2 import HTTPSHandler, Request, build_opener  # pylint: disable=import-error
-    from httplib import HTTPConnection, HTTPSConnection  # pylint: disable=import-error
+from optparse import OptionParser  # pylint: disable=deprecated-module
+import os
+import ssl
+import sys
+from urllib.request import HTTPSHandler, Request, build_opener
 
 import six
 
@@ -48,12 +43,8 @@ class HTTPSConfigurableConnection(HTTPSConnection):
 
 
 class HTTPSAuthHandler(HTTPSHandler):
-    def __init__(self, ca_file):  # pylint: disable=super-on-old-class
-        if sys.version_info[0] >= 3:
-            super(HTTPSAuthHandler, self).__init__()
-        else:
-            # NOTE: WTF? HTTPSHandler's super-superclass BaseHandler is an old-style class! o_O
-            HTTPSHandler.__init__(self)
+    def __init__(self, ca_file):
+        super(HTTPSAuthHandler, self).__init__()
         self.__ca_file = ca_file
 
     def https_open(self, req):

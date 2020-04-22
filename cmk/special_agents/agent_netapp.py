@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -52,15 +52,13 @@ Additionally you may need to make further adjustments for the Ontap 9.5:
      sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
 """
 
-from __future__ import print_function
-
 import argparse
 import re
 import sys
 import time
+from typing import Any, Dict, List
 import warnings
-
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from xml.dom import minidom  # type: ignore[import]
 
 import requests
 import six
@@ -200,13 +198,12 @@ def parse_arguments(argv):
 
 
 def prettify(elem):
-    from xml.dom import minidom  # type: ignore[import]
     rough_string = ET.tostring(elem)
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="\t")
 
 
-class ErrorMessages(object):
+class ErrorMessages:
     def __init__(self):
         self.messages = set()
 
@@ -225,7 +222,7 @@ class ErrorMessages(object):
         return "\n".join(self.messages)
 
 
-class NetAppConnection(object):
+class NetAppConnection:
     def __init__(self, hostname, user, password):
         self.hostname = hostname
         self.user = user
@@ -323,7 +320,7 @@ class NetAppConnection(object):
         self.vfiler = name
 
 
-class NetAppNode(object):
+class NetAppNode:
     def __init__(self, xml_element):
         if isinstance(xml_element, str):
             xml_element = ET.Element(xml_element)
@@ -386,7 +383,7 @@ class NetAppRootNode(NetAppNode):
 
 
 # NetApp Response Oject, holds the actual content in the NetAppNode member variable
-class NetAppResponse(object):
+class NetAppResponse:
 
     # We have seen devices (NetApp Release 8.3.2P9) occasionally send
     # invalid XML characters, leading to an exception during parsing.

@@ -58,15 +58,13 @@ PluginNameFilterFunction = Callable[[
 
 
 class SNMPDataFetcher:
-    def __init__(self, check_plugin_names, fetched_check_plugin_names, persisted_sections,
-                 use_snmpwalk_cache, snmp_config, logger):
+    def __init__(self, oid_infos, use_snmpwalk_cache, snmp_config, logger):
+        # type (Dict[str, Union[OIDInfo, List[SNMPTree]]], bool, snmp_utils.SNMPHostConfig, Logger) -> None
         super(SNMPDataFetcher, self).__init__()
-        self._check_plugin_names = check_plugin_names  # type: List[CheckPluginName]
-        self._fetched_check_plugin_names = fetched_check_plugin_names  # type: Set[CheckPluginName]
-        self._persisted_sections = persisted_sections  # type: BoundedAbstractPersistedSections
-        self._use_snmpwalk_cache = use_snmpwalk_cache  # type: bool
-        self._snmp_config = snmp_config  # type: snmp_utils.SNMPHostConfig
-        self._logger = logger  # type: Logger
+        self._oid_infos = oid_infos
+        self._use_snmpwalk_cache = use_snmpwalk_cache
+        self._snmp_config = snmp_config
+        self._logger = logger
 
     def __enter__(self):
         # type: () -> SNMPDataFetcher
@@ -79,26 +77,8 @@ class SNMPDataFetcher:
     def data(self):
         # type: () -> RawSNMPData
         info = {}  # type: RawSNMPData
-        for check_plugin_name in self._check_plugin_names:
-            # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-            # Please note, that if the check_plugin_name is foo.bar then we lookup the
-            # snmp info for "foo", not for "foo.bar".
+        for check_plugin_name, oid_info in self._oid_infos.items():
             section_name = check_utils.section_name_of(check_plugin_name)
-            oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
-
-            if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
-                continue
-
-            if oid_info is None:
-                continue
-
-            # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
-            # Skip gathering new data here. The persisted data will be added later
-            if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug("%s: Skip fetching data (persisted info exists)",
-                                   check_plugin_name)
-                continue
-
             # Prevent duplicate data fetching of identical section in case of SNMP sub checks
             if section_name in info:
                 self._logger.debug("%s: Skip fetching data (section already fetched)",
@@ -119,24 +99,6 @@ class SNMPDataFetcher:
             else:
                 info[section_name] = get_snmp(self._snmp_config, check_plugin_name, oid_info)
         return info
-
-    @staticmethod
-    def _oid_info_from_section_name(section_name):
-        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[SNMPTree]], bool]
-        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
-        has_snmp_info = False
-        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
-        snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
-        if snmp_section_plugin:
-            oid_info = snmp_section_plugin.trees
-        elif section_name in cmk.base.inventory_plugins.inv_info:
-            # TODO: merge this into config.registered_snmp_sections!
-            oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
-            if oid_info:
-                has_snmp_info = True
-        else:
-            oid_info = None
-        return oid_info, has_snmp_info
 
 
 class SNMPHostSections(AbstractHostSections[RawSNMPData, SNMPSections, PersistedSNMPSections,
@@ -312,19 +274,58 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _execute(self):
         # type: () -> RawSNMPData
         verify_ipaddress(self._ipaddress)
-        check_plugin_names = self._sort_check_plugin_names(self.get_check_plugin_names())
-        snmp_config = self._snmp_config
-
         with SNMPDataFetcher(
-                check_plugin_names,
-                self._fetched_check_plugin_names,
-                self._persisted_sections,
+                self._make_oid_infos(),
                 self._use_snmpwalk_cache,
-                snmp_config,
+                self._snmp_config,
                 self._logger,
         ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
+
+    def _make_oid_infos(self):
+        # type: () -> Dict[CheckPluginName, Union[OIDInfo, List[SNMPTree]]]
+        oid_infos = {}  # Dict[CheckPluginName, Union[OIDInfo, List[SNMPTree]]]
+        for check_plugin_name in self._sort_check_plugin_names(self.get_check_plugin_names()):
+            # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
+            # Please note, that if the check_plugin_name is foo.bar then we lookup the
+            # snmp info for "foo", not for "foo.bar".
+            section_name = check_utils.section_name_of(check_plugin_name)
+            oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
+
+            if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
+                continue
+
+            if oid_info is None:
+                continue
+
+            # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
+            # Skip gathering new data here. The persisted data will be added later
+            if self._persisted_sections and section_name in self._persisted_sections:
+                self._logger.debug("%s: Skip fetching data (persisted info exists)",
+                                   check_plugin_name)
+                continue
+
+            oid_infos[check_plugin_name] = oid_info
+        return oid_infos
+
+    @staticmethod
+    def _oid_info_from_section_name(section_name):
+        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[SNMPTree]], bool]
+        import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
+        has_snmp_info = False
+        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
+        snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
+        if snmp_section_plugin:
+            oid_info = snmp_section_plugin.trees
+        elif section_name in cmk.base.inventory_plugins.inv_info:
+            # TODO: merge this into config.registered_snmp_sections!
+            oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
+            if oid_info:
+                has_snmp_info = True
+        else:
+            oid_info = None
+        return oid_info, has_snmp_info
 
     @staticmethod
     def _sort_check_plugin_names(check_plugin_names):

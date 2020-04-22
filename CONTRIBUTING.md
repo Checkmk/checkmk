@@ -46,9 +46,9 @@ this:
  3. **Commit** changes to your own feature branch
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
- 
+
  ⚠ Please reply when asked for more information or to update your PR
-in case in didn't meet the requirements (e.g. failed checks). 
+in case in didn't meet the requirements (e.g. failed checks).
 If there's no response from the author for at least 14 days, the PR will be closed.
 
 If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/). You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
@@ -216,8 +216,8 @@ The public repository of [Checkmk](https://github.com/tribe29/checkmk) is
 integrated with Travis CI. Each time a Pull request is submitted, Travis will
 have a look at the changes.
 
-**⚠ Important:** We only review PRs that are confirmed to be OK by Travis. 
-If a check failed, please fix it and update the PR. 
+**⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
+If a check failed, please fix it and update the PR.
 PRs will be closed if the author didn't respond for at least 14 days.
 
 It is recommended to run all tests locally before submitting a PR. If you want
@@ -529,7 +529,8 @@ repository.
 Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
 ```
-let g:ale_fixers = {'python': ['isort, 'yapf']}
+let g:ale_fixers = {'python': ['isort', 'yapf']}
+let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.venv/bin/yapf'
 let g:ale_fix_on_save = 1
 ```
 
@@ -556,12 +557,21 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
   \}
   ```
 
-- Then tell the linter how to run mypy:
+- Then tell the linter how to run pylint and mypy:
 
   ```
-  let g:ale_python_mypy_executable = 'scripts/run-mypy'
-  let g:ale_python_mypy_options = '--config-file=../mypy.ini'
+  let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
+  let g:ale_python_pylint_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-pylint'
+  let g:ale_python_pylint_options = '--rcfile YOUR_REPO_PATH/check_mk/.pylintrc'
   ```
+
+---
+**NOTE**
+
+mypy may not support home expansion ("~"), so it is recommended to use an
+absolute Path for 'YOUR_REPO_PATH'.
+
+---
 
 The mypy-Checker should run with this. With ":ALEInfo" you get information
 about the error diagnosis below, if it doesn't work.

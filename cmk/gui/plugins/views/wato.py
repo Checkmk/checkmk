@@ -177,7 +177,7 @@ class PainterWatoFolderPlain(Painter):
 
 
 def cmp_wato_folder(r1, r2, how):
-    return cmp(get_wato_folder(r1, how, False), get_wato_folder(r2, how, False))
+    return cmp(Text(get_wato_folder(r1, how, False)), Text(get_wato_folder(r2, how, False)))
 
 
 @sorter_registry.register

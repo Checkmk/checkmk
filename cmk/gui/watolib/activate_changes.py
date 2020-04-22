@@ -9,7 +9,7 @@ The major elements here are:
 
 ActivateChangesManager   - Coordinates a single activation of Checkmk config changes for all
                            affected sites.
-ABCSnapshotManager       - Coordinates the collection and packing of snapshots
+SnapshotManager          - Coordinates the collection and packing of snapshots
 ABCSnapshotDataCollector - Copying or generating files to be put into snapshots
 SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
@@ -24,7 +24,7 @@ import abc
 import multiprocessing
 import traceback
 from typing import (  # pylint: disable=unused-import
-    Dict, Set, List, Optional, Tuple, Union, NamedTuple, Type,
+    Dict, Set, List, Optional, Tuple, Union, NamedTuple,
 )
 import six
 
@@ -619,8 +619,7 @@ class ActivateChangesManager(ActivateChanges):
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
 
-            snapshot_manager = SnapshotManagerFactory().factory(work_dir,
-                                                                self._site_snapshot_settings())
+            snapshot_manager = SnapshotManager.factory(work_dir, self._site_snapshot_settings())
             snapshot_manager.generate_snapshots()
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
@@ -737,25 +736,40 @@ class ActivateChangesManager(ActivateChanges):
         return "site_%s.mk" % site_id
 
 
-class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
-    def __init__(self, activation_work_dir, site_snapshot_settings):
-        # type: (str, Dict[SiteId, SnapshotSettings]) -> None
-        super(ABCSnapshotManager, self).__init__()
+class SnapshotManager(object):
+    @staticmethod
+    def factory(work_dir, site_snapshot_settings):
+        # type: (str, Dict[SiteId, SnapshotSettings]) -> SnapshotManager
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
+            return SnapshotManager(
+                work_dir,
+                site_snapshot_settings,
+                managed_snapshots.CMESnapshotDataCollector(site_snapshot_settings),
+                reuse_identical_snapshots=False,
+                generate_in_suprocess=True,
+            )
+
+        return SnapshotManager(
+            work_dir,
+            site_snapshot_settings,
+            CRESnapshotDataCollector(site_snapshot_settings),
+            reuse_identical_snapshots=True,
+            generate_in_suprocess=False,
+        )
+
+    def __init__(self, activation_work_dir, site_snapshot_settings, data_collector,
+                 reuse_identical_snapshots, generate_in_suprocess):
+        # type: (str, Dict[SiteId, SnapshotSettings], ABCSnapshotDataCollector, bool, bool) -> None
+        super(SnapshotManager, self).__init__()
         self._activation_work_dir = activation_work_dir
         self._site_snapshot_settings = site_snapshot_settings
+        self._data_collector = data_collector
+        self._reuse_identical_snapshots = reuse_identical_snapshots
+        self._generate_in_subproces = generate_in_suprocess
 
         # Stores site and folder specific information to speed-up the snapshot generation
         self._logger = logger.getChild(self.__class__.__name__)
-
-    @abc.abstractmethod
-    def _get_data_collector(self):
-        # type: () -> ABCSnapshotDataCollector
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _reuse_identical_snapshots(self):
-        # type: () -> bool
-        raise NotImplementedError()
 
     def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
                                    data_collector):
@@ -767,7 +781,7 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
         # snapshots for all sites (with some minor differences, like site specific global settings).
         # It creates a single snapshot and clones the result multiple times. Parallel creation of
         # the snapshots would not work for the CEE.
-        if cmk_version.is_managed_edition():
+        if self._generate_in_subproces:
             generate_function = snapshot_creator.generate_snapshot_in_subprocess
         else:
             generate_function = snapshot_creator.generate_snapshot
@@ -775,7 +789,7 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
         generate_function(target_filepath=snapshot_settings.snapshot_path,
                           generic_components=generic_site_components,
                           custom_components=custom_site_components,
-                          reuse_identical_snapshots=self._reuse_identical_snapshots())
+                          reuse_identical_snapshots=self._reuse_identical_snapshots)
 
     def generate_snapshots(self):
         # type: () -> None
@@ -783,40 +797,16 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
             # Nothing to do
             return
 
-        data_collector = self._get_data_collector()
-        data_collector.prepare_snapshot_files()
+        self._data_collector.prepare_snapshot_files()
 
-        generic_components = data_collector.get_generic_components()
+        generic_components = self._data_collector.get_generic_components()
         with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
             for site_id, snapshot_settings in self._site_snapshot_settings.items():
                 self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
-                                                data_collector)
+                                                self._data_collector)
 
         for snapshot_settings in self._site_snapshot_settings.values():
             shutil.rmtree(snapshot_settings.work_dir)
-
-
-class CRESnapshotManager(ABCSnapshotManager):
-    def _get_data_collector(self):
-        # type: () -> ABCSnapshotDataCollector
-        return CRESnapshotDataCollector(self._site_snapshot_settings)
-
-    def _reuse_identical_snapshots(self):
-        # type: () -> bool
-        return True
-
-
-class SnapshotManagerFactory(object):
-    @staticmethod
-    def factory(work_dir, site_snapshot_settings):
-        # type: (str, Dict[SiteId, SnapshotSettings]) -> ABCSnapshotManager
-        if cmk_version.is_managed_edition():
-            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
-            cls = managed_snapshots.CMESnapshotManager  # type: Type[ABCSnapshotManager]
-        else:
-            cls = CRESnapshotManager
-
-        return cls(work_dir, site_snapshot_settings)
 
 
 class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):

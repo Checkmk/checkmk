@@ -52,7 +52,7 @@ def _create_test_sync_config(monkeypatch):
                             raising=False)
 
 
-def _create_sync_snapshot(snapshot_manager_class, monkeypatch, tmp_path):
+def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
     # TODO: Make this better testable: Extract site snapshot setting calculation
     activation_manager = activate_changes.ActivateChangesManager()
     activation_manager._sites = ["unit", "unit_remote_1"]
@@ -106,9 +106,9 @@ def _create_sync_snapshot(snapshot_manager_class, monkeypatch, tmp_path):
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
-    snapshot_manager = activate_changes.SnapshotManagerFactory.factory(
-        str(work_dir), site_snapshot_settings)
-    assert snapshot_manager.__class__.__name__ == snapshot_manager_class
+    snapshot_manager = activate_changes.SnapshotManager.factory(str(work_dir),
+                                                                site_snapshot_settings)
+    assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
     snapshot_settings = site_snapshot_settings["unit_remote_1"]
 
@@ -120,17 +120,18 @@ def _create_sync_snapshot(snapshot_manager_class, monkeypatch, tmp_path):
 
 
 def editions():
-    yield ("cre", "CRESnapshotManager")
+    yield ("cre", "CRESnapshotDataCollector")
 
     if is_enterprise_repo():
-        yield ("cee", "CRESnapshotManager")
+        yield ("cee", "CRESnapshotDataCollector")
 
     if is_managed_repo():
-        yield ("cme", "CMESnapshotManager")
+        yield ("cme", "CMESnapshotDataCollector")
 
 
-@pytest.mark.parametrize("edition_short,snapshot_manager_class", editions())
-def test_generate_snapshot(edition_short, snapshot_manager_class, monkeypatch, tmp_path, with_user):
+@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
+                           with_user):
     user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
@@ -139,7 +140,8 @@ def test_generate_snapshot(edition_short, snapshot_manager_class, monkeypatch, t
          RequestContext(htmllib.html(Request(environ))):
         login.login(user_id)
         _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_manager_class, monkeypatch, tmp_path)
+        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class, monkeypatch,
+                                                  tmp_path)
 
     # And now check the resulting snapshot contents
     unpack_dir = tmp_path / "snapshot_unpack"
@@ -218,8 +220,8 @@ def test_generate_snapshot(edition_short, snapshot_manager_class, monkeypatch, t
             "Subtar %s has wrong files" % subtar.name
 
 
-@pytest.mark.parametrize("edition_short,snapshot_manager_class", editions())
-def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch, tmp_path,
+@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+def test_apply_sync_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
                              with_user):
     user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
@@ -230,7 +232,8 @@ def test_apply_sync_snapshot(edition_short, snapshot_manager_class, monkeypatch,
         login.login(user_id)
 
         _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_manager_class, monkeypatch, tmp_path)
+        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class, monkeypatch,
+                                                  tmp_path)
 
         # Change unpack target directory from "unit test site" paths to a test specific path
         unpack_dir = tmp_path / "snapshot_unpack"

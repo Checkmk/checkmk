@@ -31,7 +31,7 @@ def test_value_store():
         with pytest.raises(KeyError):
             _ = store["foo"]
         with pytest.raises(TypeError):
-            store[2] = "key must be sting"  # type: ignore
+            store[2] = "key must be string"  # type: ignore[index]
 
         store["foo"] = 42
         store["bar"] = 23

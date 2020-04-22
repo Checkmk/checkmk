@@ -136,6 +136,7 @@ class SnapshotCreationBase(object):
         target_basename = os.path.basename(target_filepath)
 
         # Convert the tuple lists into a more managable format
+        # TODO: Since the components are now named tuples we could clean this up
         parsed_generic_components = SnapshotComponentsParser(generic_components)
         parsed_custom_components = SnapshotComponentsParser(custom_components)
 

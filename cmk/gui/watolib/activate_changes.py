@@ -7,10 +7,12 @@
 
 The major elements here are:
 
-ActivateChangesManager - Coordinates a single activation of Checkmk config changes for all affected
-                         sites.
-CRE/CMESnapshotCreator - Prepare the configuration to be synchronized to a site.
-ActivateChangesSite    - Executes the activation procedure for a single site.
+ActivateChangesManager   - Coordinates a single activation of Checkmk config changes for all
+                           affected sites.
+ABCSnapshotManager       - Coordinates the collection and packing of snapshots
+ABCSnapshotDataCollector - Copying or generating files to be put into snapshots
+SnapshotCreator          - Packing the snapshots into snapshot archives
+ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
 import errno

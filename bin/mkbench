@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 __version__ = "1.7.0i1"
 
 # TODO:
@@ -34,42 +33,39 @@ __version__ = "1.7.0i1"
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
-import errno
-import os
-import re
 import ast
-import sys
-import glob
-import time
+import collections
+import ctypes
+import ctypes.util
+import errno
 import getopt
+import glob
+import logging
+import multiprocessing
+import os
 import pprint
+import re
 import select
 import shutil
 import signal
 import socket
-import logging
+import sys
 import tempfile
 import threading
+import time
 import traceback
-import collections
-import multiprocessing
-from typing import (  # pylint: disable=unused-import
-    Optional, Iterable, Tuple, Dict, Any, List, Union, Text,
-)
+from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
+
 import six
 from psutil._common import sdiskusage  # type: ignore[import]
 from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
-
 import psutil  # type: ignore[import]
-import npyscreen  # type: ignore[import]
+import npyscreen  # type: ignore[import]  # pylint: disable=import-error
 
 import livestatus
 
 from cmk.utils.render import fmt_bytes
-from cmk.utils.exceptions import (
-    MKGeneralException,
-    MKTerminate,
-)
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 import cmk.utils.cmk_subprocess as subprocess
 
 #.
@@ -88,8 +84,6 @@ import cmk.utils.cmk_subprocess as subprocess
 # Changes the process name and process command line on of the running process
 # This works at least with Python 2.x on Linux
 def set_cmdline(cmdline):
-    import ctypes
-    import ctypes.util
     libc_path = ctypes.util.find_library('c')
     if libc_path is None:
         raise MKGeneralException("Huh? libc not found???")
@@ -256,7 +250,7 @@ def run_performance_test(num_hosts, num_helpers):
         analyzer.stop()
 
 
-class Test(object):
+class Test:
     STATE_INITIALIZING = "initializing"
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
@@ -519,7 +513,7 @@ class TestRunner(threading.Thread):
 
     def _run_test(self):
         for test_case in self._generate_test_cases():
-            if self._stop.isSet():
+            if self._stop.is_set():
                 break
 
             self.test.test_cases.append(test_case)
@@ -551,7 +545,7 @@ class TestRunner(threading.Thread):
                                 result_msg = "Skipped: %s" % e
                                 break  # Will iterate to next step (till test case end)
 
-                            if self._stop.isSet():
+                            if self._stop.is_set():
                                 result = TestCase.RESULT_ABORTED
                                 result_msg = "Test runner was stopped"
                                 return
@@ -598,7 +592,7 @@ class TestRunner(threading.Thread):
 
     def _generate_test_cases(self):
         # type: () -> Iterable[TestAgentBasedStandardHosts]
-        while not self._stop.isSet():
+        while not self._stop.is_set():
             yield TestAgentBasedStandardHosts(self,
                                               num_hosts=self._num_hosts,
                                               planned_duration=15 * 60,
@@ -710,7 +704,7 @@ class TestRunner(threading.Thread):
         self._stop.set()
 
     def shall_stop(self):
-        return self._stop.isSet()
+        return self._stop.is_set()
 
     def _cleanup_host_files(self, cleanup_rrds=False):
         for path in glob.glob("%s/var/check_mk/autochecks/*" % omd_root()):
@@ -745,7 +739,7 @@ class Analyzer(threading.Thread):
     def run(self):
         #self._runner.test.info("Analyzer started")
         try:
-            while not self._stop.isSet() and not self._runner.test.is_stopped():
+            while not self._stop.is_set() and not self._runner.test.is_stopped():
                 self._measure()
                 time.sleep(1)
         except Exception:
@@ -773,16 +767,16 @@ class Analyzer(threading.Thread):
         self._stop.set()
 
 
-class Start(object):
+class Start:
     pass
 
 
-class Wait(object):
+class Wait:
     def __init__(self, duration):
         self.until = time.time() + duration
 
 
-class SystemInfo(object):
+class SystemInfo:
     def __init__(self):
         super(SystemInfo, self).__init__()
         self.cpu_count = 0
@@ -806,7 +800,7 @@ class SystemInfo(object):
         self.core = self._get_monitoring_core()
 
     def serialize(self):
-        return dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_"])
+        return {k: v for k, v in self.__dict__.items() if k[0] != "_"}
 
     def deserialize(self, raw):
         self.__dict__.update(raw)
@@ -885,7 +879,7 @@ class SystemInfo(object):
 DiskIO = collections.namedtuple("DiskIO", ["read_bytes", "write_bytes"])
 
 
-class Measurement(object):
+class Measurement:
     @classmethod
     def summary(cls, measurements):
         average_keys = [
@@ -1152,11 +1146,9 @@ class AgentListener(multiprocessing.Process):
             counters[ident] = now, 0
             return  # just initialied. Don't increase
 
-        else:
-            last_update, last_value = counters[ident]
-            duration = now - last_update
-
-            counters[ident] = now, last_value + (duration * per_sec)
+        last_update, last_value = counters[ident]
+        duration = now - last_update
+        counters[ident] = now, last_value + (duration * per_sec)
 
     def _section_kernel(self, host_id):
         self._update_counter(host_id, "kernel_ctxt", per_sec=5000)
@@ -1165,7 +1157,7 @@ class AgentListener(multiprocessing.Process):
 
         # hundreds of a second
         num_cpus = 4
-        for i in [""] + map(str, range(num_cpus)):
+        for i in [""] + list(map(str, range(num_cpus))):
             self._update_counter(host_id, "kernel_cpu%s_user" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_nice" % i, per_sec=0.05)
             self._update_counter(host_id, "kernel_cpu%s_system" % i, per_sec=0.10)
@@ -1176,7 +1168,7 @@ class AgentListener(multiprocessing.Process):
         counters["now"] = time.time()
 
         cpu_output = ""
-        for i in [""] + map(str, range(num_cpus)):
+        for i in [""] + list(map(str, range(num_cpus))):
             cpu_output += "cpu%s %d %d %d %d %d 0 0 0 0 0\n" % \
                 (i,
                  counters["kernel_cpu%s_user" % i],
@@ -2423,7 +2415,7 @@ thermal_zone1 - BAT0 35000
 #   '----------------------------------------------------------------------'
 
 
-class TestCase(object):
+class TestCase:
     STATE_INITIALIZING = "initializing"  # noqa: E101
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
@@ -2453,12 +2445,12 @@ class TestCase(object):
     def duration(self):
         if self.started_at is None:
             return 0
-        elif self.finished_at is None:
+        if self.finished_at is None:
             return time.time() - self.started_at
         return self.finished_at - self.started_at
 
     def serialize(self):
-        d = dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_"])
+        d = {k: v for k, v in self.__dict__.items() if k[0] != "_"}
         d["__class_name__"] = self.__class__.__name__
         return d
 
@@ -2778,7 +2770,7 @@ class TestAgentBasedStandardHosts(TestCase):
     # To create the RRDs, simply perform one check and wait for the RRDs to be created
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
-        for _i in xrange(2):
+        for _i in range(2):
             p = subprocess.Popen(
                 ["cmk", "-v", host_name],
                 stdin=open(os.devnull),
@@ -2864,7 +2856,8 @@ class TestAgentBasedStandardHosts(TestCase):
 
             try:
                 matched_pids = subprocess.check_output(
-                    ["pgrep", "-u", site_id(), "-f", "python.*cmk --keepalive$"]).split("\n")
+                    ["pgrep", "-u", site_id(), "-f",
+                     "python.*cmk --keepalive$"]).decode("utf-8").split("\n")
             except subprocess.CalledProcessError as e:
                 self._test.error("  Found no helper yet (%s)" % e.returncode)
                 continue

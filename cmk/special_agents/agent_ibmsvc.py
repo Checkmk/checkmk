@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,10 +7,11 @@
 # needs to issue a command like
 # ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -delim :'
 
-from __future__ import print_function
+import cProfile
+import getopt
 import os
 import sys
-import getopt
+
 import cmk.utils.cmk_subprocess as subprocess
 
 
@@ -165,7 +166,6 @@ def main(sys_argv=None):
         if o in ['--debug']:
             opt_debug = True
         elif o in ['--profile']:
-            import cProfile
             g_profile = cProfile.Profile()
             g_profile.enable()
         elif o in ['-u', '--user']:
@@ -233,14 +233,13 @@ def main(sys_argv=None):
     exit_code = result.wait()
 
     if exit_code not in [0, 1]:
-        msg = "Error connecting via ssh: %s\n" % stderr
-        sys.stderr.write(msg.encode("utf-8"))
+        sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
         sys.exit(2)
 
     lines = stdout.split('\n')
 
     if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(stdout.encode("utf-8"))
+        sys.stderr.write(stdout)
         sys.exit(2)
 
     # Quite strange.. Why not simply print stdout?

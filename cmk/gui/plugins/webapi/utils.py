@@ -8,8 +8,9 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-import json
 from hashlib import md5
+import json
+
 import six
 
 import cmk.utils.plugin_registry
@@ -72,10 +73,12 @@ def check_hostname(hostname, should_exist=True):
 def validate_config_hash(hash_value, entity):
     entity_hash = compute_config_hash(entity)
     if hash_value != entity_hash:
-        raise MKUserError(None, _("The configuration has changed in the meantime. "\
-                                  "You need to load the configuration and start another update. "
-                                  "If the existing configuration should not be checked, you can "
-                                  "remove the configuration_hash value from the request object."))
+        raise MKUserError(
+            None,
+            _("The configuration has changed in the meantime. "
+              "You need to load the configuration and start another update. "
+              "If the existing configuration should not be checked, you can "
+              "remove the configuration_hash value from the request object."))
 
 
 def add_configuration_hash(response, configuration_object):
@@ -103,7 +106,7 @@ def validate_host_attributes(attributes, new=False):
 # Check if the given attribute name exists, no type check
 def _validate_general_host_attributes(host_attributes, new):
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
-    all_host_attribute_names = host_attribute_registry.keys() + ["inventory_failed", "site"]
+    all_host_attribute_names = list(host_attribute_registry.keys()) + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))

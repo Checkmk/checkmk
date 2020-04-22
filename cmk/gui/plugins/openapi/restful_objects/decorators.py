@@ -13,15 +13,19 @@ connexion is disabled.
 
 """
 import functools
+import sys
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
 
-from typing import (  # pylint: disable=unused-import
-    Any, Set, Dict, Optional, List, Union, Literal, Tuple, Type)
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from typing_extensions import Literal
+else:
+    from typing import Literal  # pylint: disable=no-name-in-module
 
-import apispec  # type: ignore
-import apispec.utils  # type: ignore
-from connexion import problem  # type: ignore
-import six
+import apispec  # type: ignore[import]
+import apispec.utils  # type: ignore[import]
+from connexion import problem  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
+import six
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -232,7 +236,7 @@ def endpoint_schema(
             # NOTE: Be aware that this block only works under the assumption that only one(!)
             # http_status defined `operation_spec`. If this assumption no longer holds this block
             # needs to be refactored.
-            only_key = path_item.keys()[0]
+            only_key = list(path_item.keys())[0]
             path_item[only_key].setdefault('headers', {})
             path_item[only_key]['headers'].update(ETAG_HEADER_PARAM)
 
@@ -408,7 +412,7 @@ def _docstring_keys(docstring, title, description):
         return {
             title: docstring.strip(),
         }
-    elif len(parts) == 2:
+    if len(parts) == 2:
         summary, long_desc = parts
         return {
             title: summary.strip(),

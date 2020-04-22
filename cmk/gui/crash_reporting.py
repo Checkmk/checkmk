@@ -6,13 +6,14 @@
 
 import abc
 import base64
-import tarfile
 import io
-import time
-import pprint
-import traceback
 import json
-from typing import Dict, Text, Optional  # pylint: disable=unused-import
+import pprint
+import tarfile
+import time
+import traceback
+from typing import Dict, Optional, Text  # pylint: disable=unused-import
+
 import six
 
 import livestatus
@@ -211,10 +212,11 @@ class PageCrash(ABCCrashReportPage):
             vs.validate_value(details, "_report")
 
             # Make the resulting page execute the crash report post request
-            url_encoded_params = html.urlencode_vars(details.items() + [
-                ("crashdump",
-                 base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
-            ])
+            url_encoded_params = html.urlencode_vars(
+                list(details.items()) + [
+                    ("crashdump",
+                     base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
+                ])
             html.open_div(id_="pending_msg", style="display:none")
             html.show_message(_("Submitting crash report..."))
             html.close_div()
@@ -550,7 +552,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write(_pack_crash_report(self._get_serialized_crash_report()))
+        html.write(six.ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
 
 
 def _pack_crash_report(serialized_crash_report):

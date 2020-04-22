@@ -11,7 +11,7 @@ import re
 import socket
 import sys
 from html import escape as html_escape  # type: ignore[import]
-from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
 import six
@@ -32,7 +32,7 @@ def collect_context():
 
 
 def format_link(template, url, text):
-    # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
+    # type: (str, str, str) -> str
     return template % (url, text) if url else text
 
 
@@ -64,7 +64,7 @@ def default_from_address():
 
 
 def _base_url(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -80,13 +80,13 @@ def _base_url(context):
 
 
 def host_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     base = _base_url(context)
     return base + context['HOSTURL'] if base else ''
 
 
 def service_url_from_context(context):
-    # type: (Dict[str, AnyStr]) -> AnyStr
+    # type: (Dict[str, str]) -> str
     base = _base_url(context)
     return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 

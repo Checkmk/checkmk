@@ -970,7 +970,7 @@ def _get_sources_for_discovery(hostname,
             # We can not disable the data_source_cache per default when caching is set
             # since this would affect the WATO service discovery page.
             if for_check_discovery and source.get_may_use_cache_file():
-                source.disable_data_source_cache()
+                data_sources.SNMPDataSource.disable_data_source_cache()
 
             source.set_check_plugin_name_filter(snmp_scan.gather_snmp_check_plugin_names)
 

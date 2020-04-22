@@ -512,15 +512,15 @@ class DataSource(
         # type: () -> bool
         return cls._no_cache
 
-    @classmethod
-    def get_may_use_cache_file(cls):
+    @staticmethod
+    def get_may_use_cache_file():
         # type: () -> bool
-        return cls._may_use_cache_file
+        return DataSource._may_use_cache_file
 
-    @classmethod
-    def set_may_use_cache_file(cls, state=True):
+    @staticmethod
+    def set_may_use_cache_file(state=True):
         # type: (bool) -> None
-        cls._may_use_cache_file = state
+        DataSource._may_use_cache_file = state
 
     def get_summary_result_for_discovery(self):
         # type: () -> ServiceCheckResult

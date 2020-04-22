@@ -218,7 +218,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         on_error=on_error,
     )
     new_host_labels, host_labels_per_plugin = \
-        _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new)
+        _perform_host_label_discovery(hostname, discovered_host_labels, only_new)
     DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
 
     messages = []
@@ -239,32 +239,25 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     console.section_success(", ".join(messages))
 
 
-def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new):
-    # type: (str, DiscoveredHostLabels, Optional[Set[CheckPluginName]], bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
+def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
+    # type: (str, DiscoveredHostLabels, bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
 
-    new_host_labels = DiscoveredHostLabels()
-
-    if not check_plugin_names and not only_new:
-        existing_host_labels = DiscoveredHostLabels()
-    else:
-        existing_host_labels = DiscoveredHostLabels.from_dict(
+    # Take over old items if -I is selected
+    if only_new:
+        return_host_labels = DiscoveredHostLabels.from_dict(
             DiscoveredHostLabelsStore(hostname).load())
+    else:
+        return_host_labels = DiscoveredHostLabels()
 
-    # Take over old items if -I is selected or if -II is selected with
-    # --checks= and the check type is not one of the listed ones
-    for existing_label in existing_host_labels.values():
-        if only_new or (check_plugin_names and
-                        existing_label.plugin_name not in check_plugin_names):
-            new_host_labels.add_label(existing_label)
-
-    host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
+    new_host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
     for discovered_label in discovered_host_labels.values():
-        if discovered_label.name not in new_host_labels:
-            new_host_labels.add_label(discovered_label)
-            host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
-            host_labels_per_plugin[discovered_label.plugin_name] += 1
+        if discovered_label.name in return_host_labels:
+            continue
+        return_host_labels.add_label(discovered_label)
+        new_host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
+        new_host_labels_per_plugin[discovered_label.plugin_name] += 1
 
-    return new_host_labels, host_labels_per_plugin
+    return return_host_labels, new_host_labels_per_plugin
 
 
 # determine changed services on host.
@@ -381,7 +374,7 @@ def discover_on_host(config_cache,
 
     if mode != "remove":
         new_host_labels, host_labels_per_plugin = \
-            _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names=None, only_new=True)
+            _perform_host_label_discovery(hostname, discovered_host_labels, only_new=True)
         DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
         counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
         counts["self_total_host_labels"] = len(new_host_labels)
@@ -491,7 +484,7 @@ def check_discovery(hostname, ipaddress):
                 (discovered_service.check_plugin_name, discovered_service.description))
 
     _new_host_labels, host_labels_per_plugin = \
-        _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names=None, only_new=True)
+        _perform_host_label_discovery(hostname, discovered_host_labels, only_new=True)
     if host_labels_per_plugin:
         infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
         status = cmk.base.utils.worst_service_state(status,

@@ -753,10 +753,29 @@ class ABCSnapshotManager(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def _reuse_identical_snapshots(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
     def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
                                    data_collector):
         # type: (SiteId, SnapshotSettings, SnapshotCreator, ABCSnapshotDataCollector) -> None
-        raise NotImplementedError()
+        generic_site_components, custom_site_components = data_collector.get_site_components(
+            snapshot_settings)
+
+        # The CME produces individual snapshots in parallel subprocesses, the CEE mainly equal
+        # snapshots for all sites (with some minor differences, like site specific global settings).
+        # It creates a single snapshot and clones the result multiple times. Parallel creation of
+        # the snapshots would not work for the CEE.
+        if cmk_version.is_managed_edition():
+            generate_function = snapshot_creator.generate_snapshot_in_subprocess
+        else:
+            generate_function = snapshot_creator.generate_snapshot
+
+        generate_function(target_filepath=snapshot_settings.snapshot_path,
+                          generic_components=generic_site_components,
+                          custom_components=custom_site_components,
+                          reuse_identical_snapshots=self._reuse_identical_snapshots())
 
     def generate_snapshots(self):
         # type: () -> None
@@ -782,18 +801,9 @@ class CRESnapshotManager(ABCSnapshotManager):
         # type: () -> ABCSnapshotDataCollector
         return CRESnapshotDataCollector(self._site_snapshot_settings)
 
-    def _create_site_sync_snapshot(self, site_id, snapshot_settings, snapshot_creator,
-                                   data_collector):
-        # type: (SiteId, SnapshotSettings, SnapshotCreator, ABCSnapshotDataCollector) -> None
-        create_site_globals_file(site_id, snapshot_settings.work_dir, snapshot_settings.site_config)
-
-        generic_site_components, custom_site_components = data_collector.get_site_components(
-            snapshot_settings)
-
-        snapshot_creator.generate_snapshot(target_filepath=snapshot_settings.snapshot_path,
-                                           generic_components=generic_site_components,
-                                           custom_components=custom_site_components,
-                                           reuse_identical_snapshots=True)
+    def _reuse_identical_snapshots(self):
+        # type: () -> bool
+        return True
 
 
 class SnapshotManagerFactory(object):
@@ -846,7 +856,9 @@ class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
     # TODO: This will prepare the sites config sync directory in the future
     def prepare_snapshot_files(self):
-        pass
+        for site_id, snapshot_settings in self._site_snapshot_settings.items():
+            create_site_globals_file(site_id, snapshot_settings.work_dir,
+                                     snapshot_settings.site_config)
 
     def get_generic_components(self):
         # type: () -> List[ReplicationPath]

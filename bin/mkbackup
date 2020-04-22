@@ -640,7 +640,7 @@ def do_site_backup(opts, site=None, try_stop=True):
     assert p.stdout is not None
     assert p.stderr is not None
 
-    with open(backup_path, "w") as backup_file:
+    with open(backup_path, "wb") as backup_file:
         s = BackupStream(stream=p.stdout,
                          is_alive=lambda: p.poll() is None,
                          key_ident=g_job_config["encrypt"])
@@ -1161,9 +1161,9 @@ def do_system_backup(opts):
 
 
 def do_system_rw_backup(opts):
-    with open(system_backup_archive_path(), "w") as backup_file:
+    with open(system_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
+        pipein = os.fdopen(pipein_fd, "rb")
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1178,9 +1178,9 @@ def do_system_rw_backup(opts):
 
 
 def do_system_data_backup(opts):
-    with open(system_data_backup_archive_path(), "w") as backup_file:
+    with open(system_data_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
+        pipein = os.fdopen(pipein_fd, "rb")
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1195,7 +1195,7 @@ def do_system_data_backup(opts):
 
 
 def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
-    pipeout = os.fdopen(pipeout_fd, "w")
+    pipeout = os.fdopen(pipeout_fd, "wb")
     backup_files_to_tarfile(pipeout, base_path, exclude_patterns)
     pipeout.close()
 
@@ -1514,7 +1514,7 @@ def do_site_restore(opts, info, site=None):
     assert p.stdin is not None
     assert p.stderr is not None
 
-    with open(backup_path, "r") as backup_file:
+    with open(backup_path, "rb") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
@@ -1757,13 +1757,13 @@ def do_system_data_restore(opts, info):
 
 
 def restore_system_backup(backup_path):
-    with open(backup_path, "r") as backup_file:
+    with open(backup_path, "rb") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
+        pipein = os.fdopen(pipein_fd, "rb")
 
         # Write to buffer in dedicated thread
         t = threading.Thread(target=lambda: read_from_tarfile_threaded(s, pipeout_fd))
@@ -1781,7 +1781,7 @@ def restore_system_backup(backup_path):
 
 
 def read_from_tarfile_threaded(s, pipeout_fd):
-    pipeout = os.fdopen(pipeout_fd, "w")
+    pipeout = os.fdopen(pipeout_fd, "wb")
 
     try:
         for chunk in s.process():

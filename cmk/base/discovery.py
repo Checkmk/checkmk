@@ -968,7 +968,7 @@ def _get_sources_for_discovery(hostname,
             # During discovery, the snmp datasource can never fully rely on the locally cached data,
             # since the available oid trees depend on the current running checks
             # We can not disable the data_source_cache per default when caching is set
-            # since this would affect the WATO service discvoery page.
+            # since this would affect the WATO service discovery page.
             if for_check_discovery and source.get_may_use_cache_file():
                 source.disable_data_source_cache()
 

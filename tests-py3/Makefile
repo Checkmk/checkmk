@@ -156,7 +156,7 @@ test-integration: $(NODE_MODULES)
 	$(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
-	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
+	CI=true $(PIPENV3) run scripts/run-dockerized.py "test-integration"
 
 test-integration-docker-debug test-composition-docker-debug: $(NODE_MODULES)
 	$(PIPENV3) run scripts/run-dockerized.py debug

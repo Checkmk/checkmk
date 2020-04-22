@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 MIRROR_URL="https://sourceware.org/pub/"
 
 GCC_MAJOR="8"
-GCC_MINOR="3"
+GCC_MINOR="4"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 GCC_URL="${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz"

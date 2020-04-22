@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,28 +11,34 @@ import fnmatch
 import getopt
 import glob
 import grp
-from hashlib import md5
-import json
 import os
-from pathlib import Path
 import pwd
 import re
 import shutil
-import signal
 import socket
+import signal
 import sys
 import syslog
-from tarfile import TarFile, ReadError
 import tempfile
 import textwrap
-import threading
 import time
+import threading
 import traceback
-from typing import Any, Dict, List, NamedTuple, Optional, IO
+import json
+from tarfile import TarFile, ReadError
+from hashlib import md5
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Optional, IO, NamedTuple, List,
+)
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
 
-from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 
@@ -49,7 +55,7 @@ VERSION = "1.4.0i1"
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
-class Log:
+class Log(object):
     def __init__(self, fd):
         self.fd = fd
 
@@ -320,7 +326,7 @@ def add_site_info_to_backup_info(info):
 
 
 def add_system_info_to_backup_info(info):
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+    import cma  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     info["cma_version"] = cma.version()
 
@@ -361,10 +367,10 @@ def file_checksum(path):
 
 # Wrapper to workaround different issues during system restore and improved logging
 class MKTarFile(TarFile):
-    def _extract_member(self, tarinfo, targetpath, set_attrs=True, numeric_owner=False):
+    def _extract_member(self, tarinfo, targetpath):
         verbose("Extracting %s" % targetpath)
-        # NOTE: The typeshed for TarFile is incomplete.
-        super()._extract_member(tarinfo, targetpath, set_attrs, numeric_owner)  # type: ignore[misc]
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self)._extract_member(tarinfo, targetpath)  # type: ignore[misc]
 
     def makedir(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -374,8 +380,8 @@ class MKTarFile(TarFile):
             elif not os.path.isdir(targetpath):
                 os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makedir(tarinfo, targetpath)  # type: ignore[misc]
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makedir(tarinfo, targetpath)  # type: ignore[misc]
 
     def makelink(self, tarinfo, targetpath):
         if os.path.lexists(targetpath) and not os.path.islink(targetpath):
@@ -384,8 +390,8 @@ class MKTarFile(TarFile):
             else:
                 os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makelink(tarinfo, targetpath)  # type: ignore[misc]
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makelink(tarinfo, targetpath)  # type: ignore[misc]
 
     def makefile(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -397,8 +403,8 @@ class MKTarFile(TarFile):
                 shutil.rmtree(targetpath)
 
         try:
-            # NOTE: The typeshed for TarFile is incomplete.
-            super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+            # Mypy does not understand that the method exists
+            super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
         except IOError as e:
             if e.errno == errno.EISDIR:
                 # Handle "IOError: [Errno 21] Is a directory"
@@ -407,14 +413,14 @@ class MKTarFile(TarFile):
                     os.remove(targetpath)
                 else:
                     shutil.rmtree(targetpath)
-                # NOTE: The typeshed for TarFile is incomplete.
-                super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+                # Mypy does not understand that the method exists
+                super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
 
             elif e.errno == errno.ETXTBSY:
                 # Fix "IOError: [Errno 26] Text file busy" when replacing a file
                 os.remove(targetpath)
-                # NOTE: The typeshed for TarFile is incomplete.
-                super().makefile(tarinfo, targetpath)  # type: ignore[misc]
+                # Mypy does not understand that the method exists
+                super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
             else:
                 raise
 
@@ -423,8 +429,8 @@ class MKTarFile(TarFile):
             verbose("Cleaning up %s" % targetpath)
             os.remove(targetpath)
 
-        # NOTE: The typeshed for TarFile is incomplete.
-        super().makefifo(tarinfo, targetpath)  # type: ignore[misc]
+        # Mypy does not understand that the method exists
+        super(MKTarFile, self).makefifo(tarinfo, targetpath)  # type: ignore[misc]
 
 
 #   List: Alle Backups auflisten
@@ -573,16 +579,20 @@ def mode_backup(local_job_id, opts):
         do_backup(opts)
         success = True
 
+    except KeyboardInterrupt:
+        raise
+
     except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
 
     except Exception:
-        if opt_debug:
+        if not opt_debug:
+            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write(traceback.format_exc())
+        else:
             raise
-        sys.stderr.write("An exception occured:\n")
-        sys.stderr.write(traceback.format_exc())
 
     finally:
         stop_logging()
@@ -640,7 +650,7 @@ def do_site_backup(opts, site=None, try_stop=True):
     assert p.stdout is not None
     assert p.stderr is not None
 
-    with open(backup_path, "wb") as backup_file:
+    with open(backup_path, "w") as backup_file:
         s = BackupStream(stream=p.stdout,
                          is_alive=lambda: p.poll() is None,
                          key_ident=g_job_config["encrypt"])
@@ -648,7 +658,7 @@ def do_site_backup(opts, site=None, try_stop=True):
             backup_file.write(chunk)
 
     if p.returncode != 0:
-        err = p.stderr.read().decode('utf-8')
+        err = p.stderr.read()
         if not compress_archives() and "Invalid option '--no-compression'" in err:
             err = "The Check_MK version of this site does not support uncompressed backups. " \
                   "you can either re-enable the compression or update your site to version " \
@@ -685,7 +695,7 @@ def stop_site(site):
         if subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull,
                                                                                "w")) == 1:
             break
-        if c == 4:
+        elif c == 4:
             raise MKGeneralException("Failed to stop site")
 
 
@@ -701,7 +711,7 @@ def start_site(site):
                 "--bare",
         ] + site_arg, stdout=open(os.devnull, "w")) == 0:
             break
-        if c == 4:
+        elif c == 4:
             raise MKGeneralException("Failed to start site")
 
 
@@ -730,7 +740,7 @@ def omd_command(*args):
 # a) create a random secret key which is encrypted with the RSA public key
 # b) the encrypted key is used written to the backup file
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
-class MKBackupStream:
+class MKBackupStream(object):
     def __init__(self, stream, is_alive, key_ident):
         self._stream = stream
         self._is_alive = is_alive
@@ -745,7 +755,7 @@ class MKBackupStream:
         # needs to be unique per key per message. Normally, it's sent alongside
         # the data in cleartext. Here, since the key is only ever used once,
         # you can use a known IV.
-        self._iv = b'\x00' * AES.block_size
+        self._iv = '\x00' * AES.block_size
 
     def process(self):
         head = self._init_processing()
@@ -776,7 +786,8 @@ class MKBackupStream:
         except ValueError:
             if self._stream.closed:
                 return ""  # handle EOF transparently
-            raise
+            else:
+                raise
 
     def _read_chunk(self):
         raise NotImplementedError()
@@ -906,7 +917,7 @@ class RestoreStream(MKBackupStream):
             self._next_chunk = this_chunk
             return "", False
 
-        if len(this_chunk) == 0:
+        elif len(this_chunk) == 0:
             # Processing last chunk. Stip off padding.
             padding_length = ord(self._next_chunk[-1])
             chunk = self._next_chunk[:-padding_length]
@@ -927,7 +938,8 @@ class RestoreStream(MKBackupStream):
                 c = self._stream.read(1)
                 if c == "\0":
                     break
-                buf += c
+                else:
+                    buf += c
             return buf
 
         file_version = read_field()
@@ -980,8 +992,9 @@ class RestoreStream(MKBackupStream):
                                      "version. You need to use a Check_MK 1.4 version that has "
                                      "been released before 2017-03-24. The last compatible "
                                      "release is 1.4.0b4.")
-        cipher_rsa = PKCS1_OAEP.new(private_key)
-        return cipher_rsa.decrypt(encrypted_secret_key)
+        else:
+            cipher_rsa = PKCS1_OAEP.new(private_key)
+            return cipher_rsa.decrypt(encrypted_secret_key)
 
 
 # Returns the base path for the backup to work with. In backup mode, this is
@@ -1116,7 +1129,8 @@ def verify_backup_files(info, files, needed):
             if needed:
                 raise MKGeneralException("The backup is missing the needed archive %s." %
                                          archive_file)
-            continue  # missing optional files are OK
+            else:
+                continue  # missing optional files are OK
 
         archive_path = "%s/%s" % (backup_base_path(), archive_file)
         this_checksum = file_checksum(archive_path)
@@ -1133,7 +1147,8 @@ def do_system_backup(opts):
     except OSError as e:
         if e.errno == errno.EACCES:
             raise MKGeneralException("Failed to create the backup directory: %s" % e)
-        raise
+        else:
+            raise
 
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix())
@@ -1161,9 +1176,9 @@ def do_system_backup(opts):
 
 
 def do_system_rw_backup(opts):
-    with open(system_backup_archive_path(), "wb") as backup_file:
+    with open(system_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd, "rb")
+        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1178,9 +1193,9 @@ def do_system_rw_backup(opts):
 
 
 def do_system_data_backup(opts):
-    with open(system_data_backup_archive_path(), "wb") as backup_file:
+    with open(system_data_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd, "rb")
+        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1195,14 +1210,14 @@ def do_system_data_backup(opts):
 
 
 def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
-    pipeout = os.fdopen(pipeout_fd, "wb")
+    pipeout = os.fdopen(pipeout_fd, "w")
     backup_files_to_tarfile(pipeout, base_path, exclude_patterns)
     pipeout.close()
 
 
 # Whether or not the data filesystem is mounted (-> on active cluster nodes)
 def is_inactive_cluster_node():
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     cma.load_config()
     return cma.inactive_cluster_node()
 
@@ -1281,7 +1296,8 @@ def cleanup_previous_incomplete_backup():
         except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
-            raise
+            else:
+                raise
 
 
 def load_job(local_job_id):
@@ -1446,16 +1462,20 @@ def mode_restore(target_id, backup_id, opts):
         do_restore(opts, info)
         success = True
 
+    except KeyboardInterrupt:
+        raise
+
     except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
 
     except Exception:
-        if opt_debug:
+        if not opt_debug:
+            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write(traceback.format_exc())
+        else:
             raise
-        sys.stderr.write("An exception occured:\n")
-        sys.stderr.write(traceback.format_exc())
 
     finally:
         stop_logging()
@@ -1514,7 +1534,7 @@ def do_site_restore(opts, info, site=None):
     assert p.stdin is not None
     assert p.stderr is not None
 
-    with open(backup_path, "rb") as backup_file:
+    with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
@@ -1595,7 +1615,7 @@ def do_system_restore(opts, info):
 
 
 def verify_data_volume_is_mounted():
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
 
     count = 0
     is_mounted = cma.is_mounted("/omd")
@@ -1609,7 +1629,7 @@ def verify_data_volume_is_mounted():
 
 
 def prepare_cluster_environment(info):
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     cma.load_config()
 
     if cma.is_cluster_configured() and not is_cluster_backup(info):
@@ -1627,7 +1647,7 @@ def prepare_cluster_environment(info):
 def setup_cluster_environment(info):
     log("Setting up cluster environment")
 
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     cma.load_config()
 
     # To be able to start the DRBD volume we need to have the IP
@@ -1650,8 +1670,8 @@ def setup_standalone_environment(info):
 
 def enable_drbd_ip_addresses():
     # These modules are only available when mkbackup is executed on OS level on the appliance
-    import cma  # pylint: disable=import-error,import-outside-toplevel
-    import cma_net  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
+    import cma_net  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
 
@@ -1659,7 +1679,7 @@ def enable_drbd_ip_addresses():
     config = cma_net.current_interface_config(drbd_if)
     if cma_net.is_vlan_config(config):
         return None
-    if cma_net.is_vlan_interface(drbd_if):
+    elif cma_net.is_vlan_interface(drbd_if):
         config = config["ip"]
 
     address, netmask = config["ipaddress"], config["netmask"]
@@ -1674,7 +1694,7 @@ def enable_drbd_ip_addresses():
 
 def verify_cma_version_compatible(info):
     # These modules are only available when mkbackup is executed on OS level on the appliance
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     if info["cma_version"] != cma.version():
         raise MKGeneralException(
             "The backup can not be restored because the version of the "
@@ -1701,7 +1721,7 @@ def fix_linux_capabilities():
     but it is easier to simply re-execute the post-install script of each Checkmk
     version.
     """
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     for version in cma.compatible_omd_versions():
         cma.execute_post_install(version)
 
@@ -1722,7 +1742,7 @@ def cleanup_system_rw_files(files_before, files_restored):
 
 
 def prepare_system_restore():
-    import cma  # pylint: disable=import-error,import-outside-toplevel
+    import cma  # pylint: disable=import-error
     log("Cleaning up Check_MK processess and temporary filesystems")
     cma.free_omd_ressources(graceful=False)
 
@@ -1757,13 +1777,13 @@ def do_system_data_restore(opts, info):
 
 
 def restore_system_backup(backup_path):
-    with open(backup_path, "rb") as backup_file:
+    with open(backup_path, "r") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd, "rb")
+        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(target=lambda: read_from_tarfile_threaded(s, pipeout_fd))
@@ -1781,7 +1801,7 @@ def restore_system_backup(backup_path):
 
 
 def read_from_tarfile_threaded(s, pipeout_fd):
-    pipeout = os.fdopen(pipeout_fd, "wb")
+    pipeout = os.fdopen(pipeout_fd, "w")
 
     try:
         for chunk in s.process():
@@ -1966,7 +1986,7 @@ def main():
     if len(mode_args) != len(mode.args):
         usage("Invalid number of arguments for this mode")
 
-    opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
+    opt_dict = dict([(k.lstrip("-"), v) for k, v in opts + mode_opts])
 
     globals()["mode_%s" % mode_name](*mode_args, opts=opt_dict)
 

@@ -15,6 +15,7 @@ import livestatus
 
 import cmk.utils.version as cmk_version
 
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
@@ -103,8 +104,26 @@ class FilterUnicode(FilterText):
         return html.request.get_unicode_input(htmlvar, "")
 
 
+class FilterUnicodeRegExp(FilterUnicode):
+    def _current_value(self):
+        current_value = super(FilterUnicodeRegExp, self)._current_value()
+        if current_value is not None:
+            cmk.gui.utils.validate_regex(current_value)
+
+        return current_value
+
+
+class FilterRegExp(FilterText):
+    def _current_value(self):
+        current_value = super(FilterRegExp, self)._current_value()
+        if current_value is not None:
+            cmk.gui.utils.validate_regex(current_value)
+
+        return current_value
+
+
 @filter_registry.register
-class FilterHostregex(FilterText):
+class FilterHostregex(FilterRegExp):
     @property
     def ident(self):
         return "hostregex"
@@ -122,7 +141,7 @@ class FilterHostregex(FilterText):
         return _("Search field allowing regular expressions and partial matches")
 
     def __init__(self):
-        FilterText.__init__(self, "host", "host_name", "host_regex", "~~", True)
+        FilterRegExp.__init__(self, "host", "host_name", "host_regex", "~~", True)
 
 
 @filter_registry.register
@@ -170,7 +189,7 @@ class FilterHostalias(FilterUnicode):
 
 
 @filter_registry.register
-class FilterServiceregex(FilterUnicode):
+class FilterServiceregex(FilterUnicodeRegExp):
     @property
     def ident(self):
         return "serviceregex"
@@ -188,7 +207,8 @@ class FilterServiceregex(FilterUnicode):
         return _("Search field allowing regular expressions and partial matches")
 
     def __init__(self):
-        FilterUnicode.__init__(self, "service", "service_description", "service_regex", "~~", True)
+        FilterUnicodeRegExp.__init__(self, "service", "service_description", "service_regex", "~~",
+                                     True)
 
 
 @filter_registry.register
@@ -214,7 +234,7 @@ class FilterService(FilterUnicode):
 
 
 @filter_registry.register
-class FilterServiceDisplayName(FilterUnicode):
+class FilterServiceDisplayName(FilterUnicodeRegExp):
     @property
     def ident(self):
         return "service_display_name"
@@ -232,8 +252,8 @@ class FilterServiceDisplayName(FilterUnicode):
         return _("Alternative display name of the service, regex match")
 
     def __init__(self):
-        FilterUnicode.__init__(self, "service", "service_display_name", "service_display_name",
-                               "~~")
+        FilterUnicodeRegExp.__init__(self, "service", "service_display_name",
+                                     "service_display_name", "~~")
 
 
 @filter_registry.register
@@ -798,7 +818,7 @@ class FilterHostCtc(FilterText):
 
 
 @filter_registry.register
-class FilterHostCtcRegex(FilterText):
+class FilterHostCtcRegex(FilterRegExp):
     @property
     def ident(self):
         return "host_ctc_regex"
@@ -812,7 +832,7 @@ class FilterHostCtcRegex(FilterText):
         return 107
 
     def __init__(self):
-        FilterText.__init__(self, "host", "host_contacts", "host_ctc_regex", "~~")
+        FilterRegExp.__init__(self, "host", "host_contacts", "host_ctc_regex", "~~")
 
 
 @filter_registry.register
@@ -834,7 +854,7 @@ class FilterServiceCtc(FilterText):
 
 
 @filter_registry.register
-class FilterServiceCtcRegex(FilterText):
+class FilterServiceCtcRegex(FilterRegExp):
     @property
     def ident(self):
         return "service_ctc_regex"
@@ -848,7 +868,7 @@ class FilterServiceCtcRegex(FilterText):
         return 207
 
     def __init__(self):
-        FilterText.__init__(self, "service", "service_contacts", "service_ctc_regex", "~~")
+        FilterRegExp.__init__(self, "service", "service_contacts", "service_ctc_regex", "~~")
 
 
 # Selection of one group to be used in the info "hostgroup" or "servicegroup".
@@ -922,7 +942,7 @@ class FilterServicegroup(FilterGroupSelection):
 
 
 @filter_registry.register
-class FilterHostgroupnameregex(FilterText):
+class FilterHostgroupnameregex(FilterRegExp):
     @property
     def ident(self):
         return "hostgroupnameregex"
@@ -942,7 +962,7 @@ class FilterHostgroupnameregex(FilterText):
         )
 
     def __init__(self):
-        FilterText.__init__(self, "hostgroup", "hostgroup_name", "hostgroup_regex", "~~")
+        FilterRegExp.__init__(self, "hostgroup", "hostgroup_name", "hostgroup_regex", "~~")
 
 
 @filter_registry.register
@@ -977,7 +997,7 @@ class FilterHostgroupVisibility(Filter):
 
 
 @filter_registry.register
-class FilterServicegroupnameregex(FilterText):
+class FilterServicegroupnameregex(FilterRegExp):
     @property
     def ident(self):
         return "servicegroupnameregex"
@@ -995,12 +1015,12 @@ class FilterServicegroupnameregex(FilterText):
         return _("Search field allowing regular expression and partial matches")
 
     def __init__(self):
-        FilterText.__init__(self,
-                            "servicegroup",
-                            "servicegroup_name",
-                            "servicegroup_regex",
-                            "~~",
-                            negateable=True)
+        FilterRegExp.__init__(self,
+                              "servicegroup",
+                              "servicegroup_name",
+                              "servicegroup_regex",
+                              "~~",
+                              negateable=True)
 
 
 @filter_registry.register
@@ -2238,7 +2258,7 @@ class FilterLogContactName(FilterText):
 
 
 @filter_registry.register
-class FilterLogContactNameRegex(FilterText):
+class FilterLogContactNameRegex(FilterRegExp):
     @property
     def ident(self):
         return "log_contact_name_regex"
@@ -2252,16 +2272,16 @@ class FilterLogContactNameRegex(FilterText):
         return 261
 
     def __init__(self):
-        FilterText.__init__(self,
-                            "log",
-                            "log_contact_name",
-                            "log_contact_name_regex",
-                            "~~",
-                            negateable=True)
+        FilterRegExp.__init__(self,
+                              "log",
+                              "log_contact_name",
+                              "log_contact_name_regex",
+                              "~~",
+                              negateable=True)
 
 
 @filter_registry.register
-class FilterLogCommandNameRegex(FilterText):
+class FilterLogCommandNameRegex(FilterRegExp):
     @property
     def ident(self):
         return "log_command_name_regex"
@@ -2275,12 +2295,12 @@ class FilterLogCommandNameRegex(FilterText):
         return 262
 
     def __init__(self):
-        FilterText.__init__(self,
-                            "log",
-                            "log_command_name",
-                            "log_command_name_regex",
-                            "~~",
-                            negateable=True)
+        FilterRegExp.__init__(self,
+                              "log",
+                              "log_command_name",
+                              "log_command_name_regex",
+                              "~~",
+                              negateable=True)
 
 
 @filter_registry.register
@@ -3625,7 +3645,7 @@ class FilterEventComment(FilterText):
 
 
 @filter_registry.register
-class FilterEventHostRegex(FilterText):
+class FilterEventHostRegex(FilterRegExp):
     @property
     def ident(self):
         return "event_host_regex"
@@ -3639,7 +3659,7 @@ class FilterEventHostRegex(FilterText):
         return 201
 
     def __init__(self):
-        FilterText.__init__(self, "event", "event_host", "event_host", "~~")
+        FilterRegExp.__init__(self, "event", "event_host", "event_host", "~~")
 
 
 @filter_registry.register

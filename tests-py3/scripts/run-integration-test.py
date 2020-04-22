@@ -102,7 +102,7 @@ def _execute_as_site_user(site, args):
     }
     for varname in [
             "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-            "PYLINT_ARGS"
+            "PYLINT_ARGS", "CI"
     ]:
         if varname in os.environ:
             env_vars[varname] = os.environ[varname]

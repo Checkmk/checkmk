@@ -210,13 +210,13 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     autochecks.save_autochecks_file(hostname, new_services)
 
+    console.step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,
         multi_host_sections,
         on_error=on_error,
     )
-
     new_host_labels, host_labels_per_plugin = \
         _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new)
     DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
@@ -863,6 +863,8 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
         section_plugins = (config.get_registered_section_plugin(rs) for rs in raw_sections)
         parsed_sections = {p.parsed_section_name for p in section_plugins if p is not None}
 
+        console.vverbose("Trying host label discovery with: %s\n" %
+                         ", ".join(str(p) for p in parsed_sections))
         for parsed_section_name in sorted(parsed_sections):
             try:
                 plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
@@ -1252,6 +1254,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
 
+    console.step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,

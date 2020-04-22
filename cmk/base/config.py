@@ -1969,7 +1969,7 @@ def _extract_agent_and_snmp_sections():
             #if cmk.utils.debug.enabled():
             #    raise MKGeneralException(exc)
             #console.warning(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
-            pass
+            console.vverbose(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
 
 
 def _extract_check_plugins():

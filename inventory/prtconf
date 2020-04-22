@@ -23,6 +23,29 @@
 # Console Login: enable
 # Auto Restart: true
 # Full Core: false
+# Network Information
+#        Host Name: example1
+#        IP Address: 192.168.0.1
+#        Sub Netmask: 255.255.255.128
+#        Gateway: 192.168.0.2
+#        Name Server: 192.168.0.3
+#        Domain Name: example1.example.com
+#
+# Volume Groups Information
+# Inactive VGs
+# ==============================================================================
+# appvg
+# ==============================================================================
+# Active VGs
+# ==============================================================================
+# cow-daag0cvg:
+# PV_NAME           PV STATE          TOTAL PPs   FREE PPs    FREE DISTRIBUTION
+# hdisk663          active            3218        0           00..00..00..00..00
+# hdisk664          active            3218        0           00..00..00..00..00
+# hdisk665          active            3218        0           00..00..00..00..00
+# hdisk666          active            3218        0           00..00..00..00..00
+# ==============================================================================
+
 
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.

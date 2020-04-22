@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,13 +8,11 @@ This program overwrites __import__ and tracks memory before
 and after any import statement issued. The resulting data can
 be emitted in various formats for futher processing.
 """
-from __future__ import print_function
-
-import distutils.sysconfig as sysconfig  # pylint: disable=import-error
 
 import argparse
 import collections
 import contextlib
+import distutils.sysconfig as sysconfig
 import gc
 import importlib
 import inspect
@@ -22,8 +20,8 @@ import json
 import os
 import subprocess
 import sys
-
-from typing import Any, Dict, Iterator, List, Optional, Union  # pylint: disable=unused-import
+from types import FrameType
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
@@ -48,7 +46,7 @@ def _get_python_stdlib():
 
         for nm in files:
             if nm != '__init__.py' and nm[-3:] == '.py':
-                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace(b'/', b'.')
+                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.')
 
 
 # We pull a list of Python's stdlib so we can color it differently.
@@ -61,7 +59,7 @@ def log(msg, *args):
     sys.stderr.flush()
 
 
-class ConsoleFormatter(object):
+class ConsoleFormatter:
     __slots__ = ['out']
 
     def __init__(self, args):
@@ -83,7 +81,7 @@ class ConsoleFormatter(object):
         pass
 
 
-class JSONFormatter(object):
+class JSONFormatter:
     """
 
     Output looks like this:
@@ -153,7 +151,7 @@ class JSONFormatter(object):
         return json.dumps(self.stack[0], indent=4)
 
 
-class GraphVizFormatter(object):
+class GraphVizFormatter:
     __slots__ = ('from_', 'to', 'out', 'open')
 
     def __init__(self, args):
@@ -240,7 +238,7 @@ FORMATTERS = {
 _FORMATTER = None  # type: Optional[Formatter]
 
 
-class Formatter(object):
+class Formatter:
     def __init__(self, *formatters):
         self.formatters = formatters
 
@@ -314,7 +312,7 @@ def _get_delta(mem1, mem2):
     )
 
 
-class MeasureMemory(object):
+class MeasureMemory:
     __slots__ = ['pid', 'mem_before', 'mem_after']
 
     def __init__(self):
@@ -355,6 +353,14 @@ __imp = __import__
 stack = ['__main__']
 
 
+def _back(frame):
+    # type: (Optional[FrameType]) -> FrameType
+    assert frame is not None
+    b = frame.f_back
+    assert b is not None
+    return b
+
+
 def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
     # type: (str, Optional[dict], Optional[dict], Optional[list], int) -> Any
     # Wrap __import__ and do some shenanigans to actually track what's happening.
@@ -365,14 +371,14 @@ def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
     without_us = [frame for frame in _stack if frame[1] != __file__]
 
     current = inspect.currentframe()
-    parent = current.f_back.f_back.f_back.f_globals.get(b'__name__')
+    parent = _back(_back(_back(current))).f_globals.get('__name__')
 
     if _globals is None or _locals is None:
         # Someone did call __import__('foo') without specifying
         # globals and locals. I'm looking at you, six!
         # We get our globals from the parent frame.
-        _globals = current.f_back.f_globals
-        _locals = current.f_back.f_locals
+        _globals = _back(current).f_globals
+        _locals = _back(current).f_locals
 
     def module_name_from_import_stmt(line):
         # may be 'exec("import foo as bar")'. Thank you reportlab.
@@ -403,12 +409,12 @@ def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
             # We take the first one we can find.
             candidate = module_name_from_import_stmt(_frame[4][0])
             if candidate.startswith("."):
-                ret = current.f_back.f_back.f_globals['__name__'] + module_name
+                ret = _back(_back(current)).f_globals['__name__'] + module_name
             else:
                 ret = candidate
             return ret
 
-    module_name = _globals.get(b'__name__')
+    module_name = _globals.get('__name__')
 
     # c-libraries sometimes don't have a name, or have no _globals and thus somehow fall through
     # to the base globals() so we figure out how they were called when they were imported and
@@ -458,9 +464,9 @@ def main(args):
 @contextlib.contextmanager
 def basedir():
     # type () -> Iterator
-    root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip()
+    root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
     # So cmk will actually be found...
-    sys.path.insert(0, root)
+    sys.path.insert(0, root.decode('utf-8').strip())
     yield
 
 
@@ -471,7 +477,7 @@ def _spawn(*args):
     subprocess.Popen(args,
                      stdout=open('/dev/null', 'w'),
                      stderr=open('/dev/null', 'w'),
-                     preexec_fn=os.setpgrp)
+                     start_new_session=True)
 
 
 def remove_zeros(param):

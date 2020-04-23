@@ -14,7 +14,7 @@ components:
       name: hostname
       required: true
       schema:
-        pattern: '[a-zA-Z0-9-.]+'
+        pattern: '[-0-9a-zA-Z_.]+'
         type: string
     ident:
       description: The identifier for this object. It's a 128bit uuid represented
@@ -25,7 +25,7 @@ components:
       name: ident
       required: true
       schema:
-        pattern: '[a-fA-F0-9]{32}'
+        pattern: '[a-fA-F0-9]{32}|root'
         type: string
     name:
       description: A name used as an identifier. Can be of arbitrary (sensible) length.
@@ -130,6 +130,8 @@ components:
         domainType:
           default: contact_group
           type: string
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -143,6 +145,30 @@ components:
       - domainType
       - links
       type: object
+    CreateFolder:
+      properties:
+        attributes:
+          example:
+            foo: bar
+          type: object
+        name:
+          description: The name of the folder.
+          example: production
+          type: string
+        parent:
+          description: The folder-id of the folder under which this folder shall be
+            created. May be 'root' for the root-folder.
+          example: root
+          pattern: '[a-fA-F0-9]{32}|root'
+          type: string
+        title:
+          example: Production Hosts
+          type: string
+      required:
+      - name
+      - parent
+      - title
+      type: object
     CreateHost:
       properties:
         attributes:
@@ -155,9 +181,9 @@ components:
           pattern: '[a-fA-F0-9]{32}|root'
           type: string
         hostname:
-          description: The hostname itself. Only characters valid in FQDNs are allowed.
+          description: The hostname or IP address itself.
           example: example.com
-          pattern: '[a-zA-Z][a-zA-Z-]+'
+          pattern: '[-0-9a-zA-Z_.]+'
           type: string
         nodes:
           description: Nodes where the newly created host should be the cluster-container
@@ -176,6 +202,8 @@ components:
     DomainObject:
       properties:
         domainType:
+          type: string
+        id:
           type: string
         links:
           description: list of links to other resources.
@@ -209,23 +237,39 @@ components:
         domainType:
           default: folder
           type: string
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
             $ref: '#/components/schemas/Link'
           type: array
         members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+          $ref: '#/components/schemas/FolderMembers'
         title:
           type: string
       required:
       - domainType
       - links
       type: object
+    FolderMembers:
+      properties:
+        hosts:
+          allOf:
+          - $ref: '#/components/schemas/ObjectPropertyMember'
+          description: A list of links pointing to the actual host-resources.
+        move:
+          allOf:
+          - $ref: '#/components/schemas/ObjectActionMember'
+          description: An action which triggers the move of this folder to another
+            folder.
+      type: object
     Host:
       properties:
         domainType:
           default: host
+          type: string
+        id:
           type: string
         links:
           description: list of links to other resources.
@@ -233,7 +277,9 @@ components:
             $ref: '#/components/schemas/Link'
           type: array
         members:
-          $ref: '#/components/schemas/ObjectMemberDict'
+          allOf:
+          - $ref: '#/components/schemas/HostMembers'
+          description: All the members of the host object.
         title:
           type: string
       required:
@@ -245,6 +291,8 @@ components:
         domainType:
           default: host_group
           type: string
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -257,6 +305,15 @@ components:
       required:
       - domainType
       - links
+      type: object
+    HostMembers:
+      properties:
+        folder:
+          allOf:
+          - $ref: '#/components/schemas/ObjectPropertyMember'
+          description: The folder in which this host resides. It is represented by
+            a hexadecimal identifier which is it's 'primary key'. The folder can be
+            accessed via the `self`-link provided in the links array.
       type: object
     InputAttribute:
       properties:
@@ -278,30 +335,6 @@ components:
           type: string
       required:
       - name
-      type: object
-    InputFolder:
-      properties:
-        attributes:
-          example:
-            foo: bar
-          type: object
-        name:
-          description: The name of the folder.
-          example: production
-          type: string
-        parent:
-          description: The folder-id of the folder under which this folder shall be
-            created. May be 'root' for the root-folder.
-          example: root
-          pattern: '[a-fA-F0-9]{32}|root'
-          type: string
-        title:
-          example: Production Hosts
-          type: string
-      required:
-      - name
-      - parent
-      - title
       type: object
     InputHostGroup:
       properties:
@@ -520,6 +553,8 @@ components:
         domainType:
           default: service_group
           type: string
+        id:
+          type: string
         links:
           description: list of links to other resources.
           items:
@@ -559,6 +594,7 @@ components:
           - host2
           - host3
           items:
+            pattern: foo
             type: string
           type: array
       type: object
@@ -581,14 +617,13 @@ info:
     email: feedback@checkmk.com
     name: Contact the Checkmk Team
     url: https://checkmk.com/contact.php
-  description: "API for Checkmk.\n\nThis is the docstring which will be the description\
-    \ of the API.\n\n# Introduction\n\nThis API is documented in **OpenAPI format**.\
-    \ This means there is a formal specification for the\nwhole API surface. This\
-    \ documentation is generated from this specification.\n\n# Authentication\n\n\
-    To use this API you have to create an *Automation User* via WATO. The resulting\
-    \ username and\npassword have to be sent in the `Authentication` HTTP-Header in\
-    \ the *Bearer* format. Example here:\n\n## Security definitions\n\n<SecurityDefinitions\
-    \ />\n\n# How does it work?\n\nThis API follows the [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)\
+  description: "# Introduction\n\nThis API is documented in **OpenAPI format**. This\
+    \ means there is a formal specification for the\nwhole API surface. This documentation\
+    \ is generated from this specification.\n\n# Authentication\n\nTo use this API\
+    \ you have to create an *Automation User* via WATO. The resulting username and\n\
+    password have to be sent in the `Authentication` HTTP-Header in the *Bearer* format.\
+    \ Example here:\n\n## Security definitions\n\n<SecurityDefinitions />\n\n# How\
+    \ does it work?\n\nThis API follows the [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)\
     \ principle. While it can be\nused in a traditional way, using the elements that\
     \ enable HATEOAS make it way more powerful and\nflexible.\n\n## Text and payload\
     \ encoding\n\nAs specified by the `Content-Type` of `application/json`, the response\
@@ -613,7 +648,7 @@ info:
     name: GNU General Public License version 2
     url: https://checkmk.com/gpl.html
   title: Checkmk REST API
-  version: 1.0.0
+  version: 0.3.2
 openapi: 3.0.2
 paths:
   /collections/contact_group:
@@ -636,6 +671,22 @@ paths:
       summary: List contact-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/collections/contact_group\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/collections/contact_group\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/contact_group\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.create
@@ -670,26 +721,34 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
-          \n        }' \\\n    /collections/contact_group"
-      - lang: httpie
-        source: "http POST /collections/contact_group \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/contact_group\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
-          \    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/collections/contact_group\",\n    json={\n        \"alias\"\
+          : \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Not on Sundays.\"\
+          , \n          \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/contact_group\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Not\
+          \ on Sundays.' \\\n    name='OnCall'"
   /objects/contact_group/{name}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -707,6 +766,26 @@ paths:
       summary: Delete a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/contact_group/pathname\",\n    headers={ \n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/contact_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/contact_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.show
@@ -736,12 +815,31 @@ paths:
       summary: Show a contact-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/contact_group/pathname\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/contact_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/contact_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     put:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.contact_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -778,19 +876,27 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.contact_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Not on Sundays.\", \n          \"name\": \"OnCall\"\
-          \n        }' \\\n    /objects/contact_group/pathname"
-      - lang: httpie
-        source: "http PUT /objects/contact_group/pathname \\\n    'Authorization:\
-          \ Bearer username password' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
       - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/contact_group/pathname\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n\
-          \    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
+          \    API_URL + \"/objects/contact_group/pathname\",\n    headers={ \n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    json={\n        \"alias\": \"Not on\
+          \ Sundays.\", \n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    -d '{\n          \"alias\": \"Not on Sundays.\", \n          \"name\"\
+          : \"OnCall\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/contact_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
   /collections/folder:
     get:
       description: ''
@@ -811,14 +917,30 @@ paths:
       summary: List folders
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/collections/folder\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/collections/folder\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/folder\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     post:
-      description: This is the long description of the endpoint.
+      description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder.create
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InputFolder'
+              $ref: '#/components/schemas/CreateFolder'
         required: true
       responses:
         default:
@@ -845,29 +967,39 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {\n            \"foo\": \"bar\"\n          },\
-          \ \n          \"name\": \"production\", \n          \"parent\": \"root\"\
-          , \n          \"title\": \"Production Hosts\"\n        }' \\\n    /collections/folder"
-      - lang: httpie
-        source: "http POST /collections/folder \\\n    'Authorization: Bearer username\
-          \ password' \\\n    attributes='{\"foo\": \"bar\"}' \\\n    name='production'\
-          \ \\\n    parent='root' \\\n    title='Production Hosts'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/folder\",\n\
-          \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {\n            \"foo\": \"bar\"\n        }, \n\
-          \        \"name\": \"production\", \n        \"parent\": \"root\", \n  \
-          \      \"title\": \"Production Hosts\"\n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/collections/folder\",\n    json={\n        \"attributes\"\
+          : {\n            \"foo\": \"bar\"\n        }, \n        \"name\": \"production\"\
+          , \n        \"parent\": \"root\", \n        \"title\": \"Production Hosts\"\
+          \n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"attributes\": {\n      \
+          \      \"foo\": \"bar\"\n          }, \n          \"name\": \"production\"\
+          , \n          \"parent\": \"root\", \n          \"title\": \"Production\
+          \ Hosts\"\n        }' \\\n    \"$API_URL/collections/folder\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    attributes='{\"\
+          foo\": \"bar\"}' \\\n    name='production' \\\n    parent='root' \\\n  \
+          \  title='Production Hosts'"
   /objects/folder/{ident}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder.delete
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -885,6 +1017,26 @@ paths:
       summary: Delete a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\",\n \
+          \   headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder.show_folder
@@ -914,13 +1066,33 @@ paths:
       summary: Show a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\",\n)\n\
+          resp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     put:
       description: Title and attributes can be updated, but there is no checking of
         the attributes done.
       operationId: cmk.gui.plugins.openapi.endpoints.folder.update
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -957,29 +1129,42 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": [\n            {\n              \"value\": \"\
-          bar\", \n              \"key\": \"foo\"\n            }\n          ], \n\
-          \          \"title\": \"Virtual Servers.\"\n        }' \\\n    /objects/folder/49167bd012b44719a67956cf3ef7b3dd"
-      - lang: httpie
-        source: "http PUT /objects/folder/49167bd012b44719a67956cf3ef7b3dd \\\n  \
-          \  'Authorization: Bearer username password' \\\n    attributes='[{'value':\
-          \ 'bar', 'key': 'foo'}]' \\\n    title='Virtual Servers.'"
       - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": [\n            {\n                \"key\": \"foo\"\
-          , \n                \"value\": \"bar\"\n            }\n        ], \n   \
-          \     \"title\": \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
+          \    API_URL + \"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\",\n \
+          \   headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
+          attributes\": [\n            {\n                \"key\": \"foo\", \n   \
+          \             \"value\": \"bar\"\n            }\n        ], \n        \"\
+          title\": \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    -d '{\n          \"attributes\": [\n            {\n              \"\
+          value\": \"bar\", \n              \"key\": \"foo\"\n            }\n    \
+          \      ], \n          \"title\": \"Virtual Servers.\"\n        }' \\\n \
+          \   \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc' \\\n    attributes='[{\"value\": \"bar\", \"key\": \"\
+          foo\"}]' \\\n    title='Virtual Servers.'"
   /objects/folder/{ident}/actions/move/invoke:
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.folder.move
       parameters:
       - $ref: '#/components/parameters/ident'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1009,6 +1194,26 @@ paths:
       summary: Move a folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.folder
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/objects/folder/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+          ,\n    headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd/actions/move/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
   /collections/host:
     post:
       description: ''
@@ -1044,31 +1249,39 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {}, \n          \"folder\": \"root\", \n    \
-          \      \"hostname\": \"example.com\", \n          \"nodes\": [\n       \
-          \     \"host1\", \n            \"host2\", \n            \"host3\"\n    \
-          \      ]\n        }' \\\n    /collections/host"
-      - lang: httpie
-        source: "http POST /collections/host \\\n    'Authorization: Bearer username\
-          \ password' \\\n    attributes='{}' \\\n    folder='root' \\\n    hostname='example.com'\
-          \ \\\n    nodes='['host1', 'host2', 'host3']'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/host\",\n\
-          \    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {}, \n        \"folder\": \"root\", \n        \"\
-          hostname\": \"example.com\", \n        \"nodes\": [\n            \"host1\"\
-          , \n            \"host2\", \n            \"host3\"\n        ]\n    },\n\
-          )\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/collections/host\",\n    json={\n        \"attributes\"\
+          : {}, \n        \"folder\": \"root\", \n        \"hostname\": \"example.com\"\
+          , \n        \"nodes\": [\n            \"host1\", \n            \"host2\"\
+          , \n            \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"attributes\": {}, \n   \
+          \       \"folder\": \"root\", \n          \"hostname\": \"example.com\"\
+          , \n          \"nodes\": [\n            \"host1\", \n            \"host2\"\
+          , \n            \"host3\"\n          ]\n        }' \\\n    \"$API_URL/collections/host\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    attributes='{}'\
+          \ \\\n    folder='root' \\\n    hostname='example.com' \\\n    nodes='[\"\
+          host1\", \"host2\", \"host3\"]'"
   /objects/host/{hostname}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host.delete
       parameters:
       - $ref: '#/components/parameters/hostname'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1086,6 +1299,26 @@ paths:
       summary: Delete a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/host/example.com\",\n    headers={ \n        \"\
+          If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object to\
+          \ be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/host/example.com\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/host/example.com\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host.show_host
@@ -1104,15 +1337,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Host'
           description: ''
+          headers:
+            ETag:
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
       summary: Show a host
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/host/example.com\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/host/example.com\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host/example.com\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     put:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host.update_host
       parameters:
       - $ref: '#/components/parameters/hostname'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1149,22 +1409,30 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.host
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"attributes\": {}, \n          \"nodes\": [\n            \"\
-          host1\", \n            \"host2\", \n            \"host3\"\n          ]\n\
-          \        }' \\\n    /objects/host/example.com"
-      - lang: httpie
-        source: "http PUT /objects/host/example.com \\\n    'Authorization: Bearer\
-          \ username password' \\\n    attributes='{}' \\\n    nodes='['host1', 'host2',\
-          \ 'host3']'"
       - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/host/example.com\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"attributes\": {}, \n        \"nodes\": [\n            \"host1\"\
-          , \n            \"host2\", \n            \"host3\"\n        ]\n    },\n\
-          )\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
+          \    API_URL + \"/objects/host/example.com\",\n    headers={ \n        \"\
+          If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object to\
+          \ be modified.\n    },\n    json={\n        \"attributes\": {}, \n     \
+          \   \"nodes\": [\n            \"host1\", \n            \"host2\", \n   \
+          \         \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    -d '{\n          \"attributes\": {}, \n          \"nodes\": [\n   \
+          \         \"host1\", \n            \"host2\", \n            \"host3\"\n\
+          \          ]\n        }' \\\n    \"$API_URL/objects/host/example.com\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host/example.com\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc' \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"\
+          host2\", \"host3\"]'"
   /collections/host_group:
     post:
       description: ''
@@ -1200,26 +1468,34 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Windows Servers\", \n          \"name\": \"windows\"\
-          \n        }' \\\n    /collections/host_group"
-      - lang: httpie
-        source: "http POST /collections/host_group \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='Windows Servers' \\\n    name='windows'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/host_group\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Windows Servers\", \n        \"name\": \"windows\"\
-          \n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/collections/host_group\",\n    json={\n        \"alias\"\
+          : \"Windows Servers\", \n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Windows Servers\"\
+          , \n          \"name\": \"windows\"\n        }' \\\n    \"$API_URL/collections/host_group\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host_group\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Windows\
+          \ Servers' \\\n    name='windows'"
   /objects/host_group/{name}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1237,6 +1513,26 @@ paths:
       summary: Delete a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/host_group/pathname\",\n    headers={ \n     \
+          \   \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object\
+          \ to be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/host_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/host_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_group.get
@@ -1266,12 +1562,31 @@ paths:
       summary: Show a host-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/host_group/pathname\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/host_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     put:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.host_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1308,19 +1623,27 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Windows Servers\", \n          \"name\": \"windows\"\
-          \n        }' \\\n    /objects/host_group/pathname"
-      - lang: httpie
-        source: "http PUT /objects/host_group/pathname \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='Windows Servers' \\\n    name='windows'"
       - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/host_group/pathname\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Windows Servers\", \n        \"name\": \"windows\"\
-          \n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
+          \    API_URL + \"/objects/host_group/pathname\",\n    headers={ \n     \
+          \   \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object\
+          \ to be modified.\n    },\n    json={\n        \"alias\": \"Windows Servers\"\
+          , \n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    -d '{\n          \"alias\": \"Windows Servers\", \n          \"name\"\
+          : \"windows\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
   /collections/service_group:
     get:
       description: ''
@@ -1341,6 +1664,22 @@ paths:
       summary: List service-groups
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/collections/service_group\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/collections/service_group\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/service_group\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.create
@@ -1375,26 +1714,35 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Environment Sensors\", \n          \"name\": \"\
-          environment\"\n        }' \\\n    /collections/service_group"
-      - lang: httpie
-        source: "http POST /collections/service_group \\\n    'Authorization: Bearer\
-          \ username password' \\\n    alias='Environment Sensors' \\\n    name='environment'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/collections/service_group\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Environment Sensors\", \n        \"name\": \"environment\"\
-          \n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/collections/service_group\",\n    json={\n        \"alias\"\
+          : \"Environment Sensors\", \n        \"name\": \"environment\"\n    },\n\
+          )\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"alias\": \"Environment Sensors\"\
+          , \n          \"name\": \"environment\"\n        }' \\\n    \"$API_URL/collections/service_group\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/service_group\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Environment\
+          \ Sensors' \\\n    name='environment'"
   /objects/service_group/{name}:
     delete:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.delete
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1412,6 +1760,26 @@ paths:
       summary: Delete a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.delete(\n\
+          \    API_URL + \"/objects/service_group/pathname\",\n    headers={ \n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X DELETE \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    \"$API_URL/objects/service_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp DELETE \"$API_URL/objects/service_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc'"
     get:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.show_group
@@ -1441,12 +1809,31 @@ paths:
       summary: Show a service-group
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/service_group/pathname\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/service_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/service_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
     put:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.service_group.update
       parameters:
       - $ref: '#/components/parameters/name'
-      - description: The ETag of the object to be modified.
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        example: a20ceacf346041dc
         in: header
         name: If-Match
         required: true
@@ -1483,20 +1870,27 @@ paths:
       tags:
       - cmk.gui.plugins.openapi.endpoints.service_group
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X PUT \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"alias\": \"Environment Sensors\", \n          \"name\": \"\
-          environment\"\n        }' \\\n    /objects/service_group/pathname"
-      - lang: httpie
-        source: "http PUT /objects/service_group/pathname \\\n    'Authorization:\
-          \ Bearer username password' \\\n    alias='Environment Sensors' \\\n   \
-          \ name='environment'"
       - lang: requests
-        source: "import requests\n\nresp = requests.put(\"/objects/service_group/pathname\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"alias\": \"Environment Sensors\", \n        \"name\": \"environment\"\
-          \n    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
+          \    API_URL + \"/objects/service_group/pathname\",\n    headers={ \n  \
+          \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    json={\n        \"alias\": \"Environment\
+          \ Sensors\", \n        \"name\": \"environment\"\n    },\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
+          \    -d '{\n          \"alias\": \"Environment Sensors\", \n          \"\
+          name\": \"environment\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/service_group/pathname\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
+          \ a20ceacf346041dc' \\\n    alias='Environment Sensors' \\\n    name='environment'"
   /version:
     get:
       description: ''
@@ -1516,9 +1910,25 @@ paths:
           description: ''
       tags:
       - cmk.gui.plugins.openapi.endpoints.version
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/version\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/version\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/version\" \\\n  \
+          \  \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/agent/actions/sign:
     post:
-      description: "Args:\n    params:"
+      description: ''
       operationId: cmk.gui.cee.plugins.openapi.endpoints.agents.sign_agents
       requestBody:
         content:
@@ -1539,23 +1949,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActionResult'
           description: ''
-      summary: Sign all agents.
+      summary: Sign all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
       x-code-samples:
-      - lang: curl
-        source: "curl \\\n    -X POST \\\n    --header \"Authorization: Bearer username\
-          \ password\" \\\n    --header \"Accept: application/json\" \\\n    -d '{\n\
-          \          \"key_id\": \"asdf\", \n          \"passphrase\": \"sw0rdfish\"\
-          \n        }' \\\n    /domain-types/agent/actions/sign"
-      - lang: httpie
-        source: "http POST /domain-types/agent/actions/sign \\\n    'Authorization:\
-          \ Bearer username password' \\\n    key_id='asdf' \\\n    passphrase='sw0rdfish'"
       - lang: requests
-        source: "import requests\n\nresp = requests.post(\"/domain-types/agent/actions/sign\"\
-          ,\n    headers={'Authorization': 'Bearer username password'},\n    data={\n\
-          \        \"key_id\": \"asdf\", \n        \"passphrase\": \"sw0rdfish\"\n\
-          \    },\n)\nresp.raise_for_status()"
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/domain-types/agent/actions/sign\",\n    json={\n     \
+          \   \"key_id\": \"asdf\", \n        \"passphrase\": \"sw0rdfish\"\n    },\n\
+          )\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\", \n \
+          \         \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    key_id='asdf'\
+          \ \\\n    passphrase='sw0rdfish'"
   /collections/agent:
     get:
       description: ''
@@ -1576,6 +1992,22 @@ paths:
       summary: List all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/collections/agent\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/collections/agent\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/collections/agent\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /objects/host/{hostname}/objects/agent:
     get:
       description: ''
@@ -1598,6 +2030,22 @@ paths:
       summary: List agents for a specific host
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/host/example.com/objects/agent\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/host/example.com/objects/agent\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/host/example.com/objects/agent\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/agent/actions/bake:
     post:
       description: ''
@@ -1618,6 +2066,22 @@ paths:
       summary: Bake all agents
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
+          \    API_URL + \"/domain-types/agent/actions/bake\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/agent/actions/bake\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/bake\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/agent/actions/automatic-deployment:
     get:
       description: ''
@@ -1638,6 +2102,23 @@ paths:
       summary: Show the status of the automatic deployment system
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/domain-types/agent/actions/automatic-deployment\",\n)\n\
+          resp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/agent/actions/automatic-deployment\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/automatic-deployment\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /domain-types/agent/actions/baking_status:
     get:
       description: ''
@@ -1658,6 +2139,22 @@ paths:
       summary: Show the baking status
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/domain-types/agent/actions/baking_status\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/agent/actions/baking_status\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/agent/actions/baking_status\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /objects/agent/{agent_hash}:
     get:
       description: "Args:\n    params:"
@@ -1705,62 +2202,93 @@ paths:
       summary: A single agent
       tags:
       - cmk.gui.cee.plugins.openapi.endpoints.agents
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/objects/agent/{agent_hash}\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/objects/agent/{agent_hash}\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/objects/agent/{agent_hash}\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
 security:
 - BearerAuth: []
 tags:
 - name: cmk.gui.plugins.openapi.endpoints.contact_group
-- description: 'Schema for submitting Contact Group information.
-
-
-    <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup" showReadOnly={true}
-    showWriteOnly={true} />'
+  x-displayName: Contact-groups
+- description: <SchemaDefinition schemaRef="#/components/schemas/InputContactGroup"
+    showReadOnly={true} showWriteOnly={true} />
   name: InputContactGroup
-  x-displayName: InputContactGroup
+  x-displayName: Creating a contact group
 - name: cmk.gui.plugins.openapi.endpoints.folder
-- description: <SchemaDefinition schemaRef="#/components/schemas/InputFolder" showReadOnly={true}
-    showWriteOnly={true} />
-  name: InputFolder
+  x-displayName: Folders
+- description: "Every folder needs a parent folder to reside in. The uppermost folder\
+    \ is called the \"root\"\nFolder and has the fixed identifier \"root\".\n\nParameters:\n\
+    \n * `name` is the actual folder-name on disk.\n * `title` is meant for humans\
+    \ to read.\n * `parent` is the identifier for the parent-folder. This identifier\
+    \ stays the same,\n    even if the parent folder is being moved.\n * `attributes`\
+    \ can hold special configuration parameters which control various aspects of\n\
+    \    the monitoring system. Most of these attributes will be inherited by hosts\
+    \ within that\n    folder. For more information please have a look at the\n  \
+    \  [Host Administration chapter of the handbook](https://checkmk.com/cms_wato_hosts.html#Introduction)\n\
+    \n<SchemaDefinition schemaRef=\"#/components/schemas/CreateFolder\" showReadOnly={true}\
+    \ showWriteOnly={true} />"
+  name: CreateFolder
+  x-displayName: Creating a folder
 - description: <SchemaDefinition schemaRef="#/components/schemas/UpdateFolder" showReadOnly={true}
     showWriteOnly={true} />
   name: UpdateFolder
-- name: cmk.gui.plugins.openapi.endpoints.host
-- description: <SchemaDefinition schemaRef="#/components/schemas/CreateHost" showReadOnly={true}
-    showWriteOnly={true} />
+  x-displayName: Updating a folder
+- description: 'Hosts can only exist in conjunction with Folders. To get a list of
+    hosts
+
+    you need to access the folder API endpoints.'
+  name: cmk.gui.plugins.openapi.endpoints.host
+  x-displayName: Hosts
+- description: "Required arguments:\n\n  * `hostname` - A host name with or without\
+    \ domain part. IP addresses are also allowed.\n  * `folder` - The folder identifier.\n\
+    \nOptional arguments:\n\n  * `attributes`\n  * `nodes`\n\n<SchemaDefinition schemaRef=\"\
+    #/components/schemas/CreateHost\" showReadOnly={true} showWriteOnly={true} />"
   name: CreateHost
-  x-displayName: Schema for creating a new host
-- description: <SchemaDefinition schemaRef="#/components/schemas/UpdateHost" showReadOnly={true}
-    showWriteOnly={true} />
+  x-displayName: Creating a new host
+- description: "Only the `attributes` and `nodes` values may be changed.\n\nRequired\
+    \ attributes:\n\n  * none\n\nOptional arguments:\n\n  * `attributes`\n  * `nodes`\n\
+    \n<SchemaDefinition schemaRef=\"#/components/schemas/UpdateHost\" showReadOnly={true}\
+    \ showWriteOnly={true} />"
   name: UpdateHost
+  x-displayName: Updating of a host
 - name: cmk.gui.plugins.openapi.endpoints.host_group
+  x-displayName: Host-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputHostGroup" showReadOnly={true}
     showWriteOnly={true} />
   name: InputHostGroup
+  x-displayName: Creating a host group
 - name: cmk.gui.plugins.openapi.endpoints.service_group
+  x-displayName: Service-groups
 - description: <SchemaDefinition schemaRef="#/components/schemas/InputServiceGroup"
     showReadOnly={true} showWriteOnly={true} />
   name: InputServiceGroup
+  x-displayName: Creating a service group
 - name: cmk.gui.plugins.openapi.endpoints.version
-- description: "TODO:\n    Expose an \"Action\" according to the \"Restful Objects\"\
-    \ specification which bakes all bakable agents.\n    Expose an \"Object\" which\
-    \ shows the \"Baking Status\" of the baking-process. If a progress estimate is\
-    \ possible, expose this via \"format=progress\" via OpenAPI.\n    Provide an endpoint\
-    \ representing an Agent and it's configuration:\n        on \"Accept: application/json\"\
-    \ return information about the agent\n        on \"Accept: application/octet-stream\"\
-    \ return the Agent binary itself\n    Expose an \"Action\" which signs all baked\
-    \ (unsigned) agents.\n    Expose an GET-Endpoint which shows the current configuration\
-    \ of the baking system\n        e.g. keys available, signed, etc.\n    Expose\
-    \ an GET-PUT-POST Endpoint for handling certificates and credentials."
-  name: cmk.gui.cee.plugins.openapi.endpoints.agents
+  x-displayName: Miscellaneous
+- name: cmk.gui.cee.plugins.openapi.endpoints.agents
   x-displayName: Agent related endpoints
 - description: <SchemaDefinition schemaRef="#/components/schemas/AgentSign" showReadOnly={true}
     showWriteOnly={true} />
   name: AgentSign
-  x-displayName: Foo
+  x-displayName: Signing of agents
 x-ignoredHeaderParameters:
 - User-Agent
 - X-Test-Header
 x-logo:
-  altText: CheckMK
+  altText: Checkmk
   url: https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png
 x-tagGroups:
 - name: Endpoints
@@ -1777,7 +2305,7 @@ x-tagGroups:
 - name: Request Schemas
   tags:
   - InputContactGroup
-  - InputFolder
+  - CreateFolder
   - UpdateFolder
   - CreateHost
   - UpdateHost

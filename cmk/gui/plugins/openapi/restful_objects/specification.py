@@ -3,10 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""API for Checkmk.
-
-This is the docstring which will be the description of the API.
-
+"""
 # Introduction
 
 This API is documented in **OpenAPI format**. This means there is a formal specification for the
@@ -68,6 +65,7 @@ import apispec.utils  # type: ignore
 import apispec_oneofschema  # type: ignore
 
 from cmk.gui.plugins.openapi import plugins
+from cmk.gui.plugins.openapi.restful_objects.request_schemas import HOSTNAME_REGEXP
 
 # Path parameters look like {varname} and need to be checked.
 PARAM_RE = re.compile(r"\{([a-z][a-z0-9]*)\}")
@@ -80,7 +78,11 @@ ETAG_IF_MATCH_HEADER = {
     'in': 'header',
     'name': 'If-Match',
     'required': True,
-    'description': 'The ETag of the object to be modified.',
+    'description':
+        ('The ETag of the object to be modified. This value comes from the ETag HTTP header '
+         'whenever the object is displayed. To update this object the currently stored ETag '
+         'needs to be the same as the one sent.'),
+    'example': 'a20ceacf346041dc',
     'schema': {
         'type': 'string'
     },
@@ -143,7 +145,7 @@ OPTIONS = {
 }
 
 SPEC = apispec.APISpec("Checkmk REST API",
-                       "1.0.0",
+                       "0.3.2",
                        apispec.utils.OpenAPIVersion("3.0.2"),
                        plugins=[
                            plugins.ValueTypedDictMarshmallowPlugin(),
@@ -189,7 +191,7 @@ SPEC.components.parameter(
                         "in this number."),
         'example': '49167bd012b44719a67956cf3ef7b3dd',
         'schema': {
-            'pattern': "[a-fA-F0-9]{32}",
+            'pattern': "[a-fA-F0-9]{32}|root",
             'type': 'string',
         }
     })
@@ -199,7 +201,7 @@ SPEC.components.parameter(
         'description': "A hostname.",
         'example': 'example.com',
         'schema': {
-            'pattern': "[a-zA-Z0-9-.]+",
+            'pattern': HOSTNAME_REGEXP,
             'type': 'string',
         }
     })

@@ -353,17 +353,19 @@ def object_href(domain_type, obj):
     )
 
 
-def domain_object(domain_type, identifier, title, members, extensions):
+def domain_object(domain_type, identifier, title, members, extensions, deletable=True):
     uri = "/objects/%s/%s" % (domain_type, identifier)
     links = [
         link_rel('self', uri, method='GET'),
         link_rel('.../update', uri, method='PUT'),
-        link_rel('.../delete', uri, method='DELETE'),
     ]
+    if deletable:
+        links.append(link_rel('.../delete', uri, method='DELETE'),)
     for link_factory in DOMAIN_OBJECT_LINK_REGISTRY.get(domain_type, []):
         links.append(link_factory(uri))
     return {
         'domainType': domain_type,
+        'id': identifier,
         'title': title,
         'links': links,
         'members': members,

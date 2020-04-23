@@ -3,14 +3,24 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Hosts"""
+"""Hosts
+
+Hosts can only exist in conjunction with Folders. To get a list of hosts
+you need to access the folder API endpoints.
+"""
 import json
+
+from connexion import problem  # type: ignore[import]
 
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.folder import load_folder
-from cmk.gui.plugins.openapi.restful_objects import constructors, response_schemas, endpoint_schema, \
-    request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    request_schemas,
+    response_schemas,
+)
 from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
 
 
@@ -83,11 +93,16 @@ def delete(params):
 @endpoint_schema('/objects/host/{hostname}',
                  method='get',
                  parameters=['hostname'],
+                 etag='output',
                  response_schema=response_schemas.Host)
 def show_host(params):
     """Show a host"""
     hostname = params['hostname']
     host = watolib.Host.host(hostname)
+    if host is None:
+        return problem(
+            404, 'Host "%s" is not known.' % (hostname,),
+            'The host you asked for is not known. Please check for eventual misspellings.')
     return _serve_host(host)
 
 

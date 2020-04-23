@@ -241,7 +241,9 @@ def endpoint_schema(
                     }
                 }
             }
-            operation_spec['x-code-samples'] = code_samples(path, method, request_schema)
+
+        operation_spec['x-code-samples'] = code_samples(path, method, request_schema,
+                                                        operation_spec)
 
         # If we don't have any parameters we remove the empty list, so the spec will not have it.
         if not operation_spec['parameters']:

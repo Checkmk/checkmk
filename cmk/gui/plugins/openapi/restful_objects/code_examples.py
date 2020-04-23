@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
 import json
+import re
 import threading
 
 import jinja2
@@ -15,42 +16,98 @@ from cmk.gui.plugins.openapi.restful_objects.specification import PARAM_RE, SPEC
 CODE_TEMPLATES_LOCK = threading.Lock()
 
 CODE_TEMPLATE_CURL = """
+API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+USERNAME = "..."
+PASSWORD = "..."
+
 curl \\
     -X {{ request_method | upper }} \\
-    --header "Authorization: Bearer username password" \\
+    --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: application/json" \\
+{%- for header in headers %}
+    --header "{{ header['name'] }}: {{ header['example'] }}" \\
+{%- endfor %}{% if request_schema %}
     -d '{{ request_schema | to_dict | to_json(indent=2) | indent(skip_lines=1, spaces=8) }}' \\
-    {{ request_endpoint | fill_out_parameters }}
+{%- endif %}
+    "$API_URL{{ request_endpoint | fill_out_parameters }}"
 """
 
 CODE_TEMPLATE_HTTPIE = """
-http {{ request_method | upper }} {{ request_endpoint | fill_out_parameters }} \\
-    'Authorization: Bearer username password' \\
+API_URL = "http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+USERNAME = "..."
+PASSWORD = "..."
+
+http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
+    "Authorization: Bearer $USERNAME $PASSWORD"
+{%- for header in headers %} \\
+    '{{ header['name'] }}: {{ header['example'] }}'{% if not loop.last %} \\{% endif %}
+{%- endfor %}{% if request_schema %} \\
     {% for key, value in (request_schema | to_dict).items() -%}
         {{ key }}='{{ value | to_env }}'{% if not loop.last %} \\{% endif %}
     {% endfor -%}
+{% endif %}
 """
 
+# Beware, correct whitespace handling in this template is a bit tricky.
 CODE_TEMPLATE_REQUESTS = """
 import requests
-{% set method = request_method | lower %}
-resp = requests.{{ method }}("{{ request_endpoint | fill_out_parameters }}",
-    headers={'Authorization': 'Bearer username password'},
-    {% if method == "get" %}params{% else %}data{% endif %}={{
+
+session = requests.session()
+session.headers['Authorization'] = 'Bearer username password'
+session.headers['Accept'] = 'application/json'
+{%- set method = request_method | lower %}
+
+# Replace HOST_NAME and SITE_NAME with the names from your host and site.
+API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'
+
+resp = session.{{ method }}(
+    API_URL + "{{ request_endpoint | fill_out_parameters }}",
+{%- for header in headers %}
+{%- if loop.first %}
+    headers={ {% endif %}
+        "{{ header['name'] }}": "{{ header['example'] }}",{% if header['description'] %}  #
+        {%- if header['required'] %} (required){% endif %} {{
+        header['description'] | first_sentence }}{% endif %}
+{%- if loop.last %}
+    },{% endif %}{% endfor %}{% if request_schema %}
+    {% if method == "get" %}params{% else %}json{% endif %}={{
             request_schema |
             to_dict |
             to_json(indent=4, sort_keys=True) |
-            indent(skip_lines=1, spaces=4) }},
+            indent(skip_lines=1, spaces=4) }},{% endif %}
 )
 resp.raise_for_status()
 """
 
 
 def to_env(value):
-    if isinstance(value, dict):
+    if isinstance(value, (list, dict)):
         return json.dumps(value)
 
     return value
+
+
+def first_sentence(text):
+    """Return the first sentence in a string.
+
+    Args:
+        text: Some text. Sentences are separated by dots directly following a word.
+
+    Examples:
+        >>> first_sentence("This is the first part. This is the second part. Or the third.")
+        'This is the first part.'
+
+        >>> first_sentence("This is ... the first part. This is the second part.")
+        'This is ... the first part.'
+
+        >>> first_sentence('This is also a sentence')
+        'This is also a sentence'
+
+    Returns:
+        A string containing only the first sentence of a string.
+
+    """
+    return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
 def to_dict(schema):
@@ -68,7 +125,13 @@ def to_dict(schema):
 
 
 # noinspection PyDefaultArgument
-def code_samples(path, method, request_schema, code_templates=[]):  # pylint: disable=dangerous-default-value
+def code_samples(
+    path,
+    method,
+    request_schema,
+    operation_spec,
+    code_templates=[],
+):  # pylint: disable=dangerous-default-value
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""
@@ -77,12 +140,19 @@ def code_samples(path, method, request_schema, code_templates=[]):  # pylint: di
             if not code_templates:
                 code_templates.append(_build_code_templates())
 
+    headers = []
+    for param in operation_spec.get('parameters', []):
+        if isinstance(param, dict) and param['in'] == 'header':
+            headers.append(param)
+
     return [{
         'lang': language,
         'source': template.render(
             request_endpoint=path,
             request_method=method,
-            request_schema=resolve_schema_instance(request_schema),
+            request_schema=(resolve_schema_instance(request_schema)
+                            if request_schema is not None else None),
+            headers=headers,
         ).strip(),
     } for language, template in code_templates[0].items()]
 
@@ -114,6 +184,7 @@ def _build_code_templates():
     # These functions will be available in the templates
     tmpl_env.filters.update(
         fill_out_parameters=fill_out_parameters,
+        first_sentence=first_sentence,
         indent=indent,
         to_dict=to_dict,
         to_env=to_env,
@@ -128,9 +199,9 @@ def _build_code_templates():
     # NOTE: To add a new code-example, just add them to this OrderedDict. The examples will
     # appear in the order they are put in here.
     return collections.OrderedDict([
+        ('requests', tmpl_env.from_string(CODE_TEMPLATE_REQUESTS)),
         ('curl', tmpl_env.from_string(CODE_TEMPLATE_CURL)),
         ('httpie', tmpl_env.from_string(CODE_TEMPLATE_HTTPIE)),
-        ('requests', tmpl_env.from_string(CODE_TEMPLATE_REQUESTS)),
     ])
 
 

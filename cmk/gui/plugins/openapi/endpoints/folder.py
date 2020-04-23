@@ -33,12 +33,9 @@ from cmk.gui.wsgi.types import DomainObject  # pylint: disable=unused-import
                  response_schema=response_schemas.Folder,
                  etag='output',
                  request_body_required=True,
-                 request_schema=request_schemas.InputFolder)
+                 request_schema=request_schemas.CreateFolder)
 def create(params):
-    """Create a new folder
-
-    This is the long description of the endpoint.
-    """
+    """Create a new folder"""
     put_body = params['body']
     name = put_body['name']
     title = put_body['title']
@@ -182,12 +179,6 @@ def _serialize_folder(folder):
                     ),
                 ]),
             ),
-            'title': constructors.object_property(
-                name='title',
-                value=folder.title(),
-                prop_format='string',
-                base=uri,
-            ),
         },
         extensions={
             'attributes': folder.attributes(),
@@ -197,6 +188,8 @@ def _serialize_folder(folder):
 
 def load_folder(ident, status=404, message=None):
     try:
+        if ident == 'root':
+            return watolib.Folder.root_folder()
         return watolib.Folder.by_id(ident)
     except MKUserError as exc:
         if message is None:

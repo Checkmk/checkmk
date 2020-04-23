@@ -225,15 +225,30 @@ class AttributeDict(plugins.ValueTypedDictSchema):
 
 class DomainObject(Linkable):
     domainType = fields.String(required=True)
+    id = fields.String()
     title = fields.String()
-    members = fields.Nested(ObjectMemberDict)
+    members = fields.Nested(ObjectMemberDict())
 
 
-class Folder(DomainObject):
+class FolderMembers(Schema):
+    hosts = fields.Nested(
+        ObjectPropertyMember(),
+        description="A list of links pointing to the actual host-resources.",
+    )
+    move = fields.Nested(
+        ObjectActionMember(),
+        description="An action which triggers the move of this folder to another folder.",
+    )
+
+
+class Folder(Linkable):
     domainType = fields.Constant(
         "folder",
         required=True,
     )
+    id = fields.String()
+    title = fields.String()
+    members = fields.Nested(FolderMembers(),)
 
 
 class MoveFolder(Schema):
@@ -267,11 +282,22 @@ class ContactGroup(DomainObject):
     )
 
 
-class Host(DomainObject):
+class HostMembers(Schema):
+    folder = fields.Nested(
+        ObjectPropertyMember(),
+        description="The folder in which this host resides. It is represented by a hexadecimal "
+        "identifier which is it's 'primary key'. The folder can be accessed via the "
+        "`self`-link provided in the links array.")
+
+
+class Host(Linkable):
     domainType = fields.Constant(
         "host",
         required=True,
     )
+    id = fields.String()
+    title = fields.String()
+    members = fields.Nested(HostMembers, description="All the members of the host object.")
 
 
 class ObjectAction(Linkable):

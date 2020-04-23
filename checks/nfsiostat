@@ -108,6 +108,6 @@ check_info['nfsiostat'] = {
     'inventory_function': inventory_nfsiostat,
     'check_function': check_nfsiostat,
     'service_description': 'NFS IO stats %s',
-    'group': 'nfsiostat',
+    'group': 'nfsiostats',
     'has_perfdata': True,
 }

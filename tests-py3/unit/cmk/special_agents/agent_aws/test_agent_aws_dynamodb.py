@@ -19,7 +19,12 @@ from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, DynamoDB
                                           DynamoDBSummary, DynamoDBTable)
 
 
-class Paginator:
+class PaginatorTables:
+    def paginate(self):
+        yield {'TableNames': ['TableName-0', 'TableName-1', 'TableName-2']}
+
+
+class PaginatorTags:
     def paginate(self, ResourceArn=None):
         if ResourceArn == 'TableArn-2':  # the third table has no tags
             tags = []
@@ -45,12 +50,6 @@ class FakeDynamoDBClient:
     def describe_limits(self):
         return DynamoDBDescribeLimitsIB.create_instances(amount=1)[0]
 
-    def list_tables(self):
-        return {
-            'TableNames': ['TableName-0', 'TableName-1', 'TableName-2'],
-            'NextMarker': 'string',
-        }
-
     def describe_table(self, TableName=None):
         if TableName not in ['TableName-0', 'TableName-1', 'TableName-2']:
             raise self.exceptions.ResourceNotFoundException
@@ -58,8 +57,10 @@ class FakeDynamoDBClient:
         return {'Table': self._tables[idx]}
 
     def get_paginator(self, operation_name):
+        if operation_name == 'list_tables':
+            return PaginatorTables()
         if operation_name == 'list_tags_of_resource':
-            return Paginator()
+            return PaginatorTags()
         raise NotImplementedError
 
     def list_tags_of_resource(self, ResourceArn=None):

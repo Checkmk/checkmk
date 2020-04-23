@@ -173,7 +173,9 @@ def _describe_dynamodb_tables(client,
                               catch_resource_not_found_excpts=False):
 
     if table_names is None:
-        table_names = get_response_content(client.list_tables(), 'TableNames')
+        table_names = []
+        for page in client.get_paginator('list_tables').paginate():
+            table_names.extend(get_response_content(page, 'TableNames'))
 
     tables = []
     for table_name in table_names:

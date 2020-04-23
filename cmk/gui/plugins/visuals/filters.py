@@ -38,6 +38,7 @@ import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     DualListChoice,
@@ -114,21 +115,21 @@ class FilterUnicode(FilterText):
 
 
 class FilterUnicodeRegExp(FilterUnicode):
-    def _current_value(self):
-        current_value = super(FilterUnicodeRegExp, self)._current_value()
-        if current_value is not None:
-            cmk.gui.utils.validate_regex(current_value)
-
-        return current_value
+    def validate_value(self, value):
+        htmlvar = self.htmlvars[0]
+        try:
+            cmk.gui.utils.validate_regex(value[htmlvar])
+        except Exception as e:
+            raise MKUserError(htmlvar, "%s" % e)
 
 
 class FilterRegExp(FilterText):
-    def _current_value(self):
-        current_value = super(FilterRegExp, self)._current_value()
-        if current_value is not None:
-            cmk.gui.utils.validate_regex(current_value)
-
-        return current_value
+    def validate_value(self, value):
+        htmlvar = self.htmlvars[0]
+        try:
+            cmk.gui.utils.validate_regex(value[htmlvar])
+        except Exception as e:
+            raise MKUserError(htmlvar, "%s" % e)
 
 
 @filter_registry.register

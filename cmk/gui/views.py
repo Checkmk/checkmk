@@ -1515,6 +1515,7 @@ def get_livestatus_filter_headers(view, all_active_filters):
     filterheaders = ""
     for filt in all_active_filters:
         try:
+            filt.validate_value(filt.value())
             header = filt.filter(view.datasource.table)
         except MKUserError as e:
             html.add_user_error(e.varname, e)

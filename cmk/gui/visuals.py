@@ -1371,6 +1371,9 @@ class VisualFilter(ValueSpec):
             raise MKUserError(varprefix,
                               _("The value must be of type dict, but it has type %s") % type(value))
 
+    def validate_value(self, value, varprefix):
+        self._filter.validate_value(value)
+
 
 def SingleInfoSelection(info_keys):
     # type: (List[InfoName]) -> DualListChoice

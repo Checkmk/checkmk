@@ -1587,6 +1587,7 @@ def get_livestatus_filter_headers(view, all_active_filters):
     filterheaders = ""
     for filt in all_active_filters:
         try:
+            filt.validate_value(filt.value())
             # TODO: Argument does not seem to be used anywhere. Remove it
             header = filt.filter(view.datasource.ident)
         except MKUserError as e:

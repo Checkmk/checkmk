@@ -101,7 +101,7 @@ class QuicksearchSnapin(SidebarSnapin):
 # and then tries to verify it is a regex
 def _to_regex(s):
     s = s.replace('*', '.*')
-    cmk.gui.utils.validate_regex(s)
+    cmk.gui.utils.validate_regex(s, varname=None)
 
     return s
 

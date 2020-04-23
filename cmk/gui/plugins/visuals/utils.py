@@ -303,6 +303,10 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         """Whether this filter needs to load host inventory data"""
         return False
 
+    def validate_value(self, value):
+        # type: (Dict) -> None
+        return
+
     def filter_table(self, rows):
         # type: (List[dict]) -> List[dict]
         """post-Livestatus filtering (e.g. for BI aggregations)"""

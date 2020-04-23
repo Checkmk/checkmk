@@ -208,13 +208,13 @@ def get_failed_plugins():
     return list(itertools.chain(*list(_failed_plugins.values())))
 
 
-def validate_regex(regex_value):
-    # type: (str) -> None
+def validate_regex(value, varname):
+    # type: (str, Optional[str]) -> None
     try:
-        re.compile(regex_value)
+        re.compile(value)
     except re.error:
         raise MKUserError(
-            None,
+            varname,
             _('You search statement is not valid. You need to provide a regular '
               'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
               'if you like to search for a single backslash.'))
@@ -223,6 +223,6 @@ def validate_regex(regex_value):
     # check for lookaheads here
     lookahead_pattern = r'\((\?!|\?=|\?<)'
 
-    if re.search(lookahead_pattern, regex_value):
-        raise MKUserError(None,
+    if re.search(lookahead_pattern, value):
+        raise MKUserError(varname,
                           _('You search statement is not valid. You can not use a lookahead here.'))

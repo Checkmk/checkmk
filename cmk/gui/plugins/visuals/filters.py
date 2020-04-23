@@ -105,21 +105,15 @@ class FilterUnicode(FilterText):
 
 
 class FilterUnicodeRegExp(FilterUnicode):
-    def _current_value(self):
-        current_value = super(FilterUnicodeRegExp, self)._current_value()
-        if current_value is not None:
-            cmk.gui.utils.validate_regex(current_value)
-
-        return current_value
+    def validate_value(self, value):
+        htmlvar = self.htmlvars[0]
+        cmk.gui.utils.validate_regex(value[htmlvar], htmlvar)
 
 
 class FilterRegExp(FilterText):
-    def _current_value(self):
-        current_value = super(FilterRegExp, self)._current_value()
-        if current_value is not None:
-            cmk.gui.utils.validate_regex(current_value)
-
-        return current_value
+    def validate_value(self, value):
+        htmlvar = self.htmlvars[0]
+        cmk.gui.utils.validate_regex(value[htmlvar], htmlvar)
 
 
 @filter_registry.register

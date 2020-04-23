@@ -11,25 +11,23 @@ import fnmatch
 import getopt
 import glob
 import grp
+from hashlib import md5
+import json
 import os
 import pwd
 import re
 import shutil
-import socket
 import signal
+import socket
 import sys
 import syslog
+from tarfile import TarFile, ReadError
 import tempfile
 import textwrap
-import time
 import threading
+import time
 import traceback
-import json
-from tarfile import TarFile, ReadError
-from hashlib import md5
-from typing import (  # pylint: disable=unused-import
-    Any, Dict, Optional, IO, NamedTuple, List,
-)
+from typing import Any, Dict, List, NamedTuple, Optional, IO  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -38,7 +36,7 @@ else:
 
 import six
 
-from OpenSSL import crypto
+from OpenSSL import crypto  # type: ignore[import]
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 
@@ -369,7 +367,7 @@ def file_checksum(path):
 class MKTarFile(TarFile):
     def _extract_member(self, tarinfo, targetpath):
         verbose("Extracting %s" % targetpath)
-        # Mypy does not understand that the method exists
+        # NOTE: The typeshed for TarFile is incomplete.
         super(MKTarFile, self)._extract_member(tarinfo, targetpath)  # type: ignore[misc]
 
     def makedir(self, tarinfo, targetpath):
@@ -380,7 +378,7 @@ class MKTarFile(TarFile):
             elif not os.path.isdir(targetpath):
                 os.remove(targetpath)
 
-        # Mypy does not understand that the method exists
+        # NOTE: The typeshed for TarFile is incomplete.
         super(MKTarFile, self).makedir(tarinfo, targetpath)  # type: ignore[misc]
 
     def makelink(self, tarinfo, targetpath):
@@ -390,7 +388,7 @@ class MKTarFile(TarFile):
             else:
                 os.remove(targetpath)
 
-        # Mypy does not understand that the method exists
+        # NOTE: The typeshed for TarFile is incomplete.
         super(MKTarFile, self).makelink(tarinfo, targetpath)  # type: ignore[misc]
 
     def makefile(self, tarinfo, targetpath):
@@ -403,7 +401,7 @@ class MKTarFile(TarFile):
                 shutil.rmtree(targetpath)
 
         try:
-            # Mypy does not understand that the method exists
+            # NOTE: The typeshed for TarFile is incomplete.
             super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
         except IOError as e:
             if e.errno == errno.EISDIR:
@@ -413,13 +411,13 @@ class MKTarFile(TarFile):
                     os.remove(targetpath)
                 else:
                     shutil.rmtree(targetpath)
-                # Mypy does not understand that the method exists
+                # NOTE: The typeshed for TarFile is incomplete.
                 super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
 
             elif e.errno == errno.ETXTBSY:
                 # Fix "IOError: [Errno 26] Text file busy" when replacing a file
                 os.remove(targetpath)
-                # Mypy does not understand that the method exists
+                # NOTE: The typeshed for TarFile is incomplete.
                 super(MKTarFile, self).makefile(tarinfo, targetpath)  # type: ignore[misc]
             else:
                 raise
@@ -429,7 +427,7 @@ class MKTarFile(TarFile):
             verbose("Cleaning up %s" % targetpath)
             os.remove(targetpath)
 
-        # Mypy does not understand that the method exists
+        # NOTE: The typeshed for TarFile is incomplete.
         super(MKTarFile, self).makefifo(tarinfo, targetpath)  # type: ignore[misc]
 
 
@@ -579,20 +577,16 @@ def mode_backup(local_job_id, opts):
         do_backup(opts)
         success = True
 
-    except KeyboardInterrupt:
-        raise
-
     except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
 
     except Exception:
-        if not opt_debug:
-            sys.stderr.write("An exception occured:\n")
-            sys.stderr.write(traceback.format_exc())
-        else:
+        if opt_debug:
             raise
+        sys.stderr.write("An exception occured:\n")
+        sys.stderr.write(traceback.format_exc())
 
     finally:
         stop_logging()
@@ -1462,20 +1456,16 @@ def mode_restore(target_id, backup_id, opts):
         do_restore(opts, info)
         success = True
 
-    except KeyboardInterrupt:
-        raise
-
     except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
 
     except Exception:
-        if not opt_debug:
-            sys.stderr.write("An exception occured:\n")
-            sys.stderr.write(traceback.format_exc())
-        else:
+        if opt_debug:
             raise
+        sys.stderr.write("An exception occured:\n")
+        sys.stderr.write(traceback.format_exc())
 
     finally:
         stop_logging()

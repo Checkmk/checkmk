@@ -682,47 +682,39 @@ def do_site_backup(opts, site=None, try_stop=True):
         raise MKGeneralException("Site backup failed: %s" % err)
 
 
-def stop_site(site):
-    site_arg = [site] if is_root() else []
-
-    omd_command("stop", *site_arg)
-
-    for c in range(5):
-        if subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull,
-                                                                               "w")) == 1:
-            break
-        if c == 4:
-            raise MKGeneralException("Failed to stop site")
-
-
 def start_site(site):
+    # type: (str) -> None
+    start_stop_site(site, "start", 0)
+
+
+def stop_site(site):
+    # type: (str) -> None
+    start_stop_site(site, "stop", 1)
+
+
+def start_stop_site(site, command, expected_return_code):
+    # type: (str, str, int) -> None
     site_arg = [site] if is_root() else []
-
-    omd_command("start", *site_arg)
-
-    for c in range(5):
-        if subprocess.call([
-                "omd",
-                "status",
-                "--bare",
-        ] + site_arg, stdout=open(os.devnull, "w")) == 0:
-            break
-        if c == 4:
-            raise MKGeneralException("Failed to start site")
+    omd_command(["omd", command] + site_arg)
+    for _c in range(5):
+        with open(os.devnull, "wb") as f:
+            if subprocess.call(["omd", "status", "--bare"] + site_arg,
+                               stdout=f) == expected_return_code:
+                return
+    raise MKGeneralException("Failed to %s site" % command)
 
 
-def omd_command(*args):
-    cmd = ["omd"] + list(args)
+def omd_command(cmd):
+    # type: (List[str]) -> None
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        stdin=open(os.devnull),
-        close_fds=True,
-        encoding="utf-8",
-    )
-    stdout, _stderr = p.communicate()
+    with open(os.devnull, "r") as f:
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=f,
+                             close_fds=True,
+                             encoding="utf-8")
+        stdout, _stderr = p.communicate()
     verbose(stdout)
     if p.returncode != 0:
         raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))

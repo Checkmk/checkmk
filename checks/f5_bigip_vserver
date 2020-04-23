@@ -186,29 +186,31 @@ def check_f5_bigip_vserver(_item, params, data):
 
 
 check_info["f5_bigip_vserver"] = {
-    "parse_function"          : parse_f5_bigip_vserver,
-    "check_function"          : check_f5_bigip_vserver,
-    "inventory_function"      : inventory_f5_bigip_vserver,
-    "group"                   : "f5_bigip_vserver",
-    "service_description"     : "Virtual Server %s",
-    "has_perfdata"            : True,
-    "snmp_info"               : (".1.3.6.1.4.1.3375.2.2.10", [
-                                    "13.2.1.1", #  0 ltmVsStatusName
-                                    "13.2.1.2", #  1 ltmVsStatusAvailState
-                                    "13.2.1.3", #  2 ltmVsStatusEnabledState
-                                    "13.2.1.5", #  3 ltmVsStatusDetailReason
-                                    "1.2.1.3",  #  4 IP Address
-                                    "2.3.1.2",  #  5 min conn duration
-                                    "2.3.1.3",  #  6 max conn duration
-                                    "2.3.1.4",  #  7 mean connection duration
-                                    "2.3.1.6",  #  8 Client Packets In
-                                    "2.3.1.8",  #  9 Client Packets Out
-                                    "2.3.1.7",  # 10 Client Bytes In
-                                    "2.3.1.9",  # 11 Client Bytes Out
-                                    "2.3.1.11", # 12 Client Total Connections
-                                    "2.3.1.12", # 13 Client Current Connections
-                                    "2.3.1.25", # 14 packet_velocity_asic Total Connections
-                               ]),
-    "snmp_scan_function"      : lambda oid: ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") \
-                                      and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
+    "parse_function": parse_f5_bigip_vserver,
+    "check_function": check_f5_bigip_vserver,
+    "inventory_function": inventory_f5_bigip_vserver,
+    "group": "f5_bigip_vserver",
+    "service_description": "Virtual Server %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3375.2.2.10",
+        [
+            "13.2.1.1",  #  0 ltmVsStatusName
+            "13.2.1.2",  #  1 ltmVsStatusAvailState
+            "13.2.1.3",  #  2 ltmVsStatusEnabledState
+            "13.2.1.5",  #  3 ltmVsStatusDetailReason
+            "1.2.1.3",  #  4 IP Address
+            "2.3.1.2",  #  5 min conn duration
+            "2.3.1.3",  #  6 max conn duration
+            "2.3.1.4",  #  7 mean connection duration
+            "2.3.1.6",  #  8 Client Packets In
+            "2.3.1.8",  #  9 Client Packets Out
+            "2.3.1.7",  # 10 Client Bytes In
+            "2.3.1.9",  # 11 Client Bytes Out
+            "2.3.1.11",  # 12 Client Total Connections
+            "2.3.1.12",  # 13 Client Current Connections
+            "2.3.1.25",  # 14 packet_velocity_asic Total Connections
+        ]),
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") and
+                          "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
 }

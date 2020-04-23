@@ -652,7 +652,7 @@ def do_site_backup(opts, site=None, try_stop=True):
             backup_file.write(chunk)
 
     if p.returncode != 0:
-        err = p.stderr.read()
+        err = six.ensure_str(p.stderr.read())
         if not compress_archives() and "Invalid option '--no-compression'" in err:
             err = "The Check_MK version of this site does not support uncompressed backups. " \
                   "you can either re-enable the compression or update your site to version " \
@@ -749,7 +749,7 @@ class MKBackupStream(object):
         # needs to be unique per key per message. Normally, it's sent alongside
         # the data in cleartext. Here, since the key is only ever used once,
         # you can use a known IV.
-        self._iv = '\x00' * AES.block_size
+        self._iv = b'\x00' * AES.block_size
 
     def process(self):
         head = self._init_processing()

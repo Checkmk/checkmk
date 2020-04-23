@@ -22,7 +22,7 @@ def parse_sap_hana_status(info):
                     "instance": sid_instance,
                     'version': line[2],
                 }
-            parsed.setdefault(item_name, {}).setdefault(node, item_data)
+            parsed.setdefault("%s %s" % (item_name, sid_instance), {}).setdefault(node, item_data)
     return parsed
 
 
@@ -49,7 +49,7 @@ def check_sap_hana_status(item, params, node_data):
         yield 0, 'Nodes: %s' % ", ".join(nodes)
 
     for data in node_data.values():
-        if item == 'Status':
+        if 'Status' in item:
             yield _check_sap_hana_status_data(data)
         else:
             yield 0, "Version: %s" % data['version']

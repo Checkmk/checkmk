@@ -10,5 +10,5 @@ node('windows') {
     }
     windows.build(
         TARGET: 'test_integration'
-    ) 
+    )
 }

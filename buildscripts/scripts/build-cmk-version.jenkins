@@ -68,41 +68,41 @@ def DOCKER_REGISTRY_NO_HTTP
 //
 // MAIN
 //
-try {
-    node(NODE) {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
-                stage('Checkout sources') {
-                    cleanup_work_directories(DAILY_DATA)
-                    dir("${DAILY_DATA}/git") {
-                        checkout_git(scm, VERSION)
-                        // Load libraries
-                        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-                        windows = load 'buildscripts/scripts/lib/windows.groovy'
-                        str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-                        notify = load 'buildscripts/scripts/lib/notify.groovy'
-                        withFolderProperties{
-                            DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
-                        }
-
-                        patch_themes(EDITION)
-                        patch_demo(DEMO)
-                        set_version(CMK_VERS)
-                        BRANCH_VERSION = versioning.get_branch_version()
-
-                        DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-
-                        // Remember files needed for building the windows agent on the windows node later
-                        stash(
-                            name: 'WinDep',
-                            includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
-                        )
+node(NODE) {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
+            stage('Checkout sources') {
+                cleanup_work_directories(DAILY_DATA)
+                dir("${DAILY_DATA}/git") {
+                    checkout_git(scm, VERSION)
+                    // Load libraries
+                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                    windows = load 'buildscripts/scripts/lib/windows.groovy'
+                    str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+                    notify = load 'buildscripts/scripts/lib/notify.groovy'
+                    withFolderProperties{
+                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
                     }
+
+                    patch_themes(EDITION)
+                    patch_demo(DEMO)
+                    set_version(CMK_VERS)
+                    BRANCH_VERSION = versioning.get_branch_version()
+
+                    DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+
+                    // Remember files needed for building the windows agent on the windows node later
+                    stash(
+                        name: 'WinDep',
+                        includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, omd/packages/yaml-cpp/**/*, cmk/utils/**/*'
+                    )
                 }
             }
         }
     }
+}
 
+try {
     if (!params.FAKE_WINDOWS_ARTIFACTS) {
         AGENT_LIST.each { AGENT ->
             AGENT_BUILDS['build agent ' + AGENT] = {

@@ -19,19 +19,23 @@ node (NODE) {
         COMMON_IMAGE.inside('--ulimit nofile=1024:1024 --init') {
             stage('checkout sources') {
                 checkout(scm)
+                notify = load 'buildscripts/scripts/lib/notify.groovy'
             }
+            try {
+                stage('test pipenv dependencies') {
+                    dir ('tests-py3') {
+                        def EXIT_CODE = sh(
+                            script: "make test-pipenv-deps",
+                            returnStatus: true
+                        )
 
-            stage('test pipenv dependencies') {
-                dir ('tests-py3') {
-                    def EXIT_CODE = sh(
-                        script: "make test-pipenv-deps",
-                        returnStatus: true
-                    )
-
-                    if (EXIT_CODE != 0) {
-                        unstable("Exit code was: " + EXIT_CODE);
+                        if (EXIT_CODE != 0) {
+                            unstable("Exit code was: " + EXIT_CODE);
+                        }
                     }
                 }
+            }catch(Exception e) {
+                notify.notify_error(e)
             }
         }
     }

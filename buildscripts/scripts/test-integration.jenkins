@@ -29,14 +29,19 @@ currentBuild.description = '\nVersion: ' + VERSION + '\nEdition: ' + EDITION + '
 node (NODE) {
     stage('checkout sources') {
         checkout(scm)
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
         versioning = load 'buildscripts/scripts/lib/versioning.groovy'
         integration= load 'buildscripts/scripts/lib/integration.groovy'
     }
-    integration.build(
-        DISTRO_LIST: DISTRO_LIST,
-        EDITION: EDITION,
-        VERSION: VERSION,
-        DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), DOCKER_TAG, DOCKER_TAG_DEFAULT),
-        MAKE_TARGET: "test-integration-docker",
-    )
+    try {
+        integration.build(
+            DISTRO_LIST: DISTRO_LIST,
+            EDITION: EDITION,
+            VERSION: VERSION,
+            DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), DOCKER_TAG, DOCKER_TAG_DEFAULT),
+            MAKE_TARGET: "test-integration-docker",
+        )
+    }catch(Exception e) {
+        notify.notify_error(e)
+    }
 }

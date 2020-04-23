@@ -26,6 +26,7 @@ node (NODE) {
             stage('checkout sources') {
                 checkout(scm)
                 // Load libraries
+                notify = load 'buildscripts/scripts/lib/notify.groovy'
                 str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
                 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
 
@@ -35,25 +36,29 @@ node (NODE) {
                 BRANCH_VERSION = versioning.get_branch_version()
             }
 
-            DISTRO_LIST.each { DISTRO ->
-                DOCKER_BUILDS[DISTRO] = {
-                    def IMAGE
-                    stage('build ' + DISTRO) {
-                        dir('buildscripts/infrastructure/build-nodes') {
-                            def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                            withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                                IMAGE = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' --build-arg BRANCH_VERSION='$BRANCH_VERSION' -f $DISTRO/Dockerfile .")
+            try {
+                DISTRO_LIST.each { DISTRO ->
+                    DOCKER_BUILDS[DISTRO] = {
+                        def IMAGE
+                        stage('build ' + DISTRO) {
+                            dir('buildscripts/infrastructure/build-nodes') {
+                                def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+                                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                    IMAGE = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL' --build-arg DISTRO='$DISTRO' --build-arg NEXUS_USERNAME='$USERNAME' --build-arg NEXUS_PASSWORD='$PASSWORD' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' --build-arg BRANCH_VERSION='$BRANCH_VERSION' -f $DISTRO/Dockerfile .")
+                                }
                             }
                         }
-                    }
 
-                    stage('upload ' + DISTRO) {
-                        IMAGE.push()
-                        IMAGE.push(BRANCH + '-latest')
+                        stage('upload ' + DISTRO) {
+                            IMAGE.push()
+                            IMAGE.push(BRANCH + '-latest')
+                        }
                     }
                 }
+                parallel DOCKER_BUILDS
+            }catch(Exception e) {
+                notify.notify_error(e)
             }
-            parallel DOCKER_BUILDS
         }
     }
 }

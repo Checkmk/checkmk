@@ -105,6 +105,7 @@ def _filter_discovery(
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
+            yield element
 
     return filtered_generator
 
@@ -122,6 +123,7 @@ def _filter_check(
         for element in generator(*args, **kwargs):
             if not isinstance(element, (Result, Metric, IgnoreResults)):
                 raise TypeError("unexpected type in check function: %r" % type(element))
+            yield element
 
     return filtered_generator
 

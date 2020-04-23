@@ -148,6 +148,105 @@ class SectionStore:
         return sections
 
 
+class FileCache:
+    def __init__(
+        self,
+        path,  # type: str
+        max_cachefile_age,  # type: Optional[int]
+        is_agent_cache_disabled,  # type: bool
+        may_use_cache_file,  # type: bool
+        use_outdated_cache_file,  # type: bool
+        from_cache_file,
+        to_cache_file,
+        logger,  # type: logging.Logger
+    ):
+        # type (...) -> None
+        super(FileCache, self).__init__()
+        self.path = path
+        self._max_cachefile_age = max_cachefile_age
+        self._is_agent_cache_disabled = is_agent_cache_disabled
+        self._may_use_cache_file = may_use_cache_file
+        self._use_outdated_cache_file = use_outdated_cache_file
+        self._from_cache_file = from_cache_file
+        self._to_cache_file = to_cache_file
+        self._logger = logger
+
+    @classmethod
+    def from_source(cls, source):
+        # type: (DataSource) -> FileCache
+        return cls(
+            source._cache_file_path(),
+            source._max_cachefile_age,
+            source.is_agent_cache_disabled(),
+            source.get_may_use_cache_file(),
+            source._use_outdated_cache_file,
+            source._from_cache_file,
+            source._to_cache_file,
+            source._logger,
+        )
+
+    def read(self):
+        # type: () -> Optional[BoundedAbstractRawData]
+        assert self._max_cachefile_age is not None
+
+        cachefile = self.path
+
+        if not os.path.exists(cachefile):
+            self._logger.debug("Not using cache (Does not exist)")
+            return None
+
+        if self._is_agent_cache_disabled:
+            self._logger.debug("Not using cache (Cache usage disabled)")
+            return None
+
+        if not self._may_use_cache_file and not config.simulation_mode:
+            self._logger.debug("Not using cache (Don't try it)")
+            return None
+
+        may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
+        cachefile_age = cmk.utils.cachefile_age(cachefile)
+        if not may_use_outdated and cachefile_age > self._max_cachefile_age:
+            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
+                               (cachefile_age, self._max_cachefile_age))
+            return None
+
+        # TODO: Use some generic store file read function to generalize error handling,
+        # but there is currently no function that simply reads data from the file
+        result = open(cachefile, 'rb').read()
+        if not result:
+            self._logger.debug("Not using cache (Empty)")
+            return None
+
+        self._logger.log(VERBOSE, "Using data from cache file %s", cachefile)
+        return self._from_cache_file(result)
+
+    def write(self, raw_data):
+        # type: (BoundedAbstractRawData) -> None
+        if self._is_agent_cache_disabled:
+            self._logger.debug("Not writing data to cache file (Cache usage disabled)")
+            return
+
+        cachefile = self.path
+
+        try:
+            try:
+                os.makedirs(os.path.dirname(cachefile))
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
+        except Exception as e:
+            raise MKGeneralException("Cannot create directory %r: %s" %
+                                     (os.path.dirname(cachefile), e))
+
+        self._logger.debug("Write data to cache file %s" % (cachefile))
+        try:
+            store.save_file(cachefile, self._to_cache_file(raw_data))
+        except Exception as e:
+            raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
+
+
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
 
 
@@ -308,7 +407,8 @@ class DataSource(
         CheckMKAgentDataSource sources. The SNMPDataSource source already
         return the final info data structure.
         """
-        raw_data = self._read_cache_file()
+        file_cache = FileCache.from_source(self)
+        raw_data = file_cache.read()
         if raw_data:
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
@@ -318,7 +418,7 @@ class DataSource(
 
         self._logger.log(VERBOSE, "Execute data source")
         raw_data = self._execute()
-        self._write_cache_file(raw_data)
+        file_cache.write(raw_data)
         return raw_data, False
 
     @abc.abstractmethod
@@ -332,67 +432,6 @@ class DataSource(
         CheckMKAgentDataSource sources. The SNMPDataSource source already
         return the final data structure to be wrapped into HostSections()."""
         raise NotImplementedError()
-
-    def _read_cache_file(self):
-        # type: () -> Optional[BoundedAbstractRawData]
-        assert self._max_cachefile_age is not None
-
-        cachefile = self._cache_file_path()
-
-        if not os.path.exists(cachefile):
-            self._logger.debug("Not using cache (Does not exist)")
-            return None
-
-        if self.is_agent_cache_disabled():
-            self._logger.debug("Not using cache (Cache usage disabled)")
-            return None
-
-        if not self._may_use_cache_file and not config.simulation_mode:
-            self._logger.debug("Not using cache (Don't try it)")
-            return None
-
-        may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
-        cachefile_age = cmk.utils.cachefile_age(cachefile)
-        if not may_use_outdated and cachefile_age > self._max_cachefile_age:
-            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                               (cachefile_age, self._max_cachefile_age))
-            return None
-
-        # TODO: Use some generic store file read function to generalize error handling,
-        # but there is currently no function that simply reads data from the file
-        result = open(cachefile, 'rb').read()
-        if not result:
-            self._logger.debug("Not using cache (Empty)")
-            return None
-
-        self._logger.log(VERBOSE, "Using data from cache file %s", cachefile)
-        return self._from_cache_file(result)
-
-    def _write_cache_file(self, raw_data):
-        # type: (BoundedAbstractRawData) -> None
-        if self.is_agent_cache_disabled():
-            self._logger.debug("Not writing data to cache file (Cache usage disabled)")
-            return
-
-        cachefile = self._cache_file_path()
-
-        try:
-            try:
-                os.makedirs(os.path.dirname(cachefile))
-            except OSError as e:
-                if e.errno == errno.EEXIST:
-                    pass
-                else:
-                    raise
-        except Exception as e:
-            raise MKGeneralException("Cannot create directory %r: %s" %
-                                     (os.path.dirname(cachefile), e))
-
-        self._logger.debug("Write data to cache file %s" % (cachefile))
-        try:
-            store.save_file(cachefile, self._to_cache_file(raw_data))
-        except Exception as e:
-            raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
     @abc.abstractmethod
     def _empty_raw_data(self):

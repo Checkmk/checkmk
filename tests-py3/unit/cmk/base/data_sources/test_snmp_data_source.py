@@ -6,8 +6,10 @@
 
 import os
 from contextlib import suppress
+from pathlib import Path
 
 import pytest  # type: ignore[import]
+from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -18,9 +20,10 @@ from cmk.base.api.agent_based.section_types import (
     OIDEnd,
 )
 from cmk.base.data_sources.abstract import DataSource
+from cmk.base.data_sources.abstract import FileCache, store
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
-from cmk.base.snmp_utils import SNMPTable
+from cmk.base.snmp_utils import RawSNMPData, SNMPTable
 from testlib.base import Scenario
 
 
@@ -72,21 +75,57 @@ def test_disable_data_source_cache_no_read(mocker, monkeypatch):
     source.disable_data_source_cache()
 
     mocker.patch.object(os.path, "exists", return_value=True)
-
     disabled_checker = mocker.patch.object(source, "is_agent_cache_disabled")
-    assert source._read_cache_file() is None
+
+    file_cache = FileCache.from_source(source)
+    assert file_cache.read() is None
+
     disabled_checker.assert_called_once()
 
 
 def test_disable_data_source_cache_no_write(mocker, monkeypatch):
+    # Beginning of setup.
     Scenario().add_host("hostname").apply(monkeypatch)
     source = SNMPDataSource("hostname", "ipaddress")
     source.disable_data_source_cache()
 
     disabled_checker = mocker.patch.object(source, "is_agent_cache_disabled")
     table = []  # type: SNMPTable
-    source._write_cache_file({"X": table})
+    raw_data = {"X": table}  # type: RawSNMPData
+    # End of setup.
+
+    file_cache = FileCache.from_source(source)
+    file_cache.write(raw_data)
+
     disabled_checker.assert_called_once()
+
+
+@patchfs
+def test_write_file_cache(monkeypatch, fs):
+    # Beginning of setup.
+    Scenario().add_host("hostname").apply(monkeypatch)
+    source = SNMPDataSource("hostname", "ipaddress")
+    source.set_max_cachefile_age(999)
+    source.set_may_use_cache_file()
+
+    # Patch I/O: It is good enough to patch `store.save_file()`
+    # as pyfakefs takes care of the rest.
+    monkeypatch.setattr(store, "save_file",
+                        lambda path, contents: fs.create_file(path, contents=contents))
+
+    file_cache = FileCache.from_source(source)
+
+    table = []  # type: SNMPTable
+    raw_data = {"X": table}  # type: RawSNMPData
+    # End of setup.
+
+    assert source.is_agent_cache_disabled() is False
+    assert not Path(file_cache.path).exists()
+
+    file_cache.write(raw_data)
+
+    assert Path(file_cache.path).exists() is True
+    assert Path(file_cache.path).read_bytes() == source._to_cache_file(raw_data)
 
 
 def test_snmp_ipaddress_from_mgmt_board(monkeypatch):

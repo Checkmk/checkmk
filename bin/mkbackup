@@ -689,7 +689,7 @@ def stop_site(site):
         if subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull,
                                                                                "w")) == 1:
             break
-        elif c == 4:
+        if c == 4:
             raise MKGeneralException("Failed to stop site")
 
 
@@ -705,7 +705,7 @@ def start_site(site):
                 "--bare",
         ] + site_arg, stdout=open(os.devnull, "w")) == 0:
             break
-        elif c == 4:
+        if c == 4:
             raise MKGeneralException("Failed to start site")
 
 
@@ -780,8 +780,7 @@ class MKBackupStream(object):
         except ValueError:
             if self._stream.closed:
                 return ""  # handle EOF transparently
-            else:
-                raise
+            raise
 
     def _read_chunk(self):
         raise NotImplementedError()
@@ -911,7 +910,7 @@ class RestoreStream(MKBackupStream):
             self._next_chunk = this_chunk
             return "", False
 
-        elif len(this_chunk) == 0:
+        if len(this_chunk) == 0:
             # Processing last chunk. Stip off padding.
             padding_length = ord(self._next_chunk[-1])
             chunk = self._next_chunk[:-padding_length]
@@ -932,8 +931,7 @@ class RestoreStream(MKBackupStream):
                 c = self._stream.read(1)
                 if c == "\0":
                     break
-                else:
-                    buf += c
+                buf += c
             return buf
 
         file_version = read_field()
@@ -986,9 +984,8 @@ class RestoreStream(MKBackupStream):
                                      "version. You need to use a Check_MK 1.4 version that has "
                                      "been released before 2017-03-24. The last compatible "
                                      "release is 1.4.0b4.")
-        else:
-            cipher_rsa = PKCS1_OAEP.new(private_key)
-            return cipher_rsa.decrypt(encrypted_secret_key)
+        cipher_rsa = PKCS1_OAEP.new(private_key)
+        return cipher_rsa.decrypt(encrypted_secret_key)
 
 
 # Returns the base path for the backup to work with. In backup mode, this is
@@ -1123,8 +1120,7 @@ def verify_backup_files(info, files, needed):
             if needed:
                 raise MKGeneralException("The backup is missing the needed archive %s." %
                                          archive_file)
-            else:
-                continue  # missing optional files are OK
+            continue  # missing optional files are OK
 
         archive_path = "%s/%s" % (backup_base_path(), archive_file)
         this_checksum = file_checksum(archive_path)
@@ -1141,8 +1137,7 @@ def do_system_backup(opts):
     except OSError as e:
         if e.errno == errno.EACCES:
             raise MKGeneralException("Failed to create the backup directory: %s" % e)
-        else:
-            raise
+        raise
 
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix())
@@ -1290,8 +1285,7 @@ def cleanup_previous_incomplete_backup():
         except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
-            else:
-                raise
+            raise
 
 
 def load_job(local_job_id):
@@ -1669,7 +1663,7 @@ def enable_drbd_ip_addresses():
     config = cma_net.current_interface_config(drbd_if)
     if cma_net.is_vlan_config(config):
         return None
-    elif cma_net.is_vlan_interface(drbd_if):
+    if cma_net.is_vlan_interface(drbd_if):
         config = config["ip"]
 
     address, netmask = config["ipaddress"], config["netmask"]
@@ -1976,7 +1970,7 @@ def main():
     if len(mode_args) != len(mode.args):
         usage("Invalid number of arguments for this mode")
 
-    opt_dict = dict([(k.lstrip("-"), v) for k, v in opts + mode_opts])
+    opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
 
     globals()["mode_%s" % mode_name](*mode_args, opts=opt_dict)
 

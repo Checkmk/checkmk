@@ -33,7 +33,7 @@ def parse_ucd_mem(string_table):
             'MemTotal': _info_str_to_bytes(info[0][0]),
             'MemAvail': _info_str_to_bytes(info[0][1]),
         }
-    except ValueError:
+    except (IndexError, ValueError):
         return {}
 
     # optional memory values

@@ -237,6 +237,12 @@ SYSTEM_VALUE FROM  M_INIFILE_CONTENTS WHERE  FILE_NAME IN ('indexserver.ini',
 QUERY
 }
 
+function query_sap_hana_ess_migration () {
+    cat << QUERY
+select value from _SYS_STATISTICS.STATISTICS_PROPERTIES where key = 'internal.installation.state'
+QUERY
+}
+
 
 function query_sap_hana_memrate () {
     local hostname="$1"
@@ -462,6 +468,10 @@ function do_query () {
     echo "$INSTANCE_NAME"
     mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_started "$HOSTNAME")"
     mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_active)"
+
+    echo "<<<sap_hana_ess_migration:sep(59)>>>"
+    echo "$INSTANCE_NAME"
+    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_migration)"
 
     echo "<<<sap_hana_memrate:sep(59)>>>"
     echo "$INSTANCE_NAME"

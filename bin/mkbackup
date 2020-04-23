@@ -27,7 +27,7 @@ import textwrap
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, NamedTuple, Optional, IO  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, IO, List, NamedTuple, Optional  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -38,6 +38,7 @@ import six
 
 from OpenSSL import crypto  # type: ignore[import]
 from Cryptodome.Cipher import AES, PKCS1_OAEP
+from Cryptodome.Cipher._mode_cbc import CbcMode
 from Cryptodome.PublicKey import RSA
 
 import cmk.utils.daemon as daemon
@@ -276,7 +277,8 @@ def load_config():
 
 # TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path):
-    info = json.load(open(path))
+    with open(path) as f:
+        info = json.load(f)
 
     # Load the backup_id from the second right path component. This is the
     # base directory of the mkbackup.info file. The user might have moved
@@ -736,13 +738,14 @@ def omd_command(*args):
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream(object):
     def __init__(self, stream, is_alive, key_ident):
+        # type: (IO[bytes], Callable[[], bool], Any) -> None
         self._stream = stream
         self._is_alive = is_alive
-        self._cipher = None
+        self._cipher = None  # type: Optional[CbcMode]
         self._key_ident = key_ident
 
         self._last_state_update = time.time()
-        self._last_bps = None
+        self._last_bps = None  # type: Optional[float]
         self._bytes_copied = 0
 
         # The iv is an initialization vector for the CBC mode of operation. It
@@ -775,11 +778,12 @@ class MKBackupStream(object):
         raise NotImplementedError()
 
     def _read_from_stream(self, size):
+        # type: (int) -> bytes
         try:
             return self._stream.read(size)
         except ValueError:
             if self._stream.closed:
-                return ""  # handle EOF transparently
+                return b""  # handle EOF transparently
             raise
 
     def _read_chunk(self):
@@ -805,6 +809,7 @@ class MKBackupStream(object):
             self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
 
     def _get_key_spec(self, key_id):
+        # type: (bytes)  -> Dict[str, bytes]
         keys = self._load_backup_keys()
 
         for key in keys.values():
@@ -814,7 +819,9 @@ class MKBackupStream(object):
 
         raise MKGeneralException("Failed to load the configured backup key: %s" % key_id)
 
+    # TODO: The return type is a bit questionable...
     def _load_backup_keys(self):
+        # type: () -> Dict[str, Dict[str, bytes]]
         if is_root():
             path = "/etc/cma/backup_keys.conf"
         else:
@@ -823,6 +830,7 @@ class MKBackupStream(object):
         variables = {"keys": {}}  # type: Dict[str, Dict[str, Any]]
         if os.path.exists(path):
             exec(open(path).read(), variables, variables)
+        # TODO: Verify value of keys.
         return variables["keys"]
 
 
@@ -831,7 +839,9 @@ class BackupStream(MKBackupStream):
         if self._encrypt():
             secret_key, encrypted_secret_key = self._derive_key(self._get_encryption_public_key(),
                                                                 32)
-            self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+            cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+            assert isinstance(cipher, CbcMode)
+            self._cipher = cipher
 
             # Write out a file version marker and  the encrypted secret key, preceded by
             # a length indication. All separated by \0.
@@ -894,7 +904,9 @@ class RestoreStream(MKBackupStream):
 
         file_version, encrypted_secret_key = self._read_encrypted_secret_key()
         secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key)
-        self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+        assert isinstance(cipher, CbcMode)
+        self._cipher = cipher
 
     def _read_chunk(self):
         if not self._encrypt():
@@ -926,10 +938,11 @@ class RestoreStream(MKBackupStream):
 
     def _read_encrypted_secret_key(self):
         def read_field():
-            buf = ""
+            # type: () -> bytes
+            buf = b""
             while True:
                 c = self._stream.read(1)
-                if c == "\0":
+                if c == b"\0":
                     break
                 buf += c
             return buf
@@ -949,7 +962,7 @@ class RestoreStream(MKBackupStream):
 
         encrypted_secret_key = self._stream.read(int(key_len))
 
-        if self._stream.read(1) != "\0":
+        if self._stream.read(1) != b"\0":
             raise MKGeneralException("Failed to parse the encrypted backup file (header broken)")
 
         return file_version, encrypted_secret_key
@@ -966,8 +979,8 @@ class RestoreStream(MKBackupStream):
 
         # First decrypt the private key using PyOpenSSL (was unable to archieve
         # this with RSA.importKey(). :-(
-        key = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"], passphrase)
-        priv_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
+        pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"], passphrase)
+        priv_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
         try:
             return RSA.importKey(priv_pem)

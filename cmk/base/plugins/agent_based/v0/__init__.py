@@ -33,7 +33,7 @@ from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.snmp_utils import OIDCached, OIDBytes
 
-from . import register
+from . import register, state
 
 __all__ = [
     # register functions
@@ -62,6 +62,7 @@ __all__ = [
     "not_equals",
     "not_exists",
     # CHECKING related
+    "state",
     # persising values
     "get_value_store",
     # utils

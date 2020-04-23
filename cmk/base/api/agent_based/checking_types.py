@@ -114,11 +114,30 @@ class Service:
 
 
 @enum.unique
-class state(enum.IntEnum):
+class state(enum.Enum):
+    # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
     OK = 0
     WARN = 1
     CRIT = 2
     UNKNOWN = 3
+
+    def __int__(self):
+        return int(self.value)
+
+
+def state_worst(*args):
+    # type: (*state) -> state
+    """Returns the worst of all passed states
+
+    You can pass an arbitrary number of arguments, and the return value will be
+    the "worst" of them, where
+
+        `OK < WARN < UNKNOWN < CRIT`
+    """
+    # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
+    if state.CRIT in args or 2 in args:
+        return state.CRIT
+    return state(max(int(s or 0) for s in args))
 
 
 class MetricFloat(float):
@@ -217,12 +236,11 @@ class Metric:
                                                          self.value, self.levels, self.boundaries)
 
 
-class Result(
-        NamedTuple("ResultTuple", [
-            ("state", Optional[state]),
-            ("summary", Optional[str]),
-            ("details", Optional[str]),
-        ])):
+class Result(NamedTuple("ResultTuple", [
+    ("state", state),
+    ("summary", str),
+    ("details", str),
+])):
 
     _state_class = state  # avoid shadowing by keyword called "state"
 
@@ -247,9 +265,9 @@ class Result(
 
         return super(Result, cls).__new__(
             cls,
-            state=state,
-            summary=summary or None,
-            details=details or None,
+            state=cls._state_class(state or cls._state_class.OK),
+            summary=summary or "",
+            details=details or "",
         )
 
 

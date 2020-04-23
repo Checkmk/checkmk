@@ -12,11 +12,12 @@ from cmk.base.api.agent_based.checking_types import (
     Parameters,
     ServiceLabel,
     Service,
-    state,
     MetricFloat,
     Metric,
     Result,
 )
+# get the exposed version for states (so we have state.worst)
+from cmk.base.plugins.agent_based.v0 import state  # type: ignore[import]
 
 
 @pytest.mark.parametrize("data", [
@@ -100,17 +101,18 @@ def test_service_features():
 
 
 def test_state():
-    assert state(0) is state.OK
-    assert state.OK == 0
+    assert int(state.OK) == 0
+    assert int(state.WARN) == 1
+    assert int(state.CRIT) == 2
+    assert int(state.UNKNOWN) == 3
 
-    assert state(1) is state.WARN
-    assert state.WARN == 1
+    assert state.worst(state.WARN, state.UNKNOWN, state.CRIT) == state.CRIT
+    assert state.worst(state.OK, state.WARN, state.UNKNOWN) == state.UNKNOWN
+    assert state.worst(state.OK, state.WARN) == state.WARN
+    assert state.worst(state.OK) == state.OK
 
-    assert state(2) is state.CRIT
-    assert state.CRIT == 2
-
-    assert state(3) is state.UNKNOWN
-    assert state.UNKNOWN == 3
+    with pytest.raises(TypeError):
+        _ = state.OK < state.WARN  # type: ignore[operator]
 
 
 def test_metric_float():
@@ -178,10 +180,10 @@ def test_result():
     assert result.summary == "moooo"
     assert result.details == "I'm a cow and I will chill out all day."
 
-    result = Result(summary="info", details="")
-    assert result.state is None
+    result = Result(summary="info", details=None)
+    assert result.state is state.OK
     assert result.summary == "info"
-    assert result.details is None
+    assert result.details == ""
 
 
 def test_ignore_results():

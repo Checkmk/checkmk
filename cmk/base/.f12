@@ -24,7 +24,7 @@ sudo rsync \
     --exclude=cme.py \
     -a * $ROOT/lib/python3/cmk/base/
 
-# Ensure cmk.base is a namespace package
+# Ensure cmk.base[.cee] is a namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/base/__init__.py" \
     "$ROOT/lib/python3/cmk/base/__init__.pyc"

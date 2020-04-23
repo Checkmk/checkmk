@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 import sys
 import time
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union, Callable  # pylint: disable=unused-import
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -130,6 +130,12 @@ AWSStrings = Union[bytes, str]
 #     |
 #     '-- DynamoDBTable
 
+# WAFV2Limits
+# |
+# '-- WAFV2Summary
+#     |
+#     '-- WAFV2WebACL
+
 #.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
@@ -159,12 +165,12 @@ def _get_ec2_piggyback_hostname(inst, region):
         return
 
 
-def _get_dynamodb_piggyback_hostname(table, region):
+def _hostname_from_name_and_region(name, region):
     """
-    We add the region to the the hostname because a table might be replicated across multiple
-    regions (global table).
+    We add the region to the the hostname because resources in different regions might have the
+    same names (for example replicated DynamoDB tables).
     """
-    return "%s_%s" % (table['TableName'], region)
+    return "%s_%s" % (name, region)
 
 
 def _describe_dynamodb_tables(client,
@@ -189,6 +195,71 @@ def _describe_dynamodb_tables(client,
                 raise
 
     return tables
+
+
+def _validate_wafv2_scope_and_region(scope, region):
+    """
+    WAFs can either be deployed locally, for example in front of Application Load Balancers,
+    or globally, in front of CloudFront. The global ones can only be queried from the region
+    us-east-1.
+    """
+
+    assert scope in ('REGIONAL', 'CLOUDFRONT'), \
+        "The scope of WAFV2Limits / WAFV2Summary must be either REGIONAL or CLOUDFRONT, it is " \
+        "used as the 'Scope' kwarg in the list_... operations of the wafv2 client"
+
+    if scope == 'CLOUDFRONT':
+        assert region == "us-east-1", \
+            "The scope of WAFV2Limits / WAFV2Summary  can only be set to 'CLOUDFRONT' when using " \
+            "the region us-east-1, other combinations crash the wafv2 client"
+        region_report = 'CloudFront'
+    else:
+        region_report = region
+
+    return region_report
+
+
+def _iterate_through_wafv2_list_operations(list_operation, scope, entry_name, get_response_content):
+    # type: (Callable, str, str, Callable) -> List
+    """
+    For some reason, the return objects of the list_... functions of the WAFV2-client seem to
+    always contain 'NextMarker', indicating that there are more values to retrieve, even if there
+    are not. Also, these functions cannot be paginated.
+    """
+
+    response = list_operation(Scope=scope)
+    results = get_response_content(response, entry_name)
+    next_marker = get_response_content(response, 'NextMarker', dflt="")
+
+    while next_marker:
+        response = list_operation(NextMarker=next_marker, Scope=scope)
+        results.extend(get_response_content(response, entry_name))
+        next_marker = get_response_content(response, 'NextMarker', dflt="")
+
+    return results
+
+
+def _get_wafv2_web_acls(client,
+                        scope,
+                        get_response_content,
+                        web_acls_info=None,
+                        web_acls_names=None):
+    if web_acls_info is None:
+        web_acls_info = _iterate_through_wafv2_list_operations(client.list_web_acls, scope,
+                                                               'WebACLs', get_response_content)
+
+    if web_acls_names is not None:
+        web_acls_info = [
+            web_acl_info for web_acl_info in web_acls_info if web_acl_info['Name'] in web_acls_names
+        ]
+
+    web_acls = [
+        get_response_content(
+            client.get_web_acl(Name=web_acl_info['Name'], Scope=scope, Id=web_acl_info['Id']),
+            'WebACL') for web_acl_info in web_acls_info
+    ]
+
+    return web_acls
 
 
 #.
@@ -440,14 +511,19 @@ class AWSSectionLimits(AWSSection):
         self._quota_client = quota_client
         self._limits = {}
 
-    def _add_limit(self, piggyback_hostname, limit):
+    def _add_limit(self, piggyback_hostname, limit, region=None):
         assert isinstance(limit, AWSLimit), "%s: Limit must be of type 'AWSLimit'" % self.name
+        if region is None:
+            region = self._region
+        else:
+            assert isinstance(region, str), "%s: Region for limit must be of type str" % self.name
+
         self._limits.setdefault(piggyback_hostname, []).append(
             AWSRegionLimit(key=limit.key,
                            title=limit.title,
                            limit=limit.limit,
                            amount=limit.amount,
-                           region=self.region))
+                           region=region))
 
     def _create_results(self, computed_content):
         return [
@@ -2979,10 +3055,10 @@ class DynamoDBLimits(AWSSectionLimits):
             account_read_usage += table_usage_read
             account_write_usage += table_usage_write
 
-            self._add_read_write_limits(_get_dynamodb_piggyback_hostname(table, self._region),
-                                        table_usage_read, table_usage_write,
-                                        limits["TableMaxReadCapacityUnits"],
-                                        limits["TableMaxWriteCapacityUnits"])
+            self._add_read_write_limits(
+                _hostname_from_name_and_region(table['TableName'],
+                                               self._region), table_usage_read, table_usage_write,
+                limits["TableMaxReadCapacityUnits"], limits["TableMaxWriteCapacityUnits"])
 
         self._add_limit(
             "",
@@ -3072,7 +3148,7 @@ class DynamoDBSummary(AWSSectionGeneric):
         content_by_piggyback_hosts = {}  # type: Dict[str, str]
         for table in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                _get_dynamodb_piggyback_hostname(table, self._region), table)
+                _hostname_from_name_and_region(table['TableName'], self._region), table)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -3156,6 +3232,244 @@ class DynamoDBTable(AWSSectionCloudwatch):
                                                   ['WriteCapacityUnits']
             })
 
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.items()
+        ]
+
+
+#.
+#   .--WAFV2---------------------------------------------------------------.
+#   |                __        ___    _______     ______                   |
+#   |                \ \      / / \  |  ___\ \   / /___ \                  |
+#   |                 \ \ /\ / / _ \ | |_   \ \ / /  __) |                 |
+#   |                  \ V  V / ___ \|  _|   \ V /  / __/                  |
+#   |                   \_/\_/_/   \_\_|      \_/  |_____|                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class WAFV2Limits(AWSSectionLimits):
+    def __init__(self, client, region, config, scope, distributor=None, quota_client=None):
+        super(WAFV2Limits, self).__init__(client,
+                                          region,
+                                          config,
+                                          distributor=distributor,
+                                          quota_client=quota_client)
+        self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
+        self._scope = scope
+
+    @property
+    def name(self):
+        return "wafv2_limits"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args):
+        """
+        We get lists of the following resources, since they have per-region limits:
+        - Web Access Control Lists (Web ACLs)
+        - Rule groups
+        - IP sets
+        - Regex sets
+        Additionally, we gather more information about the Web ACLs, since they additionally have
+        limits on how many rules they can use.
+        """
+
+        resources = {}  # type: Dict
+
+        for list_operation, key in [(self._client.list_web_acls, 'WebACLs'),
+                                    (self._client.list_rule_groups, 'RuleGroups'),
+                                    (self._client.list_ip_sets, 'IPSets'),
+                                    (self._client.list_regex_pattern_sets, 'RegexPatternSets')]:
+
+            resources[key] = _iterate_through_wafv2_list_operations(list_operation, self._scope,
+                                                                    key, self._get_response_content)
+
+        web_acls = _get_wafv2_web_acls(self._client,
+                                       self._scope,
+                                       self._get_response_content,
+                                       web_acls_info=resources['WebACLs'])
+
+        return resources, web_acls
+
+    def _compute_content(self, raw_content, colleague_contents):
+        """
+        See https://docs.aws.amazon.com/waf/latest/developerguide/limits.html for the limits. The
+        page says that the limits can be changed, however, the API does not seem to offer a method
+        for getting the current limits, so we have to hard-code the default values.
+        """
+
+        resources, web_acls = raw_content.content
+
+        # region-wide limits
+        for resource_key, limit_key, limit_title, def_limit in \
+            [('WebACLs', 'web_acls', 'Web ACLs', 100),
+             ('RuleGroups', 'rule_groups', 'Rule groups', 100),
+             ('IPSets', 'ip_sets', 'IP sets', 100),
+             ('RegexPatternSets', 'regex_pattern_sets', 'Regex sets', 10)]:
+            self._add_limit("",
+                            AWSLimit(limit_key, limit_title, def_limit,
+                                     len(resources[resource_key])),
+                            region=self._region_report)
+
+        # limits per Web ACL
+        for web_acl in web_acls:
+            self._add_limit(_hostname_from_name_and_region(web_acl['Name'], self._region_report),
+                            AWSLimit("web_acl_capacity_units", "Web ACL capacity units (WCUs)",
+                                     1500, web_acl['Capacity']),
+                            region=self._region_report)
+
+        return AWSComputedContent(web_acls, raw_content.cache_timestamp)
+
+
+class WAFV2Summary(AWSSectionGeneric):
+    def __init__(self, client, region, config, scope, distributor=None):
+        super(WAFV2Summary, self).__init__(client, region, config, distributor=distributor)
+        self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
+        self._scope = scope
+        self._names = self._config.service_config['wafv2_names']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['wafv2_tags'])
+
+    @property
+    def name(self):
+        return "wafv2_summary"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('wafv2_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, *args):
+
+        (colleague_contents,) = args
+        found_web_acls = []
+
+        for web_acl in self._describe_web_acls(colleague_contents):
+            # list_tags_for_resource does not support pagination
+            tag_info = self._get_response_content(
+                self._client.list_tags_for_resource(ResourceARN=web_acl['ARN']),
+                'TagInfoForResource',
+                dflt={})
+            tags = self._get_response_content(tag_info, 'TagList')
+
+            if self._matches_tag_conditions(tags):
+                web_acl['Region'] = self._region_report
+                found_web_acls.append(web_acl)
+
+        return found_web_acls
+
+    def _describe_web_acls(self, colleague_contents):
+
+        if self._names is None:
+            if colleague_contents.content:
+                return colleague_contents.content
+            return _get_wafv2_web_acls(self._client, self._scope, self._get_response_content)
+
+        if colleague_contents.content:
+            return [
+                web_acl for web_acl in colleague_contents.content if web_acl['Name'] in self._names
+            ]
+        return _get_wafv2_web_acls(self._client,
+                                   self._scope,
+                                   self._get_response_content,
+                                   web_acls_names=self._names)
+
+    def _matches_tag_conditions(self, tagging):
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}  # type: Dict[str, str]
+        for web_acl in raw_content.content:
+            content_by_piggyback_hosts.setdefault(
+                _hostname_from_name_and_region(web_acl['Name'], self._region_report), web_acl)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", list(computed_content.content.values()))]
+
+
+class WAFV2WebACL(AWSSectionCloudwatch):
+    def __init__(self, client, region, config, is_regional, distributor=None):
+        super(WAFV2WebACL, self).__init__(client, region, config, distributor=distributor)
+        if not is_regional:
+            assert self._region == 'us-east-1', "WAFV2WebACL: is_regional should only be set to " \
+                                                "False in combination with the region us-east-1, " \
+                                                "since metrics for CloudFront-WAFs can only be " \
+                                                "accessed from this region"
+        self._metric_dimensions = [{
+            'Name': 'WebACL',
+            'Value': None
+        }, {
+            'Name': 'Rule',
+            'Value': 'ALL'
+        }]  # type: List[Dict]
+        if is_regional:
+            self._metric_dimensions.append({'Name': 'Region', 'Value': self._region})
+
+    @property
+    def name(self):
+        return "wafv2_web_acl"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('wafv2_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+
+        metrics = []
+
+        for idx, (piggyback_hostname, web_acl) in enumerate(colleague_contents.content.items()):
+
+            self._metric_dimensions[0]['Value'] = web_acl['Name']
+
+            for metric_name in ['AllowedRequests', 'BlockedRequests']:
+                metrics.append({
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
+                    'Label': piggyback_hostname,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/WAFV2',
+                            'MetricName': metric_name,
+                            'Dimensions': self._metric_dimensions,
+                        },
+                        'Period': self.period,
+                        'Stat': 'Sum',
+                    },
+                })
+
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}  # type: Dict[str, List[Dict]]
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -3279,7 +3593,8 @@ class AWSSectionsUSEast(AWSSections):
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     US East is the AWS Standard region.
 
-    Note that for buckets created in the US Standard region, us-east-1, the value of LocationConstraint will be null.
+    Note that for buckets created in the US Standard region, us-east-1, the value of
+    LocationConstraint will be null.
     """
     def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
@@ -3287,14 +3602,29 @@ class AWSSectionsUSEast(AWSSections):
 
         cloudwatch_client = self._init_client('cloudwatch')
         s3_client = self._init_client('s3')
+        wafv2_client = self._init_client('wafv2')
 
         #---distributors----------------------------------------------------
         s3_limits_distributor = ResultDistributor()
         s3_summary_distributor = ResultDistributor()
 
+        wafv2_limits_distributor = ResultDistributor()
+        wafv2_summary_distributor = ResultDistributor()
+
         #---sections with distributors--------------------------------------
         s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
+
+        wafv2_limits = WAFV2Limits(wafv2_client,
+                                   region,
+                                   config,
+                                   'CLOUDFRONT',
+                                   distributor=wafv2_limits_distributor)
+        wafv2_summary = WAFV2Summary(wafv2_client,
+                                     region,
+                                     config,
+                                     'CLOUDFRONT',
+                                     distributor=wafv2_summary_distributor)
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client, region, config)
@@ -3302,10 +3632,15 @@ class AWSSectionsUSEast(AWSSections):
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
 
+        wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, False)
+
         #---register sections to distributors-------------------------------
         s3_limits_distributor.add(s3_summary)
         s3_summary_distributor.add(s3)
         s3_summary_distributor.add(s3_requests)
+
+        wafv2_limits_distributor.add(wafv2_summary)
+        wafv2_summary_distributor.add(wafv2_web_acl)
 
         #---register sections for execution---------------------------------
         if 'ce' in services:
@@ -3318,6 +3653,12 @@ class AWSSectionsUSEast(AWSSections):
             self._sections.append(s3)
             if config.service_config['s3_requests']:
                 self._sections.append(s3_requests)
+
+        if 'wafv2' in services and config.service_config['wafv2_cloudfront']:
+            if config.service_config.get('wafv2_limits'):
+                self._sections.append(wafv2_limits)
+            self._sections.append(wafv2_summary)
+            self._sections.append(wafv2_web_acl)
 
 
 class AWSSectionsGeneric(AWSSections):
@@ -3332,6 +3673,7 @@ class AWSSectionsGeneric(AWSSections):
         rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
         dynamodb_client = self._init_client('dynamodb')
+        wafv2_client = self._init_client('wafv2')
 
         #---distributors----------------------------------------------------
         ec2_limits_distributor = ResultDistributor()
@@ -3355,6 +3697,9 @@ class AWSSectionsGeneric(AWSSections):
 
         dynamodb_limits_distributor = ResultDistributor()
         dynamodb_summary_distributor = ResultDistributor()
+
+        wafv2_limits_distributor = ResultDistributor()
+        wafv2_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor,
@@ -3392,6 +3737,17 @@ class AWSSectionsGeneric(AWSSections):
         dynamodb_summary = DynamoDBSummary(dynamodb_client, region, config,
                                            dynamodb_summary_distributor)
 
+        wafv2_limits = WAFV2Limits(wafv2_client,
+                                   region,
+                                   config,
+                                   'REGIONAL',
+                                   distributor=wafv2_limits_distributor)
+        wafv2_summary = WAFV2Summary(wafv2_client,
+                                     region,
+                                     config,
+                                     'REGIONAL',
+                                     distributor=wafv2_summary_distributor)
+
         #---sections--------------------------------------------------------
         ec2_labels = EC2Labels(ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
@@ -3420,6 +3776,8 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
 
         dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
+
+        wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, True)
 
         #---register sections to distributors-------------------------------
         ec2_limits_distributor.add(ec2_summary)
@@ -3453,6 +3811,9 @@ class AWSSectionsGeneric(AWSSections):
 
         dynamodb_limits_distributor.add(dynamodb_summary)
         dynamodb_summary_distributor.add(dynamodb_table)
+
+        wafv2_limits_distributor.add(wafv2_summary)
+        wafv2_summary_distributor.add(wafv2_web_acl)
 
         #---register sections for execution---------------------------------
         if 'ec2' in services:
@@ -3511,6 +3872,12 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(dynamodb_limits)
             self._sections.append(dynamodb_summary)
             self._sections.append(dynamodb_table)
+
+        if 'wafv2' in services:
+            if config.service_config.get('wafv2_limits'):
+                self._sections.append(wafv2_limits)
+            self._sections.append(wafv2_summary)
+            self._sections.append(wafv2_web_acl)
 
 
 #.
@@ -3593,6 +3960,12 @@ AWSServices = [
                          filter_by_names=True,
                          filter_by_tags=True,
                          limits=True),
+    AWSServiceAttributes(key="wafv2",
+                         title="Web Application Firewall (WAFV2)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
 ]
 
 
@@ -3645,6 +4018,9 @@ def parse_arguments(argv):
                         nargs='+',
                         action='append',
                         help="Overall tag values")
+    parser.add_argument("--wafv2-cloudfront",
+                        action="store_true",
+                        help="Also monitor global WAFs in front of CloudFront resources.")
     parser.add_argument("--hostname", required=True)
 
     for service in AWSServices:
@@ -3796,13 +4172,17 @@ class AWSConfig:
         store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
 
 
-def _sanitize_aws_services_params(g_aws_services, r_aws_services):
+def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_services=()):
     """
     Sort service keys into global and regional services by checking
     the service configuration of AWSServices.
     This abstracts the AWS structure from the GUI configuration.
     :param g_aws_services: all services in --global-services
     :param r_aws_services: all services in --services
+    :param r_and_g_aws_services: services in --services which should also be run globally, e.g.
+                                 WAFV2, which has regional and global firewalls; the regional ones
+                                 can only be accessed from the corresponding region, the global
+                                 ones only from us-east-1
     :return: two lists of global and regional services
     """
     aws_service_keys = set()  # type: Set[str]
@@ -3823,6 +4203,8 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services):
             global_services.append(service_key)
         else:
             regional_services.append(service_key)
+            if service_key in r_and_g_aws_services:
+                global_services.append(service_key)
     return global_services, regional_services
 
 
@@ -3847,16 +4229,18 @@ def main(sys_argv=None):
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
         ("dynamodb", args.dynamodb_names, (args.dynamodb_tag_key, args.dynamodb_tag_values),
          args.dynamodb_limits),
+        ("wafv2", args.wafv2_names, (args.wafv2_tag_key, args.wafv2_tag_values), args.wafv2_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)
         aws_config.add_single_service_config("%s_limits" % service_key, service_limits)
 
-    aws_config.add_single_service_config("s3_requests", args.s3_requests)
-    aws_config.add_single_service_config("cloudwatch_alarms", args.cloudwatch_alarms)
+    for arg in ["s3_requests", "cloudwatch_alarms", "wafv2_cloudfront"]:
+        aws_config.add_single_service_config(arg, getattr(args, arg))
 
     global_services, regional_services =\
-        _sanitize_aws_services_params(args.global_services, args.services)
+        _sanitize_aws_services_params(args.global_services, args.services,
+                                      r_and_g_aws_services=('wafv2',))
 
     use_cache = aws_config.is_up_to_date() and not args.no_cache
 

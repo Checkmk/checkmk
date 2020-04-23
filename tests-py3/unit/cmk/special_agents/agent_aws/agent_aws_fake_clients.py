@@ -111,6 +111,11 @@ class BoolChoice(Choice):
         super(BoolChoice, self).__init__(key, [True, False])
 
 
+class Bytes(Str):
+    def create(self, idx, amount):
+        return bytes(super(Bytes, self).create(idx, amount), 'utf-8')
+
+
 #.
 #   .--creators------------------------------------------------------------.
 #   |                                    _                                 |
@@ -1945,6 +1950,136 @@ class DynamoDBListTagsOfResourceIB(InstanceBuilder):
 
 
 #.
+#   .--WAFV2----------------------------------------------------------------
+
+
+class WAFV2ListOperationIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [Str('Name'), Str('Id'), Str('Description'), Str('LockToken'), Str('ARN')]
+
+
+class WAFV2GetWebACLIB(InstanceBuilder):
+    def _field_to_match(self):
+        return Dict('FieldToMatch', [
+            Dict('SingleHeader', [Str('Name')]),
+            Dict('SingleQueryArgument', [Str('Name')]),
+            Dict('AllQueryArguments', []),
+            Dict('UriPath', []),
+            Dict('QueryString', []),
+            Dict('Body', []),
+            Dict('Method', [])
+        ])
+
+    def _text_transformations(self):
+        return List('TextTransformations', [
+            Int('Priority'),
+            Choice('Type', [
+                'NONE', 'COMPRESS_WHITE_SPACE', 'HTML_ENTITY_DECODE', 'LOWERCASE', 'CMD_LINE',
+                'URL_DECODE'
+            ])
+        ])
+
+    def _visibility_config(self):
+        return Dict('VisibilityConfig', [
+            BoolChoice('SampledRequestsEnabled'),
+            BoolChoice('CloudWatchMetricsEnabled'),
+            Str('MetricName')
+        ])
+
+    def _process_firewall_manager_rule_groups(self, key):
+        return List(key, [
+            Str('Name'),
+            Int('Priority'),
+            Dict('FirewallManagerStatement', [
+                Dict('ManagedRuleGroupStatement',
+                     [Str('VendorName'),
+                      Str('Name'),
+                      List('ExcludedRules', [Str('Name')])]),
+                Dict('RuleGroupReferenceStatement',
+                     [Str('Name'), List('ExcludedRules', [Str('Name')])])
+            ]),
+            Dict('OverrideAction', [Dict('Count', []), Dict('None', [])]),
+            self._visibility_config()
+        ])
+
+    def _fill_instance(self):
+        return [
+            Str('Name'),
+            Str('Id'),
+            Str('ARN'),
+            Dict('DefaultAction', [Dict('Block', []), Dict('Allow', [])]),
+            Str('Description'),
+            List('Rules', [
+                Str('Name'),
+                Int('Priority'),
+                Dict(
+                    'Statement',
+                    [
+                        Dict('ByteMatchStatement', [
+                            Bytes('SearchString'),
+                            self._field_to_match(),
+                            self._text_transformations(),
+                            Choice('PositionalConstraint', [
+                                'EXACTLY', 'STARTS_WITH', 'ENDS_WITH', 'CONTAINS', 'CONTAINS_WORD'
+                            ])
+                        ]),
+                        Dict('SqliMatchStatement',
+                             [self._field_to_match(),
+                              self._text_transformations()]),
+                        Dict('XssMatchStatement',
+                             [self._field_to_match(),
+                              self._text_transformations()]),
+                        Dict('SizeConstraintStatement', [
+                            self._field_to_match(),
+                            Choice('ComparisonOperator', ['EQ', 'NE', 'LE', 'LT', 'GE', 'GT']),
+                            Int('Size'),
+                            self._text_transformations()
+                        ]),
+                        Dict('GeoMatchStatement', [Enum('CountryCodes')]),
+                        Dict('RuleGroupReferenceStatement',
+                             [Str('ARN'), List('ExcludedRules', [Str('Name')])]),
+                        Dict('IPSetReferenceStatement', [Str('ARN')]),
+                        Dict('RegexPatternSetReferenceStatement',
+                             [Str('ARN'),
+                              self._field_to_match(),
+                              self._text_transformations()]),
+                        Dict(
+                            'RateBasedStatement',
+                            [Int('Limit'),
+                             Str('AggregateKeyType'),
+                             Dict('ScopeDownStatement', [])]),
+                        Dict('AndStatement', [List('Statements', [])]),
+                        Dict('OrStatement', [List('Statements', [])]),
+                        Dict('NotStatement', [Dict('ScopeDownStatement', [])]),
+                        Dict('Statement', [
+                            Dict('ManagedRuleGroupStatement', [
+                                Str('VendorName'),
+                                Str('Name'),
+                                List('ExcludedRules', [Str('Name')])
+                            ])
+                        ]),
+                        Dict('Action', [Dict('Block', []),
+                                        Dict('Allow', []),
+                                        Dict('Count', [])]),
+                        Dict('OverrideAction',
+                             [Dict('Count', []), Dict('None', [])]),
+                        self._visibility_config(),
+                    ],
+                )
+            ]),
+            self._visibility_config(),
+            Int('Capacity'),
+            self._process_firewall_manager_rule_groups('PreProcessFirewallManagerRuleGroups'),
+            self._process_firewall_manager_rule_groups('PostProcessFirewallManagerRuleGroups'),
+            BoolChoice('ManagedByFirewallManager')
+        ]
+
+
+class WAFV2ListTagsForResourceIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [Str('ResourceARN'), List('TagList', [Str('Key'), Str('Value')])]
+
+
 #.
 #   .--fake clients--------------------------------------------------------.
 #   |           __       _               _ _            _                  |

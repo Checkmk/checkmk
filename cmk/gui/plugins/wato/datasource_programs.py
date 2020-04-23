@@ -2247,9 +2247,27 @@ def _valuespec_special_agents_aws():
                           optional_keys=["limits"],
                           default_keys=["limits"],
                       )),
+                     ("wafv2",
+                      Dictionary(
+                          title=_("Web Application Firewall (WAFV2)"),
+                          elements=[
+                              _vs_element_aws_service_selection(),
+                              _vs_element_aws_limits(),
+                              ("cloudfront",
+                               FixedValue(
+                                   None,
+                                   totext=_("Monitor CloudFront WAFs"),
+                                   title=_("CloudFront WAFs"),
+                                   help=_("Include WAFs in front of CloudFront resources in the "
+                                          "monitoring"))),
+                          ],
+                          optional_keys=["limits", "cloudfront"],
+                          default_keys=["limits", "cloudfront"],
+                      )),
                  ],
                  default_keys=[
-                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch", "dynamodb"
+                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch", "dynamodb",
+                     "wafv2"
                  ],
              )),
             ("overall_tags",

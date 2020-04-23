@@ -121,8 +121,12 @@ def _vs_latency():
             ))
 
 
-def _vs_limits(resource, default_limit, vs_limit_cls=None, unit=None):
-    # type: (str, int, Optional[Type[Filesize]], Optional[str]) -> Alternative
+def _vs_limits(resource,
+               default_limit,
+               vs_limit_cls=None,
+               unit=None,
+               title_default="Limit from AWS API"):
+    # type: (str, int, Optional[Type[Filesize]], Optional[str], str) -> Alternative
 
     if unit is None:
         unit = resource
@@ -150,11 +154,10 @@ def _vs_limits(resource, default_limit, vs_limit_cls=None, unit=None):
         elements=[
             Tuple(title=_("Set levels"),
                   elements=[
-                      Alternative(
-                          elements=[FixedValue(
-                              None,
-                              totext=_("Limit from AWS API"),
-                          ), vs_limit]),
+                      Alternative(elements=[FixedValue(
+                          None,
+                          totext=_(title_default),
+                      ), vs_limit]),
                       Percentage(title=_("Warning at"), default_value=80.0),
                       Percentage(title=_("Critical at"), default_value=90.0),
                   ]),
@@ -1163,4 +1166,65 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_dynamodb_latency,
         title=lambda: _("AWS/DynamoDB Latency"),
+    ))
+
+#.
+#   .--WAFV2---------------------------------------------------------------.
+#   |                __        ___    _______     ______                   |
+#   |                \ \      / / \  |  ___\ \   / /___ \                  |
+#   |                 \ \ /\ / / _ \ | |_   \ \ / /  __) |                 |
+#   |                  \ V  V / ___ \|  _|   \ V /  / __/                  |
+#   |                   \_/\_/_/   \_\_|      \_/  |_____|                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _parameter_valuespec_aws_wafv2_limits():
+    return Dictionary(title=_('Limits and levels'),
+                      elements=[
+                          ('web_acls',
+                           _vs_limits("Web ACLs", 100, title_default="Default limit set by AWS")),
+                          ('rule_groups',
+                           _vs_limits("Rule groups", 100,
+                                      title_default="Default limit set by AWS")),
+                          ('ip_sets',
+                           _vs_limits("IP sets", 100, title_default="Default limit set by AWS")),
+                          ('regex_pattern_sets',
+                           _vs_limits("Regex sets", 10, title_default="Default limit set by AWS")),
+                          ('web_acl_capacity_units',
+                           _vs_limits("Web ACL capacity units (WCUs)",
+                                      1500,
+                                      title_default="Default limit set by AWS")),
+                      ])
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_wafv2_limits",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_wafv2_limits,
+        title=lambda: _("AWS/WAFV2 Limits"),
+    ))
+
+
+def _parameter_valuespec_aws_wafv2_web_acl():
+    return Dictionary(title=_('Levels on Web ACL requests'),
+                      elements=[
+                          ("%s_requests_perc" % action,
+                           Tuple(title=_("Upper levels on percentage of %s requests" % action),
+                                 elements=[
+                                     Percentage(title=_("Warning at")),
+                                     Percentage(title=_("Critical at")),
+                                 ])) for action in ['allowed', 'blocked']
+                      ])
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_wafv2_web_acl",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_wafv2_web_acl,
+        title=lambda: _("AWS/WAFV2 Web ACL Requests"),
     ))

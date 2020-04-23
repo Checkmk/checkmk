@@ -2162,6 +2162,12 @@ msgstr "AWS/S3 Latenzzeit"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzwerte"
 
+msgid "AWS/WAFV2 Limits"
+msgstr "AWS/WAFV2 Grenzwerte"
+
+msgid "AWS/WAFV2 Web ACL Requests"
+msgstr "AWS/WAFV2 Web-ACL-Anfragen"
+
 msgid "Abort"
 msgstr "Abbruch"
 
@@ -11691,8 +11697,11 @@ msgstr "Ungültige Benutzeranmeldung"
 msgid "Default layout"
 msgstr "Voreingestelltes Layout"
 
-msgid "Default levels"
-msgstr "Standardschwellwerte"
+msgid "Default limit set by AWS"
+msgstr "AWS-Standardschwellwerte"
+
+msgid "Default line style"
+msgstr "Voreingestellter Linien Stil"
 
 msgid "Default line style"
 msgstr "Voreingestellter Linien Stil"
@@ -20306,6 +20315,9 @@ msgstr "Auszuschließende IP-Bereiche"
 msgid "IP ranges to scan"
 msgstr "Zu scannende IP-Bereiche"
 
+msgid "IP sets"
+msgstr "IP-Sets"
+
 msgid "IP-Address of Tunnel Endpoint"
 msgstr "IP-Adresse des Tunnelendpunkts"
 
@@ -22314,6 +22326,11 @@ msgstr "Einschluss-Muster"
 
 msgid "Include Volume name in item"
 msgstr "Volume-Namen in Item verwenden"
+
+msgid
+"Include WAFs in front of CloudFront resources in the monitoring"
+msgstr ""
+"WAFs vor Cloudfront-Resourcen in die Überwachung einschließen"
 
 msgid "Include all subfolders"
 msgstr "Schließe alle Unterordner ein"
@@ -24480,6 +24497,9 @@ msgstr "Schwellwerte für Trends in Grad Celsius pro Zeitspanne"
 msgid "Levels on used capacity in bytes"
 msgstr "Schwellwerte für benutzte Kapazität in Bytes"
 
+msgid "Levels on Web ACL requests"
+msgstr "Schwellwerte für die Web-ACL-Anfragen"
+
 msgid "Levels on write capacity"
 msgstr "Schwellwerte für die Schreibkapazität"
 
@@ -24596,6 +24616,9 @@ msgstr "Limit für die folgenden Hosts"
 
 msgid "Limit to the following services"
 msgstr "Limitiere auf die folgenden Services"
+
+msgid "Limits and levels"
+msgstr "Grenz- und Schwellwerte"
 
 msgid "Limits for the number of used states"
 msgstr "Schwellen für die Anzahl der benutzten Zustände"
@@ -27329,6 +27352,9 @@ msgstr "Alle gefundenen Instanzen überwachen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
+
+msgid "Monitor CloudFront WAFs"
+msgstr "Cloudfront WAFs überwachen"
 
 msgid "Monitor costs and usage"
 msgstr "Überwachung von Kosten und Nutzung"
@@ -33763,6 +33789,9 @@ msgstr "Regulärer Ausdruck für Hostalias"
 msgid "Regex for host name"
 msgstr "Regulärer Ausdruck für Hostnamen"
 
+msgid "Regex sets"
+msgstr "Regex-Sets"
+
 msgid "Regions to use"
 msgstr "Zu verwendende Regionen"
 
@@ -35011,6 +35040,9 @@ msgstr ""
 
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr "Regeln für die Alarmierung von Kontakten über Host- und Serviceprobleme"
+
+msgid "Rule groups"
+msgstr "Regelgruppen"
 
 msgid "Rules in folder"
 msgstr "Regeln im Ordner"
@@ -50532,6 +50564,12 @@ msgstr "Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher P
 msgid "Upper levels on maximum latency of successful PutItem requests"
 msgstr "Obere Schwellwerte für die maximale Latenzzeit erfolgreicher PutItem-Anfragen"
 
+msgid "Upper levels on percentage of allowed requests"
+msgstr "Obere Schwellwerte für den prozentualen Anteil zugelassener Anfragen"
+
+msgid "Upper levels on percentage of blocked requests"
+msgstr "Obere Schwellwerte für den prozentualen Anteil blockierter Anfragen"
+
 msgid "Upper levels replica lag"
 msgstr "Obere Schwellen für die Replikaverzögerung"
 
@@ -52326,6 +52364,12 @@ msgstr "WEB - aktuell bearbeitet Anfragen"
 msgid "WEB - Timed out Active Directory Requests"
 msgstr "WEB - Abgelaufene Active Directory Anfragen"
 
+msgid "Web ACLs"
+msgstr "Web-ACLs"
+
+msgid "Web ACL capacity units (WCUs)"
+msgstr "Web-ACL Kapazitätseinheiten (WCUs)"
+
 msgid "WLAN"
 msgstr "WLAN"
 
@@ -52585,6 +52629,9 @@ msgstr "Web"
 
 msgid "Web API communication"
 msgstr "Web-API-Kommunikation"
+
+msgid "Web Application Firewall (WAFV2)"
+msgstr "Webanwendungs-Firewall (WAFV2)"
 
 msgid "Web Services"
 msgstr "Webservices"
@@ -56128,6 +56175,9 @@ msgstr "Clients"
 
 msgid "closed"
 msgstr "geschlossen"
+
+msgid "CloudFront WAFs"
+msgstr "CloudFront WAFs"
 
 msgid "collapsed"
 msgstr "zugeklappt"

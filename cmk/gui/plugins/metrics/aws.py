@@ -698,6 +698,66 @@ metric_info['aws_dynamodb_putitem_maximum_latency'] = {
     'color': '15/a',
 }
 
+metric_info['aws_wafv2_web_acls'] = {
+    'title': _('Number of Web ACLs'),
+    'unit': 'count',
+    'color': '41/a',
+}
+
+metric_info['aws_wafv2_rule_groups'] = {
+    'title': _('Number of rule groups'),
+    'unit': 'count',
+    'color': '16/a',
+}
+
+metric_info['aws_wafv2_ip_sets'] = {
+    'title': _('Number of IP sets'),
+    'unit': 'count',
+    'color': '31/b',
+}
+
+metric_info['aws_wafv2_regex_pattern_sets'] = {
+    'title': _('Number of regex sets'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_wafv2_web_acl_capacity_units'] = {
+    'title': _('Web ACL capacity units (WCUs)'),
+    'unit': 'count',
+    'color': '41/a',
+}
+
+metric_info['aws_wafv2_requests_rate'] = {
+    'title': _('Avg. request rate'),
+    'unit': '1/s',
+    'color': '#000000',
+}
+
+metric_info['aws_wafv2_allowed_requests_rate'] = {
+    'title': _('Avg. rate of allowed requests'),
+    'unit': '1/s',
+    'color': '26/b',
+}
+
+metric_info['aws_wafv2_blocked_requests_rate'] = {
+    'title': _('Avg. rate of blocked requests'),
+    'unit': '1/s',
+    'color': '16/a',
+}
+
+metric_info['aws_wafv2_allowed_requests_perc'] = {
+    'title': _('Percentage of allowed requests'),
+    'unit': '%',
+    'color': '26/b',
+}
+
+metric_info['aws_wafv2_blocked_requests_perc'] = {
+    'title': _('Percentage of blocked requests'),
+    'unit': '%',
+    'color': '16/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -796,5 +856,14 @@ graph_info['aws_dynamodb_putitem_latency'] = {
     'metrics': [
         ('aws_dynamodb_putitem_average_latency', 'line'),
         ('aws_dynamodb_putitem_maximum_latency', 'line'),
+    ],
+}
+
+graph_info['aws_wafv2_web_acl_requests'] = {
+    'title': _('Web ACL Requests'),
+    'metrics': [
+        ('aws_wafv2_allowed_requests_rate', 'stack'),
+        ('aws_wafv2_blocked_requests_rate', 'stack'),
+        ('aws_wafv2_requests_rate', 'line'),
     ],
 }

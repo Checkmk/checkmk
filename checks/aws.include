@@ -23,7 +23,7 @@ def parse_aws(info):
 def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=None):
     if extra_keys is None:
         extra_keys = []
-    values_by_labels = {}
+    values_by_labels = {}  # type: Dict[str, Dict]
     for row in parsed:
         row_id = row['Id'].lower()
         row_label = row['Label']
@@ -72,7 +72,7 @@ def inventory_aws_generic_single(parsed, required_metrics, requirement=all):
 def check_aws_elb_summary_generic(item, params, load_balancers):
     yield 0, "Balancers: %s" % len(load_balancers)
 
-    balancers_by_avail_zone = {}
+    balancers_by_avail_zone = {}  # type: Dict[str, List]
     long_output = []
     for row in load_balancers:
         balancer_name = row['LoadBalancerName']
@@ -132,7 +132,10 @@ def parse_aws_limits_generic(info):
     return parsed
 
 
-def check_aws_limits(aws_service, params, parsed):
+def check_aws_limits(aws_service,
+                     params,
+                     parsed,
+                     region_formatter=lambda region: " (Region %s)" % region if region else ""):
     """
     Generic check for checking limits of AWS resource.
     - levels: use plain resource_key
@@ -154,7 +157,7 @@ def check_aws_limits(aws_service, params, parsed):
 
         infotext = '%s: %s (of max. %s)%s' % (resource_title, human_readable_func(amount),
                                               human_readable_func(limit_ref),
-                                              " (Region %s)" % region if region else "")
+                                              region_formatter(region))
         perfvar = "aws_%s_%s" % (aws_service, resource_key)
         if _is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))

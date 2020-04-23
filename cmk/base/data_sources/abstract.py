@@ -11,6 +11,7 @@ import time
 import abc
 import logging
 import sys
+from pathlib import Path
 from types import TracebackType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     Type, TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
@@ -112,7 +113,7 @@ class SectionStore:
                 raise
 
         store.save_object_to_file(self.path, sections, pretty=False)
-        self._logger.debug("Stored persisted sections: %s" % (", ".join(sections)))
+        self._logger.debug("Stored persisted sections: %s", ", ".join(sections))
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
@@ -142,8 +143,8 @@ class SectionStore:
                 persisted_until = entry[1]
 
             if now > persisted_until:
-                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
-                                   (section_name, now - persisted_until))
+                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it.",
+                                   section_name, now - persisted_until)
                 del sections[section_name]
         return sections
 
@@ -151,7 +152,7 @@ class SectionStore:
 class FileCache:
     def __init__(
         self,
-        path,  # type: str
+        path,  # type: Union[str, Path]
         max_cachefile_age,  # type: Optional[int]
         is_agent_cache_disabled,  # type: bool
         may_use_cache_file,  # type: bool
@@ -162,7 +163,7 @@ class FileCache:
     ):
         # type (...) -> None
         super(FileCache, self).__init__()
-        self.path = path
+        self.path = Path(path)
         self._max_cachefile_age = max_cachefile_age
         self._is_agent_cache_disabled = is_agent_cache_disabled
         self._may_use_cache_file = may_use_cache_file
@@ -188,10 +189,7 @@ class FileCache:
     def read(self):
         # type: () -> Optional[BoundedAbstractRawData]
         assert self._max_cachefile_age is not None
-
-        cachefile = self.path
-
-        if not os.path.exists(cachefile):
+        if not self.path.exists():
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
@@ -204,20 +202,20 @@ class FileCache:
             return None
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
-        cachefile_age = cmk.utils.cachefile_age(cachefile)
+        cachefile_age = cmk.utils.cachefile_age(self.path)
         if not may_use_outdated and cachefile_age > self._max_cachefile_age:
-            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                               (cachefile_age, self._max_cachefile_age))
+            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)",
+                               cachefile_age, self._max_cachefile_age)
             return None
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
-        result = open(cachefile, 'rb').read()
+        result = self.path.read_bytes()
         if not result:
             self._logger.debug("Not using cache (Empty)")
             return None
 
-        self._logger.log(VERBOSE, "Using data from cache file %s", cachefile)
+        self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
         return self._from_cache_file(result)
 
     def write(self, raw_data):
@@ -226,25 +224,16 @@ class FileCache:
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
 
-        cachefile = self.path
-
         try:
-            try:
-                os.makedirs(os.path.dirname(cachefile))
-            except OSError as e:
-                if e.errno == errno.EEXIST:
-                    pass
-                else:
-                    raise
+            self.path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            raise MKGeneralException("Cannot create directory %r: %s" %
-                                     (os.path.dirname(cachefile), e))
+            raise MKGeneralException("Cannot create directory %r: %s" % (self.path.parent, e))
 
-        self._logger.debug("Write data to cache file %s" % (cachefile))
+        self._logger.debug("Write data to cache file %s", self.path)
         try:
-            store.save_file(cachefile, self._to_cache_file(raw_data))
+            store.save_file(self.path, self._to_cache_file(raw_data))
         except Exception as e:
-            raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
+            raise MKGeneralException("Cannot write cache file %s: %s" % (self.path, e))
 
 
 BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=AbstractHostSections)
@@ -648,10 +637,10 @@ class DataSource(
 
             # Don't overwrite sections that have been received from the source with this call
             if section_name in host_sections.sections:
-                self._logger.debug("Skipping persisted section %r, live data available" %
-                                   (section_name))
+                self._logger.debug("Skipping persisted section %r, live data available",
+                                   section_name)
             else:
-                self._logger.debug("Using persisted section %r" % (section_name))
+                self._logger.debug("Using persisted section %r", section_name)
                 host_sections.add_cached_section(section_name, section_info, persisted_from,
                                                  persisted_until)
         return host_sections

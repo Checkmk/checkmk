@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
@@ -16,10 +17,35 @@ from cmk.base.api.agent_based.section_types import (
     SNMPTree,
     OIDEnd,
 )
+from cmk.base.data_sources.abstract import DataSource
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 from cmk.base.snmp_utils import SNMPTable
 from testlib.base import Scenario
+
+
+@pytest.fixture(autouse=True)
+def reset_mutable_global_state():
+    def reset(cls, attr, value):
+        # Make sure we are not *adding* any field.
+        assert hasattr(cls, attr)
+        setattr(cls, attr, value)
+
+    def delete(cls, attr):
+        with suppress(AttributeError):
+            delattr(cls, attr)
+
+    yield
+    delete(SNMPDataSource, "_no_cache")
+    delete(SNMPDataSource, "_use_outdated_persisted_sections")
+
+    reset(DataSource, "_for_mgmt_board", False)
+    reset(DataSource, "_no_cache", False)
+    reset(DataSource, "_may_use_cache_file", False)
+    reset(DataSource, "_use_outdated_cache_file", False)
+    reset(DataSource, "_use_outdated_persisted_sections", False)
+
+    reset(SNMPDataSource, "_for_mgmt_board", False)
 
 
 def test_data_source_cache_default(monkeypatch):
@@ -110,7 +136,7 @@ def test_attribute_defaults(monkeypatch, ipaddress):
     assert source.get_do_snmp_scan() is False
     # From the base class
     assert source.name() == ("snmp:%s:%s" % (hostname, ipaddress if ipaddress else ""))
-    assert source.is_agent_cache_disabled() is True
+    assert source.is_agent_cache_disabled() is False
     assert source.get_may_use_cache_file() is False
     assert source.exception() is None
 

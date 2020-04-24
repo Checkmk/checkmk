@@ -55,6 +55,7 @@ if [ ! -z "$MAIL_RELAY_HOST" ]; then
     postconf -e recipient_delimiter=+
     postconf -e inet_interfaces=all
     postconf -e inet_protocols=all
+    postconf -# myhostname
 
     echo "### STARTING MAIL SERVICES"
     syslogd

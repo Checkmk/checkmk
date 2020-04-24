@@ -436,8 +436,10 @@ def write_agent_output(args):
             },
             "nodes": [{
                 "{node}": {
+                    "subscription": {},
                     # for now just get basic task data - we'll read the logs later
                     "tasks": [],
+                    "version": {},
                 },
             }],
             "version": {},
@@ -476,9 +478,21 @@ def write_agent_output(args):
         write_piggyback_sections(
             host=node['node'],
             sections=[
-                # {  # Todo
-                #    "name": "proxmox_node_info",
-                # },
+                {
+                    "name": "proxmox_node_info",
+                    "data": {
+                        "status": node["status"],
+                        "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
+                        "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
+                        "proxmox_version": node["version"],
+                        "subscription": {
+                            key: value for key, value in node["subscription"].items() if key in {
+                                "status", "checktime", "key", "level", "nextduedate", "productname",
+                                "regdate"
+                            }
+                        },
+                    },
+                },
                 {
                     "name": "proxmox_disk_usage",
                     "data": {

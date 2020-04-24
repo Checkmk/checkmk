@@ -22,7 +22,6 @@ import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 import six
 
-import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.utils
 import cmk.utils.debug
 # pylint: disable=cmk-module-layer-violation
@@ -376,18 +375,20 @@ class ProgramDataFetcher(AbstractDataFetcher):
         self,
         cmdline,  # type: Union[bytes, Text]
         stdin,  # type: Optional[str]
+        is_cmc,  # type: bool
         logger,  # type: logging.Logger
     ):
         # type: (...) -> None
         super(ProgramDataFetcher, self).__init__()
         self._cmdline = cmdline
         self._stdin = stdin
+        self._is_cmc = is_cmc
         self._logger = logger
         self._process = None  # type: Optional[subprocess.Popen]
 
     def __enter__(self):
         # type: () -> ProgramDataFetcher
-        if config.monitoring_core == "cmc":
+        if self._is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your
             # application. The child process could deadlock before exec is called. If you

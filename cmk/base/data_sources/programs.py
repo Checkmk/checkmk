@@ -66,7 +66,12 @@ class ProgramDataSource(CheckMKAgentDataSource):
     def _execute(self):
         # type: () -> RawAgentData
         self._logger.debug("Calling external program %r" % (self.source_cmdline))
-        with ProgramDataFetcher(self.source_cmdline, self.source_stdin, self._logger) as fetcher:
+        with ProgramDataFetcher(
+                self.source_cmdline,
+                self.source_stdin,
+                config.is_cmc(),
+                self._logger,
+        ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 

@@ -296,24 +296,24 @@ section_nfs_mounts() {
     # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
     if inpath waitmax; then
         echo '<<<nfsmounts>>>'
-        get_nfs_mounts | while read -r mountPoint; do
-            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-            || echo "${mountPoint} hanging 0 0 0 0"
+        get_nfs_mounts | while read -r _mount_point; do
+            waitmax -s 9 5 stat -f -c "${_mount_point} ok %b %f %a %s" "${_mount_point}" ||
+                echo "${_mount_point} hanging 0 0 0 0"
         done
 
         echo '<<<cifsmounts>>>'
-        get_cifs_mounts | while read -r mountPoint; do
-            if [ ! -r "${mountPoint}" ]; then
-                echo "${mountPoint} Permission denied"
+        get_cifs_mounts | while read -r _mount_point; do
+            if [ ! -r "${_mount_point}" ]; then
+                echo "${_mount_point} Permission denied"
             else
-                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-                    || echo "${mountPoint} hanging 0 0 0 0"
+                waitmax -s 9 2 stat -f -c "${_mount_point} ok %b %f %a %s" "${_mount_point}" ||
+                    echo "${_mount_point} hanging 0 0 0 0"
             fi
         done
     fi
 
     # Clean up our function variables
-    unset mountPoint
+    unset -v _mount_point
 }
 
 section_mounts() {

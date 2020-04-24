@@ -479,9 +479,13 @@ def write_agent_output(args):
                 # {  # Todo
                 #    "name": "proxmox_node_info",
                 # },
-                # {  # Todo
-                #    "name": "proxmox_disk_usage",
-                # },
+                {
+                    "name": "proxmox_disk_usage",
+                    "data": {
+                        "disk": node["disk"],
+                        "max_disk": node["maxdisk"],
+                    },
+                },
                 # {  # Todo
                 #    "name": "proxmox_mem_usage",
                 # },
@@ -506,9 +510,14 @@ def write_agent_output(args):
                 # {  # Todo
                 #    "name": "proxmox_vm_info",
                 # },
-                # {  # Todo
-                #    "name": "proxmox_disk_usage",
-                # },
+                {
+                    "name": "proxmox_disk_usage",
+                    "data": {
+                        "disk": vm["disk"],
+                        "max_disk": vm["maxdisk"],
+                    },
+                    "skip": vm["type"] == 'qemu',
+                },
                 # {  # Todo
                 #    "name": "proxmox_mem_usage",
                 # },

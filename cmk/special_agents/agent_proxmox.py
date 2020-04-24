@@ -1,31 +1,64 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright tribe29 2020                                           |
-# +------------------------------------------------------------------+
-#
-# This file is part of Checkmk
-# The official homepage is at https://checkmk.de.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
-Checkmk ProxMox special agent
+Checkmk Proxmox special agent
+
+Domain    | Element                       | Check
+----------+-------------------------------+---------------------------------------------------------
+Proxmox   |                               |
+          | Proxmox Version               | --- checked for each node
+          | Configured, Backup            | --- checked for each vm proxmox_cluster_backup_status
+          | log-cutoff-weeks              |
+          |                               |
+----------+-------------------------------+---------------------------------------------------------
+Nodes []  |                               |
+          | Proxmox Version               | proxmox_node_info
+          | Subscription                  | proxmox_node_info
+          | Status: "active"/"inactive"   | proxmox_node_info
+          | lxc: []                       | proxmox_node_info
+          | qemu: []                      | proxmox_node_info
+          |                               |
+          | Uptime                        | uptime (existing)
+          |                               |
+          | disk usage   (%/max)          | proxmox_disk_usage
+          | mem usage    (%/max)          | proxmox_mem_usage
+          |                               |
+          | # backup                      | todo: summary status for VMs configured on this node
+          | # snapshots                   | todo: summary status for VMs configured on this node
+          | # replication                 | ---
+          |                               |
+----------+-------------------------------+---------------------------------------------------------
+VMs []    |                               |
+          | vmid: int                     | proxmox_vm_info
+          | type: lxc/qemu                | proxmox_vm_info
+          | node: host                    | proxmox_vm_info (vllt. konfigurierbare überprüfung?)
+          | status: running/not running   | proxmox_vm_info
+          |                               |
+          | disk usage                    | [x] proxmox_disk_usage / only lxc
+          | mem usage                     | [x] proxmox_mem_usage
+
+          | Backed up                     | [x] proxmox_vm_backup_status
+          |     When / crit / warn        | [x]
+          |     Failure as warning        | [x]
+          |     Bandwidth                 | [?]
+          |                               |
+          | # replication                 | todo: ähnlich wie backup
+          | # snapshots                   | todo: warn about snapshots > 1 day / more than N
+          |                               |
+----------+-------------------------------+---------------------------------------------------------
 """
+
+# Todo:
+# - agent: cuttoff-weeks / cert-check / timeout configurable
+# - Turn into Python3-Script:
+#   - use Python3 type annotations
+#   - use {**a,**b} instead of .update()
+#   - use (*, arg1, arg2..) syntax
+# - Replication Status VMs & Container, Gesamtstatus + piggybacked
+# - Snapshots - piggybacked
 
 # Read:
 # - https://pve.proxmox.com/wiki/Proxmox_VE_API
@@ -33,25 +66,13 @@ Checkmk ProxMox special agent
 # - https://pve.proxmox.com/pve-docs/api-viewer/apidoc.js
 # - https://pypi.org/project/proxmoxer/
 
-# Todo:
-# - Turn into Python3-Script:
-#   - use Python3 type annotations
-#   - use {**a,**b} instead of .update()
-#   - use (*, arg1, arg2..) syntax
-# - Backup Status VMs & Container, Gesamtstatus + piggybacked
-# - Replication Status VMs & Container, Gesamtstatus + piggybacked
-# - Snapshots - piggybacked
-# - PVE Version im Check_MK Output
-# - Status der VMs & Container, z.b. Staus/lock reason/maxdisc/maxmem/name - piggybacked bzw.
-#    siehe auch pvesh get /cluster/resources
-
 # pylint: disable=too-few-public-methods
 
 import sys
 import json
 import argparse
 import logging
-from typing import Any, List, Tuple, Dict, Union, Optional
+from typing import Any, List, Dict, Union, Optional, Tuple, Sequence
 
 import requests
 from requests.packages import urllib3
@@ -61,7 +82,10 @@ import cmk.utils.password_store
 # cannot be imported yet - pathlib2 is missing for python3
 # from cmk.special_agents.utils import vcrtrace
 
+LOGGER = logging.getLogger("agent_proxmox")
+
 ListOrDict = Union[List[Dict[str, Any]], Dict[str, Any]]
+StrSequence = Union[List[str], Tuple[str]]
 
 
 def parse_arguments(argv):
@@ -78,8 +102,7 @@ def parse_arguments(argv):
     # TODO: default should not be True
     parser.add_argument('--no-cert-check', action="store_true", default=True)
     parser.add_argument('--debug', action="store_true", help="Keep some exceptions unhandled")
-    parser.add_argument("hostname", help="Name of the ProxMox instance to query.")
-
+    parser.add_argument("hostname", help="Name of the Proxmox instance to query.")
     return parser.parse_args(argv)
 
 
@@ -87,14 +110,17 @@ def write_agent_output(args):
     # type: (argparse.Namespace) -> None
     """Fetches and writes selected information formatted as agent output to stdout"""
     def write_piggyback_sections(host, sections):
-        # type: (str, List[Dict[str, Any]]) -> None
+        # type: (str, Sequence[Dict[str, Any]]) -> None
         print("<<<<%s>>>>" % host)
         write_sections(sections)
+        print("<<<<>>>>")
 
     def write_sections(sections):
-        # type: (List[Dict[str, Any]]) -> None
-        def write_section(name, data, jsonify=True):
-            # type: (str, Any, bool) -> None
+        # type: (Sequence[Dict[str, Any]]) -> None
+        def write_section(name, data, skip=False, jsonify=True):
+            # type: (str, Any, bool, bool) -> None
+            if skip:
+                return
             print(("<<<%s:sep(0)>>>" if jsonify else "<<<%s>>>") % name)
             print(json.dumps(data, sort_keys=True) if jsonify else data)
 
@@ -108,40 +134,73 @@ def write_agent_output(args):
             timeout=args.timeout,
             verify_ssl=not args.no_cert_check,
     ) as session:
+        LOGGER.info("Fetch general cluster and node information..")
         data = session.get_tree({
             "cluster": {
                 "backup": [],
+                "resources": [],
             },
-            "nodes": [{
-                "{node}": {
-                    "subscription": {},
-                    "lxc": [],
-                    "qemu": [],
-                },
-            }],
-            "version": {},
+            "nodes": [],
         })
 
-        write_sections([{
-            "name": "proxmox_version",
-            "data": data["version"],
-        }])
-        for node in data["nodes"]:
-            write_piggyback_sections(
-                host=node['node'],
-                sections=[
-                    {
-                        "name": "uptime",
-                        "data": node["uptime"],
-                        "jsonify": False,
-                    },
-                    {
-                        "name": "proxmox_node_subscription",
-                        "data": node["subscription"],
-                        "jsonify": True,
-                    },
-                ],
-            )
+    all_vms = {
+        str(entry["vmid"]): entry
+        for entry in data["cluster"]["resources"]
+        if entry["type"] in ("lxc", "qemu")
+    }
+
+    LOGGER.info("Write agent output..")
+    for node in data["nodes"]:
+        assert node["type"] == 'node'
+        write_piggyback_sections(
+            host=node['node'],
+            sections=[
+                # {  # Todo
+                #    "name": "proxmox_node_info",
+                # },
+                # {  # Todo
+                #    "name": "proxmox_disk_usage",
+                # },
+                # {  # Todo
+                #    "name": "proxmox_mem_usage",
+                # },
+                {
+                    "name": "uptime",
+                    "data": node["uptime"],
+                    # don't write json since we use generic check plugin
+                    "jsonify": False,
+                },
+                # {  # Todo
+                #     "name": "proxmox_backup_summary",
+                # },
+                # {  # Todo
+                #     "name": "proxmox_snapshot_summary",
+                # },
+            ])
+
+    for _vmid, vm in all_vms.items():
+        write_piggyback_sections(
+            host=vm["name"],
+            sections=[
+                # {  # Todo
+                #    "name": "proxmox_vm_info",
+                # },
+                # {  # Todo
+                #    "name": "proxmox_disk_usage",
+                # },
+                # {  # Todo
+                #    "name": "proxmox_mem_usage",
+                # },
+                # {  # Todo
+                #     "name": "proxmox_vm_backup_status",
+                # },
+                # {  # Todo
+                #     "name": "proxmox_vm_replication_status",
+                # },
+                # {  # Todo
+                #     "name": "proxmox_vm_snapshot_status",
+                # },
+            ])
 
 
 class ProxmoxSession:
@@ -150,7 +209,7 @@ class ProxmoxSession:
         """Auth"""
         def __init__(self, base_url, credentials, timeout, verify_ssl):
             # type: (str, Dict[str, str], int, bool) -> None
-            super().__init__()
+            super(ProxmoxSession.HTTPAuth, self).__init__()
             ticket_url = base_url + "api2/json/access/ticket"
             response = requests.post(url=ticket_url,
                                      verify=verify_ssl,
@@ -182,7 +241,6 @@ class ProxmoxSession:
                  "text/x-javascript", "text/x-json"))
             return session
 
-        super().__init__()
         self._timeout = timeout
         self._verify_ssl = verify_ssl
         self._base_url = "https://%s:%d/" % endpoint
@@ -192,7 +250,7 @@ class ProxmoxSession:
         # type: () -> Any
         return self
 
-    def __exit__(self, *_args, **_kwargs):
+    def __exit__(self, *args, **kwargs):  # wing disable:argument-not-used
         # type: (Any, Any) -> None
         self.close()
 
@@ -207,6 +265,9 @@ class ProxmoxSession:
         return self._session.request(
             method="GET",
             url=self._base_url + sub_url,
+            # todo: generic
+            params={"limit": "5000"} if
+            (sub_url.endswith("/log") or sub_url.endswith("/tasks")) else {},
             verify=self._verify_ssl,
             timeout=self._timeout,
         )
@@ -216,7 +277,7 @@ class ProxmoxSession:
         """do an API GET request"""
         response_json = self.get_raw("api2/json/" + path).json()
         if 'errors' in response_json:
-            raise RuntimeError("could not fetch %r (%r)" % (path, response_json['errors']))
+            raise RuntimeError("Could not fetch %r (%r)" % (path, response_json['errors']))
         return response_json.get('data')
 
 
@@ -224,12 +285,18 @@ class ProxmoxAPI:
     """Wrapper for ProxmoxSession which provides high level API calls"""
     def __init__(self, host, port, credentials, timeout, verify_ssl):
         # type: (str, int, Any, int, bool) -> None
-        self._session = ProxmoxSession(
-            endpoint=(host, port),
-            credentials=credentials,
-            timeout=timeout,
-            verify_ssl=verify_ssl,
-        )
+        try:
+            LOGGER.info("Establish connection to Proxmox host %r", host)
+            self._session = ProxmoxSession(
+                endpoint=(host, port),
+                credentials=credentials,
+                timeout=timeout,
+                verify_ssl=verify_ssl,
+            )
+        except requests.exceptions.ConnectTimeout as exc:
+            # In order to make the exception traceback more readable truncate it to
+            # this function - fallback to full stack on Python2
+            raise exc.with_traceback(None) if hasattr(exc, "with_traceback") else exc
 
     def __enter__(self):
         # type: () -> Any
@@ -250,7 +317,7 @@ class ProxmoxAPI:
     def get_tree(self, requested_structure):
         # type: (ListOrDict) -> Any
         def rec_get_tree(element_name, requested_structure, path):
-            # type: (Optional[str], ListOrDict, List[str]) -> Any
+            # type: (Optional[str], ListOrDict, StrSequence) -> Any
             """Recursively fetch data from API to match <requested_structure>"""
             def is_list_of_subtree_names(data):
                 # type: (ListOrDict) -> bool
@@ -282,12 +349,12 @@ class ProxmoxAPI:
 
             def dict_merge(d1, d2):
                 # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
-                """Does the same as {**d1, **d2} would do - be careful: """
+                """Does the same as {**d1, **d2} would do"""
                 result = d1.copy()
                 result.update(d2)
                 return result
 
-            next_path = path + ([str(element_name)] if element_name is not None else [])
+            next_path = list(path) + ([] if element_name is None else [element_name])
             subtree = extract_request_subtree(requested_structure)
             variable = extract_variable(subtree)
             response = self._session.get_api_element("/".join(next_path))
@@ -311,11 +378,21 @@ class ProxmoxAPI:
                 # Handle case when response is a list of arbitrary datasets
                 #  e.g [{'uptime': 12345}, 'id': 'server-1', ...}, ...]"""
                 if all(isinstance(elem, dict) for elem in response):
+                    if variable is None:
+                        assert isinstance(subtree, dict)
+                        return {
+                            key: rec_get_tree(key, subtree[key], next_path)  #
+                            for key in subtree
+                        } if isinstance(requested_structure, dict) else response
+
                     assert isinstance(requested_structure, list)
-                    return response if variable is None else [
-                        dict_merge(key,
-                                   rec_get_tree(key[variable["name"]], variable["subtree"],
-                                                next_path) or {})  #
+                    return [
+                        dict_merge(
+                            key,
+                            rec_get_tree(
+                                key[variable["name"]],
+                                variable["subtree"],  #
+                                next_path) or {})  #
                         for key in response
                     ]
 
@@ -324,35 +401,39 @@ class ProxmoxAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
-def log():
-    # type: () -> logging.Logger
-    return logging.getLogger("agent_proxmox")
-
-
 def main(argv=None):
     # type: (Any) -> int
     """read arguments, configure application and run command specified on command line"""
     if argv is None:
         cmk.utils.password_store.replace_passwords()
         argv = sys.argv[1:]
+
     args = parse_arguments(argv)
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
-    logging.basicConfig(level={
-        0: logging.WARN,
-        1: logging.INFO,
-        2: logging.DEBUG
-    }.get(args.verbose, logging.WARN))
+    logging.basicConfig(
+        format="%(levelname)s %(asctime)s %(name)s: %(message)s",
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level={
+            0: logging.WARN,
+            1: logging.INFO,
+            2: logging.DEBUG
+        }.get(args.verbose, logging.DEBUG),
+    )
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
 
     # activate as soon as vcr is available (see imports)
     # logging.getLogger("vcr").setLevel(logging.WARN)
+    LOGGER.info("running file %s with Python version %s", __file__,
+                ".".join(str(e) for e in sys.version_info))
 
     try:
         write_agent_output(args)
     except Exception as exc:
         if args.debug:
             raise
-        log().error("Cought exception: %r", exc)
+        LOGGER.error("Caught exception: %r", exc)
+        return -1
 
     return 0
 

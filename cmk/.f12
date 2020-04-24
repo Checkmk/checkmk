@@ -55,6 +55,7 @@ PYTHON3_PATHS=(
     gui
     utils
     ec
+    fetchers
     special_agents/agent_allnet_ip_sensoric.py
     special_agents/agent_aws.py
     special_agents/agent_couchbase.py

@@ -23,7 +23,6 @@ KNOWN_AUTO_MIGRATION_FAILURES = [
     ('section', 'domino_tasks'),
     ('section', 'f5_bigip_cluster'),
     ('section', 'f5_bigip_cluster_status'),
-    ('section', 'f5_bigip_cluster_status.v11_2'),
     ('section', 'f5_bigip_cluster_status_v11_2'),
     ('section', 'f5_bigip_cluster_v11'),
     ('section', 'f5_bigip_vcmpfailover'),

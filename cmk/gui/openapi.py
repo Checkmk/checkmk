@@ -19,7 +19,7 @@ import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 
 if not version.is_raw_edition():
     # noinspection PyUnresolvedReferences
-    import cmk.gui.cee.plugins.openapi  # pylint: disable=unused-import
+    import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 
 def generate(args=None):

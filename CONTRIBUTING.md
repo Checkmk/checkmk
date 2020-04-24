@@ -607,32 +607,198 @@ The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. If you would like to change or contribute
 something, please respect the following things:
 
-- If you think you need to use more advanced shell capability for your plugin 
-  like associative arrays (e.g. `bash`, `zsh`), then you should probably
-  consider using another language like `python`
+- If you think you need to use more advanced shell capability for your plugin
+  or local check, such as associative arrays (e.g. `bash`, `zsh`), then you
+  should probably consider using another language like `python`
 
-- Use [shellcheck](https://www.shellcheck.net/) for your changes before
-  submitting patches.
+### Code style
 
-  The best results are achieved with
-  [a direct integration](https://github.com/koalaman/shellcheck#user-content-in-your-editor)
-  into your preferred editor, so that you are immediately informed about
-  possible problems during programming.
-  
-  The various agent scripts are not clean at the moment, but we aim to clean
-  this up in the near future.
+Format your code according to the following guidelines:
 
-  Do note that while Shellcheck is an excellent tool, it's not perfect.
-  Sometimes it alerts on code that may actually be desired.  In this scenario,
-  you must use a `disable` directive with a comment that justifies your reason
-  for this.  Preferably this will be a git commit hash where the reasoning is
-  given e.g.
+- [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
+- [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
 
-  ```
-  # See commit abcd3456
-  # shellcheck disable=SC2120
-  foo() {
-  ```
+checkmk specific guidance below supersedes what's offered in those guidelines:
+
+### Indentation and column width
+
+- Line length up to 100 characters is allowed
+- Use 4 spaces for indentation
+
+### Function Names
+
+Names are in lowercase, underscored i.e. `snake_case()`.  Names should be
+meaningful, so the `verb_noun` style may be worth considering.  Microsoft has
+documentation for [approved
+verbs](https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7)
+that may provide some useful guidance.
+
+Do not use the `function` keyword.  It is non-portable and considered obsolete.
+
+Bad:
+
+```
+# Haha I gave this function a funny name!
+function blurgh() {
+    ...
+}
+```
+
+Better:
+
+```
+get_checkmk_api() {
+    ...
+}
+```
+
+### Variables
+
+The family of Linux/UNIX shells use dynamic scoping, which can cause confusion
+and trouble.  Fortunately, this gives us the freedom to practice a rudimentary
+form of static scoping, which helps to make things a little bit more robust.
+
+Different languages have different numbers of scopes and different names, but
+broadly speaking we can break shell's down to the following three-ish "scopes":
+
+#### Global / Environment / Constants
+
+We know from long-established convention that **Global/Environment** variables
+and, to a lesser extent, **Constants** tend to be in UPPERCASE.  You can see 
+this in e.g. `bash` by running `set` and/or `printenv`.
+
+So you should avoid UPPERCASE as much as possible.  If you *do* need a variable
+in the environment "scope" for whatever reason, use the form `MK_VARNAME`
+e.g. `MK_VERSION`
+
+To make a variable constant, use `readonly`, defined and set separately e.g.
+
+```
+MK_CONSTANT="Northern Star"
+readonly MK_CONSTANT
+```
+
+#### Script
+
+Variables in the **script** "scope" tend often to be mistakenly written in 
+UPPERCASE, which gives rise to the possibility of clobbering a legitimate 
+global var.  This can have results that are 
+[potentially hilarious](https://stackoverflow.com/q/28310594), or potentially bad.
+
+For that reason, UPPERCASE variable names are strongly discouraged outside of
+the global scope.
+
+Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
+
+Try, also, to use meaningful names, this is meaningless:
+
+```
+for f in df; do
+  ...
+```
+
+Whereas this is better:
+
+```
+for file_system in $(df); do
+```
+
+*Exception: C-Style `for` loops :)*
+
+#### Function / Local
+
+`bash` and others allow you to define variables as local within a function e.g.
+
+```
+get_api_user() {
+  local username=Shelly
+}
+```
+
+Unfortunately this is not portable.  So our practice is to prepend any variables
+within a function with an underscore.  We also `unset` the variable immediately
+prior to the function closure.  For example:
+
+```
+get_api_user() {
+  _username=Shelly
+  printf -- '%s\n' "${_username}"
+  unset -v _username
+}
+```
+
+#### Curly braces?
+
+Curly braces are used on `${arrays[@]}` and `${variable/modif/ications}`.
+To maintain consistency, you should use curly braces on normal variables too.
+
+Curly braces around variables improves readability when syntax colouring is not
+available.  `${this_variable}` stands out within this block of text.
+
+They also allow us to better format outputs e.g.
+
+```
+▓▒░$ time_metric=5
+▓▒░$ echo "$time_metricmins"
+
+▓▒░$ echo "${time_metric}mins"
+5mins
+```
+
+In the first example, there is no such variable as `$timemetricmins`.
+
+So curly braces explicitly tell the shell interpreter where the variable name
+boundaries are.
+
+*Exception: When you're in an arithmetic context e.g. `(( time_metric < 10 ))`*
+
+#### Re-cap:
+
+* **Global / Environment**: `${MK_UPPERCASE}`
+* **Constants**: `${MK_UPPERCASE}` set to `readonly`
+* **Script**: `${meaningful_snake_case}`
+* **Function / Local** `${_underscore_prepended_snake_case}` with `unset -v`
+
+### Linting and formatting
+
+Use [shellcheck](https://www.shellcheck.net/) for your changes before
+submitting patches.
+
+The best results are achieved with
+[a direct integration](https://github.com/koalaman/shellcheck#user-content-in-your-editor)
+into your preferred editor, so that you are immediately informed about
+possible problems during programming.
+
+The various agent scripts are not clean at the moment, but we aim to clean
+this up in the near future.
+
+Do note that while Shellcheck is an excellent tool, it's not perfect.
+Sometimes it alerts on code that may actually be desired.  In this scenario,
+you must use a `disable` directive with a comment that justifies your reason
+for this.  Preferably this will be a git commit hash where the reasoning is
+given e.g.
+
+```
+# See commit abcd3456
+# shellcheck disable=SC2120
+foo() {
+```
+
+### Formatting
+
+You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
+
+If you don't have a Go environment ready, the easiest way is to use it is using
+a prepared docker image (See bottom of project README). We have a shortcut to
+this, which is also used by our CI system.
+
+Execute this in checkmk git directory:
+
+```
+sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
+```
+
+### Portability
 
 - Existing scripts have been written using a variety of shells.  Scripts that
   use `bash` have tended to be written for `bash` 3.x.
@@ -652,32 +818,7 @@ something, please respect the following things:
 
   The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
 
-- Format the code according to the [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml) with these exceptions:
-  - Line length up to 100 characters is allowed
-  - Use 4 spaces for indentation
-
-- [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md) 
-  offers extra guidance over and above Google's that you may like to consider.
-  Again, the above listed exceptions apply.
-
-- By long-established convention, UPPERCASE variables are for the shell's
-  de-facto global scope, so should generally be avoided to minimise the risk of
-  clobbering the environment.  As is the standard practice in other languages.
-  If you need a variable in the "global scope", prepend it with `MK_` e.g. `MK_VERSION`
-
 - `echo` is a portability nightmare.  Prefer `printf` instead.
-
-- You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
-
-  If you don't have a Go environment ready, the easiest way is to use it is using
-  a prepared docker image (See bottom of project README). We have a shortcut to
-  this, which is also used by our CI system.
-
-  Execute this in Checkmk git directory:
-
-  ```
-  sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
-  ```
 
 ## Localization
 

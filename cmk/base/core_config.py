@@ -8,7 +8,7 @@ import abc
 import numbers
 import os
 import sys
-from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 import six
 
@@ -313,11 +313,19 @@ def do_update(core, with_precompile):
 
 
 def active_check_arguments(hostname, description, args):
-    # type: (HostName, ServiceName, Union[str, List[str]]) -> str
-    if isinstance(args, str):
-        cmd_args = args  # type: Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]]
+    # type: (HostName, Optional[ServiceName], config.SpecialAgentInfoFunctionResult) -> str
+    if isinstance(args, config.SpecialAgentConfiguration):
+        # TODO: Silly dispatching because of broken types/variance.
+        if isinstance(args.args, str):
+            cmd_args = args.args  # type: Union[str, List[Union[int, float, str, Tuple[str, str, str]]]]
+        elif isinstance(args.args, list):
+            cmd_args = [arg for arg in args.args if isinstance(arg, str)]
+        else:
+            raise Exception("funny SpecialAgentConfiguration args %r" % (args.args,))
+    elif isinstance(args, str):
+        cmd_args = args
     elif isinstance(args, list):
-        cmd_args = [arg for arg in args if isinstance(arg, str)]
+        cmd_args = [arg for arg in args if isinstance(arg, (str, tuple))]
     else:
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "

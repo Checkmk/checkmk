@@ -7,8 +7,7 @@
 import abc
 import os
 import sys
-from logging import Logger  # pylint: disable=unused-import
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Dict, Optional, Set  # pylint: disable=unused-import
 
 import six
 
@@ -132,14 +131,6 @@ class DSProgramDataSource(ProgramDataSource):
         return six.ensure_str(core_config.replace_macros(cmd, macros))
 
 
-SpecialAgentConfiguration = NamedTuple(
-    "SpecialAgentConfiguration",
-    [
-        ("args", Union[str, List[str]]),
-        ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
-    ])
-
-
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):
         # type: (HostName, Optional[HostAddress], str, Dict) -> None
@@ -174,16 +165,7 @@ class SpecialAgentDataSource(ProgramDataSource):
         # type: () -> str
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
-        if isinstance(agent_configuration, SpecialAgentConfiguration):
-            cmd_arguments = agent_configuration.args  # type: Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]]
-        elif isinstance(agent_configuration, str):
-            cmd_arguments = agent_configuration
-        elif isinstance(agent_configuration, list):
-            cmd_arguments = [arg for arg in agent_configuration if isinstance(arg, str)]
-        else:
-            raise Exception("invalid agent configuration %r" % (agent_configuration,))
-
-        return config.prepare_check_command(cmd_arguments, self._hostname, description=None)
+        return core_config.active_check_arguments(self._hostname, None, agent_configuration)
 
     @property
     def source_cmdline(self):
@@ -197,6 +179,6 @@ class SpecialAgentDataSource(ProgramDataSource):
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
-        if isinstance(agent_configuration, SpecialAgentConfiguration):
+        if isinstance(agent_configuration, config.SpecialAgentConfiguration):
             return agent_configuration.stdin
         return None

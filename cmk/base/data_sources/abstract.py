@@ -31,6 +31,7 @@ from cmk.utils.encoding import (
     convert_to_unicode,
     ensure_bytestr,
 )
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.base.agent_simulator
 import cmk.base.console as console
@@ -981,8 +982,8 @@ class CheckMKAgentDataSource(
                     if cmk.utils.misc.is_daily_build_version(agent_version):
                         return False
 
-                    if cmk.utils.werks.parse_check_mk_version(agent_version) \
-                        < cmk.utils.werks.parse_check_mk_version(spec['release']):
+                    if parse_check_mk_version(agent_version) < parse_check_mk_version(
+                            spec['release']):
                         return False
 
             return True

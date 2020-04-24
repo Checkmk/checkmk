@@ -17,7 +17,8 @@ import sys
 import itertools
 import contextlib
 from typing import (  # pylint: disable=unused-import
-    Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional, cast,
+    Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Text, Tuple, Union,
+    cast,
 )
 
 if sys.version_info[0] >= 3:
@@ -107,8 +108,16 @@ GetCheckApiContext = Callable[[], Dict[str, Any]]
 GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
+SpecialAgentConfiguration = NamedTuple(
+    "SpecialAgentConfiguration",
+    [
+        ("args", Union[str, List[str]]),
+        ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
+    ])
+SpecialAgentInfoFunctionResult = Union[str, List[Union[str, Tuple[str, str, str]]],
+                                       SpecialAgentConfiguration]
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
-                                    Union[str, List[str]]]
+                                    SpecialAgentInfoFunctionResult]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
@@ -1167,8 +1176,9 @@ def get_service_translations(hostname):
     return translations
 
 
+# TODO: Why do we include int and float in the signature/code below?
 def prepare_check_command(command_spec, hostname, description):
-    # type: (Union[str, List[Union[int, float, str, Tuple[Any, Any, Any]]]], HostName, Optional[ServiceName]) -> str
+    # type: (Union[str, List[Union[int, float, str, Tuple[str, str, str]]]], HostName, Optional[ServiceName]) -> str
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as

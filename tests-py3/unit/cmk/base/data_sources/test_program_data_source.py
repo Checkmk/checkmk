@@ -4,15 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
 import cmk.base.config as config
+from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 import cmk.utils.paths
 from cmk.base.data_sources.programs import (
     DSProgramDataSource,
-    SpecialAgentConfiguration,
     SpecialAgentDataSource,
 )
 from testlib.base import Scenario
@@ -46,7 +46,7 @@ info_func_result_and_expected = [
         SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
         ("'list0' 'list1'", "stdin_blob"),
     ),
-]  # type: List[Tuple[Union[str, List[str], SpecialAgentConfiguration], Tuple[str, Optional[str]]]]
+]  # type: List[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]]
 
 
 @pytest.mark.parametrize("info_func_result,expected", info_func_result_and_expected)

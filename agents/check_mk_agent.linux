@@ -15,6 +15,16 @@ for i in "C.UTF-8" "C.utf8" "C"; do
     fi
 done
 
+# Close standard input (for security reasons) and stderr when not explicitly in debug mode.
+# When the nodes agent is executed by a e.g. docker node in a container,
+# then don't close stdin, because the agent is piped through it in this case.
+if [ "${1}" = -d ]; then
+    set -xv
+# TO-DO: Review the validity/use of MK_FROM_NODE, it seems to be superseded now
+elif [ -z "${MK_FROM_NODE}" ]; then
+    exec </dev/null 2>/dev/null
+fi
+
 ####################################################################################################
 # Environment variables
 # Make sure that locally installed binaries are found
@@ -57,62 +67,24 @@ export MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_V
 
 ####################################################################################################
 
-# Provide information about the remote host. That helps when data
-# is being sent only once to each remote host.
-if [ "$REMOTE_HOST" ]; then
-    export REMOTE=$REMOTE_HOST
-elif [ "$SSH_CLIENT" ]; then
-    export REMOTE=${SSH_CLIENT%% *}
-fi
-
 # The package name gets patched for baked agents to either
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 XINETD_SERVICE_NAME=check_mk
 
-# close standard input (for security reasons) and stderr when not
-# explicitly in debug mode.
-# When the nodes agent is executed by a e.g. docker node in a container,
-# then don't close stdin, because the agent is piped through it in this
-# case.
-if [ "$1" = -d ]; then
-    set -xv
-elif [ -z "${MK_FROM_NODE}" ]; then
-    exec </dev/null 2>/dev/null
-fi
-
 # Detect whether or not the agent is being executed in a container
 # environment.
 if [ -f /.dockerenv ]; then
-    IS_DOCKERIZED=1
-elif grep container=lxc /proc/1/environ >/dev/null 2>&1; then
+    MK_IS_DOCKERIZED=1
+elif grep 'container=lxc' /proc/1/environ >/dev/null 2>&1; then
     # Works in lxc environment e.g. on Ubuntu bionic, but does not
     # seem to work in proxmox (see CMK-1561)
-    IS_LXC_CONTAINER=1
+    MK_IS_LXC_CONTAINER=1
 elif grep 'lxcfs /proc/cpuinfo fuse.lxcfs' /proc/mounts >/dev/null 2>&1; then
     # Seems to work in proxmox
-    IS_LXC_CONTAINER=1
+    MK_IS_LXC_CONTAINER=1
 else
-    unset IS_DOCKERIZED
-    unset IS_LXC_CONTAINER
+    unset -v MK_IS_DOCKERIZED MK_IS_LXC_CONTAINER
 fi
-
-# Function to list CIFS mounts for use by section_nfs
-get_cifs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ cifs/{print $3;}'
-    fi
-}
-
-# Function to list NFS mounts for use by section_nfs
-get_nfs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ nfs/{print $3;}'
-    fi
-}
 
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
@@ -161,10 +133,25 @@ if [ "$ENCRYPTED" == "yes" ]; then
     fi
 fi
 
+# Load our variables for realtime data
 RTC_PLUGINS=""
-if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+# Load our config file.  This provides RTC_TIMEOUT, RTC_PORT, RTC_SECRET and RTC_SECTIONS
+if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+    # We ensure that this file is secure
+    chmod 640 "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null
+
     # shellcheck source=/dev/null
     . "${MK_CONFDIR}/real_time_checks.cfg"
+fi
+
+# Provide information about the remote host.
+# That helps when data is being sent only once to each remote host.
+if [ "${REMOTE_HOST}" ]; then
+    MK_RTC_HOST="${REMOTE_HOST}"
+    export MK_RTC_HOST
+elif [ "${SSH_CLIENT}" ]; then
+    MK_RTC_HOST="${SSH_CLIENT%% *}"
+    export MK_RTC_HOST
 fi
 
 section_checkmk() {
@@ -185,7 +172,7 @@ EOF
 # CHECK SECTIONS
 
 section_mem() {
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ]; then
         echo '<<<mem>>>'
         grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
     else
@@ -230,14 +217,15 @@ section_cpu() {
     fi
     NUM_CPUS=$(grep -c -E $CPU_REGEX </proc/cpuinfo)
 
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
         echo '<<<cpu>>>'
         echo "$(cat /proc/loadavg) $NUM_CPUS"
         if [ -f "/proc/sys/kernel/threads-max" ]; then
             cat /proc/sys/kernel/threads-max
         fi
     else
-        if [ -n "$IS_DOCKERIZED" ]; then
+
+        if [ -n "${MK_IS_DOCKERIZED}" ]; then
             echo '<<<docker_container_cpu>>>'
         else
             echo '<<<lxc_container_cpu>>>'
@@ -250,7 +238,7 @@ section_cpu() {
 
 section_uptime() {
     echo '<<<uptime>>>'
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ]; then
         cat /proc/uptime
     else
         echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
@@ -264,7 +252,7 @@ section_uptime() {
 # thousands of agent processes and, ultimately, a dead monitored system.
 # These should generally be monitored on the NFS server, not on the clients.
 section_df() {
-    if [ -n "$IS_DOCKERIZED" ]; then
+    if [ -n "${MK_IS_DOCKERIZED}" ]; then
         return
     fi
 
@@ -433,7 +421,7 @@ section_multipathing() {
 }
 
 section_diskstat() {
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ]; then
         echo '<<<diskstat>>>'
         date +%s
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
@@ -472,7 +460,7 @@ section_chrony() {
 }
 
 section_kernel() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
         echo '<<<kernel>>>'
         date +%s
         cat /proc/vmstat /proc/stat
@@ -621,7 +609,7 @@ section_nvidia() {
 }
 
 section_drbd() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
     fi
@@ -884,7 +872,7 @@ section_job() {
 }
 
 section_thermal() {
-    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
         echo '<<<lnx_thermal:sep(124)>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"
@@ -965,9 +953,9 @@ run_fileinfo() {
 }
 
 run_liveupdate() {
-    if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
-        if [ -z "$REMOTE" ]; then
-            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+    if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+        if [ -z "${MK_RTC_HOST}" ]; then
+            echo "ERROR: \${MK_RTC_HOST} not specified. Not starting Real-Time Checks." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
@@ -1271,7 +1259,7 @@ run_real_time_checks() {
                 else
                     section_"$SECTION"
                 fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${MK_RTC_HOST}/${RTC_PORT}"
         done
 
         # Plugins
@@ -1294,7 +1282,7 @@ run_real_time_checks() {
                     else
                         ./"$PLUGIN"
                     fi
-                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${MK_RTC_HOST}/${RTC_PORT}"
             done
         fi
 

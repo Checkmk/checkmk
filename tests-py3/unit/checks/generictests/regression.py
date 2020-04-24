@@ -32,7 +32,7 @@ A. Create a new test from scratch
 
     2) From this file we create a regression test dataset by running
 
-       py.test -T unit tests/unit/checks/generictests/regression.py \
+       py.test -T unit tests-py3/unit/checks/generictests/regression.py \
        --datasetfile ~/tmp/example.py
 
       This will create a file called '../datasets/example.py' (relative to the

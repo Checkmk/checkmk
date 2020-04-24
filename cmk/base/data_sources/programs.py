@@ -6,11 +6,9 @@
 
 import abc
 import os
-import signal
 import sys
 from logging import Logger  # pylint: disable=unused-import
-from types import TracebackType  # pylint: disable=unused-import
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 import six
 
@@ -19,10 +17,9 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-violation
+
 import cmk.utils.paths
-from cmk.utils.exceptions import MKTimeout
-import cmk.utils.cmk_subprocess as subprocess
-from cmk.utils.encoding import ensure_bytestr
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -31,7 +28,7 @@ from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-impor
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress)
 
-from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
+from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
 
 #.
 #   .--Datasoure Programs--------------------------------------------------.
@@ -44,83 +41,6 @@ from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, RawAgentData 
 #   +----------------------------------------------------------------------+
 #   | Fetching agent data from program calls instead of an agent           |
 #   '----------------------------------------------------------------------'
-
-
-class ProgramDataFetcher(AbstractDataFetcher):
-    def __init__(self, cmdline, stdin, logger):
-        # type: (Union[bytes, Text], Optional[str], Logger) -> None
-        super(ProgramDataFetcher, self).__init__()
-        self._cmdline = cmdline
-        self._stdin = stdin
-        self._logger = logger
-        self._process = None  # type: Optional[subprocess.Popen]
-
-    def __enter__(self):
-        # type: () -> ProgramDataFetcher
-        if config.monitoring_core == "cmc":
-            # Warning:
-            # The preexec_fn parameter is not safe to use in the presence of threads in your
-            # application. The child process could deadlock before exec is called. If you
-            # must use it, keep it trivial! Minimize the number of libraries you call into.
-            #
-            # Note:
-            # If you need to modify the environment for the child use the env parameter
-            # rather than doing it in a preexec_fn. The start_new_session parameter can take
-            # the place of a previously common use of preexec_fn to call os.setsid() in the
-            # child.
-            self._process = subprocess.Popen(
-                self._cmdline,
-                shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                start_new_session=True,
-                close_fds=True,
-            )
-        else:
-            # We can not create a separate process group when running Nagios
-            # Upon reaching the service_check_timeout Nagios only kills the process
-            # group of the active check.
-            self._process = subprocess.Popen(
-                self._cmdline,
-                shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=True,
-            )
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
-        if self._process is None:
-            return
-        if exc_type is MKTimeout:
-            # On timeout exception try to stop the process to prevent child process "leakage"
-            os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
-            self._process.wait()
-        # The stdout and stderr pipe are not closed correctly on a MKTimeout
-        # Normally these pipes getting closed after p.communicate finishes
-        # Closing them a second time in a OK scenario won't hurt neither..
-        if self._process.stdout is None or self._process.stderr is None:
-            raise Exception("stdout needs to be set")
-        self._process.stdout.close()
-        self._process.stderr.close()
-        self._process = None
-
-    def data(self):
-        # type: () -> RawAgentData
-        if self._process is None:
-            raise MKAgentError("No process")
-        stdout, stderr = self._process.communicate(
-            input=ensure_bytestr(self._stdin) if self._stdin else None)
-        if self._process.returncode == 127:
-            exepath = self._cmdline.split()[0]  # for error message, hide options!
-            raise MKAgentError("Program '%s' not found (exit code 127)" % six.ensure_str(exepath))
-        if self._process.returncode:
-            raise MKAgentError("Agent exited with code %d: %s" %
-                               (self._process.returncode, six.ensure_str(stderr)))
-        return stdout
 
 
 class ProgramDataSource(CheckMKAgentDataSource):

@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-import socket
-
 import pytest  # type: ignore[import]
 
-from cmk.base.check_utils import ServiceCheckResult
-from cmk.base.data_sources.tcp import TCPDataFetcher, TCPDataSource
 import cmk.base.data_sources.abstract as _abstract
-from cmk.base.exceptions import MKAgentError
+from cmk.base.check_utils import ServiceCheckResult
+from cmk.base.data_sources.tcp import TCPDataSource
 from testlib.base import Scenario
 
 
@@ -74,29 +70,3 @@ def test_get_summary_result_requires_host_sections(monkeypatch, ipaddress):
     assert source.get_summary_result_for_discovery() == defaults
     assert source.get_summary_result_for_inventory() == defaults
     assert source.get_summary_result_for_checking() == defaults
-
-
-def test_decrypt_plaintext_is_noop():
-    settings = {"use_regular": "allow"}
-    output = b"<<<section:sep(0)>>>\nbody\n"
-    fetcher = TCPDataFetcher(socket.AF_INET, "127.0.0.1", 0.0, settings, logging.getLogger("test"))
-
-    assert fetcher._decrypt(output) == output
-
-
-def test_decrypt_plaintext_with_enforce_raises_MKAgentError():
-    settings = {"use_regular": "enforce"}
-    output = b"<<<section:sep(0)>>>\nbody\n"
-    fetcher = TCPDataFetcher(socket.AF_INET, "127.0.0.1", 0.0, settings, logging.getLogger("test"))
-
-    with pytest.raises(MKAgentError):
-        fetcher._decrypt(output)
-
-
-def test_decrypt_payload_with_wrong_protocol_raises_MKAgentError():
-    settings = {"use_regular": "enforce"}
-    output = b"the first two bytes are not a number"
-    fetcher = TCPDataFetcher(socket.AF_INET, "127.0.0.1", 0.0, settings, logging.getLogger("test"))
-
-    with pytest.raises(MKAgentError):
-        fetcher._decrypt(output)

@@ -8,8 +8,7 @@ import abc
 import ast
 import time
 from logging import Logger  # pylint: disable=unused-import
-from types import TracebackType  # pylint: disable=unused-import
-from typing import Callable, Tuple, Type, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 import six
 from mypy_extensions import NamedArg
@@ -19,7 +18,6 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.check_utils as check_utils
 import cmk.base.config as config
-import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
@@ -33,6 +31,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 )
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.fetchers import SNMPDataFetcher  # pylint: disable=cmk-module-layer-violation
 
 from .abstract import DataSource, management_board_ipaddress, verify_ipaddress
 from .host_sections import AbstractHostSections
@@ -55,50 +54,6 @@ PluginNameFilterFunction = Callable[[
 #   +----------------------------------------------------------------------+
 #   | Realize the data source for dealing with SNMP data                   |
 #   '----------------------------------------------------------------------'
-
-
-class SNMPDataFetcher:
-    def __init__(self, oid_infos, use_snmpwalk_cache, snmp_config, logger):
-        # type (Dict[str, Union[OIDInfo, List[SNMPTree]]], bool, snmp_utils.SNMPHostConfig, Logger) -> None
-        super(SNMPDataFetcher, self).__init__()
-        self._oid_infos = oid_infos
-        self._use_snmpwalk_cache = use_snmpwalk_cache
-        self._snmp_config = snmp_config
-        self._logger = logger
-
-    def __enter__(self):
-        # type: () -> SNMPDataFetcher
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
-        pass
-
-    def data(self):
-        # type: () -> RawSNMPData
-        info = {}  # type: RawSNMPData
-        for check_plugin_name, oid_info in self._oid_infos.items():
-            section_name = check_utils.section_name_of(check_plugin_name)
-            # Prevent duplicate data fetching of identical section in case of SNMP sub checks
-            if section_name in info:
-                self._logger.debug("%s: Skip fetching data (section already fetched)",
-                                   check_plugin_name)
-                continue
-
-            self._logger.debug("%s: Fetching data", check_plugin_name)
-
-            # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
-            # and fetches a separate snmp table.
-            get_snmp = snmp.get_snmp_table_cached if self._use_snmpwalk_cache else snmp.get_snmp_table
-            if isinstance(oid_info, list):
-                check_info = []  # type: List[SNMPTable]
-                for entry in oid_info:
-                    check_info_part = get_snmp(self._snmp_config, check_plugin_name, entry)
-                    check_info.append(check_info_part)
-                info[section_name] = check_info
-            else:
-                info[section_name] = get_snmp(self._snmp_config, check_plugin_name, oid_info)
-        return info
 
 
 class SNMPHostSections(AbstractHostSections[RawSNMPData, SNMPSections, PersistedSNMPSections,

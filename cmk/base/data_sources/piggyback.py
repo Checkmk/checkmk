@@ -5,10 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import json
-from types import TracebackType  # pylint: disable=unused-import
-from typing import Tuple, Type, Optional, List  # pylint: disable=unused-import
+from typing import Tuple, Optional, List  # pylint: disable=unused-import
 
+from cmk.fetchers import PiggyBackDataFetcher  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import (  # pylint: disable=unused-import
@@ -21,72 +20,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 from cmk.base.exceptions import MKAgentError
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
-from .abstract import AbstractDataFetcher, CheckMKAgentDataSource
-
-
-def _raw_data(hostname, time_settings):
-    # type: (Optional[str], PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
-    return get_piggyback_raw_data(hostname if hostname else "", time_settings)
-
-
-class PiggyBackDataFetcher(AbstractDataFetcher):
-    def __init__(self, hostname, ipaddress, time_settings):
-        super(PiggyBackDataFetcher, self).__init__()
-        self._hostname = hostname  # type: HostName
-        self._ipaddress = ipaddress  # type: Optional[HostAddress]
-        self._time_settings = time_settings  # type: List[Tuple[Optional[str], str, int]]
-        self._sources = []  # type: List[PiggybackRawDataInfo]
-
-    def __enter__(self):
-        # type: () -> PiggyBackDataFetcher
-        for origin in (self._hostname, self._ipaddress):
-            self._sources.extend(_raw_data(origin, self._time_settings))
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
-        self._sources.clear()
-
-    def data(self):
-        # type: () -> RawAgentData
-        raw_data = b""
-        raw_data += self._get_main_section()
-        raw_data += self._get_source_labels_section()
-        return raw_data
-
-    def summary(self):
-        # type: () -> ServiceCheckResult
-        states = [0]
-        infotexts = set()
-        for src in self._sources:
-            states.append(src.reason_status)
-            infotexts.add(src.reason)
-        return max(states), ", ".join(infotexts), []
-
-    def _get_main_section(self):
-        # type: () -> RawAgentData
-        raw_data = b""
-        for src in self._sources:
-            if src.successfully_processed:
-                # !! Important for Check_MK and Check_MK Discovery service !!
-                #   - sources contains ALL file infos and is not filtered
-                #     in cmk/base/piggyback.py as in previous versions
-                #   - Check_MK gets the processed file info reasons and displays them in
-                #     it's service details
-                #   - Check_MK Discovery: Only shows vanished/new/... if raw data is not
-                #     added; ie. if file_info is not successfully processed
-                raw_data += src.raw_data
-        return raw_data
-
-    def _get_source_labels_section(self):
-        # type: () -> RawAgentData
-        """Return a <<<labels>>> agent section which adds the piggyback sources
-        to the labels of the current host"""
-        if not self._sources:
-            return b""
-
-        labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in self._sources}
-        return b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8")
+from .abstract import CheckMKAgentDataSource
 
 
 class PiggyBackDataSource(CheckMKAgentDataSource):

@@ -12,9 +12,8 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from types import TracebackType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Type, TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
+    TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
 )
 import six
 
@@ -72,24 +71,6 @@ class AgentHostSections(AbstractHostSections[RawAgentData, AgentSections, Persis
     def _extend_section(self, section_name, section_content):
         # type: (SectionName, AgentSectionContent) -> None
         self.sections.setdefault(section_name, []).extend(section_content)
-
-
-class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):
-    """Interface to the data fetchers."""
-    @abc.abstractmethod
-    def __enter__(self):
-        # type: () -> AbstractDataFetcher
-        """Prepare the data source."""
-
-    @abc.abstractmethod
-    def __exit__(self, exc_type, exc_value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> Optional[bool]
-        """Destroy the data source."""
-
-    @abc.abstractmethod
-    def data(self):
-        # type: () -> RawAgentData
-        """Return the data from the source."""
 
 
 class SectionStore:

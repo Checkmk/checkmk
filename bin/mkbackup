@@ -27,7 +27,7 @@ import textwrap
 import threading
 import time
 import traceback
-from typing import Any, Callable, Dict, IO, List, NamedTuple, Optional  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, IO, List, NamedTuple, Optional, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -56,6 +56,7 @@ VERSION = "1.4.0i1"
 # is e.g. used during "mkbackup backup" to store the output.
 class Log(object):
     def __init__(self, fd):
+        # type: (int) -> None
         self.fd = fd
 
         if self.fd == 1:
@@ -68,12 +69,14 @@ class Log(object):
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 
     def __del__(self):
+        # type: () -> None
         if self.fd == 1:
             sys.stdout = self.orig
         else:
             sys.stderr = self.orig
 
     def write(self, data):
+        # type: (str) -> None
         self.orig.write(data)
         try:
             add_output(self.color_replace.sub('', data))
@@ -81,6 +84,7 @@ class Log(object):
             self.orig.write("Failed to add output: %s\n" % e)
 
     def flush(self):
+        # type: () -> None
         self.orig.flush()
 
 
@@ -89,18 +93,21 @@ g_stderr_log = None
 
 
 def start_logging():
+    # type: () -> None
     global g_stdout_log, g_stderr_log
     g_stdout_log = Log(1)
     g_stderr_log = Log(2)
 
 
 def stop_logging():
+    # type: () -> None
     global g_stdout_log, g_stderr_log
     g_stderr_log = None
     g_stdout_log = None
 
 
 def log(s):
+    # type: (str) -> None
     msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
     sys.stdout.write(six.ensure_str(msg))
     if is_cma():
@@ -108,36 +115,44 @@ def log(s):
 
 
 def verbose(s):
+    # type (str) -> None
     if opt_verbose > 0:
         log(s)
 
 
 def hostname():
+    # type: () -> str
     return socket.gethostname()
 
 
 def is_root():
+    # type () -> bool
     return os.getuid() == 0
 
 
 def is_cma():
+    # type () -> bool
     return os.path.exists("/etc/cma/cma.conf")
 
 
 def current_site_id():
+    # type: () -> Optional[str]
     return os.environ.get("OMD_SITE")
 
 
 def site_version(site_id):
+    # type: (str) -> str
     linkpath = os.readlink("/omd/sites/%s/version" % site_id)
     return linkpath.split("/")[-1]
 
 
 def system_config_path():
+    # type: () -> str
     return "/etc/cma/backup.conf"
 
 
 def site_config_path():
+    # type: () -> str
     if not current_site_id():
         raise Exception("Not executed in OMD environment!")
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
@@ -150,6 +165,7 @@ g_backup_lock_f = None  # type: Optional[IO[bytes]]
 # geholt wird. D.h. es kann Systemweit immer nur ein Backup oder Restore
 # zur Zeit ausgeführt werden.
 def acquire_backup_lock():
+    # type: () -> None
     global g_backup_lock_f
     lock_file_path = "/tmp/mkbackup.lock"
     if not os.path.exists(lock_file_path):
@@ -179,6 +195,7 @@ def acquire_backup_lock():
 
 
 def set_permissions(path, uid, gid, mode):
+    # type: (str, int, int, Optional[int]) -> None
     try:
         os.chown(path, uid, gid)
     except OSError as e:
@@ -193,7 +210,8 @@ def set_permissions(path, uid, gid, mode):
             raise
 
     try:
-        os.chmod(path, mode)
+        if mode is not None:
+            os.chmod(path, mode)
     except OSError as e:
         if e.errno == errno.EACCES:
             pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
@@ -208,6 +226,7 @@ def set_permissions(path, uid, gid, mode):
 
 # TODO: Move to cmklib?
 def makedirs(path, user=None, group=None, mode=None):
+    # type: (str, Optional[str], Optional[str], Optional[int]) -> None
     head, tail = os.path.split(path)
     if not tail:
         head, tail = os.path.split(head)
@@ -226,21 +245,12 @@ def makedirs(path, user=None, group=None, mode=None):
 
 # TODO: Move to cmklib?
 def makedir(path, user=None, group=None, mode=None):
+    # type: (str, Optional[str], Optional[str], Optional[int]) -> None
     if os.path.exists(path):
         return
-
     os.mkdir(path)
-
-    if user is not None:
-        uid = pwd.getpwnam(user).pw_uid
-    else:
-        uid = -1
-
-    if group is not None:
-        gid = grp.getgrnam(group).gr_gid
-    else:
-        gid = -1
-
+    uid = -1 if user is None else pwd.getpwnam(user).pw_uid
+    gid = -1 if group is None else grp.getgrnam(group).gr_gid
     set_permissions(path, uid, gid, mode)
 
 
@@ -250,7 +260,9 @@ def makedir(path, user=None, group=None, mode=None):
 # - Targets aus System-Konfiguration laden
 # - Site-Konfiguration laden
 def load_config():
+    # type: () -> Dict[str, Any]
     def load_file(path):
+        # type: (str) -> Any
         with Path(path).open("r", encoding="utf-8") as f:
             return ast.literal_eval(f.read())
 
@@ -277,6 +289,7 @@ def load_config():
 
 # TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path):
+    # type: (str) -> Dict[str, Any]
     with open(path) as f:
         info = json.load(f)
 
@@ -291,15 +304,18 @@ def load_backup_info(path):
 
 
 def get_site_ids_of_backup(info):
+    # type: (Dict[str, Any]) -> List[str]
     return [f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-")]
 
 
 def save_backup_info(info):
+    # type: (Dict[str, Any]) -> None
     with open(backup_info_path(), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 def create_backup_info():
+    # type: () -> Dict[str, Any]
     files = get_files_for_backup_info()
 
     info = {
@@ -321,11 +337,13 @@ def create_backup_info():
 
 
 def add_site_info_to_backup_info(info):
+    # type: (Dict[str, Any]) -> None
     info["site_id"] = current_site_id()
     info["site_version"] = site_version(info["site_id"])
 
 
 def add_system_info_to_backup_info(info):
+    # type: (Dict[str, Any]) -> None
     import cma  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     info["cma_version"] = cma.version()
@@ -348,16 +366,18 @@ def add_system_info_to_backup_info(info):
 
 
 def get_files_for_backup_info():
-    files = []
+    # type: () -> List[Tuple[str, int, str]]
     backup_path = job_backup_path_during_backup()
-    for f in sorted(os.listdir(backup_path)):
+    dir_entries = os.listdir(backup_path)  # type: List[str]
+    files = []
+    for f in sorted(dir_entries):
         files.append(
             (f, os.path.getsize(backup_path + "/" + f), file_checksum(backup_path + "/" + f)))
-
     return files
 
 
 def file_checksum(path):
+    # type: (str) -> str
     hash_md5 = md5()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -764,9 +784,11 @@ class MKBackupStream(object):
             self._update_state()
 
     def _encrypt(self):
+        # type: () -> bool
         return self._key_ident is not None
 
     def _init_processing(self):
+        # type: () -> Optional[str]
         raise NotImplementedError()
 
     def _read_from_stream(self, size):
@@ -779,12 +801,15 @@ class MKBackupStream(object):
             raise
 
     def _read_chunk(self):
+        # type: () -> Tuple[bytes, bool]
         raise NotImplementedError()
 
     def _process_chunk(self, chunk):
+        # type: (bytes) -> bytes
         raise NotImplementedError()
 
     def _update_state(self):
+        # type: () -> None
         timedif = time.time() - self._last_state_update
         if timedif >= 1:
             this_bps = float(self._bytes_copied) / timedif
@@ -828,21 +853,24 @@ class MKBackupStream(object):
 
 class BackupStream(MKBackupStream):
     def _init_processing(self):
-        if self._encrypt():
-            secret_key, encrypted_secret_key = self._derive_key(self._get_encryption_public_key(),
-                                                                32)
-            cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-            assert isinstance(cipher, CbcMode)
-            self._cipher = cipher
+        # type: () -> Optional[str]
+        if not self._encrypt():
+            return None
 
-            # Write out a file version marker and  the encrypted secret key, preceded by
-            # a length indication. All separated by \0.
-            # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
-            #            early versions of 1.4 until moving from PyCryto to PyCryptodome
-            # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
-            return "%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
+        secret_key, encrypted_secret_key = self._derive_key(self._get_encryption_public_key(), 32)
+        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
+        assert isinstance(cipher, CbcMode)
+        self._cipher = cipher
+
+        # Write out a file version marker and  the encrypted secret key, preceded by
+        # a length indication. All separated by \0.
+        # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
+        #            early versions of 1.4 until moving from PyCryto to PyCryptodome
+        # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
+        return "%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
     def _read_chunk(self):
+        # type: () -> Tuple[bytes, bool]
         finished = False
         if self._encrypt():
             chunk = self._read_from_stream(1024 * AES.block_size)
@@ -861,6 +889,7 @@ class BackupStream(MKBackupStream):
         return chunk, finished
 
     def _process_chunk(self, chunk):
+        # type: (bytes) -> bytes
         if self._encrypt():
             assert self._cipher is not None
             return self._cipher.encrypt(chunk)
@@ -891,16 +920,19 @@ class BackupStream(MKBackupStream):
 
 class RestoreStream(MKBackupStream):
     def _init_processing(self):
+        # type: () -> Optional[str]
         if not self._encrypt():
-            return
+            return None
 
         file_version, encrypted_secret_key = self._read_encrypted_secret_key()
         secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key)
         cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
         assert isinstance(cipher, CbcMode)
         self._cipher = cipher
+        return None
 
     def _read_chunk(self):
+        # type: () -> Tuple[bytes, bool]
         if not self._encrypt():
             # process unencrypted backup
             chunk = self._read_from_stream(1024 * 1024)
@@ -926,6 +958,7 @@ class RestoreStream(MKBackupStream):
         return chunk, False
 
     def _process_chunk(self, chunk):
+        # type: (bytes) -> bytes
         return chunk
 
     def _read_encrypted_secret_key(self):

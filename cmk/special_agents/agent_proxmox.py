@@ -525,9 +525,16 @@ def write_agent_output(args):
         write_piggyback_sections(
             host=vm["name"],
             sections=[
-                # {  # Todo
-                #    "name": "proxmox_vm_info",
-                # },
+                {
+                    "name": "proxmox_vm_info",
+                    "data": {
+                        "vmid": vmid,
+                        "node": vm["node"],
+                        "type": vm["type"],
+                        "status": vm["status"],
+                        "name": vm["name"],
+                    },
+                },
                 {
                     "name": "proxmox_disk_usage",
                     "data": {

@@ -1,0 +1,13 @@
+Title: Checkmk Docker container: Commend myhostname in /etc/postfix/main.cf
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1657569354
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This werk commends myhostname in /etc/postfix/main.cf.
+Some mailservers reject mails with BOGUS HELO if you let myhostname uncommended.
+

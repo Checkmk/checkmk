@@ -15,12 +15,47 @@ for i in "C.UTF-8" "C.utf8" "C"; do
     fi
 done
 
-export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
-export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
-export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
+####################################################################################################
+# Environment variables
+# Make sure that locally installed binaries are found
+PATH=$PATH:/usr/local/bin
+export PATH
+
+# If HOSTNAME isn't set, then set it
+if [ -z "${HOSTNAME}" ]; then 
+    HOSTNAME=$(hostname); readonly HOSTNAME; export HOSTNAME
+fi
+
+####################################################################################################
+# checkmk variables and constants
+MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
+MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
+MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
+
+# All executables in MK_PLUGINSDIR will be executed and their ouput appended to the output of
+# the agent. Plugins define their own sections and must output headers with '<<<' and '>>>'
+MK_PLUGINSDIR="${MK_LIBDIR:?}"/plugins
+
+# All executables in MK_LOCALDIR will be executed and their output inserted into the section 
+# <<<local>>>. Please refer to online documentation for details about local checks.
+MK_LOCALDIR="${MK_LIBDIR}"/local
+
+# All files in MK_SPOOLDIR will be appended to the agent output if they are not outdated (see below)
+MK_SPOOLDIR="${MK_VARDIR:?}"/spool
 
 # Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+#MK_TMPDIR=
+
+# Define the version of Check_MK
+MK_VERSION="1.7.0i1"
+
+# Protect our globals, making them constant...
+readonly MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_VERSION
+
+# ...and export them to the environment
+export MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_VERSION
+
+####################################################################################################
 
 # Provide information about the remote host. That helps when data
 # is being sent only once to each remote host.
@@ -34,23 +69,6 @@ fi
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 XINETD_SERVICE_NAME=check_mk
 
-# Make sure, locally installed binaries are found
-PATH=$PATH:/usr/local/bin
-
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
-
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please
-# refer to online documentation for details about local checks.
-LOCALDIR=$MK_LIBDIR/local
-
-# All files in SPOOLDIR will simply appended to the agent
-# output if they are not outdated (see below)
-SPOOLDIR=$MK_VARDIR/spool
-
 # close standard input (for security reasons) and stderr when not
 # explicitly in debug mode.
 # When the nodes agent is executed by a e.g. docker node in a container,
@@ -58,7 +76,7 @@ SPOOLDIR=$MK_VARDIR/spool
 # case.
 if [ "$1" = -d ]; then
     set -xv
-elif [ -z "$MK_FROM_NODE" ]; then
+elif [ -z "${MK_FROM_NODE}" ]; then
     exec </dev/null 2>/dev/null
 fi
 
@@ -122,9 +140,9 @@ if inpath timeout; then
     export -f waitmax
 fi
 
-if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
+if [ -f "${MK_CONFDIR}/encryption.cfg" ]; then
     # shellcheck source=/dev/null
-    . "$MK_CONFDIR/encryption.cfg"
+    . "${MK_CONFDIR}/encryption.cfg"
 fi
 
 if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
@@ -144,26 +162,27 @@ if [ "$ENCRYPTED" == "yes" ]; then
 fi
 
 RTC_PLUGINS=""
-if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
     # shellcheck source=/dev/null
-    . "$MK_CONFDIR/real_time_checks.cfg"
+    . "${MK_CONFDIR}/real_time_checks.cfg"
 fi
 
 section_checkmk() {
-    echo "<<<check_mk>>>"
-    echo "Version: 1.7.0i1"
-    echo "AgentOS: linux"
-    echo "Hostname: $(hostname)"
-    echo "AgentDirectory: $MK_CONFDIR"
-    echo "DataDirectory: $MK_VARDIR"
-    echo "SpoolDirectory: $SPOOLDIR"
-    echo "PluginsDirectory: $PLUGINSDIR"
-    echo "LocalDirectory: $LOCALDIR"
+cat << EOF
+"<<<check_mk>>>"
+"Version: ${MK_VERSION}"
+"AgentOS: linux"
+"Hostname: ${HOSTNAME}"
+"AgentDirectory: ${MK_CONFDIR}"
+"DataDirectory: ${MK_VARDIR}"
+"SpoolDirectory: ${MK_SPOOLDIR}"
+"PluginsDirectory: ${MK_PLUGINSDIR}"
+"LocalDirectory: ${MK_LOCALDIR}"
+EOF
 }
 
-#
+####################################################################################################
 # CHECK SECTIONS
-#
 
 section_mem() {
     if [ -z "$IS_DOCKERIZED" ]; then
@@ -848,7 +867,7 @@ section_mkbackup() {
 }
 
 section_job() {
-    if pushd "$MK_VARDIR/job" >/dev/null; then
+    if pushd "${MK_VARDIR}/job" >/dev/null; then
         echo '<<<job>>>'
         for username in *; do
             if [ -d "$username" ] && cd "$username"; then
@@ -942,11 +961,11 @@ run_fileinfo() {
             }
         }
     }
-    ' -- "$MK_CONFDIR"
+    ' -- "${MK_CONFDIR}"
 }
 
 run_liveupdate() {
-    if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+    if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
         if [ -z "$REMOTE" ]; then
             echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
         elif ! inpath openssl; then
@@ -958,8 +977,8 @@ run_liveupdate() {
 }
 
 run_remote_plugin() {
-    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+    if [ -e "${MK_CONFDIR}/mrpe.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
             while read -r descr cmdline; do
                 interval=
                 args="-m"
@@ -994,8 +1013,8 @@ run_remote_plugin() {
 }
 
 run_runas_executor() {
-    if [ -e "$MK_CONFDIR/runas.cfg" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
+    if [ -e "${MK_CONFDIR}/runas.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/runas.cfg" |
             while read -r type user include; do
                 if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
                     PREFIX=""
@@ -1071,7 +1090,7 @@ is_valid_plugin() {
 run_local_checks() {
     # Local checks
     echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR"; then
+    if cd "${MK_LOCALDIR}"; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 ./"$skript"
@@ -1087,7 +1106,7 @@ run_local_checks() {
 }
 
 run_plugins() {
-    if cd "$PLUGINSDIR"; then
+    if cd "${MK_PLUGINSDIR}"; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 ./"$skript"
@@ -1151,11 +1170,11 @@ run_cached() {
     shift 2
     local CMDLINE=$section$*
 
-    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache"; fi
+    if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     if [ "$mrpe" = 1 ]; then
-        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
+        CACHEFILE="${MK_VARDIR}/cache/mrpe_$NAME.cache"
     else
-        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+        CACHEFILE="${MK_VARDIR}/cache/$NAME.cache"
     fi
 
     # Check if the creation of the cache takes suspiciously long and kill the
@@ -1218,7 +1237,7 @@ export -f run_cached
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
-    PIDFILE=$MK_VARDIR/real_time_checks.pid
+    PIDFILE=${MK_VARDIR}/real_time_checks.pid
     echo $$ >"$PIDFILE"
 
     if [ "$PASSPHRASE" != "" ]; then
@@ -1256,7 +1275,7 @@ run_real_time_checks() {
         done
 
         # Plugins
-        if cd "$PLUGINSDIR"; then
+        if cd "${MK_PLUGINSDIR}"; then
             for PLUGIN in $RTC_PLUGINS; do
                 if [ ! -f $PLUGIN ]; then
                     continue
@@ -1510,8 +1529,8 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
+if [ -d "${MK_SPOOLDIR}" ] && [ -r "${MK_SPOOLDIR}" ]; then
+    pushd "${MK_SPOOLDIR}" >/dev/null
     now=$(date +%s)
 
     for file in *; do

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
 # type: ignore
-
 checkname = 'ps'
 
 info = []
@@ -16,10 +15,10 @@ discovery = {
         (
             'moooo', {
                 'process': None,
-                'cpu_rescale_max': None,
                 'match_groups': (),
                 'user': None,
-                'cgroup': ('~.*systemd', False)
+                'cgroup': ('~.*systemd', False),
+                'cpu_rescale_max': None
             }
         )
     ],
@@ -30,29 +29,29 @@ checks = {
     '': [
         (
             'moooo', {
-                'cpu_rescale_max': None,
-                'match_groups': (),
                 'levels': (1, 1, 99999, 99999),
+                'process': None,
+                'match_groups': (),
                 'user': None,
                 'cgroup': ('~.*systemd', False),
-                'process': None
+                'cpu_rescale_max': None
             }, [
                 (
-                    0, '1 process [running on NODE]', [
-                        ('count', 1, 100000, 100000, 0, None)
+                    0, 'Processes: 1 [running on NODE]', [
+                        ('count', 1, 100000.0, 100000.0, 0.0, None)
                     ]
                 ),
                 (
-                    0, '220.74 MB virtual', [
+                    0, 'virtual: 220.74 MB', [
                         ('vsz', 226036, None, None, None, None)
                     ]
                 ),
                 (
-                    0, '9.51 MB physical', [
+                    0, 'physical: 9.51 MB', [
                         ('rss', 9736, None, None, None, None)
                     ]
-                ), (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
-                (0, 'running for 314 m', [])
+                ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
+                (0, 'running for: 314 m', [])
             ]
         )
     ]

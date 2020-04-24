@@ -295,7 +295,7 @@ def ps_cleanup_params(params):
     return params
 
 
-def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", total_ram=None):
+def check_ps_common(item, params, parsed, cpu_cores=1, info_name="Processes", total_ram=None):
     params = ps_cleanup_params(params)
 
     processes = check_ps_process_capture(parsed, params, cpu_cores)
@@ -328,44 +328,14 @@ def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", tota
         yield 0, infotext
 
 
-def upperlevels(value, warn, crit, readable=str):
-    infotext = ''
-    if value >= crit:
-        state = 2
-    elif value >= warn:
-        state = 1
-    else:
-        state = 0
-    if state:
-        infotext = ": (warn/crit at %s/%s)" % tuple(map(readable, (warn, crit)))
-
-    return state, infotext
-
-
-def boundary_levels(value, warnmin, okmin, okmax, warnmax):
-    infotext = ''
-    state = 0
-    if value > warnmax or value < warnmin:
-        state = 2
-    elif value > okmax or value < okmin:
-        state = 1
-    else:
-        state = 0
-    if state:
-        infotext = ": (ok from %d to %d)" % (okmin, okmax)
-
-    return state, infotext
-
-
 def ps_count_check(processes, params, info_name):
     warnmin, okmin, okmax, warnmax = params["levels"]
-    count = processes.count
 
-    perfdata = [("count", count, okmax + 1, warnmax + 1, 0)]
-    infotext = "%d %s%s" % (count, info_name, '' if count == 1 else 'es')
-
-    state, warntext = boundary_levels(count, warnmin, okmin, okmax, warnmax)
-    infotext += warntext
+    state, infotext, perfdata = check_levels(processes.count,
+                                             "count", (okmax + 1, warnmax + 1, okmin, warnmin),
+                                             human_readable_func=int,
+                                             boundaries=(0, None),
+                                             infoname=info_name)
 
     if processes.running_on_nodes:
         infotext += " [running on %s]" % ", ".join(sorted(processes.running_on_nodes))
@@ -382,55 +352,52 @@ def memory_check(processes, params):
         if size == 0:
             continue
 
-        infotext = "%s %s" % (get_bytes_human_readable(size * 1024.0), title)
         warn_levels, crit_levels = params.get(levels, (None, None))
-        if levels in params:
-            state, levelstext = upperlevels(size * 1024, warn_levels, crit_levels,
-                                            get_bytes_human_readable)
-        else:
-            state, levelstext = 0, ""
-        yield state, infotext + levelstext, [(metric, size, warn_levels, crit_levels)]
+        status, info_text, perf_data = check_levels(size * 1024,
+                                                    None, (warn_levels, crit_levels),
+                                                    human_readable_func=get_bytes_human_readable,
+                                                    infoname=title)
+        yield status, info_text, [(metric, size, warn_levels, crit_levels)]
 
 
 def memory_perc_check(processes, params, total_ram):
     """Check levels that are in percent of the total RAM of the host"""
-    warn_perc, crit_perc = params["resident_levels_perc"]
     if not total_ram:
-        infotext = "percentual RAM levels configured, but total RAM is unknown"
-        state = 3
-    else:
-        resident_perc = 100 * float(processes.resident_size * 1024) / total_ram
-        infotext = "%s of total RAM" % get_percent_human_readable(resident_perc)
-        state, levelstext = upperlevels(resident_perc, warn_perc, crit_perc,
-                                        get_percent_human_readable)
-        infotext += levelstext
+        return 3, "percentual RAM levels configured, but total RAM is unknown"
 
-    return state, infotext
+    resident_perc = 100 * float(processes.resident_size * 1024) / total_ram
+    return check_levels(resident_perc,
+                        None,
+                        params["resident_levels_perc"],
+                        human_readable_func=get_percent_human_readable,
+                        infoname="Percentage of total RAM")
 
 
 def cpu_check(percent_cpu, item, params):
     """Check levels for cpu utilization from given process"""
 
-    infotext = "%.1f%% CPU" % percent_cpu
+    infotext = "CPU"
     warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
     perf_data = [("pcpu", percent_cpu, warn_cpu, crit_cpu)]
 
     # CPU might come with previous
     if "cpu_average" in params:
+        infotext = "CPU: %s" % get_percent_human_readable(percent_cpu)
         now = time.time()
         avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
-        infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
+        infotext += ", %d min average" % params["cpu_average"]
         perf_data.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
         percent_cpu = avg_cpu  # use this for level comparison
 
-    state, levelstext = upperlevels(percent_cpu, warn_cpu, crit_cpu,
-                                    get_percent_human_readable) if "cpulevels" in params else (0,
-                                                                                               "")
-    return state, infotext + levelstext, perf_data
+    state, infotext, _ = check_levels(percent_cpu,
+                                      None, (warn_cpu, crit_cpu),
+                                      human_readable_func=get_percent_human_readable,
+                                      infoname=infotext)
+    return state, infotext, perf_data
 
 
 def individual_process_check(processes, params):
-    warn_cpu_single, crit_cpu_single = params["single_cpulevels"]
+    levels = params["single_cpulevels"]
     for p in processes:
         cpu_usage, name, pid = 0.0, None, None
 
@@ -442,39 +409,36 @@ def individual_process_check(processes, params):
             elif the_item.startswith("cpu usage"):
                 cpu_usage += value
 
-        state, levelstext = upperlevels(cpu_usage, warn_cpu_single, crit_cpu_single,
-                                        get_percent_human_readable)
+        process_description = name + " with PID %s CPU" % pid if pid else ""
+        state, infotext, _ = check_levels(cpu_usage,
+                                          None,
+                                          levels,
+                                          human_readable_func=get_percent_human_readable,
+                                          infoname=process_description)
         if state:
-            process_description = name + " with PID %s" % pid if pid else ""
-            infotext = "%.1f%% CPU for %s%s" % (cpu_usage, process_description, levelstext)
             yield state, infotext
 
 
 def uptime_check(times, params):
     """Check how long the process is running"""
-    state = 0
-    if times.min_elapsed == times.max_elapsed:
-        infotext = "running for %s" % get_age_human_readable(times.min_elapsed)
-    else:
-        infotext = "youngest running for {}, oldest running for {}".format(
-            *map(get_age_human_readable, [times.min_elapsed, times.max_elapsed]))
+    infotext = "running for"
+    if times.min_elapsed != times.max_elapsed:
+        infotext = "youngest running for: %s, oldest running for" % get_age_human_readable(
+            times.min_elapsed)
 
-    if "max_age" in params:
-        warn_age, crit_age = params["max_age"]
-        state, levelstext = upperlevels(times.max_elapsed, warn_age, crit_age,
-                                        get_age_human_readable)
-        infotext += levelstext
-
-    return state, infotext
+    return check_levels(times.max_elapsed,
+                        None,
+                        params.get("max_age", (None, None)),
+                        human_readable_func=get_age_human_readable,
+                        infoname=infotext)
 
 
 def handle_count_check(processes, params):
-    infotext = "%d process handles" % processes.handle_count
-    warn_handle, crit_handle = params.get("handle_count", (None, None))
-    state, levelstext = upperlevels(processes.handle_count, warn_handle,
-                                    crit_handle) if "handle_count" in params else (0, "")
-    return state, infotext + levelstext, [("process_handles", processes.handle_count, warn_handle,
-                                           crit_handle)]
+    return check_levels(processes.handle_count,
+                        "process_handles",
+                        params.get("handle_count", (None, None)),
+                        human_readable_func=int,
+                        infoname="process handles")
 
 
 def cpu_rate(counter, now, lifetime):

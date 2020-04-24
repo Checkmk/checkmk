@@ -639,81 +639,81 @@ def test_replace_service_description_exception(check_manager):
 
 check_results = [
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0)]),
+        (1, "virtual: 1.00 GB (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
                                                                  2147483648, None, None)]),
-        (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
-        (1, "28.92% of total RAM: (warn/crit at 25.0%/50.0%)"),
-        (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
+        (0, "physical: 296.14 MB", [("rss", 303252, 1073741824, 2147483648, None, None)]),
+        (1, "Percentage of total RAM: 28.92% (warn/crit at 25.0%/50.0%)"),
+        (0, "CPU: 0%, 15 min average: 0%", [("pcpu", 0.0, None, None, None, None),
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
-        (0, "running for 27 h", []),
+        (0, "running for: 27 h", []),
         (0,
          "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>2018-10-23 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
         ),
     ]),
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0,
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0,
                            None)]),
-        (0, "2.79 GB virtual", [("vsz", 2924232, None, None, None, None)]),
-        (0, "461.18 MB physical", [("rss", 472252, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]), (0, "running for 7 h", []),
+        (0, "virtual: 2.79 GB", [("vsz", 2924232, None, None, None, None)]),
+        (0, "physical: 461.18 MB", [("rss", 472252, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]), (0, "running for: 7 h", []),
         (0,
          "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
-        (0, "10.92 MB virtual", [("vsz", 11180, None, None, None, None)]),
-        (0, "1.12 MB physical", [("rss", 1144, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "running for 234 m", []),
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "virtual: 10.92 MB", [("vsz", 11180, None, None, None, None)]),
+        (0, "physical: 1.12 MB", [("rss", 1144, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for: 234 m", []),
         (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
-        (0, "2 processes", [("count", 2, 100000, 100000, 0, None)]),
-        (0, "21.84 MB virtual", [("vsz", 22360, None, None, None, None)]),
-        (0, "2.33 MB physical", [("rss", 2388, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "youngest running for 157 m, oldest running for 234 m", []),
+        (0, "Processes: 2", [("count", 2, 100000, 100000, 0, None)]),
+        (0, "virtual: 21.84 MB", [("vsz", 22360, None, None, None, None)]),
+        (0, "physical: 2.33 MB", [("rss", 2388, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "youngest running for: 157 m, oldest running for: 234 m", []),
         (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
-        (0, "10.92 MB virtual", [("vsz", 11180, None, None, None, None)]),
-        (0, "1.21 MB physical", [("rss", 1244, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "running for 157 m", []),
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "virtual: 10.92 MB", [("vsz", 11180, None, None, None, None)]),
+        (0, "physical: 1.21 MB", [("rss", 1244, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for: 157 m", []),
         (0, "\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
-        (0, "2 processes [running on bsd, solaris]", [("count", 2, 100000, 100000, 0, None)]),
-        (0, "20.73 MB virtual", [("vsz", 21232, None, None, None, None)]),
-        (0, "18.61 MB physical", [("rss", 19052, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "running for 52 d", []),
+        (0, "Processes: 2 [running on bsd, solaris]", [("count", 2, 100000, 100000, 0, None)]),
+        (0, "virtual: 20.73 MB", [("vsz", 21232, None, None, None, None)]),
+        (0, "physical: 18.61 MB", [("rss", 19052, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for: 52 d", []),
     ]),
-    CheckResult([(0, '1 process [running on solaris]', [('count', 1, 100000, 100000, 0, None)]),
-                 (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
-                 (0, 'running for 0.00 s', [])]),
+    CheckResult([(0, 'Processes: 1 [running on solaris]', [('count', 1, 100000, 100000, 0, None)]),
+                 (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
+                 (0, 'running for: 0.00 s', [])]),
     CheckResult([
-        (0, "3 processes", [("count", 3, 100000, 100000, 0, None)]),
-        (0, "136.26 MB virtual", [("vsz", 139532, 1073741824000, 2147483648000, None, None)]),
-        (0, "38.59 MB physical", [("rss", 39516, 104857600, 209715200, None, None)]),
+        (0, "Processes: 3", [("count", 3, 100000, 100000, 0, None)]),
+        (0, "virtual: 136.26 MB", [("vsz", 139532, 1073741824000, 2147483648000, None, None)]),
+        (0, "physical: 38.59 MB", [("rss", 39516, 104857600, 209715200, None, None)]),
         (3, "percentual RAM levels configured, but total RAM is unknown", []),
-        (0, "0.0% CPU", [("pcpu", 0.0, 90.0, 98.0, None, None)]),
-        (1, "1204 process handles: (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
+        (0, "CPU: 0%", [("pcpu", 0.0, 90.0, 98.0, None, None)]),
+        (1, "process handles: 1204 (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
                                                                 None, None)]),
-        (1, "youngest running for 12.0 s, oldest running for 71 m: (warn/crit at 60 m/120 m)", []),
+        (1, "youngest running for: 12.0 s, oldest running for: 71 m (warn/crit at 60 m/120 m)", []),
     ]),
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
-        (0, "4.47 MB virtual", [("vsz", 4576, None, None, None, None)]),
-        (0, "316.00 kB physical", [("rss", 316, None, None, None, None)]),
-        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
-        (0, "53 process handles", [("process_handles", 53, None, None, None, None)]),
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "virtual: 4.47 MB", [("vsz", 4576, None, None, None, None)]),
+        (0, "physical: 316.00 kB", [("rss", 316, None, None, None, None)]),
+        (0, "CPU: 0%", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "process handles: 53", [("process_handles", 53, None, None, None, None)]),
     ]),
 ]
 
@@ -791,11 +791,11 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
     output = time_info(data.agent_info, 60, data.cputime, data.cpu_cores)
 
     reference = CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (0, "105.00 kB virtual", [("vsz", 105, None, None, None, None)]),
-        (0, "30.00 kB physical", [("rss", 30, None, None, None, None)]),
+        (0, "Processes: 1", [("count", 1, 100000, 100000, 0)]),
+        (0, "virtual: 105.00 kB", [("vsz", 105, None, None, None, None)]),
+        (0, "physical: 30.00 kB", [("rss", 30, None, None, None, None)]),
         check.context["cpu_check"](data.exp_load, inv_item[0], inv_item[1]),
-        (0, "running for 239 m", []),
+        (0, "running for: 239 m", []),
     ])
 
     assertCheckResultsEqual(output, reference)
@@ -804,10 +804,10 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 @pytest.mark.parametrize("levels, reference", [
     ((1, 1, 99999, 99999),
      CheckResult([
-         (2, "0 processes: (ok from 1 to 99999)", [("count", 0, 100000, 100000, 0)]),
+         (2, "Processes: 0 (warn/crit below 1/1)", [("count", 0, 100000, 100000, 0)]),
      ])),
     ((0, 0, 99999, 99999), CheckResult([
-        (0, "0 processes", [("count", 0, 100000, 100000, 0)]),
+        (0, "Processes: 0", [("count", 0, 100000, 100000, 0)]),
     ])),
 ])
 def test_check_ps_common_count(check_manager, levels, reference):
@@ -880,9 +880,9 @@ def test_subset_patterns(check_manager):
 
     def counted_reference(count):
         return CheckResult([
-            (0, "%s process%s" % (count, '' if count == 1 else 'es'), [("count", count, 100000,
+            (0, "Processes: %s" % count, [("count", count, 100000,
                                                                         100000, 0, None)]),
-            (0, "0.5% CPU", [("pcpu", 0.5, None, None, None, None)]),
+            (0, "CPU: 0.5%", [("pcpu", 0.5, None, None, None, None)]),
         ])
 
     for (item, params), count in zip(discovered, [1, 2, 1]):
@@ -923,13 +923,14 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
     output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
-    single_msg = '%.1f%% CPU for firefox with PID 25898: (warn/crit at 45.0%%/80.0%%)' % cpu_util
+    cpu_util_s = check.context['get_percent_human_readable'](cpu_util)
+    single_msg = 'firefox with PID 25898 CPU: %s (warn/crit at 45.0%%/80.0%%)' % cpu_util_s
     reference = [
-        (0, "4 processes", [("count", 4, 100000, 100000, 0)]),
-        (0, "13.00 GB virtual", [("vsz", 13631104, None, None, None, None)]),
-        (0, "1.06 GB physical", [("rss", 1106568, None, None, None, None)]),
-        (0, "%.1f%% CPU" % cpu_util, [('pcpu', cpu_util, None, None, None, None)]),
-        (0, 'youngest running for 6 m, oldest running for 26 m', []),
+        (0, "Processes: 4", [("count", 4, 100000, 100000, 0)]),
+        (0, "virtual: 13.00 GB", [("vsz", 13631104, None, None, None, None)]),
+        (0, "physical: 1.06 GB", [("rss", 1106568, None, None, None, None)]),
+        (0, "CPU: %s" % cpu_util_s, [('pcpu', cpu_util, None, None, None, None)]),
+        (0, 'youngest running for: 6 m, oldest running for: 26 m', []),
         (0, "\r\n".join([
             '\nname firefox, user on, virtual size 2275004kB, resident size 434008kB, creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%',
             'name firefox, user on, virtual size 1869920kB, resident size 359836kB, creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%',

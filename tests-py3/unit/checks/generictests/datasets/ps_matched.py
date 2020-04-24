@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
 # type: ignore
-
 checkname = 'ps'
 
 info = [
@@ -24,10 +23,10 @@ discovery = {
             'NTP', {
                 'process':
                 '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*',
-                'cpu_rescale_max': None,
                 'match_groups': (None, 'NTP'),
                 'user': None,
-                'cgroup': (None, False)
+                'cgroup': (None, False),
+                'cpu_rescale_max': None
             }
         )
     ],
@@ -37,60 +36,62 @@ discovery = {
 checks = {
     '': [
         (
-            u'NTP', {
+            'NTP', {
                 'process':
                 '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*',
                 'cpu_rescale_max': None,
-                'match_groups': [None, u'NTP'],
+                'match_groups': [None, 'NTP'],
                 'levels': (1, 1, 1, 1),
                 'user': None
             }, [
-                (0, '1 process', [('count', 1, 2, 2, 0, None)]),
+                (0, 'Processes: 1', [('count', 1, 2.0, 2.0, 0.0, None)]),
                 (
-                    0, '30.38 MB virtual', [
+                    0, 'virtual: 30.38 MB', [
                         ('vsz', 31108, None, None, None, None)
                     ]
                 ),
                 (
-                    0, '6.00 MB physical', [
+                    0, 'physical: 6.00 MB', [
                         ('rss', 6140, None, None, None, None)
                     ]
-                ), (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
+                ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
                 (
-                    0, '105 process handles', [
+                    0, 'process handles: 105', [
                         ('process_handles', 105, None, None, None, None)
                     ]
-                ), (0, 'running for 275 m', [])
+                ), (0, 'running for: 275 m', [])
             ]
         ),
         (
             'NTP', {
-                'cpu_rescale_max':
-                None,
-                'match_groups': (None, 'NTP'),
                 'levels': (1, 1, 99999, 99999),
-                'user':
-                None,
-                'cgroup': (None, False),
                 'process':
-                '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*'
+                '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*',
+                'match_groups': (None, 'NTP'),
+                'user': None,
+                'cgroup': (None, False),
+                'cpu_rescale_max': None
             }, [
-                (0, '1 process', [('count', 1, 100000, 100000, 0, None)]),
                 (
-                    0, '30.38 MB virtual', [
+                    0, 'Processes: 1', [
+                        ('count', 1, 100000.0, 100000.0, 0.0, None)
+                    ]
+                ),
+                (
+                    0, 'virtual: 30.38 MB', [
                         ('vsz', 31108, None, None, None, None)
                     ]
                 ),
                 (
-                    0, '6.00 MB physical', [
+                    0, 'physical: 6.00 MB', [
                         ('rss', 6140, None, None, None, None)
                     ]
-                ), (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
+                ), (0, 'CPU: 0%', [('pcpu', 0.0, None, None, None, None)]),
                 (
-                    0, '105 process handles', [
+                    0, 'process handles: 105', [
                         ('process_handles', 105, None, None, None, None)
                     ]
-                ), (0, 'running for 275 m', [])
+                ), (0, 'running for: 275 m', [])
             ]
         )
     ]

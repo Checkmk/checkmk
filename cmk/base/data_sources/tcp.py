@@ -9,7 +9,7 @@ import socket
 from typing import Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
-from cmk.base.exceptions import MKAgentError
+from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from cmk.fetchers import TCPDataFetcher  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
@@ -84,6 +84,9 @@ class TCPDataSource(CheckMKAgentDataSource):
                 self._logger,
         ) as fetcher:
             output = fetcher.data()
+            if not output:  # may be caused by xinetd not allowing our address
+                raise MKEmptyAgentData("Empty output from agent at %s:%d" %
+                                       (self._ipaddress, self.port))
             if len(output) < 16:
                 raise MKAgentError("Too short output from agent: %r" % output)
             return output

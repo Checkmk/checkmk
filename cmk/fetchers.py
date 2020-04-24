@@ -28,7 +28,7 @@ import cmk.utils.debug
 import cmk.base.snmp as snmp
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_utils import section_name_of, RawAgentData, ServiceCheckResult
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
+from cmk.base.exceptions import MKAgentError
 from cmk.base.snmp_utils import OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
 # pylint: enable=cmk-module-layer-violation
 from cmk.utils.encoding import ensure_bytestr
@@ -517,10 +517,7 @@ class TCPDataFetcher(AbstractDataFetcher):
             return b"".join(buffer)
 
         try:
-            output = recvall(self._socket)
-            if not output:  # may be caused by xinetd not allowing our address
-                raise MKEmptyAgentData("Empty output from agent at %s:%d" % self._address)
-            return output
+            return recvall(self._socket)
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise

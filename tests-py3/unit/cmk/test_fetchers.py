@@ -8,7 +8,13 @@ from collections import namedtuple
 
 import pytest  # type: ignore[import]
 
-from cmk.fetchers import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.fetchers.ipmi import *
+from cmk.fetchers.piggyback import *
+from cmk.fetchers.program import *
+from cmk.fetchers.snmp import *
+from cmk.fetchers.tcp import *
+# pylint: enable=wildcard-import,unused-wildcard-import
 
 SensorReading = namedtuple(
     "SensorReading", "states health name imprecision units"

@@ -292,38 +292,28 @@ section_zfs() {
 }
 
 section_nfs_mounts() {
+    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
+    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
     if inpath waitmax; then
-        STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
-        STAT_BROKE="5.3.0"
-
         echo '<<<nfsmounts>>>'
-        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
-            sed 's/\\040/ /g' |
-            while read -r MP; do
-                if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                        echo "$MP hanging 0 0 0 0"
-                else
-                    waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                        printf '\n' || echo "$MP hanging 0 0 0 0"
-                fi
-            done
+        get_nfs_mounts | while read -r mountPoint; do
+            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+            || echo "${mountPoint} hanging 0 0 0 0"
+        done
 
         echo '<<<cifsmounts>>>'
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
-            sed 's/\\040/ /g' |
-            while read -r MP; do
-                if [ ! -r "$MP" ]; then
-                    echo "$MP Permission denied"
-                elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
-                        echo "$MP hanging 0 0 0 0"
-                else
-                    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
-                        printf '\n' || echo "$MP hanging 0 0 0 0"
-                fi
-            done
+        get_cifs_mounts | while read -r mountPoint; do
+            if [ ! -r "${mountPoint}" ]; then
+                echo "${mountPoint} Permission denied"
+            else
+                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+                    || echo "${mountPoint} hanging 0 0 0 0"
+            fi
+        done
     fi
+
+    # Clean up our function variables
+    unset mountPoint
 }
 
 section_mounts() {

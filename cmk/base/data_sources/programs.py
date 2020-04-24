@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
 import os
 import signal
 import sys
 from logging import Logger  # pylint: disable=unused-import
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
 import six
 
@@ -49,10 +48,11 @@ from .abstract import AbstractDataFetcher, CheckMKAgentDataSource, RawAgentData 
 
 class ProgramDataFetcher(AbstractDataFetcher):
     def __init__(self, cmdline, stdin, logger):
+        # type: (Union[bytes, Text], Optional[str], Logger) -> None
         super(ProgramDataFetcher, self).__init__()
-        self._cmdline = cmdline  # type: Union[bytes, Text]
-        self._stdin = stdin  # type: Optional[str]
-        self._logger = logger  # type: Logger
+        self._cmdline = cmdline
+        self._stdin = stdin
+        self._logger = logger
         self._process = None  # type: Optional[subprocess.Popen]
 
     def __enter__(self):
@@ -207,7 +207,12 @@ class DSProgramDataSource(ProgramDataSource):
         return six.ensure_str(core_config.replace_macros(cmd, macros))
 
 
-SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", ["args", "stdin"])
+SpecialAgentConfiguration = NamedTuple(
+    "SpecialAgentConfiguration",
+    [
+        ("args", Union[str, List[str]]),
+        ("stdin", Optional[str]),  # TODO: Why do we need to distinguish between "" and None???
+    ])
 
 
 class SpecialAgentDataSource(ProgramDataSource):

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pytest  # type: ignore[import]
 
@@ -17,8 +17,7 @@ from cmk.base.data_sources.programs import (
 )
 from testlib.base import Scenario
 
-
-@pytest.mark.parametrize("info_func_result,expected", [
+info_func_result_and_expected = [
     (
         "arg0 arg1",
         ("arg0 arg1", None),
@@ -47,7 +46,10 @@ from testlib.base import Scenario
         SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
         ("'list0' 'list1'", "stdin_blob"),
     ),
-])
+]  # type: List[Tuple[Union[str, List[str], SpecialAgentConfiguration], Tuple[str, Optional[str]]]]
+
+
+@pytest.mark.parametrize("info_func_result,expected", info_func_result_and_expected)
 def test_command_line_and_stdin(monkeypatch, info_func_result, expected):
     Scenario().add_host("testhost").apply(monkeypatch)
     special_agent_id = "bi"

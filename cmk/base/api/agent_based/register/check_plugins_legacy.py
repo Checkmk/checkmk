@@ -80,20 +80,18 @@ def _create_discovery_function(check_info_dict):
             if isinstance(element, (HostLabel, DiscoveredHostLabels)):
                 # these are dealt with in the host_label_function!
                 continue
+
             if isinstance(element, LegacyService):
-                # TODO: Is the assertion really always true? At leas mypy requires it!
-                assert isinstance(element.parameters, dict)
                 yield Service(
                     item=element.item,
-                    parameters=element.parameters,
+                    parameters=wrap_parameters(element.parameters or {}),
                     labels=list(element.service_labels),
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
-                item, params = element[0], element[-1]
-                if not isinstance(params, dict):
-                    # our new service object will refuse to take any parameters but a dict
-                    params = wrap_parameters(params)
-                yield Service(item=item, parameters=params)
+                yield Service(
+                    item=element[0],
+                    parameters=wrap_parameters(element[-1] or {}),
+                )
             else:
                 # just let it through. Base must deal with bogus return types anyway.
                 yield element
@@ -287,6 +285,8 @@ PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 def wrap_parameters(parameters):
     # type: (Any) -> Dict[str, Any]
+    if isinstance(parameters, dict):
+        return parameters
     return {PARAMS_WRAPPER_KEY: parameters}
 
 

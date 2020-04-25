@@ -7,6 +7,7 @@
 """
 from typing import (  # pylint: disable=unused-import
     Any, Generator, List, Optional, Union)
+import functools
 import sys
 import inspect
 import itertools
@@ -115,7 +116,19 @@ def _create_host_label_function(host_label_function):
         return _noop_host_label_function
 
     _validate_host_label_function(host_label_function)
-    return host_label_function
+
+    @functools.wraps(host_label_function)
+    def filtered_generator(section):
+        """Only let HostLabel through
+
+        This allows for better typing in base code.
+        """
+        for label in host_label_function(section):  # type: ignore[misc] # Bug: None not callable
+            if not isinstance(label, HostLabel):
+                raise TypeError("unexpected type in host label function: %r" % type(label))
+            yield label
+
+    return filtered_generator
 
 
 def _create_supersedes(supersedes):

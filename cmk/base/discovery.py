@@ -10,8 +10,7 @@ import time
 import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Pattern, Union, Generator, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
-    Any,
+    Pattern, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn, Any,
 )
 import six
 
@@ -920,8 +919,6 @@ def _discover_services(
                                                 check_plugin_name, on_error):
                     if isinstance(entry, DiscoveredService):
                         discovered_services.append(entry)
-                    elif isinstance(entry, HostLabel):
-                        pass
                     else:
                         raise TypeError("unexpectedly discovered %r" % type(entry))
             except (KeyboardInterrupt, MKTimeout):
@@ -988,7 +985,7 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
-    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
+    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[DiscoveredService]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -1022,30 +1019,6 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
         if section_content is None:  # No data for this check type
             return
-
-        # *HOST LABEL* discovery
-        # TODO (mo):
-        # The host_label_function is tied to the section, not to the plugin, so
-        # I think this whole part should be somewhere else entirely.
-        # It should only be done once for every section.
-        # The host label function expects only the sections' content, so we currently need to
-        # check wether the check plugin has "extra sections" defined, and if so, remove them.
-        try:
-            section_plugin_name = PluginName(check_plugin_name)
-            section_plugin = config.get_registered_section_plugin(section_plugin_name)
-        except ValueError:
-            # this means we're dealing with a subcheck
-            # TODO (mo): Remove this case once subchecks don't exist anymore
-            section_plugin = None
-
-        # no section definition is OK (but you can't get host labels)
-        if section_plugin is not None:
-            has_extra_sections = bool(config.check_info[check_plugin_name]["extra_sections"])
-            hl_args = section_content[0] if has_extra_sections else section_content
-            discovered_host_labels_gen = section_plugin.host_label_function(hl_args)
-            for label in _filter_for_host_labels(hostname, section_plugin_name,
-                                                 discovered_host_labels_gen):
-                yield label
 
         # *SERVICE* discovery
         discovery_function = _get_discovery_function_of(check_plugin_name)
@@ -1105,16 +1078,6 @@ def _execute_discovery_function(discovery_function, section_content):
         discovered_items = list(discovered_items)
 
     return discovered_items
-
-
-def _filter_for_host_labels(hostname, plugin_name, label_generator):
-    # type: (str, PluginName, Generator[HostLabel, None, None]) -> Generator[HostLabel, None, None]
-    for label in label_generator:
-        if not isinstance(label, HostLabel):
-            console.error("%s: Section plugin %s returned invalid host label data: %r\n" %
-                          (hostname, plugin_name, repr(label)))
-            continue
-        yield label
 
 
 # FIXME: Broken typing, see comment for _execute_discovery_function.

@@ -65,7 +65,6 @@ def test_service_label():
 @pytest.mark.parametrize("item, parameters, labels", [
     (4, None, None),
     (None, (80, 90), None),
-    (None, None, ()),
     (None, None, ["foo:bar"]),
 ])
 def test_service_invalid(item, parameters, labels):

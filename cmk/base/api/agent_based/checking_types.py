@@ -70,8 +70,8 @@ class Service:
     def _validate_item(item):
         if item is None:
             return
-        if not isinstance(item, str):
-            raise TypeError("'item' must be string, got %r" % (item,))
+        if not (item and isinstance(item, str)):
+            raise TypeError("'item' must be non empty string, got %r" % (item,))
 
     @staticmethod
     def _validate_parameters(parameters):
@@ -82,9 +82,8 @@ class Service:
 
     @staticmethod
     def _validate_labels(labels):
-        if labels is None:
-            return
-        if not (isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels)):
+        if labels and not (isinstance(labels, list) and
+                           all(isinstance(l, ServiceLabel) for l in labels)):
             raise TypeError("'labels' must be list of ServiceLabels, got %r" % (labels,))
 
     @property

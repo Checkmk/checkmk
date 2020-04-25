@@ -106,10 +106,29 @@ inpath() {
 # in 5.9.4 STABLE.  Just in case we happen across this particular version
 # we catch it and build a workaround to correct its behaviour globally
 # See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
-if stat --version 2>&1 | head -n 1 | grep "5.3.0" >/dev/null 2>&1; then
-    stat() {
-        printf -- '%s\n' "$(command stat "${@}")"
-    }
+
+# In the future, we should control this behaviour with 'MK_STAT_BUG'
+# This should be coupled with an `is_true()` function i.e. `if is_true "${MK_STAT_BUG}"; then`
+# For now, this will just pass straight through
+if [ -z "${MK_STAT_BUG+x}" ]||[ "${MK_STAT_BUG}" = "true" ]; then
+    if stat --version 2>&1 | grep -q GNU; then
+        # The following sequence of transformations converts a semantic version to an integer
+        # Where the Major number is untouched, and the Minor and Patch numbers are zero padded
+        # e.g. 'stat (GNU coreutils) 8.28' --> '82800'
+        # This technique allows us to do simple integer based version comparisons
+        stat_version=$(stat --version | head -n 1)
+        stat_version="${stat_version//[!0-9.]/}"
+        # We want word splitting here so that 'set' assigns each 'word' appropriately
+        # shellcheck disable=SC2086
+        set -- ${stat_version//./ }
+        stat_version="${1}$(printf -- '%02d' "${2}" "${3:-0}")"
+
+        if [ "${stat_version}" -ge 50300 ] && [ "${stat_version}" -lt 50904 ]; then
+            stat() {
+                printf -- '%s\n' "$(command stat "${@}")"
+            }
+        fi
+    fi
 fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against

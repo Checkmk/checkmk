@@ -78,22 +78,19 @@ else
     unset IS_LXC_CONTAINER
 fi
 
-# Function to list CIFS mounts for use by section_nfs
-get_cifs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ cifs/{print $3;}'
-    fi
-}
+# date +%s is not portable, so we provide this function
+# To do this in pure shell is... fun... however 'perl' is assumed
+# elsewhere in this agent, so we may as well depend on that for our failover option
+if date +%s 2>/dev/null | grepq '%s'; then
+    get_epoch() { perl -e 'print time."\n";'; }
+else
+    get_epoch() { date +%s; }
+fi
 
-# Function to list NFS mounts for use by section_nfs
-get_nfs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ nfs/{print $3;}'
-    fi
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null ||
+        stat -f %m "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
 # Function to replace "if type [somecmd]" idiom
@@ -1330,10 +1327,39 @@ section_ntp() {
     fi
 }
 
-get_file_mtime() {
-    stat -c %Y "${1}" 2>/dev/null ||
-        stat -f %m "${1}" 2>/dev/null ||
-        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+# Agent output snippets created by cronjobs, etc.
+# See: Werk 0016
+section_spooldir() {
+    (
+        # Output every file in this directory. If the file is prefixed with a number,
+        # then that number is the maximum age of the file in seconds.
+        # If the file is older than that, it is ignored.
+        # TO-DO: If/when tribe29 catches up with PR #164, this variable can be cleaned up
+        if cd "${MK_SPOOLDIR:-$SPOOLDIR}" 2>/dev/null; then
+            _now=$(get_epoch)
+
+            for _file in *; do
+                [ "${_file}" = "*" ] && break
+
+                # Split any leading digits from a filename and assign to 'maxage'
+                # This should ignore further digits e.g. '600file20' will output '600'
+                _maxage="$(echo "${_file}" | sed 's/^[^0-9]*//;s/[^0-9].*$//')"
+
+                # If 'maxage' is set, then we grab the file's mtime, subtract it from
+                # the epoch time, and compare that to 'maxage'
+                if [ "${_maxage}" ]; then
+                    _mtime=$(get_file_mtime "${_file}")
+                    if [ $((_now - _mtime)) -gt "${_maxage}" ]; then
+                        continue
+                    fi
+                fi
+
+                # Output the file
+                cat "${_file}"
+            done
+            unset -v _now _file _maxage _mtime
+        fi
+    )
 }
 
 section_checkmk
@@ -1510,35 +1536,4 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
-    now=$(date +%s)
-
-    for file in *; do
-        test "$file" = "*" && break
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
-
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]; do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
-
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ]; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt "$maxage" ]; then
-                continue
-            fi
-        fi
-
-        # Output the file
-        cat "$file"
-    done
-    popd >/dev/null
-fi
+section_spooldir

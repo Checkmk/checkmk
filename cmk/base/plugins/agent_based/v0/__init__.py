@@ -23,7 +23,11 @@ from cmk.base.api.agent_based.utils import (
     not_matches,
     not_equals,
     not_exists,
+    get_rate,
+    get_average,
 )
+
+from cmk.base.api.agent_based.value_store import get_value_store
 
 from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
 from cmk.base.discovered_labels import HostLabel
@@ -34,12 +38,14 @@ from . import register
 __all__ = [
     # register functions
     "register",
-    ## SECTION related
+    # SECTION related
     "SNMPTree",
     "OIDEnd",
     "OIDCached",
     "OIDBytes",
     "HostLabel",
+    # utils
+    "parse_string_table",
     # detect spec helper
     "all_of",
     "any_of",
@@ -55,6 +61,10 @@ __all__ = [
     "not_matches",
     "not_equals",
     "not_exists",
+    # CHECKING related
+    # persising values
+    "get_value_store",
     # utils
-    "parse_string_table",
+    "get_rate",
+    "get_average",
 ]

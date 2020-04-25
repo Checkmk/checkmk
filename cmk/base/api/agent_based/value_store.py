@@ -65,7 +65,21 @@ class _ValueStore(MutableMapping[str, Any]):
         return "<value store %r>" % (get_item_state_prefix(),)
 
 
-value_store = _ValueStore()
+_value_store = _ValueStore()
+
+
+def get_value_store():
+    # type: () -> _ValueStore
+    """Get the value store for the current service from Checkmk
+
+    The returned value store object can be used to persist values
+    between different check executions. It is a MutableMapping,
+    so it can be used just like a dictionary.
+    """
+    # At the moment this seems not really necessary. But it gives us options
+    # for future changes: We can put code here, that will only be executed
+    # if the plugin actually needs the value_store, e.g. lazy file loading.
+    return _value_store
 
 
 @contextmanager

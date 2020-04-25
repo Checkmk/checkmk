@@ -15,7 +15,7 @@ from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
 
 def test_value_store():
 
-    store = value_store.value_store
+    store = value_store.get_value_store()
 
     with pytest.raises(MKGeneralException):
         store["foo"] = 42

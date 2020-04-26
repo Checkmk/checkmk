@@ -957,39 +957,44 @@ run_liveupdate() {
     fi
 }
 
-run_remote_plugin() {
-    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
-            while read -r descr cmdline; do
-                interval=
-                args="-m"
-                # NOTE: Due to an escaping-related bug in some old bash versions
-                # (3.2.x), we have to use an intermediate variable for the pattern.
-                pattern='\(([^\)]*)\)[[:space:]](.*)'
-                if [[ $cmdline =~ $pattern ]]; then
-                    parameters=${BASH_REMATCH[1]}
-                    cmdline=${BASH_REMATCH[2]}
+run_mrpe_plugins() {
+    # MK's Remote Plugin Executor
+    # We handle mrpe.cfg format that looks like this for synchronous running:
+    # SERVICE_NAME  /path/to/the/plugin/script  -warn 10 -crit 20
+    # Or this for asynchronous running:
+    # SERVICE_NAME  (interval=360:appendage=1)  /path/to/the/plugin/script  -warn 10 -crit 20
+    if [ -r "${MK_CONFDIR}/mrpe.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+            while read -r _mrpe_descr _mrpe_cmdline; do
+                # Detect if _mrpe_cmdline starts with '(' i.e. async mode
+                case "${_mrpe_cmdline}" in
+                    (\(*)
+                        # If we do start with '(', then split 'params' out of '_mrpe_cmdline'
+                        # Strip the brackets from 'params' and rewrite '_mrpe_cmdline' without them
+                        _mrpe_params=$(echo "${_mrpe_cmdline% *}" | tr -d '()')
+                        _mrpe_cmdline="${_mrpe_cmdline##* }"
 
-                    # split multiple parameter assignments
-                    for par in $(echo "$parameters" | tr ":" "\n"); do
-                        # split each assignment
-                        key=$(echo "$par" | cut -d= -f1)
-                        value=$(echo "$par" | cut -d= -f2)
-
-                        if [ "$key" = "interval" ]; then
-                            interval=$value
-                        elif [ "$key" = "appendage" ]; then
-                            args="-ma"
-                        fi
-                    done
-                fi
-
-                if [ -z "$interval" ]; then
-                    run_mrpe "$descr" "$cmdline"
-                else
-                    run_cached "$args" "$descr" "$interval" "$cmdline"
-                fi
+                        # split multiple parameter assignments
+                        for _par in $(echo "${_mrpe_params}" | tr ':' '\n'); do 
+                            # split each assignment
+                            _key="${_par%=*}"
+                            _value="${_par#*=}"
+                            # Setting 'args' here upsets shellcheck as we're inside a 'while' loop
+                            # This should be fine: if we use it, we use it
+                            # shellcheck disable=SC2030
+                            case "${_key}" in
+                                (interval)  _interval="${_value}" ;;
+                                (appendage) _args="-ma" ;;
+                            esac
+                        done
+                        run_cached "${_args:--m}" "${_mrpe_descr}" "${_interval:-}" "${_mrpe_cmdline}"
+                    ;;
+                    (*)
+                        run_mrpe "${_mrpe_descr}" "${_mrpe_cmdline}"
+                    ;;
+                esac 
             done
+            unset -v _mrpe_descr _mrpe_cmdline _mrpe_params _par _key _value _interval _args
     fi
 }
 
@@ -1102,18 +1107,22 @@ run_plugins() {
     fi
 }
 
+# MK's runas Executor
 run_mrpe() {
-    local descr=$1
+    _mrpe_descr="${1}"
     shift
-    local cmdline=$*
+    _mrpe_cmdline="${*}"
 
     echo '<<<mrpe>>>'
 
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "$cmdline")
+    _mrpe_plugin=${_mrpe_cmdline%% *}
+    _mrpe_output=$(eval "${_mrpe_cmdline}")
 
-    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+    echo -n "(${_mrpe_plugin##*/}) ${_mrpe_descr} ${?} ${_mrpe_output}" | tr \\n \\1
     echo
+
+    # Unset the function variables
+    unset -v _mrpe_descr _mrpe_cmdline _mrpe_plugin _mrpe_output
 }
 
 export -f run_mrpe
@@ -1498,10 +1507,7 @@ section_mkbackup
 run_liveupdate
 
 # MK's Remote Plugin Executor
-run_remote_plugin
-
-# MK's runas Executor
-run_mrpe
+run_mrpe_plugins
 
 # Local checks
 run_local_checks

@@ -379,7 +379,7 @@ def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class
         ]
 
         with open(snapshot_settings.snapshot_path, "rb") as f:
-            activate_changes.apply_sync_snapshot("unit_remote_1", f.read(), components)
+            activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), components)
 
     expected_paths = _get_expected_paths(user_id)
 

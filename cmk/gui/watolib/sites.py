@@ -683,6 +683,11 @@ PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
 
 @automation_command_registry.register
 class AutomationPushSnapshot(AutomationCommand):
+    """Apply a config sync snapshot create by a pre 1.7 site
+
+    This is kept for compatibility of pre 1.7 central sites with 1.7 remote sites.
+    TODO: This call can be dropped with 1.8.
+    """
     def command_name(self):
         return "push-snapshot"
 
@@ -700,6 +705,6 @@ class AutomationPushSnapshot(AutomationCommand):
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
-            return cmk.gui.watolib.activate_changes.apply_sync_snapshot(
+            return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content,
                 cmk.gui.watolib.activate_changes.get_replication_paths())

@@ -1461,7 +1461,7 @@ def get_number_of_pending_changes():
     return len(changes.grouped_changes())
 
 
-def apply_sync_snapshot(site_id, tar_content, components):
+def apply_pre_17_sync_snapshot(site_id, tar_content, components):
     # type: (SiteId, bytes, List[ReplicationPath]) -> bool
     """Apply the snapshot received from a central site to the local site"""
     extract_from_buffer(tar_content, components)

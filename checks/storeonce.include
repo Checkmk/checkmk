@@ -39,6 +39,14 @@ def _get_storeonce_space_values(values, type_):
     if key in values:
         return float(values[key]), 0, 0
 
+    key = "Total %s (bytes)" % type_
+    if key in values:
+        return float(values[key]), 0, 0
+
+    key = "%s (bytes)" % type_
+    if key in values:
+        return float(values[key]), 0, 0
+
     # combined(total) = local + cloud
     type_ = type_.replace(" Space", "")
     combined_key = "combined%sBytes" % type_
@@ -67,5 +75,9 @@ def check_storeonce_space(item, params, values):
                                                      get_bytes_human_readable(free_local_bytes))
 
     dedupl_ratio_str = values.get('Deduplication Ratio')
+
+    if "Dedupe Ratio" in values and dedupl_ratio_str is None:
+        dedupl_ratio_str = values.get('Dedupe Ratio')
+
     if dedupl_ratio_str is not None:
         yield 0, "Dedup ratio: %.2f" % float(dedupl_ratio_str)

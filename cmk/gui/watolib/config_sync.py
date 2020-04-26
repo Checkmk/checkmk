@@ -385,45 +385,40 @@ def _extract(tar, components):
     # type: (tarfile.TarFile, List[ReplicationPath]) -> None
     """Extract a tar archive with the new site configuration received from a central site"""
     for component in components:
-        if len(component) == 4:
-            what, name, path, _excludes = component  # type: ignore[misc]
-        else:
-            what, name, path = component  # type: ignore[misc]
-
         try:
             try:
-                subtarstream = tar.extractfile(name + ".tar")
+                subtarstream = tar.extractfile(component.ident + ".tar")
             except Exception:
                 continue  # may be missing, e.g. sites.tar is only present
                 # if some sites have been created.
 
-            if what == "dir":
-                target_dir = path
+            if component.ty == "dir":
+                target_dir = component.path
             else:
-                target_dir = os.path.dirname(path)
+                target_dir = os.path.dirname(component.path)
 
             # Extract without use of temporary files
             subtar = tarfile.open(fileobj=subtarstream)
 
             # Remove old stuff
-            if os.path.exists(path):
-                if name == "usersettings":
-                    _update_usersettings(path, subtar)
+            if os.path.exists(component.path):
+                if component.ident == "usersettings":
+                    _update_usersettings(component.path, subtar)
                     continue
-                if name == "check_mk":
+                if component.ident == "check_mk":
                     _update_check_mk(target_dir, subtar)
                     continue
-                if what == "dir":
-                    _wipe_directory(path)
+                if component.ty == "dir":
+                    _wipe_directory(component.path)
                 else:
-                    os.remove(path)
-            elif what == "dir":
-                os.makedirs(path)
+                    os.remove(component.path)
+            elif component.ty == "dir":
+                os.makedirs(component.path)
 
             subtar.extractall(target_dir)
         except Exception:
             raise MKGeneralException('Failed to extract subtar %s: %s' %
-                                     (name, traceback.format_exc()))
+                                     (component.ident, traceback.format_exc()))
 
 
 def _wipe_directory(path):

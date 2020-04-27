@@ -41,6 +41,14 @@ Seconds = int
 Timestamp = int
 TimeRange = Tuple[int, int]
 
+ServiceState = int
+HostState = int
+ServiceDetails = Text
+ServiceAdditionalDetails = Text
+# TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
+Metric = List
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
+
 UserId = NewType("UserId", Text)
 EventRule = Dict[str, Any]  # TODO Improve this
 

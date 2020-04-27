@@ -4954,10 +4954,6 @@ multisite_builtin_views['cmk_sites'] = {
         'host_labels': {
             'host_label': '[{"value":"cmk/check_mk_server:yes"}]'
         },
-        'invcmksites_autostart': {
-            'invcmksites_autostart_from': '1',
-            'invcmksites_autostart_to': '1'
-        }
     },
     'datasource': 'invcmksites',
     'description': u'Displaying the state of Checkmk sites\n',
@@ -4985,12 +4981,7 @@ multisite_builtin_views['cmk_sites_of_host'] = {
     'add_context_to_title': True,
     'browser_reload': 0,
     'column_headers': 'pergroup',
-    'context': {
-        'invcmksites_autostart': {
-            'invcmksites_autostart_from': '1',
-            'invcmksites_autostart_to': '1'
-        }
-    },
+    'context': {},
     'datasource': 'invcmksites',
     'description': u'Displaying the state of Checkmk sites of the given host\n',
     'force_checkboxes': False,

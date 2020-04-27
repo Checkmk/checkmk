@@ -594,6 +594,18 @@ def test_registered_permissions():
             'icons_and_actions.deployment_status',
         ]
 
+    if cmk_version.is_managed_edition():
+        expected_permissions += [
+            "wato.customer_management",
+            "view.customers",
+            "view.customer_hosts",
+            "view.customer_hosts_up",
+            "view.customer_hosts_down",
+            "view.customer_hosts_pend",
+            "view.customer_hosts_unreach",
+            "sidesnap.customers",
+        ]
+
     assert sorted(expected_permissions) == sorted(permission_registry.keys())
 
     for perm_class in permission_registry.values():

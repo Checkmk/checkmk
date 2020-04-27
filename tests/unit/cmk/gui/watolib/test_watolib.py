@@ -8,14 +8,9 @@ import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
 
-# Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
-import cmk.gui.watolib.rulespecs
 from cmk.gui.valuespec import (
-    ValueSpec,
-    Dictionary,
-)
+    ValueSpec,)
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     ConfigVariableGroup,
@@ -23,8 +18,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     configvar_order,
 )
-from cmk.gui.plugins.wato.utils import (
-    register_check_parameters,)
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_config_domains():
@@ -260,6 +255,11 @@ def test_registered_configvars():
             'reporting_use',
             'reporting_view_limit',
             'site_liveproxyd',
+        ]
+
+    if cmk_version.is_managed_edition():
+        expected_vars += [
+            "color_set",
         ]
 
     registered = sorted(config_variable_registry.keys())

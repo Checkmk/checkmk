@@ -27,7 +27,10 @@ import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
+
 from testlib.utils import DummyApplication, is_enterprise_repo, is_managed_repo
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def _create_test_sync_config(monkeypatch):
@@ -119,6 +122,79 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
     return snapshot_settings
 
 
+def _get_expected_paths(user_id):
+    expected_paths = [
+        'etc',
+        'var',
+        'etc/check_mk',
+        'etc/check_mk/conf.d',
+        'etc/check_mk/mkeventd.d',
+        'etc/check_mk/multisite.d',
+        'etc/check_mk/conf.d/wato',
+        'etc/check_mk/conf.d/wato/hosts.mk',
+        'etc/check_mk/conf.d/wato/contacts.mk',
+        'etc/check_mk/mkeventd.d/wato',
+        'etc/check_mk/multisite.d/wato',
+        'etc/check_mk/multisite.d/wato/global.mk',
+        'var/check_mk',
+        'var/check_mk/web',
+        "etc/htpasswd",
+        "etc/auth.serials",
+        "etc/check_mk/multisite.d/wato/users.mk",
+        six.ensure_str('var/check_mk/web/%s' % user_id),
+        six.ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
+        six.ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
+        six.ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
+        six.ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
+        six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
+    ]
+
+    # TODO: The second condition should not be needed. Seems to be a subtle difference between the
+    # CME and CRE/CEE snapshot logic
+    if not cmk_version.is_managed_edition():
+        expected_paths += [
+            'etc/check_mk/mkeventd.d/mkp',
+            'etc/check_mk/mkeventd.d/mkp/rule_packs',
+        ]
+
+    # The paths are registered once the enterprise plugins are available, independent of the
+    # cmk_version.edition_short() value.
+    # TODO: The second condition should not be needed. Seems to be a subtle difference between the
+    # CME and CRE/CEE snapshot logic
+    if is_enterprise_repo() and not cmk_version.is_managed_edition():
+        expected_paths += [
+            'etc/check_mk/dcd.d',
+            'etc/check_mk/dcd.d/wato',
+            'etc/check_mk/mknotifyd.d',
+            'etc/check_mk/mknotifyd.d/wato',
+        ]
+
+    # TODO: Shouldn't we clean up these subtle differences?
+    if cmk_version.is_managed_edition():
+        expected_paths += [
+            "etc/check_mk/conf.d/customer.mk",
+            "etc/check_mk/conf.d/wato/groups.mk",
+            "etc/check_mk/mkeventd.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/customer.mk",
+            "etc/check_mk/multisite.d/wato/bi.mk",
+            "etc/check_mk/multisite.d/wato/customers.mk",
+            "etc/check_mk/multisite.d/wato/groups.mk",
+            "etc/check_mk/multisite.d/wato/user_connections.mk",
+        ]
+
+        expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
+
+    # TODO: The second condition should not be needed. Seems to be a subtle difference between the
+    # CME and CRE/CEE snapshot logic
+    if not cmk_version.is_raw_edition() and not cmk_version.is_managed_edition():
+        expected_paths += [
+            'etc/check_mk/liveproxyd.d',
+            'etc/check_mk/liveproxyd.d/wato',
+        ]
+
+    return expected_paths
+
+
 def editions():
     yield ("cre", "CRESnapshotDataCollector")
 
@@ -170,6 +246,16 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
     if not cmk_version.is_raw_edition():
         expected_subtars.append("liveproxyd.tar")
 
+    if cmk_version.is_managed_edition():
+        expected_subtars += [
+            "customer_check_mk.tar",
+            "customer_gui_design.tar",
+            "customer_multisite.tar",
+            "gui_logo.tar",
+            "gui_logo_dark.tar",
+            "gui_logo_facelift.tar",
+        ]
+
     assert sorted(f.name for f in unpack_dir.iterdir()) == sorted(expected_subtars)
 
     expected_files = {
@@ -188,9 +274,15 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
         'diskspace.tar': [],
     }
 
-    # TODO: Shouldn't we clean up these subtle differences?
     if cmk_version.is_managed_edition():
         expected_files.update({
+            "customer_check_mk.tar": ["customer.mk"],
+            "customer_gui_design.tar": [],
+            "customer_multisite.tar": ["customer.mk"],
+            "gui_logo.tar": [],
+            "gui_logo_dark.tar": [],
+            "gui_logo_facelift.tar": [],
+            # TODO: Shouldn't we clean up these subtle differences?
             "mkeventd.tar": ["rules.mk"],
             'check_mk.tar': ["groups.mk", "contacts.mk"],
             'multisite.tar': [
@@ -245,68 +337,18 @@ def test_apply_sync_snapshot(edition_short, snapshot_data_collector_class, monke
         with open(snapshot_settings.snapshot_path, "rb") as f:
             activate_changes.apply_sync_snapshot("unit_remote_1", f.read(), components)
 
-    expected_paths = [
-        'etc',
-        'var',
-        'etc/check_mk',
-        'etc/check_mk/conf.d',
-        'etc/check_mk/mkeventd.d',
-        'etc/check_mk/multisite.d',
-        'etc/check_mk/conf.d/wato',
-        'etc/check_mk/conf.d/wato/hosts.mk',
-        'etc/check_mk/conf.d/wato/contacts.mk',
-        'etc/check_mk/mkeventd.d/mkp',
-        'etc/check_mk/mkeventd.d/wato',
-        'etc/check_mk/mkeventd.d/mkp/rule_packs',
-        'etc/check_mk/multisite.d/wato',
-        'etc/check_mk/multisite.d/wato/global.mk',
-        'var/check_mk',
-        'var/check_mk/web',
-        "etc/htpasswd",
-        "etc/auth.serials",
-        "etc/check_mk/multisite.d/wato/users.mk",
-        six.ensure_str('var/check_mk/web/%s' % user_id),
-        six.ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
-    ]
+    expected_paths = _get_expected_paths(user_id)
 
-    # The paths are registered once the enterprise plugins are available, independent of the
-    # cmk_version.edition_short() value.
-    if is_enterprise_repo():
-        expected_paths += [
-            'etc/check_mk/dcd.d',
-            'etc/check_mk/mknotifyd.d',
-            'etc/check_mk/mknotifyd.d/wato',
-            'etc/check_mk/dcd.d/wato',
-        ]
-
-    # TODO: Shouldn't we clean up these subtle differences?
     if cmk_version.is_managed_edition():
         expected_paths += [
-            "etc/check_mk/conf.d/wato/groups.mk",
-            "etc/check_mk/mkeventd.d/wato/rules.mk",
-            "etc/check_mk/multisite.d/wato/bi.mk",
-            "etc/check_mk/multisite.d/wato/customers.mk",
-            "etc/check_mk/multisite.d/wato/groups.mk",
-            "etc/check_mk/multisite.d/wato/user_connections.mk",
-            #"etc/check_mk/conf.d/wato/sitespecific.mk",
-            #"etc/check_mk/dcd.d/wato/distributed.mk",
-            #"etc/check_mk/dcd.d/wato/sitespecific.mk",
-            #"etc/check_mk/mkeventd.d/wato/sitespecific.mk",
-            #"etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
-            #"etc/check_mk/multisite.d/wato/sitespecific.mk",
-        ]
-
-        expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
-
-    if not cmk_version.is_raw_edition():
-        expected_paths += [
-            'etc/check_mk/liveproxyd.d',
-            'etc/check_mk/liveproxyd.d/wato',
-            #'etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk',
+            "etc/check_mk/dcd.d",
+            "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/liveproxyd.d",
+            "etc/check_mk/liveproxyd.d/wato",
+            "etc/check_mk/mknotifyd.d",
+            "etc/check_mk/mknotifyd.d/wato",
+            "etc/check_mk/mkeventd.d/mkp",
+            "etc/check_mk/mkeventd.d/mkp/rule_packs",
         ]
 
     paths = [str(p.relative_to(unpack_dir)) for p in unpack_dir.glob("**/*")]

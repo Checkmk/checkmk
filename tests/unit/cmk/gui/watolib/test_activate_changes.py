@@ -10,7 +10,10 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui.watolib.config_sync import ReplicationPath
+
 import testlib
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 @pytest.fixture(autouse=True)
@@ -63,6 +66,42 @@ def _expected_replication_paths():
         ReplicationPath('file', 'diskspace', '%s/etc/diskspace.conf' % cmk.utils.paths.omd_root,
                         []),
     ]
+
+    if cmk_version.is_managed_edition():
+        expected += [
+            ReplicationPath(ty='file',
+                            ident='customer_check_mk',
+                            path='%s/etc/check_mk/conf.d/customer.mk' % cmk.utils.paths.omd_root,
+                            excludes=[]),
+            ReplicationPath(ty='file',
+                            ident='customer_gui_design',
+                            path='%s/etc/check_mk/multisite.d/zzz_customer_gui_design.mk' %
+                            cmk.utils.paths.omd_root,
+                            excludes=[]),
+            ReplicationPath(ty='file',
+                            ident='customer_multisite',
+                            path='%s/etc/check_mk/multisite.d/customer.mk' %
+                            cmk.utils.paths.omd_root,
+                            excludes=[]),
+            ReplicationPath(
+                ty='file',
+                ident='gui_logo',
+                path='%s/local/share/check_mk/web/htdocs/themes/classic/images/sidebar_top.png' %
+                cmk.utils.paths.omd_root,
+                excludes=[]),
+            ReplicationPath(
+                ty='file',
+                ident='gui_logo_dark',
+                path='%s/local/share/check_mk/web/htdocs/themes/modern-dark/images/mk-logo.png' %
+                cmk.utils.paths.omd_root,
+                excludes=[]),
+            ReplicationPath(
+                ty='file',
+                ident='gui_logo_facelift',
+                path='%s/local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png' %
+                cmk.utils.paths.omd_root,
+                excludes=[]),
+        ]
 
     return expected
 

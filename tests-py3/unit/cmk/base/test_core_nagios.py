@@ -12,6 +12,7 @@ import six
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
+import cmk.utils.version as cmk_version
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
 
@@ -159,6 +160,10 @@ def test_format_nagios_object():
     }),
 ])
 def test_create_nagios_host_spec(hostname, result, monkeypatch):
+    if cmk_version.is_managed_edition():
+        result = result.copy()
+        result['_CUSTOMER'] = 'provider'
+
     ts = Scenario().add_host("localhost")
     ts.add_host("host2")
     ts.add_cluster("cluster1")

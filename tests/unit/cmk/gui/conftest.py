@@ -12,10 +12,18 @@ import threading
 from cookielib import CookieJar
 from urllib import urlencode
 import shutil
+import sys
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import webtest  # type: ignore[import]
 
 import pytest  # type: ignore[import]
+import six
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -97,12 +105,30 @@ def _create_and_destroy_user(automation=False):
     edit_users(_mk_user_obj(username, password, automation=automation))
     config.load_config()
 
+    profile_path = Path(paths.omd_root, "var", "check_mk", "web", username)
+    profile_path.joinpath('cached_profile.mk').write_text(
+        six.text_type(
+            repr({
+                'alias': u'Test user',
+                'contactgroups': ['all'],
+                'disable_notifications': {},
+                'email': u'test_user_%s@tribe29.com' % username,
+                'fallback_contact': False,
+                'force_authuser': False,
+                'locked': False,
+                'language': 'de',
+                'pager': '',
+                'roles': ['user'],
+                'start_url': None,
+                'ui_theme': 'modern-dark',
+            })))
+
     yield username, password
 
     delete_users([username])
 
     # User directories are not deleted by WATO by default. Clean it up here!
-    shutil.rmtree(paths.omd_root + "/var/check_mk/web/" + username)
+    shutil.rmtree(str(profile_path))
 
 
 @pytest.fixture(scope='function')

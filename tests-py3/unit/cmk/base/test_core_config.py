@@ -9,6 +9,7 @@ import six
 from testlib import CheckManager
 from testlib.base import Scenario
 
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -36,8 +37,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     })
     config_cache = ts.apply(monkeypatch)
 
-    attrs = core_config.get_host_attributes("test-host", config_cache)
-    assert attrs == {
+    expected_attrs = {
         '_ADDRESS_4': '0.0.0.0',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
@@ -56,6 +56,12 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         'address': '0.0.0.0',
         'alias': 'test-host',
     }
+
+    if cmk_version.is_managed_edition():
+        expected_attrs['_CUSTOMER'] = 'provider'
+
+    attrs = core_config.get_host_attributes("test-host", config_cache)
+    assert attrs == expected_attrs
 
 
 @pytest.mark.parametrize("hostname,result", [

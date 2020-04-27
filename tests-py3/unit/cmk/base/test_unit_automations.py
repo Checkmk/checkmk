@@ -43,7 +43,7 @@ def test_registered_automations():
         'get-rule-mismatch-reason',
     ]
 
-    if cmk_version.is_enterprise_edition():
+    if not cmk_version.is_raw_edition():
         needed_automations += [
             'bake-agents',
         ]

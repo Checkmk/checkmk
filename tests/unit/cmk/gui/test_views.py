@@ -13,9 +13,7 @@ import cmk.gui.config as config
 
 import cmk.utils.version as cmk_version
 
-# Make it load all plugins (CEE + CME)
-import cmk.gui.views  # pylint: disable=unused-import
-import cmk.gui.default_permissions
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec
@@ -24,7 +22,7 @@ from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.type_defs import PainterSpec
 
 @pytest.fixture()
-def view(register_builtin_html, load_plugins):
+def view(register_builtin_html):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -710,7 +708,6 @@ def test_registered_datasources():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_painters():
     expected = {
         'aggr_acknowledged': {
@@ -4091,7 +4088,6 @@ def test_legacy_register_painter(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_sorters():
     expected = {
         'aggr_group': {
@@ -5780,12 +5776,20 @@ def test_get_needed_join_columns(view):
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
-    assert sorted(columns) == sorted([
+
+    expected_columns = [
         'host_name',
         'service_description',
-    ])
+    ]
 
-@pytest.mark.usefixtures("load_plugins")
+    if cmk_version.is_managed_edition():
+        expected_columns += [
+            "host_custom_variable_names",
+            "host_custom_variable_values",
+        ]
+
+    assert sorted(columns) == sorted(expected_columns)
+
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
@@ -5839,7 +5843,7 @@ def test_view_user_sorters(view):
     assert view.user_sorters == [("abc", True)]
 
 
-def test_registered_display_hints(load_plugins):
+def test_registered_display_hints():
     expected = ['.',
     '.hardware.',
     '.hardware.chassis.',
@@ -6278,6 +6282,6 @@ def test_registered_display_hints(load_plugins):
     found = cmk.gui.plugins.views.inventory_displayhints.keys()
     assert sorted(expected) == sorted(found)
 
-def test_get_inventory_display_hint(load_plugins):
+def test_get_inventory_display_hint():
     hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)

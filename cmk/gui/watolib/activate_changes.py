@@ -192,7 +192,18 @@ def get_replication_paths():
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
         paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
-    return paths + _replication_paths
+    # There are some edition specific paths available during unit tests when testing other
+    # editions. Filter them out there, even when they are registered.
+    filtered = _replication_paths[:]
+    if not cmk_version.is_managed_edition():
+        filtered = [
+            p for p in filtered if p.ident not in {
+                "customer_multisite", "customer_check_mk", "customer_gui_design", "gui_logo",
+                "gui_logo_facelift", "gui_logo_dark"
+            }
+        ]
+
+    return paths + filtered
 
 
 def _load_site_replication_status(site_id, lock=False):

@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest  # type: ignore[import]
+
 import cmk.utils.version as cmk_version
-# Needed to trigger plugin loading
-import cmk.gui.sidebar  # pylint: disable=unused-import
 
 from cmk.gui.plugins.sidebar.utils import snapin_registry
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_snapins():
@@ -47,6 +49,11 @@ def test_registered_snapins():
         expected_snapins += [
             'cmc_stats',
             'reports',
+        ]
+
+    if cmk_version.is_managed_edition():
+        expected_snapins += [
+            "customers",
         ]
 
     assert sorted(snapin_registry.keys()) == sorted(expected_snapins)

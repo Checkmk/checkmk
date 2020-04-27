@@ -70,14 +70,15 @@ def fake_version_and_paths():
     import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
-    # TODO: handle CME case
-    #if is_managed_repo():
-    #    monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cee" % cmk_version.__version__)
-    #elif is_enterprise_repo():
-    if is_enterprise_repo():
-        monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cee" % cmk_version.__version__)
+    if is_managed_repo():
+        edition_short = "cme"
+    elif is_enterprise_repo():
+        edition_short = "cee"
     else:
-        monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.cre" % cmk_version.__version__)
+        edition_short = "cre"
+
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.%s" %
+                        (cmk_version.__version__, edition_short))
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())

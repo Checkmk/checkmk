@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest  # type: ignore[import]
+
 import cmk.utils.version as cmk_version
 
-# Following import is used to trigger plugin loading
-import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_modules():
@@ -47,6 +49,11 @@ def test_registered_modules():
             'agents',
             'alert_handlers',
             'mkps',
+        ]
+
+    if cmk_version.is_managed_edition():
+        expected_modules += [
+            "customer_management",
         ]
 
     module_names = [m.mode_or_url for m in main_menu.get_modules()]

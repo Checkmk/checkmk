@@ -607,9 +607,34 @@ The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. If you would like to change or contribute
 something, please respect the following things:
 
-- If you think you need to use more advanced shell capability for your plugin
-  or local check, such as associative arrays (e.g. `bash`, `zsh`), then you
-  should probably consider using another language like `python`
+### Is it appropriate?
+
+#### Contributed Plugins and Local Checks
+
+If you think you need to use more advanced (read: less portable) shell
+capability for your plugin or local check, such as associative arrays found in
+e.g. `bash`, `zsh`, then you should probably consider using another language
+like `python`.
+
+If you're only familiar with shell, or it's all that's available to your
+particular situation, that's fine, but you should:
+
+- Put a comment in your code stating that you're open to having your check or 
+  plugin rewritten, or why you don't want it rewritten
+- Fail-fast, fail-early e.g
+
+```
+# Restrict this plugin script to bash 4 and newer
+if [[ -z "${BASH_VERSION}" ]] || (( "${BASH_VERSINFO[0]}" < 4 )); then
+  printf -- '%s\n' "This check requires bash 4 or newer" >&2
+  exit 1
+fi
+```
+
+#### Contributions to the agent scripts
+
+If you think you need to use more advanced shell capability for the agent code,
+then you will need to find another way to achieve what you want to do.
 
 ### Code style
 
@@ -658,8 +683,9 @@ The family of Linux/UNIX shells use dynamic scoping, which can cause confusion
 and trouble.  Fortunately, this gives us the freedom to practice a rudimentary
 form of static scoping, which helps to make things a little bit more robust.
 
-Different languages have different numbers of scopes and different names, but
-broadly speaking we can break shell's down to the following three-ish "scopes":
+Different languages have different numbers of scopes and different names for 
+them, but broadly speaking we can break shell's down to the following 
+three-ish "scopes":
 
 #### Global / Environment / Constants
 
@@ -683,27 +709,40 @@ readonly MK_CONSTANT
 Variables in the **script** "scope" tend often to be mistakenly written in 
 UPPERCASE, which gives rise to the possibility of clobbering a legitimate 
 global var.  This can have results that are 
-[potentially hilarious](https://stackoverflow.com/q/28310594), or potentially bad.
+[potentially hilarious, or potentially bad.](https://stackoverflow.com/q/28310594)
 
 For that reason, UPPERCASE variable names are strongly discouraged outside of
 the global scope.
 
 Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
 
+GNU Autoconf's documentation also states:
+
+>As a general rule, shell variable names containing a lower-case letter are safe; 
+>you can define and use these variables without worrying about their effect on 
+>the underlying system, and without worrying about whether the shell changes 
+>them unexpectedly.
+
 Try, also, to use meaningful names, this is meaningless:
 
 ```
-for f in df; do
-  ...
+for f in $(lsblk -ln -o NAME); do
+    ...
 ```
 
 Whereas this is better:
 
 ```
-for file_system in $(df); do
+for block_device in $(lsblk -ln -o NAME); do
+    ...
 ```
 
-*Exception: C-Style `for` loops :)*
+*Exception:*
+*C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
+*as the var `i` is usually self-contained*
+
+You should consider `unset`ting your variables once you're done with them,
+though this isn't strictly necessary.
 
 #### Function / Local
 
@@ -711,7 +750,7 @@ for file_system in $(df); do
 
 ```
 get_api_user() {
-  local username=Shelly
+    local username=Shelly
 }
 ```
 
@@ -721,9 +760,9 @@ prior to the function closure.  For example:
 
 ```
 get_api_user() {
-  _username=Shelly
-  printf -- '%s\n' "${_username}"
-  unset -v _username
+    _username=Shelly
+    printf -- '%s\n' "${_username}"
+    unset -v _username
 }
 ```
 
@@ -733,7 +772,7 @@ Curly braces are used on `${arrays[@]}` and `${variable/modif/ications}`.
 To maintain consistency, you should use curly braces on normal variables too.
 
 Curly braces around variables improves readability when syntax colouring is not
-available.  `${this_variable}` stands out within this block of text.
+available.  ${this_variable} stands out within this block of text.
 
 They also allow us to better format outputs e.g.
 
@@ -747,19 +786,25 @@ They also allow us to better format outputs e.g.
 
 In the first example, there is no such variable as `$timemetricmins`.
 
-So curly braces explicitly tell the shell interpreter where the variable name
-boundaries are.
+In this scenario, the curly braces explicitly tell the shell interpreter where
+the variable name boundaries are.  While it's possible to do these things in
+other ways, it's just simpler and more consistent to use curly braces by default.
 
-*Exception: When you're in an arithmetic context e.g. `(( time_metric < 10 ))`*
+*Exception: When you're in an arithmetic context e.g. `$(( time_metric + 10 ))`*
 
-#### Re-cap:
+*Exceptions to the exception: If your var is an array element or requires*
+*transformation e.g.*  
+- *`$(( "${time_metrics[2]}" + 20 ))`*
+- *`$(( "${10#time_metric}" + 10 ))`*
 
-* **Global / Environment**: `${MK_UPPERCASE}`
-* **Constants**: `${MK_UPPERCASE}` set to `readonly`
-* **Script**: `${meaningful_snake_case}`
-* **Function / Local** `${_underscore_prepended_snake_case}` with `unset -v`
+#### Variables re-cap:
 
-### Linting and formatting
+- **Global / Environment**: `${MK_UPPERCASE}`
+- **Constants**:            `${MK_UPPERCASE}` set to `readonly`
+- **Script**:               `${meaningful_snake_case}`
+- **Function / Local**:     `${_underscore_prepended_snake_case}` with `unset -v`
+
+### Linting
 
 Use [shellcheck](https://www.shellcheck.net/) for your changes before
 submitting patches.
@@ -775,11 +820,11 @@ this up in the near future.
 Do note that while Shellcheck is an excellent tool, it's not perfect.
 Sometimes it alerts on code that may actually be desired.  In this scenario,
 you must use a `disable` directive with a comment that justifies your reason
-for this.  Preferably this will be a git commit hash where the reasoning is
-given e.g.
+for this.  It may also be useful to reference a git commit hash or werk number.
 
 ```
-# See commit abcd3456
+# This function is sourced outside of this library, where it does parse args
+# See commit abcd3456 and/or werk 1234
 # shellcheck disable=SC2120
 foo() {
 ```
@@ -800,25 +845,117 @@ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci 
 
 ### Portability
 
+- We are loosely aiming for "POSIX plus simple named arrays"
+
+- `echo` is a portability nightmare.  Prefer `printf` instead.
+
 - Existing scripts have been written using a variety of shells.  Scripts that
   use `bash` have tended to be written for `bash` 3.x.
   
-  In the future, we will attempt to make our shell code more portable, which
+- In the future, we will attempt to make our shell code more portable, which
   means reducing `bash`isms.  If you're making shell code now, try to approach
   it with portability in mind. Your code may be used on older systems and/or
   commercial unices (e.g. AIX, Solaris etc).
-  
-  `ksh` is a reasonable lowest common denominator to target as it's 
+
+- `ksh` is a reasonable lowest common denominator to target as it's 
   [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and
   its syntax is almost directly runnable in `bash`, `zsh` and others.
 
-  Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
+- GNU Autoconf documentation features a segment on 
+  [Portable Shell Programming](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/autoconf.html#Portable-Shell)
+
+- Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
   you some ideas on more portable scripting, and `dash` is a readily available
-  shell that you can test your code within.
+  shell that you can test your code within.  Do be aware that `dash` is stricter
+  than our goals.
 
-  The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
+- The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
 
-- `echo` is a portability nightmare.  Prefer `printf` instead.
+- A tool like [shall](https://github.com/mklement0/shall) might be useful
+
+### The Unofficial Strict Mode
+
+There is a lot of advice on the internet to "always use The Unofficial Strict Mode."
+
+It is usually presented as a brilliant catch-all that will magically fix every
+shell scripting issue.  It is usually in a form similar to:
+
+```
+set -euo pipefail
+```
+
+This is well meaning, but flawed advice.  Firstly, it's not portable, so it's 
+disqualified by default for our purposes.  Secondly, it comes with its own flaws.
+Some of these options have reasonable uses, but it's dangerous to think that
+this one-line incantation is somehow perfect.  You can read more about it, and 
+specifically `set -e` at one of the following links (read *at least* the first):
+
+- https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/
+- http://wiki.bash-hackers.org/scripting/obsolete
+- http://mywiki.wooledge.org/BashFAQ/105
+- http://mywiki.wooledge.org/BashFAQ/112
+- https://www.reddit.com/r/commandline/comments/4b3cqu/use_the_unofficial_bash_strict_mode_unless_you/
+- https://www.reddit.com/r/programming/comments/25y6yt/use_the_unofficial_bash_strict_mode_unless_you/
+- https://www.reddit.com/r/bash/comments/5zdzil/shell_scripts_matter_good_shell_script_practices/
+- https://www.reddit.com/r/programming/comments/4daos8/good_practices_for_writing_shell_scripts/d1pgv4p/
+- https://www.reddit.com/r/bash/comments/5ddvd2/til_you_can_turn_tracing_x_on_and_off_dynamically/da3xjkk/
+- https://news.ycombinator.com/item?id=8054440
+
+### Performance
+
+Let's be honest: Compared to almost anything else, shell performance is poor.  
+Especially in `bash`.  We use shell for Linux/UNIX hosts because, for better or
+worse, it is the most portable option.  Nonetheless, we can at least try to be 
+mindful about how we construct our code, in order to squeeze out as much 
+performance as we can.
+
+It may help to think of this competitively, or as a challenge.  Constantly ask
+yourself "can I optimize this code any further?"
+
+For a simple and classic example, we have the good old 
+["Useless Use of Cat"](http://porkmail.org/era/unix/award.html):
+
+```
+cat haystack.txt | grep needle
+```
+
+This causes a pointless fork and process, as well as a waste of a pipe with
+associated buffering and broken pipe risks, as `grep` can address files directly
+i.e.
+
+```
+grep needle haystack.txt
+```
+
+We also often find "Useless Use of Cat" paired with "Useless Use of Grep | Awk"
+e.g.
+
+```
+cat haystack.txt | grep needle | awk '{print $2}'
+```
+
+`awk`, like `grep`, can address files directly, and given that it has searching
+built in, it can actually do all of this in one shot:
+
+```
+awk '/needle/{print $2}' haystack.txt
+```
+
+Often we see blocks of `if...elif...elif...elif`'s that can and should be
+replaced with a cleaner and meaner `case...esac` statement.
+
+The style guides linked to earlier both state:
+
+>Given the choice between invoking a shell builtin and invoking a separate 
+>process, choose the builtin.
+
+>We prefer the use of builtins such as the Parameter Expansion functions in 
+>bash(1) as it’s more robust and portable (especially when compared to things 
+>like sed).
+
+Often (but not always) there are massive performance gains to be had through 
+the use of builtins, usually at the expense of some readability.  This can be
+counter-balanced via explantory comments.
 
 ## Localization
 

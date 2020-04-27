@@ -1024,7 +1024,12 @@ class ConfigHostname(TextAsciiAutocomplete):
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         all_hosts = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
+        match_list = []
+        for host_name, host_object in all_hosts.items():
+            if match_pattern.search(host_name) is not None and host_object.may("read"):
+                match_list.append(tuple((host_name, host_name)))
+
+        return match_list
 
 
 class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):

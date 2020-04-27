@@ -51,6 +51,9 @@ import cmk.utils.cmk_subprocess as subprocess
 
 VERSION = "1.4.0i1"
 
+# TODO: Use plain open() instead of os.fdopen() when we switch to Python 3, the
+# typing is better.
+
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
@@ -1218,7 +1221,6 @@ def do_system_backup(opts):
 def do_system_rw_backup(opts):
     with open(system_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1227,15 +1229,15 @@ def do_system_rw_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
-        for chunk in s.process():
-            backup_file.write(chunk)
+        with os.fdopen(pipein_fd, "rb") as pipein:
+            s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
+            for chunk in s.process():
+                backup_file.write(chunk)
 
 
 def do_system_data_backup(opts):
     with open(system_data_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
@@ -1244,15 +1246,16 @@ def do_system_data_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
-        for chunk in s.process():
-            backup_file.write(chunk)
+        with open(pipein_fd, "rb") as pipein:
+            s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
+            for chunk in s.process():
+                backup_file.write(chunk)
 
 
 def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
-    pipeout = os.fdopen(pipeout_fd, "w")
-    backup_files_to_tarfile(pipeout, base_path, exclude_patterns)
-    pipeout.close()
+    # type: (int, str, List[str]) -> None
+    with os.fdopen(pipeout_fd, "wb") as pipeout:
+        backup_files_to_tarfile(pipeout, base_path, exclude_patterns)
 
 
 # Whether or not the data filesystem is mounted (-> on active cluster nodes)
@@ -1275,10 +1278,8 @@ def existing_sites():
         [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
 
 
-def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
-    if exclude_patterns is None:
-        exclude_patterns = []
-
+def backup_files_to_tarfile(fobj, base_path, exclude_patterns):
+    # type: (IO[bytes], str, List[str]) -> None
     def filter_files(tarinfo):
         # patterns are relative to base_path, tarinfo.name is full path without leading slash.
         matches_exclude = any(
@@ -1813,13 +1814,13 @@ def do_system_data_restore(opts, info):
 
 
 def restore_system_backup(backup_path):
+    # type: (str) -> List[str]
     with open(backup_path, "rb") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
-        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
         t = threading.Thread(target=lambda: read_from_tarfile_threaded(s, pipeout_fd))
@@ -1827,9 +1828,10 @@ def restore_system_backup(backup_path):
         t.start()
 
         try:
-            with MKTarFile.open(fileobj=pipein, mode="r|*") as tar:
-                tar.extractall("/")
-                return ["/%s" % name for name in tar.getnames()]
+            with os.fdopen(pipein_fd, "rb") as pipein:
+                with MKTarFile.open(fileobj=pipein, mode="r|*") as tar:
+                    tar.extractall("/")
+                    return ["/%s" % name for name in tar.getnames()]
         except ReadError:
             if opt_debug:
                 raise
@@ -1837,16 +1839,13 @@ def restore_system_backup(backup_path):
 
 
 def read_from_tarfile_threaded(s, pipeout_fd):
-    pipeout = os.fdopen(pipeout_fd, "w")
-
+    # type: (RestoreStream, int) -> None
     try:
-        for chunk in s.process():
-            pipeout.write(chunk)
+        with os.fdopen(pipeout_fd, "wb") as pipeout:
+            for chunk in s.process():
+                pipeout.write(chunk)
     except IOError as e:
         log("Error while sending data to restore process: %s" % e)
-
-    # s.process() ends when backup_file is processed. Then end the restore process.
-    pipeout.close()
 
 
 def complete_restore():

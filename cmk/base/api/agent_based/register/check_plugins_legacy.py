@@ -139,10 +139,10 @@ def _create_check_function(name, check_info_dict, ruleset_name):
 
 
 def _create_new_result(
-    implicit_newline,  # type: str
-    legacy_state,  # type: int
-    legacy_text,  # type: str
-    legacy_metrics=(),  # type: Union[Tuple, List]
+        implicit_newline,  # type: str
+        legacy_state,  # type: int
+        legacy_text,  # type: str
+        legacy_metrics=(),  # type: Union[Tuple, List]
 ):
     # type: (...) -> Generator[Union[Metric, Result], None, str]
     kwargs = {"state": state(legacy_state)}  # type: Dict[str, Any]
@@ -164,9 +164,9 @@ def _create_new_result(
 
 
 def _create_signature_check_function(
-    requires_item,  # type: bool
-    requires_params,  # type: bool
-    original_function,  # type: Callable
+        requires_item,  # type: bool
+        requires_params,  # type: bool
+        original_function,  # type: Callable
 ):
     # type: (...) -> Callable
     """Create the function for a check function with the required signature"""

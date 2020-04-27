@@ -133,15 +133,15 @@ class SectionStore:
 
 class FileCache:
     def __init__(
-        self,
-        path,  # type: Union[str, Path]
-        max_cachefile_age,  # type: Optional[int]
-        is_agent_cache_disabled,  # type: bool
-        may_use_cache_file,  # type: bool
-        use_outdated_cache_file,  # type: bool
-        from_cache_file,
-        to_cache_file,
-        logger,  # type: logging.Logger
+            self,
+            path,  # type: Union[str, Path]
+            max_cachefile_age,  # type: Optional[int]
+            is_agent_cache_disabled,  # type: bool
+            may_use_cache_file,  # type: bool
+            use_outdated_cache_file,  # type: bool
+            from_cache_file,
+            to_cache_file,
+            logger,  # type: logging.Logger
     ):
         # type (...) -> None
         super(FileCache, self).__init__()

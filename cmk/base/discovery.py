@@ -900,11 +900,11 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def _discover_services(
-    hostname,  # type: str
-    ipaddress,  # type: Optional[str]
-    sources,  # type: data_sources.DataSources
-    multi_host_sections,  # type: data_sources.MultiHostSections
-    on_error,  # type: str
+        hostname,  # type: str
+        ipaddress,  # type: Optional[str]
+        sources,  # type: data_sources.DataSources
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        on_error,  # type: str
 ):
     # type: (...) -> List[DiscoveredService]
     # Set host name for host_name()-function (part of the Check API)

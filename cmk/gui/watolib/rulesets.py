@@ -55,13 +55,13 @@ _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 class RuleConditions(object):
     def __init__(
-        self,
-        host_folder,  # type: str
-        host_tags=None,  # type: Tags
-        host_labels=None,  # type: Labels
-        host_name=None,  # type: HostNameConditions
-        service_description=None,  # type: ServiceNameConditions
-        service_labels=None,  # type: Labels
+            self,
+            host_folder,  # type: str
+            host_tags=None,  # type: Tags
+            host_labels=None,  # type: Labels
+            host_name=None,  # type: HostNameConditions
+            service_description=None,  # type: ServiceNameConditions
+            service_labels=None,  # type: Labels
     ):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}

@@ -354,9 +354,8 @@ def werk_matches_options(werk, werk_table_options):
     except ValueError:
         werk_to_match = ""
 
-    if not ((not werk_to_match or werk["id"] == werk_to_match) and
-            werk["level"] in werk_table_options["levels"] and
-            werk["class"] in werk_table_options["classes"] and
+    if not ((not werk_to_match or werk["id"] == werk_to_match) and werk["level"]
+            in werk_table_options["levels"] and werk["class"] in werk_table_options["classes"] and
             werk["compatible"] in werk_table_options["compatibility"] and
             werk_table_options["component"] in (None, werk["component"]) and
             werk["date"] >= werk_table_options["date_range"][0] and

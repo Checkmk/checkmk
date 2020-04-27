@@ -73,13 +73,13 @@ DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, L
 
 
 def link_rel(
-    rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
-    href,  # type: Text
-    method='GET',  # type: HTTPMethod
-    content_type='application/json',  # type: str
-    profile=None,  # type: Optional[str]
-    title=None,  # type: Optional[Text]
-    parameters=None,  # type: Optional[Dict[str, str]]
+        rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
+        href,  # type: Text
+        method='GET',  # type: HTTPMethod
+        content_type='application/json',  # type: str
+        profile=None,  # type: Optional[str]
+        title=None,  # type: Optional[Text]
+        parameters=None,  # type: Optional[Dict[str, str]]
 ):
     # type: (...) -> LinkType
     """Link to a separate entity
@@ -144,8 +144,8 @@ def link_rel(
 
 
 def expand_rel(
-    rel,  # type: str
-    parameters=None,  # type: Optional[Dict[str, str]]
+        rel,  # type: str
+        parameters=None,  # type: Optional[Dict[str, str]]
 ):
     # type: (...) -> str
     """Expand abbreviations in the rel field
@@ -284,10 +284,10 @@ def object_collection(name, entries, base):
 
 
 def action_result(
-    action_links,  # type: List[LinkType]
-    result_type,  # type: ResultType
-    result_links,  # type: List[LinkType]
-    result_value,  # type: Optional[Any]
+        action_links,  # type: List[LinkType]
+        result_type,  # type: ResultType
+        result_links,  # type: List[LinkType]
+        result_value,  # type: Optional[Any]
 ):
     # type: (...) -> Dict
     """Construct an Action Result resource
@@ -458,14 +458,14 @@ def etag_of_obj(obj):
 
 
 def param(
-    param_name,  # type: str
-    description=None,  # type: Optional[str]
-    location=None,  # type: LocationType
-    required=True,  # type: bool
-    allow_emtpy=False,  # type: bool
-    schema_type='string',  # type: str
-    schema_pattern=None,  # type: str
-    **kw):
+        param_name,  # type: str
+        description=None,  # type: Optional[str]
+        location=None,  # type: LocationType
+        required=True,  # type: bool
+        allow_emtpy=False,  # type: bool
+        schema_type='string',  # type: str
+        schema_pattern=None,  # type: str
+        **kw):
     # type: (...) -> Union[str, dict]
     """Specify an OpenAPI parameter to be used on a particular endpoint.
 

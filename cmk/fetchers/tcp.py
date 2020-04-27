@@ -20,11 +20,11 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class TCPDataFetcher(AbstractDataFetcher):
     def __init__(
-        self,
-        family,  # type: socket.AddressFamily
-        address,  # type: Tuple[HostAddress, int]
-        timeout,  # type: float
-        encryption_settings,  # type: Dict[str, str]
+            self,
+            family,  # type: socket.AddressFamily
+            address,  # type: Tuple[HostAddress, int]
+            timeout,  # type: float
+            encryption_settings,  # type: Dict[str, str]
     ):
         # type (...) -> None
         super(TCPDataFetcher, self).__init__()

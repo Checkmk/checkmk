@@ -27,7 +27,7 @@ import textwrap
 import threading
 import time
 import traceback
-from typing import Any, Callable, Dict, IO, List, NamedTuple, NoReturn, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterator, IO, List, NamedTuple, NoReturn, Optional, Tuple  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -673,7 +673,7 @@ def do_site_backup(opts, site=None, try_stop=True):
     assert p.stdout is not None
     assert p.stderr is not None
 
-    with open(backup_path, "w") as backup_file:
+    with open(backup_path, "wb") as backup_file:
         s = BackupStream(stream=p.stdout,
                          is_alive=lambda: p.poll() is None,
                          key_ident=g_job_config["encrypt"])
@@ -766,6 +766,7 @@ class MKBackupStream(object):
         self._last_state_update = time.time()
         self._last_bps = None  # type: Optional[float]
         self._bytes_copied = 0
+        self._next_chunk = None  # type: Optional[bytes]
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
@@ -774,6 +775,7 @@ class MKBackupStream(object):
         self._iv = b'\x00' * AES.block_size
 
     def process(self):
+        # type: () -> Iterator[bytes]
         head = self._init_processing()
         if head is not None:
             yield head
@@ -795,7 +797,7 @@ class MKBackupStream(object):
         return self._key_ident is not None
 
     def _init_processing(self):
-        # type: () -> Optional[str]
+        # type: () -> Optional[bytes]
         raise NotImplementedError()
 
     def _read_from_stream(self, size):
@@ -841,7 +843,8 @@ class MKBackupStream(object):
             if key_id == cert.digest("md5"):
                 return key
 
-        raise MKGeneralException("Failed to load the configured backup key: %s" % key_id)
+        raise MKGeneralException("Failed to load the configured backup key: %s" %
+                                 six.ensure_str(key_id))
 
     # TODO: The return type is a bit questionable...
     def _load_backup_keys(self):
@@ -860,7 +863,7 @@ class MKBackupStream(object):
 
 class BackupStream(MKBackupStream):
     def _init_processing(self):
-        # type: () -> Optional[str]
+        # type: () -> Optional[bytes]
         if not self._encrypt():
             return None
 
@@ -874,7 +877,7 @@ class BackupStream(MKBackupStream):
         # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
         #            early versions of 1.4 until moving from PyCryto to PyCryptodome
         # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
-        return "%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
+        return b"%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
     def _read_chunk(self):
         # type: () -> Tuple[bytes, bool]
@@ -885,12 +888,11 @@ class BackupStream(MKBackupStream):
             # Detect end of file and add padding to fill up to block size
             if chunk == "" or len(chunk) % AES.block_size != 0:
                 padding_length = (AES.block_size - len(chunk) % AES.block_size) or AES.block_size
-                chunk += padding_length * chr(padding_length)
+                chunk += padding_length * bytes((padding_length,))
                 finished = True
         else:
             chunk = self._read_from_stream(1024 * 1024)
-
-            if chunk == "":
+            if chunk == b"":
                 finished = True
 
         return chunk, finished
@@ -927,7 +929,7 @@ class BackupStream(MKBackupStream):
 
 class RestoreStream(MKBackupStream):
     def _init_processing(self):
-        # type: () -> Optional[str]
+        # type: () -> Optional[bytes]
         if not self._encrypt():
             return None
 
@@ -951,11 +953,15 @@ class RestoreStream(MKBackupStream):
         if self._next_chunk is None:
             # First chunk. Only store for next loop
             self._next_chunk = this_chunk
-            return "", False
+            return b"", False
 
         if len(this_chunk) == 0:
             # Processing last chunk. Stip off padding.
-            padding_length = ord(self._next_chunk[-1])
+            pad = self._next_chunk[-1]
+            if sys.version_info[0] >= 3:
+                padding_length = pad
+            else:
+                padding_length = ord(pad)
             chunk = self._next_chunk[:-padding_length]
             return chunk, True
 
@@ -1210,7 +1216,7 @@ def do_system_backup(opts):
 
 
 def do_system_rw_backup(opts):
-    with open(system_backup_archive_path(), "w") as backup_file:
+    with open(system_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
 
@@ -1227,7 +1233,7 @@ def do_system_rw_backup(opts):
 
 
 def do_system_data_backup(opts):
-    with open(system_data_backup_archive_path(), "w") as backup_file:
+    with open(system_data_backup_archive_path(), "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
 
@@ -1564,7 +1570,7 @@ def do_site_restore(opts, info, site=None):
     assert p.stdin is not None
     assert p.stderr is not None
 
-    with open(backup_path, "r") as backup_file:
+    with open(backup_path, "rb") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
@@ -1578,7 +1584,7 @@ def do_site_restore(opts, info, site=None):
                 # produced which broke the restore of the site on the local system. Skip to
                 # the beginning of the archive
                 if not archive_started:
-                    if chunk.startswith("Unmounting temporary filesystem"):
+                    if chunk.startswith(b"Unmounting temporary filesystem"):
                         chunk = chunk[37:]
                     archive_started = True
 
@@ -1590,7 +1596,7 @@ def do_site_restore(opts, info, site=None):
         p.stdin.close()
 
     if p.wait() != 0:
-        log(p.stderr.read())
+        log(six.ensure_str(p.stderr.read()))
         raise MKGeneralException("Site restore failed")
 
     if not is_root():
@@ -1807,7 +1813,7 @@ def do_system_data_restore(opts, info):
 
 
 def restore_system_backup(backup_path):
-    with open(backup_path, "r") as backup_file:
+    with open(backup_path, "rb") as backup_file:
         s = RestoreStream(stream=backup_file,
                           is_alive=lambda: False,
                           key_ident=g_job_config["encrypt"])
@@ -2015,7 +2021,7 @@ def main():
 
     # Load the mode specific options
     try:
-        mode_opts, mode_args = getopt.getopt(args, "", mode_options(mode).keys())
+        mode_opts, mode_args = getopt.getopt(args, "", list(mode_options(mode).keys()))
     except getopt.GetoptError as e:
         usage("%s" % e)
 

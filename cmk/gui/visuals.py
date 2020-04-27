@@ -1407,7 +1407,12 @@ class VisualFilterList(ListOfMultiple):
 @page_registry.register_page("ajax_visual_filter_list_get_choice")
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
     def _get_choices(self, request):
-        return VisualFilterList.get_choices(request["infos"], set(request["ignore"]))
+        infos, ignore = request["infos"], request["ignore"]
+        return [
+            ListOfMultipleChoiceGroup(title=visual_info_registry[info]().title,
+                                      choices=VisualFilterList.get_choices(info, ignore))
+            for info in infos
+        ]
 
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get

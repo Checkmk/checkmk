@@ -111,7 +111,9 @@ def _snmp_scan(host_config,
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
     if for_inv:
-        these_plugin_names = list(inventory_plugins.inv_info)
+        these_plugin_names = [
+            name for name in inventory_plugins.inv_info if inventory_plugins.is_snmp_plugin(name)
+        ]
     else:
         # TODO (mo): stop converting to string!
         these_plugin_names = [str(n) for n in config.registered_snmp_sections]
@@ -120,8 +122,6 @@ def _snmp_scan(host_config,
 
     for check_plugin_name in these_plugin_names:
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
-            continue
-        if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
             continue
 
         detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,

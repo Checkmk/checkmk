@@ -15,11 +15,10 @@ from Cryptodome.Cipher import AES
 import cmk.utils.debug
 # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import RawAgentData
-from cmk.base.exceptions import MKAgentError
 # pylint: enable=cmk-module-layer-violation
 from cmk.utils.type_defs import HostAddress
 
-from ._base import AbstractDataFetcher
+from ._base import AbstractDataFetcher, MKFetcherError
 
 
 class TCPDataFetcher(AbstractDataFetcher):
@@ -64,7 +63,7 @@ class TCPDataFetcher(AbstractDataFetcher):
     def data(self):
         # type: () -> RawAgentData
         if self._socket is None:
-            raise MKAgentError("Not connected")
+            raise MKFetcherError("Not connected")
 
         return self._decrypt(self._raw_data())
 
@@ -89,14 +88,14 @@ class TCPDataFetcher(AbstractDataFetcher):
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
-            raise MKAgentError("Communication failed: %s" % e)
+            raise MKFetcherError("Communication failed: %s" % e)
 
     def _decrypt(self, output):
         # type: (RawAgentData) -> RawAgentData
         if output.startswith(b"<<<"):
             self._logger.debug("Output is not encrypted")
             if self._encryption_settings["use_regular"] == "enforce":
-                raise MKAgentError(
+                raise MKFetcherError(
                     "Agent output is plaintext but encryption is enforced by configuration")
             return output
 
@@ -107,11 +106,11 @@ class TCPDataFetcher(AbstractDataFetcher):
         try:
             self._logger.debug("Decrypt encrypted output")
             output = self._real_decrypt(output)
-        except MKAgentError:
+        except MKFetcherError:
             raise
         except Exception as e:
             if self._encryption_settings["use_regular"] == "enforce":
-                raise MKAgentError("Failed to decrypt agent output: %s" % e)
+                raise MKFetcherError("Failed to decrypt agent output: %s" % e)
 
             # of course the package might indeed have been encrypted but
             # in an incorrect format, but how would we find that out?
@@ -126,7 +125,7 @@ class TCPDataFetcher(AbstractDataFetcher):
             # simply check if the protocol is an actual number
             protocol = int(output[:2])
         except ValueError:
-            raise MKAgentError("Unsupported protocol version: %r" % output[:2])
+            raise MKFetcherError("Unsupported protocol version: %r" % output[:2])
         encrypted_pkg = output[2:]
         encryption_key = self._encryption_settings["passphrase"]
 

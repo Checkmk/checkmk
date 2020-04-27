@@ -25,7 +25,7 @@ class TestIPMIDataFetcher:
     def test_command_raises_IpmiException_handling(self, monkeypatch):
         monkeypatch.setattr(IPMIDataFetcher, "open", lambda self: None)
 
-        with pytest.raises(MKAgentError):
+        with pytest.raises(MKFetcherError):
             with IPMIDataFetcher("127.0.0.1", "", "", logging.getLogger("tests")):
                 raise IpmiException()
 
@@ -50,18 +50,18 @@ class TestTCPDataFetcher:
 
         assert fetcher._decrypt(output) == output
 
-    def test_decrypt_plaintext_with_enforce_raises_MKAgentError(self):
+    def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings, logging.getLogger("test"))
 
-        with pytest.raises(MKAgentError):
+        with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
 
-    def test_decrypt_payload_with_wrong_protocol_raises_MKAgentError(self):
+    def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"the first two bytes are not a number"
         fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings, logging.getLogger("test"))
 
-        with pytest.raises(MKAgentError):
+        with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)

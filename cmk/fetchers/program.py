@@ -15,12 +15,11 @@ import six
 
 # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import RawAgentData
-from cmk.base.exceptions import MKAgentError
 # pylint: enable=cmk-module-layer-violation
 from cmk.utils.encoding import ensure_bytestr
 from cmk.utils.exceptions import MKTimeout
 
-from ._base import AbstractDataFetcher
+from ._base import AbstractDataFetcher, MKFetcherError
 
 
 class ProgramDataFetcher(AbstractDataFetcher):
@@ -95,13 +94,13 @@ class ProgramDataFetcher(AbstractDataFetcher):
     def data(self):
         # type: () -> RawAgentData
         if self._process is None:
-            raise MKAgentError("No process")
+            raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
             input=ensure_bytestr(self._stdin) if self._stdin else None)
         if self._process.returncode == 127:
             exepath = self._cmdline.split()[0]  # for error message, hide options!
-            raise MKAgentError("Program '%s' not found (exit code 127)" % six.ensure_str(exepath))
+            raise MKFetcherError("Program '%s' not found (exit code 127)" % six.ensure_str(exepath))
         if self._process.returncode:
-            raise MKAgentError("Agent exited with code %d: %s" %
-                               (self._process.returncode, six.ensure_str(stderr)))
+            raise MKFetcherError("Agent exited with code %d: %s" %
+                                 (self._process.returncode, six.ensure_str(stderr)))
         return stdout

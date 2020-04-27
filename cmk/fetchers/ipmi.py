@@ -17,12 +17,11 @@ import six
 import cmk.utils.debug
 # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import RawAgentData
-from cmk.base.exceptions import MKAgentError
 # pylint: enable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress
 
-from ._base import AbstractDataFetcher
+from ._base import AbstractDataFetcher, MKFetcherError
 
 
 class IPMIDataFetcher(AbstractDataFetcher):
@@ -51,7 +50,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
         self.close()
         if exc_type is IpmiException and not str(exc_value):
             # Raise a more specific exception
-            raise MKAgentError("IPMI communication failed: %r" % exc_type)
+            raise MKFetcherError("IPMI communication failed: %r" % exc_type)
         if not cmk.utils.debug.enabled():
             return False
         return True
@@ -59,7 +58,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
     def data(self):
         # type: () -> RawAgentData
         if self._command is None:
-            raise MKAgentError("Not connected")
+            raise MKFetcherError("Not connected")
 
         output = b""
         output += self._sensors_section()
@@ -86,7 +85,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
     def _sensors_section(self):
         # type: () -> RawAgentData
         if self._command is None:
-            raise MKAgentError("Not connected")
+            raise MKFetcherError("Not connected")
 
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
@@ -118,7 +117,7 @@ class IPMIDataFetcher(AbstractDataFetcher):
     def _firmware_section(self):
         # type: () -> RawAgentData
         if self._command is None:
-            raise MKAgentError("Not connected")
+            raise MKFetcherError("Not connected")
 
         self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:

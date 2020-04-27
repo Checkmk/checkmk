@@ -13,6 +13,11 @@ import six
 # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import RawAgentData
 # pylint: enable=cmk-module-layer-violation
+from cmk.utils.exceptions import MKException
+
+
+class MKFetcherError(MKException):
+    """An exception common to the fetchers."""
 
 
 class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):

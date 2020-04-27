@@ -1189,7 +1189,11 @@ def do_system_backup(opts):
 
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix())
-    do_system_rw_backup(opts)
+    perform_backup(
+        backup_archive_path=system_backup_archive_path(),
+        base_path="/rw",
+        exclude_patterns=["mnt/*/*"],
+    )
 
     # The data volume (/omd) is not backed up on slave cluster nodes
     if is_inactive_cluster_node():
@@ -1198,7 +1202,11 @@ def do_system_backup(opts):
         return
 
     log("Performing system data backup (system-data%s)" % archive_suffix())
-    do_system_data_backup(opts)
+    perform_backup(
+        backup_archive_path=system_data_backup_archive_path(),
+        base_path="/omd",
+        exclude_patterns=["sites/*"],
+    )
 
     def exclude_sites(opts):
         return "without-sites" in opts or g_job_config.get("without_sites", False)
@@ -1212,30 +1220,14 @@ def do_system_backup(opts):
         log("Skipping site backup (disabled)")
 
 
-def do_system_rw_backup(opts):
-    with open(system_backup_archive_path(), "wb") as backup_file:
+def perform_backup(backup_archive_path, base_path, exclude_patterns):
+    # type: (str, str, List[str]) -> None
+    with open(backup_archive_path, "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
 
         # Write to buffer in dedicated thread
         t = threading.Thread(
-            target=lambda: write_to_tarfile_threaded(pipeout_fd, "/rw", ["mnt/*/*"]))
-        t.daemon = True
-        t.start()
-
-        # Process backup stream and write to destination file
-        with open(pipein_fd, "rb") as pipein:
-            s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
-            for chunk in s.process():
-                backup_file.write(chunk)
-
-
-def do_system_data_backup(opts):
-    with open(system_data_backup_archive_path(), "wb") as backup_file:
-        pipein_fd, pipeout_fd = os.pipe()
-
-        # Write to buffer in dedicated thread
-        t = threading.Thread(
-            target=lambda: write_to_tarfile_threaded(pipeout_fd, "/omd", ["sites/*"]))
+            target=lambda: write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns))
         t.daemon = True
         t.start()
 

@@ -28,7 +28,7 @@ class TCPDataFetcher(AbstractDataFetcher):
     ):
         # type (...) -> None
         super(TCPDataFetcher, self).__init__()
-        self._family = family
+        self._family = socket.AddressFamily(family)
         self._address = address
         self._timeout = timeout
         self._encryption_settings = encryption_settings

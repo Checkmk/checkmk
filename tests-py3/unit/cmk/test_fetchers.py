@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+import socket
 from collections import namedtuple
 
 import pytest  # type: ignore[import]
@@ -21,7 +23,20 @@ SensorReading = namedtuple(
     " state_ids type value unavailable")
 
 
+def to_json(data):
+    return json.loads(json.dumps(data))
+
+
 class TestIPMIDataFetcher:
+    def test_deserialization(self):
+        fetcher = IPMIDataFetcher.from_json(
+            to_json({
+                "ipaddress": "1.2.3.4",
+                "username": "us3r",
+                "password": "secret",
+            }))
+        assert isinstance(fetcher, IPMIDataFetcher)
+
     def test_command_raises_IpmiException_handling(self, monkeypatch):
         monkeypatch.setattr(IPMIDataFetcher, "open", lambda self: None)
 
@@ -42,7 +57,47 @@ class TestIPMIDataFetcher:
             0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 
+class TestPiggyBack:
+    def test_deserialization(self):
+        fetcher = PiggyBackDataFetcher.from_json(
+            to_json({
+                "hostname": "host",
+                "ipaddress": "1.2.3.4",
+                "time_settings": [],
+            }))
+        assert isinstance(fetcher, PiggyBackDataFetcher)
+
+
+class TestProgram:
+    def test_deserialization(self):
+        fetcher = ProgramDataFetcher.from_json(
+            to_json({
+                "cmdline": "/bin/true",
+                "stdin": None,
+                "is_cmc": False,
+            }))
+        assert isinstance(fetcher, ProgramDataFetcher)
+
+
+class TestSNMP:
+    @pytest.mark.skip("not implemented")
+    def test_deserialization(self):
+        pass
+
+
 class TestTCPDataFetcher:
+    def test_deserialization(self):
+        fetcher = TCPDataFetcher.from_json(
+            to_json({
+                "family": socket.AF_INET,
+                "address": "1.2.3.4",
+                "timeout": 0.1,
+                "encryption_settings": {
+                    "encryption": "settings"
+                },
+            }))
+        assert isinstance(fetcher, TCPDataFetcher)
+
     def test_decrypt_plaintext_is_noop(self):
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"

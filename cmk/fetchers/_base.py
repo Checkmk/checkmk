@@ -6,7 +6,7 @@
 
 import abc
 from types import TracebackType
-from typing import Optional, Type
+from typing import Any, Dict, Optional, Type
 
 import six
 
@@ -20,6 +20,12 @@ class MKFetcherError(MKException):
 
 class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):
     """Interface to the data fetchers."""
+    @classmethod
+    def from_json(cls, serialized):
+        # type: (Dict[str, Any]) -> AbstractDataFetcher
+        """Deserialize from JSON."""
+        return cls(**serialized)  # type: ignore[call-arg]
+
     @abc.abstractmethod
     def __enter__(self):
         # type: () -> AbstractDataFetcher

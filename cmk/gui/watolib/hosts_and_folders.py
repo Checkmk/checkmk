@@ -482,8 +482,8 @@ def deep_update(original, update, overwrite=True):
 
 
 def update_metadata(
-        attributes,  # type: Dict[str, Any]
-        created_by=None,  # type: Optional[Text]
+    attributes,  # type: Dict[str, Any]
+    created_by=None,  # type: Optional[Text]
 ):  # type: (...) -> Dict[str, Any]
     """Update meta_data timestamps and set created_by if provided.
 

@@ -51,19 +51,19 @@ TableRows = List[Union[TableRow, GroupHeader]]
 
 @contextmanager
 def table_element(
-        table_id=None,  # type: Optional[str]
-        title=None,  # type: HTMLContent
-        searchable=True,  # type: bool
-        sortable=True,  # type: bool
-        foldable=False,  # type: bool
-        limit=None,  # type: Optional[int]
-        output_format="html",  # type: str
-        omit_if_empty=False,  # type: bool
-        omit_empty_columns=False,  # type: bool
-        omit_headers=False,  # type: bool
-        empty_text=None,  # type: Optional[Text]
-        help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
-        css=None,  # type: Optional[str]
+    table_id=None,  # type: Optional[str]
+    title=None,  # type: HTMLContent
+    searchable=True,  # type: bool
+    sortable=True,  # type: bool
+    foldable=False,  # type: bool
+    limit=None,  # type: Optional[int]
+    output_format="html",  # type: str
+    omit_if_empty=False,  # type: bool
+    omit_empty_columns=False,  # type: bool
+    omit_headers=False,  # type: bool
+    empty_text=None,  # type: Optional[Text]
+    help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
+    css=None,  # type: Optional[str]
 ):
     # type: (...) -> Iterator[Table]
     with html.plugged():
@@ -108,20 +108,20 @@ def table_element(
 
 class Table(object):
     def __init__(
-            self,
-            table_id=None,  # type: Optional[str]
-            title=None,  # type: HTMLContent
-            searchable=True,  # type: bool
-            sortable=True,  # type: bool
-            foldable=False,  # type: bool
-            limit=None,  # type: Optional[int]
-            output_format="html",  # type: str
-            omit_if_empty=False,  # type: bool
-            omit_empty_columns=False,  # type: bool
-            omit_headers=False,  # type: bool
-            empty_text=None,  # type: Optional[Text]
-            help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
-            css=None,  # type: Optional[str]
+        self,
+        table_id=None,  # type: Optional[str]
+        title=None,  # type: HTMLContent
+        searchable=True,  # type: bool
+        sortable=True,  # type: bool
+        foldable=False,  # type: bool
+        limit=None,  # type: Optional[int]
+        output_format="html",  # type: str
+        omit_if_empty=False,  # type: bool
+        omit_empty_columns=False,  # type: bool
+        omit_headers=False,  # type: bool
+        empty_text=None,  # type: Optional[Text]
+        help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
+        css=None,  # type: Optional[str]
     ):
         super(Table, self).__init__()
         self.next_func = lambda: None
@@ -163,13 +163,13 @@ class Table(object):
         self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
     def text_cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
+        self,
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
+        help_txt=None,  # type: Optional[Text]
+        colspan=None,  # type: Optional[int]
+        sortable=True,  # type: bool
     ):
         self.cell(title=title,
                   text=text,
@@ -179,14 +179,14 @@ class Table(object):
                   escape_text=True)
 
     def cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
-            escape_text=False,  # type: bool
+        self,
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
+        help_txt=None,  # type: Optional[Text]
+        colspan=None,  # type: Optional[int]
+        sortable=True,  # type: bool
+        escape_text=False,  # type: bool
     ):
         self._finish_previous()
         self.next_func = lambda: self._add_cell(title=title,
@@ -217,14 +217,14 @@ class Table(object):
             self.options["collect_headers"] = False
 
     def _add_cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
-            escape_text=False,  # type: bool
+        self,
+        title="",  # type: HTMLContent
+        text="",  # type: HTMLContent
+        css=None,  # type: CSSSpec
+        help_txt=None,  # type: Optional[Text]
+        colspan=None,  # type: Optional[int]
+        sortable=True,  # type: bool
+        escape_text=False,  # type: bool
     ):
         if escape_text:
             cell_text = escaping.escape_text(text)

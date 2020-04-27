@@ -81,8 +81,6 @@ PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += PyJWT-1.7.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
-PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
-
 PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.2.0.tar.gz # needed by GUI (User sync)
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)

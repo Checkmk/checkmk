@@ -23,10 +23,10 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class IPMIDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            address,  # type: HostAddress
-            username,  # type: str
-            password,  # type: str
+        self,
+        address,  # type: HostAddress
+        username,  # type: str
+        password,  # type: str
     ):
         # type: (...) -> None
         super(IPMIDataFetcher, self).__init__()

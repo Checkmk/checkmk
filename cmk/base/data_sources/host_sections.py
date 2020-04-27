@@ -171,10 +171,10 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         return (min(cached_ats), max(intervals)) if cached_ats else (None, None)
 
     def get_parsed_section(
-            self,
-            host_name,  # type: HostName
-            ip_address,  # type: Optional[HostAddress]
-            section_name,  # type: PluginName
+        self,
+        host_name,  # type: HostName
+        ip_address,  # type: Optional[HostAddress]
+        section_name,  # type: PluginName
     ):
         # type: (...) -> Optional[ParsedSectionContent]
         cache_key = (host_name, ip_address, section_name)

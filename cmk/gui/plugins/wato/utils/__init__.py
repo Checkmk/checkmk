@@ -173,11 +173,11 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        only_v3=False,  # type: bool
-        default_value="public",  # type: _Optional[Text]
-        allow_none=False  # type: bool
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
+    only_v3=False,  # type: bool
+    default_value="public",  # type: _Optional[Text]
+    allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):
         if only_v3:
@@ -520,10 +520,10 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
@@ -549,10 +549,10 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: _Optional[Text]
+    help=None,  # type: _Optional[ValueSpecHelp]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):
     return Transform(
         PasswordFromStore(

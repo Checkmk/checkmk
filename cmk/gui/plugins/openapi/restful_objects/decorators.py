@@ -57,17 +57,17 @@ RequestSchema = Optional[Schema]
 
 
 def endpoint_schema(
-        path,  # type: str
-        method='get',  # type: HTTPMethod
-        parameters=None,  # type: List[Parameter]
-        content_type='application/json',  # type: str
-        output_empty=False,  # type: bool
-        response_schema=None,  # type: ResponseSchema
-        request_schema=None,  # type: RequestSchema
-        request_body_required=True,  # type: bool
-        error_schema=ApiError,  # type: Schema
-        etag=None,  # type: ETagBehaviour
-        **options  # type: dict
+    path,  # type: str
+    method='get',  # type: HTTPMethod
+    parameters=None,  # type: List[Parameter]
+    content_type='application/json',  # type: str
+    output_empty=False,  # type: bool
+    response_schema=None,  # type: ResponseSchema
+    request_schema=None,  # type: RequestSchema
+    request_body_required=True,  # type: bool
+    error_schema=ApiError,  # type: Schema
+    etag=None,  # type: ETagBehaviour
+    **options  # type: dict
 ):
     """Mark the function as a REST-API endpoint.
 

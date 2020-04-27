@@ -22,10 +22,10 @@ from ._base import AbstractDataFetcher, MKFetcherError
 
 class ProgramDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            cmdline,  # type: Union[bytes, Text]
-            stdin,  # type: Optional[str]
-            is_cmc,  # type: bool
+        self,
+        cmdline,  # type: Union[bytes, Text]
+        stdin,  # type: Optional[str]
+        is_cmc,  # type: bool
     ):
         # type: (...) -> None
         super(ProgramDataFetcher, self).__init__()

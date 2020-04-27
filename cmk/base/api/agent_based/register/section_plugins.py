@@ -143,13 +143,13 @@ def _create_supersedes(supersedes):
 
 
 def create_agent_section_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[AgentParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
+    #*,
+    name=None,  # type: Optional[str]
+    parsed_section_name=None,  # type: Optional[str]
+    parse_function=None,  # type: Optional[AgentParseFunction]
+    host_label_function=None,  # type: Optional[HostLabelFunction]
+    supersedes=None,  # type:  Optional[List[str]]
+    forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> AgentSectionPlugin
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -180,15 +180,15 @@ def create_agent_section_plugin(
 
 
 def create_snmp_section_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[SNMPParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        detect_spec=None,  # type: Optional[SNMPDetectSpec]
-        trees=None,  # type: Optional[List[SNMPTree]]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
+    #*,
+    name=None,  # type: Optional[str]
+    parsed_section_name=None,  # type: Optional[str]
+    parse_function=None,  # type: Optional[SNMPParseFunction]
+    host_label_function=None,  # type: Optional[HostLabelFunction]
+    supersedes=None,  # type:  Optional[List[str]]
+    detect_spec=None,  # type: Optional[SNMPDetectSpec]
+    trees=None,  # type: Optional[List[SNMPTree]]
+    forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> SNMPSectionPlugin
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one

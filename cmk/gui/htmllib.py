@@ -2331,25 +2331,25 @@ class html(ABCHTMLGenerator):
             self.close_div()
 
     def text_input(
-            self,
-            varname,  # type: str
-            default_value=u"",  # type: Text
-            cssclass="text",  # type: str
-            size=None,  # type: Union[None, str, int]
-            label=None,  # type: Optional[Text]
-            id_=None,  # type: str
-            submit=None,  # type: Optional[str]
-            try_max_width=False,  # type: bool
-            read_only=False,  # type: bool
-            autocomplete=None,  # type: Optional[str]
-            style=None,  # type: Optional[str]
-            omit_css_width=False,  # type: bool
-            type_=None,  # type: Optional[str]
-            onkeyup=None,  # type: Optional[Text]
-            onblur=None,  # type: Optional[str]
-            placeholder=None,  # type: Optional[Text]
-            data_world=None,  # type: Optional[str]
-            data_max_labels=None  # type: Optional[int]
+        self,
+        varname,  # type: str
+        default_value=u"",  # type: Text
+        cssclass="text",  # type: str
+        size=None,  # type: Union[None, str, int]
+        label=None,  # type: Optional[Text]
+        id_=None,  # type: str
+        submit=None,  # type: Optional[str]
+        try_max_width=False,  # type: bool
+        read_only=False,  # type: bool
+        autocomplete=None,  # type: Optional[str]
+        style=None,  # type: Optional[str]
+        omit_css_width=False,  # type: bool
+        type_=None,  # type: Optional[str]
+        onkeyup=None,  # type: Optional[Text]
+        onblur=None,  # type: Optional[str]
+        placeholder=None,  # type: Optional[Text]
+        data_world=None,  # type: Optional[str]
+        data_max_labels=None  # type: Optional[int]
     ):
         # type: (...) -> None
 
@@ -2515,16 +2515,16 @@ class html(ABCHTMLGenerator):
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def dropdown(
-            self,
-            varname,  # type: str
-            choices,  # type: Choices
-            deflt='',  # type: DefaultChoice
-            ordered=False,  # type: bool
-            label=None,  # type: Optional[Text]
-            class_=None,  # type: CSSSpec
-            size=1,  # type: int
-            read_only=False,  # type: bool
-            **attrs  # type: HTMLTagAttributeValue
+        self,
+        varname,  # type: str
+        choices,  # type: Choices
+        deflt='',  # type: DefaultChoice
+        ordered=False,  # type: bool
+        label=None,  # type: Optional[Text]
+        class_=None,  # type: CSSSpec
+        size=1,  # type: int
+        read_only=False,  # type: bool
+        **attrs  # type: HTMLTagAttributeValue
     ):
         # type: (...) -> None
         current = self.request.get_unicode_input(varname, deflt)

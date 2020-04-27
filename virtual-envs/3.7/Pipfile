@@ -87,7 +87,6 @@ pbr = "==5.4.4" # needed by jira
 requests-oauthlib = "==1.3.0" # needed by jira
 requests-toolbelt = "==0.9.1" # needed by jira
 PyJWT = "==1.7.1" # needed by jira
-adal = "==1.2.0" # needed by agent_azure
 jira = "==2.0.0" # needed by jira
 Pillow = "==7.0.0" # needed by GUI
 python-ldap = "==3.2.0" # needed by GUI (User sync)

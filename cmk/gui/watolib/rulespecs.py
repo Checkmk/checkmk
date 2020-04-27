@@ -1021,20 +1021,20 @@ class ManualCheckParameterRulespec(HostRulespec):
 
 # Pre 1.6 rule registering logic. Need to be kept for some time
 def register_rule(
-        group,
-        varname,
-        valuespec=None,
-        title=None,
-        help=None,  # pylint: disable=redefined-builtin
-        itemspec=None,
-        itemtype=None,
-        itemname=None,
-        itemhelp=None,
-        itemenum=None,
-        match="first",
-        optional=False,
-        deprecated=False,
-        **kwargs):
+    group,
+    varname,
+    valuespec=None,
+    title=None,
+    help=None,  # pylint: disable=redefined-builtin
+    itemspec=None,
+    itemtype=None,
+    itemname=None,
+    itemhelp=None,
+    itemenum=None,
+    match="first",
+    optional=False,
+    deprecated=False,
+    **kwargs):
 
     factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
 

@@ -37,19 +37,19 @@ def get_input(valuespec, varprefix):
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # is very uncommon compared to the other usages of valuespecs.
 def edit_dictionaries(
-        dictionaries,  # type: List[Tuple[str, Union[Transform, Dictionary]]]
-        value,  # type: Dict[str, Any]
-        focus=None,  # type: Optional[str]
-        hover_help=True,  # type: bool
-        validate=None,  # type: Optional[Callable[[Any], None]]
-        buttontext=None,  # type: Optional[Text]
-        title=None,  # type: Optional[Text]
-        buttons=None,  # type: List[Tuple[str, Text, str]]
-        method="GET",  # type: str
-        preview=False,  # type: bool
-        varprefix="",  # type: str
-        formname="form",  # type: str
-        consume_transid=True  # type: bool
+    dictionaries,  # type: List[Tuple[str, Union[Transform, Dictionary]]]
+    value,  # type: Dict[str, Any]
+    focus=None,  # type: Optional[str]
+    hover_help=True,  # type: bool
+    validate=None,  # type: Optional[Callable[[Any], None]]
+    buttontext=None,  # type: Optional[Text]
+    title=None,  # type: Optional[Text]
+    buttons=None,  # type: List[Tuple[str, Text, str]]
+    method="GET",  # type: str
+    preview=False,  # type: bool
+    varprefix="",  # type: str
+    formname="form",  # type: str
+    consume_transid=True  # type: bool
 ):
 
     if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
@@ -110,15 +110,15 @@ def edit_dictionaries(
 
 # Similar but for editing an arbitrary valuespec
 def edit_valuespec(
-        vs,  # type: Dictionary
-        value,  # type: Dict[str, Any]
-        buttontext=None,  # type: Optional[Text]
-        method="GET",  # type: str
-        varprefix="",  # type: str
-        validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
-        formname="form",  # type: str
-        consume_transid=True,  # type: bool
-        focus=None  # type: Optional[str]
+    vs,  # type: Dictionary
+    value,  # type: Dict[str, Any]
+    buttontext=None,  # type: Optional[Text]
+    method="GET",  # type: str
+    varprefix="",  # type: str
+    validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
+    formname="form",  # type: str
+    consume_transid=True,  # type: bool
+    focus=None  # type: Optional[str]
 ):
     # type: (...) -> Optional[Dict[str, Any]]
 

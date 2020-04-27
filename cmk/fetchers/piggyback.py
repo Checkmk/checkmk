@@ -21,10 +21,10 @@ from ._base import AbstractDataFetcher
 
 class PiggyBackDataFetcher(AbstractDataFetcher):
     def __init__(
-            self,
-            hostname,  # type: HostName
-            address,  # type: Optional[HostAddress]
-            time_settings  # type: List[Tuple[Optional[str], str, int]]
+        self,
+        hostname,  # type: HostName
+        address,  # type: Optional[HostAddress]
+        time_settings  # type: List[Tuple[Optional[str], str, int]]
     ):
         # type: (...) -> None
         super(PiggyBackDataFetcher, self).__init__()

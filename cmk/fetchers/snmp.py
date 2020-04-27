@@ -18,10 +18,10 @@ from cmk.base.snmp_utils import OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
 
 class SNMPDataFetcher:
     def __init__(
-            self,
-            oid_infos,  # type: Dict[str, Union[OIDInfo, List[SNMPTree]]]
-            use_snmpwalk_cache,  # type: bool
-            snmp_config,  # type: SNMPHostConfig
+        self,
+        oid_infos,  # type: Dict[str, Union[OIDInfo, List[SNMPTree]]]
+        use_snmpwalk_cache,  # type: bool
+        snmp_config,  # type: SNMPHostConfig
     ):
         # type (...) -> None
         super(SNMPDataFetcher, self).__init__()

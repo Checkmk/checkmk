@@ -69,7 +69,6 @@ class ProgramDataSource(CheckMKAgentDataSource):
                 self.source_cmdline,
                 self.source_stdin,
                 config.is_cmc(),
-                self._logger,
         ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

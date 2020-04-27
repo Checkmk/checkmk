@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import logging  # pylint: disable=unused-import
+import logging
 from types import TracebackType
 from typing import List, Optional, Tuple, Type
 
@@ -31,6 +31,7 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
         self._hostname = hostname
         self._ipaddress = ipaddress
         self._time_settings = time_settings
+        self._logger = logging.getLogger("cmk.fetchers.piggyback")
         self._sources = []  # type: List[PiggybackRawDataInfo]
 
     def __enter__(self):

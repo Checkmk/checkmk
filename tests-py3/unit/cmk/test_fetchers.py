@@ -26,7 +26,7 @@ class TestIPMIDataFetcher:
         monkeypatch.setattr(IPMIDataFetcher, "open", lambda self: None)
 
         with pytest.raises(MKFetcherError):
-            with IPMIDataFetcher("127.0.0.1", "", "", logging.getLogger("tests")):
+            with IPMIDataFetcher("127.0.0.1", "", ""):
                 raise IpmiException()
 
     def test_parse_sensor_reading_standard_case(self):
@@ -46,14 +46,14 @@ class TestTCPDataFetcher:
     def test_decrypt_plaintext_is_noop(self):
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings, logging.getLogger("test"))
+        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         assert fetcher._decrypt(output) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings, logging.getLogger("test"))
+        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)
@@ -61,7 +61,7 @@ class TestTCPDataFetcher:
     def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self):
         settings = {"use_regular": "enforce"}
         output = b"the first two bytes are not a number"
-        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings, logging.getLogger("test"))
+        fetcher = TCPDataFetcher(socket.AF_INET, ("", 0), 0.0, settings)
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(output)

@@ -233,7 +233,6 @@ class SNMPDataSource(ABCSNMPDataSource):
                 self._make_oid_infos(),
                 self._use_snmpwalk_cache,
                 self._snmp_config,
-                self._logger,
         ) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")

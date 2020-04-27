@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging  # pylint: disable=unused-import
+import logging
 import socket
 from hashlib import sha256, md5
 from types import TracebackType
@@ -25,7 +25,6 @@ class TCPDataFetcher(AbstractDataFetcher):
         address,  # type: Tuple[HostAddress, int]
         timeout,  # type: float
         encryption_settings,  # type: Dict[str, str]
-        logger,  # type: logging.Logger
     ):
         # type (...) -> None
         super(TCPDataFetcher, self).__init__()
@@ -33,7 +32,7 @@ class TCPDataFetcher(AbstractDataFetcher):
         self._address = address
         self._timeout = timeout
         self._encryption_settings = encryption_settings
-        self._logger = logger
+        self._logger = logging.getLogger("cmk.fetchers.tcp")
         self._socket = None  # type: Optional[socket.socket]
 
     def __enter__(self):

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging  # pylint: disable=unused-import
+import logging
 from types import TracebackType
 from typing import List, Optional, Type
 
@@ -27,14 +27,13 @@ class IPMIDataFetcher(AbstractDataFetcher):
         ipaddress,  # type: HostAddress
         username,  # type: str
         password,  # type: str
-        logger,  # type: logging.Logger
     ):
         # type: (...) -> None
         super(IPMIDataFetcher, self).__init__()
         self._ipaddress = ipaddress
         self._username = username
         self._password = password
-        self._logger = logger
+        self._logger = logging.getLogger("cmk.fetchers.ipmi")
         self._command = None  # type: Optional[ipmi_cmd.Command]
 
     def __enter__(self):

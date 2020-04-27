@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging  # pylint: disable=unused-import
+import logging
 from types import TracebackType
 from typing import Dict, List, Optional, Type, Union
 
@@ -22,14 +22,13 @@ class SNMPDataFetcher:
         oid_infos,  # type: Dict[str, Union[OIDInfo, List[SNMPTree]]]
         use_snmpwalk_cache,  # type: bool
         snmp_config,  # type: SNMPHostConfig
-        logger,  # type: logging.Logger
     ):
         # type (...) -> None
         super(SNMPDataFetcher, self).__init__()
         self._oid_infos = oid_infos
         self._use_snmpwalk_cache = use_snmpwalk_cache
         self._snmp_config = snmp_config
-        self._logger = logger
+        self._logger = logging.getLogger("cmk.fetchers.snmp")
 
     def __enter__(self):
         # type: () -> SNMPDataFetcher

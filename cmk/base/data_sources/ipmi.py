@@ -63,7 +63,7 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
             raise MKAgentError("Missing IP address")
 
         with IPMIDataFetcher(self._ipaddress, self._credentials["username"],
-                             self._credentials["password"], self._logger) as fetcher:
+                             self._credentials["password"]) as fetcher:
             return fetcher.data()
         raise MKAgentError("Failed to read data")
 

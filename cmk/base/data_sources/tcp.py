@@ -81,7 +81,6 @@ class TCPDataSource(CheckMKAgentDataSource):
             (self._ipaddress, self.port),
                 self.timeout,
                 self._host_config.agent_encryption,
-                self._logger,
         ) as fetcher:
             output = fetcher.data()
             if not output:  # may be caused by xinetd not allowing our address

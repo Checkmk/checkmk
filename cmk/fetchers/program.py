@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging  # pylint: disable=unused-import
+import logging
 import os
 import signal
 import subprocess
@@ -26,14 +26,13 @@ class ProgramDataFetcher(AbstractDataFetcher):
         cmdline,  # type: Union[bytes, Text]
         stdin,  # type: Optional[str]
         is_cmc,  # type: bool
-        logger,  # type: logging.Logger
     ):
         # type: (...) -> None
         super(ProgramDataFetcher, self).__init__()
         self._cmdline = cmdline
         self._stdin = stdin
         self._is_cmc = is_cmc
-        self._logger = logger
+        self._logger = logging.getLogger("cmk.fetchers.program")
         self._process = None  # type: Optional[subprocess.Popen]
 
     def __enter__(self):

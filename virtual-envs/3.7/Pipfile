@@ -9,10 +9,10 @@ name = "pypi"
 astroid = "==2.3.3"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
-bson = "==0.5.9"  # used by test_mk_mongodb unit test
+bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "*"  # used by test_docker test and mk_docker agent plugin
-dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
+dockerpty = "*"  # used by dockerized tests for opening debug shells
 flake8 = "*"
 freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
@@ -20,8 +20,8 @@ lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp specia
 mock = "==4.0.2"  # used in checktestlib in unit tests
 mockldap = "*"  # used in test_userdb_ldap_connector unit test
 mypy = "*"  # used by test/static/Makefile's test-mypy target
-polib = "==1.1.0"  # used by locale/add-authors for working with .po files
-pre-commit = "==2.2.0"  # used to fix / find issues before commiting changes
+polib = "*"  # used by locale/add-authors for working with .po files
+pre-commit = "*"  # used to fix / find issues before commiting changes
 pyfakefs = "==4.0.2" # used for unit tests
 pylint = "==2.4.4"  # used by test/Makefile's test-pylint target
 pymongo = "*"  # used by mk_mongodb agent plugin

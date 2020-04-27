@@ -10,10 +10,8 @@ from typing import Optional, Type
 
 import six
 
-# pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import RawAgentData
-# pylint: enable=cmk-module-layer-violation
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import RawAgentData
 
 
 class MKFetcherError(MKException):

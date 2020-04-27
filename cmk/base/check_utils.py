@@ -9,7 +9,7 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, Item, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, Item, CheckPluginName, RawAgentData  # pylint: disable=unused-import
 
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
@@ -28,8 +28,6 @@ ServiceAdditionalDetails = Text
 # TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
 Metric = List
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
-
-RawAgentData = bytes
 
 SectionName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]

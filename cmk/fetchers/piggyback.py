@@ -10,14 +10,14 @@ from types import TracebackType
 from typing import List, Optional, Tuple, Type
 
 # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import RawAgentData, ServiceCheckResult
+from cmk.base.check_utils import ServiceCheckResult
 # pylint: enable=cmk-module-layer-violation
 from cmk.utils.piggyback import (
     get_piggyback_raw_data,
     PiggybackRawDataInfo,
     PiggybackTimeSettings,
 )
-from cmk.utils.type_defs import HostName, HostAddress
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData
 
 from ._base import AbstractDataFetcher
 

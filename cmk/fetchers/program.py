@@ -13,11 +13,9 @@ from typing import Optional, Text, Type, Union
 
 import six
 
-# pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import RawAgentData
-# pylint: enable=cmk-module-layer-violation
 from cmk.utils.encoding import ensure_bytestr
 from cmk.utils.exceptions import MKTimeout
+from cmk.utils.type_defs import RawAgentData
 
 from ._base import AbstractDataFetcher, MKFetcherError
 

@@ -14,6 +14,7 @@ ServiceName = Text
 ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
+RawAgentData = bytes
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
 RuleSpec = Dict[str, Any]  # TODO: Improve this type

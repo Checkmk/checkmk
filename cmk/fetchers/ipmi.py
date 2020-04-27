@@ -15,11 +15,8 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 import six
 
 import cmk.utils.debug
-# pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import RawAgentData
-# pylint: enable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.type_defs import HostAddress, RawAgentData
 
 from ._base import AbstractDataFetcher, MKFetcherError
 

@@ -20,12 +20,12 @@ from cmk.base.api.agent_based.register.section_plugins import (
 
 
 def agent_section(
-    #*,
-    name=None,  # type: Optional[str]
-    parsed_section_name=None,  # type: Optional[str]
-    parse_function=None,  # type: Optional[AgentParseFunction]
-    host_label_function=None,  # type: Optional[HostLabelFunction]
-    supersedes=None,  # type: Optional[List[str]]
+        #*,
+        name=None,  # type: Optional[str]
+        parsed_section_name=None,  # type: Optional[str]
+        parse_function=None,  # type: Optional[AgentParseFunction]
+        host_label_function=None,  # type: Optional[HostLabelFunction]
+        supersedes=None,  # type: Optional[List[str]]
 ):
     # type: (...) -> None
     """Register an agent section to checkmk
@@ -65,14 +65,14 @@ def agent_section(
 
 
 def snmp_section(
-    #*,
-    name=None,  # type: Optional[str]
-    parsed_section_name=None,  # type: Optional[str]
-    parse_function=None,  # type: Optional[SNMPParseFunction]
-    host_label_function=None,  # type: Optional[HostLabelFunction]
-    detect=None,  # type: Optional[SNMPDetectSpec]
-    trees=None,  # type: Optional[List[SNMPTree]]
-    supersedes=None,  # type: Optional[List[str]]
+        #*,
+        name=None,  # type: Optional[str]
+        parsed_section_name=None,  # type: Optional[str]
+        parse_function=None,  # type: Optional[SNMPParseFunction]
+        host_label_function=None,  # type: Optional[HostLabelFunction]
+        detect=None,  # type: Optional[SNMPDetectSpec]
+        trees=None,  # type: Optional[List[SNMPTree]]
+        supersedes=None,  # type: Optional[List[str]]
 ):
     # type: (...) -> None
     """Register an snmp section to checkmk

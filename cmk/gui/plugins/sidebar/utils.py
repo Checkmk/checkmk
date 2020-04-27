@@ -350,8 +350,8 @@ def visuals_by_topic(permitted_visuals, default_order=None):
             _("Problems"),
         ]
 
-    s = sorted([(_u(visual.get("topic") or
-                    _("Other")), _u(visual.get("title")), name, 'painters' in visual)
+    s = sorted([(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters'
+                 in visual)
                 for name, visual in permitted_visuals
                 if not visual["hidden"] and not visual.get("mobile")])
 

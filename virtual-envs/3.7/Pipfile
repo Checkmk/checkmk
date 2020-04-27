@@ -13,7 +13,7 @@ bson = "==0.5.9"  # used by test_mk_mongodb unit test
 compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "==4.2.0"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
-flake8 = "==3.7.9"
+flake8 = "*"
 freezegun = "==0.3.15"  # used by various unit tests
 isort = "==4.3.21"  # used as a plugin for editors
 lxml = "==4.5.0"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
@@ -29,7 +29,7 @@ pytest = "==5.4.1"  # used by various test/Makefile targets
 pytest-cov = "==2.8.1"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-mock = "==3.0.0"  # used by quite a few unit/integration tests via the mocker fixture
 webtest = "==2.0.34"  # used by WSGI based tests
-yapf = "==0.29.0"  # used for editor integration and the format-python Makefile target
+yapf = "*"  # used for editor integration and the format-python Makefile target
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py

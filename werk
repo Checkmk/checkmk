@@ -330,11 +330,10 @@ def list_werk(werk):
     title = werk["title"][:cols - 45]
     sys.stdout.write(
         "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
-        (format_werk_id(werk["id"]), time.strftime(
-            "%F", time.localtime(int(werk["date"]))), colored_class(werk["class"], 8),
-         format_knw_state(werk["knowledge"]) if werk["class"] == "feature" else "   ",
-         werk["edition"], werk["component"], werk["compatible"], tty_bold, werk["level"],
-         tty_normal, werk["version"], bold, title, tty_normal))
+        (format_werk_id(werk["id"]), time.strftime("%F", time.localtime(int(werk["date"]))),
+         colored_class(werk["class"], 8), format_knw_state(werk["knowledge"]) if werk["class"]
+         == "feature" else "   ", werk["edition"], werk["component"], werk["compatible"], tty_bold,
+         werk["level"], tty_normal, werk["version"], bold, title, tty_normal))
 
 
 def format_werk_id(werk_id):

@@ -454,12 +454,12 @@ class ActivateChangesManager(ActivateChanges):
     # configuration on that site. The state is checked by the general activation
     # thread.
     def start(
-        self,
-        sites,  # type: List[SiteId]
-        activate_until=None,  # type: Optional[str]
-        comment=None,  # type: Optional[str]
-        activate_foreign=False,  # type: bool
-        prevent_activate=False  # type: bool
+            self,
+            sites,  # type: List[SiteId]
+            activate_until=None,  # type: Optional[str]
+            comment=None,  # type: Optional[str]
+            activate_foreign=False,  # type: bool
+            prevent_activate=False  # type: bool
     ):
         self._sites = self._get_sites(sites)
         self._activate_until = (self._get_last_change_id()

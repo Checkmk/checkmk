@@ -93,7 +93,7 @@ def _validate_function_args(plugin_name, func_type, function, has_item, has_para
 
 
 def _filter_discovery(
-    generator,  # type: Callable[..., Generator[Any, None, None]]
+        generator,  # type: Callable[..., Generator[Any, None, None]]
 ):
     # type: (...) -> Callable[..., Generator[Service, None, None]]
     """Only let Services through
@@ -111,7 +111,7 @@ def _filter_discovery(
 
 
 def _filter_check(
-    generator,  # type: Callable[..., Generator[Any, None, None]]
+        generator,  # type: Callable[..., Generator[Any, None, None]]
 ):
     # type: (...) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
     """Only let Result, Metric and IgnoreResults through
@@ -169,19 +169,19 @@ def _validate_check_ruleset(ruleset_name, default_parameters):
 
 
 def create_check_plugin(
-    #*,
-    name=None,  # type: Optional[str]
-    sections=None,  # type: Optional[List[str]]
-    service_name=None,  # type: Optional[str]
-    management_board_option=None,  # type: Optional[management_board]
-    discovery_function=None,  # type: Callable
-    discovery_default_parameters=None,  # type: Optional[Dict]
-    discovery_ruleset_name=None,  # type: Optional[str]
-    check_function=None,  # type: Callable
-    check_default_parameters=None,  # type: Optional[Dict]
-    check_ruleset_name=None,  # type: Optional[str]
-    cluster_check_function=None,  # type:  Optional[Callable]
-    forbidden_names=None,  # type: Optional[List[PluginName]]
+        #*,
+        name=None,  # type: Optional[str]
+        sections=None,  # type: Optional[List[str]]
+        service_name=None,  # type: Optional[str]
+        management_board_option=None,  # type: Optional[management_board]
+        discovery_function=None,  # type: Callable
+        discovery_default_parameters=None,  # type: Optional[Dict]
+        discovery_ruleset_name=None,  # type: Optional[str]
+        check_function=None,  # type: Callable
+        check_default_parameters=None,  # type: Optional[Dict]
+        check_ruleset_name=None,  # type: Optional[str]
+        cluster_check_function=None,  # type:  Optional[Callable]
+        forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> CheckPlugin
     """Return an CheckPlugin object after validating and converting the arguments one by one

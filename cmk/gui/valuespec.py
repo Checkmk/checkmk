@@ -133,12 +133,12 @@ class ValueSpec(object):
     # TODO: Remove **kwargs once all valuespecs have been changed
     # TODO: Cleanup help argument redefined-builtin
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
-        **kwargs):
+            self,
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            **kwargs):
         super(ValueSpec, self).__init__()
         self._title = title
         self._help = help
@@ -270,13 +270,13 @@ class ValueSpec(object):
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        value,  # type: Any
-        totext=None,  # type: Text
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            value,  # type: Any
+            totext=None,  # type: Text
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(FixedValue, self).__init__(title=title,
                                          help=help,
@@ -315,16 +315,16 @@ class FixedValue(ValueSpec):
 class Age(ValueSpec):
     """Time in seconds"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        label=None,  # type: _Optional[Text]
-        minvalue=None,  # type: _Optional[Seconds]
-        maxvalue=None,  # type: _Optional[Seconds]
-        display=None,  # type: _Optional[List[str]]
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
-        cssclass=None,  # type: _Optional[str]
+            self,
+            label=None,  # type: _Optional[Text]
+            minvalue=None,  # type: _Optional[Seconds]
+            maxvalue=None,  # type: _Optional[Seconds]
+            display=None,  # type: _Optional[List[str]]
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            cssclass=None,  # type: _Optional[str]
     ):
         super(Age, self).__init__(title=title,
                                   help=help,
@@ -414,13 +414,13 @@ class Age(ValueSpec):
 
 class NumericRenderer(object):
     def __init__(
-        self,
-        size,  # type: _Optional[int]
-        maxvalue,  # type: _Optional[SupportsFloat]
-        label,  # type: _Optional[Text]
-        unit,  # type: Text
-        thousand_sep,  # type: _Optional[Text]
-        align,  # type: str
+            self,
+            size,  # type: _Optional[int]
+            maxvalue,  # type: _Optional[SupportsFloat]
+            label,  # type: _Optional[Text]
+            unit,  # type: Text
+            thousand_sep,  # type: _Optional[Text]
+            align,  # type: str
     ):
         super(NumericRenderer, self).__init__()
         if size is not None:
@@ -467,20 +467,20 @@ class NumericRenderer(object):
 class Integer(ValueSpec):
     """Editor for a single integer"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        size=None,  # type: _Optional[int]
-        minvalue=None,  # type: _Optional[int]
-        maxvalue=None,  # type: _Optional[int]
-        label=None,  # type: _Optional[Text]
-        unit="",  # type: Text
-        thousand_sep=None,  # type: _Optional[Text]
-        display_format="%d",  # type: Text
-        align="left",  # type: str
-        # ValueSpec
+            self,
+            size=None,  # type: _Optional[int]
+            minvalue=None,  # type: _Optional[int]
+            maxvalue=None,  # type: _Optional[int]
+            label=None,  # type: _Optional[Text]
+            unit="",  # type: Text
+            thousand_sep=None,  # type: _Optional[Text]
+            display_format="%d",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Integer, self).__init__(title=title,
                                       help=help,
@@ -570,28 +570,28 @@ class TextAscii(ValueSpec):
 
     # TODO: Cleanup attrencode attribute
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        label=None,  # type: _Optional[Text]
-        size=25,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # ValueSpec
+            self,
+            label=None,  # type: _Optional[Text]
+            size=25,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(TextAscii, self).__init__(title=title,
                                         help=help,
@@ -753,33 +753,33 @@ class RegExp(TextAscii):
     complete = "complete"
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        mode,  # type: str
-        case_sensitive=True,  # type: bool
-        mingroups=0,  # type: int
-        maxgroups=None,  # type: _Optional[int]
-        # TextAscii
+            self,
+            mode,  # type: str
+            case_sensitive=True,  # type: bool
+            mingroups=0,  # type: int
+            maxgroups=None,  # type: _Optional[int]
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=25,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # From ValueSpec
+            size=25,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(RegExp, self).__init__(
             label=label,
@@ -886,29 +886,29 @@ class RegExpUnicode(TextUnicode, RegExp):
 
 class EmailAddress(TextUnicode):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        make_clickable=False,  # type: bool
-        # TextAscii
+            self,
+            make_clickable=False,  # type: bool
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=40,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # From ValueSpec
+            size=40,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(EmailAddress, self).__init__(
             label=label,
@@ -973,14 +973,14 @@ class EmailAddress(TextUnicode):
 
 
 def IPNetwork(  # pylint: disable=redefined-builtin
-    ip_class=None,  # type: Union[Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]]
-    # TextAscii
+        ip_class=None,  # type: Union[Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]]
+        # TextAscii
     allow_empty=True,  # type: bool
-    size=34,  # type: Union[int, str]
-    # From ValueSpec
+        size=34,  # type: Union[int, str]
+        # From ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    default_value=DEF_VALUE,  # type: Any
+        help=None,  # type: _Optional[ValueSpecHelp]
+        default_value=DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
@@ -1007,8 +1007,8 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
 
 def IPv4Network(  # pylint: disable=redefined-builtin
-    title=None,  # type: _Optional[Text]
-    help=None  # type: _Optional[ValueSpecHelp]
+        title=None,  # type: _Optional[Text]
+        help=None  # type: _Optional[ValueSpecHelp]
 ):
     # type: (...) -> TextAscii
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
@@ -1016,12 +1016,12 @@ def IPv4Network(  # pylint: disable=redefined-builtin
 
 
 def IPv4Address(  # pylint: disable=redefined-builtin
-    # TextAscii
-    allow_empty=True,  # type: bool
-    # From ValueSpec
+        # TextAscii
+        allow_empty=True,  # type: bool
+        # From ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    default_value=DEF_VALUE,  # type: Any
+        help=None,  # type: _Optional[ValueSpecHelp]
+        default_value=DEF_VALUE,  # type: Any
 ):
     # type: (...) -> TextAscii
     return IPNetwork(
@@ -1038,30 +1038,30 @@ class TextAsciiAutocomplete(TextAscii):
     ident = ""
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        completion_ident,  # type: Text
-        completion_params,  # type: Dict[Text, Any]
-        # TextAscii
+            self,
+            completion_ident,  # type: Text
+            completion_params,  # type: Dict[Text, Any]
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=40,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        hidden=False,  # type: bool
-        # From ValueSpec
+            size=40,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            hidden=False,  # type: bool
+            # From ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
                             (json.dumps(completion_ident),
@@ -1174,12 +1174,12 @@ class PageVsAutocomplete(Page):
 
 
 def Hostname(  # pylint: disable=redefined-builtin
-    # TextAscii
-    allow_empty=False,
-    # ValueSpec
-    title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    default_value=DEF_VALUE,  # type: Any
+        # TextAscii
+        allow_empty=False,
+        # ValueSpec
+        title=None,  # type: _Optional[Text]
+        help=None,  # type: _Optional[ValueSpecHelp]
+        default_value=DEF_VALUE,  # type: Any
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextAscii(
@@ -1196,32 +1196,32 @@ def Hostname(  # pylint: disable=redefined-builtin
 class HostAddress(TextAscii):
     """Use this for all host / ip address input fields!"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        allow_host_name=True,  # type: bool
-        allow_ipv4_address=True,  # type: bool
-        allow_ipv6_address=True,  # type: bool
-        # TextAscii
+            self,
+            allow_host_name=True,  # type: bool
+            allow_ipv4_address=True,  # type: bool
+            allow_ipv6_address=True,  # type: bool
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=64,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # ValueSpec
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(HostAddress, self).__init__(
             label=label,
@@ -1325,14 +1325,14 @@ class HostAddress(TextAscii):
 
 
 def AbsoluteDirname(  # pylint: disable=redefined-builtin
-    # TextAscii
-    allow_empty=True,  # type: bool
-    size=25,  # type: Union[int, str]
-    # ValueSpec
+        # TextAscii
+        allow_empty=True,  # type: bool
+        size=25,  # type: Union[int, str]
+        # ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    default_value=DEF_VALUE,  # type: Any
-    validate=None,  # type: _Optional[ValueSpecValidateFunc]
+        help=None,  # type: _Optional[ValueSpecHelp]
+        default_value=DEF_VALUE,  # type: Any
+        validate=None,  # type: _Optional[ValueSpecValidateFunc]
 ):
     # type: (...) -> TextAscii
     return TextAscii(
@@ -1349,33 +1349,33 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
 
 class Url(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        default_scheme,  # type: str
-        allowed_schemes,  # type: List[str]
-        show_as_link=False,  # type: bool
-        target=None,  # type: _Optional[str]
-        # TextAscii
+            self,
+            default_scheme,  # type: str
+            allowed_schemes,  # type: List[str]
+            show_as_link=False,  # type: bool
+            target=None,  # type: _Optional[str]
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=64,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # ValueSpec
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Url, self).__init__(
             label=label,
@@ -1451,17 +1451,17 @@ class Url(TextAscii):
 
 
 def HTTPUrl(  # pylint: disable=redefined-builtin
-    show_as_link=True,  # type: bool
-    # Url
+        show_as_link=True,  # type: bool
+        # Url
     regex=None,  # type: Union[None, str, Pattern[str]]
-    regex_error=None,  # type: _Optional[Text]
-    # TextAscii
+        regex_error=None,  # type: _Optional[Text]
+        # TextAscii
     allow_empty=True,  # type: bool
-    size=80,  # type: Union[int, str]
-    # ValueSpec
+        size=80,  # type: Union[int, str]
+        # ValueSpec
     title=None,  # type: _Optional[Text]
-    help=None,  # type: _Optional[ValueSpecHelp]
-    default_value=DEF_VALUE,  # type: Any
+        help=None,  # type: _Optional[ValueSpecHelp]
+        default_value=DEF_VALUE,  # type: Any
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1479,9 +1479,9 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
 
 
 def CheckMKVersion(
-    # ValueSpec
-    title=None,  # type: _Optional[Text]
-    default_value=DEF_VALUE,  # type: Any
+        # ValueSpec
+        title=None,  # type: _Optional[Text]
+        default_value=DEF_VALUE,  # type: Any
 ):
     return TextAscii(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
@@ -1493,33 +1493,33 @@ def CheckMKVersion(
 
 class TextAreaUnicode(TextUnicode):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        cols=60,  # type: int
-        rows=20,  # type: Union[int, str]
-        minrows=0,  # type: int
-        monospaced=False,  # type: bool
-        # TextAscii
+            self,
+            cols=60,  # type: int
+            rows=20,  # type: Union[int, str]
+            minrows=0,  # type: int
+            monospaced=False,  # type: bool
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=64,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # ValueSpec
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(TextAreaUnicode, self).__init__(
             label=label,
@@ -1601,31 +1601,31 @@ class Filename(TextAscii):
 
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        default="/tmp/foo",  # type: str
-        trans_func=None,  # type: _Optional[Callable[[str], str]]
-        # TextAscii
+            self,
+            default="/tmp/foo",  # type: str
+            trans_func=None,  # type: _Optional[Callable[[str], str]]
+            # TextAscii
         label=None,  # type: _Optional[Text]
-        size=60,  # type: Union[int, str]
-        try_max_width=False,  # type: bool
-        cssclass="text",  # type: str
-        strip=True,  # type: bool
-        attrencode=True,  # type: bool
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        read_only=False,  # type: bool
-        forbidden_chars="",  # type: Text
-        regex=None,  # type: Union[None, str, Pattern[str]]
-        regex_error=None,  # type: _Optional[Text]
-        minlen=None,  # type: _Optional[int]
-        onkeyup=None,  # type: _Optional[Text]
-        autocomplete=True,  # type: bool
-        hidden=False,  # type: bool
-        # ValueSpec
+            size=60,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: Union[None, str, Pattern[str]]
+            regex_error=None,  # type: _Optional[Text]
+            minlen=None,  # type: _Optional[int]
+            onkeyup=None,  # type: _Optional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Filename, self).__init__(
             label=label,
@@ -1688,22 +1688,22 @@ class Filename(TextAscii):
 
 class ListOfStrings(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # ListOfStrings
-        valuespec=None,  # type: _Optional[ValueSpec]
-        size=25,  # type: Union[str, int]
-        orientation="vertical",  # type: Text
-        allow_empty=True,  # type: bool
-        empty_text="",  # type: Text
-        max_entries=None,  # type: _Optional[int]
-        separator="",  # type: Text
-        split_on_paste=True,  # type: bool
-        split_separators=";",  # type: Text
-        # ValueSpec
+            self,
+            # ListOfStrings
+            valuespec=None,  # type: _Optional[ValueSpec]
+            size=25,  # type: Union[str, int]
+            orientation="vertical",  # type: Text
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            max_entries=None,  # type: _Optional[int]
+            separator="",  # type: Text
+            split_on_paste=True,  # type: bool
+            split_separators=";",  # type: Text
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(ListOfStrings, self).__init__(title=title,
                                             help=help,
@@ -1855,22 +1855,22 @@ class ListOf(ValueSpec):
         FLOATING = "floating"
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        valuespec,  # type: ValueSpec
-        magic="@!@",  # type: str
-        add_label=None,  # type: _Optional[Text]
-        del_label=None,  # type: _Optional[Text]
-        movable=True,  # type: bool
-        style=None,  # type: _Optional[ListOf.Style]
-        totext=None,  # type: _Optional[Text]
-        text_if_empty=None,  # type: _Optional[Text]
-        allow_empty=True,  # type: bool
-        empty_text=None,  # type: _Optional[Text]
-        sort_by=None,  # type: _Optional[int]
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            valuespec,  # type: ValueSpec
+            magic="@!@",  # type: str
+            add_label=None,  # type: _Optional[Text]
+            del_label=None,  # type: _Optional[Text]
+            movable=True,  # type: bool
+            style=None,  # type: _Optional[ListOf.Style]
+            totext=None,  # type: _Optional[Text]
+            text_if_empty=None,  # type: _Optional[Text]
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: _Optional[Text]
+            sort_by=None,  # type: _Optional[int]
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(ListOf, self).__init__(title=title,
                                      help=help,
@@ -2126,18 +2126,18 @@ class ListOfMultiple(ValueSpec):
     Each sub-valuespec can be added only once
     """
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        choices,  # type: List[_Tuple[str, ValueSpec]]
-        choice_page_name,  # type: str
-        page_request_vars=None,  # type: Dict[Text, Any]
-        size=None,  # type: _Optional[int]
-        add_label=None,  # type: _Optional[Text]
-        del_label=None,  # type: _Optional[Text]
-        delete_style="default",  # type: str
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            choices,  # type: List[_Tuple[str, ValueSpec]]
+            choice_page_name,  # type: str
+            page_request_vars=None,  # type: Dict[Text, Any]
+            size=None,  # type: _Optional[int]
+            add_label=None,  # type: _Optional[Text]
+            del_label=None,  # type: _Optional[Text]
+            delete_style="default",  # type: str
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(ListOfMultiple, self).__init__(title=title,
                                              help=help,
@@ -2291,23 +2291,23 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
 class Float(ValueSpec):
     """Same as Integer, but for floating point values"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        decimal_separator=".",  # type: Text
-        allow_int=False,  # type: bool
-        # Integer
+            self,
+            decimal_separator=".",  # type: Text
+            allow_int=False,  # type: bool
+            # Integer
         size=None,  # type: _Optional[int]
-        minvalue=None,  # type: _Optional[float]
-        maxvalue=None,  # type: _Optional[float]
-        label=None,  # type: _Optional[Text]
-        unit="",  # type: Text
-        thousand_sep=None,  # type: _Optional[Text]
-        display_format="%.2f",  # type: Text
-        align="left",  # type: str
-        # ValueSpec
+            minvalue=None,  # type: _Optional[float]
+            maxvalue=None,  # type: _Optional[float]
+            label=None,  # type: _Optional[Text]
+            unit="",  # type: Text
+            thousand_sep=None,  # type: _Optional[Text]
+            display_format="%.2f",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Float, self).__init__(title=title,
                                     help=help,
@@ -2363,24 +2363,24 @@ class Float(ValueSpec):
 
 class Percentage(Float):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # Float
-        decimal_separator=".",  # type: Text
-        allow_int=False,  # type: bool
-        # Integer
+            self,
+            # Float
+            decimal_separator=".",  # type: Text
+            allow_int=False,  # type: bool
+            # Integer
         size=None,  # type: _Optional[int]
-        minvalue=0.0,  # type: Union[None, int, float]
-        maxvalue=101.0,  # type: Union[None, int, float]
-        label=None,  # type: _Optional[Text]
-        unit="%",  # type: Text
-        thousand_sep=None,  # type: _Optional[Text]
-        display_format="%.1f",  # type: Text
-        align="left",  # type: str
-        # ValueSpec
+            minvalue=0.0,  # type: Union[None, int, float]
+            maxvalue=101.0,  # type: Union[None, int, float]
+            label=None,  # type: _Optional[Text]
+            unit="%",  # type: Text
+            thousand_sep=None,  # type: _Optional[Text]
+            display_format="%.1f",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Percentage, self).__init__(decimal_separator=decimal_separator,
                                          allow_int=allow_int,
@@ -2415,15 +2415,15 @@ class Percentage(Float):
 
 class Checkbox(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        label=None,  # type: _Optional[Text]
-        true_label=None,  # type: _Optional[Text]
-        false_label=None,  # type: _Optional[Text]
-        onclick=None,  # type: _Optional[Text]
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            label=None,  # type: _Optional[Text]
+            true_label=None,  # type: _Optional[Text]
+            false_label=None,  # type: _Optional[Text]
+            onclick=None,  # type: _Optional[Text]
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Checkbox, self).__init__(title=title,
                                        help=help,
@@ -2477,29 +2477,29 @@ class DropdownChoice(ValueSpec):
 
     # TODO: Cleanup redefined builtin sorted
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # DropdownChoice
-        choices,  # type: DropdownChoices
-        sorted=False,  # type: bool
-        label=None,  # type: _Optional[Text]
-        help_separator=None,  # type: Text
-        prefix_values=False,  # type: bool
-        empty_text=None,  # type: _Optional[Text]
-        invalid_choice="complain",  # type: _Optional[str]
-        invalid_choice_title=None,  # type: _Optional[Text]
-        invalid_choice_error=None,  # type: _Optional[Text]
-        no_preselect=False,  # type: bool
-        no_preselect_value=None,  # type: Any
-        no_preselect_title="",  # type: Text
-        no_preselect_error=None,  # type: Text
-        on_change=None,  # type: Text
-        read_only=False,  # type: bool
-        encode_value=True,  # type: bool
-        # ValueSpec
+            self,
+            # DropdownChoice
+            choices,  # type: DropdownChoices
+            sorted=False,  # type: bool
+            label=None,  # type: _Optional[Text]
+            help_separator=None,  # type: Text
+            prefix_values=False,  # type: bool
+            empty_text=None,  # type: _Optional[Text]
+            invalid_choice="complain",  # type: _Optional[str]
+            invalid_choice_title=None,  # type: _Optional[Text]
+            invalid_choice_error=None,  # type: _Optional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: Any
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: Text
+            on_change=None,  # type: Text
+            read_only=False,  # type: bool
+            encode_value=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(DropdownChoice, self).__init__(title=title,
                                              help=help,
@@ -2721,25 +2721,25 @@ class CascadingDropdown(ValueSpec):
         foldable = "foldable"
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        choices,  # type: CascadingDropdownChoices
-        label=None,  # type: _Optional[Text]
-        separator=", ",  # type: Text
-        sorted=True,  # type: bool
-        orientation="vertical",  # type: Text
-        render=None,  # type: _Optional[CascadingDropdown.Render]
-        no_elements_text=None,  # type: _Optional[Text]
-        no_preselect=False,  # type: bool
-        no_preselect_value=None,  # type: _Optional[Any]
-        no_preselect_title="",  # type: Text
-        no_preselect_error=None,  # type: _Optional[Text]
-        render_sub_vs_page_name=None,  # type: _Optional[Text]
-        render_sub_vs_request_vars=None,  # type: _Optional[Dict]
-        # ValueSpec
+            self,
+            choices,  # type: CascadingDropdownChoices
+            label=None,  # type: _Optional[Text]
+            separator=", ",  # type: Text
+            sorted=True,  # type: bool
+            orientation="vertical",  # type: Text
+            render=None,  # type: _Optional[CascadingDropdown.Render]
+            no_elements_text=None,  # type: _Optional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: _Optional[Any]
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: _Optional[Text]
+            render_sub_vs_page_name=None,  # type: _Optional[Text]
+            render_sub_vs_request_vars=None,  # type: _Optional[Dict]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(CascadingDropdown, self).__init__(title=title,
                                                 help=help,
@@ -3046,22 +3046,22 @@ class ListChoice(ValueSpec):
                 for (type_id, type_name) in sorted(choices.items())]
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # ListChoice
-        choices=None,  # type: ListChoiceChoices
-        columns=1,  # type: int
-        allow_empty=True,  # type: bool
-        empty_text=None,  # type: _Optional[Text]
-        render_function=None,  # type: _Optional[Callable[[Text, Text], Text]]
-        toggle_all=False,  # type: bool
-        # TODO: Rename to "orientation" to be in line with other valuespecs
+            self,
+            # ListChoice
+            choices=None,  # type: ListChoiceChoices
+            columns=1,  # type: int
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: _Optional[Text]
+            render_function=None,  # type: _Optional[Callable[[Text, Text], Text]]
+            toggle_all=False,  # type: bool
+            # TODO: Rename to "orientation" to be in line with other valuespecs
         render_orientation="horizontal",  # type: Text
-        no_elements_text=None,  # type: _Optional[Text]
-        # ValueSpec
+            no_elements_text=None,  # type: _Optional[Text]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(ListChoice, self).__init__(title=title,
                                          help=help,
@@ -3184,29 +3184,29 @@ class DualListChoice(ListChoice):
     fix this and make it this compatible to DropdownChoice()
     """
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        # DualListChoice
-        autoheight=False,  # type: bool
-        custom_order=False,  # type: bool
-        instant_add=False,  # type: bool
-        enlarge_active=False,  # type: bool
-        rows=None,  # type: _Optional[int]
-        size=None,  # type: _Optional[int]
-        # ListChoice
+            self,
+            # DualListChoice
+            autoheight=False,  # type: bool
+            custom_order=False,  # type: bool
+            instant_add=False,  # type: bool
+            enlarge_active=False,  # type: bool
+            rows=None,  # type: _Optional[int]
+            size=None,  # type: _Optional[int]
+            # ListChoice
         choices=None,  # type: ListChoiceChoices
-        columns=1,  # type: int
-        allow_empty=True,  # type: bool
-        empty_text=None,  # type: _Optional[Text]
-        render_function=None,  # type: _Optional[Callable[[Text, Text], Text]]
-        toggle_all=False,  # type: bool
-        # TODO: Rename to "orientation" to be in line with other valuespecs
+            columns=1,  # type: int
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: _Optional[Text]
+            render_function=None,  # type: _Optional[Callable[[Text, Text], Text]]
+            toggle_all=False,  # type: bool
+            # TODO: Rename to "orientation" to be in line with other valuespecs
         render_orientation="horizontal",  # type: Text
-        no_elements_text=None,  # type: _Optional[Text]
-        # ValueSpec
+            no_elements_text=None,  # type: _Optional[Text]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(DualListChoice, self).__init__(choices=choices,
                                              columns=columns,
@@ -3346,31 +3346,31 @@ class OptionalDropdownChoice(DropdownChoice):
     opens a further value spec for entering an alternative
     Value."""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        explicit,  # type: ValueSpec
-        choices,  # type: DropdownChoices
-        otherlabel=None,  # type: _Optional[Text]
-        # DropdownChoice
+            self,
+            explicit,  # type: ValueSpec
+            choices,  # type: DropdownChoices
+            otherlabel=None,  # type: _Optional[Text]
+            # DropdownChoice
         sorted=False,  # type: bool
-        label=None,  # type: _Optional[Text]
-        help_separator=None,  # type: Text
-        prefix_values=False,  # type: bool
-        empty_text=None,  # type: _Optional[Text]
-        invalid_choice="complain",  # type: _Optional[str]
-        invalid_choice_title=None,  # type: _Optional[Text]
-        invalid_choice_error=None,  # type: _Optional[Text]
-        no_preselect=False,  # type: bool
-        no_preselect_value=None,  # type: Any
-        no_preselect_title="",  # type: Text
-        no_preselect_error=None,  # type: Text
-        on_change=None,  # type: Text
-        read_only=False,  # type: bool
-        encode_value=True,  # type: bool
-        # ValueSpec
+            label=None,  # type: _Optional[Text]
+            help_separator=None,  # type: Text
+            prefix_values=False,  # type: bool
+            empty_text=None,  # type: _Optional[Text]
+            invalid_choice="complain",  # type: _Optional[str]
+            invalid_choice_title=None,  # type: _Optional[Text]
+            invalid_choice_error=None,  # type: _Optional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: Any
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: Text
+            on_change=None,  # type: Text
+            read_only=False,  # type: bool
+            encode_value=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(OptionalDropdownChoice, self).__init__(choices=choices,
                                                      sorted=sorted,
@@ -3745,14 +3745,14 @@ class Timeofday(ValueSpec):
     the user does not enter a time the vs will return None.
     """
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        allow_24_00=False,  # type: bool
-        allow_empty=True,  # type: bool
-        # ValueSpec
+            self,
+            allow_24_00=False,  # type: bool
+            allow_empty=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Timeofday, self).__init__(title=title,
                                         help=help,
@@ -3844,13 +3844,13 @@ TimeofdayRangeValue = _Tuple[_Tuple[int, int], _Tuple[int, int]]
 class TimeofdayRange(ValueSpec):
     """Range like 00:15 - 18:30"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        allow_empty=True,  # type: bool
-        # ValueSpec
+            self,
+            allow_empty=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(TimeofdayRange, self).__init__(title=title,
                                              help=help,
@@ -4003,29 +4003,29 @@ class TimeHelper(object):
 
 class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        allow_empty=False,  # type: bool
-        include_time=False,  # type: bool
-        choices=None,  # type: Union[None, List[CascadingDropdownChoice], Callable[[], List[CascadingDropdownChoice]]]
-        # CascadingDropdown
-        # TODO: Make this more specific
+            self,
+            allow_empty=False,  # type: bool
+            include_time=False,  # type: bool
+            choices=None,  # type: Union[None, List[CascadingDropdownChoice], Callable[[], List[CascadingDropdownChoice]]]
+            # CascadingDropdown
+            # TODO: Make this more specific
         label=None,  # type: _Optional[Text]
-        separator=", ",  # type: Text
-        sorted=False,  # type: bool
-        orientation="vertical",  # type: Text
-        render=None,  # type: _Optional[CascadingDropdown.Render]
-        no_elements_text=None,  # type: _Optional[Text]
-        no_preselect=False,  # type: bool
-        no_preselect_value=None,  # type: _Optional[Any]
-        no_preselect_title="",  # type: Text
-        no_preselect_error=None,  # type: _Optional[Text]
-        render_sub_vs_page_name=None,  # type: _Optional[Text]
-        render_sub_vs_request_vars=None,  # type: _Optional[Dict]
-        # ValueSpec
+            separator=", ",  # type: Text
+            sorted=False,  # type: bool
+            orientation="vertical",  # type: Text
+            render=None,  # type: _Optional[CascadingDropdown.Render]
+            no_elements_text=None,  # type: _Optional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: _Optional[Any]
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: _Optional[Text]
+            render_sub_vs_page_name=None,  # type: _Optional[Text]
+            render_sub_vs_request_vars=None,  # type: _Optional[Dict]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Timerange, self).__init__(
             choices=self._prepare_choices,
@@ -4250,20 +4250,20 @@ class Optional(ValueSpec):
     The user has a checkbox for activating the option. Example:
     debug_log: it is either None or set to a filename."""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        valuespec,  # type: ValueSpec
-        label=None,  # type: _Optional[Text]
-        negate=False,  # type: bool
-        none_label=None,  # type: _Optional[Text]
-        none_value=None,  # type: Any
-        sameline=False,  # type: bool
-        indent=True,  # type: bool
-        allow_empty=True,  # type: bool
-        # ValueSpec
+            self,
+            valuespec,  # type: ValueSpec
+            label=None,  # type: _Optional[Text]
+            negate=False,  # type: bool
+            none_label=None,  # type: _Optional[Text]
+            none_value=None,  # type: Any
+            sameline=False,  # type: bool
+            indent=True,  # type: bool
+            allow_empty=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Optional, self).__init__(title=title,
                                        help=help,
@@ -4356,18 +4356,18 @@ class Alternative(ValueSpec):
     The different alternatives must have different data types that can
     be distinguished with validate_datatype."""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        elements,  # type: List[ValueSpec]
-        match=None,  # type: _Optional[Callable[[Any], int]]
-        style="radio",  # type: Text
-        show_alternative_title=False,  # type: bool
-        on_change=None,  # type: _Optional[Text]
-        orientation="vertical",  # type: Text
-        # ValueSpec
+            self,
+            elements,  # type: List[ValueSpec]
+            match=None,  # type: _Optional[Callable[[Any], int]]
+            style="radio",  # type: Text
+            show_alternative_title=False,  # type: bool
+            on_change=None,  # type: _Optional[Text]
+            orientation="vertical",  # type: Text
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Alternative, self).__init__(title=title,
                                           help=help,
@@ -4527,16 +4527,16 @@ class Alternative(ValueSpec):
 class Tuple(ValueSpec):
     """Edit a n-tuple (with fixed size) of values"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        elements,  # type: List[ValueSpec]
-        show_titles=True,  # type: bool
-        orientation="vertical",  # type: str
-        separator=" ",  # type: Text
-        title_br=True,  # type: bool
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            elements,  # type: List[ValueSpec]
+            show_titles=True,  # type: bool
+            orientation="vertical",  # type: str
+            separator=" ",  # type: Text
+            title_br=True,  # type: bool
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Tuple, self).__init__(title=title,
                                     help=help,
@@ -4665,27 +4665,27 @@ DictionaryElements = Union[List[DictionaryEntry], Callable[[], List[DictionaryEn
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        elements,  # type: DictionaryElements
-        empty_text=None,  # type: _Optional[Text]
-        default_text=None,  # type: _Optional[Text]
-        optional_keys=True,  # type: Union[bool, List[str]]
-        required_keys=None,  # type: _Optional[List[str]]
-        ignored_keys=None,  # type: _Optional[List[str]]
-        default_keys=None,  # type: _Optional[List[str]]
-        hidden_keys=None,  # type: _Optional[List[str]]
-        columns=1,  # type: int
-        render="normal",  # type: str
-        form_narrow=False,  # type: bool
-        form_isopen=True,  # type: bool
-        headers=None,  # type: Union[None, str, List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]]
-        migrate=None,  # type: Callable[[_Tuple], Dict]
-        indent=True,  # type: bool
-        # ValueSpec
+            self,
+            elements,  # type: DictionaryElements
+            empty_text=None,  # type: _Optional[Text]
+            default_text=None,  # type: _Optional[Text]
+            optional_keys=True,  # type: Union[bool, List[str]]
+            required_keys=None,  # type: _Optional[List[str]]
+            ignored_keys=None,  # type: _Optional[List[str]]
+            default_keys=None,  # type: _Optional[List[str]]
+            hidden_keys=None,  # type: _Optional[List[str]]
+            columns=1,  # type: int
+            render="normal",  # type: str
+            form_narrow=False,  # type: bool
+            form_isopen=True,  # type: bool
+            headers=None,  # type: Union[None, str, List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]]
+            migrate=None,  # type: Callable[[_Tuple], Dict]
+            indent=True,  # type: bool
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Dictionary, self).__init__(title=title,
                                          help=help,
@@ -5009,14 +5009,14 @@ class ElementSelection(ValueSpec):
     a function get_elements() that returns a dictionary
     from element keys to element titles."""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        label=None,  # type: _Optional[Text]
-        empty_text=None,  # type: _Optional[Text]
-        # ValueSpec
+            self,
+            label=None,  # type: _Optional[Text]
+            empty_text=None,  # type: _Optional[Text]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(ElementSelection, self).__init__(title=title,
                                                help=help,
@@ -5173,14 +5173,14 @@ class Transform(ValueSpec):
     back:  function that converts a value created by the encapsulated
            vs back to the outer representation"""
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        valuespec,  # type: ValueSpec
-        back=None,  # type: _Optional[Callable[[Any], Any]]
-        forth=None,  # type: _Optional[Callable[[Any], Any]]
-        title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            self,
+            valuespec,  # type: ValueSpec
+            back=None,  # type: _Optional[Callable[[Any], Any]]
+            forth=None,  # type: _Optional[Callable[[Any], Any]]
+            title=None,  # type: _Optional[Text]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Transform, self).__init__(title=title,
                                         help=help,
@@ -5544,15 +5544,15 @@ class Labels(ValueSpec):
         DISCOVERED = "discovered"
 
     def __init__(  # pylint: disable=redefined-builtin
-        self,
-        world,  # type: Labels.World
-        label_source=None,  # type: Labels.Source
-        max_labels=None,  # type: _Optional[int]
-        # ValueSpec
+            self,
+            world,  # type: Labels.World
+            label_source=None,  # type: Labels.Source
+            max_labels=None,  # type: _Optional[int]
+            # ValueSpec
         title=None,  # type: _Optional[Text]
-        help=None,  # type: _Optional[ValueSpecHelp]
-        default_value=DEF_VALUE,  # type: Any
-        validate=None,  # type: _Optional[ValueSpecValidateFunc]
+            help=None,  # type: _Optional[ValueSpecHelp]
+            default_value=DEF_VALUE,  # type: Any
+            validate=None,  # type: _Optional[ValueSpecValidateFunc]
     ):
         super(Labels, self).__init__(title=title,
                                      help=help,

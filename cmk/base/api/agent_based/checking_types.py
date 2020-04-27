@@ -159,12 +159,12 @@ class Metric:
         return tuple(self._sanitize_single_value(field, v) for v in values)
 
     def __init__(
-        self,
-        name,  # type: str
-        value,  # type: float
-        # *args,  # type: str  # *, # type shoud be "nothing"
+            self,
+            name,  # type: str
+            value,  # type: float
+            # *args,  # type: str  # *, # type shoud be "nothing"
         levels=(None, None),  # type: Tuple[Optional[float], Optional[float]]
-        boundaries=(None, None),  # type: Tuple[Optional[float], Optional[float]]
+            boundaries=(None, None),  # type: Tuple[Optional[float], Optional[float]]
     ):
         # type: (...) -> None
         # if args:

@@ -6,6 +6,7 @@
 
 import sys
 import tarfile
+import shutil
 import six
 from werkzeug.test import create_environ
 
@@ -13,7 +14,7 @@ from werkzeug.test import create_environ
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import pytest  # type: ignore[import]
 
@@ -55,7 +56,7 @@ def _create_test_sync_config(monkeypatch):
                             raising=False)
 
 
-def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
+def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path, is_pre_17_site):
     # TODO: Make this better testable: Extract site snapshot setting calculation
     activation_manager = activate_changes.ActivateChangesManager()
     activation_manager._sites = ["unit", "unit_remote_1"]
@@ -106,6 +107,9 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
         })
 
     site_snapshot_settings = activation_manager._site_snapshot_settings()
+    snapshot_settings = site_snapshot_settings["unit_remote_1"]
+
+    assert not Path(snapshot_settings.snapshot_path).exists()
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
@@ -113,10 +117,9 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path):
                                                                 site_snapshot_settings)
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
-    snapshot_settings = site_snapshot_settings["unit_remote_1"]
-
     snapshot_manager.generate_snapshots()
-    assert Path(snapshot_settings.snapshot_path).exists()
+
+    assert Path(snapshot_settings.snapshot_path).exists() == is_pre_17_site
     assert Path(snapshot_settings.work_dir).exists()
 
     return snapshot_settings
@@ -210,6 +213,37 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
                            with_user):
     user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
+
+    environ = dict(create_environ(), REQUEST_URI='')
+    with AppContext(DummyApplication(environ, None)), \
+         RequestContext(htmllib.html(Request(environ))):
+        login.login(user_id)
+        _create_test_sync_config(monkeypatch)
+        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class,
+                                                  monkeypatch,
+                                                  tmp_path,
+                                                  is_pre_17_site=False)
+
+    expected_paths = _get_expected_paths(user_id)
+
+    expected_paths += [
+        "site_globals",
+        "site_globals/sitespecific.mk",
+    ]
+
+    work_dir = Path(snapshot_settings.work_dir)
+    paths = [str(p.relative_to(work_dir)) for p in work_dir.glob("**/*")]
+    assert sorted(paths) == sorted(expected_paths)
+
+
+@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
+                                       tmp_path, with_user):
+    is_pre_17_site = True
+    user_id = with_user[0]
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
@@ -217,10 +251,13 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
         login.login(user_id)
         _create_test_sync_config(monkeypatch)
         snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class, monkeypatch,
-                                                  tmp_path)
+                                                  tmp_path, is_pre_17_site)
 
     # And now check the resulting snapshot contents
     unpack_dir = tmp_path / "snapshot_unpack"
+    if unpack_dir.exists():
+        shutil.rmtree(str(unpack_dir))
+
     with tarfile.open(snapshot_settings.snapshot_path, "r") as t:
         t.extractall(str(unpack_dir))
 
@@ -313,10 +350,12 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
 
 
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
-def test_apply_sync_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
-                             with_user):
+def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
+                                    tmp_path, with_user):
+    is_pre_17_site = True
     user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
@@ -324,11 +363,16 @@ def test_apply_sync_snapshot(edition_short, snapshot_data_collector_class, monke
         login.login(user_id)
 
         _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class, monkeypatch,
-                                                  tmp_path)
+        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class,
+                                                  monkeypatch,
+                                                  tmp_path,
+                                                  is_pre_17_site=is_pre_17_site)
 
         # Change unpack target directory from "unit test site" paths to a test specific path
         unpack_dir = tmp_path / "snapshot_unpack"
+        if unpack_dir.exists():
+            shutil.rmtree(str(unpack_dir))
+
         components = [
             activate_changes._replace_omd_root(str(unpack_dir), p)
             for p in activate_changes.get_replication_paths()

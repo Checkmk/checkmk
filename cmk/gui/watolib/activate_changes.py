@@ -24,6 +24,14 @@ import abc
 import multiprocessing
 import traceback
 import subprocess
+import sys
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
 from typing import (  # pylint: disable=unused-import
     Dict, Set, List, Optional, Tuple, Union, NamedTuple,
 )
@@ -808,12 +816,13 @@ class SnapshotManager(object):
         # 1. Collect files to "var/check_mk/site_configs" directory
         self._data_collector.prepare_snapshot_files()
 
-        # 2. Create snapshot for synchronization
+        # 2. Create snapshot for synchronization (Only for pre 1.7 sites)
         generic_components = self._data_collector.get_generic_components()
         with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
             for site_id, snapshot_settings in self._site_snapshot_settings.items():
-                self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
-                                                self._data_collector)
+                if snapshot_settings.create_pre_17_snapshot:
+                    self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
+                                                    self._data_collector)
 
 
 class ABCSnapshotDataCollector(six.with_metaclass(abc.ABCMeta, object)):
@@ -898,28 +907,36 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if component.ident == "sitespecific":
                 continue  # Will be created for each site individually later
 
-            source_path = component.path.replace(snapshot_settings.work_dir,
-                                                 cmk.utils.paths.omd_root)
+            source_path = Path(
+                component.path.replace(snapshot_settings.work_dir, cmk.utils.paths.omd_root))
+            target_path = Path(component.path)
 
-            if not os.path.exists(source_path):
-                continue  # Not existing things can simply be skipped
+            store.makedirs(target_path.parent)
 
-            store.makedirs(os.path.dirname(component.path))
+            if not source_path.exists():
+                # Not existing files things can simply be skipped, not existing files could also be
+                # skipped, but we create them here to be 1:1 compatible with the pre 1.7 sync.
+                if component.ty == "dir":
+                    store.makedirs(target_path)
+
+                continue
 
             # Recursively hard link files (rsync --link-dest or cp -al)
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             #shutil.copytree(source_path, component.path, copy_function=os.link)
-            p = subprocess.Popen(["cp", "-al", source_path, component.path],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 stdin=open(os.devnull),
-                                 shell=False,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                ["cp", "-al", str(source_path),
+                 str(target_path.parent) + "/"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                stdin=open(os.devnull),
+                shell=False,
+                close_fds=True)
             stdout = p.communicate()[0]
             if p.returncode != 0:
                 self._logger.error("Failed to clone files from %s to %s: %s", source_path,
-                                   component.path, stdout)
+                                   str(target_path), stdout)
                 raise MKGeneralException("Failed to create site config directory")
 
         self._logger.debug("Finished site")

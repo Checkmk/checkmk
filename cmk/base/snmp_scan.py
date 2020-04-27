@@ -123,8 +123,6 @@ def _snmp_scan(host_config,
             continue
         if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
             continue
-        if not for_inv and not cmk.base.check_utils.is_snmp_check(check_plugin_name):
-            continue
 
         detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,
                                                               inventory_plugins.inv_info)

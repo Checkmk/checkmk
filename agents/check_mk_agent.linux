@@ -96,39 +96,51 @@ get_nfs_mounts() {
     fi
 }
 
-# Function to replace "if type [somecmd]" idiom
-# 'command -v' tends to be more robust vs 'which' and 'type' based tests
-inpath() {
-    command -v "${1:?No command to test}" >/dev/null 2>&1
+# Convert a three number style semantic version number to an integer for version comparisons
+# This zero pads, to double digits, the second and third numbers and removes any non-numerical chars
+# e.g. 'openssl 1.0.2k-fips' -> '10002'
+semver_to_int() {
+    _sem_ver="${1:?No version number supplied}"
+
+    # Strip the variable of any non-numerics or dots
+    _sem_ver="$(echo "${_sem_ver}" | sed 's/[^0-9.]//g')"
+
+    # Swap the dots for spaces and assign the outcome to the positional param array
+    # We want word splitting here, so we disable shellcheck's complaints
+    # shellcheck disable=SC2046
+    set -- $(echo "${_sem_ver}" | tr '.' ' ')
+
+    # Assemble and print our integer
+    printf -- '%d%02d%02d' "${1}" "${2:-0}" "${3:-0}"
+
+    unset -v _sem_ver
 }
 
-# 'coreutils' 5.3.0 broke how 'stat' handled its output.  This was reverted
-# in 5.9.4 STABLE.  Just in case we happen across this particular version
-# we catch it and build a workaround to correct its behaviour globally
+# GNU 'coreutils' 5.3.0 broke how 'stat' handled line endings in its output.
+# This was corrected somewhere around 5.92 - 5.94 STABLE.
+# If we detect a version of GNU stat 5.x, we investigate and set MK_STAT_BUG
 # See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
-
-# In the future, we should control this behaviour with 'MK_STAT_BUG'
-# This should be coupled with an `is_true()` function i.e. `if is_true "${MK_STAT_BUG}"; then`
-# For now, this will just pass straight through
-if [ -z "${MK_STAT_BUG+x}" ]||[ "${MK_STAT_BUG}" = "true" ]; then
-    if stat --version 2>&1 | grep -q GNU; then
-        # The following sequence of transformations converts a semantic version to an integer
-        # Where the Major number is untouched, and the Minor and Patch numbers are zero padded
-        # e.g. 'stat (GNU coreutils) 8.28' --> '82800'
-        # This technique allows us to do simple integer based version comparisons
-        stat_version=$(stat --version | head -n 1)
-        stat_version="${stat_version//[!0-9.]/}"
-        # We want word splitting here so that 'set' assigns each 'word' appropriately
-        # shellcheck disable=SC2086
-        set -- ${stat_version//./ }
-        stat_version="${1}$(printf -- '%02d' "${2}" "${3:-0}")"
-
-        if [ "${stat_version}" -ge 50300 ] && [ "${stat_version}" -lt 50904 ]; then
-            stat() {
-                printf -- '%s\n' "$(command stat "${@}")"
-            }
+if [ -z "${MK_STAT_BUG+x}" ]; then
+    # We only care about versions in the range [ 5.3.0 .. 5.94 ] (yes different numbering schemes)
+    if stat --version 2>&1 | grep -q "GNU.*5.[3-9]"; then
+        # Convert the version information from semantic versioning to an integer
+        stat_version=$(semver_to_int "$(stat --version 2>&1 | head -n 1)")
+        if [ "${stat_version}" -ge 50300 ] && [ "${stat_version}" -lt 59400 ]; then
+            MK_STAT_BUG="true"
+        else
+            MK_STAT_BUG="false"
         fi
+        readonly MK_STAT_BUG
+        export MK_STAT_BUG
     fi
+
+fi
+
+# If MK_STAT_BUG is true, we correct 'stat's behaviour globally
+if [ "${MK_STAT_BUG}" = "true" ]; then
+    stat() {
+        printf -- '%s\n' "$(command stat "${@}")"
+    }
 fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against

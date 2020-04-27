@@ -31,7 +31,7 @@ class TestIPMIDataFetcher:
     def test_deserialization(self):
         fetcher = IPMIDataFetcher.from_json(
             to_json({
-                "ipaddress": "1.2.3.4",
+                "address": "1.2.3.4",
                 "username": "us3r",
                 "password": "secret",
             }))
@@ -62,7 +62,7 @@ class TestPiggyBack:
         fetcher = PiggyBackDataFetcher.from_json(
             to_json({
                 "hostname": "host",
-                "ipaddress": "1.2.3.4",
+                "address": "1.2.3.4",
                 "time_settings": [],
             }))
         assert isinstance(fetcher, PiggyBackDataFetcher)

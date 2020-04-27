@@ -24,13 +24,13 @@ from ._base import AbstractDataFetcher, MKFetcherError
 class IPMIDataFetcher(AbstractDataFetcher):
     def __init__(
         self,
-        ipaddress,  # type: HostAddress
+        address,  # type: HostAddress
         username,  # type: str
         password,  # type: str
     ):
         # type: (...) -> None
         super(IPMIDataFetcher, self).__init__()
-        self._ipaddress = ipaddress
+        self._address = address
         self._username = username
         self._password = password
         self._logger = logging.getLogger("cmk.fetchers.ipmi")
@@ -63,9 +63,9 @@ class IPMIDataFetcher(AbstractDataFetcher):
 
     def open(self):
         # type: () -> None
-        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._ipaddress,
+        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._address,
                            self._username)
-        self._command = ipmi_cmd.Command(bmc=self._ipaddress,
+        self._command = ipmi_cmd.Command(bmc=self._address,
                                          userid=self._username,
                                          password=self._password,
                                          privlevel=2)

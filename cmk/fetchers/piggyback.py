@@ -23,20 +23,20 @@ class PiggyBackDataFetcher(AbstractDataFetcher):
     def __init__(
         self,
         hostname,  # type: HostName
-        ipaddress,  # type: Optional[HostAddress]
+        address,  # type: Optional[HostAddress]
         time_settings  # type: List[Tuple[Optional[str], str, int]]
     ):
         # type: (...) -> None
         super(PiggyBackDataFetcher, self).__init__()
         self._hostname = hostname
-        self._ipaddress = ipaddress
+        self._address = address
         self._time_settings = time_settings
         self._logger = logging.getLogger("cmk.fetchers.piggyback")
         self._sources = []  # type: List[PiggybackRawDataInfo]
 
     def __enter__(self):
         # type: () -> PiggyBackDataFetcher
-        for origin in (self._hostname, self._ipaddress):
+        for origin in (self._hostname, self._address):
             self._sources.extend(PiggyBackDataFetcher._raw_data(origin, self._time_settings))
         return self
 

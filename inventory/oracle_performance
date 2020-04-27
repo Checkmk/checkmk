@@ -9,6 +9,12 @@
 
 
 def inv_oracle_performance(parsed, status_data_tree):
+    def get_pga_data(data):
+        pga_data = {}
+        for key, entrylist in data.items():
+            pga_data.setdefault(key, entrylist[0])
+        return pga_data
+
     sga_status_node = status_data_tree.get_list("software.applications.oracle.sga:")
     pga_status_node = status_data_tree.get_list("software.applications.oracle.pga:")
 
@@ -33,7 +39,8 @@ def inv_oracle_performance(parsed, status_data_tree):
                 "free_mem_avail": sga_data.get("Free SGA Memory Available"),
             })
         if "PGA_info" in entryinfo:
-            pga_data = entryinfo["PGA_info"]
+            # entryinfo["PGA_info"] = Dict[str, List[int, str]]
+            pga_data = get_pga_data(entryinfo["PGA_info"])
             pga_status_node.append({
                 "sid": entry,
                 "aggregate_pga_auto_target": pga_data.get("aggregate PGA auto target"),

@@ -751,6 +751,7 @@ though this isn't strictly necessary.
 ```
 get_api_user() {
     local username=Shelly
+    ...
 }
 ```
 
@@ -761,7 +762,7 @@ prior to the function closure.  For example:
 ```
 get_api_user() {
     _username=Shelly
-    printf -- '%s\n' "${_username}"
+    ...
     unset -v _username
 }
 ```
@@ -894,20 +895,15 @@ specifically `set -e` at one of the following links (read *at least* the first):
 - http://wiki.bash-hackers.org/scripting/obsolete
 - http://mywiki.wooledge.org/BashFAQ/105
 - http://mywiki.wooledge.org/BashFAQ/112
-- https://www.reddit.com/r/commandline/comments/4b3cqu/use_the_unofficial_bash_strict_mode_unless_you/
-- https://www.reddit.com/r/programming/comments/25y6yt/use_the_unofficial_bash_strict_mode_unless_you/
-- https://www.reddit.com/r/bash/comments/5zdzil/shell_scripts_matter_good_shell_script_practices/
-- https://www.reddit.com/r/programming/comments/4daos8/good_practices_for_writing_shell_scripts/d1pgv4p/
-- https://www.reddit.com/r/bash/comments/5ddvd2/til_you_can_turn_tracing_x_on_and_off_dynamically/da3xjkk/
-- https://news.ycombinator.com/item?id=8054440
+- https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/
 
 ### Performance
 
-Let's be honest: Compared to almost anything else, shell performance is poor.  
-Especially in `bash`.  We use shell for Linux/UNIX hosts because, for better or
-worse, it is the most portable option.  Nonetheless, we can at least try to be 
-mindful about how we construct our code, in order to squeeze out as much 
-performance as we can.
+Let's be honest: Compared to almost anything else, shell performance is
+suboptimal.  Especially in `bash`.  We use shell for Linux/UNIX hosts because,
+for better or worse, it is the most portable option.  Nonetheless, we can at 
+least try to be mindful about how we construct our code, in order to squeeze out
+as much performance as we can.
 
 It may help to think of this competitively, or as a challenge.  Constantly ask
 yourself "can I optimize this code any further?"
@@ -941,6 +937,12 @@ built in, it can actually do all of this in one shot:
 awk '/needle/{print $2}' haystack.txt
 ```
 
+Or to do so case insensitively:
+
+```
+awk 'tolower($0) ~ /needle/{print $2}' haystack.txt
+```
+
 Often we see blocks of `if...elif...elif...elif`'s that can and should be
 replaced with a cleaner and meaner `case...esac` statement.
 
@@ -955,7 +957,7 @@ The style guides linked to earlier both state:
 
 Often (but not always) there are massive performance gains to be had through 
 the use of builtins, usually at the expense of some readability.  This can be
-counter-balanced via explantory comments.
+counter-balanced via explanatory comments.
 
 ## Localization
 

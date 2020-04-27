@@ -19,10 +19,22 @@ from cmk.base.api.agent_based.section_types import (
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from testlib.base import Scenario
 
-
-class _SNMPTestConfig:
-    def __init__(self):
-        self.character_encoding = "ascii"
+SNMPConfig = snmp_utils.SNMPHostConfig(
+    is_ipv6_primary=False,
+    hostname="testhost",
+    ipaddress="1.2.3.4",
+    credentials="",
+    port=42,
+    is_bulkwalk_host=False,
+    is_snmpv2or3_without_bulkwalk_host=False,
+    bulk_walk_size_of=0,
+    timing={},
+    oid_range_limits=[],
+    snmpv3_contexts=[],
+    character_encoding="ascii",
+    is_usewalk_host=False,
+    is_inline_snmp_host=False,
+)
 
 
 class _SNMPTestFactory:
@@ -84,12 +96,11 @@ def test_value_encoding(column):
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
     monkeypatch.setattr(snmp_utils, "is_snmpv3_host", lambda _x: False)
-    snmp_cfg = _SNMPTestConfig()
 
     def get_all_snmp_tables(info):
         if not isinstance(info, list):
-            return snmp.get_snmp_table(snmp_cfg, "unit-test", info)
-        return [snmp.get_snmp_table(snmp_cfg, "unit-test", i) for i in info]
+            return snmp.get_snmp_table(SNMPConfig, "unit-test", info)
+        return [snmp.get_snmp_table(SNMPConfig, "unit-test", i) for i in info]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 

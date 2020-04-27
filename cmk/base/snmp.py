@@ -169,10 +169,12 @@ def create_snmp_host_config(hostname):
 
 
 def get_snmp_table(snmp_config, check_plugin_name, oid_info):
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, SNMPTree]) -> SNMPTable
     return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False)
 
 
 def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, SNMPTree]) -> SNMPTable
     return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True)
 
 

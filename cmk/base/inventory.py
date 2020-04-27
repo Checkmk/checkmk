@@ -327,11 +327,11 @@ def _gather_snmp_check_plugin_names_inventory(snmp_host_config,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool) -> Set[CheckPluginName]
-    return snmp_scan.gather_snmp_check_plugin_names(snmp_host_config,
-                                                    on_error,
-                                                    do_snmp_scan,
-                                                    for_inventory=True,
-                                                    for_mgmt_board=for_mgmt_board)
+    return snmp_scan.gather_available_raw_section_names(snmp_host_config,
+                                                        on_error,
+                                                        do_snmp_scan,
+                                                        for_inventory=True,
+                                                        for_mgmt_board=for_mgmt_board)
 
 
 #.

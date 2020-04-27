@@ -969,7 +969,7 @@ def _get_sources_for_discovery(hostname,
             if for_check_discovery and source.get_may_use_cache_file():
                 data_sources.SNMPDataSource.disable_data_source_cache()
 
-            source.set_check_plugin_name_filter(snmp_scan.gather_snmp_check_plugin_names)
+            source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names)
 
     # When check types are specified via command line, enforce them and disable auto detection
     if check_plugin_names:

@@ -53,11 +53,11 @@ def _evaluate_snmp_detection_atom(oid_function, atom):
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_snmp_check_plugin_names(host_config,
-                                   on_error,
-                                   do_snmp_scan,
-                                   for_inventory=False,
-                                   for_mgmt_board=False):
+def gather_available_raw_section_names(host_config,
+                                       on_error,
+                                       do_snmp_scan,
+                                       for_inventory=False,
+                                       for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
     check_plugin_names = set()  # type: Set[CheckPluginName]
 

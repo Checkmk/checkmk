@@ -13,5 +13,5 @@ item:
  Number of VSID.
 
 inventory:
- One service {Checkpoint VSID VSID-NR Connections} is created for each VSID.
+ One service {VS VSID-NAME VSID-NR Connections} is created for each VSID.
 

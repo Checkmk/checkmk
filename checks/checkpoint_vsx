@@ -29,20 +29,20 @@
 # .1.3.6.1.4.1.2620.1.16.23.1.1.13.1.0 1
 
 
-# first virtual system id has index 0
-def _calc_vs_idx(raw_vs_idx):
-    return str(int(raw_vs_idx) + 1)
-
-
 def parse_checkpoint_vsx(info):
     parsed = {}
     status_table, counter_table = info
 
-    for vs_id, vs_name, vs_type, vs_ip, vs_policy, vs_policy_type, \
-        vs_sic_status, vs_ha_status in status_table:
+    vsid_info = [s + c for (s, c) in zip(status_table, counter_table)]
 
+    for vs_id, vs_name, vs_type, vs_ip, vs_policy, vs_policy_type, \
+        vs_sic_status, vs_ha_status, conn_num, conn_table_size, packets, \
+        packets_dropped, packets_accepted, packets_rejected, bytes_accepted, \
+        bytes_dropped, bytes_rejected, logged in vsid_info:
+
+        item = "%s %s" % (vs_name, vs_id)
         parsed.setdefault(
-            _calc_vs_idx(vs_id), {
+            item, {
                 "vs_name": vs_name,
                 "vs_type": vs_type,
                 "vs_sic_status": vs_sic_status,
@@ -52,11 +52,7 @@ def parse_checkpoint_vsx(info):
                 "vs_policy_type": vs_policy_type,
             })
 
-    for vs_id, conn_num, conn_table_size, packets, packets_dropped, \
-        packets_accepted, packets_rejected, bytes_accepted, \
-        bytes_dropped, bytes_rejected, logged in counter_table:
-
-        inst = parsed.setdefault(_calc_vs_idx(vs_id), {})
+        inst = parsed.setdefault(item, {})
         for key, value in [
             ("conn_num", conn_num),
             ("conn_table_size", conn_table_size),
@@ -95,7 +91,6 @@ def check_checkpoint_vsx(item, _no_params, parsed):
         return
 
     for key, infotext in [
-        ("vs_name", "Name"),
         ("vs_type", "Type"),
         ("vs_ip", "Main IP"),
     ]:
@@ -130,7 +125,6 @@ check_info["checkpoint_vsx"] = {
         (
             ".1.3.6.1.4.1.2620.1.16.23.1.1",
             [
-                1,  # vsxCountersVSId
                 2,  # vsxCountersConnNum
                 4,  # vsxCountersConnTableLimit
                 5,  # vsxCountersPackets

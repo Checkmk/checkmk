@@ -87,15 +87,16 @@ DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 # being called from the main option parsing code. The list of
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
-def do_discovery(hostnames, check_plugin_names, only_new):
+def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
     config_cache = config.get_config_cache()
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
-    if not hostnames:
+    if not arg_hostnames:
         console.verbose("Discovering services on all hosts\n")
         hostnames = config_cache.all_active_realhosts()
         use_caches = True
     else:
+        hostnames = arg_hostnames
         console.verbose("Discovering services on: %s\n" % ", ".join(sorted(hostnames)))
 
     # For clusters add their nodes to the list. Clusters itself
@@ -128,16 +129,16 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             # Usually we disable SNMP scan if cmk -I is used without a list of
-            # explicity hosts. But for host that have never been service-discovered
+            # explicit hosts. But for host that have never been service-discovered
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names,
+            sources = _get_sources_for_discovery(hostname, ipaddress, arg_check_plugin_names,
                                                  do_snmp_scan, on_error)
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-            _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
-                              only_new, on_error)
+            _do_discovery_for(hostname, ipaddress, sources, multi_host_sections,
+                              arg_check_plugin_names, arg_only_new, on_error)
 
         except Exception as e:
             if cmk.utils.debug.enabled():

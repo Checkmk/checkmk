@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,8 +8,7 @@ import getopt
 import os
 import sys
 import time
-from typing import Any, Dict, List, NoReturn, Optional, Text  # pylint: disable=unused-import
-import six
+from typing import Any, Dict, List, NoReturn, Optional, Text
 
 import livestatus
 
@@ -55,7 +54,7 @@ define timeperiod {
 
 def encode_row(row):
     for key, val in row.items():
-        if isinstance(val, six.text_type):
+        if isinstance(val, str):
             row[key] = val.encode("utf-8")
 
 
@@ -71,13 +70,12 @@ def encode_row(row):
 #   '----------------------------------------------------------------------'
 
 g_connection = None  # type: Optional[livestatus.SingleSiteConnection]
+opt_socket = None  # type: Optional[str]
 
 
 def connect():
     global g_connection, opt_socket
-
-    # TODO: Fix the code and remove the pragma below!
-    if not opt_socket and not omd_root():  # pylint: disable=used-before-assignment
+    if not opt_socket and not omd_root():
         bail_out("Please specify the URL of the livestatus socket.")
     if omd_root():
         opt_socket = "unix:%s/tmp/run/live" % omd_root()
@@ -97,7 +95,7 @@ def livedump_config():
     if opt_dump_templates:
         dump_templates()
 
-    check_commands = set([])
+    check_commands = set()
 
     def prepare_row(row):
         encode_row(row)
@@ -326,7 +324,6 @@ long_options = [
 
 opt_verbose = False
 opt_debug = False
-opt_socket = None  # type: Optional[str]
 opt_mark_mode = False
 opt_prefix = ""
 opt_host_headers = ""

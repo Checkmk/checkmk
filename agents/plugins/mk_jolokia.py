@@ -14,7 +14,7 @@ try:
         import simplejson as json
     except ImportError:
         import json
-except ImportError, import_error:
+except ImportError:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
@@ -26,7 +26,7 @@ try:
     import requests
     from requests.auth import HTTPDigestAuth
     from requests.packages import urllib3
-except ImportError, import_error:
+except ImportError:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
                      " Please install it on the monitored system.\n")

@@ -286,14 +286,14 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config):
         snmp.get_snmp_table(
             snmp_config,
             check_plugin_name="",
-            oid_info=cast(snmp_utils.OIDWithColumns, (
+            oid_info=(
                 ".1.3.6.1.2.1.1",
                 [
                     "1.0",
                     "2.0",
                     "5.0",
                 ],
-            )),
+            ),
         )
 
 

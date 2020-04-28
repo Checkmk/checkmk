@@ -90,32 +90,12 @@ DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
     config_cache = config.get_config_cache()
-    use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
-    if not arg_hostnames:
-        console.verbose("Discovering services on all hosts\n")
-        hostnames = config_cache.all_active_realhosts()
-        use_caches = True
-    else:
-        hostnames = arg_hostnames
-        console.verbose("Discovering services on: %s\n" % ", ".join(sorted(hostnames)))
+    use_caches = not arg_hostnames or data_sources.abstract.DataSource.get_may_use_cache_file()
 
-    # For clusters add their nodes to the list. Clusters itself
-    # cannot be discovered but the user is allowed to specify
-    # them and we do discovery on the nodes instead.
-    for h in hostnames:
-        host_config = config_cache.get_host_config(h)
-        if host_config.is_cluster:
-            nodes = host_config.nodes
-            if nodes is None:
-                raise MKGeneralException("Invalid cluster configuration")
-            hostnames.update(nodes)
-
-    # Then remove clusters and make list unique
-    sorted_hostnames = sorted(
-        {h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
+    host_names = _preprocess_hostnames(arg_hostnames, config_cache)
 
     # Now loop through all hosts
-    for hostname in sorted_hostnames:
+    for hostname in sorted(host_names):
         console.section_begin(hostname)
 
         try:
@@ -144,6 +124,31 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             console.section_error("%s" % e)
         finally:
             cmk.base.cleanup.cleanup_globals()
+
+
+def _preprocess_hostnames(arg_host_names, config_cache):
+    # type: (Set[HostName], config.ConfigCache) -> Set[HostName]
+    """Default to all hosts and expand cluster names to their nodes"""
+    if not arg_host_names:
+        console.verbose("Discovering services on all hosts\n")
+        arg_host_names = config_cache.all_active_realhosts()
+    else:
+        console.verbose("Discovering services on: %s\n" % ", ".join(sorted(arg_host_names)))
+
+    host_names = set()  # type: Set[HostName]
+    # For clusters add their nodes to the list. Clusters itself
+    # cannot be discovered but the user is allowed to specify
+    # them and we do discovery on the nodes instead.
+    for host_name, host_config in [(hn, config_cache.get_host_config(hn)) for hn in arg_host_names]:
+        if not host_config.is_cluster:
+            host_names.add(host_name)
+            continue
+
+        if host_config.nodes is None:
+            raise MKGeneralException("Invalid cluster configuration")
+        host_names.update(host_config.nodes)
+
+    return host_names
 
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,

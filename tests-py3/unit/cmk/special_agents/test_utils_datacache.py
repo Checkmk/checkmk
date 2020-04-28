@@ -1,12 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-import pytest
-from pathlib2 import Path
+from pathlib import Path
 
 from cmk.special_agents.utils import DataCache
 
@@ -16,10 +14,12 @@ class KeksDose(DataCache):
     def cache_interval(self):
         return 5
 
-    def get_validity_from_args(self, arg):
+    # TODO: Fix this and remove the suppression
+    def get_validity_from_args(self, arg):  # pylint: disable=arguments-differ
         return bool(arg)
 
-    def get_live_data(self, arg):
+    # TODO: Fix this and remove the suppression
+    def get_live_data(self, arg):  # pylint: disable=arguments-differ
         return "live data"
 
 
@@ -31,9 +31,6 @@ def test_datacache_init(tmp_path):
 
     tc_debug = KeksDose(tmp_path, 'test', debug=True)
     assert tc_debug.debug
-
-    with pytest.raises(TypeError):
-        DataCache('foo', 'bar')  # pylint: disable=abstract-class-instantiated
 
 
 def test_datacache_timestamp(tmp_path):

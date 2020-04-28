@@ -679,6 +679,17 @@ get_checkmk_api() {
 
 ### Variables
 
+#### Typing
+
+Variables in Linux/UNIX shells are untyped.  Attempts have been made to bring in
+some degree of typing via `typeset` and `declare`, but these are not portable
+solutions, so should be avoided.
+
+If you need a variable to be of a specific type, the best advice right now 
+(that we're aware of) is to validate it before you use it.
+
+#### Scoping
+
 The family of Linux/UNIX shells use dynamic scoping, which can cause confusion
 and trouble.  Fortunately, this gives us the freedom to practice a rudimentary
 form of static scoping, which helps to make things a little bit more robust.
@@ -687,20 +698,21 @@ Different languages have different numbers of scopes and different names for
 them, but broadly speaking we can break shell's down to the following 
 three-ish "scopes":
 
-#### Global / Environment / Constants
+#### Global / Environment / Shell / Constants
 
-We know from long-established convention that **Global/Environment** variables
-and, to a lesser extent, **Constants** tend to be in UPPERCASE.  You can see 
-this in e.g. `bash` by running `set` and/or `printenv`.
+We know from long-established convention that **Global/Environment/Shell** 
+variables and, to a lesser extent, **Constants** tend to be in UPPERCASE.  You 
+can see this in e.g. `bash` by running `set` and/or `printenv`.
 
 So you should avoid UPPERCASE as much as possible.  If you *do* need a variable
 in the environment "scope" for whatever reason, use the form `MK_VARNAME`
 e.g. `MK_VERSION`
 
-To make a variable constant, use `readonly`, defined and set separately e.g.
+To make a variable constant (a.k.a. an "immutable variable"), use `readonly`, 
+defined and set separately e.g.
 
 ```
-MK_CONSTANT="Northern Star"
+MK_CONSTANT="Polaris"
 readonly MK_CONSTANT
 ```
 
@@ -723,7 +735,7 @@ GNU Autoconf's documentation also states:
 >the underlying system, and without worrying about whether the shell changes 
 >them unexpectedly.
 
-Try, also, to use meaningful names, this is meaningless:
+Try, also, to use meaningful names.  This is meaningless:
 
 ```
 for f in $(lsblk -ln -o NAME); do
@@ -736,6 +748,8 @@ Whereas this is better:
 for block_device in $(lsblk -ln -o NAME); do
     ...
 ```
+
+This also reduces/eliminates unexpected in-scope collisions.
 
 *Exception:*
 *C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
@@ -858,12 +872,10 @@ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci 
   it with portability in mind. Your code may be used on older systems and/or
   commercial unices (e.g. AIX, Solaris etc).
 
-- `ksh` is a reasonable lowest common denominator to target as it's 
+- `ksh` is in some ways a reasonable lowest common denominator to target as it's 
   [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and
-  its syntax is almost directly runnable in `bash`, `zsh` and others.
-
-- GNU Autoconf documentation features a segment on 
-  [Portable Shell Programming](https://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/autoconf.html#Portable-Shell)
+  its syntax is almost directly runnable in `bash`, `zsh` and others.  Be aware,
+  however, that there are many variants of `ksh`.
 
 - Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
   you some ideas on more portable scripting, and `dash` is a readily available

@@ -588,12 +588,16 @@ class MetricCache(DataCache):
 
     @property
     def cache_interval(self):
+        # type: () -> int
         return self.timedelta.seconds
 
     def get_validity_from_args(self, *args):
+        # type: (Any) -> bool
         return True
 
-    def get_live_data(self, mgmt_client, resource_id, err):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args):
+        # type: (Any) -> Any
+        mgmt_client, resource_id, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         raw_metrics = mgmt_client.metrics(resource_id,
@@ -635,6 +639,7 @@ class UsageClient(DataCache):
 
     @property
     def cache_interval(self):
+        # type: () -> int
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
@@ -649,9 +654,11 @@ class UsageClient(DataCache):
         return any(s in errmsg for s in cls.NO_CONSUPTION_API)
 
     def get_validity_from_args(self, *args):
+        # type: (Any) -> bool
         return True
 
-    def get_live_data(self):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args):
+        # type: (Any) -> Any
         LOGGER.debug("UsageClient: get live data")
 
         try:

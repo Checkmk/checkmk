@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 from pathlib import Path
 
 from cmk.special_agents.utils import DataCache
@@ -12,14 +14,15 @@ from cmk.special_agents.utils import DataCache
 class KeksDose(DataCache):
     @property
     def cache_interval(self):
+        # type: () -> int
         return 5
 
-    # TODO: Fix this and remove the suppression
-    def get_validity_from_args(self, arg):  # pylint: disable=arguments-differ
-        return bool(arg)
+    def get_validity_from_args(self, *args):
+        # type: (Any) -> bool
+        return bool(args[0])
 
-    # TODO: Fix this and remove the suppression
-    def get_live_data(self, arg):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args):
+        # type: (Any) -> Any
         return "live data"
 
 

@@ -17,10 +17,9 @@ from pathlib import Path
 import pprint
 import sys
 import time
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import requests
-import six
 
 import cmk.utils.store as store
 
@@ -95,32 +94,34 @@ def datetime_serializer(obj):
     raise TypeError("%r is not JSON serializable" % obj)
 
 
-class DataCache(six.with_metaclass(abc.ABCMeta, object)):
+class DataCache(abc.ABC):
     def __init__(self, cache_file_dir, cache_file_name, debug=False):
-        self._cache_file_dir = Path(cache_file_dir)
+        # type: (Path, str, bool) -> None
+        self._cache_file_dir = cache_file_dir
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
         self.debug = debug
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cache_interval(self):
+        # type: () -> int
         """
         Return the time for how long cached data is valid
         """
-        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_validity_from_args(self, *args):
+        # type: (Any) -> bool
         """
         Decide whether we need to update the cache due to new arguments
         """
-        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_live_data(self, *args):
+        # type: (Any) -> Any
         """
         This is the function that will be called if no cached data can be found.
         """
-        raise NotImplementedError()
 
     @property
     def cache_timestamp(self):

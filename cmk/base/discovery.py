@@ -102,11 +102,9 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
-    cluster_hosts = []
     for h in hostnames:
         host_config = config_cache.get_host_config(h)
         if host_config.is_cluster:
-            cluster_hosts.append(h)
             nodes = host_config.nodes
             if nodes is None:
                 raise MKGeneralException("Invalid cluster configuration")
@@ -146,12 +144,6 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             console.section_error("%s" % e)
         finally:
             cmk.base.cleanup.cleanup_globals()
-
-    # Check whether or not the cluster host autocheck files are still
-    # existant. Remove them. The autochecks are only stored in the nodes
-    # autochecks files these days.
-    for hostname in cluster_hosts:
-        autochecks.remove_autochecks_file(hostname)
 
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,

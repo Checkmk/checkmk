@@ -30,12 +30,32 @@ from cmk.gui.exceptions import MKGeneralException
 
 Command = List[str]
 
-ReplicationPath = NamedTuple("ReplicationPath", [
-    ("ty", str),
-    ("ident", str),
-    ("path", str),
-    ("excludes", List[str]),
-])
+
+class ReplicationPath(
+        NamedTuple("ReplicationPath", [
+            ("ty", str),
+            ("ident", str),
+            ("path", str),
+            ("excludes", List[str]),
+        ])):
+    def __new__(cls, ty, ident, path, excludes):
+        # type: (str, str, str, List[str]) -> ReplicationPath
+
+        cleaned_path = os.path.abspath(path).rstrip("/")
+
+        if ".*new*" not in excludes:
+            final_excludes = excludes[:]
+            final_excludes.append(".*new*")  # exclude all temporary files
+        else:
+            final_excludes = excludes
+
+        return super(ReplicationPath, cls).__new__(
+            cls,
+            ty=ty,
+            ident=ident,
+            path=cleaned_path,
+            excludes=final_excludes,
+        )
 
 
 class SnapshotComponentsParser(object):
@@ -69,10 +89,8 @@ class SnapshotComponent(object):
         # type: (ReplicationPath) -> None
         self.component_type = component.ty
         self.name = component.ident
-        self.excludes = component.excludes[:]
-
-        self.configured_path = os.path.abspath(component.path).rstrip("/")
-        self.excludes.append(".*new*")  # exclude all temporary files
+        self.excludes = component.excludes
+        self.configured_path = component.path
 
     def __str__(self):
         # type: () -> str

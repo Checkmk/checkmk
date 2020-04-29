@@ -33,13 +33,21 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeELBv2Client:
-    def describe_load_balancers(self):
-        return {
-            'LoadBalancers': ELBv2DescribeLoadBalancersIB.create_instances(amount=3),
+class Paginator:
+    def paginate(self, Names=None):
+        load_balancers = ELBv2DescribeLoadBalancersIB.create_instances(amount=3)
+        if Names is not None:
+            load_balancers = [
+                load_balancer for load_balancer in load_balancers
+                if load_balancer['LoadBalancerName'] in Names
+            ]
+        yield {
+            'LoadBalancers': load_balancers,
             'NextMarker': 'string',
         }
 
+
+class FakeELBv2Client:
     def describe_tags(self, ResourceArns=None):
         tag_descrs = []
         for lb_arn in ResourceArns:
@@ -76,6 +84,11 @@ class FakeELBv2Client:
         return {
             'TargetHealthDescriptions': ELBv2DescribeTargetHealthIB.create_instances(amount=1),
         }
+
+    def get_paginator(self, operation_name):
+        if operation_name == 'describe_load_balancers':
+            return Paginator()
+        raise NotImplementedError
 
 
 @pytest.fixture()
@@ -180,18 +193,6 @@ def check_target_group_errors_results(elbv2_summary_content,
     assert n_metrics_lambda == 2 * n_tg_lambda  # 2 metrics per target group
 
 
-elbv2_tags_params = [
-    ((None, None), ['LoadBalancerName-0', 'LoadBalancerName-1',
-                    'LoadBalancerName-2'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
-    (([['FOO']], [['BAR']]), [], []),
-    (([['Key-0']], [['Value-0']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
-     ['LoadBalancerName-0', 'LoadBalancerName-1']),
-    (([['Key-0',
-        'Foo']], [['Value-0',
-                   'Bar']]), ['LoadBalancerName-0',
-                              'LoadBalancerName-1'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
-]
-
 elbv2_params = [
     (None, (None, None), ['LoadBalancerName-0', 'LoadBalancerName-1',
                           'LoadBalancerName-2'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
@@ -208,6 +209,7 @@ elbv2_params = [
     (['LoadBalancerName-0',
       'LoadBalancerName-2'], (None, None), ['LoadBalancerName-0',
                                             'LoadBalancerName-2'], ['LoadBalancerName-0']),
+    (['LoadBalancerName-2'], ([['FOO']], [['BAR']]), ['LoadBalancerName-2'], []),
 ]
 
 
@@ -333,10 +335,10 @@ def test_agent_aws_elbv2_network(get_elbv2_sections, names, tags, found_instance
         assert len(result.content) == 14
 
 
-@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", elbv2_tags_params)
-def test_agent_aws_elbv2_summary_without_limits(get_elbv2_sections, tags, found_instances,
+@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+def test_agent_aws_elbv2_summary_without_limits(get_elbv2_sections, names, tags, found_instances,
                                                 found_instances_with_labels):
-    elbv2_sections = get_elbv2_sections(None, tags)
+    elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary = elbv2_sections['elbv2_summary']
     elbv2_summary_results = elbv2_summary.run().results
 
@@ -353,10 +355,10 @@ def test_agent_aws_elbv2_summary_without_limits(get_elbv2_sections, tags, found_
         assert len(elbv2_summary_results) == 0
 
 
-@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", elbv2_tags_params)
-def test_agent_aws_elbv2_labels_without_limits(get_elbv2_sections, tags, found_instances,
+@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+def test_agent_aws_elbv2_labels_without_limits(get_elbv2_sections, names, tags, found_instances,
                                                found_instances_with_labels):
-    elbv2_sections = get_elbv2_sections(None, tags)
+    elbv2_sections = get_elbv2_sections(names, tags)
     _elbv2_summary_results = elbv2_sections['elbv2_summary'].run().results
     elbv2_labels = elbv2_sections['elbv2_labels']
     elbv2_labels_results = elbv2_labels.run().results
@@ -368,10 +370,10 @@ def test_agent_aws_elbv2_labels_without_limits(get_elbv2_sections, tags, found_i
         assert result.piggyback_hostname != ''
 
 
-@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", elbv2_tags_params)
-def test_agent_aws_elbv2_target_groups_without_limits(get_elbv2_sections, tags, found_instances,
-                                                      found_instances_with_labels):
-    elbv2_sections = get_elbv2_sections(None, tags)
+@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+def test_agent_aws_elbv2_target_groups_without_limits(get_elbv2_sections, names, tags,
+                                                      found_instances, found_instances_with_labels):
+    elbv2_sections = get_elbv2_sections(names, tags)
     _elbv2_summary_results = elbv2_sections['elbv2_summary'].run().results
     elbv2_target_groups = elbv2_sections['elbv2_target_groups']
     elbv2_target_groups_results = elbv2_target_groups.run().results
@@ -383,10 +385,10 @@ def test_agent_aws_elbv2_target_groups_without_limits(get_elbv2_sections, tags, 
         assert result.piggyback_hostname != ''
 
 
-@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", elbv2_tags_params)
-def test_agent_aws_elbv2_application_without_limits(get_elbv2_sections, tags, found_instances,
-                                                    found_instances_with_labels):
-    elbv2_sections = get_elbv2_sections(None, tags)
+@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+def test_agent_aws_elbv2_application_without_limits(get_elbv2_sections, names, tags,
+                                                    found_instances, found_instances_with_labels):
+    elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary_results = elbv2_sections['elbv2_summary'].run().results
     _elbv2_target_groups_results = elbv2_sections['elbv2_target_groups'].run().results
     elbv2_application, elbv2_application_target_groups_http, elbv2_application_target_groups_lambda = elbv2_sections[
@@ -416,10 +418,10 @@ def test_agent_aws_elbv2_application_without_limits(get_elbv2_sections, tags, fo
                                           elbv2_application_target_groups_lambda_results)
 
 
-@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", elbv2_tags_params)
-def test_agent_aws_elbv2_network_without_limits(get_elbv2_sections, tags, found_instances,
+@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+def test_agent_aws_elbv2_network_without_limits(get_elbv2_sections, names, tags, found_instances,
                                                 found_instances_with_labels):
-    elbv2_sections = get_elbv2_sections(None, tags)
+    elbv2_sections = get_elbv2_sections(names, tags)
     _elbv2_summary_results = elbv2_sections['elbv2_summary'].run().results
     elbv2_network = elbv2_sections['elbv2_network']
     elbv2_network_results = elbv2_network.run().results

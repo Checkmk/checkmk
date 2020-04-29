@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 import sys
 import time
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union, Callable  # pylint: disable=unused-import
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable  # pylint: disable=unused-import
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -1970,8 +1970,11 @@ class ELBLimits(AWSSectionLimits):
         but no values about the usage per limit thus we have to gather the usage
         values from 'describe_load_balancers'.
         """
-        response = self._client.describe_load_balancers()
-        load_balancers = self._get_response_content(response, 'LoadBalancerDescriptions')
+        load_balancers = [
+            load_balancer
+            for page in self._client.get_paginator('describe_load_balancers').paginate()
+            for load_balancer in self._get_response_content(page, 'LoadBalancerDescriptions')
+        ]
 
         response = self._client.describe_account_limits()
         limits = self._get_response_content(response, 'Limits')
@@ -2013,7 +2016,18 @@ class ELBLimits(AWSSectionLimits):
 
 class ELBSummaryGeneric(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None, resource=""):
+
         self._resource = resource
+        if self._resource == 'elb':
+            self._describe_load_balancers_karg = 'LoadBalancerNames'
+            self._describe_load_balancers_key = 'LoadBalancerDescriptions'
+        elif self._resource == 'elbv2':
+            self._describe_load_balancers_karg = 'Names'
+            self._describe_load_balancers_key = 'LoadBalancers'
+        else:
+            raise AssertionError("ELBSummaryGeneric: resource argument must be either 'elb' or "
+                                 "'elbv2'")
+
         super(ELBSummaryGeneric, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['%s_names' % resource]
         self._tags = self._prepare_tags_for_api_response(self._config.service_config['%s_tags' %
@@ -2048,40 +2062,29 @@ class ELBSummaryGeneric(AWSSectionGeneric):
         return found_load_balancers
 
     def _get_load_balancer_tags(self, load_balancer):
-        try:
-            if self._resource == "elb":
-                return self._client.describe_tags(
-                    LoadBalancerNames=[load_balancer['LoadBalancerName']])
-            if self._resource == "elbv2":
-                return self._client.describe_tags(ResourceArns=[load_balancer['LoadBalancerArn']])
-            return {}
-        except botocore.exceptions.ClientError as e:
-            # If there are no tags attached to a bucket we receive a 'ClientError'
-            logging.info("%s/%s: No tags set, %s", self.name, load_balancer['LoadBalancerName'], e)
-            return {}
+        if self._resource == "elb":
+            return self._client.describe_tags(LoadBalancerNames=[load_balancer['LoadBalancerName']])
+        return self._client.describe_tags(ResourceArns=[load_balancer['LoadBalancerArn']])
 
     def _describe_load_balancers(self, colleague_contents):
-        if self._tags is None and self._names is not None:
+        if self._names is not None:
             if colleague_contents.content:
                 return [
                     load_balancer for load_balancer in colleague_contents.content
                     if load_balancer['LoadBalancerName'] in self._names
                 ]
-            response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
+            page_iterator = self._client.get_paginator('describe_load_balancers').paginate(
+                **{self._describe_load_balancers_karg: self._names})
 
         else:
             if colleague_contents.content:
                 return colleague_contents.content
+            page_iterator = self._client.get_paginator('describe_load_balancers').paginate()
 
-            response = self._client.describe_load_balancers()
-
-        if self._resource == "elb":
-            response_key = "LoadBalancerDescriptions"  # type: Optional[str]
-        elif self._resource == "elbv2":
-            response_key = "LoadBalancers"
-        else:
-            response_key = None
-        return self._get_response_content(response, response_key)
+        return [
+            load_balancer for page in page_iterator
+            for load_balancer in self._get_response_content(page, self._describe_load_balancers_key)
+        ]
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -2265,8 +2268,11 @@ class ELBv2Limits(AWSSectionLimits):
         but no values about the usage per limit thus we have to gather the usage
         values from 'describe_load_balancers'.
         """
-        response = self._client.describe_load_balancers()
-        load_balancers = self._get_response_content(response, 'LoadBalancers')
+        load_balancers = [
+            load_balancer
+            for page in self._client.get_paginator('describe_load_balancers').paginate()
+            for load_balancer in self._get_response_content(page, 'LoadBalancers')
+        ]
 
         for load_balancer in load_balancers:
             lb_arn = load_balancer['LoadBalancerArn']

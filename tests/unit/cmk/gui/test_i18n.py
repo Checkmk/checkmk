@@ -132,7 +132,7 @@ def test_init_language_with_local_modification_fallback(local_translation):
 
 def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
-
+    assert trans is not None
     translated = trans.ugettext("pkg1")
     assert isinstance(translated, six.text_type)
     assert translated == "lala"

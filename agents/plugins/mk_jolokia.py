@@ -124,8 +124,8 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
                                                                               "context"], False),],
 }
 
-AVAILABLE_PRODUCTS = sorted(set(QUERY_SPECS_SPECIFIC_LEGACY.keys() +
-                                MBEAN_SECTIONS_SPECIFIC.keys()))
+AVAILABLE_PRODUCTS = sorted(
+    set(QUERY_SPECS_SPECIFIC_LEGACY.keys()) | set(MBEAN_SECTIONS_SPECIFIC.keys()))
 
 # Default global configuration: key, value [, help]
 DEFAULT_CONFIG_TUPLES = (
@@ -570,7 +570,7 @@ def yield_configured_instances(custom_config=None):
     # instances in his configuration, we will use this (a list of dicts).
     individual_configs = custom_config.pop("instances", [{}])
     for cfg in individual_configs:
-        keys = set(cfg.keys() + custom_config.keys())
+        keys = set(cfg.keys()) | set(custom_config.keys())
         conf_dict = dict((k, cfg.get(k, custom_config.get(k))) for k in keys)
         if VERBOSE:
             sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)

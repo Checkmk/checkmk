@@ -66,10 +66,6 @@ class SnapshotComponent(object):
 
         # complete path, dir or file
         self.configured_path = ""
-        # real path
-        self.base_dir = ""
-        # real filename, . for directories
-        self.filename = None  # type: Optional[str]
 
         self._from_tuple(component)
 
@@ -77,27 +73,17 @@ class SnapshotComponent(object):
         # type: (ReplicationPath) -> None
         self.component_type = component.ty
         self.name = component.ident
-        self.configured_path = component.path
         self.excludes = component.excludes[:]
 
-        self.configured_path = os.path.abspath(self.configured_path).rstrip("/")
-        if self.component_type == "dir":
-            self.filename = None
-            self.base_dir = self.configured_path
-        else:
-            self.filename = os.path.basename(self.configured_path)
-            self.base_dir = os.path.dirname(self.configured_path)
-
+        self.configured_path = os.path.abspath(component.path).rstrip("/")
         self.excludes.append(".*new*")  # exclude all temporary files
 
     def __str__(self):
         # type: () -> str
-        return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % (
+        return "type: %s, name: %s, configured_path: %s, excludes: %s" % (
             self.component_type,
             self.name,
             self.configured_path,
-            self.base_dir,
-            self.filename,
             self.excludes,
         )
 
@@ -216,8 +202,7 @@ class SnapshotCreationBase(object):
         if component.component_type == "dir":
             files_location = [source_dir, "."]
         else:
-            assert component.filename is not None
-            files_location = [source_dir, component.filename]
+            files_location = [source_dir, os.path.basename(component.configured_path)]
 
         return [
             "tar", "cf",
@@ -261,8 +246,12 @@ class SnapshotCreationBase(object):
                 tar = tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.name), "w")
                 tar.close()
                 continue
+
+            base_dir = component.configured_path if component.component_type == "dir" else os.path.dirname(
+                component.configured_path)
+
             custom_components_commands.append(
-                self._get_subtar_command(component, component.base_dir, tarfile_dir))
+                self._get_subtar_command(component, base_dir, tarfile_dir))
         self._execute_bash_commands(custom_components_commands)
 
     def _get_snapshot_fingerprint(self, parsed_generic_components, parsed_custom_components):

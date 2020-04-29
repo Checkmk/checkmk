@@ -980,7 +980,7 @@ run_mrpe_plugins() {
                             _key="${_par%=*}"
                             _value="${_par#*=}"
                             # Setting 'args' here upsets shellcheck as we're inside a 'while' loop
-                            # This should be fine: if we use it, we use it
+                            # This should be fine: we use it immediately and inside the loop
                             # shellcheck disable=SC2030
                             case "${_key}" in
                                 (interval)  _interval="${_value}" ;;

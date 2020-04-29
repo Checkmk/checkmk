@@ -1057,7 +1057,9 @@ rulespec_registry.register(
 
 def _parameter_valuespec_aws_dynamodb_limits():
     return Dictionary(elements=[
-        ('number_of_tables', _vs_limits("Number of tables", 256, unit='tables')),
+        ('number_of_tables',
+         _vs_limits(
+             "Number of tables", 256, unit='tables', title_default="Default limit set by AWS")),
         ('read_capacity', _vs_limits("Read capacity", 80000, unit='RCU')),
         ('write_capacity', _vs_limits("Write capacity", 80000, unit='WCU')),
     ])

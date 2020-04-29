@@ -187,12 +187,10 @@ def _elbv2_target_group_arn_to_dim(arn):
     return arn.split(':')[-1]
 
 
-def _describe_dynamodb_tables(client,
-                              get_response_content,
-                              table_names=None,
-                              catch_resource_not_found_excpts=False):
+def _describe_dynamodb_tables(client, get_response_content, table_names=None):
 
-    if table_names is None:
+    get_table_names = table_names is None
+    if get_table_names:
         table_names = []
         for page in client.get_paginator('list_tables').paginate():
             table_names.extend(get_response_content(page, 'TableNames'))
@@ -203,9 +201,9 @@ def _describe_dynamodb_tables(client,
             tables.append(get_response_content(client.describe_table(TableName=table_name),
                                                'Table'))
         except client.exceptions.ResourceNotFoundException:
-            if catch_resource_not_found_excpts:
-                logging.info("No table named %s in the current region", table_name)
-            else:
+            # we raise the exception if we fetched the table names from the API, since in that case
+            # all tables should exist, otherwise something went really wrong
+            if get_table_names:
                 raise
 
     return tables
@@ -3139,8 +3137,7 @@ class DynamoDBSummary(AWSSectionGeneric):
             ]
         return _describe_dynamodb_tables(self._client,
                                          self._get_response_content,
-                                         table_names=self._names,
-                                         catch_resource_not_found_excpts=True)
+                                         table_names=self._names)
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:

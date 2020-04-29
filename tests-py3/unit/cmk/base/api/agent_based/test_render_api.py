@@ -4,27 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest  # type: ignore[import]
-
+import time
 import cmk.base.api.agent_based.render as render
 
 
 @pytest.mark.parametrize("epoch, output", [
     (0, "Jan 01 1970"),
-    (1587901020, "Apr 26 2020"),
-    (1587901020.0, "Apr 26 2020"),
-    ("1587901020", "Apr 26 2020"),
+    (1587908220, "Apr 26 2020"),
+    (1587908220.0, "Apr 26 2020"),
+    ("1587908220", "Apr 26 2020"),
 ])
 def test_date(epoch, output):
     assert render.date(epoch=epoch) == output
 
 
 @pytest.mark.parametrize("epoch, output", [
-    (0, "Jan 01 1970 01:00:00"),
-    (1587901020, "Apr 26 2020 13:37:00"),
-    (1587901020.0, "Apr 26 2020 13:37:00"),
-    ("1587901020", "Apr 26 2020 13:37:00"),
+    (0, "Jan 01 1970 00:00:00"),
+    (1587908220, "Apr 26 2020 13:37:00"),
+    (1587908220.0, "Apr 26 2020 13:37:00"),
+    ("1587908220", "Apr 26 2020 13:37:00"),
 ])
-def test_datetime(epoch, output):
+def test_datetime(monkeypatch, epoch, output):
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     assert render.datetime(epoch=epoch) == output
 
 

@@ -179,12 +179,13 @@ def send_mail_sendmail(m, target, from_address):
     cmd = [_sendmail_path()]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target.encode("utf-8")]
+    cmd += ["-i", target]
 
     try:
         p = subprocess.Popen(
             cmd,
             stdin=subprocess.PIPE,
+            encoding="utf-8",
         )
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")

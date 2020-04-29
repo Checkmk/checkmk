@@ -58,50 +58,6 @@ class ReplicationPath(
         )
 
 
-class SnapshotComponentsParser(object):
-    def __init__(self, component_list):
-        # type: (List[ReplicationPath]) -> None
-        super(SnapshotComponentsParser, self).__init__()
-        self.components = []  # type: List[SnapshotComponent]
-        self._from_component_list(component_list)
-
-    def _from_component_list(self, component_list):
-        # type: (List[ReplicationPath]) -> None
-        for component in component_list:
-            self.components.append(SnapshotComponent(component))
-
-
-class SnapshotComponent(object):
-    def __init__(self, component):
-        # file or dir
-        self.component_type = ""
-        # exclude files from dir
-        self.excludes = []  # type: List[str]
-        # the name of the subtar
-        self.name = ""
-
-        # complete path, dir or file
-        self.configured_path = ""
-
-        self._from_tuple(component)
-
-    def _from_tuple(self, component):
-        # type: (ReplicationPath) -> None
-        self.component_type = component.ty
-        self.name = component.ident
-        self.excludes = component.excludes
-        self.configured_path = component.path
-
-    def __str__(self):
-        # type: () -> str
-        return "type: %s, name: %s, configured_path: %s, excludes: %s" % (
-            self.component_type,
-            self.name,
-            self.configured_path,
-            self.excludes,
-        )
-
-
 class SnapshotCreationBase(object):
     def __init__(self, work_dir):
         # type: (str) -> None
@@ -136,19 +92,14 @@ class SnapshotCreationBase(object):
         target_basename = os.path.basename(target_filepath)
         store.makedirs(os.path.dirname(target_filepath))
 
-        # Convert the tuple lists into a more managable format
-        # TODO: Since the components are now named tuples we could clean this up
-        parsed_generic_components = SnapshotComponentsParser(generic_components)
-        parsed_custom_components = SnapshotComponentsParser(custom_components)
-
         # This is not supported in CME, most of the CME files are customized!
         # Only the sitespecific custom component is currently supported
         if reuse_identical_snapshots:
             # Note/Requirement: There is (currently) no need to rsync custom components, since these components are always
             #                   generated on the fly in a custom directory
             # Check if a snapshot with the same content has already been packed.
-            snapshot_fingerprint = self._get_snapshot_fingerprint(parsed_generic_components,
-                                                                  parsed_custom_components)
+            snapshot_fingerprint = self._get_snapshot_fingerprint(generic_components,
+                                                                  custom_components)
             identical_snapshot = self._available_snapshots.get(snapshot_fingerprint)
             if identical_snapshot:
                 os.symlink(identical_snapshot, target_filepath)
@@ -158,21 +109,19 @@ class SnapshotCreationBase(object):
                 return
 
         # Generate the final tar command
-        required_subtars = ["%s.tar" % c.name for c in parsed_generic_components.components]
+        required_subtars = ["%s.tar" % c.ident for c in generic_components]
         final_tar_command = [
             "tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir
         ] + required_subtars
 
         # Add custom files to final tar command
-        if parsed_custom_components.components:
+        if custom_components:
             base_dir = os.path.basename(target_filepath)
             tarfile_dir = "%s/custom_files/%s" % (self._tarfile_dir, base_dir)
             os.makedirs(tarfile_dir)
 
-            self._create_custom_components_tarfiles(parsed_custom_components, tarfile_dir)
-            required_custom_subtars = [
-                "%s.tar" % c.name for c in parsed_custom_components.components
-            ]
+            self._create_custom_components_tarfiles(custom_components, tarfile_dir)
+            required_custom_subtars = ["%s.tar" % c.ident for c in custom_components]
             final_tar_command.extend(["-C", tarfile_dir] + required_custom_subtars)
 
         # Execute final tar command, create the snapshot
@@ -187,7 +136,7 @@ class SnapshotCreationBase(object):
                                                             (time.time() - generate_start_time)))
 
     def _get_rsync_and_tar_commands(self, component, rsync_target_dir, tarfile_target_dir):
-        # type: (SnapshotComponent, str, str) -> List[Command]
+        # type: (ReplicationPath, str, str) -> List[Command]
         bash_commands = []
 
         # Rsync from source
@@ -199,28 +148,28 @@ class SnapshotCreationBase(object):
         return bash_commands
 
     def _get_rsync_command(self, component, rsync_target_dir):
-        # type: (SnapshotComponent, str) -> Command
+        # type: (ReplicationPath, str) -> Command
         exclude_args = list(
             itertools.chain.from_iterable([("--exclude", f) for f in component.excludes]))
-        if component.component_type == "dir":
+        if component.ty == "dir":
             # Sync the content of the directory, but not the directory itself
-            archive_path = "%s/" % component.configured_path
+            archive_path = "%s/" % component.path
         else:
-            # component.configured_path points to the file
-            archive_path = component.configured_path
+            # component.path points to the file
+            archive_path = component.path
 
         return ["rsync", "-av", "--delete", archive_path, rsync_target_dir] + exclude_args
 
     def _get_subtar_command(self, component, source_dir, tarfile_target_dir):
-        # type: (SnapshotComponent, str, str) -> Command
-        if component.component_type == "dir":
+        # type: (ReplicationPath, str, str) -> Command
+        if component.ty == "dir":
             files_location = [source_dir, "."]
         else:
-            files_location = [source_dir, os.path.basename(component.configured_path)]
+            files_location = [source_dir, os.path.basename(component.path)]
 
         return [
             "tar", "cf",
-            os.path.join(tarfile_target_dir, component.name + ".tar"), "--force-local", "-C"
+            os.path.join(tarfile_target_dir, component.ident + ".tar"), "--force-local", "-C"
         ] + files_location
 
     def _execute_bash_commands(self, commands, debug=False):
@@ -250,54 +199,50 @@ class SnapshotCreationBase(object):
                     _("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s"
                      ) % (command, e))
 
-    def _create_custom_components_tarfiles(self, parsed_custom_components, tarfile_dir):
-        # type: (SnapshotComponentsParser, str) -> None
+    def _create_custom_components_tarfiles(self, custom_components, tarfile_dir):
+        # type: (List[ReplicationPath], str) -> None
         # Add any custom_components
         custom_components_commands = []
-        for component in parsed_custom_components.components:
-            if not os.path.exists(component.configured_path):
+        for component in custom_components:
+            if not os.path.exists(component.path):
                 # Create an empty tarfile for this component
-                tar = tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.name), "w")
+                tar = tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.ident), "w")
                 tar.close()
                 continue
 
-            base_dir = component.configured_path if component.component_type == "dir" else os.path.dirname(
-                component.configured_path)
+            base_dir = component.path if component.ty == "dir" else os.path.dirname(component.path)
 
             custom_components_commands.append(
                 self._get_subtar_command(component, base_dir, tarfile_dir))
         self._execute_bash_commands(custom_components_commands)
 
-    def _get_snapshot_fingerprint(self, parsed_generic_components, parsed_custom_components):
-        # type: (SnapshotComponentsParser, SnapshotComponentsParser) -> Tuple[str, ...]
-        custom_components_md5sum = self._get_custom_components_md5sum(parsed_custom_components)
-        return tuple(
-            sorted(c.name for c in parsed_generic_components.components) +
-            [custom_components_md5sum])
+    def _get_snapshot_fingerprint(self, generic_components, custom_components):
+        # type: (List[ReplicationPath], List[ReplicationPath]) -> Tuple[str, ...]
+        custom_components_md5sum = self._get_custom_components_md5sum(custom_components)
+        return tuple(sorted(c.ident for c in generic_components) + [custom_components_md5sum])
 
-    def _get_custom_components_md5sum(self, parsed_custom_components):
-        # type: (SnapshotComponentsParser) -> str
-        if not parsed_custom_components.components:
+    def _get_custom_components_md5sum(self, custom_components):
+        # type: (List[ReplicationPath]) -> str
+        if not custom_components:
             return ""
 
         # Note: currently there is only one custom component, the sitespecific.mk
         #       If there additional custom components in the future this call will fail
         #       This function raises an exception in case of an unknown component
         def is_supported(component):
-            # type: (SnapshotComponent) -> bool
-            return (component.name == "sitespecific" and  #
-                    component.component_type == "file" and  #
-                    component.configured_path.endswith("sitespecific.mk"))
+            # type: (ReplicationPath) -> bool
+            return (component.ident == "sitespecific" and  #
+                    component.ty == "file" and  #
+                    component.path.endswith("sitespecific.mk"))
 
-        for component in parsed_custom_components.components:
+        for component in custom_components:
             if not is_supported(component):
                 raise MKGeneralException(
                     _("Identical snapshot detection not supported. Cannot create md5sum. "
                       "Unsupported custom snapshot component: %s.") % str(component))
 
         # Simply compute the checksum of the sitespecific.mk
-        return hashlib.md5(
-            open(parsed_custom_components.components[0].configured_path, "rb").read()).hexdigest()
+        return hashlib.md5(open(custom_components[0].path, "rb").read()).hexdigest()
 
 
 class SnapshotCreator(SnapshotCreationBase):
@@ -305,7 +250,7 @@ class SnapshotCreator(SnapshotCreationBase):
         # type: (str, List[ReplicationPath]) -> None
         super(SnapshotCreator, self).__init__(work_dir)
         self._setup_directories()
-        self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
+        self._generic_components = all_generic_components
         self._worker_subprocesses = []  # type: List[multiprocessing.Process]
 
     def generate_snapshot(self, target_filepath, generic_components, custom_components,
@@ -353,19 +298,17 @@ class SnapshotCreator(SnapshotCreationBase):
         # type: () -> None
         bash_commands = []  # type: List[Command]
         prepare_start_time = time.time()
-        for component in self._parsed_generic_components.components:
-            assert component.name is not None
-            rsync_target_dir = os.path.join(self._rsync_target_dir, component.name)
+        for component in self._generic_components:
+            rsync_target_dir = os.path.join(self._rsync_target_dir, component.ident)
             os.makedirs(rsync_target_dir)
 
-            assert component.configured_path is not None
-            if os.path.exists(component.configured_path):
+            if os.path.exists(component.path):
                 bash_commands.extend(
                     self._get_rsync_and_tar_commands(component, rsync_target_dir,
                                                      self._tarfile_dir))
             else:
                 # create an empty tarfile for this component
-                tar = tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.name), "w")
+                tar = tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.ident), "w")
                 tar.close()
 
         self._execute_bash_commands(bash_commands)

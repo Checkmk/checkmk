@@ -173,6 +173,20 @@ def _hostname_from_name_and_region(name, region):
     return "%s_%s" % (name, region)
 
 
+def _elbv2_load_balancer_arn_to_dim(arn):
+    # for application load balancers:
+    # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
+    # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
+    # for network load balancers:
+    # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/net/load-balancer-name/load-balancer-id
+    # We need: net/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
+    return "/".join(arn.split("/")[-3:])
+
+
+def _elbv2_target_group_arn_to_dim(arn):
+    return arn.split(':')[-1]
+
+
 def _describe_dynamodb_tables(client,
                               get_response_content,
                               table_names=None,
@@ -2442,16 +2456,6 @@ class ELBv2TargetGroups(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
-def _load_balancer_arn_to_dim(arn):
-    # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
-    # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
-    return "/".join(arn.split("/")[-3:])
-
-
-def _target_group_arn_to_dim(arn):
-    return arn.split(':')[-1]
-
-
 class ELBv2Application(AWSSectionCloudwatch):
     @property
     def name(self):
@@ -2471,7 +2475,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         metrics = []
         for idx, (load_balancer_dns_name,
                   load_balancer) in enumerate(colleague_contents.content.items()):
-            load_balancer_dim = _load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
+            load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
             for metric_name, stat in [
                 ('ActiveConnectionCount', 'Sum'),
                 ('ClientTLSNegotiationErrorCount', 'Sum'),
@@ -2558,7 +2562,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
             if load_balancer_type != 'application':
                 continue
 
-            load_balancer_dim = _load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
+            load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
 
             for target_group in load_balancer['TargetGroups']:
 
@@ -2569,7 +2573,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
                 if target_group['TargetType'] not in target_types:
                     continue
 
-                target_group_dim = _target_group_arn_to_dim(target_group["TargetGroupArn"])
+                target_group_dim = _elbv2_target_group_arn_to_dim(target_group["TargetGroupArn"])
 
                 for metric_name in metrics_to_get:
                     metrics.append({
@@ -2664,9 +2668,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         metrics = []
         for idx, (load_balancer_dns_name,
                   load_balancer) in enumerate(colleague_contents.content.items()):
-            # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/net/load-balancer-name/load-balancer-id
-            # We need: net/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
-            load_balancer_dim = "/".join(load_balancer['LoadBalancerArn'].split("/")[-3:])
+            load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer['LoadBalancerArn'])
             for metric_name, stat in [
                 ('ActiveFlowCount', 'Average'),
                 ('ActiveFlowCount_TLS', 'Average'),

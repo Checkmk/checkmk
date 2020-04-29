@@ -11703,9 +11703,6 @@ msgstr "AWS-Standardschwellwerte"
 msgid "Default line style"
 msgstr "Voreingestellter Linien Stil"
 
-msgid "Default line style"
-msgstr "Voreingestellter Linien Stil"
-
 msgid "Default parameters for detected services"
 msgstr "Standardparameter für erkannte Services"
 

@@ -7,13 +7,17 @@
 import os
 import socket
 import sys
-import urllib2
+
+if sys.version_info[0] >= 3:
+    from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
+else:
+    from urllib2 import quote  # type: ignore[attr-defined] # pylint: disable=import-error
 
 try:
     try:
         import simplejson as json
     except ImportError:
-        import json
+        import json  # type: ignore[no-redef]
 except ImportError:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
@@ -139,9 +143,9 @@ DEFAULT_CONFIG_TUPLES = (
     ("service_url", None),
     ("service_user", None),
     ("service_password", None),
-    ("product", None, "Product description. Available: %s. If not provided," \
-                      " we try to detect the product from the jolokia info section." % \
-                      ", ".join(AVAILABLE_PRODUCTS)),
+    ("product", None, "Product description. Available: %s. If not provided,"
+     " we try to detect the product from the jolokia info section." %
+     ", ".join(AVAILABLE_PRODUCTS)),
     ("timeout", 1.0, "Connection/read timeout for requests."),
     ("custom_vars", []),
     # List of instances to monitor. Each instance is a dict where
@@ -322,9 +326,13 @@ class JolokiaInstance(object):
             raw_response = self._session.post(self.base_url,
                                               data=post_data,
                                               verify=self._session.verify)
-        except () if DEBUG else requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
+            if DEBUG:
+                raise
             raise SkipInstance("Cannot connect to server at %s" % self.base_url)
-        except () if DEBUG else Exception as exc:
+        except Exception as exc:
+            if DEBUG:
+                raise
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
 
@@ -455,7 +463,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
 
     try:
         value = fetch_var(inst, "search", mbean)
-    except () if DEBUG else SkipMBean:
+    except SkipMBean:
+        if DEBUG:
+            raise
         return []
 
     try:
@@ -463,7 +473,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
+    return [("%s/%s" % (quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
 
 
 def _process_queries(inst, queries):
@@ -475,7 +485,9 @@ def _process_queries(inst, queries):
             raise SkipInstance()
         except SkipMBean:
             continue
-        except () if DEBUG else Exception:
+        except Exception:
+            if DEBUG:
+                raise
             continue
 
 
@@ -500,7 +512,7 @@ def generate_jolokia_info(inst):
     # Determine type of server
     try:
         data = fetch_var(inst, "version", "")
-    except (SkipInstance, SkipMBean), exc:
+    except (SkipInstance, SkipMBean) as exc:
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
@@ -538,8 +550,11 @@ def generate_json(inst, mbeans):
             yield inst.name, mbean, json.dumps(obj['value'])
         except (IOError, socket.timeout):
             raise SkipInstance()
-        except SkipMBean if DEBUG else Exception:
+        except SkipMBean:
             pass
+        except Exception:
+            if DEBUG:
+                raise
 
 
 def yield_configured_instances(custom_config=None):

@@ -32,12 +32,12 @@ import multiprocessing
 import logging
 
 try:
-    import ConfigParser as configparser
+    import ConfigParser as configparser  # type: ignore[import]
 except ImportError:  # Python3
-    import configparser
+    import configparser  # type: ignore[import,no-redef]
 
 try:
-    import docker
+    import docker  # type: ignore[import]
 except ImportError:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
@@ -241,7 +241,7 @@ def time_it(func):
         try:
             return func(*args, **kwargs)
         finally:
-            LOGGER.info("%r took %ss", func.func_name, time.time() - before)
+            LOGGER.info("%r took %ss", func.__name__, time.time() - before)
 
     return wrapped
 
@@ -288,7 +288,9 @@ def section_node_disk_usage(client):
     section = Section('node_disk_usage')
     try:
         data = client.df()
-    except () if DEBUG else docker.errors.APIError, exc:
+    except docker.errors.APIError, exc:
+        if DEBUG:
+            raise
         section.write()
         LOGGER.exception(exc)
         return
@@ -473,8 +475,10 @@ def call_node_sections(client, config):
             continue
         try:
             section(client)
-        except () if DEBUG else Exception, exc:
-            report_exception_to_server(exc, section.func_name)
+        except Exception, exc:
+            if DEBUG:
+                raise
+            report_exception_to_server(exc, section.__name__)
 
 
 def call_container_sections(client, config):
@@ -496,14 +500,18 @@ def _call_single_containers_sections(client, config, container_id):
             continue
         try:
             section(client, container_id)
-        except () if DEBUG else Exception, exc:
-            report_exception_to_server(exc, section.func_name)
+        except Exception, exc:
+            if DEBUG:
+                raise
+            report_exception_to_server(exc, section.__name__)
 
     agent_success = False
     if not is_disabled_section(config, 'docker_container_agent'):
         try:
             agent_success = section_container_agent(client, container_id)
-        except () if DEBUG else Exception, exc:
+        except Exception, exc:
+            if DEBUG:
+                raise
             report_exception_to_server(exc, "section_container_agent")
     if agent_success:
         return
@@ -513,8 +521,10 @@ def _call_single_containers_sections(client, config, container_id):
             continue
         try:
             section(client, container_id)
-        except () if DEBUG else Exception, exc:
-            report_exception_to_server(exc, section.func_name)
+        except Exception, exc:
+            if DEBUG:
+                raise
+            report_exception_to_server(exc, section.__name__)
 
 
 #.
@@ -537,7 +547,9 @@ def main():
 
     try:  # first calls by docker-daemon: report failure
         client = MKDockerClient(config)
-    except () if DEBUG else Exception, exc:
+    except Exception, exc:
+        if DEBUG:
+            raise
         report_exception_to_server(exc, "MKDockerClient.__init__")
         sys.exit(1)
 

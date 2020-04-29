@@ -50,10 +50,6 @@ class SnapshotComponentsParser(object):
         for component in component_list:
             self.components.append(SnapshotComponent(component))
 
-    def get_component_names(self):
-        # type: () -> List[str]
-        return [x.name for x in self.components]
-
 
 class SnapshotComponent(object):
     def __init__(self, component):
@@ -144,7 +140,7 @@ class SnapshotCreationBase(object):
                 return
 
         # Generate the final tar command
-        required_subtars = ["%s.tar" % x for x in parsed_generic_components.get_component_names()]
+        required_subtars = ["%s.tar" % c.name for c in parsed_generic_components.components]
         final_tar_command = [
             "tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir
         ] + required_subtars
@@ -157,7 +153,7 @@ class SnapshotCreationBase(object):
 
             self._create_custom_components_tarfiles(parsed_custom_components, tarfile_dir)
             required_custom_subtars = [
-                "%s.tar" % x for x in parsed_custom_components.get_component_names()
+                "%s.tar" % c.name for c in parsed_custom_components.components
             ]
             final_tar_command.extend(["-C", tarfile_dir] + required_custom_subtars)
 
@@ -258,11 +254,12 @@ class SnapshotCreationBase(object):
         # type: (SnapshotComponentsParser, SnapshotComponentsParser) -> Tuple[str, ...]
         custom_components_md5sum = self._get_custom_components_md5sum(parsed_custom_components)
         return tuple(
-            sorted(parsed_generic_components.get_component_names()) + [custom_components_md5sum])
+            sorted(c.name for c in parsed_generic_components.components) +
+            [custom_components_md5sum])
 
     def _get_custom_components_md5sum(self, parsed_custom_components):
         # type: (SnapshotComponentsParser) -> str
-        if not parsed_custom_components:
+        if not parsed_custom_components.components:
             return ""
 
         # Note: currently there is only one custom component, the sitespecific.mk

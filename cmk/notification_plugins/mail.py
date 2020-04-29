@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,23 +12,17 @@
 # attached graphs and such neat stuff. Sweet!
 
 import base64
-import os
-import socket
-import sys
-
-if sys.version_info[0] >= 3:
-    from urllib.parse import quote  # pylint: disable=no-name-in-module,import-error
-    from urllib.request import urlopen  # pylint: disable=no-name-in-module,import-error
-else:
-    from urllib import quote  # pylint: disable=no-name-in-module
-    from urllib2 import urlopen  # noqa: F401 # pylint: disable=import-error
-
-import json
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List  # pylint: disable=unused-import
+import json
+import os
+import socket
+import sys
+from typing import List
+from urllib.parse import quote
+from urllib.request import urlopen
 
 from cmk.notification_plugins import utils
 import cmk.utils.site as site
@@ -506,7 +500,7 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
 
 
 def send_mail_smtp(message, target, from_address, context):
-    import smtplib  # for the error messages
+    import smtplib  # pylint: disable=import-outside-toplevel
     host_index = 1
 
     retry_possible = False
@@ -562,8 +556,8 @@ def send_mail_smtp(message, target, from_address, context):
 
 
 def send_mail_smtp_impl(message, target, smarthost, from_address, context):
-    import smtplib
-    import types
+    import smtplib  # pylint: disable=import-outside-toplevel
+    import types  # pylint: disable=import-outside-toplevel
 
     def getreply_wrapper(self):
         self.last_code, self.last_repl = smtplib.SMTP.getreply(self)
@@ -796,7 +790,7 @@ def body_templates(what, is_alert_handler, elements, body_elements):
 
 
 # TODO: NamedTuple?
-class EmailContent(object):
+class EmailContent:
     def __init__(self, context, mailto, subject, from_address, reply_to, content_txt, content_html,
                  attachments):
         self.context = context

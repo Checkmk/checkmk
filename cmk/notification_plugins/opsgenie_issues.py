@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Optional, Text  # pylint: disable=unused-import
+from typing import Optional, Text
+
 import six
 from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
 from opsgenie.swagger_client import configuration  # pylint: disable=import-error
@@ -14,6 +15,7 @@ from opsgenie.swagger_client.rest import ApiException  # type: ignore[import] # 
 from opsgenie.swagger_client.models import CloseAlertRequest  # pylint: disable=import-error
 from opsgenie.swagger_client.models import CreateAlertRequest  # pylint: disable=import-error
 from opsgenie.swagger_client.models import TeamRecipient  # pylint: disable=import-error
+
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # SMS (using smstools)
 
@@ -21,9 +21,8 @@ for binary in ['sendsms', 'smssend']:
         send_path = binary
 
 smsd_user = 'smsd'
-spool_dir = '/var/spool/sms/outgoing'
-if not os.path.exists(spool_dir):
-    spool_dir = None
+spool_dir_ = '/var/spool/sms/outgoing'
+spool_dir = spool_dir_ if os.path.exists(spool_dir_) else None
 
 if not send_path and not spool_dir:
     sys.stderr.write(
@@ -91,7 +90,8 @@ elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper
     # script. On this distro, simply drop the SMS in the outgoing spool directory.
     fd, path = tempfile.mkstemp(prefix='cmk_sms_')
-    os.write(fd, 'To: %s\n\n%s' % (recipient, quote_message(message)))
+    os.write(fd,
+             b'To: %s\n\n%s' % (recipient.encode("utf-8"), quote_message(message).encode("utf-8")))
     os.close(fd)
     os.chmod(path, 0o660)
     filename = path.split('/')[-1]

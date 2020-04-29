@@ -1,0 +1,12 @@
+Title: Analyze configuration: Avoid crash on timeout when contacting remote sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p25
+Date: 1588168378
+Class: fix
+
+In case of connection problems of remote sites, the analyze config page crashes
+with a RequestTimeout. From now on, a warning message is displayed for failed
+sites and the page is rendered correctly.

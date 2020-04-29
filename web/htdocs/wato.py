@@ -17636,6 +17636,7 @@ class ModeAnalyzeConfig(WatoMode):
         result_queue = multiprocessing.JoinableQueue()
 
         processes = []
+        failed_sites = []
         for site_id in test_site_ids:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
@@ -17650,7 +17651,8 @@ class ModeAnalyzeConfig(WatoMode):
                 result = ast.literal_eval(results_data)
 
                 if result["state"] == 1:
-                    raise MKGeneralException(result["response"])
+                    failed_sites.append(site_id)
+                    continue
 
                 elif result["state"] == 0:
                     test_results = []
@@ -17669,6 +17671,11 @@ class ModeAnalyzeConfig(WatoMode):
             except Exception, e:
                 log_exception()
                 html.show_error("%s: %s" % (site_id, e))
+
+        if failed_sites:
+            html.show_warning("Could not fetch data for site: "
+                              "%s See ~/var/log/web.log for "
+                              "details." % " ".join(failed_sites))
 
         self._logger.debug("Got test results")
 
@@ -17720,7 +17727,7 @@ class ModeAnalyzeConfig(WatoMode):
 
             else:
                 results_data = watolib.do_remote_automation(
-                    config.site(site_id), "check-analyze-config", [])
+                    config.site(site_id), "check-analyze-config", [], html.get_request_timeout() - 10)
 
             self._logger.debug("[%s] Finished" % site_id)
 

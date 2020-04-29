@@ -4344,7 +4344,7 @@ def sync_changes_before_remote_automation(site_id):
                          state.get("_status_details"))
 
 
-def do_remote_automation(site, command, vars):
+def do_remote_automation(site, command, vars, timeout=None):
     base_url = site["multisiteurl"]
     secret = site.get("secret")
     if not secret:
@@ -4357,7 +4357,7 @@ def do_remote_automation(site, command, vars):
                ("debug",   config.debug and '1' or '')
         ])
 
-    response = get_url(url, site.get('insecure', False), data=dict(vars))
+    response = get_url(url, site.get('insecure', False), data=dict(vars), timeout=timeout)
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))

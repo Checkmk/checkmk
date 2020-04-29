@@ -18,7 +18,7 @@ from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable
 ContextName = str
 OID = str
 SNMPValueEncoding = str
-Column = Union[str, Tuple[SNMPValueEncoding, str]]
+Column = Union[str, int, Tuple[SNMPValueEncoding, str]]
 Columns = List[Column]
 OIDWithColumns = Tuple[OID, Columns]
 OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]

@@ -371,7 +371,7 @@ def test_get_simple_snmp_table(snmp_config):
 def test_get_simple_snmp_table_oid_end(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", str(snmp_utils.OID_END)],
+        ["1", "2", "3", snmp_utils.OID_END],
     )  # type: snmp_utils.OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
@@ -388,7 +388,7 @@ def test_get_simple_snmp_table_oid_end(snmp_config):
 def test_get_simple_snmp_table_oid_string(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", str(snmp_utils.OID_STRING)],
+        ["1", "2", "3", snmp_utils.OID_STRING],
     )  # type: snmp_utils.OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
@@ -405,7 +405,7 @@ def test_get_simple_snmp_table_oid_string(snmp_config):
 def test_get_simple_snmp_table_oid_bin(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", str(snmp_utils.OID_BIN)],
+        ["1", "2", "3", snmp_utils.OID_BIN],
     )  # type: snmp_utils.OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
@@ -422,7 +422,7 @@ def test_get_simple_snmp_table_oid_bin(snmp_config):
 def test_get_simple_snmp_table_oid_end_bin(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", str(snmp_utils.OID_END_BIN)],
+        ["1", "2", "3", snmp_utils.OID_END_BIN],
     )  # type: snmp_utils.OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,

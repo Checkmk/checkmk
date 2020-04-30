@@ -486,9 +486,13 @@ def write_agent_output(args):
                         "max_disk": node["maxdisk"],
                     },
                 },
-                # {  # Todo
-                #    "name": "proxmox_mem_usage",
-                # },
+                {
+                    "name": "proxmox_mem_usage",
+                    "data": {
+                        "mem": node["mem"],
+                        "max_mem": node["maxmem"],
+                    },
+                },
                 {
                     "name": "uptime",
                     "data": node["uptime"],
@@ -518,9 +522,13 @@ def write_agent_output(args):
                     },
                     "skip": vm["type"] == 'qemu',
                 },
-                # {  # Todo
-                #    "name": "proxmox_mem_usage",
-                # },
+                {
+                    "name": "proxmox_mem_usage",
+                    "data": {
+                        "mem": vm["mem"],
+                        "max_mem": vm["maxmem"],
+                    },
+                },
                 {
                     "name": "proxmox_vm_backup_status",
                     "data": {

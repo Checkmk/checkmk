@@ -99,7 +99,6 @@ import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
-import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -110,7 +109,34 @@ import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-impor
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
-import cmk.base.check_api_utils as _check_api_utils
+from cmk.base.snmp_utils import (
+    OID_END,
+    OID_STRING,
+    OID_BIN,
+    OID_END_BIN,
+    OID_END_OCTET_STRING,
+    binstring_to_int,
+)
+from cmk.base.check_api_utils import (
+    # Symbolic representations of states in plugin output
+    state_markers,
+    # Management board checks
+    MGMT_ONLY,  # Use host address/credentials when it's a SNMP HOST
+    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces)
+    host_name,
+    service_description,
+    check_type,
+    Service,
+)
+from cmk.utils.rulesets.tuple_rulesets import (
+    # TODO: Only used by logwatch check. Can we clean this up?
+    get_rule_options,
+    # These functions were used in some specific checks until 1.6. Don't add it to
+    # the future check API. It's kept here for compatibility reasons for now.
+    in_extraconf_hostlist,
+    hosttags_match_taglist,
+)
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, CheckPluginName, MetricName,
 )
@@ -145,34 +171,14 @@ def get_check_api_context():
 # Names of texts usually output by checks
 core_state_names = _defines.short_service_state_names()
 
-# Symbolic representations of states in plugin output
-state_markers = _check_api_utils.state_markers
-
 # backwards compatibility: allow to pass integer.
 BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
 CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
-
-OID_END = _snmp_utils.OID_END
-OID_STRING = _snmp_utils.OID_STRING
-OID_BIN = _snmp_utils.OID_BIN
-OID_END_BIN = _snmp_utils.OID_END_BIN
-OID_END_OCTET_STRING = _snmp_utils.OID_END_OCTET_STRING
-binstring_to_int = _snmp_utils.binstring_to_int
-
-# Management board checks
-MGMT_ONLY = _check_api_utils.MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY = _check_api_utils.HOST_ONLY  # Check is only executed for real SNMP host (e.g. interfaces)
-
-host_name = _check_api_utils.host_name
-service_description = _check_api_utils.service_description
-check_type = _check_api_utils.check_type
 
 from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
     HostLabel,
 )
-Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
@@ -231,15 +237,6 @@ def in_binary_hostlist(hostname, ruleset):
 def host_extra_conf_merged(hostname, conf):
     # type: (HostName, _config.Ruleset) -> Dict[str, Any]
     return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
-
-
-# TODO: Only used by logwatch check. Can we clean this up?
-get_rule_options = _tuple_rulesets.get_rule_options
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-in_extraconf_hostlist = _tuple_rulesets.in_extraconf_hostlist
-hosttags_match_taglist = _tuple_rulesets.hosttags_match_taglist
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to

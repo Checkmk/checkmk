@@ -208,6 +208,7 @@ def editions():
         yield ("cme", "CMESnapshotDataCollector")
 
 
+@pytest.mark.skip("Enable once new sync mechanism is in place")
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
                            with_user):

@@ -654,7 +654,7 @@ class ActivateChangesManager(ActivateChanges):
             self._check_snapshot_creation_permissions(site_id)
 
             site_config = config.sites[site_id]
-            site_status = self._get_site_status(site_id, site_config)[0]
+            #site_status = self._get_site_status(site_id, site_config)[0]
             work_dir = cmk.utils.paths.site_config_dir / site_id
 
             snapshot_components = _get_replication_components(str(work_dir), site_config)
@@ -668,7 +668,7 @@ class ActivateChangesManager(ActivateChanges):
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
-                create_pre_17_snapshot=_is_pre_17_remote_site(site_status),
+                create_pre_17_snapshot=True,  # _is_pre_17_remote_site(site_status),
             )
 
         return snapshot_settings

@@ -50,7 +50,7 @@ def _get_python_plugins():
 @pytest.mark.parametrize("python_version", ["2.5", "2.6", "2.7"])
 def test_agent_plugin_syntax_compatibility(python_container, plugin_path, python_version):
     _exit_code, output = python_container.exec_run(
-        ["python%s" % python_version, ("%s/%s" % (testlib.cmk_path(), plugin_path))],
+        ["python%s" % python_version, ("/cmk/%s" % plugin_path)],
         workdir="/cmk",
     )
 

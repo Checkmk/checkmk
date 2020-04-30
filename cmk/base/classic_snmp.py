@@ -18,9 +18,10 @@ import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.exceptions import MKSNMPError
 from cmk.base.snmp_utils import SNMPHostConfig, ContextName, RawValue, OID
+from cmk.fetchers.snmp_backend import ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
 
 
-class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
+class ClassicSNMPBackend(ABCSNMPBackend):
     def get(self, snmp_config, oid, context_name=None):
         # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
         if oid.endswith(".*"):

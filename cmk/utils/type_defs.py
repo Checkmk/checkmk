@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk wide type definitions"""
 
-from typing import Union, NewType, Any, Text, Optional, Dict, Set, List, Tuple
+from typing import Union, NamedTuple, NewType, Any, Text, Optional, Dict, Set, List, Tuple
 
 HostName = str
 HostAddress = str
@@ -60,6 +60,50 @@ BakeryHostName = Union[bool, None, HostName]
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
 TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
+
+ContextName = str
+OID = str
+RawValue = bytes
+SNMPRowInfo = List[Tuple[OID, RawValue]]
+
+# TODO: Be more specific about the possible tuples
+# if the credentials are a string, we use that as community,
+# if it is a four-tuple, we use it as V3 auth parameters:
+# (1) security level (-l)
+# (2) auth protocol (-a, e.g. 'md5')
+# (3) security name (-u)
+# (4) auth password (-A)
+# And if it is a six-tuple, it has the following additional arguments:
+# (5) privacy protocol (DES|AES) (-x)
+# (6) privacy protocol pass phrase (-X)
+SNMPCommunity = str
+# TODO: This does not work as intended
+#SNMPv3NoAuthNoPriv = Tuple[str, str]
+#SNMPv3AuthNoPriv = Tuple[str, str, str, str]
+#SNMPv3AuthPriv = Tuple[str, str, str, str, str, str]
+#SNMPCredentials = Union[SNMPCommunity, SNMPv3NoAuthNoPriv, SNMPv3AuthNoPriv, SNMPv3AuthPriv]
+SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
+
+# TODO: Cleanup to named tuple
+SNMPTiming = Dict
+
+# Wraps the configuration of a host into a single object for the SNMP code
+SNMPHostConfig = NamedTuple("SNMPHostConfig", [
+    ("is_ipv6_primary", bool),
+    ("hostname", HostName),
+    ("ipaddress", HostAddress),
+    ("credentials", SNMPCredentials),
+    ("port", int),
+    ("is_bulkwalk_host", bool),
+    ("is_snmpv2or3_without_bulkwalk_host", bool),
+    ("bulk_walk_size_of", int),
+    ("timing", SNMPTiming),
+    ("oid_range_limits", list),
+    ("snmpv3_contexts", list),
+    ("character_encoding", Optional[str]),
+    ("is_usewalk_host", bool),
+    ("is_inline_snmp_host", bool),
+])
 
 
 # TODO: We should really parse our configuration file and use a

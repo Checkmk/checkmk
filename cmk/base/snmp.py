@@ -31,6 +31,7 @@ from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.fetchers.snmp_backend import ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
 
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
@@ -378,7 +379,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
     @staticmethod
     def factory(snmp_config, enforce_stored_walks):
-        # type: (SNMPHostConfig, bool) -> snmp_utils.ABCSNMPBackend
+        # type: (SNMPHostConfig, bool) -> ABCSNMPBackend
         if enforce_stored_walks or snmp_config.is_usewalk_host:
             return StoredWalkSNMPBackend()
 
@@ -388,7 +389,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
         return classic_snmp.ClassicSNMPBackend()
 
 
-class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
+class StoredWalkSNMPBackend(ABCSNMPBackend):
     def get(self, snmp_config, oid, context_name=None):
         # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
         walk = self.walk(snmp_config, oid)
@@ -508,7 +509,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
     if snmp_config.is_inline_snmp_host:
-        backend = inline_snmp.InlineSNMPBackend()  # type: snmp_utils.ABCSNMPBackend
+        backend = inline_snmp.InlineSNMPBackend()  # type: ABCSNMPBackend
     else:
         backend = classic_snmp.ClassicSNMPBackend()
 

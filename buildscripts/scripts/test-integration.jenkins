@@ -130,6 +130,9 @@ try {
                                     'ubuntu-19.10')
                                         DISTRO_CODE='_0.eoan_amd64.deb'
                                         ;;
+                                    'ubuntu-20.04')
+                                        DISTRO_CODE='_0.focal_amd64.deb'
+                                        ;;
                                     'centos-6')
                                         DISTRO_CODE='-el6-38.x86_64.rpm'
                                         ;;

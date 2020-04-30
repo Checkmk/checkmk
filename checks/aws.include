@@ -212,20 +212,16 @@ def check_aws_error_rate(error_rate, request_rate, metric_name_rate, metric_name
 def check_aws_http_elb(params, parsed, http_err_codes, cloudwatch_metrics_format):
 
     request_rate = parsed.get('RequestCount')
-    if request_rate is not None:
-        yield check_aws_request_rate(request_rate)
-    else:
-        request_rate = 0
+    if request_rate is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+
+    yield check_aws_request_rate(request_rate)
 
     for http_err_code in http_err_codes:
-
-        http_error_rate = parsed.get(cloudwatch_metrics_format % http_err_code.upper())
-        if http_error_rate is None:
-            http_error_rate = 0  # CloudWatch only reports HTTPCode_... if the value is nonzero
-
-        for result in check_aws_error_rate(http_error_rate, request_rate,
-                                           'aws_http_%s_rate' % http_err_code,
-                                           'aws_http_%s_perc' % http_err_code,
-                                           params.get('levels_http_%s_perc' % http_err_code),
-                                           "%s-Errors" % http_err_code.upper()):
+        # CloudWatch only reports HTTPCode_... if the value is nonzero
+        for result in check_aws_error_rate(
+                parsed.get(cloudwatch_metrics_format % http_err_code.upper(), 0), request_rate,
+                'aws_http_%s_rate' % http_err_code, 'aws_http_%s_perc' % http_err_code,
+                params.get('levels_http_%s_perc' % http_err_code),
+                "%s-Errors" % http_err_code.upper()):
             yield result

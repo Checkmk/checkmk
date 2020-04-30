@@ -22,6 +22,9 @@ def _aws_wafv2_web_acl_human_readable_rate(f):
 
 def check_aws_wafv2_web_acl(item, params, parsed):
 
+    if len(parsed) == 0:
+        raise MKCounterWrapped("Currently no data from AWS")
+
     metric_ids = ['AllowedRequests', 'BlockedRequests']
     # the metrics used here are only reported if they are not zero
     metric_vals = [parsed.get(metric_id, 0) for metric_id in metric_ids]
@@ -58,8 +61,8 @@ def check_aws_wafv2_web_acl(item, params, parsed):
 
 check_info['aws_wafv2_web_acl'] = {
     'parse_function': parse_aws_wafv2_web_acl,
-    # we always discover because Cloudwatch only reports the metrics used here if they are non-zero
-    'inventory_function': lambda p: inventory_aws_generic_single(p, []),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, ['AllowedRequests', 'BlockedRequests'], requirement=any),
     'check_function': check_aws_wafv2_web_acl,
     'service_description': 'AWS/WAFV2 Web ACL Requests',
     'group': 'aws_wafv2_web_acl',

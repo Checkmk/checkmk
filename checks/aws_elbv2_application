@@ -47,7 +47,9 @@ def parse_aws_elbv2_application(info):
 
 
 def check_aws_elbv2_application_lcu(item, params, parsed):
-    lcus = parsed['ConsumedLCUs']
+    lcus = parsed.get('ConsumedLCUs')
+    if lcus is None:
+        raise MKCounterWrapped("Currently no data from AWS")
     yield check_levels(lcus,
                        'aws_consumed_lcus',
                        params.get('levels'),
@@ -90,6 +92,7 @@ def inventory_aws_elbv2_application_connections(parsed):
 
 
 def check_aws_elbv2_application_connections(item, params, parsed):
+    go_stale = True
     for conn_ty, (key, title) in zip(_aws_elbv2_application_connection_types, [
         ('Active', 'active'),
         ('New', 'new'),
@@ -99,11 +102,14 @@ def check_aws_elbv2_application_connections(item, params, parsed):
         conns = parsed.get(conn_ty)
         if conns is None:
             continue
+        go_stale = False
         yield check_levels(conns,
                            'aws_%s_connections' % key,
                            None,
                            human_readable_func=int,
                            infoname=title)
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
 
 
 check_info['aws_elbv2_application.connections'] = {
@@ -153,6 +159,7 @@ check_info['aws_elbv2_application.http_elb'] = {
 
 
 def check_aws_elbv2_application_http_redirects(item, params, parsed):
+    go_stale = True
     for redirect_ty, title, key in [
         ('HTTP_Redirect_Count', 'Successful', 'http_redirects'),
         ('HTTP_Redirect_Url_Limit_Exceeded_Count', 'Not completed', 'http_redirect_url_limit'),
@@ -161,7 +168,10 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed):
         redirects = parsed.get(redirect_ty)
         if redirects is None:
             continue
+        go_stale = False
         yield check_levels(redirects, 'aws_%s' % key, None, human_readable_func=int, infoname=title)
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
 
 
 check_info['aws_elbv2_application.http_redirects'] = {
@@ -198,8 +208,10 @@ def inventory_aws_elbv2_application_statistics(parsed):
 
 
 def check_aws_elbv2_application_statistics(item, params, parsed):
+    go_stale = True
     processed_bytes = parsed.get('ProcessedBytes')
     if processed_bytes is not None:
+        go_stale = False
         yield check_levels(processed_bytes,
                            "aws_proc_bytes",
                            None,
@@ -208,6 +220,7 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
     ipv6_processed_bytes = parsed.get('IPv6ProcessedBytes')
     if ipv6_processed_bytes is not None:
+        go_stale = False
         yield check_levels(ipv6_processed_bytes,
                            "aws_ipv6_proc_bytes",
                            None,
@@ -216,6 +229,7 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
     ipv6_requests = parsed.get('IPv6RequestCount')
     if ipv6_requests is not None:
+        go_stale = False
         yield check_levels(ipv6_requests,
                            "aws_ipv6_requests",
                            None,
@@ -224,11 +238,14 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
     rule_evaluations = parsed.get('RuleEvaluations')
     if rule_evaluations is not None:
+        go_stale = False
         yield check_levels(rule_evaluations,
                            'aws_rule_evaluations',
                            None,
                            human_readable_func=int,
                            infoname="Rule evaluations")
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
 
 
 check_info['aws_elbv2_application.statistics'] = {

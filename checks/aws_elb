@@ -50,7 +50,12 @@ factory_settings['aws_elb_statistics'] = {
 
 
 def check_aws_elb_statistics(item, params, parsed):
+
     queue_length = parsed.get('SurgeQueueLength')
+    spillover = parsed.get('SpilloverCount')
+    if queue_length is spillover is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+
     if queue_length is not None:
         yield check_levels(queue_length,
                            'aws_surge_queue_length',
@@ -89,12 +94,15 @@ check_info['aws_elb'] = {
 
 
 def check_aws_elb_latency(item, params, parsed):
+
     latency = parsed.get("Latency")
-    if latency is not None:
-        yield check_levels(latency,
-                           'aws_load_balancer_latency',
-                           params.get('levels_latency'),
-                           human_readable_func=get_age_human_readable)
+    if latency is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+
+    yield check_levels(latency,
+                       'aws_load_balancer_latency',
+                       params.get('levels_latency'),
+                       human_readable_func=get_age_human_readable)
 
 
 check_info['aws_elb.latency'] = {
@@ -168,15 +176,23 @@ check_info['aws_elb.http_backend'] = {
 
 
 def check_aws_elb_healthy_hosts(item, params, parsed):
+
+    go_stale = True
+
     try:
         healthy_hosts = int(parsed["HealthyHostCount"])
+        go_stale = False
     except (KeyError, ValueError):
         healthy_hosts = None
 
     try:
         unhealthy_hosts = int(parsed["UnHealthyHostCount"])
+        go_stale = False
     except (KeyError, ValueError):
         unhealthy_hosts = None
+
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
 
     if healthy_hosts is not None:
         yield 0, 'Healthy hosts: %s' % healthy_hosts
@@ -229,13 +245,14 @@ check_info['aws_elb.healthy_hosts'] = {
 
 def check_aws_elb_backend_connection_errors(item, params, parsed):
     backend_connection_error_rate = parsed.get("BackendConnectionErrors")
-    if backend_connection_error_rate is not None:
-        yield check_levels(
-            backend_connection_error_rate,
-            'aws_backend_connection_errors_rate',
-            params.get('levels_backend_connection_errors_rate'),
-            human_readable_func=lambda f: get_number_with_precision(f, unit='/s', precision=3),
-            infoname='Backend connection errors')
+    if backend_connection_error_rate is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+    yield check_levels(
+        backend_connection_error_rate,
+        'aws_backend_connection_errors_rate',
+        params.get('levels_backend_connection_errors_rate'),
+        human_readable_func=lambda f: get_number_with_precision(f, unit='/s', precision=3),
+        infoname='Backend connection errors')
 
 
 check_info['aws_elb.backend_connection_errors'] = {

@@ -10,14 +10,17 @@ def parse_aws_elbv2_target_groups_lambda(info):
     return metrics
 
 
-@get_parsed_item_data
-def check_aws_application_elb_target_groups_lambda(item, params, data):
+def check_aws_application_elb_target_groups_lambda(item, params, parsed):
+
+    data = parsed.get(item)
+    if data is None:
+        raise MKCounterWrapped("Currently no data from AWS")
 
     request_rate = data.get('RequestCount')
-    if request_rate is not None:
-        yield check_aws_request_rate(request_rate)
-    else:
-        request_rate = 0
+    if request_rate is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+
+    yield check_aws_request_rate(request_rate)
 
     lambda_error_rate = data.get('LambdaUserError')
     if lambda_error_rate is None:

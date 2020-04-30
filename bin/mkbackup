@@ -590,7 +590,7 @@ def mode_backup(local_job_id, opts):
         daemon.daemonize()
         save_state({"pid": os.getpid()})
 
-    start_logging()
+    # start_logging()
     log("--- Starting backup (%s to %s) ---" % (g_job_id, target_ident))
 
     success = False
@@ -616,7 +616,7 @@ def mode_backup(local_job_id, opts):
         sys.stderr.write(traceback.format_exc())
 
     finally:
-        stop_logging()
+        # stop_logging()
         save_state({
             "state": "finished",
             "finished": time.time(),
@@ -1478,7 +1478,7 @@ def mode_restore(target_id, backup_id, opts):
         daemon.daemonize()
         save_state({"pid": os.getpid()})
 
-    start_logging()
+    # start_logging()
     log("--- Starting restore (%s) ---" % g_backup_id)
 
     success = False
@@ -1502,7 +1502,7 @@ def mode_restore(target_id, backup_id, opts):
         sys.stderr.write(traceback.format_exc())
 
     finally:
-        stop_logging()
+        # stop_logging()
         save_state({
             "state": "finished",
             "finished": time.time(),

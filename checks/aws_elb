@@ -230,8 +230,12 @@ check_info['aws_elb.healthy_hosts'] = {
 def check_aws_elb_backend_connection_errors(item, params, parsed):
     backend_connection_error_rate = parsed.get("BackendConnectionErrors")
     if backend_connection_error_rate is not None:
-        yield check_levels(backend_connection_error_rate, 'backend_connection_errors_rate',
-                           params.get('levels_backend_connection_errors_rate'))
+        yield check_levels(
+            backend_connection_error_rate,
+            'aws_backend_connection_errors_rate',
+            params.get('levels_backend_connection_errors_rate'),
+            human_readable_func=lambda f: get_number_with_precision(f, unit='/s', precision=3),
+            infoname='Backend connection errors')
 
 
 check_info['aws_elb.backend_connection_errors'] = {

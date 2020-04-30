@@ -302,7 +302,7 @@ metric_info['aws_http_fixed_response'] = {
     'color': '11/a',
 }
 
-metric_info['aws__proc_bytes'] = {
+metric_info['aws_proc_bytes'] = {
     'title': _('Processed Bytes'),
     'unit': 'bytes',
     'color': '11/a',

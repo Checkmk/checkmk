@@ -2054,3 +2054,8 @@ for check_name in ["aws_elb.http_elb", "aws_elb.http_backend", "aws_elbv2_applic
             "name": "aws_http_5xx_perc"
         },
     }
+check_metrics["check_mk-aws_elb.backend_connection_errors"] = {
+    "backend_connection_errors_rate": {
+        "name": "aws_backend_connection_errors_rate"
+    },
+}

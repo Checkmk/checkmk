@@ -110,7 +110,7 @@ def sections_replica(server_status):
 def sections_replica_set(client):
     try:
         rep_set_status = client.admin.command("replSetGetStatus")
-    except pymongo.errors.OperationFailure as e:
+    except pymongo.errors.OperationFailure, e:
         sys.stderr.write("%s\n" % e)
         return
 
@@ -532,7 +532,7 @@ def _get_indexes_information(client, databases):
                     collection_name].aggregate([{
                         "$indexStats": {},
                     }])
-            except pymongo.errors.OperationFailure as e:
+            except pymongo.errors.OperationFailure, e:
                 sys.stderr.write("%s\n" % e)
                 return
 

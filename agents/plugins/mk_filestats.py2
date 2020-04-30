@@ -176,20 +176,20 @@ class FileStat(object):
         path = self.path.encode('utf8')
         try:
             stat = os.stat(path)
-        except OSError as exc:
+        except OSError, exc:
             self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
 
         try:
             self.size = int(stat.st_size)
-        except ValueError as exc:
+        except ValueError, exc:
             self.stat_status = str(exc)
             return
 
         try:
             self._m_time = int(stat.st_mtime)
             self.age = int(time.time()) - self._m_time
-        except ValueError as exc:
+        except ValueError, exc:
             self.stat_status = str(exc)
             return
 

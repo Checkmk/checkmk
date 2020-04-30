@@ -31,7 +31,7 @@ import datetime
 # already loaded.
 try:
     import sapnwrfc
-except ImportError as e:
+except ImportError, e:
     if 'sapnwrfc.so' in str(e):
         sys.stderr.write(
             'Unable to find the library sapnwrfc.so. Maybe you need to put a file pointing to\n'
@@ -475,12 +475,12 @@ try:
         try:
             check(entry)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tOK\n' % entry['ashost'])
-        except sapnwrfc.RFCCommunicationError as e:
+        except sapnwrfc.RFCCommunicationError, e:
             sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n' %\
                              (entry['ashost'], e))
             processed_all = False
-        except Exception as e:
+        except Exception, e:
             sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n' %\
                              (entry['ashost'], e))
@@ -504,7 +504,7 @@ try:
         os.close(state_fd)
         os.rename(STATE_FILE + '.new', STATE_FILE)
 
-except Exception as e:
+except Exception, e:
     sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
 
 sys.exit(0)

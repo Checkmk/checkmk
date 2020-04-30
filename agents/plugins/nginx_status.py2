@@ -110,7 +110,7 @@ for server in servers:
         try:
             request = urllib2.Request(url, headers={"Accept": "text/plain"})
             fd = urllib2.urlopen(request)
-        except urllib2.URLError as e:
+        except urllib2.URLError, e:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
@@ -126,8 +126,8 @@ for server in servers:
                 # seems to be html output. Skip this server.
                 break
             sys.stdout.write("%s %s %s\n" % (address, port, line))
-    except urllib2.HTTPError as e:
+    except urllib2.HTTPError, e:
         sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))
 
-    except Exception as e:
+    except Exception, e:
         sys.stderr.write('Exception (%s:%d): %s\n' % (address, port, e))

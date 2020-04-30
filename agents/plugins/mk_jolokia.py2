@@ -330,7 +330,7 @@ class JolokiaInstance(object):
             if DEBUG:
                 raise
             raise SkipInstance("Cannot connect to server at %s" % self.base_url)
-        except Exception as exc:
+        except Exception, exc:
             if DEBUG:
                 raise
             sys.stderr.write("ERROR: %s\n" % exc)

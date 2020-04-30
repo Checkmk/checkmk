@@ -57,7 +57,7 @@ write-host $myCdpJobsText
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
 $myTaskText = ""
 
-$myBackupJobs = Get-VBRJob | where {$_.IsScheduleEnabled -eq $true }
+$myBackupJobs = Get-VBRJob -WarningAction SilentlyContinue | where {$_.IsScheduleEnabled -eq $true }
 
 foreach ($myJob in $myBackupJobs)
     {

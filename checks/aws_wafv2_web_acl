@@ -23,14 +23,8 @@ def _aws_wafv2_web_acl_human_readable_rate(f):
 def check_aws_wafv2_web_acl(item, params, parsed):
 
     metric_ids = ['AllowedRequests', 'BlockedRequests']
-    metric_vals = []
-
-    for metric_id in metric_ids:
-        metric_val = parsed.get(metric_id)
-        if metric_val is None:
-            metric_val = 0  # the metrics used here are only reported if they are not zero
-        metric_vals.append(metric_val)
-
+    # the metrics used here are only reported if they are not zero
+    metric_vals = [parsed.get(metric_id, 0) for metric_id in metric_ids]
     requests_total = sum(metric_vals)
 
     yield check_levels(requests_total,

@@ -144,6 +144,28 @@ foreach ($myJob in $myBackupJobs)
 
     }
 
+$myBackupJobs = Get-VBREPJob | where {$_.IsEnabled -eq $true }
+
+foreach ($myJob in $myBackupJobs)
+    {
+	$myJobName = $myJob.Name -replace "\'","_" -replace " ","_"
+
+	$myJobType = $myjob.Description
+
+	$myJobLastState = $myJob.LastState
+
+	$myJobLastResult = $myJob.LastResult
+
+	$myJobLastSession = (Get-VBREPSession -Name $myJobName)[-1]
+
+	$myJobCreationTime = $myJobLastSession.CreationTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+
+	$myJobEndTime = $myJobLastSession.EndTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+
+	$myJobsText = "$myJobsText" + "$myJobName" + "`t" + "$myJobType" + "`t" + "$myJobLastState" + "`t" + "$myJobLastResult" + "`t" + "$myJobCreationTime" + "`t" + "$myJobEndTime" + "`n"
+    
+    }
+
 write-host $myJobsText
 write-host $myTaskText
 }

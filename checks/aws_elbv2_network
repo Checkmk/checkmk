@@ -119,50 +119,53 @@ check_info['aws_elbv2_network.connections'] = {
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
+# This service is currently never discovered, because the AWS special agent does not deliver the
+# corresponding data. After fixing this issue in the special agent, probably the best solution is to
+# discover one service per target group.
 
-def check_aws_elbv2_network_healthy_hosts(item, params, parsed):
-    try:
-        healthy_hosts = int(parsed["HealthyHostCount"])
-    except (KeyError, ValueError):
-        healthy_hosts = None
-
-    try:
-        unhealthy_hosts = int(parsed["UnHealthyHostCount"])
-    except (KeyError, ValueError):
-        unhealthy_hosts = None
-
-    if healthy_hosts is not None:
-        yield 0, 'Healthy hosts: %s' % healthy_hosts
-
-    if unhealthy_hosts is not None:
-        yield 0, 'Unhealthy hosts: %s' % unhealthy_hosts
-
-    if healthy_hosts is not None and unhealthy_hosts is not None:
-        total_hosts = unhealthy_hosts + healthy_hosts
-        yield 0, 'Total: %s' % total_hosts
-
-        try:
-            perc = 100.0 * healthy_hosts / total_hosts
-        except ZeroDivisionError:
-            perc = None
-
-        if perc is not None:
-            yield check_levels(perc,
-                               'aws_overall_hosts_health_perc',
-                               params.get('levels_overall_hosts_health_perc'),
-                               human_readable_func=get_percent_human_readable,
-                               infoname="Proportion of healthy hosts")
-
-
-check_info['aws_elbv2_network.healthy_hosts'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, ['HealthyHostCount', 'UnHealthyHostCount']),
-    'check_function': check_aws_elbv2_network_healthy_hosts,
-    'service_description': 'AWS/NetworkELB Healthy Hosts',
-    'includes': ['aws.include'],
-    'group': 'aws_elb_healthy_hosts',
-    'has_perfdata': True,
-}
+# def check_aws_elbv2_network_healthy_hosts(item, params, parsed):
+#     try:
+#         healthy_hosts = int(parsed["HealthyHostCount"])
+#     except (KeyError, ValueError):
+#         healthy_hosts = None
+#
+#     try:
+#         unhealthy_hosts = int(parsed["UnHealthyHostCount"])
+#     except (KeyError, ValueError):
+#         unhealthy_hosts = None
+#
+#     if healthy_hosts is not None:
+#         yield 0, 'Healthy hosts: %s' % healthy_hosts
+#
+#     if unhealthy_hosts is not None:
+#         yield 0, 'Unhealthy hosts: %s' % unhealthy_hosts
+#
+#     if healthy_hosts is not None and unhealthy_hosts is not None:
+#         total_hosts = unhealthy_hosts + healthy_hosts
+#         yield 0, 'Total: %s' % total_hosts
+#
+#         try:
+#             perc = 100.0 * healthy_hosts / total_hosts
+#         except ZeroDivisionError:
+#             perc = None
+#
+#         if perc is not None:
+#             yield check_levels(perc,
+#                                'aws_overall_hosts_health_perc',
+#                                params.get('levels_overall_hosts_health_perc'),
+#                                human_readable_func=get_percent_human_readable,
+#                                infoname="Proportion of healthy hosts")
+#
+#
+# check_info['aws_elbv2_network.healthy_hosts'] = {
+#     'inventory_function': lambda p: inventory_aws_generic_single(
+#         p, ['HealthyHostCount', 'UnHealthyHostCount']),
+#     'check_function': check_aws_elbv2_network_healthy_hosts,
+#     'service_description': 'AWS/NetworkELB Healthy Hosts',
+#     'includes': ['aws.include'],
+#     'group': 'aws_elb_healthy_hosts',
+#     'has_perfdata': True,
+# }
 
 #.
 #   .--TLS handshakes------------------------------------------------------.

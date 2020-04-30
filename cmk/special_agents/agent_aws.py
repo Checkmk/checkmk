@@ -57,6 +57,10 @@ AWSStrings = Union[bytes, str]
 # - per account (S3)
 # - per region (EC2, EBS, ELB, RDS)
 
+# TODO network load balancers
+# - gather the metrics HealthyHostCount and UnHealthyHostCount using the correct dimensions (load
+#   balancer and target group)
+
 #   .--overview------------------------------------------------------------.
 #   |                                        _                             |
 #   |               _____   _____ _ ____   _(_) _____      __              |
@@ -2678,7 +2682,6 @@ class ELBv2Network(AWSSectionCloudwatch):
                 ('ActiveFlowCount_TLS', 'Average'),
                 ('ClientTLSNegotiationErrorCount', 'Sum'),
                 ('ConsumedLCUs', 'Sum'),
-                ('HealthyHostCount', 'Maximum'),
                 ('NewFlowCount', 'Sum'),
                 ('NewFlowCount_TLS', 'Sum'),
                 ('ProcessedBytes', 'Sum'),
@@ -2687,7 +2690,13 @@ class ELBv2Network(AWSSectionCloudwatch):
                 ('TCP_Client_Reset_Count', 'Sum'),
                 ('TCP_ELB_Reset_Count', 'Sum'),
                 ('TCP_Target_Reset_Count', 'Sum'),
-                ('UnHealthyHostCount', 'Maximum'),
+                    # These two metrics are commented out because they need an additional dimension,
+                    # namely a target group, see https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-cloudwatch-metrics.html
+                    # the corresponding check aws_elbv2_network.healthy_hosts is currently also
+                    # commented out. The solution is to create a separate class specifically for
+                    # target groups of network load balancers and collect these metrics there.
+                    # ('HealthyHostCount', 'Maximum'),
+                    # ('UnHealthyHostCount', 'Maximum'),
             ]:
                 metrics.append({
                     'Id': self._create_id_for_metric_data_query(idx, metric_name),

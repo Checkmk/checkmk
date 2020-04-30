@@ -331,8 +331,8 @@ def test_agent_aws_elbv2_network(get_elbv2_sections, names, tags, found_instance
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:
         assert result.piggyback_hostname != ''
-        # 14 metrics
-        assert len(result.content) == 14
+        # 12 metrics
+        assert len(result.content) == 12
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -431,5 +431,5 @@ def test_agent_aws_elbv2_network_without_limits(get_elbv2_sections, names, tags,
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:
         assert result.piggyback_hostname != ''
-        # 14 metrics
-        assert len(result.content) == 14
+        # 12 metrics
+        assert len(result.content) == 12

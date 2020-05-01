@@ -452,7 +452,6 @@ class ActivateChangesManager(ActivateChanges):
         self._comment = None  # type: Optional[str]
         self._activate_foreign = False
         self._activation_id = None  # type: Optional[str]
-        self._snapshot_id = None  # TODO: Never set?!
         if not os.path.exists(self.activation_persisted_dir):
             os.makedirs(self.activation_persisted_dir)
         super(ActivateChangesManager, self).__init__()
@@ -492,7 +491,6 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = activate_foreign
         self._activation_id = self._new_activation_id()
         self._time_started = time.time()
-        self._snapshot_id = None
         self._prevent_activate = prevent_activate
 
         self._verify_valid_host_config()
@@ -597,7 +595,6 @@ class ActivateChangesManager(ActivateChanges):
                 "_comment": self._comment,
                 "_activate_foreign": self._activate_foreign,
                 "_activation_id": self._activation_id,
-                "_snapshot_id": self._snapshot_id,
                 "_time_started": self._time_started,
             })
 

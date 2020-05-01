@@ -91,6 +91,7 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or data_sources.abstract.DataSource.get_may_use_cache_file()
+    on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
 
@@ -99,10 +100,6 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
         console.section_begin(hostname)
 
         try:
-            if cmk.utils.debug.enabled():
-                on_error = "raise"
-            else:
-                on_error = "warn"
 
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 

@@ -30,6 +30,7 @@ import cmk.utils.log
 import cmk.utils.paths as paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
+import cmk.gui.login as login
 from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.plugins.userdb import htpasswd
@@ -135,6 +136,14 @@ def _create_and_destroy_user(automation=False):
 def with_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=False) as user:
         yield user
+
+
+@pytest.fixture(scope='function')
+def with_user_login(with_user):
+    user_id = with_user[0]
+    login.login(user_id)
+    yield user_id
+    config.clear_user_login()
 
 
 # noinspection PyDefaultArgument

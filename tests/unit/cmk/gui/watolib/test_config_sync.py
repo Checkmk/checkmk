@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+import time
 import tarfile
 import shutil
 import six
-from werkzeug.test import create_environ
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -21,17 +21,22 @@ import pytest  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.login as login
 import cmk.gui.config as config
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
-import cmk.gui.htmllib as htmllib
-from cmk.gui.http import Request
-from cmk.gui.globals import AppContext, RequestContext
 
-from testlib.utils import DummyApplication, is_enterprise_repo, is_managed_repo
+from testlib.utils import is_enterprise_repo, is_managed_repo
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
+
+
+def _create_sync_snapshot(activation_manager, snapshot_data_collector_class, monkeypatch, tmp_path,
+                          is_pre_17_site):
+    _create_test_sync_config(monkeypatch)
+    return _generate_sync_snapshot(activation_manager,
+                                   snapshot_data_collector_class,
+                                   tmp_path,
+                                   is_pre_17_site=is_pre_17_site)
 
 
 def _create_test_sync_config(monkeypatch):
@@ -56,12 +61,8 @@ def _create_test_sync_config(monkeypatch):
                             raising=False)
 
 
-def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path, is_pre_17_site):
+def _get_activation_manager(monkeypatch):
     # TODO: Make this better testable: Extract site snapshot setting calculation
-    activation_manager = activate_changes.ActivateChangesManager()
-    activation_manager._sites = ["unit", "unit_remote_1"]
-    activation_manager._changes_by_site = {"unit": [], "unit_remote_1": []}
-    activation_manager._activation_id = "123"
     monkeypatch.setattr(
         config, "sites", {
             "unit": {
@@ -106,6 +107,15 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path, 
             },
         })
 
+    activation_manager = activate_changes.ActivateChangesManager()
+    activation_manager._sites = ["unit", "unit_remote_1"]
+    activation_manager._changes_by_site = {"unit": [], "unit_remote_1": []}
+    activation_manager._activation_id = "123"
+    return activation_manager
+
+
+def _generate_sync_snapshot(activation_manager, snapshot_data_collector_class, tmp_path,
+                            is_pre_17_site):
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._sites)
     snapshot_settings = site_snapshot_settings["unit_remote_1"]
@@ -211,23 +221,20 @@ def editions():
 
 @pytest.mark.skip("Enable once new sync mechanism is in place")
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+@pytest.mark.usefixtures("register_builtin_html")
 def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
-                           with_user):
-    user_id = with_user[0]
+                           with_user_login):
+    activation_manager = _get_activation_manager(monkeypatch)
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ))):
-        login.login(user_id)
-        _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class,
-                                                  monkeypatch,
-                                                  tmp_path,
-                                                  is_pre_17_site=False)
+    snapshot_settings = _create_sync_snapshot(activation_manager,
+                                              snapshot_data_collector_class,
+                                              monkeypatch,
+                                              tmp_path,
+                                              is_pre_17_site=False)
 
-    expected_paths = _get_expected_paths(user_id)
+    expected_paths = _get_expected_paths(user_id=with_user_login)
 
     expected_paths += [
         "site_globals",
@@ -240,20 +247,16 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
 
 
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+@pytest.mark.usefixtures("register_builtin_html")
 def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
-                                       tmp_path, with_user):
+                                       tmp_path, with_user_login):
     is_pre_17_site = True
-    user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ))):
-        login.login(user_id)
-        _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class, monkeypatch,
-                                                  tmp_path, is_pre_17_site)
+    activation_manager = _get_activation_manager(monkeypatch)
+    snapshot_settings = _create_sync_snapshot(activation_manager, snapshot_data_collector_class,
+                                              monkeypatch, tmp_path, is_pre_17_site)
 
     # And now check the resulting snapshot contents
     unpack_dir = tmp_path / "snapshot_unpack"
@@ -300,7 +303,7 @@ def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_cl
     expected_files = {
         'mkeventd_mkp.tar': [],
         'multisite.tar': ["global.mk", "users.mk"],
-        'usersettings.tar': [user_id],
+        'usersettings.tar': [with_user_login],
         'mkeventd.tar': [],
         'check_mk.tar': ["hosts.mk", "contacts.mk"],
         'htpasswd.tar': ["htpasswd"],
@@ -352,38 +355,34 @@ def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_cl
 
 
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+@pytest.mark.usefixtures("register_builtin_html")
 def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
-                                    tmp_path, with_user):
+                                    tmp_path, with_user_login):
     is_pre_17_site = True
-    user_id = with_user[0]
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ))):
-        login.login(user_id)
+    activation_manager = _get_activation_manager(monkeypatch)
+    snapshot_settings = _create_sync_snapshot(activation_manager,
+                                              snapshot_data_collector_class,
+                                              monkeypatch,
+                                              tmp_path,
+                                              is_pre_17_site=is_pre_17_site)
 
-        _create_test_sync_config(monkeypatch)
-        snapshot_settings = _create_sync_snapshot(snapshot_data_collector_class,
-                                                  monkeypatch,
-                                                  tmp_path,
-                                                  is_pre_17_site=is_pre_17_site)
+    # Change unpack target directory from "unit test site" paths to a test specific path
+    unpack_dir = tmp_path / "snapshot_unpack"
+    if unpack_dir.exists():
+        shutil.rmtree(str(unpack_dir))
 
-        # Change unpack target directory from "unit test site" paths to a test specific path
-        unpack_dir = tmp_path / "snapshot_unpack"
-        if unpack_dir.exists():
-            shutil.rmtree(str(unpack_dir))
+    components = [
+        activate_changes._replace_omd_root(str(unpack_dir), p)
+        for p in activate_changes.get_replication_paths()
+    ]
 
-        components = [
-            activate_changes._replace_omd_root(str(unpack_dir), p)
-            for p in activate_changes.get_replication_paths()
-        ]
+    with open(snapshot_settings.snapshot_path, "rb") as f:
+        activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), components)
 
-        with open(snapshot_settings.snapshot_path, "rb") as f:
-            activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), components)
-
-    expected_paths = _get_expected_paths(user_id)
+    expected_paths = _get_expected_paths(user_id=with_user_login)
 
     if cmk_version.is_managed_edition():
         expected_paths += [
@@ -483,3 +482,44 @@ def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class
 ])
 def test_update_contacts_dict(master, slave, result):
     assert config_sync._update_contacts_dict(master, slave) == result
+
+
+@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
+@pytest.mark.usefixtures("register_builtin_html")
+def test_synchronize_pre_17_site(monkeypatch, edition_short, snapshot_data_collector_class,
+                                 tmp_path, mocker):
+
+    if edition_short == "cme":
+        pytest.skip("Seems faked site environment is not 100% correct")
+
+    is_pre_17_site = True
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+
+    activation_manager = _get_activation_manager(monkeypatch)
+    snapshot_settings = _create_sync_snapshot(activation_manager,
+                                              snapshot_data_collector_class,
+                                              monkeypatch,
+                                              tmp_path,
+                                              is_pre_17_site=is_pre_17_site)
+
+    site_activation = activate_changes.ActivateChangesSite("unit_remote_1",
+                                                           snapshot_settings,
+                                                           activation_manager._activation_id,
+                                                           prevent_activate=True)
+
+    # Could be better to mock requests instead of our own code
+    get_url_mock = mocker.patch("cmk.gui.watolib.automations.get_url", return_value="True")
+
+    site_activation._time_started = time.time()
+    site_activation._synchronize_site()
+
+    get_url_mock.assert_called_once()
+    assert get_url_mock.call_args.args == (
+        'http://localhost/unit_remote_1/check_mk/automation.py?command=push-snapshot&debug=&secret=watosecret&siteid=unit_remote_1',
+        False)
+    assert get_url_mock.call_args.kwargs.keys() == ["files"]
+    assert get_url_mock.call_args.kwargs["files"].keys() == ["snapshot"]
+    assert isinstance(get_url_mock.call_args.kwargs["files"]["snapshot"], file)
+    assert get_url_mock.call_args.kwargs["files"][
+        "snapshot"].name == snapshot_settings.snapshot_path

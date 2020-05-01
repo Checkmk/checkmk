@@ -53,3 +53,6 @@ VisualTypeName = str
 VisualContext = Dict[FilterName, Union[Text, str, FilterHTTPVariables]]
 InfoName = str
 SingleInfos = List[InfoName]
+
+# Configuration related
+ConfigDomainName = str

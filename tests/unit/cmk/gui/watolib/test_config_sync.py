@@ -106,7 +106,8 @@ def _create_sync_snapshot(snapshot_data_collector_class, monkeypatch, tmp_path, 
             },
         })
 
-    site_snapshot_settings = activation_manager._site_snapshot_settings()
+    site_snapshot_settings = activation_manager._get_site_snapshot_settings(
+        activation_manager._sites)
     snapshot_settings = site_snapshot_settings["unit_remote_1"]
 
     assert not Path(snapshot_settings.snapshot_path).exists()

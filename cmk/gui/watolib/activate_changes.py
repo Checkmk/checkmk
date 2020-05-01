@@ -33,7 +33,7 @@ else:
     from pathlib2 import Path
 
 from typing import (  # pylint: disable=unused-import
-    Dict, Set, List, Optional, Tuple, Union, NamedTuple,
+    Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple,
 )
 import six
 
@@ -50,6 +50,7 @@ from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.type_defs import ConfigDomainName  # pylint: disable=unused-import
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 from cmk.gui.sites import (  # pylint: disable=unused-import
@@ -138,6 +139,7 @@ _replication_paths = []  # type: List[ReplicationPath]
 
 ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
 ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
+ConfigWarnings = Dict[ConfigDomainName, List[Text]]
 
 
 def add_replication_paths(paths):
@@ -448,6 +450,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def __init__(self):
         self._sites = []  # type: List[SiteId]
+        self._site_snapshot_settings = {}  # type: Dict[SiteId, SnapshotSettings]
         self._activate_until = None  # type: Optional[str]
         self._comment = None  # type: Optional[str]
         self._activate_foreign = False
@@ -485,6 +488,7 @@ class ActivateChangesManager(ActivateChanges):
             prevent_activate=False  # type: bool
     ):
         self._sites = self._get_sites(sites)
+        self._site_snapshot_settings = self._get_site_snapshot_settings(self._sites)
         self._activate_until = (self._get_last_change_id()
                                 if activate_until is None else activate_until)
         self._comment = comment
@@ -563,6 +567,7 @@ class ActivateChangesManager(ActivateChanges):
         return cmk.gui.utils.gen_id()
 
     def _get_sites(self, sites):
+        # type: (List[SiteId]) -> List[SiteId]
         for site_id in sites:
             if site_id not in activation_sites():
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
@@ -638,16 +643,16 @@ class ActivateChangesManager(ActivateChanges):
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
 
-            snapshot_manager = SnapshotManager.factory(work_dir, self._site_snapshot_settings())
+            snapshot_manager = SnapshotManager.factory(work_dir, self._site_snapshot_settings)
             snapshot_manager.generate_snapshots()
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
 
-    def _site_snapshot_settings(self):
-        # type: () -> Dict[SiteId, SnapshotSettings]
+    def _get_site_snapshot_settings(self, sites):
+        # type: (List[SiteId]) -> Dict[SiteId, SnapshotSettings]
         snapshot_settings = {}
 
-        for site_id in self._sites:
+        for site_id in sites:
             self._check_snapshot_creation_permissions(site_id)
 
             site_config = config.sites[site_id]
@@ -690,11 +695,13 @@ class ActivateChangesManager(ActivateChanges):
                   "these changes in their own."))
 
     def _start_activation(self):
+        # type: () -> None
         self._log_activation()
         for site_id in self._sites:
             self._start_site_activation(site_id)
 
     def _start_site_activation(self, site_id):
+        # type: (SiteId) -> None
         self._log_site_activation(site_id)
 
         # This is doing the first fork and the ActivateChangesSite() is doing the second
@@ -704,9 +711,11 @@ class ActivateChangesManager(ActivateChanges):
         p.join()
 
     def _do_start_site_activation(self, site_id):
+        # type: (SiteId) -> None
         try:
-            site_activation = ActivateChangesSite(site_id, self._activation_id,
-                                                  self._site_snapshot_file(site_id),
+            assert self._activation_id is not None
+            snapshot_settings = self._site_snapshot_settings[site_id]
+            site_activation = ActivateChangesSite(site_id, snapshot_settings, self._activation_id,
                                                   self._prevent_activate)
             site_activation.load()
             site_activation.start()
@@ -1068,25 +1077,25 @@ def execute_activation_cleanup_background_job():
 
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     """Executes and monitors a single activation for one site"""
-    def __init__(self, site_id, activation_id, site_snapshot_file, prevent_activate=False):
+    def __init__(self, site_id, snapshot_settings, activation_id, prevent_activate=False):
+        # type: (SiteId, SnapshotSettings, str, bool) -> None
         super(ActivateChangesSite, self).__init__()
 
         self._site_id = site_id
-        self._site_changes = []
+        self._site_changes = []  # type: List
         self._activation_id = activation_id
-        self._snapshot_file = site_snapshot_file
+        self._snapshot_settings = snapshot_settings
         self.daemon = True
         self._prevent_activate = prevent_activate
 
         self._time_started = None  # type: Optional[float]
-        self._time_updated = None
-        self._time_ended = None
+        self._time_updated = None  # type: Optional[float]
+        self._time_ended = None  # type: Optional[float]
         self._phase = None
         self._state = None
         self._status_text = None
-        self._status_details = None
-        self._warnings = []
-        self._pid = None
+        self._status_details = None  # type: Optional[Text]
+        self._pid = None  # type: Optional[int]
         self._expected_duration = 10.0
 
         self._set_result(PHASE_INITIALIZED, _("Initialized"))
@@ -1179,14 +1188,15 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return manager.activate_until()
 
     def _set_done_result(self, configuration_warnings):
+        # type: (ConfigWarnings) -> None
         if any(configuration_warnings.values()):
-            self._warnings = configuration_warnings
             details = self._render_warnings(configuration_warnings)
             self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
         else:
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
     def _render_warnings(self, configuration_warnings):
+        # type: (ConfigWarnings) -> Text
         html_code = u"<div class=warning>"
         html_code += "<b>%s</b>" % _("Warnings:")
         html_code += "<ul>"
@@ -1294,11 +1304,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _upload_file(self, url, insecure):
         return cmk.gui.watolib.automations.get_url(
-            url, insecure, files={"snapshot": open(self._snapshot_file, "r")})
+            url, insecure, files={"snapshot": open(self._snapshot_settings.snapshot_path, "r")})
 
     def _cleanup_snapshot(self):
+        # type: () -> None
         try:
-            os.unlink(self._snapshot_file)
+            os.unlink(self._snapshot_settings.snapshot_path)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
@@ -1306,6 +1317,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 raise
 
     def _do_activate(self):
+        # type: () -> ConfigWarnings
         self._set_result(PHASE_ACTIVATE, _("Activating"))
 
         start = time.time()
@@ -1317,6 +1329,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self):
+        # type: () -> ConfigWarnings
         domains = self._get_domains_needing_activation()
 
         if config.site_is_local(self._site_id):
@@ -1406,7 +1419,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 "_state": self._state,
                 "_status_text": self._status_text,
                 "_status_details": self._status_details,
-                "_warnings": self._warnings,
                 "_time_started": self._time_started,
                 "_time_updated": self._time_updated,
                 "_time_ended": self._time_ended,
@@ -1432,10 +1444,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
 def execute_activate_changes(domains):
-    domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
+    # type: (List[ConfigDomainName]) -> ConfigWarnings
+    activation_domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
 
-    results = {}
-    for domain in sorted(domains):
+    results = {}  # type: ConfigWarnings
+    for domain in sorted(activation_domains):
         domain_class = ABCConfigDomain.get_class(domain)
         warnings = domain_class().activate()
         results[domain] = warnings or []

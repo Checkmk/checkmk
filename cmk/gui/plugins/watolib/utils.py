@@ -11,8 +11,9 @@ from typing import Any, Dict, List, Optional, Text, Type  # pylint: disable=unus
 import six
 
 import cmk.utils.store as store
-
 import cmk.utils.plugin_registry
+
+from cmk.gui.type_defs import ConfigDomainName  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -39,6 +40,7 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def get_always_activate_domain_idents(cls):
+        # type: () -> List[ConfigDomainName]
         return [d.ident for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod

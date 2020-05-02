@@ -1258,16 +1258,44 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             "current_activation": None,
         })
 
-    # This is done on the central site to initiate the sync process
     def _synchronize_site(self):
+        """This is done on the central site to initiate the sync process"""
         self._set_result(PHASE_SYNC, _("Synchronizing"))
 
         start = time.time()
 
-        result = self._push_snapshot_to_site()
+        try:
+            if self._snapshot_settings.create_pre_17_snapshot:
+                self._synchronize_pre_17_site()
+            else:
+                self._synchronize_17_or_newer_site()
+        finally:
+            duration = time.time() - start
+            self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
 
-        duration = time.time() - start
-        self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
+    def _synchronize_17_or_newer_site(self):
+        # type: () -> None
+        """Realizes the incremental config sync from the central to the remote site
+
+        1. Gather the replication paths handled by the central site.
+
+           We want the state of these files from the remote site to be able to compare the state of
+           the central sites site_config directory with it. Warning: In mixed version setups it
+           would not be enough to use the replication paths known by the remote site. We really need
+           the central sites definitions.
+
+        2. Send them over to the remote site and request the current state of the mentioned files
+        3. Compare the response with the site_config directory of the site
+        4. Collect needed files and send them over to the remote site (+ remote config hash)
+        5. Raise when something failed on the remote site while applying the sent files
+        """
+        pass
+
+    # TODO: Compatibility for 1.6 -> 1.7 migration. Can be removed with 1.8.
+    def _synchronize_pre_17_site(self):
+        # type: () -> None
+        """This is done on the central site to initiate the sync process"""
+        result = self._push_pre_17_snapshot_to_site()
 
         # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -1279,7 +1307,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if result is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % result)
 
-    def _push_snapshot_to_site(self):
+    def _push_pre_17_snapshot_to_site(self):
+        # type: () -> bool
         """Calls a remote automation call push-snapshot which is handled by AutomationPushSnapshot()"""
         site = config.site(self._site_id)
 
@@ -1305,16 +1334,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     def _upload_file(self, url, insecure):
         return cmk.gui.watolib.automations.get_url(
             url, insecure, files={"snapshot": open(self._snapshot_settings.snapshot_path, "r")})
-
-    def _cleanup_snapshot(self):
-        # type: () -> None
-        try:
-            os.unlink(self._snapshot_settings.snapshot_path)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass  # Not existant -> OK
-            else:
-                raise
 
     def _do_activate(self):
         # type: () -> ConfigWarnings

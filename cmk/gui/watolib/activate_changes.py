@@ -436,12 +436,15 @@ class ActivateChangesManager(ActivateChanges):
         self._verify_valid_host_config()
         self._save_activation()
 
-        self._pre_activate_changes()
-        self._create_snapshots()
-        self._save_activation()
-
-        self._start_activation()
-        self._do_housekeeping()
+        try:
+            self._pre_activate_changes()
+            self._create_snapshots()
+            self._save_activation()
+            self._start_activation()
+        finally:
+            # Always do housekeeping - even on RequestTimeout
+            # Note: A RequestTimeout can still occur during housekeeping
+            self._do_housekeeping()
 
         return self._activation_id
 

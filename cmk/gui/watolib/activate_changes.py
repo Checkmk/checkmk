@@ -1566,13 +1566,18 @@ def create_site_globals_file(site_id, tmp_dir, site_config):
     site_globals_dir = os.path.join(tmp_dir, "site_globals")
     store.makedirs(site_globals_dir)
 
+    site_globals = _get_site_globals(site_id, site_config)
+    store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
+
+
+def _get_site_globals(site_id, site_config):
+    # type: (SiteId, SiteConfiguration) -> Dict
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update({
         "wato_enabled": not site_config.get("disable_wato", True),
         "userdb_automatic_sync": site_config.get("user_sync", user_sync_default_config(site_id)),
     })
-
-    store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
+    return site_globals
 
 
 def _is_pre_17_remote_site(site_status):

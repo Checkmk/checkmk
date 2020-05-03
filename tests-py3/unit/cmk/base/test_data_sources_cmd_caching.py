@@ -109,7 +109,7 @@ def _patch_data_source_run(monkeypatch, **kwargs):
     }
     defaults.update(kwargs)
 
-    def _run(self, hostname, ipaddress, get_raw_data):
+    def _run(self, get_raw_data):
         assert self._may_use_cache_file == defaults["_may_use_cache_file"]
         assert self._no_cache == defaults["_no_cache"]
         assert self._max_cachefile_age == defaults["_max_cachefile_age"]
@@ -125,7 +125,7 @@ def _patch_data_source_run(monkeypatch, **kwargs):
             assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert self._ignore_check_interval == defaults["_ignore_check_interval"]
 
-        result = self._orig_run(hostname, ipaddress, get_raw_data)
+        result = self._orig_run(get_raw_data)
 
         global _counter_run
         _counter_run += 1

@@ -293,27 +293,27 @@ class DataSource(
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
 
-    def run(self, hostname=None, ipaddress=None):
-        # type: (Optional[HostName], Optional[HostAddress]) -> AbstractHostSections
-        result = self._run(hostname, ipaddress, get_raw_data=False)
+    def run(self):
+        # type: () -> AbstractHostSections
+        result = self._run(get_raw_data=False)
         if not isinstance(result, AbstractHostSections):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
-    def run_raw(self, hostname=None, ipaddress=None):
-        # type: (Optional[HostName], Optional[HostAddress]) -> RawAgentData
+    def run_raw(self):
+        # type: () -> RawAgentData
         """Small wrapper for self._run() which always returns raw data source data
 
         Both hostname and ipaddress are optional, used for virtual
         Check_MK clusters."""
-        result = self._run(hostname, ipaddress, get_raw_data=True)
+        result = self._run(get_raw_data=True)
         if not isinstance(result, RawAgentData):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
     @cpu_tracking.track
-    def _run(self, hostname, ipaddress, get_raw_data):
-        # type: (Optional[HostName], Optional[HostAddress], bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]
+    def _run(self, get_raw_data):
+        # type: (bool) -> Union[BoundedAbstractRawData, BoundedAbstractHostSections]
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -323,16 +323,7 @@ class DataSource(
         should use self.get_summary_result() to get the summary result of this data source
         which also includes information about the happed exception. In case the --debug
         mode is enabled, the exceptions are raised. self._exception is re-initialized
-        to None when this method is called.
-
-        Both hostname and ipaddress are optional, used for virtual
-        Check_MK clusters."""
-
-        # TODO: This is manipulating the state that has been initialized with the constructor?!
-        if hostname is not None:
-            self._hostname = hostname
-        if ipaddress is not None:
-            self._ipaddress = ipaddress
+        to None when this method is called."""
 
         self._exception = None
         self._host_sections = None

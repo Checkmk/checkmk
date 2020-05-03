@@ -116,7 +116,9 @@ def test_get_replication_paths_defaults(edition_short, monkeypatch):
 @pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
-def test_get_replication_components(edition_short, monkeypatch, replicate_ec, replicate_mkps):
+@pytest.mark.parametrize("is_pre_17_remote_site", [True, False])
+def test_get_replication_components(edition_short, monkeypatch, replicate_ec, replicate_mkps,
+                                    is_pre_17_remote_site):
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
     partial_site_config = {}
@@ -140,11 +142,22 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
             ident="sitespecific",
             path="%s/site_globals/sitespecific.mk" % work_dir,
             excludes=[],
-        )
+        ),
     ]
 
-    assert sorted(activate_changes._get_replication_components(
-        work_dir, partial_site_config)) == sorted(expected)
+    if not is_pre_17_remote_site:
+        expected += [
+            ReplicationPath(
+                ty='file',
+                ident='distributed_wato',
+                path='%s/etc/check_mk/conf.d/distributed_wato.mk' % work_dir,
+                excludes=['.*new*'],
+            ),
+        ]
+
+    assert sorted(
+        activate_changes._get_replication_components(work_dir, partial_site_config,
+                                                     is_pre_17_remote_site)) == sorted(expected)
 
 
 def test_add_replication_paths_pre_17():

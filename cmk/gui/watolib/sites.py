@@ -652,7 +652,10 @@ def _update_distributed_wato_file(sites):
         if site.get("replication"):
             distributed = True
         if config.site_is_local(siteid):
-            cmk.gui.watolib.activate_changes.create_distributed_wato_file(siteid, is_slave=False)
+            cmk.gui.watolib.activate_changes.create_distributed_wato_file(
+                cmk.gui.watolib.activate_changes.distributed_wato_file_path(),
+                siteid,
+                is_slave=False)
 
     # Remove the distributed wato file
     # a) If there is no distributed WATO setup

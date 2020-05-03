@@ -643,7 +643,11 @@ class ActivateChangesManager(ActivateChanges):
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
 
-            snapshot_manager = SnapshotManager.factory(work_dir, self._site_snapshot_settings)
+            # Do not create a snapshot for the local site. All files are already in place
+            site_snapshot_settings = self._site_snapshot_settings.copy()
+            del site_snapshot_settings[config.omd_site()]
+
+            snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()
 
             logger.debug("Snapshot creation took %.4f", time.time() - start)
@@ -656,10 +660,13 @@ class ActivateChangesManager(ActivateChanges):
             self._check_snapshot_creation_permissions(site_id)
 
             site_config = config.sites[site_id]
-            #site_status = self._get_site_status(site_id, site_config)[0]
             work_dir = cmk.utils.paths.site_config_dir / site_id
 
-            snapshot_components = _get_replication_components(str(work_dir), site_config)
+            #site_status = self._get_site_status(site_id, site_config)[0]
+            is_pre_17_remote_site = True  # _is_pre_17_remote_site(site_status)
+
+            snapshot_components = _get_replication_components(str(work_dir), site_config,
+                                                              is_pre_17_remote_site)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -670,7 +677,7 @@ class ActivateChangesManager(ActivateChanges):
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
-                create_pre_17_snapshot=True,  # _is_pre_17_remote_site(site_status),
+                create_pre_17_snapshot=is_pre_17_remote_site,
             )
 
         return snapshot_settings
@@ -886,10 +893,15 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         self._prepare_site_config_directory(first_site)
         self._clone_site_config_directories(first_site, site_ids)
 
-        # Generate site specific global settings file
         for site_id, snapshot_settings in self._site_snapshot_settings.items():
+            # Generate site specific global settings file
             create_site_globals_file(site_id, snapshot_settings.work_dir,
                                      snapshot_settings.site_config)
+
+            create_distributed_wato_file(Path(
+                snapshot_settings.work_dir).joinpath("etc/check_mk/conf.d/distributed_wato.mk"),
+                                         site_id,
+                                         is_slave=True)
 
     def _prepare_site_config_directory(self, site_id):
         # type: (SiteId) -> None
@@ -1504,7 +1516,7 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, components):
         hooks.call("snapshot-pushed")
 
         # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(site_id, is_slave=True)
+        create_distributed_wato_file(distributed_wato_file_path(), site_id, is_slave=True)
     except Exception:
         raise MKGeneralException(
             _("Failed to deploy configuration: \"%s\". "
@@ -1532,8 +1544,13 @@ def _save_site_globals_on_slave_site(tarcontent):
         shutil.rmtree(tmp_dir)
 
 
-def create_distributed_wato_file(siteid, is_slave):
-    # type: (SiteId, bool) -> None
+def distributed_wato_file_path():
+    # type: () -> Path
+    return Path(cmk.utils.paths.check_mk_config_dir, "distributed_wato.mk")
+
+
+def create_distributed_wato_file(path, siteid, is_slave):
+    # type: (Path, SiteId, bool) -> None
     output = wato_fileheader()
     output += ("# This file has been created by the master site\n"
                "# push the configuration to us. It makes sure that\n"
@@ -1541,7 +1558,7 @@ def create_distributed_wato_file(siteid, is_slave):
     output += "distributed_wato_site = '%s'\n" % siteid
     output += "is_wato_slave_site = %r\n" % is_slave
 
-    store.save_file(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk", output)
+    store.save_file(path, output)
 
 
 def create_site_globals_file(site_id, tmp_dir, site_config):
@@ -1573,8 +1590,8 @@ def _is_pre_17_remote_site(site_status):
     return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
 
 
-def _get_replication_components(work_dir, site_config):
-    # type: (str, SiteConfiguration) -> List[ReplicationPath]
+def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
+    # type: (str, SiteConfiguration, bool) -> List[ReplicationPath]
     paths = get_replication_paths()[:]
 
     # Remove Event Console settings, if this site does not want it (might
@@ -1598,5 +1615,15 @@ def _get_replication_components(work_dir, site_config):
             path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
             excludes=[],
         ))
+
+    # Add distributed_wato.mk
+    if not is_pre_17_remote_site:
+        paths.append(
+            ReplicationPath(
+                ty="file",
+                ident="distributed_wato",
+                path=os.path.join(work_dir, "etc/check_mk/conf.d/distributed_wato.mk"),
+                excludes=[],
+            ))
 
     return paths

@@ -381,7 +381,9 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
 
 
 add_replication_paths([
-    ReplicationPath("file", "diskspace", ConfigDomainDiskspace.diskspace_config, []),
+    ReplicationPath(
+        "file", "diskspace",
+        os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root), []),
 ])
 
 #.

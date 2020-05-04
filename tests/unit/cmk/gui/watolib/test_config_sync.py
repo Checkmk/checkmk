@@ -385,13 +385,9 @@ def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_u
     if unpack_dir.exists():
         shutil.rmtree(str(unpack_dir))
 
-    components = [
-        activate_changes._replace_omd_root(str(unpack_dir), p)
-        for p in activate_changes.get_replication_paths()
-    ]
-
     with open(snapshot_settings.snapshot_path, "rb") as f:
-        activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), components)
+        activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), unpack_dir,
+                                                    activate_changes.get_replication_paths())
 
     expected_paths = _get_expected_paths(user_id=with_user_login, is_pre_17_site=is_pre_17_site)
 

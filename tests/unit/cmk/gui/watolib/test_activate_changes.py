@@ -25,76 +25,61 @@ def restore_orig_replication_paths():
 
 def _expected_replication_paths():
     expected = [
-        ReplicationPath('dir', 'check_mk',
-                        '%s/etc/check_mk/conf.d/wato/' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('dir', 'multisite',
-                        '%s/etc/check_mk/multisite.d/wato/' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('file', 'htpasswd', '%s/etc/htpasswd' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('file', 'auth.secret', '%s/etc/auth.secret' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('file', 'auth.serials', '%s/etc/auth.serials' % cmk.utils.paths.omd_root,
-                        []),
-        ReplicationPath('dir', 'usersettings', '%s/var/check_mk/web' % cmk.utils.paths.omd_root,
-                        ['*/report-thumbnails']),
-        ReplicationPath('dir', 'mkps', '%s/var/check_mk/packages' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('dir', 'local', '%s/local' % cmk.utils.paths.omd_root, []),
+        ReplicationPath('dir', 'check_mk', 'etc/check_mk/conf.d/wato/', []),
+        ReplicationPath('dir', 'multisite', 'etc/check_mk/multisite.d/wato/', []),
+        ReplicationPath('file', 'htpasswd', 'etc/htpasswd', []),
+        ReplicationPath('file', 'auth.secret', 'etc/auth.secret', []),
+        ReplicationPath('file', 'auth.serials', 'etc/auth.serials', []),
+        ReplicationPath('dir', 'usersettings', 'var/check_mk/web', ['*/report-thumbnails']),
+        ReplicationPath('dir', 'mkps', 'var/check_mk/packages', []),
+        ReplicationPath('dir', 'local', 'local', []),
     ]
 
     if not cmk_version.is_raw_edition():
         expected += [
-            ReplicationPath('dir', 'liveproxyd',
-                            '%s/etc/check_mk/liveproxyd.d/wato/' % cmk.utils.paths.omd_root, []),
+            ReplicationPath('dir', 'liveproxyd', 'etc/check_mk/liveproxyd.d/wato/', []),
         ]
 
     if testlib.is_enterprise_repo():
         expected += [
-            ReplicationPath('dir', 'dcd', '%s/etc/check_mk/dcd.d/wato/' % cmk.utils.paths.omd_root,
-                            ['distributed.mk']),
-            ReplicationPath('dir', 'mknotify',
-                            '%s/etc/check_mk/mknotifyd.d/wato/' % cmk.utils.paths.omd_root, []),
+            ReplicationPath('dir', 'dcd', 'etc/check_mk/dcd.d/wato/', ['distributed.mk']),
+            ReplicationPath('dir', 'mknotify', 'etc/check_mk/mknotifyd.d/wato', []),
         ]
 
     expected += [
-        ReplicationPath('dir', 'mkeventd',
-                        '%s/etc/check_mk/mkeventd.d/wato' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('dir', 'mkeventd_mkp',
-                        '%s/etc/check_mk/mkeventd.d/mkp/rule_packs' % cmk.utils.paths.omd_root, []),
-        ReplicationPath('file', 'diskspace', '%s/etc/diskspace.conf' % cmk.utils.paths.omd_root,
-                        []),
+        ReplicationPath('dir', 'mkeventd', 'etc/check_mk/mkeventd.d/wato', []),
+        ReplicationPath('dir', 'mkeventd_mkp', 'etc/check_mk/mkeventd.d/mkp/rule_packs', []),
+        ReplicationPath('file', 'diskspace', 'etc/diskspace.conf', []),
     ]
 
     if cmk_version.is_managed_edition():
         expected += [
             ReplicationPath(ty='file',
                             ident='customer_check_mk',
-                            path='%s/etc/check_mk/conf.d/customer.mk' % cmk.utils.paths.omd_root,
+                            site_path='etc/check_mk/conf.d/customer.mk',
                             excludes=[]),
             ReplicationPath(ty='file',
                             ident='customer_gui_design',
-                            path='%s/etc/check_mk/multisite.d/zzz_customer_gui_design.mk' %
-                            cmk.utils.paths.omd_root,
+                            site_path='etc/check_mk/multisite.d/zzz_customer_gui_design.mk',
                             excludes=[]),
             ReplicationPath(ty='file',
                             ident='customer_multisite',
-                            path='%s/etc/check_mk/multisite.d/customer.mk' %
-                            cmk.utils.paths.omd_root,
+                            site_path='etc/check_mk/multisite.d/customer.mk',
                             excludes=[]),
             ReplicationPath(
                 ty='file',
                 ident='gui_logo',
-                path='%s/local/share/check_mk/web/htdocs/themes/classic/images/sidebar_top.png' %
-                cmk.utils.paths.omd_root,
+                site_path='local/share/check_mk/web/htdocs/themes/classic/images/sidebar_top.png',
                 excludes=[]),
             ReplicationPath(
                 ty='file',
                 ident='gui_logo_dark',
-                path='%s/local/share/check_mk/web/htdocs/themes/modern-dark/images/mk-logo.png' %
-                cmk.utils.paths.omd_root,
+                site_path='local/share/check_mk/web/htdocs/themes/modern-dark/images/mk-logo.png',
                 excludes=[]),
             ReplicationPath(
                 ty='file',
                 ident='gui_logo_facelift',
-                path='%s/local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png' %
-                cmk.utils.paths.omd_root,
+                site_path='local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png',
                 excludes=[]),
         ]
 
@@ -139,7 +124,7 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
             ReplicationPath(
                 ty="file",
                 ident="sitespecific",
-                path="%s/site_globals/sitespecific.mk" % work_dir,
+                site_path="site_globals/sitespecific.mk",
                 excludes=[],
             ),
         ]
@@ -149,7 +134,7 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
             ReplicationPath(
                 ty='file',
                 ident='distributed_wato',
-                path='%s/etc/check_mk/conf.d/distributed_wato.mk' % work_dir,
+                site_path='etc/check_mk/conf.d/distributed_wato.mk',
                 excludes=['.*new*'],
             ),
         ]
@@ -159,26 +144,28 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
                                                      is_pre_17_remote_site)) == sorted(expected)
 
 
-def test_add_replication_paths_pre_17():
+def test_add_replication_paths_pre_17(monkeypatch):
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", "/path")
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths([
         ("dir", "abc", "/path/to/abc"),
         ("dir", "abc", "/path/to/abc", ["e1", "e2"]),
     ])
+    monkeypatch.undo()
 
     assert activate_changes.get_replication_paths()[-2] == ReplicationPath(
-        "dir", "abc", "/path/to/abc", [])
+        "dir", "abc", "to/abc", [])
     assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "/path/to/abc", ["e1", "e2"])
+        "dir", "abc", "to/abc", ["e1", "e2"])
 
 
 def test_add_replication_paths():
     activate_changes.add_replication_paths([
-        ReplicationPath("dir", "abc", "/path/to/abc", ["e1", "e2"]),
+        ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
     ])
 
     assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "/path/to/abc", ["e1", "e2"])
+        "dir", "abc", "path/to/abc", ["e1", "e2"])
 
 
 @pytest.mark.parametrize("expected, site_status", [

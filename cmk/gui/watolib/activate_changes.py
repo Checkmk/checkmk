@@ -123,17 +123,6 @@ SnapshotSettings = NamedTuple(
         ("create_pre_17_snapshot", bool),
     ])
 
-
-def _replace_omd_root(new_root, rp):
-    # type: (str, ReplicationPath) -> ReplicationPath
-    return ReplicationPath(
-        ty=rp.ty,
-        ident=rp.ident,
-        path=rp.path.replace(cmk.utils.paths.omd_root, new_root),
-        excludes=rp.excludes,
-    )
-
-
 # Directories and files to synchronize during replication
 _replication_paths = []  # type: List[ReplicationPath]
 
@@ -155,9 +144,13 @@ def add_replication_paths(paths):
             if len(path) not in [3, 4]:
                 raise Exception("invalid replication path %r" % (path,))
 
+            # add_replication_paths with tuples used absolute paths, make them relative to our
+            # OMD_ROOT directory now
+            site_path = os.path.relpath(path[2], cmk.utils.paths.omd_root)
+
             # mypy does not understand this
             excludes = path[3] if len(path) == 4 else []  # type: ignore[misc]
-            clean_paths.append(ReplicationPath(path[0], path[1], path[2], excludes))
+            clean_paths.append(ReplicationPath(path[0], path[1], site_path, excludes))
             continue
 
         clean_paths.append(path)
@@ -168,35 +161,53 @@ def add_replication_paths(paths):
 def get_replication_paths():
     # type: () -> List[ReplicationPath]
     paths = [
-        ReplicationPath("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(), []),
-        ReplicationPath("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(), []),
-        ReplicationPath("file", "htpasswd", cmk.utils.paths.htpasswd_file, []),
-        ReplicationPath("file", "auth.secret",
-                        '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file), []),
-        ReplicationPath("file", "auth.serials",
-                        '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), []),
+        ReplicationPath(
+            "dir", "check_mk",
+            os.path.relpath(cmk.gui.watolib.utils.wato_root_dir(), cmk.utils.paths.omd_root), []),
+        ReplicationPath(
+            "dir", "multisite",
+            os.path.relpath(cmk.gui.watolib.utils.multisite_dir(), cmk.utils.paths.omd_root), []),
+        ReplicationPath("file", "htpasswd",
+                        os.path.relpath(cmk.utils.paths.htpasswd_file, cmk.utils.paths.omd_root),
+                        []),
+        ReplicationPath(
+            "file", "auth.secret",
+            os.path.relpath('%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                            cmk.utils.paths.omd_root), []),
+        ReplicationPath(
+            "file", "auth.serials",
+            os.path.relpath('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                            cmk.utils.paths.omd_root), []),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ReplicationPath("dir", "usersettings", cmk.utils.paths.var_dir + "/web",
+        ReplicationPath("dir", "usersettings",
+                        os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
                         ["*/report-thumbnails"]),
-        ReplicationPath("dir", "mkps", cmk.utils.paths.var_dir + "/packages", []),
-        ReplicationPath("dir", "local", cmk.utils.paths.omd_root + "/local", []),
+        ReplicationPath(
+            "dir", "mkps",
+            os.path.relpath(cmk.utils.paths.var_dir + "/packages", cmk.utils.paths.omd_root), []),
+        ReplicationPath(
+            "dir", "local",
+            os.path.relpath(cmk.utils.paths.omd_root + "/local", cmk.utils.paths.omd_root), []),
     ]  # type: List[ReplicationPath]
 
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
         paths += [
-            ReplicationPath("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(), []),
+            ReplicationPath(
+                "dir", "liveproxyd",
+                os.path.relpath(cmk.gui.watolib.utils.liveproxyd_config_dir(),
+                                cmk.utils.paths.omd_root), []),
         ]
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-        _rule_pack_dir = str(ec.rule_pack_dir())
+        _rule_pack_dir = str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
         paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
 
-        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
+        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
         paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
     # There are some edition specific paths available during unit tests when testing other
@@ -815,7 +826,8 @@ class SnapshotManager(object):
         else:
             generate_function = snapshot_creator.generate_snapshot
 
-        generate_function(target_filepath=snapshot_settings.snapshot_path,
+        generate_function(snapshot_work_dir=snapshot_settings.work_dir,
+                          target_filepath=snapshot_settings.snapshot_path,
                           generic_components=generic_site_components,
                           custom_components=custom_site_components,
                           reuse_identical_snapshots=self._reuse_identical_snapshots)
@@ -932,9 +944,8 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if component.ident == "sitespecific":
                 continue  # Will be created for each site individually later
 
-            source_path = Path(
-                component.path.replace(snapshot_settings.work_dir, cmk.utils.paths.omd_root))
-            target_path = Path(component.path)
+            source_path = Path(cmk.utils.paths.omd_root).joinpath(component.site_path)
+            target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
 
             store.makedirs(target_path.parent)
 
@@ -949,7 +960,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # Recursively hard link files (rsync --link-dest or cp -al)
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
-            #shutil.copytree(source_path, component.path, copy_function=os.link)
+            #shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
             p = subprocess.Popen(
                 ["cp", "-al", str(source_path),
                  str(target_path.parent) + "/"],
@@ -1509,10 +1520,10 @@ def get_number_of_pending_changes():
     return len(changes.grouped_changes())
 
 
-def apply_pre_17_sync_snapshot(site_id, tar_content, components):
-    # type: (SiteId, bytes, List[ReplicationPath]) -> bool
+def apply_pre_17_sync_snapshot(site_id, tar_content, base_dir, components):
+    # type: (SiteId, bytes, Path, List[ReplicationPath]) -> bool
     """Apply the snapshot received from a central site to the local site"""
-    extract_from_buffer(tar_content, components)
+    extract_from_buffer(tar_content, base_dir, components)
 
     try:
         _save_pre_17_site_globals_on_slave_site(tar_content)
@@ -1543,9 +1554,12 @@ def _save_pre_17_site_globals_on_slave_site(tarcontent):
         if not os.path.exists(tmp_dir):
             store.mkdir(tmp_dir)
 
-        extract_from_buffer(tarcontent, [ReplicationPath("dir", "sitespecific", tmp_dir, [])])
+        extract_from_buffer(
+            tarcontent, Path(tmp_dir),
+            [ReplicationPath("dir", "sitespecific", "site_globals/sitespecific.mk", [])])
 
-        site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
+        site_globals = store.load_object_from_file(tmp_dir + "site_globals/sitespecific.mk",
+                                                   default={})
         save_site_global_settings(site_globals)
     finally:
         shutil.rmtree(tmp_dir)
@@ -1616,10 +1630,6 @@ def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
     if not site_config.get("replicate_mkps"):
         paths = [e for e in paths if e.ident not in ["local", "mkps"]]
 
-    # Change all default replication paths to be in the site specific temporary directory
-    # These paths are then packed into the sync snapshot
-    paths = [_replace_omd_root(work_dir, repl_comp) for repl_comp in paths]
-
     # Add site-specific global settings
     if is_pre_17_remote_site:
         # When synchronizing with pre 1.7 sites, the sitespecific.mk from the config domain
@@ -1631,7 +1641,7 @@ def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
             ReplicationPath(
                 ty="file",
                 ident="sitespecific",
-                path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
+                site_path="site_globals/sitespecific.mk",
                 excludes=[],
             ))
 
@@ -1641,7 +1651,7 @@ def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
             ReplicationPath(
                 ty="file",
                 ident="distributed_wato",
-                path=os.path.join(work_dir, "etc/check_mk/conf.d/distributed_wato.mk"),
+                site_path="etc/check_mk/conf.d/distributed_wato.mk",
                 excludes=[],
             ))
 
@@ -1657,7 +1667,7 @@ def _add_pre_17_sitespecific_excludes(paths):
             p = ReplicationPath(
                 ty=p.ty,
                 ident=p.ident,
-                path=p.path,
+                site_path=p.site_path,
                 excludes=p.excludes[:] + ["sitespecific.mk"],
             )
 

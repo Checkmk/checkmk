@@ -7,9 +7,15 @@
 import os
 import re
 import time
+import sys
 from typing import (  # pylint: disable=unused-import
     NamedTuple, Type,
 )
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
 import six
 
 import cmk.utils.version as cmk_version
@@ -709,5 +715,5 @@ class AutomationPushSnapshot(AutomationCommand):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
-                request.site_id, request.tar_content,
+                request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())

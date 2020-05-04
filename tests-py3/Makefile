@@ -3,14 +3,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 SHELL    := /bin/bash -e
-NODE_MODULES := ../node_modules
 PIPENV3  := ../scripts/run-pipenv 3
 PYTEST   := $(PIPENV3) run py.test -vv
 YAPF     := $(PIPENV3) run yapf
 BANDIT   := $(PIPENV3) run bandit
 MYPY     := ../scripts/run-mypy
 
-.PHONY: help test-docker test-pylint test-unit \
+.PHONY: help prepare-node-modules test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker \
@@ -44,8 +43,8 @@ help:
 	@echo "test-bandit                   - Run bandit (security) tests"
 	@echo "test-agent-integration        - Run agent (plugin) related integration tests"
 
-$(NODE_MODULES):
-	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
+prepare-node-modules:
+	$(MAKE) -C .. node_modules/.bin/webpack
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
@@ -147,19 +146,19 @@ test-format-python3: ../.style.yapf
 test-packaging:
 	$(PYTEST) -T packaging packaging
 
-test-gui-crawl: $(NODE_MODULES)
+test-gui-crawl: prepare-node-modules
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
 
-test-integration: $(NODE_MODULES)
+test-integration: prepare-node-modules
 	CI=true $(PIPENV3) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
 
-test-integration-docker-debug test-composition-docker-debug: $(NODE_MODULES)
+test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
 	$(PIPENV3) run scripts/run-dockerized.py debug
 
 test-composition-docker:
@@ -168,7 +167,7 @@ test-composition-docker:
 # TODO: Need to either untie composition tests with agent updater code or migrate
 # the agent updater to Python 3. The composition tests currently import the agent
 # updater code for the test execution, which should not be done.
-test-composition: $(NODE_MODULES)
+test-composition: prepare-node-modules
 	../scripts/run-pipenv 2 run py.test -vv -T composition $(realpath ../tests/composition)
 
 test-pipenv-deps:

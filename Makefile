@@ -295,12 +295,6 @@ $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find
 	mv $$TMPFILE $@
 
 
-node_modules/.bin/redoc-cli:
-	@if test ! -f node_modules/.bin/redoc-cli; then \
-		make node_modules \
-	fi
-
-
 $(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
 	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
 		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
@@ -324,8 +318,18 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json package-lock.json
-	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+#
+# NOTE 1: What we actually want are grouped targets, but this would require GNU
+# make >= 4.3, so we use the common workaround of an intermediate target.
+#
+# NOTE 2: NPM people have a totally braindead idea about reproducible builds
+# which almost all other people consider a bug, so we have to touch our target
+# files. Read https://github.com/npm/npm/issues/20439 and be amazed...
+.INTERMEDIATE: .ran-npm
+node_modules/.bin/webpack: .ran-npm
+node_modules/.bin/redoc-cli: .ran-npm
+.ran-npm: package.json package-lock.json
+	if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
 	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
 	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
@@ -333,18 +337,19 @@ node_modules: package.json package-lock.json
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY
+	npm install --audit=false --unsafe-perm $$REGISTRY ; \
+	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
+web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
-web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
+web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # This target is used to generate a css file for the virtual appliance. It is
 # called from the cma git's Makefile and the built css file is moved to
 # ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
+web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff

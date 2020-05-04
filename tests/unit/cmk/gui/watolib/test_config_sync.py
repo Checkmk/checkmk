@@ -187,14 +187,6 @@ def _get_expected_paths(user_id, is_pre_17_site):
                 'etc/check_mk/mknotifyd.d/wato/sitespecific.mk',
             ]
 
-    # TODO: The second condition should not be needed. Seems to be a subtle difference between the
-    # CME and CRE/CEE snapshot logic
-    if not cmk_version.is_managed_edition():
-        expected_paths += [
-            'etc/check_mk/mkeventd.d/mkp',
-            'etc/check_mk/mkeventd.d/mkp/rule_packs',
-        ]
-
     # The paths are registered once the enterprise plugins are available, independent of the
     # cmk_version.edition_short() value.
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
@@ -410,9 +402,12 @@ def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class
             "etc/check_mk/liveproxyd.d/wato",
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
-            "etc/check_mk/mkeventd.d/mkp",
-            "etc/check_mk/mkeventd.d/mkp/rule_packs",
         ]
+
+    expected_paths += [
+        'etc/check_mk/mkeventd.d/mkp',
+        'etc/check_mk/mkeventd.d/mkp/rule_packs',
+    ]
 
     paths = [str(p.relative_to(unpack_dir)) for p in unpack_dir.glob("**/*")]
     assert sorted(paths) == sorted(expected_paths)

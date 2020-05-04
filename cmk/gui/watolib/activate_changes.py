@@ -832,7 +832,8 @@ class SnapshotManager(object):
         # 2. Create snapshot for synchronization (Only for pre 1.7 sites)
         generic_components = self._data_collector.get_generic_components()
         with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
-            for site_id, snapshot_settings in self._site_snapshot_settings.items():
+            for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
+                                                     key=lambda x: x[0]):
                 if snapshot_settings.create_pre_17_snapshot:
                     self._create_site_sync_snapshot(site_id, snapshot_settings, snapshot_creator,
                                                     self._data_collector)
@@ -893,7 +894,8 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         self._prepare_site_config_directory(first_site)
         self._clone_site_config_directories(first_site, site_ids)
 
-        for site_id, snapshot_settings in self._site_snapshot_settings.items():
+        for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
+                                                 key=lambda x: x[0]):
             # Generate site specific global settings file
             if snapshot_settings.create_pre_17_snapshot:
                 create_site_globals_file(site_id, snapshot_settings.work_dir,

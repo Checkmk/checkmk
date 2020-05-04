@@ -108,8 +108,8 @@ def _get_activation_manager(monkeypatch):
         })
 
     activation_manager = activate_changes.ActivateChangesManager()
-    activation_manager._sites = ["unit", "unit_remote_1"]
-    activation_manager._changes_by_site = {"unit": [], "unit_remote_1": []}
+    activation_manager._sites = ["unit_remote_1"]
+    activation_manager._changes_by_site = {"unit_remote_1": []}
     activation_manager._activation_id = "123"
     return activation_manager
 

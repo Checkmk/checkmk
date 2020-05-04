@@ -375,117 +375,31 @@ function sap_hana_replication_status () {
     echo "$result"
 }
 
-function sap_hana_connect() {
+function sap_hana_internal_hostname() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
-    local hostname="$4"
-    local landscape="$5"
-    local status="$6"
-
-    local port
-    local host_role
-
-    # Get major version
-    major=$(echo "$status" | awk -F";" '{print $3}' | awk -F"." '{print $1}')
-
-    # We have differnt ports for HANA 1.0 and HANA 2.0
-    if [ "$major" == "1" ];then
-        port="3${instance}15"
-    elif [ "$major" == "2" ];then
-        port="3${instance}13"
-    else
-        echo "Cannot determine port due to unknown HANA version."
-        return
-    fi
-
-    host_role=$(sap_hana_role_from_landscape "$landscape" "$hostname")
-
-    # The following logic was taken from SUP-1436
-    if [ "$host_role" = "worker" ];then
-        resp=$(su - "${instance_user}" -c "/hana/shared/${sid}/hdbclient/odbcreg ${hostname}:${port} ${sid} ${USER_CONNECT} ${PASSWORD_CONNECT}")
-    else
-        resp="retcode: 1"
-    fi
-
-    echo "$resp" | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$//g"
-}
-
-function sap_hana_role_from_landscape() {
-    local landscape="$1"
-    local hostname="$2"
-
-    # We expect the info for "Host actual role" *always* in column 15 (see SUP-1436)
-    local col_host_actual_role=15
-    local col_hosts=1
+    local col_hosts=2
     local row_hosts_start=5
-    local cur_row=1
-
-    local cur_host_actual_role
-    local landscape
-
-    while read -r line; do
-
-        if [[ "${line:0:1}" != "|" ]]; then
-            # End of table reached
-            break
-        fi
-
-        # Remove leading "|" in order to get indexes starting from 1
-        line=$(echo "$line" | sed -e "s/^|//")
-
-        if [ $cur_row -ge $row_hosts_start ]; then
-
-            cur_hostname=$(echo "$line" | awk -F "|" '{print $col}' col=$col_hosts | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-            if [ "$cur_hostname" =  "$hostname" ]; then
-                cur_host_actual_role=$(echo "$line" | awk -F "|" '{print $col}' col=$col_host_actual_role | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-                echo "$cur_host_actual_role"
-                break
-            fi
-        fi
-        cur_row=$((cur_row+1))
-    done <<< "$landscape"
-}
-
-function sap_hana_host_from_landscape() {
-    local landscape=$1
-
-    local col_hosts=1
-    local row_hosts_start=5
-    local cur_row=1
-
     local cur_hostname
     local cur_IP
+    local cur_row=1
+    local landscape
+
+    landscape=$(su - "${instance_user}" -c "python /usr/sap/${sid}/HDB${instance}/exe/python_support/landscapeHostConfiguration.py")
 
     while read -r line; do
-
-        if [[ "${line:0:1}" != "|" ]]; then
-            # End of table reached
-            break
-        fi
-
-        # Remove leading "|" in order to get indexes starting from 1
-        line=$(echo "$line" | sed -e "s/^|//")
-
         if [ $cur_row -ge $row_hosts_start ]; then
 
             cur_hostname=$(echo "$line" | awk -F "|" '{print $col}' col=$col_hosts | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-            if [[ -z "$cur_hostname" ]]; then
-                continue
-            fi
-
             cur_IP=$(nslookup "$cur_hostname" | grep "Address" | grep -v "127." | awk '{print $2}')
 
             if [[ -z "$cur_IP" ]]; then
                 continue
             fi
 
-            # Return *only* hostname with active IP
             if ifconfig -a | grep -q "$cur_IP"; then
                 echo "$cur_hostname"
-                break
             fi
 
         fi
@@ -511,12 +425,9 @@ function do_query () {
     local INSTANCE_USER="$3"
     local HOSTNAME
     local INSTANCE_NAME="[[${SID} ${INSTANCE}]]"
-    local SAP_LANDSCAPE
-
-    SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
 
     if [ -z "$HOSTNAME" ]; then
-        HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
+        HOSTNAME=$(sap_hana_internal_hostname "$SID" "$INSTANCE" "$INSTANCE_USER")
     else
         HOSTNAME=$(hostname)
     fi
@@ -575,12 +486,6 @@ function do_query () {
     echo "<<<sap_hana_proc:sep(59)>>>"
     echo "$INSTANCE_NAME"
     mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_proc "$HOSTNAME")"
-
-    if [ -v PASSWORD_CONNECT ] && [ -v USER_CONNECT ]; then
-        echo "<<<sap_hana_connect:sep(59)>>>"
-        echo "$INSTANCE_NAME"
-        sap_hana_connect "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$status_output"
-    fi
 
     # echo "<<<sap_hana_threads:sep(59)>>>"
     # echo $INSTANCE_NAME

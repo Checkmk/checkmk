@@ -329,7 +329,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
     if policy_type is not None:
         state = 0
         infotext = "Policy type: %s" % policy_type
-        if policy_type.lower() != "active":
+        if policy_type.lower() not in ["active", "initial policy"]:
             state = 2
             infotext += " (no policy installed)"
         yield state, infotext

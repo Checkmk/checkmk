@@ -9,6 +9,7 @@ import re
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.tty as tty
+import cmk.utils.snmp_cache as snmp_cache
 from cmk.utils.regex import regex
 
 import cmk.base.check_utils
@@ -90,7 +91,7 @@ def _snmp_scan(host_config,
     # this to evaluate if_disabled_if64_checks.
     check_api_utils.set_hostname(host_config.hostname)
 
-    snmp.initialize_single_oid_cache(host_config)
+    snmp_cache.initialize_single_oid_cache(host_config)
     console.vverbose("  SNMP scan:\n")
     if not config.get_config_cache().in_binary_hostlist(host_config.hostname,
                                                         config.snmp_without_sys_descr):
@@ -107,8 +108,8 @@ def _snmp_scan(host_config,
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                          "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
-        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
+        snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
+        snmp_cache.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
     if for_inv:
         these_plugin_names = [
@@ -174,7 +175,7 @@ def _snmp_scan(host_config,
     )
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
-    snmp.write_single_oid_cache(host_config)
+    snmp_cache.write_single_oid_cache(host_config)
     return filtered
 
 

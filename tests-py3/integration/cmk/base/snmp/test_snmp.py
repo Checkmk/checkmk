@@ -17,6 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils.log as log
 import cmk.utils.debug as debug
+import cmk.utils.snmp_cache as snmp_cache
 
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
@@ -197,8 +198,8 @@ def test_get_single_oid_cache(snmp_config):
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
     assert snmp.get_single_oid(snmp_config, oid) == expected_value
-    assert snmp._is_in_single_oid_cache(oid)
-    cached_oid = snmp._get_oid_from_single_oid_cache(oid)
+    assert snmp_cache.is_in_single_oid_cache(oid)
+    cached_oid = snmp_cache.get_oid_from_single_oid_cache(oid)
     assert cached_oid == expected_value
     assert isinstance(cached_oid, six.text_type)
 

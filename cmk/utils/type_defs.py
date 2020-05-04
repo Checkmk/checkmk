@@ -62,6 +62,7 @@ BakeryHostName = Union[bool, None, HostName]
 TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
 
 ContextName = str
+DecodedString = Text
 OID = str
 RawValue = bytes
 SNMPRowInfo = List[Tuple[OID, RawValue]]

@@ -20,6 +20,7 @@ import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKBailOut
 import cmk.utils.store as store
+import cmk.utils.snmp_cache as snmp_cache
 from cmk.utils.encoding import convert_to_unicode
 
 import cmk.base.config as config
@@ -52,96 +53,7 @@ except ImportError:
 
 _enforce_stored_walks = False
 
-# TODO: Replace this by generic caching
-_g_single_oid_hostname = None  # type: Optional[HostName]
-_g_single_oid_ipaddress = None  # type: Optional[HostAddress]
-_g_single_oid_cache = None  # type: Optional[Dict[OID, Optional[DecodedString]]]
-# TODO: Move to StoredWalkSNMPBackend?
-_g_walk_cache = {}  # type: Dict[str, List[str]]
-
 SNMPWalkOptions = Dict[str, List[OID]]
-
-#.
-#   .--caching-------------------------------------------------------------.
-#   |                                _     _                               |
-#   |                  ___ __ _  ___| |__ (_)_ __   __ _                   |
-#   |                 / __/ _` |/ __| '_ \| | '_ \ / _` |                  |
-#   |                | (_| (_| | (__| | | | | | | | (_| |                  |
-#   |                 \___\__,_|\___|_| |_|_|_| |_|\__, |                  |
-#   |                                              |___/                   |
-#   '----------------------------------------------------------------------'
-
-#TODO CACHING
-
-
-def initialize_single_oid_cache(snmp_config, from_disk=False):
-    # type: (SNMPHostConfig, bool) -> None
-    global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
-
-    if (not (_g_single_oid_hostname == snmp_config.hostname and
-             _g_single_oid_ipaddress == snmp_config.ipaddress) or _g_single_oid_cache is None):
-        _g_single_oid_hostname = snmp_config.hostname
-        _g_single_oid_ipaddress = snmp_config.ipaddress
-        if from_disk:
-            _g_single_oid_cache = _load_single_oid_cache(snmp_config)
-        else:
-            _g_single_oid_cache = {}
-
-
-def write_single_oid_cache(snmp_config):
-    # type: (SNMPHostConfig) -> None
-    if not _g_single_oid_cache:
-        return
-
-    cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-    cache_path = "%s/%s.%s" % (cache_dir, snmp_config.hostname, snmp_config.ipaddress)
-    store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
-
-
-def set_single_oid_cache(oid, value):
-    # type: (OID, Optional[DecodedString]) -> None
-    assert _g_single_oid_cache is not None
-    _g_single_oid_cache[oid] = value
-
-
-def _is_in_single_oid_cache(oid):
-    # type: (OID) -> bool
-    assert _g_single_oid_cache is not None
-    return oid in _g_single_oid_cache
-
-
-def _get_oid_from_single_oid_cache(oid):
-    # type: (OID) -> Optional[DecodedString]
-    assert _g_single_oid_cache is not None
-    return _g_single_oid_cache.get(oid)
-
-
-def _load_single_oid_cache(snmp_config):
-    # type: (SNMPHostConfig) -> Dict[OID, Optional[DecodedString]]
-    cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
-                               snmp_config.ipaddress)
-    return store.load_object_from_file(cache_path, default={})
-
-
-def cleanup_host_caches():
-    # type: () -> None
-    global _g_walk_cache
-    _g_walk_cache = {}
-    _clear_other_hosts_oid_cache(None)
-    if inline_snmp:
-        inline_snmp.cleanup_inline_snmp_globals()
-
-
-def _clear_other_hosts_oid_cache(hostname):
-    # type: (Optional[str]) -> None
-    global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
-    if _g_single_oid_hostname != hostname:
-        _g_single_oid_cache = None
-        _g_single_oid_hostname = hostname
-        _g_single_oid_ipaddress = None
-
 
 #.
 #   .--Generic SNMP--------------------------------------------------------.
@@ -334,9 +246,9 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
         oid = '.' + oid
 
     # TODO: Use generic cache mechanism
-    if _is_in_single_oid_cache(oid):
+    if snmp_cache.is_in_single_oid_cache(oid):
         console.vverbose("       Using cached OID %s: " % oid)
-        cached_value = _get_oid_from_single_oid_cache(oid)
+        cached_value = snmp_cache.get_oid_from_single_oid_cache(oid)
         console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, cached_value, tty.normal))
         return cached_value
 
@@ -372,7 +284,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     else:
         decoded_value = value
 
-    set_single_oid_cache(oid, decoded_value)
+    snmp_cache.set_single_oid_cache(oid, decoded_value)
     return decoded_value
 
 
@@ -422,14 +334,14 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
 
         console.vverbose("  Loading %s from %s\n" % (oid, path))
 
-        if snmp_config.hostname in _g_walk_cache:
-            lines = _g_walk_cache[snmp_config.hostname]
+        if snmp_cache.host_cache_contains(snmp_config.hostname):
+            lines = snmp_cache.host_cache_get(snmp_config.hostname)
         else:
             try:
                 lines = open(path).readlines()
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
-            _g_walk_cache[snmp_config.hostname] = lines
+            snmp_cache.host_cache_set(snmp_config.hostname, lines)
 
         begin = 0
         end = len(lines)
@@ -949,11 +861,11 @@ def do_snmpget(oid, hostnames):
     for hostname in hostnames:
         #TODO what about SNMP management boards?
         snmp_config = create_snmp_host_config(hostname)
-        initialize_single_oid_cache(snmp_config)
+        snmp_cache.initialize_single_oid_cache(snmp_config)
 
         value = get_single_oid(snmp_config, oid)
         console.output("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
         cmk.base.cleanup.cleanup_globals()
 
 
-cmk.base.cleanup.register_cleanup(cleanup_host_caches)
+cmk.base.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)

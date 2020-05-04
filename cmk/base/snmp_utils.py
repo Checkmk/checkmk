@@ -12,8 +12,8 @@ import string
 import six
 
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    ContextName, OID, RawValue, SNMPCommunity, SNMPCredentials, SNMPHostConfig, SNMPRowInfo,
-    SNMPTiming,
+    DecodedString, ContextName, OID, RawValue, SNMPCommunity, SNMPCredentials, SNMPHostConfig,
+    SNMPRowInfo, SNMPTiming,
 )
 from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
@@ -25,7 +25,6 @@ OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
 SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
 MultiOIDInfo = List[SingleOIDInfo]
 OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
-DecodedString = Text
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]

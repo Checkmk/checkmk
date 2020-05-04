@@ -46,14 +46,16 @@ this:
  3. **Commit** changes to your own feature branch
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
- 
+
  ⚠ Please reply when asked for more information or to update your PR
-in case in didn't meet the requirements (e.g. failed checks). 
+in case in didn't meet the requirements (e.g. failed checks).
 If there's no response from the author for at least 14 days, the PR will be closed.
 
-If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/). You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
+If it’s your first time to contribute to an open source project, we recommend reading
+[this guide](https://opensource.guide/how-to-contribute/). You may also want to
+try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
 
-## How to prepare for contributing?
+## How to prepare for contributing
 
 We are developing Checkmk on **Ubuntu Linux** systems. It's not a hard requirement, but
 most helper scripts are optimized for this, so we highly recommend it for best
@@ -65,8 +67,8 @@ To set up the development environment do the following:
 
     Then change to the just created project directory.
 
-    ```
-    $ cd checkmk
+    ```bash
+    cd checkmk
     ```
 
 2. Install development dependencies
@@ -75,8 +77,8 @@ To set up the development environment do the following:
     additional software, like tools for development and testing. Execute this in
     the project directory:
 
-    ```
-    $ make setup
+    ```bash
+    make setup
     ```
 
     > This is optimized for Ubuntu, but you may also get all the required programs
@@ -96,16 +98,17 @@ To set up the development environment do the following:
     > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
     > your environment and leave you unable to use pip due to a backports module clash!
 
-    ```
+    ```bash
     pip3 install pre-commit
     ```
 
     After successful installation, hook it up to your git-repository by issuing
     the following command inside your git repository:
 
-    ```
+    ```bash
     pre-commit install --allow-missing-config
     ```
+
     The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
     support this feature and are missing the configuration file won't throw errors.
 
@@ -118,25 +121,24 @@ To set up the development environment do the following:
     which checks your commit *after* it has been made. You can then fix errors and amend or squash
     your commit. You can also use this script in a rebase like such:
 
-    ```
+    ```bash
     git rebase --exec scripts/check-current-commit
     ```
 
     This will rebase your current changes and check each commit for errors. After fixing them you can
     then continue rebasing.
 
-
 Once done, you are ready for the next chapter.
 
-## How to change Checkmk?
+## How to change Checkmk
 
 1. Create your feature branch
 
     The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
 
-    ```
-    $ git checkout master
-    $ git checkout -b my-feature-branch
+    ```bash
+    git checkout master
+    git checkout -b my-feature-branch
     ```
 
     The first command ensures you start with the master branch. The second command
@@ -144,7 +146,7 @@ Once done, you are ready for the next chapter.
 
     Let's check if everything worked fine:
 
-    ```
+    ```bash
     $ git status
     On branch my-feature-branch
     (...)
@@ -161,8 +163,8 @@ Once done, you are ready for the next chapter.
 
     Once you are done with the commits and tests in your feature branch you could push them to your own GitHub fork like this.
 
-    ```
-    $ git push -u origin my-feature-branch
+    ```bash
+    git push -u origin my-feature-branch
     ```
 
     In the output of this command you will see a URL which you can open to create a pull request from your feature branch.
@@ -186,13 +188,13 @@ current upstream branch.
 To be able to do this, you need to prepare your project directory once with
 this command:
 
-```
+```bash
 git remote add upstream https://github.com/tribe29/checkmk.git
 ```
 
 From now, you can always update your feature branches with this command:
 
-```
+```bash
 git pull --rebase upstream master
 ```
 
@@ -210,30 +212,30 @@ then meld them together with the previous commit.
 
 This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-to-amend-a-commit-on-a-github-pull-request) may help you.
 
-## How to execute tests?
+## How to execute tests
 
 The public repository of [Checkmk](https://github.com/tribe29/checkmk) is
 integrated with Travis CI. Each time a Pull request is submitted, Travis will
 have a look at the changes.
 
-**⚠ Important:** We only review PRs that are confirmed to be OK by Travis. 
-If a check failed, please fix it and update the PR. 
+**⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
+If a check failed, please fix it and update the PR.
 PRs will be closed if the author didn't respond for at least 14 days.
 
 It is recommended to run all tests locally before submitting a PR. If you want
 to execute the full test suite, you can do this by executing these commands in
 the project base directory:
 
-```
-$ make -C tests test-pylint
-$ make -C tests test-bandit
-$ make -C tests test-unit
-$ make -C tests test-python-futurize
-$ make -C tests test-format-python
+```bash
+make -C tests test-pylint
+make -C tests test-bandit
+make -C tests test-unit
+make -C tests test-python-futurize
+make -C tests test-format-python
 
-$ make -C tests-py3 test-pylint
-$ make -C tests-py3 test-unit
-$ make -C tests-py3 test-mypy-raw
+make -C tests-py3 test-pylint
+make -C tests-py3 test-unit
+make -C tests-py3 test-mypy-raw
 ```
 
 Some of these commands take several minutes, for example the command
@@ -257,11 +259,11 @@ Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_g
 
 ## Commit messages
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- The first line is a short title (limit to 72 characters or less)
-- Reference issues and pull requests liberally after the first line
-- Write [good commit messages](https://chris.beams.io/posts/git-commit/)
+* Use the present tense ("Add feature" not "Added feature")
+* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+* The first line is a short title (limit to 72 characters or less)
+* Reference issues and pull requests liberally after the first line
+* Write [good commit messages](https://chris.beams.io/posts/git-commit/)
 
 ## Python
 
@@ -314,9 +316,9 @@ names are really available and needed in the current namespace.
 
 ### Exception handling
 
-- Easier to ask for forgiveness than permission
+* Easier to ask for forgiveness than permission
 
-    ```
+    ```python
     def get_status(file):
         if not os.path.exists(file):
             print "file not found"
@@ -326,7 +328,7 @@ names are really available and needed in the current namespace.
 
     vs.
 
-    ```
+    ```python
     def get_status(file):
         try:
             return open(file).readline()
@@ -335,105 +337,105 @@ names are really available and needed in the current namespace.
             sys.exit(1)
     ```
 
-- Be as specific as possible when catching exceptions
-- Keep try-blocks as small as possible
-- Don't use `except:` (Slightly better for special cases: `except Exception`)
+* Be as specific as possible when catching exceptions
+* Keep try-blocks as small as possible
+* Don't use `except:` (Slightly better for special cases: `except Exception`)
 
 ### Paths and files
 
-- Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
+* Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
 
-  ```
+  ```python
   from pathlib2 import Path
   ```
 
-- Use context-managers (the `with` keyword) to open files.
-- You are welcome to refactor old style file IO to pathlib (with tests :-))
+* Use context-managers (the `with` keyword) to open files.
+* You are welcome to refactor old style file IO to pathlib (with tests :-))
 
 ### String formatting
 
-- Use classic format strings (`%s`) for the time being. We'll move over to the
+* Use classic format strings (`%s`) for the time being. We'll move over to the
   new `format()` syntax in the future, but for the moment we'd like to stay
   consistent.
 
 ### Sub processes
 
-- Use mechanisms that are natively available in Python instead of
+* Use mechanisms that are natively available in Python instead of
   subprocess/command line tools. Example: Don't use `tar` command line tools.
   Use the `tarfile` module instead. There may be good reasons to go with the
   command line tools in special situations.
 
-- Use secure methods for calling external programs to prevent shell injections
-  - Use the `subprocess` module instead of `os.system()` or `os.popen()`
-  - Use `shell=False` and `close_fds=True` with subprocess.
-  - Use `pipes.quote()` in case you need to create a command line string
+* Use secure methods for calling external programs to prevent shell injections
+  * Use the `subprocess` module instead of `os.system()` or `os.popen()`
+  * Use `shell=False` and `close_fds=True` with subprocess.
+  * Use `pipes.quote()` in case you need to create a command line string
 
 ### Argument parsing
 
-- Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
+* Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
   have to support Python <2.5, use `optparse`.
-
 
 ### Logging
 
-- Use logger or `cmk.log`, `cmk.gui.log` as base for logging
-- Add a logger object to `self._logger` to all classes (Use either a
+* Use logger or `cmk.log`, `cmk.gui.log` as base for logging
+* Add a logger object to `self._logger` to all classes (Use either a
   class/object specific child logger, the module level `logger` or
   `cmk.log.logger`)
-- Don't use format strings for log messages. Use: `logger.info('Hello, %s', world)`
+* Don't use format strings for log messages. Use: `logger.info('Hello, %s', world)`
 
 ### HTTP requests
 
-- Use `requests`, it's great!
-- Work with requests sessions in case you need to perform multiple requests
+* Use `requests`, it's great!
+* Work with requests sessions in case you need to perform multiple requests
 
 ### Times and Dates
 
-- Use top level functionality, e.g.: `datetime`, `dateutil`
+* Use top level functionality, e.g.: `datetime`, `dateutil`
 
 ### Comments
 
-- Document the non-obvious. Don't document the how, do document the why.
-- Use doc-strings for classes and methods.
+* Document the non-obvious. Don't document the how, do document the why.
+* Use doc-strings for classes and methods.
 
 ### Code structuring
 
-- Use the right data structure for combining data. For more complex code it
+* Use the right data structure for combining data. For more complex code it
   is important to carefully think about this. This may help you find the right
   data structure for your data. In increasing order of preference:
-    - Dictionaries: Worst possible representation. One has no clue whatsoever
+  * Dictionaries: Worst possible representation. One has no clue whatsoever
       about the valid keys nor the valid values for a given key. In addition,
       they are mutable, which might not be what one wants. In effect, we are
       abusing a useful mapping type to simulate a struct.
-    - Tuples of varying length: Basically the same as dictionaries with all the
+  * Tuples of varying length: Basically the same as dictionaries with all the
       downsides.
-    - Tuples of a fixed length: Slightly better, they have a fixed number of
+  * Tuples of a fixed length: Slightly better, they have a fixed number of
       slots and are immutable. Still, one has no clue what a slot should mean.
-    - `collectons.namedtuple`: A bit better than tuples of a fixed length, at
+  * `collectons.namedtuple`: A bit better than tuples of a fixed length, at
       least the slots have names now. Still no clue about the valid values of a
       slot.
-    - `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still
+  * `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still
       not really OO, because it is still a dumb data container, but at least we
       have reached a state where Pascal was in the 70s.
-    - A `class`: This is almost what we want. Note: Classes with tons of
+  * A `class`: This is almost what we want. Note: Classes with tons of
       static/class methods are actually //not// a class, they are a namespace
       in disguise, so we should not use them like that.
-    - A `class` with mypy type annotations: This is the optimum.  Now we're
+  * A `class` with mypy type annotations: This is the optimum.  Now we're
       talking OO and mypy can help us tremendously during e.g. refactorings.
-- Don't use global variables unless you have to and can do so thread-safe.
-- Don't assign attributes to function objects.
-- Use `abc` for specifying abstract classes, methods and properties and add
+* Don't use global variables unless you have to and can do so thread-safe.
+* Don't assign attributes to function objects.
+* Use `abc` for specifying abstract classes, methods and properties and add
   `raise NotImplementedError()` in abstract methods and properties)
-- Make class attributes explicit in the constructor or helper functions (Don't
+* Make class attributes explicit in the constructor or helper functions (Don't
   add them dynamically e.g. via a dict argument and ''getattr()'')
-- Extensive getter/setters: In Python it is acceptable to simply access class
+* Extensive getter/setters: In Python it is acceptable to simply access class
   or object members directly. In case you want to protect things from external
   access make use of `@property`
-- Use `@staticmethod` and `@classmethod` decorators for methods without
+* Use `@staticmethod` and `@classmethod` decorators for methods without
   references to `cls` or `self`
-- Use early exits in your functions.
+* Use early exits in your functions.
 
 ### Module: cmk
+
 * The entire Python code of Checkmk should be under the main module `cmk` in
   the future
 * Below `cmk.utils` there is a module that provides functionalities for all
@@ -455,15 +457,15 @@ names are really available and needed in the current namespace.
 
 ### Code formatting
 
-- We supply an `.editorconfig` file, which is used to automatically configure
+* We supply an `.editorconfig` file, which is used to automatically configure
   your editor to adhere to the most basic formatting style, like indents or
   line-lengths. If your editor doesn't already come with Editorconfig support,
   install [one of the available plugins](https://editorconfig.org/#download).
-- We use YAPF for automatic formatting of the Python code.
+* We use YAPF for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-- Multi line imports: Use braces instead of continuation character
+* Multi line imports: Use braces instead of continuation character
 
-    ```
+    ```python
     from germany import bmw, \
         mercedes, \
         audi
@@ -471,7 +473,7 @@ names are really available and needed in the current namespace.
 
     vs.
 
-    ```
+    ```python
     from germany import (
         bmw,
         mercedes,
@@ -488,7 +490,7 @@ a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run
 
 #### Manual invocation: Single file
 
-```
+```bash
 yapf -i [the_file.py]
 ```
 
@@ -496,7 +498,7 @@ yapf -i [the_file.py]
 
 If you want to format all Python files in the repository, you can run:
 
-```
+```bash
 make format-python
 ```
 
@@ -504,7 +506,7 @@ make format-python
 
 Our CI executes the following formatting test on the whole code base:
 
-```
+```bash
 make -C tests test-format-python
 ```
 
@@ -513,27 +515,27 @@ repository.
 
 #### Editor integration: *macs
 
-- plugins for vim and emacs with installation instructions can be found here:
-  https://github.com/google/yapf/tree/master/plugins
-- in Spacemacs yapfify-buffer is available in the Python layer; formatting on
+* plugins for vim and emacs with installation instructions can be found here:
+  <https://github.com/google/yapf/tree/master/plugins>
+* in Spacemacs yapfify-buffer is available in the Python layer; formatting on
   save can be enabled by setting ''python-enable-yapf-format-on-save'' to
   ''t''
-- In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
+* In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
   are many large files you may want to increase the timeout for rpc calls by
   setting ''elpy-rpc-timeout'' to ''20''
 
 #### Editor integration: vim
 
-- It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
+* It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
 
 Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
-```
+```vim
 let g:ale_fixers = {'python': ['isort, 'yapf']}
 let g:ale_fix_on_save = 1
 ```
 
-- for vim formatting on save should work with [autocmds](http://learnvimscriptthehardway.stevelosh.com/chapters/12.html)
+* for vim formatting on save should work with [autocmds](http://learnvimscriptthehardway.stevelosh.com/chapters/12.html)
 
 ### Type checking: mypy
 
@@ -547,18 +549,18 @@ Checkmk repository. For info about how to type hint refer to
 
 This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy there adjust the following things in the `.vimrc`:
 
-- Add mypy to the liners. With me it looks like this:
+* Add mypy to the liners. With me it looks like this:
 
-  ```
+  ```vim
   let g:ale_linters = {
   \ 'python': ['pylint', 'mypy'],
   \ 'javascript': ['eslint'],
   \}
   ```
 
-- Then tell the linter how to run mypy:
+* Then tell the linter how to run mypy:
 
-  ```
+  ```vim
   let g:ale_python_mypy_executable = 'scripts/run-mypy'
   let g:ale_python_mypy_options = '--config-file=../mypy.ini'
   ```
@@ -568,10 +570,10 @@ about the error diagnosis below, if it doesn't work.
 
 #### Editor integration: *macs
 
-- The mypy.ini should be found by Flycheck without further configuration.
-- To use the correct mypy executable a `.dir-locals.el` in the root directory
+* The mypy.ini should be found by Flycheck without further configuration.
+* To use the correct mypy executable a `.dir-locals.el` in the root directory
   of the Checkmk repository is used.
-- Flycheck by default does not execute multiple checkers. To enable the mypy
+* Flycheck by default does not execute multiple checkers. To enable the mypy
   checker after the pylint checker the following snippet can be used e.g. in
   the `dotspacemacs/user-config`:
 
@@ -580,19 +582,19 @@ about the error diagnosis below, if it doesn't work.
       (flycheck-add-next-checker 'python-pylint 'python-mypy))
   ```
 
-- To disable the risky variable warning that is triggered by setting the mypy
+* To disable the risky variable warning that is triggered by setting the mypy
   executable the `safe-local-variables` variable has to be extended by:
 
-  ```
+  ```vim
   (eval setq flycheck-python-mypy-executable
              (concat
               (projectile-locate-dominating-file default-directory dir-locals-file)
               "scripts/run-mypy"))
   ```
 
-- An example value of the `safe-local-variables` variable is e.g.:
+* An example value of the `safe-local-variables` variable is e.g.:
 
-  ```
+  ```vim
   ((eval setq flycheck-python-mypy-executable
          (concat
           (projectile-locate-dominating-file default-directory dir-locals-file)
@@ -607,7 +609,7 @@ The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. If you would like to change or contribute
 something, please respect the following things:
 
-### Is it appropriate?
+### Is it appropriate
 
 #### Contributed Plugins and Local Checks
 
@@ -619,11 +621,11 @@ like `python`.
 If you're only familiar with shell, or it's all that's available to your
 particular situation, that's fine, but you should:
 
-- Put a comment in your code stating that you're open to having your check or 
+* Put a comment in your code stating that you're open to having your check or
   plugin rewritten, or why you don't want it rewritten
-- Fail-fast, fail-early e.g
+* Fail-fast, fail-early e.g
 
-```
+```bash
 # Restrict this plugin script to bash 4 and newer
 if [[ -z "${BASH_VERSION}" ]] || (( "${BASH_VERSINFO[0]}" < 4 )); then
   printf -- '%s\n' "This check requires bash 4 or newer" >&2
@@ -640,15 +642,15 @@ then you will need to find another way to achieve what you want to do.
 
 Format your code according to the following guidelines:
 
-- [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
-- [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
+* [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
+* [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
 
 checkmk specific guidance below supersedes what's offered in those guidelines:
 
 ### Indentation and column width
 
-- Line length up to 100 characters is allowed
-- Use 4 spaces for indentation
+* Line length up to 100 characters is allowed
+* Use 4 spaces for indentation
 
 ### Function Names
 
@@ -658,11 +660,16 @@ documentation for [approved
 verbs](https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7)
 that may provide some useful guidance.
 
+The Google/ChromiumOS style guides allow for `class::function()` style names,
+but do note that this does not appear to be portable.  No workaround is
+suggested at this time, but we expect something like `__class_function()` may
+be suitable.
+
 Do not use the `function` keyword.  It is non-portable and considered obsolete.
 
 Bad:
 
-```
+```bash
 # Haha I gave this function a funny name!
 function blurgh() {
     ...
@@ -671,13 +678,13 @@ function blurgh() {
 
 Better:
 
-```
+```bash
 get_checkmk_api() {
     ...
 }
 ```
 
-### Variables
+### Variables and Constants
 
 #### Typing
 
@@ -685,66 +692,60 @@ Variables in Linux/UNIX shells are untyped.  Attempts have been made to bring in
 some degree of typing via `typeset` and `declare`, but these are not portable
 solutions, so should be avoided.
 
-If you need a variable to be of a specific type, the best advice right now 
+If you need a variable to be of a specific type, the best advice right now
 (that we're aware of) is to validate it before you use it.
 
-#### Scoping
+#### Pseudoscoping
 
-The family of Linux/UNIX shells use dynamic scoping, which can cause confusion
-and trouble.  Fortunately, this gives us the freedom to practice a rudimentary
-form of static scoping, which helps to make things a little bit more robust.
+We practice psuedoscoping to minimise the chances of variables within scripts or
+functions from clobbering variables within the environment and vice versa.
 
-Different languages have different numbers of scopes and different names for 
-them, but broadly speaking we can break shell's down to the following 
-three-ish "scopes":
+Variables must be in the appropriate format for its "scope" as defined below:
 
-#### Global / Environment / Shell / Constants
+##### Environment
 
-We know from long-established convention that **Global/Environment/Shell** 
-variables and, to a lesser extent, **Constants** tend to be in UPPERCASE.  You 
-can see this in e.g. `bash` by running `set` and/or `printenv`.
+We know from long-established convention that *environment* variables are
+almost always in UPPERCASE.  You can see this in e.g. `bash` by running `set`
+and/or `printenv`.
 
-So you should avoid UPPERCASE as much as possible.  If you *do* need a variable
+We generally shouldn't need to put any variables into the environment, so you
+should avoid UPPERCASE as much as possible.  If you *do* need a variable
 in the environment "scope" for whatever reason, use the form `MK_VARNAME`
 e.g. `MK_VERSION`
 
-To make a variable constant (a.k.a. an "immutable variable"), use `readonly`, 
-defined and set separately e.g.
+You might often see this "scope" referred to as the *global* scope, or *script*
+scope.  This scope also contains shell builtin variables.
 
-```
-MK_CONSTANT="Polaris"
-readonly MK_CONSTANT
-```
+##### Script
 
-#### Script
-
-Variables in the **script** "scope" tend often to be mistakenly written in 
-UPPERCASE, which gives rise to the possibility of clobbering a legitimate 
-global var.  This can have results that are 
-[potentially hilarious, or potentially bad.](https://stackoverflow.com/q/28310594)
+Variables in the *script* "scope" tend often to be mistakenly written in
+UPPERCASE, which gives rise to the possibility of clobbering a legitimate
+variable in the *environment* "scope".  This can have results that are
+[potentially hilarious, or potentially bad](https://stackoverflow.com/q/28310594)
+depending on your point of view.
 
 For that reason, UPPERCASE variable names are strongly discouraged outside of
-the global scope.
+the *environment* scope.
 
 Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
 
 GNU Autoconf's documentation also states:
 
->As a general rule, shell variable names containing a lower-case letter are safe; 
->you can define and use these variables without worrying about their effect on 
->the underlying system, and without worrying about whether the shell changes 
+>As a general rule, shell variable names containing a lower-case letter are safe;
+>you can define and use these variables without worrying about their effect on
+>the underlying system, and without worrying about whether the shell changes
 >them unexpectedly.
 
 Try, also, to use meaningful names.  This is meaningless:
 
-```
+```bash
 for f in $(lsblk -ln -o NAME); do
     ...
 ```
 
 Whereas this is better:
 
-```
+```bash
 for block_device in $(lsblk -ln -o NAME); do
     ...
 ```
@@ -753,27 +754,30 @@ This also reduces/eliminates unexpected in-scope collisions.
 
 *Exception:*
 *C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
-*as the var `i` is usually self-contained*
+*as the var `i` is usually self-contained and is short-hand for 'integer'*
 
 You should consider `unset`ting your variables once you're done with them,
 though this isn't strictly necessary.
 
-#### Function / Local
+##### Function / Local
 
 `bash` and others allow you to define variables as local within a function e.g.
 
-```
+```bash
 get_api_user() {
-    local username=Shelly
+    local username
+    username=Shelly
     ...
 }
 ```
 
-Unfortunately this is not portable.  So our practice is to prepend any variables
-within a function with an underscore.  We also `unset` the variable immediately
-prior to the function closure.  For example:
+Unfortunately this is not portable and attempts at workarounds are...
+[somewhat hackish](https://stackoverflow.com/q/18597697).  So our approach to
+solve this is to simply prepend any variables within a function with an
+underscore. We also `unset` the variable immediately prior to the function
+closure.  For example:
 
-```
+```bash
 get_api_user() {
     _username=Shelly
     ...
@@ -781,7 +785,7 @@ get_api_user() {
 }
 ```
 
-#### Curly braces?
+##### Curly braces
 
 Curly braces are used on `${arrays[@]}` and `${variable/modif/ications}`.
 To maintain consistency, you should use curly braces on normal variables too.
@@ -789,9 +793,9 @@ To maintain consistency, you should use curly braces on normal variables too.
 Curly braces around variables improves readability when syntax colouring is not
 available.  ${this_variable} stands out within this block of text.
 
-They also allow us to better format outputs e.g.
+They also allow us to more robustly format outputs e.g.
 
-```
+```bash
 ▓▒░$ time_metric=5
 ▓▒░$ echo "$time_metricmins"
 
@@ -801,23 +805,34 @@ They also allow us to better format outputs e.g.
 
 In the first example, there is no such variable as `$timemetricmins`.
 
-In this scenario, the curly braces explicitly tell the shell interpreter where
-the variable name boundaries are.  While it's possible to do these things in
-other ways, it's just simpler and more consistent to use curly braces by default.
+In the second example, the curly braces explicitly tell the shell interpreter
+where the variable name boundaries are.  Instead of applying this via trial and
+error, the simplest approach is to just use curly braces by default.
 
 *Exception: When you're in an arithmetic context e.g. `$(( time_metric + 10 ))`*
 
 *Exceptions to the exception: If your var is an array element or requires*
 *transformation e.g.*  
-- *`$(( "${time_metrics[2]}" + 20 ))`*
-- *`$(( "${10#time_metric}" + 10 ))`*
 
-#### Variables re-cap:
+* *`$(( "${time_metrics[2]}" + 20 ))`*
+* *`$(( "${10#time_metric}" + 10 ))`*
 
-- **Global / Environment**: `${MK_UPPERCASE}`
-- **Constants**:            `${MK_UPPERCASE}` set to `readonly`
-- **Script**:               `${meaningful_snake_case}`
-- **Function / Local**:     `${_underscore_prepended_snake_case}` with `unset -v`
+##### Constants
+
+To make a variable constant (a.k.a. an "immutable variable"), use `readonly`,
+defined and set separately e.g.
+
+```bash
+MK_CONSTANT="Polaris"
+readonly MK_CONSTANT
+```
+
+#### Variable pseudoscopes re-cap
+
+* **Environment**:       `${MK_UPPERCASE}`
+* **Script**:            `${meaningful_snake_case}`
+* **Function / Local**:  `${_underscore_prepended_snake_case}` with `unset -v`
+* **Constants**:         The appropriate above form set to `readonly`
 
 ### Linting
 
@@ -837,7 +852,7 @@ Sometimes it alerts on code that may actually be desired.  In this scenario,
 you must use a `disable` directive with a comment that justifies your reason
 for this.  It may also be useful to reference a git commit hash or werk number.
 
-```
+```bash
 # This function is sourced outside of this library, where it does parse args
 # See commit abcd3456 and/or werk 1234
 # shellcheck disable=SC2120
@@ -854,37 +869,38 @@ this, which is also used by our CI system.
 
 Execute this in checkmk git directory:
 
-```
+```bash
 sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
 ```
 
 ### Portability
 
-- We are loosely aiming for "POSIX plus simple named arrays"
+* We are loosely aiming for "POSIX plus simple named arrays"
 
-- `echo` is a portability nightmare.  Prefer `printf` instead.
+* `echo` is a portability nightmare.  Prefer `printf` instead.
 
-- Existing scripts have been written using a variety of shells.  Scripts that
+* Existing scripts have been written using a variety of shells.  Scripts that
   use `bash` have tended to be written for `bash` 3.x.
   
-- In the future, we will attempt to make our shell code more portable, which
+* In the future, we will attempt to make our shell code more portable, which
   means reducing `bash`isms.  If you're making shell code now, try to approach
   it with portability in mind. Your code may be used on older systems and/or
   commercial unices (e.g. AIX, Solaris etc).
 
-- `ksh` is in some ways a reasonable lowest common denominator to target as it's 
+* `ksh` is in some ways a reasonable lowest common denominator to target as it's
   [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and
   its syntax is almost directly runnable in `bash`, `zsh` and others.  Be aware,
-  however, that there are many variants of `ksh`.
+  however, that there are many variants of `ksh`.  [`oksh`](https://github.com/ibara/oksh)
+  is a decent variant.
 
-- Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
+* Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
   you some ideas on more portable scripting, and `dash` is a readily available
   shell that you can test your code within.  Do be aware that `dash` is stricter
   than our goals.
 
-- The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
+* The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
 
-- A tool like [shall](https://github.com/mklement0/shall) might be useful
+* A tool like [shall](https://github.com/mklement0/shall) might be useful
 
 ### The Unofficial Strict Mode
 
@@ -893,37 +909,37 @@ There is a lot of advice on the internet to "always use The Unofficial Strict Mo
 It is usually presented as a brilliant catch-all that will magically fix every
 shell scripting issue.  It is usually in a form similar to:
 
-```
+```bash
 set -euo pipefail
 ```
 
-This is well meaning, but flawed advice.  Firstly, it's not portable, so it's 
+This is well meaning, but flawed advice.  Firstly, it's not portable, so it's
 disqualified by default for our purposes.  Secondly, it comes with its own flaws.
 Some of these options have reasonable uses, but it's dangerous to think that
-this one-line incantation is somehow perfect.  You can read more about it, and 
+this one-line incantation is somehow perfect.  You can read more about it, and
 specifically `set -e` at one of the following links (read *at least* the first):
 
-- https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/
-- http://wiki.bash-hackers.org/scripting/obsolete
-- http://mywiki.wooledge.org/BashFAQ/105
-- http://mywiki.wooledge.org/BashFAQ/112
-- https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/
+* <https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/>
+* <http://wiki.bash-hackers.org/scripting/obsolete>
+* <http://mywiki.wooledge.org/BashFAQ/105>
+* <http://mywiki.wooledge.org/BashFAQ/112>
+* <https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/>
 
 ### Performance
 
 Let's be honest: Compared to almost anything else, shell performance is
 suboptimal.  Especially in `bash`.  We use shell for Linux/UNIX hosts because,
-for better or worse, it is the most portable option.  Nonetheless, we can at 
+for better or worse, it is the most portable option.  Nonetheless, we can at
 least try to be mindful about how we construct our code, in order to squeeze out
 as much performance as we can.
 
 It may help to think of this competitively, or as a challenge.  Constantly ask
 yourself "can I optimize this code any further?"
 
-For a simple and classic example, we have the good old 
+For a simple and classic example, we have the good old
 ["Useless Use of Cat"](http://porkmail.org/era/unix/award.html):
 
-```
+```bash
 cat haystack.txt | grep needle
 ```
 
@@ -931,27 +947,27 @@ This causes a pointless fork and process, as well as a waste of a pipe with
 associated buffering and broken pipe risks, as `grep` can address files directly
 i.e.
 
-```
+```bash
 grep needle haystack.txt
 ```
 
 We also often find "Useless Use of Cat" paired with "Useless Use of Grep | Awk"
 e.g.
 
-```
+```bash
 cat haystack.txt | grep needle | awk '{print $2}'
 ```
 
 `awk`, like `grep`, can address files directly, and given that it has searching
 built in, it can actually do all of this in one shot:
 
-```
+```bash
 awk '/needle/{print $2}' haystack.txt
 ```
 
 Or to do so case insensitively:
 
-```
+```bash
 awk 'tolower($0) ~ /needle/{print $2}' haystack.txt
 ```
 
@@ -960,14 +976,14 @@ replaced with a cleaner and meaner `case...esac` statement.
 
 The style guides linked to earlier both state:
 
->Given the choice between invoking a shell builtin and invoking a separate 
+>Given the choice between invoking a shell builtin and invoking a separate
 >process, choose the builtin.
-
->We prefer the use of builtins such as the Parameter Expansion functions in 
->bash(1) as it’s more robust and portable (especially when compared to things 
+>
+>We prefer the use of builtins such as the Parameter Expansion functions in
+>bash(1) as it’s more robust and portable (especially when compared to things
 >like sed).
 
-Often (but not always) there are massive performance gains to be had through 
+Often (but not always) there are massive performance gains to be had through
 the use of builtins, usually at the expense of some readability.  This can be
 counter-balanced via explanatory comments.
 
@@ -988,18 +1004,17 @@ to the common usage for that technology.
 There are several terms in Checkmk that may be kept for a better understanding.
 Some of them are:
 
-- Host
-- Service
-- Check
-- Item
-- DOWN, UP, PENDING
+* Host
+* Service
+* Check
+* Item
+* DOWN, UP, PENDING
 
 ### Consistency
 
 Be consistent in the terms you use for a thing. E.g. in case for a server one
 could say something like "host", "system", "server" or "device". Decide to use
 one name for one thing and use it consistently in all translations.
-
 
 ## Copyright and Licensing
 

@@ -957,8 +957,8 @@ run_liveupdate() {
     fi
 }
 
+# MK's Remote Plugin Executor
 run_mrpe_plugins() {
-    # MK's Remote Plugin Executor
     # We handle mrpe.cfg format that looks like this for synchronous running:
     # SERVICE_NAME  /path/to/the/plugin/script  -warn 10 -crit 20
     # Or this for asynchronous running:

@@ -203,3 +203,13 @@ def validate_regex(regex_value):
     if re.search(lookahead_pattern, regex_value):
         raise MKUserError(None,
                           _('You search statement is not valid. You can not use a lookahead here.'))
+
+
+# TODO This changes the customer of cme remote sites to the default customer of
+# the remote sites. Prevents that global settings of the central site are used
+# in different setting views. Remove this in 1.7
+def set_cme_default_customer(default_value):
+    site_id = cmk.gui.globals.html.request.var("site")
+    if site_id and not cmk.gui.config.site_is_local(site_id):
+        default_value["customer"] = cmk.gui.config.sites[site_id]["customer"]
+    return default_value

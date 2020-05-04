@@ -147,6 +147,8 @@ class GlobalSettingsMode(WatoMode):
                     header_is_painted = True
 
                 default_value = self._default_values[varname]
+                if cmk.is_managed_edition() and varname == "default_user_profile":
+                    default_value = cmk.gui.utils.set_cme_default_customer(default_value)
 
                 edit_url = watolib.folder_preserving_link([("mode", self._edit_mode()),
                                                            ("varname", varname),
@@ -286,6 +288,9 @@ class EditGlobalSettingMode(WatoMode):
         defvalue = default_values[self._varname]
         value = self._current_settings.get(self._varname,
                                            self._global_settings.get(self._varname, defvalue))
+
+        if cmk.is_managed_edition() and self._varname == "default_user_profile":
+            defvalue = cmk.gui.utils.set_cme_default_customer(defvalue)
 
         html.begin_form("value_editor", method="POST")
         forms.header(self._valuespec.title())

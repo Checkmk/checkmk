@@ -2197,7 +2197,8 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 
         if cmk.is_managed_edition():
             import cmk.gui.cme.managed as managed
-            elements += managed.customer_choice_element()
+            default_value = cmk.gui.utils.set_cme_default_customer(default_value={})
+            elements += managed.customer_choice_element(default_value)
 
         return elements + [
             ('roles',

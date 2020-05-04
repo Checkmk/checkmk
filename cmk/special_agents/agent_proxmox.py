@@ -57,6 +57,8 @@ VMs []    |                               |
 #   - use Python3 type annotations
 #   - use {**a,**b} instead of .update()
 #   - use (*, arg1, arg2..) syntax
+#   - use suppress
+#   - super()
 # - Replication Status VMs & Container, Gesamtstatus + piggybacked
 # - Snapshots - piggybacked
 
@@ -72,12 +74,23 @@ import sys
 import json
 import argparse
 import logging
-from typing import Any, List, Dict, Union, Optional, Tuple, Sequence
+import re
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+from datetime import datetime, timedelta
+import time  # todo(Python3): not needed any more
+from contextlib import contextmanager
+from typing import Any, List, Dict, Union, Optional, Tuple, Sequence, Generator
 
+import six  # todo(Python3): not needed any more
 import requests
 from requests.packages import urllib3
 
 import cmk.utils.password_store
+from cmk.utils.paths import tmp_dir
 
 # cannot be imported yet - pathlib2 is missing for python3
 # from cmk.special_agents.utils import vcrtrace
@@ -86,6 +99,8 @@ LOGGER = logging.getLogger("agent_proxmox")
 
 ListOrDict = Union[List[Dict[str, Any]], Dict[str, Any]]
 StrSequence = Union[List[str], Tuple[str]]
+
+LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox"
 
 
 def parse_arguments(argv):
@@ -99,11 +114,290 @@ def parse_arguments(argv):
     parser.add_argument('--username', '-u', type=str, help='username for connection')
     parser.add_argument('--password', '-p', type=str, help='password for connection')
     parser.add_argument('--verbose', '-v', action="count", default=0)
+    # TODO: warn if log-cutoff-weeks is shorter than actual log length or
+    #       shorter than configured check
+    parser.add_argument('--log-cutoff-weeks',
+                        type=int,
+                        default=2,
+                        help='Fetch logs N weeks back in time')
     # TODO: default should not be True
     parser.add_argument('--no-cert-check', action="store_true", default=True)
     parser.add_argument('--debug', action="store_true", help="Keep some exceptions unhandled")
     parser.add_argument("hostname", help="Name of the Proxmox instance to query.")
     return parser.parse_args(argv)
+
+
+class BackupTask:
+    """Handles a bunch of log lines and turns them into a set of data needed from the log
+    """
+    class LogParseError(RuntimeError):
+        def __init__(self, line, msg):
+            # type: (int, str) -> None
+            # todo(Python3): super()
+            RuntimeError.__init__(self, msg)
+            self.line = line
+
+        def __repr__(self):
+            # type: () -> str
+            # todo(Python3): super()
+            return "LogParseError(%d, %r)" % (self.line, RuntimeError.__str__(self))
+
+    def __init__(self, task, logs):
+        # type: (Dict[str, Any], Sequence[Dict[str, Any]]) -> None
+        self.upid, self.type, self.starttime, self.status = "", "", 0, ""
+        self.__dict__.update(task)
+
+        try:
+            self.backup_data = self._extract_logs(self._to_lines(logs))
+        except self.LogParseError as exc:
+            self.backup_data = {}
+            LOGGER.error("Parsing the log with UPID=%r resulted in a LogParseError in line %d: %r",
+                         task["upid"], exc.line, str(exc))
+            LOGGER.error(">>>>>> content")
+            for line in logs:
+                LOGGER.error(">> %s", line["t"])
+            LOGGER.error("<<<<<< content")
+
+    @staticmethod
+    def _to_lines(lines_with_numbers):
+        # type: (Sequence[Dict[str, Any]]) -> Sequence[str]
+        """ Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
+        Returns List of lines only"""
+        return tuple(  #
+            line  #
+            for elem in lines_with_numbers  #
+            for line in (elem["t"],)  #
+            if isinstance(line, six.string_types) and line.strip())
+
+    def __str__(self):
+        # type: () -> str
+        return "BackupTask(%r, t=%r, vms=%r)" % (
+            self.type,
+            datetime.fromtimestamp(self.starttime).strftime("%Y.%m.%d-%H:%M:%S"),
+            tuple(self.backup_data.keys()),
+        )
+
+    @staticmethod
+    def _extract_tuple(pattern, string, count):
+        # type: (str, str, int) -> Optional[Sequence[str]]
+        """return regex-findings as tuple.
+        Return tuple of None (or single None) if @string does not match @pattern"""
+        result = re.search(pattern, string, flags=re.IGNORECASE)
+        return None if result is None else result.groups()[:count]
+
+    @staticmethod
+    def _extract_value(pattern, string):
+        # type: (str, str) -> Optional[str]
+        """Return first regex-group finding as string if available"""
+        result = BackupTask._extract_tuple(pattern, string, 1)
+        return None if result is None else result[0]
+
+    @staticmethod
+    def _extract_logs(logs):
+        # type: (Sequence[str]) -> Dict[str, Any]
+        pattern = {
+            "start_job": r"^INFO: starting new backup job: vzdump (.*)",
+            "start_vm": r"^INFO: Starting Backup of VM (\d+).*",
+            "started_time": r"^INFO: Backup started at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})",
+            "finish_vm": r"^INFO: Finished Backup of VM (\d+) \((\d{2}:\d{2}:\d{2})\).*",
+            "error_vm": r"^ERROR: Backup of VM (\d+) failed - (.*)$",
+            "create_archive": r"^INFO: creating archive '(.*)'",
+            "bytes_written": r"^INFO: Total bytes written: (\d+) \(.*, (.*)\/s\)",
+            "transferred": r"^INFO: transferred (\d+) MB in (\d+) seconds \(.*\)",
+            "archive_size": r"^INFO: archive file size: (.*)",
+        }
+
+        result = {}  # type: Dict[str, Any]
+        current_vmid = ""  # type: str
+        current_dataset = {}  # type: Dict[str, Any]
+
+        for linenr, line in enumerate(logs):
+            start_vmid = BackupTask._extract_value(pattern["start_vm"], line)
+            if start_vmid is not None:
+                if current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr,
+                        "Captured start of rocessing VM %r while VM %r is still active" %
+                        (start_vmid, current_vmid),
+                    )
+                current_vmid = start_vmid
+                current_dataset = {}
+                continue
+
+            stop_vmid = BackupTask._extract_value(pattern["finish_vm"], line)
+            if stop_vmid is not None:
+                if stop_vmid != current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr,
+                        "Found end of VM %r while another VM %r was active" % (  #
+                            stop_vmid, current_vmid))
+                result[current_vmid] = current_dataset
+                if not all(key in current_dataset for key in (  #
+                        "transfer_size", "transfer_time", "archive_name", "archive_size",
+                        "started_time")):
+                    raise BackupTask.LogParseError(
+                        linenr,
+                        "End of VM %r while still information is missing (have %r)" % (  #
+                            current_vmid, tuple(current_dataset.keys())))
+                current_vmid = ""
+                continue
+
+            error_vm = BackupTask._extract_tuple(pattern["error_vm"], line, 2)
+            if error_vm is not None:
+                error_vmid, error_msg = error_vm
+                if current_vmid and error_vmid != current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr,
+                        "Error for VM %r while another VM %r was active" % (  #
+                            error_vmid, current_vmid))
+                LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
+                # todo: store erroneous backup status
+                current_vmid = ""
+                continue
+
+            started_time = BackupTask._extract_value(pattern["started_time"], line)
+            if started_time is not None:
+                if not current_vmid:
+                    raise BackupTask.LogParseError(linenr,
+                                                   "Found start date while no VM was active")
+                current_dataset["started_time"] = started_time
+                continue
+
+            bytes_written = BackupTask._extract_tuple(pattern["bytes_written"], line, 2)
+            if bytes_written is not None:
+                vm_size = int(bytes_written[0])
+                bandw = to_bytes(bytes_written[1])
+                if not current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr, "Found bandwidth information while no VM was active")
+                current_dataset["transfer_size"] = vm_size
+                current_dataset["transfer_time"] = round(vm_size / bandw) if bandw > 0 else 0
+                continue
+
+            transferred = BackupTask._extract_tuple(pattern["transferred"], line, 2)
+            if transferred is not None:
+                transfer_size_mb, transfer_time = transferred
+                if not current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr, "Found bandwidth information while no VM was active")
+                current_dataset["transfer_size"] = int(transfer_size_mb) * (1 << 20)
+                current_dataset["transfer_time"] = int(transfer_time)
+                continue
+
+            archive_name = BackupTask._extract_value(pattern["create_archive"], line)
+            if archive_name is not None:
+                if not current_vmid:
+                    raise BackupTask.LogParseError(  #
+                        linenr, "Found archive name without active VM")
+                current_dataset["archive_name"] = archive_name
+                continue
+
+            archive_size = BackupTask._extract_value(pattern["archive_size"], line)
+            if archive_size is not None:
+                if not current_vmid:
+                    raise BackupTask.LogParseError(
+                        linenr, "Found archive size information without active VM")
+                current_dataset["archive_size"] = to_bytes(archive_size)
+                continue
+        assert current_vmid == ""
+        return result
+
+
+@contextmanager
+def JsonCachedData(filename):
+    # type: (str) -> Generator[Dict[str, Any], None, None]
+    """Store JSON-serializable data on filesystem and provide it if available"""
+    # # todo(python3): use exist_ok=True, remove try/except
+    try:
+        LogCacheFilePath.mkdir(parents=True)
+    except OSError as exc:
+        # todo(python3): use FileExistsError - 17 is not portable
+        if exc.errno != 17:
+            raise
+    cache_file = LogCacheFilePath / filename
+    try:
+        with cache_file.open() as crfile:
+            cache = json.load(crfile)
+    # todo(python3): ValueError->JSONDecodeError
+    except (IOError, ValueError):
+        cache = {}
+    try:
+        yield cache
+    finally:
+        Path()
+        LOGGER.info("Write cache file: %r", str(cache_file.absolute()))
+        # todo(python3): use "w" only
+        # todo(python3): use json.dump()
+        with cache_file.open(mode="wb") as cwfile:
+            cwfile.write(json.dumps(cache).encode())
+
+
+def fetch_backup_data(args, session, nodes):
+    # type: (argparse.Namespace, ProxmoxAPI, Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]
+    """Since the Proxmox API does not provide us with information about past backups we read the
+    information we need from log entries created for each backup process"""
+    # Fetching log files is by far the most time consuming process issued by the Proxmox agent.
+    # Since logs have a unique UPID we can safely cache them
+    with JsonCachedData("upid.log.cache.json") as cache:
+        # todo(python3): don't use time.mktime
+        cutoff_date = int(
+            time.mktime(  #
+                (datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timetuple()))
+        # throw away older logs
+        for upid in tuple((key for key, (date, _) in cache.items() if date < cutoff_date)):
+            LOGGER.debug("erase log cache for %r", upid)
+            del cache[upid]
+
+        # todo: check vmid, typefilter source
+        #       https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/tasks
+        backup_tasks = (
+            BackupTask(
+                task,
+                cache[task["upid"]][1] if task["upid"] in cache else cache.setdefault(
+                    task["upid"],
+                    (
+                        task["starttime"],
+                        session.get_tree({
+                            "nodes": {
+                                node["node"]: {
+                                    "tasks": {
+                                        task["upid"]: {
+                                            "log": [
+                                                # todo: specify type, date in request
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        })["nodes"][node["node"]]["tasks"][task["upid"]]["log"]))[1])
+            for node in nodes
+            for task in node["tasks"]
+            if (task['type'] == "vzdump" and int(task['starttime']) >= cutoff_date))
+
+        backup_data = {}  # type: Dict[str, Dict[str, Any]]
+        for task in backup_tasks:
+            LOGGER.info("%s", task)
+            LOGGER.debug("%r", task.backup_data)
+            for vmid, bdata in task.backup_data.items():
+                if vmid in backup_data:
+                    continue
+                backup_data[vmid] = bdata
+
+        return backup_data
+
+
+def to_bytes(string):
+    # type: (str) -> int
+    """Turn a string containing a byte-size with units like (MiB, ..) into an int
+    containing the size in bytes"""
+    return round(  #
+        (float(string[:-3]) * (1 << 10)) if string.endswith("KiB") else  #
+        (float(string[:-2]) * (1 << 10)) if string.endswith("KB") else  #
+        (float(string[:-3]) * (1 << 20)) if string.endswith("MiB") else  #
+        (float(string[:-2]) * (1 << 20)) if string.endswith("MB") else  #
+        (float(string[:-3]) * (1 << 30)) if string.endswith("GiB") else  #
+        (float(string[:-2]) * (1 << 30)) if string.endswith("GB") else  #
+        float(string))
 
 
 def write_agent_output(args):
@@ -140,14 +434,41 @@ def write_agent_output(args):
                 "backup": [],
                 "resources": [],
             },
-            "nodes": [],
+            "nodes": [{
+                "{node}": {
+                    # for now just get basic task data - we'll read the logs later
+                    "tasks": [],
+                },
+            }],
+            "version": {},
         })
+
+        LOGGER.info("Fetch and process backup logs..")
+        logged_backup_data = fetch_backup_data(args, session, data["nodes"])
 
     all_vms = {
         str(entry["vmid"]): entry
         for entry in data["cluster"]["resources"]
         if entry["type"] in ("lxc", "qemu")
     }
+
+    backup_data = {
+        # generate list of all VMs IDs - both lxc and qemu
+        "vmids": sorted(list(all_vms.keys())),
+        # look up scheduled backups and extract assigned VMIDs
+        "scheduled_vmids": sorted(
+            list(
+                set(vmid  #
+                    for backup in data["cluster"]["backup"]
+                    if "vmid" in backup and backup["enabled"] == "1"
+                    for vmid in backup["vmid"].split(",")))),
+        # add data of actually logged VMs
+        "logged_vmids": logged_backup_data,
+    }
+
+    LOGGER.info("all VMs:          %r", backup_data["vmids"])
+    LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
+    LOGGER.info("actual backups:   %r", sorted(list(logged_backup_data.keys())))
 
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
@@ -178,7 +499,7 @@ def write_agent_output(args):
                 # },
             ])
 
-    for _vmid, vm in all_vms.items():
+    for vmid, vm in all_vms.items():
         write_piggyback_sections(
             host=vm["name"],
             sections=[
@@ -191,9 +512,13 @@ def write_agent_output(args):
                 # {  # Todo
                 #    "name": "proxmox_mem_usage",
                 # },
-                # {  # Todo
-                #     "name": "proxmox_vm_backup_status",
-                # },
+                {
+                    "name": "proxmox_vm_backup_status",
+                    "data": {
+                        # todo: info about erroneous backups
+                        "last_backup": logged_backup_data.get(vmid),
+                    },
+                },
                 # {  # Todo
                 #     "name": "proxmox_vm_replication_status",
                 # },

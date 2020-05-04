@@ -8,10 +8,6 @@
 import os
 from typing import Dict, List, Optional
 
-try:
-    import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=cmk-module-layer-violation
-except ImportError:
-    inline_snmp = None  # type: ignore[assignment]
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import OID, DecodedString, HostAddress, HostName, SNMPHostConfig
@@ -80,8 +76,6 @@ def cleanup_host_caches():
     global _g_walk_cache
     _g_walk_cache = {}
     _clear_other_hosts_oid_cache(None)
-    if inline_snmp:
-        inline_snmp.cleanup_inline_snmp_globals()
 
 
 def host_cache_contains(name):

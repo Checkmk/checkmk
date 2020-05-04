@@ -869,3 +869,5 @@ def do_snmpget(oid, hostnames):
 
 
 cmk.base.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)
+if inline_snmp:
+    cmk.base.cleanup.register_cleanup(inline_snmp.cleanup_inline_snmp_globals)

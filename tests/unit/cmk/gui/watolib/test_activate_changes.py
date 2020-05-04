@@ -101,21 +101,16 @@ def _expected_replication_paths():
     return expected
 
 
-@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
 def test_get_replication_paths_defaults(edition_short, monkeypatch):
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
 
-@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
 @pytest.mark.parametrize("is_pre_17_remote_site", [True, False])
 def test_get_replication_components(edition_short, monkeypatch, replicate_ec, replicate_mkps,
                                     is_pre_17_remote_site):
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-
     partial_site_config = {}
     if replicate_ec is not None:
         partial_site_config["replicate_ec"] = replicate_ec

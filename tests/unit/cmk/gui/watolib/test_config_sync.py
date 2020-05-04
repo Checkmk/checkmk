@@ -25,7 +25,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 
-from testlib.utils import is_enterprise_repo, is_managed_repo
+from testlib.utils import is_enterprise_repo
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -233,20 +233,11 @@ def _get_expected_paths(user_id, is_pre_17_site):
     return expected_paths
 
 
-def editions():
-    yield ("cre", "CRESnapshotDataCollector")
-
-    if is_enterprise_repo():
-        yield ("cee", "CRESnapshotDataCollector")
-
-    if is_managed_repo():
-        yield ("cme", "CMESnapshotDataCollector")
-
-
-@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 @pytest.mark.usefixtures("register_builtin_html")
-def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
-                           with_user_login):
+def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login):
+    snapshot_data_collector_class = ("CMESnapshotDataCollector"
+                                     if edition_short == "cme" else "CRESnapshotDataCollector")
+
     activation_manager = _get_activation_manager(monkeypatch)
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
@@ -264,10 +255,11 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
     assert sorted(paths) == sorted(expected_paths)
 
 
-@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 @pytest.mark.usefixtures("register_builtin_html")
-def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
-                                       tmp_path, with_user_login):
+def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, with_user_login):
+    snapshot_data_collector_class = ("CMESnapshotDataCollector"
+                                     if edition_short == "cme" else "CRESnapshotDataCollector")
+
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
@@ -372,10 +364,11 @@ def test_generate_pre_17_site_snapshot(edition_short, snapshot_data_collector_cl
             "Subtar %s has wrong files" % subtar.name
 
 
-@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 @pytest.mark.usefixtures("register_builtin_html")
-def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class, monkeypatch,
-                                    tmp_path, with_user_login):
+def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_user_login):
+    snapshot_data_collector_class = ("CMESnapshotDataCollector"
+                                     if edition_short == "cme" else "CRESnapshotDataCollector")
+
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
@@ -502,10 +495,10 @@ def test_update_contacts_dict(master, slave, result):
     assert config_sync._update_contacts_dict(master, slave) == result
 
 
-@pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 @pytest.mark.usefixtures("register_builtin_html")
-def test_synchronize_pre_17_site(monkeypatch, edition_short, snapshot_data_collector_class,
-                                 tmp_path, mocker):
+def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
+    snapshot_data_collector_class = ("CMESnapshotDataCollector"
+                                     if edition_short == "cme" else "CRESnapshotDataCollector")
 
     if edition_short == "cme":
         pytest.skip("Seems faked site environment is not 100% correct")

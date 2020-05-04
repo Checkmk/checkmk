@@ -19,7 +19,22 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+from testlib import is_managed_repo, is_enterprise_repo
+
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
+def fixture_edition_short(monkeypatch, request):
+    edition_short = request.param
+    if edition_short == "cme" and not is_managed_repo():
+        pytest.skip("Needed files are not available")
+
+    if edition_short == "cee" and not is_enterprise_repo():
+        pytest.skip("Needed files are not available")
+
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    yield edition_short
 
 
 @pytest.fixture(autouse=True, scope="function")

@@ -548,16 +548,20 @@ def _parameter_valuespec_aws_elb_statistics():
          Tuple(
              title=_("Upper levels for surge queue length"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_("Warning at"), default_value=1024),
+                 Integer(title=_("Critical at"), default_value=1024),
              ],
          )),
         ('levels_spillover',
          Tuple(
              title=_("Upper levels for the number of requests that were rejected (spillover)"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Float(title=_("Warning at"), display_format="%.3f", default_value=0.001,
+                       unit='/s'),
+                 Float(title=_("Critical at"),
+                       display_format="%.3f",
+                       default_value=0.001,
+                       unit='/s'),
              ],
          )),
     ],)
@@ -661,8 +665,8 @@ def _parameter_valuespec_aws_elb_backend_connection_errors():
         Tuple(
             title=_("Upper levels for backend connection errors per second"),
             elements=[
-                Float(title=_("Warning at")),
-                Float(title=_("Critical at")),
+                Float(title=_("Warning at"), unit='/s'),
+                Float(title=_("Critical at"), unit='/s'),
             ],
         ),
     )],)

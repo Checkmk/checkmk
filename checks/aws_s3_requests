@@ -71,8 +71,7 @@ def check_aws_s3_requests(item, params, metrics):
 
 check_info['aws_s3_requests'] = {
     'parse_function': parse_aws_s3,
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['AllRequests']),
+    'inventory_function': lambda p: inventory_aws_generic(p, ['AllRequests']),
     'check_function': check_aws_s3_requests,
     'service_description': 'AWS/S3 Requests %s',
     'includes': ['aws.include'],
@@ -116,8 +115,8 @@ def check_aws_s3_http_errors(item, params, metrics):
 
 
 check_info['aws_s3_requests.http_errors'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['AllRequests', '4xxErrors', '5xxErrors']),
+    'inventory_function': lambda p: inventory_aws_generic(
+        p, ['AllRequests', '4xxErrors', '5xxErrors']),
     'check_function': check_aws_s3_http_errors,
     'service_description': 'AWS/S3 HTTP Errors %s',
     'includes': ['aws.include'],
@@ -150,8 +149,7 @@ def check_aws_s3_latency(item, params, metrics):
 
 
 check_info['aws_s3_requests.latency'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['TotalRequestLatency']),
+    'inventory_function': lambda p: inventory_aws_generic(p, ['TotalRequestLatency']),
     'check_function': check_aws_s3_latency,
     'service_description': 'AWS/S3 Latency %s',
     'includes': ['aws.include'],
@@ -176,13 +174,13 @@ def check_aws_s3_traffic_stats(item, params, metrics):
         ("BytesDownloaded", "Downloads", "aws_s3_downloads"),
         ("BytesUploaded", "Uploads", "aws_s3_uploads"),
     ]:
-        bytes_ = metrics[key]
-        yield 0, '%s: %s' % (title, get_bytes_human_readable(bytes_)), [(perf_key, bytes_)]
+        bytes_rate = metrics[key]
+        yield 0, '%s: %s' % (title, aws_get_bytes_rate_human_readable(bytes_rate)), [(perf_key,
+                                                                                      bytes_rate)]
 
 
 check_info['aws_s3_requests.traffic_stats'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['BytesDownloaded', 'BytesUploaded']),
+    'inventory_function': lambda p: inventory_aws_generic(p, ['BytesDownloaded', 'BytesUploaded']),
     'check_function': check_aws_s3_traffic_stats,
     'service_description': 'AWS/S3 Traffic Stats %s',
     'includes': ['aws.include'],
@@ -202,19 +200,19 @@ check_info['aws_s3_requests.traffic_stats'] = {
 
 @get_parsed_item_data
 def check_aws_s3_select_object(item, params, metrics):
-    # In the agent we use "Sum" which means: bytes per period (300s)
     for key, title, perf_key in [
         ("SelectScannedBytes", "Scanned", "aws_s3_select_object_scanned"),
         ("SelectReturnedBytes", "Returned", "aws_s3_select_object_returned"),
     ]:
-        select_bytes = metrics[key]
-        yield 0, '%s: %s' % (title, get_bytes_human_readable(select_bytes)), [(perf_key,
-                                                                               select_bytes)]
+        select_bytes_rate = metrics[key]
+        yield 0, '%s: %s' % (title, aws_get_bytes_rate_human_readable(select_bytes_rate)), [
+            (perf_key, select_bytes_rate)
+        ]
 
 
 check_info['aws_s3_requests.select_object'] = {
-    'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['SelectScannedBytes', 'SelectReturnedBytes']),
+    'inventory_function': lambda p: inventory_aws_generic(
+        p, ['SelectScannedBytes', 'SelectReturnedBytes']),
     'check_function': check_aws_s3_select_object,
     'service_description': 'AWS/S3 SELECT Object %s',
     'includes': ['aws.include'],

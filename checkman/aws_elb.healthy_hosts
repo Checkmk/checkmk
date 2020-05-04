@@ -8,7 +8,7 @@ description:
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.
 
- No default levels are set; Levels for overall hosts health are configurable.
+ No default levels are set. Levels for overall hosts health are configurable.
 
 inventory:
  One service is created if all required metrics (HealthyHostCount, UnHealthyHostCount) are given.

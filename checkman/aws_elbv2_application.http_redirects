@@ -4,13 +4,15 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors
+ This check monitors the rate of
 
- - redirect
+ - successful redirects
 
- - fixed-response
+ - fixed responses
 
- actions of AWS/ApplicationELB services.
+ - redirects that couldn't be completed because the URL in the response location header is too large
+
+ for AWS/ApplicationELB services.
 
  To make this check work you have to configure the related
  special agent {{Amazon Web Services (AWS)}}.

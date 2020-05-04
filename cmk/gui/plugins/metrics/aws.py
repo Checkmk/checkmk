@@ -91,8 +91,8 @@ metric_info['aws_surge_queue_length'] = {
 }
 
 metric_info['aws_spillover'] = {
-    'title': _('The number of requests that were rejected (spillover)'),
-    'unit': 'count',
+    'title': _('The rate of requests that were rejected (spillover)'),
+    'unit': '1/s',
     'color': '13/a',
 }
 
@@ -244,121 +244,121 @@ for inst_fam in AWSEC2InstFamilies:
 
 metric_info['aws_consumed_lcus'] = {
     'title': _('Consumed Load Balancer Capacity Units'),
-    'unit': 'count',
+    'unit': '',
     'color': '11/a',
 }
 
 metric_info['aws_active_connections'] = {
     'title': _('Active Connections'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '11/a',
 }
 
 metric_info['aws_active_tls_connections'] = {
     'title': _('Active TLS Connections'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '12/a',
 }
 
 metric_info['aws_new_connections'] = {
     'title': _('New Connections'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '13/a',
 }
 
 metric_info['aws_new_tls_connections'] = {
     'title': _('New TLS Connections'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '14/a',
 }
 
 metric_info['aws_rejected_connections'] = {
     'title': _('Rejected Connections'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '15/a',
 }
 
 metric_info['aws_client_tls_errors'] = {
     'title': _('Client TLS errors'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '21/a',
 }
 
 metric_info['aws_http_redirects'] = {
     'title': _('HTTP Redirects'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '11/a',
 }
 
 metric_info['aws_http_redirect_url_limit'] = {
     'title': _('HTTP Redirects URL Limit Exceeded'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '11/a',
 }
 
 metric_info['aws_http_fixed_response'] = {
     'title': _('HTTP Fixed Responses'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '11/a',
 }
 
 metric_info['aws_proc_bytes'] = {
     'title': _('Processed Bytes'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '11/a',
 }
 
 metric_info['aws_proc_bytes_tls'] = {
     'title': _('TLS Processed Bytes'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '12/a',
 }
 
 metric_info['aws_ipv6_proc_bytes'] = {
     'title': _('IPv6 Processed Bytes'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '13/a',
 }
 
 metric_info['aws_ipv6_requests'] = {
     'title': _('IPv6 Requests'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '15/a',
 }
 
 metric_info['aws_rule_evaluations'] = {
     'title': _('Rule Evaluations'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '21/a',
 }
 
 metric_info['aws_failed_tls_client_handshake'] = {
     'title': _('Failed TLS Client Handshake'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '21/a',
 }
 
 metric_info['aws_failed_tls_target_handshake'] = {
     'title': _('Failed TLS Target Handshake'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '23/a',
 }
 
 metric_info['aws_tcp_client_rst'] = {
     'title': _('TCP Client Resets'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '31/a',
 }
 
 metric_info['aws_tcp_elb_rst'] = {
     'title': _('TCP ELB Resets'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '33/a',
 }
 
 metric_info['aws_tcp_target_rst'] = {
     'title': _('TCP Target Resets'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '35/a',
 }
 

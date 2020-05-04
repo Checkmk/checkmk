@@ -23,13 +23,13 @@ checks = {
         (
             None, {'allowed_requests_perc': (10.0, 20.0), 'blocked_requests_perc': (10.0, 20.0)},
             [
-                (0, 'Total requests: 0.033 /s',
+                (0, 'Total requests: 0.033/s',
                  [('aws_wafv2_requests_rate', 0.03333333333333333, None, None)]),
-                (0, 'Allowed requests: 0.018 /s',
+                (0, 'Allowed requests: 0.018/s',
                  [('aws_wafv2_allowed_requests_rate', 0.018333333333333333, None, None)]),
                 (2, 'Percentage allowed requests: 55.0% (warn/crit at 10.0%/20.0%)',
                  [('aws_wafv2_allowed_requests_perc', 55.0, 10.0, 20.0)]),
-                (0, 'Blocked requests: 0.015 /s',
+                (0, 'Blocked requests: 0.015/s',
                  [('aws_wafv2_blocked_requests_rate', 0.015, None, None)]),
                 (2, 'Percentage blocked requests: 45.0% (warn/crit at 10.0%/20.0%)',
                  [('aws_wafv2_blocked_requests_perc', 45.0, 10.0, 20.0)]),

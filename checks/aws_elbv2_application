@@ -53,8 +53,8 @@ def check_aws_elbv2_application_lcu(item, params, parsed):
     yield check_levels(lcus,
                        'aws_consumed_lcus',
                        params.get('levels'),
-                       human_readable_func=int,
-                       infoname="Consumed")
+                       human_readable_func=aws_get_float_human_readable,
+                       infoname="Consumption")
 
 
 check_info['aws_elbv2_application'] = {
@@ -85,36 +85,35 @@ _aws_elbv2_application_connection_types = [
 ]
 
 
-def inventory_aws_elbv2_application_connections(parsed):
-    for conn_ty in _aws_elbv2_application_connection_types:
-        if conn_ty in parsed:
-            return [(None, {})]
-
-
 def check_aws_elbv2_application_connections(item, params, parsed):
-    go_stale = True
-    for conn_ty, (key, title) in zip(_aws_elbv2_application_connection_types, [
+
+    metric_infos = []
+
+    for cw_metric_name, (info_name, key) in zip(_aws_elbv2_application_connection_types, [
         ('Active', 'active'),
         ('New', 'new'),
         ('Rejected', 'rejected'),
         ('TLS errors', 'tls_errors'),
     ]):
-        conns = parsed.get(conn_ty)
-        if conns is None:
-            continue
-        go_stale = False
-        yield check_levels(conns,
-                           'aws_%s_connections' % key,
-                           None,
-                           human_readable_func=int,
-                           infoname=title)
-    if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        if key == 'tls_errors':
+            metric_name = 'aws_client_tls_errors'
+        else:
+            metric_name = 'aws_%s_connections' % key
+
+        metric_infos.append({
+            'metric_val': parsed.get(cw_metric_name),
+            'metric_name': metric_name,
+            'info_name': info_name,
+            'human_readable_func': aws_get_counts_rate_human_readable
+        })
+
+    return check_aws_elb_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.connections'] = {
     'parse_function': parse_aws_elbv2_application,
-    'inventory_function': inventory_aws_elbv2_application_connections,
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_application_connection_types, requirement=any),
     'check_function': check_aws_elbv2_application_connections,
     'service_description': 'AWS/ApplicationELB Connections',
     'includes': ['aws.include'],
@@ -157,28 +156,28 @@ check_info['aws_elbv2_application.http_elb'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_aws_elbv2_application_http_redirects_metrics = [
+    'HTTP_Redirect_Count',
+    'HTTP_Redirect_Url_Limit_Exceeded_Count',
+    'HTTP_Fixed_Response_Count',
+]
+
 
 def check_aws_elbv2_application_http_redirects(item, params, parsed):
-    go_stale = True
-    for redirect_ty, title, key in [
-        ('HTTP_Redirect_Count', 'Successful', 'http_redirects'),
-        ('HTTP_Redirect_Url_Limit_Exceeded_Count', 'Not completed', 'http_redirect_url_limit'),
-        ('HTTP_Fixed_Response_Count', 'Successful fixed-responses', 'http_fixed_response'),
-    ]:
-        redirects = parsed.get(redirect_ty)
-        if redirects is None:
-            continue
-        go_stale = False
-        yield check_levels(redirects, 'aws_%s' % key, None, human_readable_func=int, infoname=title)
-    if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+    return check_aws_elb_metrics([{
+        'metric_val': parsed.get(cw_metric_name),
+        'metric_name': 'aws_%s' % key,
+        'info_name': info_name,
+        'human_readable_func': aws_get_counts_rate_human_readable
+    } for cw_metric_name, (info_name, key) in zip(_aws_elbv2_application_http_redirects_metrics, [(
+        'Successful', 'http_redirects'), (
+            'Not completed',
+            'http_redirect_url_limit'), ('Successful fixed responses', 'http_fixed_response')])])
 
 
 check_info['aws_elbv2_application.http_redirects'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p, [
-        'HTTP_Redirect_Count',
-        'HTTP_Redirect_Url_Limit_Exceeded_Count',
-    ]),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_application_http_redirects_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_http_redirects,
     'service_description': 'AWS/ApplicationELB HTTP Redirects',
     'includes': ['aws.include'],
@@ -195,61 +194,43 @@ check_info['aws_elbv2_application.http_redirects'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-def inventory_aws_elbv2_application_statistics(parsed):
-    for metric in [
-            'ProcessedBytes',
-            'IPv6ProcessedBytes',
-            'IPv6RequestCount',
-            'RuleEvaluations',
-    ]:
-        if metric in parsed:
-            return [(None, {})]
+_aws_elbv2_application_statistics_metrics = [
+    'ProcessedBytes',
+    'IPv6ProcessedBytes',
+    'IPv6RequestCount',
+    'RuleEvaluations',
+]
 
 
 def check_aws_elbv2_application_statistics(item, params, parsed):
-    go_stale = True
-    processed_bytes = parsed.get('ProcessedBytes')
-    if processed_bytes is not None:
-        go_stale = False
-        yield check_levels(processed_bytes,
-                           "aws_proc_bytes",
-                           None,
-                           human_readable_func=get_bytes_human_readable,
-                           infoname="Processed bytes")
 
-    ipv6_processed_bytes = parsed.get('IPv6ProcessedBytes')
-    if ipv6_processed_bytes is not None:
-        go_stale = False
-        yield check_levels(ipv6_processed_bytes,
-                           "aws_ipv6_proc_bytes",
-                           None,
-                           human_readable_func=get_bytes_human_readable,
-                           infoname="IPv6 Processed bytes")
+    metric_infos = []
 
-    ipv6_requests = parsed.get('IPv6RequestCount')
-    if ipv6_requests is not None:
-        go_stale = False
-        yield check_levels(ipv6_requests,
-                           "aws_ipv6_requests",
-                           None,
-                           human_readable_func=int,
-                           infoname="IPv6 requests")
+    for cw_metric_name, (info_name,
+                         metric_name) in zip(_aws_elbv2_application_statistics_metrics,
+                                             [('Processed bytes', 'aws_proc_bytes'),
+                                              ('IPv6 Processed bytes', 'aws_ipv6_proc_bytes'),
+                                              ('IPv6RequestCount', 'aws_ipv6_requests'),
+                                              ('Rule evaluations', 'aws_rule_evaluations')]):
 
-    rule_evaluations = parsed.get('RuleEvaluations')
-    if rule_evaluations is not None:
-        go_stale = False
-        yield check_levels(rule_evaluations,
-                           'aws_rule_evaluations',
-                           None,
-                           human_readable_func=int,
-                           infoname="Rule evaluations")
-    if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        if 'bytes' in metric_name:
+            human_readable_func = aws_get_bytes_rate_human_readable
+        else:
+            human_readable_func = aws_get_counts_rate_human_readable
+
+        metric_infos.append({
+            'metric_val': parsed.get(cw_metric_name),
+            'metric_name': metric_name,
+            'info_name': info_name,
+            'human_readable_func': human_readable_func
+        })
+
+    return check_aws_elb_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.statistics'] = {
-    'inventory_function': inventory_aws_elbv2_application_statistics,
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_application_statistics_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_statistics,
     'service_description': 'AWS/ApplicationELB Statistics',
     'includes': ['aws.include'],

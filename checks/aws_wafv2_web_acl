@@ -16,10 +16,6 @@ def parse_aws_wafv2_web_acl(info):
         return {}
 
 
-def _aws_wafv2_web_acl_human_readable_rate(f):
-    return get_number_with_precision(f, unit='/s', precision=3)
-
-
 def check_aws_wafv2_web_acl(item, params, parsed):
 
     if len(parsed) == 0:
@@ -34,7 +30,7 @@ def check_aws_wafv2_web_acl(item, params, parsed):
                        'aws_wafv2_requests_rate',
                        None,
                        infoname='Total requests',
-                       human_readable_func=_aws_wafv2_web_acl_human_readable_rate)
+                       human_readable_func=aws_get_counts_rate_human_readable)
 
     for metric_id, metric_val in zip(metric_ids, metric_vals):
 
@@ -45,7 +41,7 @@ def check_aws_wafv2_web_acl(item, params, parsed):
                            'aws_wafv2_%s_rate' % '_'.join(metric_id_split),
                            None,
                            infoname=' '.join(metric_id_split).capitalize(),
-                           human_readable_func=_aws_wafv2_web_acl_human_readable_rate)
+                           human_readable_func=aws_get_counts_rate_human_readable)
 
         try:
             perc = 100 * metric_val / requests_total

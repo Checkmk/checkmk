@@ -4,16 +4,15 @@ catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
- This check monitors the number of bytes of data scanned or
+ This check monitors the rate of bytes of data scanned or
  returned with AWS SELECT object requests.
 
  To make this check work you have to configure the related
- special agent {Amazon Web Services (AWS)}.
-
- The service  is always {OK}.
-
- You have to enable requests metrics in AWS/S3 console. This
+ special agent {Amazon Web Services (AWS)}. Furthermore, you
+ have to enable request metrics in the AWS/S3 console. This
  is a paid feature
+
+ The service is always {OK}.
 
 item:
  Name of the instance

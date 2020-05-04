@@ -2059,3 +2059,17 @@ check_metrics["check_mk-aws_elb.backend_connection_errors"] = {
         "name": "aws_backend_connection_errors_rate"
     },
 }
+check_metrics["check_mk-aws_elbv2_application.connections"] = {
+    "aws_Active_connections": {
+        "name": "aws_active_connections"
+    },
+    "aws_New_connections": {
+        "name": "aws_new_connections"
+    },
+    "aws_Rejected_connections": {
+        "name": "aws_rejected_connections"
+    },
+    "aws_TLS errors_connections": {
+        "name": "aws_client_tls_errors"
+    },
+}

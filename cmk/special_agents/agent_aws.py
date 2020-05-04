@@ -1744,23 +1744,23 @@ class S3Requests(AWSSectionCloudwatch):
     def _get_metrics(self, colleague_contents):
         metrics = []
         for idx, bucket_name in enumerate(colleague_contents.content):
-            for metric_name, unit in [
-                ("AllRequests", "Count"),
-                ("GetRequests", "Count"),
-                ("PutRequests", "Count"),
-                ("DeleteRequests", "Count"),
-                ("HeadRequests", "Count"),
-                ("PostRequests", "Count"),
-                ("SelectRequests", "Count"),
-                ("SelectScannedBytes", "Bytes"),
-                ("SelectReturnedBytes", "Bytes"),
-                ("ListRequests", "Count"),
-                ("BytesDownloaded", "Bytes"),
-                ("BytesUploaded", "Bytes"),
-                ("4xxErrors", "Count"),
-                ("5xxErrors", "Count"),
-                ("FirstByteLatency", "Milliseconds"),
-                ("TotalRequestLatency", "Milliseconds"),
+            for metric_name, unit, stat in [
+                ("AllRequests", "Count", "Sum"),
+                ("GetRequests", "Count", "Sum"),
+                ("PutRequests", "Count", "Sum"),
+                ("DeleteRequests", "Count", "Sum"),
+                ("HeadRequests", "Count", "Sum"),
+                ("PostRequests", "Count", "Sum"),
+                ("SelectRequests", "Count", "Sum"),
+                ("SelectScannedBytes", "Bytes", "Sum"),
+                ("SelectReturnedBytes", "Bytes", "Sum"),
+                ("ListRequests", "Count", "Sum"),
+                ("BytesDownloaded", "Bytes", "Sum"),
+                ("BytesUploaded", "Bytes", "Sum"),
+                ("4xxErrors", "Count", "Sum"),
+                ("5xxErrors", "Count", "Sum"),
+                ("FirstByteLatency", "Milliseconds", "Average"),
+                ("TotalRequestLatency", "Milliseconds", "Average"),
             ]:
                 metrics.append({
                     'Id': self._create_id_for_metric_data_query(idx, metric_name),
@@ -1775,7 +1775,7 @@ class S3Requests(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Sum',  # reports per period
+                        'Stat': stat,
                         'Unit': unit,
                     },
                 })
@@ -1961,6 +1961,8 @@ class ELBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        # If you change this, you might have to adjust factory_settings['levels_spillover'] in
+        # checks/aws_elb
         return 300
 
     def _get_colleague_contents(self):
@@ -2487,7 +2489,7 @@ class ELBv2Application(AWSSectionCloudwatch):
             for metric_name, stat in [
                 ('ActiveConnectionCount', 'Sum'),
                 ('ClientTLSNegotiationErrorCount', 'Sum'),
-                ('ConsumedLCUs', 'Sum'),
+                ('ConsumedLCUs', 'Average'),
                 ('HTTP_Fixed_Response_Count', 'Sum'),
                 ('HTTP_Redirect_Count', 'Sum'),
                 ('HTTP_Redirect_Url_Limit_Exceeded_Count', 'Sum'),
@@ -2681,7 +2683,7 @@ class ELBv2Network(AWSSectionCloudwatch):
                 ('ActiveFlowCount', 'Average'),
                 ('ActiveFlowCount_TLS', 'Average'),
                 ('ClientTLSNegotiationErrorCount', 'Sum'),
-                ('ConsumedLCUs', 'Sum'),
+                ('ConsumedLCUs', 'Average'),
                 ('NewFlowCount', 'Sum'),
                 ('NewFlowCount_TLS', 'Sum'),
                 ('ProcessedBytes', 'Sum'),

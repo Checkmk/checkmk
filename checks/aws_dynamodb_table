@@ -60,10 +60,6 @@ def _capacity_params_to_levels(params):
     return params.get("levels_upper", (None, None)) + params.get("levels_lower", (None, None))
 
 
-def _capacity_human_readable(unit):
-    return lambda x: get_number_with_precision(x, unit=unit, precision=3)
-
-
 def _check_capacity_minmax_metrics(params, parsed, to_check):
 
     metric_ids = ["Minimum_Consumed%s" % to_check, "Maximum_Consumed%s" % to_check]
@@ -76,11 +72,12 @@ def _check_capacity_minmax_metrics(params, parsed, to_check):
         if metric_val is not None:
             metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id)
 
-            yield check_levels(metric_val,
-                               metric_name,
-                               _capacity_params_to_levels(params.get(params_key, {})),
-                               infoname=infoname,
-                               human_readable_func=_capacity_human_readable(unit))
+            yield check_levels(
+                metric_val,
+                metric_name,
+                _capacity_params_to_levels(params.get(params_key, {})),
+                infoname=infoname,
+                human_readable_func=lambda f: aws_get_float_human_readable(f, unit=unit))
 
 
 def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
@@ -93,7 +90,7 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
 
     metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id_avg)
 
-    yield 0, 'Avg. consumption: %s' % _capacity_human_readable(unit)(metric_val_avg), [
+    yield 0, 'Avg. consumption: %s' % aws_get_float_human_readable(metric_val_avg, unit=unit), [
         (metric_name, metric_val_avg)
     ]
 

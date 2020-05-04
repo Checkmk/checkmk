@@ -435,11 +435,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 cme_path() + "/cmk/base",
             ]
 
-        # Prevent build problems of livestatus
-        logger.debug("Cleanup git files")
-        assert subprocess.call(["sudo", "git", "clean", "-xfd",
-                                cmk_path() + "/livestatus"]) >> 8 == 0
-
         for path in paths:
             if os.path.exists("%s/.f12" % path):
                 logger.debug("Executing .f12 in \"%s\"...", path)

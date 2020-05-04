@@ -3,6 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 SHELL    := /bin/bash -e
+NODE_MODULES := ../node_modules
 PIPENV3  := ../scripts/run-pipenv 3
 PYTEST   := $(PIPENV3) run py.test -vv
 YAPF     := $(PIPENV3) run yapf

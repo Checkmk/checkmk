@@ -25,9 +25,6 @@ help:
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
 	@echo "test-unit-sh              - Run shell unit tests"
 
-$(NODE_MODULES):
-	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
-
 bandit.ini:
 	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 2 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
 

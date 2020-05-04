@@ -13,17 +13,17 @@ from cmk.gui.plugins.watolib.utils import (
 )
 
 
-def load_configuration_settings(site_specific=False):
+def load_configuration_settings(site_specific=False, custom_site_path=None):
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
         if site_specific:
-            settings.update(domain().load_site_globals())
+            settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
         else:
             settings.update(domain().load())
     return settings
 
 
-def save_global_settings(vars_, site_specific=False):
+def save_global_settings(vars_, site_specific=False, custom_site_path=None):
     per_domain = {}  # type: Dict[str, Dict[Any, Any]]
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
@@ -43,11 +43,12 @@ def save_global_settings(vars_, site_specific=False):
                               {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
 
     for domain in ABCConfigDomain.enabled_domains():
+        domain_config = per_domain.get(domain.ident, {})
         if site_specific:
-            domain().save_site_globals(per_domain.get(domain.ident, {}))
+            domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
-            domain().save(per_domain.get(domain.ident, {}))
+            domain().save(domain_config, custom_site_path=custom_site_path)
 
 
-def save_site_global_settings(vars_):
-    save_global_settings(vars_, site_specific=True)
+def save_site_global_settings(settings, custom_site_path=None):
+    save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

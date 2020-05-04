@@ -70,8 +70,12 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
     def activate(self):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
-    def load(self, site_specific=False):
+    def load(self, site_specific=False, custom_site_path=None):
         filename = self.config_file(site_specific)
+        if custom_site_path:
+            filename = os.path.join(custom_site_path,
+                                    os.path.relpath(filename, cmk.utils.paths.omd_root))
+
         settings = {}  # type: Dict[str, Any]
 
         if not os.path.exists(filename):
@@ -89,11 +93,14 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
-    def load_site_globals(self):
-        return self.load(site_specific=True)
+    def load_site_globals(self, custom_site_path=None):
+        return self.load(site_specific=True, custom_site_path=custom_site_path)
 
-    def save(self, settings, site_specific=False):
+    def save(self, settings, site_specific=False, custom_site_path=None):
         filename = self.config_file(site_specific)
+        if custom_site_path:
+            filename = os.path.join(custom_site_path,
+                                    os.path.relpath(filename, cmk.utils.paths.omd_root))
 
         output = wato_fileheader()
         for varname, value in settings.items():
@@ -102,8 +109,8 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
         store.makedirs(os.path.dirname(filename))
         store.save_file(filename, output)
 
-    def save_site_globals(self, settings):
-        self.save(settings, site_specific=True)
+    def save_site_globals(self, settings, custom_site_path=None):
+        self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
     @abc.abstractmethod
     def default_globals(self):

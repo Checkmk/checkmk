@@ -136,7 +136,7 @@ def _generate_sync_snapshot(activation_manager, snapshot_data_collector_class, t
     return snapshot_settings
 
 
-def _get_expected_paths(user_id):
+def _get_expected_paths(user_id, is_pre_17_site):
     expected_paths = [
         'etc',
         'var',
@@ -175,7 +175,7 @@ def _get_expected_paths(user_id):
     # cmk_version.edition_short() value.
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if is_enterprise_repo() and not cmk_version.is_managed_edition():
+    if is_enterprise_repo() and (not is_pre_17_site or not cmk_version.is_managed_edition()):
         expected_paths += [
             'etc/check_mk/dcd.d',
             'etc/check_mk/dcd.d/wato',
@@ -234,7 +234,7 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
                                               tmp_path,
                                               is_pre_17_site=False)
 
-    expected_paths = _get_expected_paths(user_id=with_user_login)
+    expected_paths = _get_expected_paths(user_id=with_user_login, is_pre_17_site=False)
 
     expected_paths += [
         "site_globals",
@@ -382,7 +382,7 @@ def test_apply_pre_17_sync_snapshot(edition_short, snapshot_data_collector_class
     with open(snapshot_settings.snapshot_path, "rb") as f:
         activate_changes.apply_pre_17_sync_snapshot("unit_remote_1", f.read(), components)
 
-    expected_paths = _get_expected_paths(user_id=with_user_login)
+    expected_paths = _get_expected_paths(user_id=with_user_login, is_pre_17_site=is_pre_17_site)
 
     if cmk_version.is_managed_edition():
         expected_paths += [

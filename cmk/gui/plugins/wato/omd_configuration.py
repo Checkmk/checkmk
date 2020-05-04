@@ -240,7 +240,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def config_dir(self):
         return ""  # unused, we override load and save below
 
-    def load(self, site_specific=False):
+    def load(self, site_specific=False, custom_site_path=None):
         cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
         if not cleanup_settings:
             return {}
@@ -261,7 +261,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
             "diskspace_cleanup": cleanup_settings,
         }
 
-    def save(self, settings, site_specific=False):
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        if site_specific:
+            return  # not supported at the moment
+
         config = {}
 
         if "diskspace_cleanup" in settings:
@@ -280,9 +283,6 @@ class ConfigDomainDiskspace(ABCConfigDomain):
             output += '%s = %r\n' % (k, v)
 
         store.save_file(self.diskspace_config, output)
-
-    def save_site_globals(self, settings):
-        pass
 
     def default_globals(self):
         diskspace_context = {}  # type: Dict[str, Any]

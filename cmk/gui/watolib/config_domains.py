@@ -99,8 +99,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
     def config_dir(self):
         return liveproxyd_config_dir()
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainLiveproxy, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainLiveproxy, self).save(settings,
+                                                site_specific=site_specific,
+                                                custom_site_path=custom_site_path)
         self.activate()
 
     def activate(self):
@@ -211,8 +213,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainCACertificates, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainCACertificates, self).save(settings,
+                                                     site_specific=site_specific,
+                                                     custom_site_path=custom_site_path)
 
         current_config = settings.get("trusted_certificate_authorities", {
             "use_system_wide_cas": True,

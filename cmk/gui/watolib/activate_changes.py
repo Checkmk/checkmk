@@ -168,10 +168,8 @@ def add_replication_paths(paths):
 def get_replication_paths():
     # type: () -> List[ReplicationPath]
     paths = [
-        ReplicationPath("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(),
-                        ["sitespecific.mk"]),
-        ReplicationPath("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(),
-                        ["sitespecific.mk"]),
+        ReplicationPath("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(), []),
+        ReplicationPath("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(), []),
         ReplicationPath("file", "htpasswd", cmk.utils.paths.htpasswd_file, []),
         ReplicationPath("file", "auth.secret",
                         '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file), []),
@@ -189,15 +187,14 @@ def get_replication_paths():
     # TODO: Move this to CEE specific code again
     if not cmk_version.is_raw_edition():
         paths += [
-            ReplicationPath("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
-                            ["sitespecific.mk"]),
+            ReplicationPath("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(), []),
         ]
 
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
         _rule_pack_dir = str(ec.rule_pack_dir())
-        paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
+        paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
 
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
         paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
@@ -898,13 +895,18 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
 
         for site_id, snapshot_settings in self._site_snapshot_settings.items():
             # Generate site specific global settings file
-            create_site_globals_file(site_id, snapshot_settings.work_dir,
-                                     snapshot_settings.site_config)
+            if snapshot_settings.create_pre_17_snapshot:
+                create_site_globals_file(site_id, snapshot_settings.work_dir,
+                                         snapshot_settings.site_config)
+            else:
+                save_site_global_settings(snapshot_settings.site_config,
+                                          custom_site_path=snapshot_settings.work_dir)
 
-            create_distributed_wato_file(Path(
-                snapshot_settings.work_dir).joinpath("etc/check_mk/conf.d/distributed_wato.mk"),
-                                         site_id,
-                                         is_slave=True)
+            if not self._site_snapshot_settings[site_id].create_pre_17_snapshot:
+                create_distributed_wato_file(Path(
+                    snapshot_settings.work_dir).joinpath("etc/check_mk/conf.d/distributed_wato.mk"),
+                                             site_id,
+                                             is_slave=True)
 
     def _prepare_site_config_directory(self, site_id):
         # type: (SiteId) -> None
@@ -1511,7 +1513,7 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, components):
     extract_from_buffer(tar_content, components)
 
     try:
-        _save_site_globals_on_slave_site(tar_content)
+        _save_pre_17_site_globals_on_slave_site(tar_content)
 
         # pending changes are lost
         confirm_all_local_changes()
@@ -1532,7 +1534,7 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, components):
     return True
 
 
-def _save_site_globals_on_slave_site(tarcontent):
+def _save_pre_17_site_globals_on_slave_site(tarcontent):
     # type: (bytes) -> None
     tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
     try:
@@ -1616,13 +1618,19 @@ def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
     paths = [_replace_omd_root(work_dir, repl_comp) for repl_comp in paths]
 
     # Add site-specific global settings
-    paths.append(
-        ReplicationPath(
-            ty="file",
-            ident="sitespecific",
-            path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
-            excludes=[],
-        ))
+    if is_pre_17_remote_site:
+        # When synchronizing with pre 1.7 sites, the sitespecific.mk from the config domain
+        # directories must not be used. Instead of this, they are transfered using the
+        # site_globals/sitespecific.mk (see below) and written on the remote site.
+        paths = _add_pre_17_sitespecific_excludes(paths)
+
+        paths.append(
+            ReplicationPath(
+                ty="file",
+                ident="sitespecific",
+                path=os.path.join(work_dir, "site_globals", "sitespecific.mk"),
+                excludes=[],
+            ))
 
     # Add distributed_wato.mk
     if not is_pre_17_remote_site:
@@ -1635,3 +1643,20 @@ def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
             ))
 
     return paths
+
+
+def _add_pre_17_sitespecific_excludes(paths):
+    # type: (List[ReplicationPath]) -> List[ReplicationPath]
+    add_domains = {"check_mk", "multisite", "liveproxyd", "mkeventd", "dcd", "mknotify"}
+    new_paths = []
+    for p in paths:
+        if p.ident in add_domains:
+            p = ReplicationPath(
+                ty=p.ty,
+                ident=p.ident,
+                path=p.path,
+                excludes=p.excludes[:] + ["sitespecific.mk"],
+            )
+
+        new_paths.append(p)
+    return new_paths

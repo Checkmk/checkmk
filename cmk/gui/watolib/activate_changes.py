@@ -645,7 +645,10 @@ class ActivateChangesManager(ActivateChanges):
 
             # Do not create a snapshot for the local site. All files are already in place
             site_snapshot_settings = self._site_snapshot_settings.copy()
-            del site_snapshot_settings[config.omd_site()]
+            try:
+                del site_snapshot_settings[config.omd_site()]
+            except KeyError:
+                pass
 
             snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()

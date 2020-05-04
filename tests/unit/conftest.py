@@ -37,7 +37,6 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
     store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
     store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/mkp/rule_packs')
     _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
 
 

@@ -532,6 +532,7 @@ Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every
 
 ```vim
 let g:ale_fixers = {'python': ['isort, 'yapf']}
+let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.venv/bin/yapf'
 let g:ale_fix_on_save = 1
 ```
 
@@ -558,11 +559,12 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
   \}
   ```
 
-* Then tell the linter how to run mypy:
+* Then tell the linter how to run pylint and mypy:
 
   ```vim
-  let g:ale_python_mypy_executable = 'scripts/run-mypy'
-  let g:ale_python_mypy_options = '--config-file=../mypy.ini'
+  let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
+  let g:ale_python_pylint_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-pylint'
+  let g:ale_python_pylint_options = '--rcfile YOUR_REPO_PATH/check_mk/.pylintrc'
   ```
 
 The mypy-Checker should run with this. With ":ALEInfo" you get information
@@ -713,7 +715,7 @@ should avoid UPPERCASE as much as possible.  If you *do* need a variable
 in the environment "scope" for whatever reason, use the form `MK_VARNAME`
 e.g. `MK_VERSION`
 
-You might often see this "scope" referred to as the *global* scope, or *script*
+You might often see this "scope" referred to as the *global* scope, or *shell*
 scope.  This scope also contains shell builtin variables.
 
 ##### Script

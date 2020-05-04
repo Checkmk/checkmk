@@ -46,7 +46,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
-from cmk.utils.werks import parse_check_mk_version
+#from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -662,8 +662,8 @@ class ActivateChangesManager(ActivateChanges):
             site_config = config.sites[site_id]
             work_dir = cmk.utils.paths.site_config_dir / site_id
 
-            #site_status = self._get_site_status(site_id, site_config)[0]
-            is_pre_17_remote_site = True  # _is_pre_17_remote_site(site_status)
+            site_status = self._get_site_status(site_id, site_config)[0]
+            is_pre_17_remote_site = _is_pre_17_remote_site(site_status)
 
             snapshot_components = _get_replication_components(str(work_dir), site_config,
                                                               is_pre_17_remote_site)
@@ -1593,11 +1593,12 @@ def _is_pre_17_remote_site(site_status):
     new central site and an old remote site, we detect that case here and create the 1.6
     snapshots for the old sites.
     """
-    version = site_status.get("livestatus_version")
-    if not version:
-        return False
+    return True  # Temporarily enforce this during runtime.
+    #version = site_status.get("livestatus_version")
+    #if not version:
+    #    return False
 
-    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
+    #return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
 
 
 def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):

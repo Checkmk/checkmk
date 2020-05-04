@@ -163,6 +163,30 @@ def _get_expected_paths(user_id, is_pre_17_site):
         six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
     ]
 
+    # The new sync directories create all needed files on the central site now
+    if not is_pre_17_site:
+        expected_paths += [
+            'etc/check_mk/apache.d',
+            'etc/check_mk/apache.d/wato',
+            'etc/check_mk/apache.d/wato/sitespecific.mk',
+            'etc/check_mk/conf.d/distributed_wato.mk',
+            'etc/check_mk/conf.d/wato/sitespecific.mk',
+            'etc/check_mk/mkeventd.d/wato/sitespecific.mk',
+            'etc/check_mk/multisite.d/wato/ca-certificates_sitespecific.mk',
+            'etc/check_mk/multisite.d/wato/sitespecific.mk',
+            'etc/check_mk/rrdcached.d',
+            'etc/check_mk/rrdcached.d/wato',
+            'etc/check_mk/rrdcached.d/wato/sitespecific.mk',
+            'etc/omd',
+            'etc/omd/sitespecific.mk',
+        ]
+
+        if is_enterprise_repo():
+            expected_paths += [
+                'etc/check_mk/dcd.d/wato/sitespecific.mk',
+                'etc/check_mk/mknotifyd.d/wato/sitespecific.mk',
+            ]
+
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if not cmk_version.is_managed_edition():
@@ -219,7 +243,6 @@ def editions():
         yield ("cme", "CMESnapshotDataCollector")
 
 
-@pytest.mark.skip("Enable once new sync mechanism is in place")
 @pytest.mark.parametrize("edition_short,snapshot_data_collector_class", editions())
 @pytest.mark.usefixtures("register_builtin_html")
 def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeypatch, tmp_path,
@@ -235,11 +258,6 @@ def test_generate_snapshot(edition_short, snapshot_data_collector_class, monkeyp
                                               is_pre_17_site=False)
 
     expected_paths = _get_expected_paths(user_id=with_user_login, is_pre_17_site=False)
-
-    expected_paths += [
-        "site_globals",
-        "site_globals/sitespecific.mk",
-    ]
 
     work_dir = Path(snapshot_settings.work_dir)
     paths = [str(p.relative_to(work_dir)) for p in work_dir.glob("**/*")]

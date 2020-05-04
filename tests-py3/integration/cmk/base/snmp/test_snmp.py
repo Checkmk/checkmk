@@ -145,9 +145,9 @@ def snmp_config_fixture(request, snmpsim, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def clear_cache(monkeypatch):
-    monkeypatch.setattr(snmp, "_g_single_oid_hostname", None)
-    monkeypatch.setattr(snmp, "_g_single_oid_ipaddress", None)
-    monkeypatch.setattr(snmp, "_g_single_oid_cache", {})
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_hostname", None)
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_ipaddress", None)
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_cache", {})
 
 
 def test_get_single_oid_ipv6(snmp_config):

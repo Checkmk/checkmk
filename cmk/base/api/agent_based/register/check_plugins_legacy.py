@@ -129,9 +129,9 @@ def _create_check_function(name, check_info_dict, ruleset_name):
         # Once we have seen a newline in *any* subresult,
         # all remaining output is sent to the details page!
         # I'm not saying that is good, but we stay compatible.
-        opt_newline = ""
+        is_details = False
         for subresult in subresults:
-            opt_newline = yield from _create_new_result(opt_newline, *subresult)
+            is_details = yield from _create_new_result(is_details, *subresult)
 
         item_state.raise_counter_wrap()
 
@@ -139,20 +139,21 @@ def _create_check_function(name, check_info_dict, ruleset_name):
 
 
 def _create_new_result(
-        implicit_newline,  # type: str
+        is_details,  # type: bool
         legacy_state,  # type: int
         legacy_text,  # type: str
         legacy_metrics=(),  # type: Union[Tuple, List]
 ):
-    # type: (...) -> Generator[Union[Metric, Result], None, str]
-    kwargs = {"state": state(legacy_state)}  # type: Dict[str, Any]
-    components = (implicit_newline + legacy_text).split("\n", 1)
-    kwargs["summary"] = components[0]
-    if len(components) > 1:
-        # make sure its longer than summary
-        kwargs["details"] = ("%%-%ds" % (len(components[0]) + 1)) % components[1]
+    # type: (...) -> Generator[Union[Metric, Result], None, bool]
+    result_state = state(legacy_state)
 
-    yield Result(**kwargs)
+    if is_details:
+        summary = None  # type: Optional[str]
+        details = legacy_text  # type: Optional[str]
+    else:
+        is_details = "\n" in legacy_text
+        summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
+    yield Result(state=result_state, summary=summary, details=details)
 
     for metric in legacy_metrics:
         # fill up with None:
@@ -160,7 +161,7 @@ def _create_new_result(
             v for v, _ in itertools.zip_longest(metric, range(6)))
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
-    return "\n" if len(components) > 1 else ""
+    return is_details
 
 
 def _create_signature_check_function(

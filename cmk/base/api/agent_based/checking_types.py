@@ -244,30 +244,57 @@ class Result(NamedTuple("ResultTuple", [
 
     _state_class = state  # avoid shadowing by keyword called "state"
 
-    def __new__(cls, summary=None, details=None, state=None):  # pylint: disable=redefined-outer-name
-        # type: (Optional[str], Optional[str], Optional[state]) -> Result
+    def __new__(  # pylint: disable=redefined-outer-name
+            cls,
+            summary=None,  # type: Optional[str]
+            notice=None,  # type: Optional[str]
+            details=None,  # type: Optional[str]
+            state=None,  # type: Optional[state]
+    ):
+        # type: (...) -> Result
         # TODO (mo): unhack this CMK-3983
         # all arguments should be kwarg-only
-        for var, name, type_ in (
-            (summary, "summary", str),
-            (details, "details", str),
-            (state, "state", cls._state_class),
+        if state is None:
+            raise TypeError("'state' is a mandatory keyword argument")
+
+        if not isinstance(state, cls._state_class):
+            raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
+
+        for var, name in (
+            (summary, "summary"),
+            (notice, "notice"),
+            (details, "details"),
         ):
-            if var is not None and not isinstance(var, type_):
-                raise TypeError("%r must be %s or None, got %r" % (name, type_, var))
+            if var is not None and not isinstance(var, str):
+                raise TypeError("%r must be non-empty str or None, got %r" % (name, var))
+            if var == "":
+                raise ValueError("%r must be non-empty str or None, got %r" % (name, var))
+
+        if summary and notice:
+            raise TypeError("'summary' and 'notice' are mutually exclusive arguments")
+
+        if not any((summary, notice, details)):
+            raise TypeError("at least 'summary', 'notice' or 'details' is required")
+
         if summary and '\n' in summary:
             raise ValueError("'\n' not allowed in 'summary'")
-        if not (details or summary):
-            raise ValueError("at least 'details' or 'summary' is required")
-        if details and summary:
-            if not len(details) > len(summary):
-                raise ValueError("'summary' should be shorter than 'details'")
+
+        if notice and '\n' in notice:
+            raise ValueError("'\n' not allowed in 'notice'")
+
+        if not details:
+            details = summary or notice
+
+        if not summary:
+            summary = notice if notice and state != cls._state_class.OK else ""
+
+        assert details is not None  # makes mypy happy
 
         return super(Result, cls).__new__(
             cls,
-            state=cls._state_class(state or cls._state_class.OK),
-            summary=summary or "",
-            details=details or "",
+            state=state,
+            summary=summary,
+            details=details,
         )
 
 

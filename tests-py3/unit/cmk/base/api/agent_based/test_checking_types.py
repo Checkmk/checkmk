@@ -152,38 +152,40 @@ def test_metric():
 
 
 @pytest.mark.parametrize(
-    "state_, summary, details",
+    "state_, summary, notice, details",
     [
-        (8, "foo", None),
-        (state.OK, b"foo", None),
-        (state.OK, "newline is a \no-no", None),
-        (state.OK, "", ""),  # either is required
-        (state.OK, "", None),  # either is required
-        (state.OK, None, ""),  # either is required
-        (state.OK, None, None),  # either is required
-        (state.OK, "this is longer than the", "detailed variant"),
-        (state.OK, "summary", {
+        (8, "foo", None, None),
+        (state.OK, b"foo", None, None),
+        (state.OK, "newline is a \no-no", None, None),
+        (state.OK, None, "newline is a \no-no", None),
+        (state.OK, "", "", ""),  # either is required
+        (state.OK, None, None, None),  # either is required
+        (state.OK, "these are", "mutually exclusive", None),
+        (state.OK, "summary", None, {
             "at the moment": "impossible",
             "someday": "maybe"
         }),
     ])
-def test_result_invalid(state_, summary, details):
+def test_result_invalid(state_, summary, notice, details):
     with pytest.raises((TypeError, ValueError)):
-        _ = Result(state=state_, summary=summary, details=details)
+        _ = Result(state=state_, summary=summary, notice=notice, details=details)
 
 
-def test_result():
-    result = Result(state=state.OK,
-                    summary="moooo",
-                    details="I'm a cow and I will chill out all day.")
-    assert result.state == state.OK
-    assert result.summary == "moooo"
-    assert result.details == "I'm a cow and I will chill out all day."
-
-    result = Result(summary="info", details=None)
-    assert result.state is state.OK
-    assert result.summary == "info"
-    assert result.details == ""
+@pytest.mark.parametrize("state_, summary, notice, details, expected_triple", [
+    (state.OK, None, None, "details", (state.OK, "", "details")),
+    (state.OK, "summary", None, "details", (state.OK, "summary", "details")),
+    (state.OK, "summary", None, None, (state.OK, "summary", "summary")),
+    (state.OK, None, "notice", "details", (state.OK, "", "details")),
+    (state.OK, None, "notice", None, (state.OK, "", "notice")),
+    (state.WARN, None, None, "details", (state.WARN, "", "details")),
+    (state.WARN, "summary", None, "details", (state.WARN, "summary", "details")),
+    (state.WARN, "summary", None, None, (state.WARN, "summary", "summary")),
+    (state.WARN, None, "notice", "details", (state.WARN, "notice", "details")),
+    (state.WARN, None, "notice", None, (state.WARN, "notice", "notice")),
+])
+def test_result(state_, summary, notice, details, expected_triple):
+    result = Result(state=state_, summary=summary, notice=notice, details=details)
+    assert (result.state, result.summary, result.details) == expected_triple
 
 
 def test_ignore_results():

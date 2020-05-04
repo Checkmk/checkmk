@@ -92,7 +92,7 @@ def test_create_check_function():
         checking_types.Result(
             state=checking_types.state.WARN,
             summary="still main, but very long",
-            details="additional1               ",
+            details="additional1",
         ),
         checking_types.Result(state=checking_types.state.CRIT, details="additional2\nadditional3"),
     ]

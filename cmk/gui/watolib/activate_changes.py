@@ -1563,6 +1563,32 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, base_dir, components):
     return True
 
 
+def verify_remote_site_config(site_id):
+    # type: (str) -> None
+    our_id = config.omd_site()
+
+    if not config.is_single_local_site():
+        raise MKGeneralException(
+            _("Configuration error. You treat us as "
+              "a <b>remote</b>, but we have an own distributed WATO configuration!"))
+
+    if our_id is not None and our_id != site_id:
+        raise MKGeneralException(
+            _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+            (our_id, site_id))
+
+    # Make sure there are no local changes we would lose!
+    changes = cmk.gui.watolib.activate_changes.ActivateChanges()
+    changes.load()
+    pending = list(reversed(changes.grouped_changes()))
+    if pending:
+        message = _("There are %d pending changes that would get lost. The most recent are: "
+                   ) % len(pending)
+        message += ", ".join(change["text"] for _change_id, change in pending[:10])
+
+        raise MKGeneralException(message)
+
+
 def _save_pre_17_site_globals_on_slave_site(tarcontent):
     # type: (bytes) -> None
     tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)

@@ -484,7 +484,7 @@ class AutomationActivateChanges(watolib.AutomationCommand):
 
     def get_request(self):
         site_id = html.request.get_ascii_input_mandatory("site_id")
-        self._verify_slave_site_config(site_id)
+        cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
         try:
             domains = ast.literal_eval(html.request.get_ascii_input_mandatory("domains"))

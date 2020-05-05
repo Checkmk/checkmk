@@ -14,11 +14,6 @@ import six
 import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.watolib.activate_changes import ActivateChanges
-
 
 class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all automation commands"""
@@ -40,31 +35,6 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
     def execute(self, request):
         # type: (Any) -> Any
         raise NotImplementedError()
-
-    def _verify_slave_site_config(self, site_id):
-        # type: (str) -> None
-        our_id = config.omd_site()
-
-        if not config.is_single_local_site():
-            raise MKGeneralException(
-                _("Configuration error. You treat us as "
-                  "a <b>remote</b>, but we have an own distributed WATO configuration!"))
-
-        if our_id is not None and our_id != site_id:
-            raise MKGeneralException(
-                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-                (our_id, site_id))
-
-        # Make sure there are no local changes we would lose!
-        changes = ActivateChanges()
-        changes.load()
-        pending = list(reversed(changes.grouped_changes()))
-        if pending:
-            message = _("There are %d pending changes that would get lost. The most recent are: "
-                       ) % len(pending)
-            message += ", ".join(change["text"] for _change_id, change in pending[:10])
-
-            raise MKGeneralException(message)
 
 
 class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):

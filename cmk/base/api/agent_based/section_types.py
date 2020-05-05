@@ -43,7 +43,7 @@ class OIDEnd(int):
 # and adjust the type hints in SNMPTree. We use a type alias for
 # the time beeing, in order to make it easier to find all occurrances.
 # Once it's not needed anymore, replace all ocurrances by OIDEnd:
-CompatibleOIDEnd = int
+CompatibleOIDEnd = Union[int, OIDEnd]
 
 
 class SNMPTree:
@@ -53,12 +53,11 @@ class SNMPTree:
     be handed a list of lists with the values of the corresponding
     OIDs.
     """
-    def __init__(self, *args, **kwargs):
-        # ty#pe: (str, List[Union[str, OIDSpec, CompatibleOIDEnd]]) -> None
-        if args or list(kwargs) != ['base', 'oids']:
+    def __init__(self, base=None, oids=None):
+        # type: (str, List[Union[str, OIDSpec, OIDEnd]]) -> None
+        if base is None or oids is None:
             # TODO (mo): unhack this CMK-3983
-            raise TypeError("keyword arguments only!")
-        base, oids = kwargs['base'], kwargs['oids']
+            raise TypeError("specify exactly 'base' and 'oids' keyword arguments")
         # replace int by OIDEnd once ready
         self._base = self._sanitize_base(base)
         self._oids = self._sanitize_oids(oids)
@@ -73,11 +72,13 @@ class SNMPTree:
 
     @staticmethod
     def _sanitize_oids(oids):
-        # type: (List[Union[str, OIDSpec, CompatibleOIDEnd]]) -> List[Union[OIDSpec, CompatibleOIDEnd]]
+        # type: (List[Union[str, OIDSpec, OIDEnd]]) -> List[Union[OIDSpec, CompatibleOIDEnd]]
         if not isinstance(oids, list):
             raise TypeError("oids must be a list")
 
-        # remove the "int" once CompatibleOIDEnd is not needed anymore
+        # Remove the "int" once CompatibleOIDEnd is not needed anymore.
+        # We must handle int, for legacy code. Typing should prevent us from
+        # adding new cases.
         typed_oids = [
             oid if isinstance(oid, (OIDSpec, OIDEnd, int)) else OIDSpec(oid) for oid in oids
         ]
@@ -85,7 +86,7 @@ class SNMPTree:
         # remaining validations only regard true OIDSpec objects
         oid_specs = [o for o in typed_oids if isinstance(o, OIDSpec)]
         if len(oid_specs) < 2:
-            return typed_oids
+            return typed_oids  # type: ignore[return-value] # allow for legacy code
 
         for oid in oid_specs:
             if str(oid).startswith('.'):
@@ -97,7 +98,7 @@ class SNMPTree:
         if count == len(oid_specs) and all(str(o) != head for o in oid_specs):
             raise ValueError("base can be extended by '.%s'" % head)
 
-        return typed_oids
+        return typed_oids  # type: ignore[return-value] # allow for legacy code
 
     @property
     def base(self):

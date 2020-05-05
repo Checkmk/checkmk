@@ -283,9 +283,9 @@ def _livestatus_auth_user(user, force_authuser):
     # type: (LoggedInUser, Optional[UserId]) -> Optional[UserId]
     if not user.may("general.see_all"):
         return user.id
-    if force_authuser == "1":
+    if force_authuser == UserId("1"):
         return user.id
-    if force_authuser == "0":
+    if force_authuser == UserId("0"):
         return None
     if force_authuser:
         return force_authuser  # set a different user

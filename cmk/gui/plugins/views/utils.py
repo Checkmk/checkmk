@@ -1323,7 +1323,7 @@ def cmp_string_list(column, r1, r2):
 
 
 def cmp_service_name_equiv(r):
-    # type: (Row) -> int
+    # type: (str) -> int
     if r == "Check_MK":
         return -6
     if r == "Check_MK Agent":

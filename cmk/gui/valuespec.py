@@ -1758,7 +1758,7 @@ class ListOfStrings(ValueSpec):
         for nr, s in enumerate(value + [""]):
             html.open_div()
             self._valuespec.render_input(varprefix + "_%d" % nr, s)
-            if self._vertical != "vertical" and self._separator:
+            if not self._vertical and self._separator:
                 html.nbsp()
                 html.write(self._separator)
                 html.nbsp()

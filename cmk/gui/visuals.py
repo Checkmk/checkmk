@@ -755,7 +755,7 @@ def page_edit_visual(what,
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
             # Make sure, name is unique
-            if cloneuser == owner_user_id:  # Clone own visual
+            if UserId(cloneuser) == owner_user_id:  # Clone own visual
                 newname = visualname + "_clone"
             else:
                 newname = visualname
@@ -768,7 +768,7 @@ def page_edit_visual(what,
             visual["public"] = False
             visualname = newname
             oldname = None  # Prevent renaming
-            if cloneuser == owner_user_id:
+            if UserId(cloneuser) == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:
             user_id_str = html.request.get_unicode_input("owner", config.user.id)

@@ -6,7 +6,7 @@
 """Default configuration settings for the Check_MK GUI"""
 
 from typing import (  # pylint: disable=unused-import
-    Dict as _Dict, List as _List, Tuple as _Tuple, Any as _Any,
+    Any as _Any, Dict as _Dict, List as _List, Tuple as _Tuple, Union as _Union,
 )
 
 #.
@@ -25,7 +25,7 @@ roles = {}  # type: _Dict
 # define default values for all settings
 debug = False
 screenshotmode = False
-profile = False
+profile = False  # type: _Union[bool, str]
 users = []  # type: _List
 admin_users = ["omdadmin", "cmkadmin"]
 guest_users = []  # type: _List

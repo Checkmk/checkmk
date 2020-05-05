@@ -272,7 +272,7 @@ def edit_package(pacname, new_package_info):
 
 def install_optional_package(package_file_name):
     # type: (Path) -> PackageInfo
-    if package_file_name not in [p.name for p in _get_optional_package_paths()]:
+    if package_file_name not in [Path(p.name) for p in _get_optional_package_paths()]:
         raise PackageException("Optional package %s does not exist" % package_file_name)
     return install_package_by_path(cmk.utils.paths.optional_packages_dir / package_file_name)
 

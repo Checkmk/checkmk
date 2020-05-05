@@ -133,7 +133,8 @@ class ModeTags(ABCTagMode):
 
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
                 del_id):
-            message = _("Transformed the user tag group \"%s\" to builtin.") % del_id
+            message = _("Transformed the user tag group \"%s\" to builtin."
+                       ) % del_id  # type: Union[bool, Text]
         else:
             message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
             if message is True:  # no confirmation yet
@@ -836,6 +837,7 @@ class OperationReplaceGroupedTags(ABCOperation):
 
 
 def _rename_tags_after_confirmation(operation):
+    # type: (ABCOperation) -> Union[bool, Text]
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according

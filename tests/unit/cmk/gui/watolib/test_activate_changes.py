@@ -4,11 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.gui.watolib.activate_changes as activate_changes
+from cmk.gui.watolib.activate_changes import (
+    ConfigSyncFileInfo,
+    GetConfigSyncStateResponse,
+    GetConfigSyncStateRequest,
+)
 from cmk.gui.watolib.config_sync import ReplicationPath
 
 import testlib
@@ -199,3 +212,101 @@ def test_is_pre_17_remote_site(site_status, expected):
     if expected is False:
         pytest.skip("Disabled for the moment")
     assert activate_changes._is_pre_17_remote_site(site_status) == expected
+
+
+def test_automation_get_config_sync_state():
+    get_state = activate_changes.AutomationGetConfigSyncState()
+    response = get_state.execute(
+        GetConfigSyncStateRequest([ReplicationPath("dir", "abc", "etc", [])]))
+    assert response == GetConfigSyncStateResponse(
+        file_infos={
+            'etc/check_mk/multisite.mk': ConfigSyncFileInfo(
+                st_mode=33204,
+                st_size=0,
+                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+            'etc/check_mk/mkeventd.mk': ConfigSyncFileInfo(
+                st_mode=33204,
+                st_size=0,
+                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+            'etc/htpasswd': ConfigSyncFileInfo(
+                st_mode=33204,
+                st_size=0,
+                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+        },
+        config_generation=0,
+    )
+
+
+def test_get_config_sync_file_infos():
+    base_dir = Path(cmk.utils.paths.omd_root) / "replication"
+    _create_get_config_sync_file_infos_test_config(base_dir)
+
+    replication_paths = [
+        ReplicationPath("dir", "d1-empty", "etc/d1", []),
+        ReplicationPath("dir", "d2-not-existing", "etc/d2", []),
+        ReplicationPath("dir", "d3-single-file", "etc/d3", []),
+        ReplicationPath("dir", "d4-multiple-files", "etc/d4", []),
+        ReplicationPath("file", "f1-not-existing", "etc/f1", []),
+        ReplicationPath("file", "f2", "bla/blub/f2", []),
+    ]
+    sync_infos = activate_changes._get_config_sync_file_infos(replication_paths, base_dir)
+
+    assert sync_infos == {
+        'bla/blub/f2': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=7,
+            file_hash='ae973806ace987a1889dc02cfa6b320912b68b6eb3929e425762795955990f35'),
+        'etc/d3/xyz': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=5,
+            file_hash='780518619e3c5dfc931121362c7f14fa8d06457995c762bd818072ed42e6e69e'),
+        'etc/d4/layer1/layer2/x3.xyz': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=6,
+            file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
+        'etc/d4/layer1/layer2/x4.xyz': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=6,
+            file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
+        'etc/d4/x1': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=6,
+            file_hash='1c77fe07e738fd6cbf0075195a773043a7507d53d6deeb1161549244c02ea0ff'),
+        'etc/d4/x2': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=6,
+            file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
+        'etc/f1': ConfigSyncFileInfo(
+            st_mode=33204,
+            st_size=7,
+            file_hash='4dd985602450dfdeb261cedf8562cb62c5173d1d8bb5f3ca26cd3519add67cf7'),
+    }
+
+
+def _create_get_config_sync_file_infos_test_config(base_dir):
+    base_dir.joinpath("etc/d1").mkdir(parents=True, exist_ok=True)
+
+    base_dir.joinpath("etc/d3").mkdir(parents=True, exist_ok=True)
+    with base_dir.joinpath("etc/d3").joinpath("xyz").open("w", encoding="utf-8") as f:
+        f.write(u"Däng")
+
+    base_dir.joinpath("etc/d4").mkdir(parents=True, exist_ok=True)
+    with base_dir.joinpath("etc/d4").joinpath("x1").open("w", encoding="utf-8") as f:
+        f.write(u"Däng1")
+    with base_dir.joinpath("etc/d4").joinpath("x2").open("w", encoding="utf-8") as f:
+        f.write(u"Däng2")
+    base_dir.joinpath("etc/d4/layer1/layer2").mkdir(parents=True, exist_ok=True)
+    with base_dir.joinpath("etc/d4/layer1/layer2").joinpath("x3.xyz").open("w",
+                                                                           encoding="utf-8") as f:
+        f.write(u"Däng2")
+
+    with base_dir.joinpath("etc/d4/layer1/layer2").joinpath("x4.xyz").open("w",
+                                                                           encoding="utf-8") as f:
+        f.write(u"Däng2")
+
+    with base_dir.joinpath("etc/f1").open("w", encoding="utf-8") as f:
+        f.write(u"Ef-eins")
+
+    base_dir.joinpath("bla/blub").mkdir(parents=True, exist_ok=True)
+    with base_dir.joinpath("bla/blub/f2").open("w", encoding="utf-8") as f:
+        f.write(u"Ef-zwei")

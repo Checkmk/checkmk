@@ -25,6 +25,7 @@ import multiprocessing
 import traceback
 import subprocess
 import sys
+import hashlib
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -78,6 +79,7 @@ from cmk.gui.watolib.config_sync import SnapshotCreator, ReplicationPath
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.config_sync import extract_from_buffer
 from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 
 from cmk.gui.watolib.changes import (
     SiteChanges,
@@ -1715,3 +1717,102 @@ def _add_pre_17_sitespecific_excludes(paths):
 
         new_paths.append(p)
     return new_paths
+
+
+GetConfigSyncStateRequest = NamedTuple("GetConfigSyncStateRequest", [
+    ("replication_paths", List[ReplicationPath]),
+])
+
+ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
+    ("st_mode", int),
+    ("st_size", int),
+    ("file_hash", str),
+])
+
+GetConfigSyncStateResponse = NamedTuple("GetConfigSyncStateResponse", [
+    ("file_infos", Dict[str, ConfigSyncFileInfo]),
+    ("config_generation", int),
+])
+
+
+@automation_command_registry.register
+class AutomationGetConfigSyncState(AutomationCommand):
+    """Called on remote site from a central site to get the current config sync state
+
+    The central site hands over the list of replication paths it will try to synchronize later.  The
+    remote site computes the list of replication files and sends it back together with the current
+    configuration generation ID. The config generation ID is increased on every WATO modification
+    and ensures that nothing is changed between the two config sync steps.
+    """
+    def command_name(self):
+        return "get-config-sync-state"
+
+    def get_request(self):
+        # type: () -> GetConfigSyncStateRequest
+        request = ast.literal_eval(html.request.get_ascii_input_mandatory("request"))
+        return GetConfigSyncStateRequest(request)
+
+    def execute(self, request):
+        # type: (GetConfigSyncStateRequest) -> GetConfigSyncStateResponse
+        with store.lock_checkmk_configuration():
+            return GetConfigSyncStateResponse(_get_config_sync_file_infos(
+                request.replication_paths, base_dir=Path(cmk.utils.paths.omd_root)),
+                                              config_generation=_get_current_config_generation())
+
+
+def _get_config_sync_file_infos(replication_paths, base_dir):
+    # type: (List[ReplicationPath], Path) -> Dict[str, ConfigSyncFileInfo]
+    """Scans the given replication paths for the information needed for the config sync
+
+    It produces a dictionary of sync file infos. One entry is created for each file.  Directories
+    are not added to the dictionary.
+    """
+    infos = {}
+
+    for replication_path in replication_paths:
+        path = base_dir.joinpath(replication_path.site_path)
+
+        if not path.exists():
+            continue  # Only report back existing things
+
+        if replication_path.ty == "file":
+            infos[replication_path.site_path] = _get_config_sync_file_info(path)
+
+        elif replication_path.ty == "dir":
+            for entry in path.glob("**/*"):
+                if entry.is_dir():
+                    continue  # Do not add directories at all
+
+                entry_site_path = entry.relative_to(base_dir)
+                infos[str(entry_site_path)] = _get_config_sync_file_info(entry)
+
+        else:
+            raise NotImplementedError()
+    return infos
+
+
+def _get_config_sync_file_info(file_path):
+    # type: (Path) -> ConfigSyncFileInfo
+    stat = file_path.stat()
+    return ConfigSyncFileInfo(
+        stat.st_mode,
+        stat.st_size,
+        _create_config_sync_file_hash(file_path),
+    )
+
+
+def _create_config_sync_file_hash(file_path):
+    # type: (Path) -> str
+    sha256 = hashlib.sha256()
+    with file_path.open("rb") as f:
+        while True:
+            chunk = f.read(65536)
+            if not chunk:
+                break
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def _get_current_config_generation():
+    # type: () -> int
+    return 0  # TODO: Will be added later

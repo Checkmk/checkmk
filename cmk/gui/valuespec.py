@@ -19,7 +19,9 @@ from __future__ import division
 import abc
 import base64
 from enum import Enum
+import datetime
 import hashlib
+import io
 import ipaddress
 import json
 import logging
@@ -27,22 +29,23 @@ import math
 import numbers
 import os
 import re
-import io
 import socket
 import sre_constants
 import sys
 import time
+import uuid
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set, SupportsFloat, Text,
     Tuple as _Tuple, Type, TypeVar, Union, Sequence,
 )
+from dateutil.relativedelta import relativedelta
+from dateutil.tz import tzlocal
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Protocol
 else:
     from typing import Protocol  # pylint: disable=no-name-in-module
 
-import uuid
 from PIL import Image  # type: ignore[import]
 
 try:
@@ -3927,75 +3930,43 @@ class TimeofdayRange(ValueSpec):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."))
 
 
-# TODO: We should *really* nuke that code below and use time/datetime.
 class TimeHelper(object):
     @staticmethod
     def round(timestamp, unit):
-        lt = time.localtime(timestamp)
-        time_s = time.struct_time((
-            lt.tm_year,
-            lt.tm_mon,
-            lt.tm_mday,
-            0,  # tm_hour
-            0,  # tm_min
-            0,  # tm_sec
-            lt.tm_wday,
-            lt.tm_yday,
-            -1,  # tm_isdst
-        ))
+        lt = datetime.datetime.fromtimestamp(timestamp, tzlocal()).replace(hour=0,
+                                                                           minute=0,
+                                                                           second=0)
 
-        if unit == 'd':
-            return time.mktime(time_s)
         if unit == 'w':
-            days = time_s.tm_wday  # 0 based
+            lt -= datetime.timedelta(days=lt.weekday())
         elif unit == 'm':
-            days = time_s.tm_mday - 1  # 1 based
+            lt = lt.replace(day=1)
         elif unit == 'y':
-            days = time_s.tm_yday - 1  # 1 based
-        else:
+            lt = lt.replace(month=1, day=1)
+        elif unit != 'd':
             raise MKGeneralException("invalid time unit %s" % unit)
 
-        return TimeHelper.round(time.mktime(time_s) - days * 86400 + 3600, 'd')
+        return time.mktime(lt.timetuple())
+        # py3 return lt.timestamp()
 
     @staticmethod
     def add(timestamp, count, unit):
+        lt = datetime.datetime.fromtimestamp(timestamp, tzlocal())
         if unit == 'h':
-            return timestamp + 3600 * count
-        if unit == 'd':
-            return timestamp + 86400 * count
-        if unit == 'w':
-            return timestamp + (7 * 86400) * count
-        if unit == 'm':
-            time_s = time.localtime(timestamp)
-            years, months = divmod(abs(count), 12)
-            if count < 0:
-                years *= -1
-                months *= -1
-            return time.mktime((
-                time_s.tm_year + years + (-1 if time_s.tm_mon <= 0 else 0),
-                time_s.tm_mon + months + (12 if time_s.tm_mon <= 0 else 0),
-                time_s.tm_mday,
-                time_s.tm_hour,
-                time_s.tm_min,
-                time_s.tm_sec,
-                time_s.tm_wday,
-                time_s.tm_yday,
-                -1,  # tm_isdst
-            ))
-        if unit == 'y':
-            time_s = time.localtime(timestamp)
-            return time.mktime((
-                time_s.tm_year + count,
-                time_s.tm_mon,
-                time_s.tm_mday,
-                time_s.tm_hour,
-                time_s.tm_min,
-                time_s.tm_sec,
-                time_s.tm_wday,
-                time_s.tm_yday,
-                time_s.tm_isdst,
-            ))
-        MKGeneralException("invalid time unit %s" % unit)
+            lt += relativedelta(hours=count)
+        elif unit == 'd':
+            lt += relativedelta(days=count)
+        elif unit == 'w':
+            lt += relativedelta(days=7 * count)
+        elif unit == 'm':
+            lt += relativedelta(months=count)
+        elif unit == 'y':
+            lt += relativedelta(years=count)
+        else:
+            MKGeneralException("invalid time unit %s" % unit)
+
+        return time.mktime(lt.timetuple())
+        # py3 return lt.timestamp()
 
 
 class Timerange(CascadingDropdown):
@@ -4066,8 +4037,11 @@ class Timerange(CascadingDropdown):
         choices += self._get_graph_timeranges() + [
             ("d0", _("Today")),
             ("d1", _("Yesterday")),
+            ("d7", _("7 days back (this day last week)")),
+            ("d8", _("8 days back")),
             ("w0", _("This week")),
             ("w1", _("Last week")),
+            ("w2", _("2 weeks back")),
             ("m0", _("This month")),
             ("m1", _("Last month")),
             ("y0", _("This year")),
@@ -4113,6 +4087,13 @@ class Timerange(CascadingDropdown):
             ]
 
     def compute_range(self, rangespec):
+        def _date_span(from_time, until_time):
+            start = AbsoluteDate().value_to_text(from_time)
+            end = AbsoluteDate().value_to_text(until_time - 1)
+            if start == end:
+                return start
+            return start + u" \u2014 " + end
+
         def _month_edge_days(now, day_id):
             # type: (float, Text) -> _Tuple[_Tuple[float, float], Text]
             # base time is current time rounded down to month
@@ -4120,9 +4101,19 @@ class Timerange(CascadingDropdown):
             if day_id == 'f1':
                 from_time = TimeHelper.add(from_time, -1, 'm')
             if day_id == 'l1':
-                from_time -= 3600 * 24
-            end_time = from_time + 3600 * 24
+                from_time = TimeHelper.add(from_time, -1, 'd')
+            end_time = TimeHelper.add(from_time, 1, 'd')
             return (from_time, end_time), time.strftime("%d/%m/%Y", time.localtime(from_time))
+
+        def _fixed_dates(rangespec):
+            from_time, until_time = rangespec[1]
+            if from_time > until_time:
+                raise MKUserError("avo_rangespec_9_0_year",
+                                  _("The end date must be after the start date"))
+            if rangespec[0] == 'date':
+                # This includes the end day
+                until_time = TimeHelper.add(until_time, 1, 'd')
+            return (from_time, until_time), _date_span(from_time, until_time)
 
         if rangespec is None:
             rangespec = "4h"
@@ -4140,32 +4131,16 @@ class Timerange(CascadingDropdown):
         now = time.time()
 
         if rangespec[0] == 'age':
-            from_time = now - rangespec[1]
-            until_time = now
             title = _("The last ") + Age().value_to_text(rangespec[1])
-            return (from_time, until_time), title
+            return (now - rangespec[1], now), title
         if rangespec[0] == 'next':
-            from_time = now
-            until_time = now + rangespec[1]
             title = _("The next ") + Age().value_to_text(rangespec[1])
-            return (from_time, until_time), title
+            return (now, now + rangespec[1]), title
         if rangespec[0] == 'until':
             return (now, rangespec[1]), AbsoluteDate().value_to_text(rangespec[1])
-
         if rangespec[0] in ['date', 'time']:
-            from_time, until_time = rangespec[1]
-            if from_time > until_time:
-                raise MKUserError("avo_rangespec_9_0_year",
-                                  _("The end date must be after the start date"))
-            if rangespec[0] == 'date':
-                # add 25 hours, then round to 00:00 of that day. This accounts for
-                # daylight-saving time
-                until_time = TimeHelper.round(TimeHelper.add(until_time, 25, 'h'), 'd')
-            title = AbsoluteDate().value_to_text(from_time) + " ... " + \
-                    AbsoluteDate().value_to_text(until_time)
-            return (from_time, until_time), title
+            return _fixed_dates(rangespec)
 
-        until_time = now
         if rangespec[0].isdigit():  # 4h, 400d
             count = int(rangespec[:-1])
             from_time = TimeHelper.add(now, count * -1, rangespec[-1])
@@ -4173,13 +4148,12 @@ class Timerange(CascadingDropdown):
             title = _("Last %d %s") % (count, unit_name)
             return (from_time, now), title
 
-        year, month = time.localtime(now)[:2]
-
         if rangespec in ['f0', 'f1', 'l1']:
             return _month_edge_days(now, rangespec)
 
         # base time is current time rounded down to the nearest unit (day, week, ...)
         from_time = TimeHelper.round(now, rangespec[0])
+        year, month = time.localtime(now)[:2]
         # derive titles from unit ()
         titles = {
             'd': (_("Today"), _("Yesterday")),
@@ -4192,19 +4166,22 @@ class Timerange(CascadingDropdown):
             return (from_time, now), titles[0]
 
         # last (previous)
-        prev_time = TimeHelper.add(from_time, -1 * int(rangespec[1:]), rangespec[0])
-        # add one hour to the calculated time so that if dst started in that period,
-        # we don't round down a whole day
-        prev_time = TimeHelper.round(prev_time + 3600, 'd')
+        span = int(rangespec[1:])
+        prev_time = TimeHelper.add(from_time, -1 * span, rangespec[0])
+        # day and week spans for historic data
+        if rangespec[0] in ['d', 'w']:
+            end_time = TimeHelper.add(prev_time, 1, rangespec[0])
+            title = _date_span(prev_time, end_time) if span > 1 else titles[1]
+            return (prev_time, end_time), title
 
         # This only works for Months, but those are the only defaults in Forecast Graphs
         # Language localization to system language not CMK GUI language
         if prev_time > from_time:
             from_time, prev_time = prev_time, from_time
-        prev_time_str = time.strftime("%B %Y", time.localtime(prev_time))
+        prev_time_str = time.strftime("%B %Y", time.localtime(prev_time))  # type: Text
         end_time_str = time.strftime("%B %Y", time.localtime(from_time - 1))
         if prev_time_str != end_time_str:
-            prev_time_str += " - " + end_time_str
+            prev_time_str += u" \u2014 " + end_time_str
         if rangespec[0] == "y":
             prev_time_str = time.strftime("%Y", time.localtime(prev_time))
 

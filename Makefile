@@ -325,11 +325,19 @@ optimize-images:
 # NOTE 2: NPM people have a totally braindead idea about reproducible builds
 # which almost all other people consider a bug, so we have to touch our target
 # files. Read https://github.com/npm/npm/issues/20439 and be amazed...
+#
+# NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
+# called!" message, where the underlying reason seems to be quite obscure, see
+# https://npm.community/t/crash-npm-err-cb-never-called/858.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
 node_modules/.bin/redoc-cli: .ran-npm
 .ran-npm: package.json package-lock.json
-	if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+	@echo "npm version: $$(npm --version)"
+	@echo "node version: $$(node --version)"
+	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
+	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
+	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
 	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
 	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
@@ -337,7 +345,7 @@ node_modules/.bin/redoc-cli: .ran-npm
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY ; \
+	npm install --audit=false --unsafe-perm $$REGISTRY
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
 web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)

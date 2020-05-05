@@ -16,12 +16,12 @@ def test_discovered_service_init():
     assert s.item == u"Item"
     assert s.description == u"ABC Item"
     assert s.parameters_unresolved == "None"
-    assert s.service_labels == {}
+    assert s.service_labels.to_dict() == {}
 
     s = discovery.DiscoveredService(
         "abc", u"Item", u"ABC Item", "None",
         discovery.DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
-    assert s.service_labels == {u"läbel": u"lübel"}
+    assert s.service_labels.to_dict() == {u"läbel": u"lübel"}
 
     with pytest.raises(AttributeError):
         s.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot

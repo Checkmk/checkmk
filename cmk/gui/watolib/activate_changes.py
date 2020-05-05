@@ -33,8 +33,7 @@ else:
     from pathlib2 import Path
 
 from typing import (  # pylint: disable=unused-import
-    Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple,
-)
+    Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple, Type, Any)
 import six
 
 from livestatus import (  # pylint: disable=unused-import
@@ -295,31 +294,21 @@ class ActivateChanges(object):
         super(ActivateChanges, self).__init__()
 
     def load(self):
-        self._load_replication_status()
-        self._load_changes_by_site()
-        self._load_changes_by_id()
-
-    def _load_replication_status(self):
         self._repstatus = _load_replication_status()
+        self._load_changes()
 
-    def _load_changes_by_site(self):
+    def _load_changes(self):
         self._changes_by_site = {}
-        for site_id in activation_sites():
-            self._changes_by_site[site_id] = SiteChanges(site_id).load()
-
-    def confirm_site_changes(self, site_id):
-        SiteChanges(site_id).clear()
-        cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
-
-    # Returns a list of changes ordered by time and grouped by the change.
-    # Each change contains a list of affected sites.
-    def _load_changes_by_id(self):
         changes = {}
 
-        for site_id, site_changes in self._changes_by_site.items():
+        for site_id in activation_sites():
+            site_changes = SiteChanges(site_id).load()
+            self._changes_by_site[site_id] = site_changes
+
             if not site_changes:
                 continue
 
+            # Assume changes can be recorded multiple times and deduplicate them.
             for change in site_changes:
                 change_id = change["id"]
 
@@ -330,6 +319,10 @@ class ActivateChanges(object):
                 affected_sites.append(site_id)
 
         self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
+
+    def confirm_site_changes(self, site_id):
+        SiteChanges(site_id).clear()
+        cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     def get_changes_estimate(self):
         changes_counter = 0
@@ -440,7 +433,7 @@ class ActivateChanges(object):
 
 
 class ActivateChangesManager(ActivateChanges):
-    """Mangages the activation of pending changes in Checkmk
+    """Manages the activation of pending changes in Checkmk
 
     A single object cares about one activation for all affected sites.
 
@@ -533,15 +526,39 @@ class ActivateChangesManager(ActivateChanges):
     def activate_until(self):
         return self._activate_until
 
-    def wait_for_completion(self):
+    def wait_for_completion(self, timeout=None):
+        # type: (Optional[float]) -> bool
+        """Wait for activation to be complete.
+
+        Optionally a soft timeout can be given and waiting will stop. The return value will then
+        be True if everything is completed and False if it isn't.
+
+        Args:
+            timeout: Optional timeout in seconds. If omitted the call will wait until completion.
+
+        Returns:
+            True if completed, False if still running.
+        """
+        start = time.time()
         while self.is_running():
             time.sleep(0.5)
+            if timeout and start + timeout >= time.time():
+                break
+
+        completed = not self.is_running()
+        return completed
+
+    def is_running(self):
+        # type: () -> bool
+        return bool(self.running_sites())
 
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)
-    def is_running(self):
+    def running_sites(self):
+        # type: () -> List[SiteId]
         state = self.get_state()
 
+        running = []
         for site_id in self._sites:
             site_state = state["sites"][site_id]
 
@@ -555,21 +572,21 @@ class ActivateChangesManager(ActivateChanges):
             if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
                 # Just been initialized. Treat as running as it has not been
                 # started and could not lock the site stat file yet.
-                return True  # -> running
+                running.append(site_id)
 
             # Check whether or not the process is still there
             try:
                 os.kill(site_state["_pid"], 0)
-                return True  # -> running
+                running.append(site_id)
             except OSError as e:
-                # 3: not running
-                # 1: operation not permitted (another process reused this)
-                if e.errno in [3, 1]:
-                    pass  # -> not running
+                # ESRCH: no such process
+                # EPERM: operation not permitted (another process reused this)
+                if e.errno in [errno.EPERM, errno.ESRCH]:
+                    running.append(site_id)
                 else:
                     raise
 
-        return False  # No site reported running -> not running
+        return running
 
     def _new_activation_id(self):
         return cmk.gui.utils.gen_id()

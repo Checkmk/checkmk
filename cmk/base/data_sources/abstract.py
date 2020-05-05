@@ -34,7 +34,6 @@ from cmk.utils.encoding import (
 from cmk.utils.werks import parse_check_mk_version
 
 import cmk.base.agent_simulator
-import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.ip_lookup as ip_lookup
@@ -266,7 +265,7 @@ class DataSource(
         self._max_cachefile_age = None  # type: Optional[int]
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
-        self._logger = console.logger.getChild("data_source.%s" % self.id())
+        self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
         self._setup_logger()
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()

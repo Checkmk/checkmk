@@ -366,7 +366,7 @@ class ModeRulesets(RulesetMode):
         return watolib.NonStaticChecksRulesets()
 
     def _set_title_and_help(self):
-        if self._search_options.keys() == ["ruleset_deprecated"]:
+        if list(self._search_options.keys()) == ["ruleset_deprecated"]:
             self._title = _("Deprecated Rulesets")
             self._help = _(
                 "Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "

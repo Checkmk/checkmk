@@ -604,7 +604,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
         summary_line = subprocess.check_output(["pmap", "-d", "%d" % int(pid)]).splitlines()[-1]
 
         parts = summary_line.split()
-        if parts[1] == "writable-private,":
+        if parts[1] == b"writable-private,":
             writable_private = parts[0]
         else:
             writable_private = parts[3]

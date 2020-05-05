@@ -101,7 +101,7 @@ def _git_has_pending_changes():
         p = subprocess.Popen(["git", "status", "--porcelain"],
                              cwd=cmk.utils.paths.default_config_dir,
                              stdout=subprocess.PIPE)
-        return p.stdout is not None and p.stdout.read() != ""
+        return p.stdout is not None and p.stdout.read() != b""
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False  # ignore missing git command

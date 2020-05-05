@@ -403,7 +403,7 @@ def check_timeperiod(tpname):
             six.ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
-        if answer == "":
+        if answer == b"":
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
         if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname

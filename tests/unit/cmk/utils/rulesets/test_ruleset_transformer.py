@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+from typing import Dict, List, NamedTuple, Tuple, Union
 
-from typing import NamedTuple
 import pytest  # type: ignore[import]
+
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
@@ -19,7 +19,7 @@ def test_transform_tuple_ruleset():
     ruleset = [
         ("VAL1", ["HOSTLIST1"]),
         ("VAL2", ["HOSTLIST2"]),
-    ]
+    ]  # type: Union[List[Tuple[str, List[str]]], List[Dict[str, List[str]]]]
 
     ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)

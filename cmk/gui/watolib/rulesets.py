@@ -610,7 +610,7 @@ class Ruleset(object):
         # case we hack it here into the ruleset search which is used to populate the
         # group pages.
         if search_options["ruleset_group"] == "agents" and self.rulespec.name in [
-                "agent_ports", "agent_encryption"
+                "agent_ports", "agent_encryption", "agent_exclude_sections"
         ]:
             return True
 

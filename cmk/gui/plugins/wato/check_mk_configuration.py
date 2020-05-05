@@ -4446,6 +4446,88 @@ rulespec_registry.register(
     ))
 
 
+def agent_config_mk_agent_sections():
+    # The key must match the section exclude parameter in the checkmk_agent i.e. MK_SKIP_<key>
+    return [
+        ("df", _("Filesystems usage")),
+        ("systemd", _("Systemd services")),
+        ("zfs", _("ZFS filesystem usage")),
+        ("nfs_mounts", ("NFS mounts")),
+        ("mounts", _("Mount options")),
+        ("ps", _("Running processes")),
+        ("mem", _("Memory")),
+        ("cpu", _("CPU")),
+        ("uptime", _("UPTIME")),
+        ("lnx_if", _("Linux interfaces")),
+        ("bonding_if", _("Bonding interfaces")),
+        ("vswitch_bonding", _("Vswitch bonding")),
+        ("tcp", _("TCP")),
+        ("multipathing", _("Multipathing")),
+        ("diskstat", _("Diskstat")),
+        ("kernel", _("Kernel")),
+        ("ipmitool", _("Ipmitool")),
+        ("ipmisensors", _("Ipmisensors")),
+        ("md", _("Raid status of Linux software")),
+        ("dm_raid", _("Raid status of Linux Raid")),
+        ("cfggen", _("Raid status of LSI controllers")),
+        ("megaraid", _("Raid status of LSI MegaRAID controller")),
+        ("three_ware_raid", _("Raid status of 3WARE disk controller")),
+        ("areca", _("Raid controllers from Areca")),
+        ("vbox_guest", _("VirtualBox Guests")),
+        ("openvpn", _("OpenVPN clients")),
+        ("timesynchronisation", _("NTP or timesyncd time synchronisation")),
+        ("chrony", _("Chrony timesynchronisation")),
+        ("nvidia", _("Nvidia")),
+        ("drbd", _("DRBD")),
+        ("heartbeat", _("Heartbeat clusters")),
+        ("mailqueue", _("Mailqueue")),
+        ("omd", _("Status of OMD sites and Checkmk Notification spooler")),
+        ("zpool", _("Zpool status")),
+        ("veritas", _("Veritas cluster server")),
+        ("fileinfo", _("Fileinfo")),
+        ("omd_cores", _("OMD monitoring cores")),
+        ("job", _("Monitored jobs")),
+        ("thermal", _("Thermal information")),
+        ("libelle", _("Libelle Business Shadow")),
+        ("http_accelerator", _("HTTP accelerator statistics")),
+        ("proxmox", _("Proxmox cluster")),
+        ("haproxy", _("Haproxy")),
+    ]
+
+
+def _agent_config_mk_sections_invert_choices(selected):
+    return [key for key, _label in agent_config_mk_agent_sections() if key not in selected]
+
+
+def _valuespec_agent_config_agent_sections():
+    return Dictionary(
+        title=_("Exclude specific agent sections"),
+        elements=[
+            (
+                "sections",
+                ListChoice(
+                    title=_("Excluded agent sections (Linux)"),
+                    help=_(
+                        "This option allows to omit specific sections from the Checkmk agent. "
+                        "Checked options will be excluded in the agent. Omission of a section "
+                        "will result in the absence of the associated Checkmk service or services."
+                    ),
+                    choices=agent_config_mk_agent_sections(),
+                    toggle_all=True,
+                ),
+            ),
+        ],
+        optional_keys=[])
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupAgentCMKAgent,
+        name="agent_exclude_sections",
+        valuespec=_valuespec_agent_config_agent_sections,
+    ))
+
+
 def _valuespec_agent_encryption():
     return Dictionary(
         elements=[

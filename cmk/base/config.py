@@ -2721,6 +2721,14 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return settings[0]
 
     @property
+    def agent_exclude_sections(self):
+        # type: () -> Dict[str, str]
+        settings = self._config_cache.host_extra_conf(self.hostname, agent_exclude_sections)
+        if not settings:
+            return {}
+        return settings[0]
+
+    @property
     def agent_target_version(self):
         # type: () -> AgentTargetVersion
         agent_target_versions = self._config_cache.host_extra_conf(self.hostname,
@@ -3873,9 +3881,11 @@ class CEEConfigCache(ConfigCache):
     def matched_agent_config_entries(self, hostname):
         # type: (Union[bool, HostName]) -> Dict[str, Any]
         matched = {}
-        for varname, ruleset in list(agent_config.items()) + [("agent_port", agent_ports),
-                                                              ("agent_encryption", agent_encryption)
-                                                             ]:
+        for varname, ruleset in list(
+                agent_config.items()) + [("agent_port", agent_ports),
+                                         ("agent_encryption", agent_encryption),
+                                         ("agent_exclude_sections", agent_exclude_sections)]:
+
             # mypy compatible check of cmk.base.cee.agent_bakyery.GENERIC_AGENT
             # GENERIC_AGENT = True
             if isinstance(hostname, bool):

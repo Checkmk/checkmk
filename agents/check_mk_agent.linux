@@ -99,6 +99,10 @@ if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
     . "$MK_CONFDIR/encryption.cfg"
 fi
 
+if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+    . "$MK_CONFDIR/exclude_sections.cfg"
+fi
+
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
     if [ $OPENSSL_VERSION -ge 10000 ]; then
@@ -1288,126 +1292,128 @@ if [ -n "$REMOTE_HOST" ]; then
     echo
 fi
 
-section_df
+[ -z "$MK_SKIP_DF" ] && section_df
 
-sections_systemd
+[ -z "$MK_SKIP_SYSTEMD" ] && sections_systemd
 
 # Filesystem usage for ZFS
-section_zfs
+[ -z "$MK_SKIP_ZFS" ] && section_zfs
 
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-section_nfs_mounts
+[ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
 
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
-section_mounts
+[ -z "$MK_SKIP_MOUNTS" ] && section_mounts
 
-section_ps
+[ -z "$MK_SKIP_PS" ] && section_ps
 
 # Memory usage
-section_mem
+[ -z "$MK_SKIP_MEM" ] && section_mem
 
 # Load and number of processes
-section_cpu
+[ -z "$MK_SKIP_CPU" ] && section_cpu
 
 # Uptime
-section_uptime
+[ -z "$MK_SKIP_UPTIME" ] && section_uptime
 
 # New variant: Information about speed and state in one section
-section_lnx_if
+[ -z "$MK_SKIP_LNX_IF" ] && section_lnx_if
 
 # Current state of bonding interfaces
-section_bonding_interfaces
+[ -z "$MK_SKIP_BONDING_IF" ] && section_bonding_interfaces
 
 # Same for Open vSwitch bonding
-section_vswitch_bonding
+[ -z "$MK_SKIP_VSWITCH_BONDING" ] && section_vswitch_bonding
 
 # Number of TCP connections in the various states
-section_tcp
+[ -z "$MK_SKIP_TCP" ] && section_tcp
 
 # Linux Multipathing
-section_multipathing
+[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
 
 # Performancecounter Platten
-section_diskstat
+[ -z "$MK_SKIP_DISKSTAT" ] && section_diskstat
 
 # Performancecounter Kernel
-section_kernel
+[ -z "$MK_SKIP_KERNEL" ] && section_kernel
 
 # Hardware sensors via IPMI (need ipmitool)
-section_ipmitool
+[ -z "$MK_SKIP_IPMITOOL" ] && section_ipmitool
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
-section_ipmisensors
+[ -z "$MK_SKIP_IPMISENSORS" ] && section_ipmisensors
 
 # RAID status of Linux software RAID
-section_md
+[ -z "$MK_SKIP_MD" ] && section_md
 
 # RAID status of Linux RAID via device mapper
-section_dm_raid
+[ -z "$MK_SKIP_DM_RAID" ] && section_dm_raid
 
 # RAID status of LSI controllers via cfggen
-section_cfggen
+[ -z "$MK_SKIP_CFGGEN" ] && section_cfggen
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-section_megaraid
+[ -z "$MK_SKIP_MEGARAID" ] && section_megaraid
 
 # RAID status of 3WARE disk controller (by Radoslaw Bak)
-section_3ware_raid
+[ -z "$MK_SKIP_THREE_WARE_RAID" ] && section_3ware_raid
 
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-section_areca_raid
+[ -z "$MK_SKIP_ARECA" ] && section_areca_raid
 
 # VirtualBox Guests. Section must always been output. Otherwise the
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
-section_vbox_guest
+[ -z "$MK_SKIP_VBOX_GUEST" ] && section_vbox_guest
 
 # OpenVPN Clients. Currently we assume that the configuration # is in
 # /etc/openvpn. We might find a safer way to find the configuration later.
-section_openvpn
+[ -z "$MK_SKIP_OPENVPN" ] && section_openvpn
 
-section_timesyncd || section_ntp
+if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+    section_timesyncd || section_ntp
+fi
 
 # Time synchronization with Chrony
-section_chrony
+[ -z "$MK_SKIP_CHRONY" ] && section_chrony
 
-section_nvidia
+[ -z "$MK_SKIP_NVIDIA" ] && section_nvidia
 
-section_drbd
+[ -z "$MK_SKIP_DRBD" ] && section_drbd
 
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-section_heartbeat
+[ -z "$MK_SKIP_HEARTBEAT" ] && section_heartbeat
 
-section_mailqueue
+[ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
 ## Check status of OMD sites and Check_MK Notification spooler
-section_omd
+[ -z "$MK_SKIP_OMD" ] && section_omd
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
-section_zpool
+[ -z "$MK_SKIP_ZPOOL" ] && section_zpool
 
 # Veritas Cluster Server
 # Software is always installed in /opt/VRTSvcs.
 # Secure mode must be off to allow root to execute commands
-section_veritas_cluster
+[ -z "$MK_SKIP_VERITAS" ] && section_veritas_cluster
 
 ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-run_fileinfo
+[ -z "$MK_SKIP_FILEINFO" ] && run_fileinfo
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance
 # on non-OMD machines.
-section_omd_core
+[ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
 # Collect states of configured Check_MK site backup jobs
 section_mkbackup
@@ -1416,22 +1422,22 @@ section_mkbackup
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-section_job
+[ -z "$MK_SKIP_JOB" ] && section_job
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-section_thermal
+[ -z "$MK_SKIP_THERMAL" ] && section_thermal
 
 # Libelle Business Shadow
-section_libelle
+[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
 
 # HTTP Accelerator Statistics
-section_http_accelerator
+[ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && section_http_accelerator
 
 # Proxmox Cluster
-section_proxmox
+[ -z "$MK_SKIP_PROXMOX" ] && section_proxmox
 
-section_haproxy
+[ -z "$MK_SKIP_HAPROXY" ] && section_haproxy
 
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after

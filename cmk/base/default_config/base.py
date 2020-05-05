@@ -22,6 +22,7 @@ mkeventd_enabled = False  # Set by OMD hook
 agent_port = 6556
 agent_ports = []  # type: _List
 agent_encryption = []  # type: _List
+agent_exclude_sections = []  # type: _List
 # UDP ports used for SNMP
 snmp_ports = []  # type: _List
 tcp_connect_timeout = 5.0

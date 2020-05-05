@@ -33,7 +33,7 @@ else:
     from pathlib2 import Path
 
 from typing import (  # pylint: disable=unused-import
-    Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple, Type, Any)
+    Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple)
 import six
 
 from livestatus import (  # pylint: disable=unused-import
@@ -582,9 +582,8 @@ class ActivateChangesManager(ActivateChanges):
             except OSError as e:
                 # ESRCH: no such process
                 # EPERM: operation not permitted (another process reused this)
-                if e.errno in [errno.EPERM, errno.ESRCH]:
-                    running.append(site_id)
-                else:
+                # -> Both cases mean it is not running anymore
+                if e.errno not in [errno.EPERM, errno.ESRCH]:
                     raise
 
         return running

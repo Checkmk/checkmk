@@ -135,7 +135,7 @@ def state_worst(*args):
         `OK < WARN < UNKNOWN < CRIT`
     """
     # we are nice, and handle ints and None as well (although mypy wouldn't allow it)
-    if state.CRIT in args or 2 in args:
+    if state.CRIT in args or 2 in args:  # type: ignore[comparison-overlap]
         return state.CRIT
     return state(max(int(s or 0) for s in args))
 

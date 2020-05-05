@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any as _Any, Dict as _Dict, List as _List  # pylint: disable=unused-import
+from typing import Any as _Any, Dict as _Dict, List as _List, Union as _Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 
@@ -34,7 +34,7 @@ notification_plugin_timeout = 60
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
 if cmk_version.is_raw_edition():
-    notification_spooling = "off"
+    notification_spooling = "off"  # type: _Union[bool, str]
 else:
     notification_spooling = "local"
 

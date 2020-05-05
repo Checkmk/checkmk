@@ -34,7 +34,7 @@ import cmk.base.snmp_utils as snmp_utils
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.fetchers.snmp_backend import ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
 
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     HostName, HostAddress,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
@@ -466,7 +466,7 @@ def _convert_rows_for_stored_walk(rows):
 
     new_rows = []  # type: SNMPRowInfoForStoredWalk
     for oid, value in rows:
-        if value == "ENDOFMIBVIEW":
+        if value == b"ENDOFMIBVIEW":
             continue
 
         if should_be_encoded(value):

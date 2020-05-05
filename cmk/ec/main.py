@@ -935,7 +935,7 @@ class EventServer(ECServerThread):
                         pipe_fragment = b""
 
                         # Last message still incomplete?
-                        if data[-1] != b'\n':
+                        if data[-1:] != b'\n':
                             if b'\n' in data:  # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit(b'\n', 1)
                                 self.process_raw_lines(messages + b'\n')  # got lost in split

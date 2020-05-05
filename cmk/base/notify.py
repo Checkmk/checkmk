@@ -276,7 +276,7 @@ def do_notify(options, args):
 def convert_legacy_configuration():
     # type: () -> None
     # Convert legacy spooling configuration to new one (see above)
-    if config.notification_spooling in (True, False):
+    if isinstance(config.notification_spooling, bool):
         if config.notification_spool_to:
             also_local = config.notification_spool_to[2]
             if also_local:

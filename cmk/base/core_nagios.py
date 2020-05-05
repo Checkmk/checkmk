@@ -670,7 +670,10 @@ def _create_nagios_config_servicegroups(cfg):
 
 def _create_nagios_config_contactgroups(cfg):
     # type: (NagiosConfig) -> None
-    if config.define_contactgroups is False:
+    # TODO: According to our types, define_contactgroups can NEVER be False,
+    # but to be sure (old user configs lying around???) we keep the test and
+    # shut up mypy. :-/
+    if config.define_contactgroups is False:  # type: ignore[comparison-overlap]
         return
 
     cgs = cfg.contactgroups_to_define

@@ -36,5 +36,6 @@ MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/om
     --scripts-are-modules \
     --show-error-codes \
     --check-untyped-defs \
+    --strict-equality \
     ${JUNIT_XML} \
     "$@"

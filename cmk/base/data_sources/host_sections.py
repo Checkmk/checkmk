@@ -164,7 +164,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             raw_section_names = (str(s.name) for s in raw_sections if s is not None)
             for name in raw_section_names:
                 cache_info = host_sections.cache_info.get(name)
-                if cache_info and cache_info != (None, None):
+                if cache_info:
                     cached_ats.append(cache_info[0])
                     intervals.append(cache_info[1])
 

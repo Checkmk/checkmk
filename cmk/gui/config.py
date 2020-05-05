@@ -447,7 +447,7 @@ def _initial_permission_cache(user_id):
     # type: (Optional[UserId]) -> Dict[str, bool]
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
-    if user_id in admin_users:
+    if user_id in [six.ensure_text(u) for u in admin_users]:
         return {
             "general.use": True,  # use Multisite
             "wato.use": True,  # enter WATO
@@ -889,11 +889,11 @@ def roles_of_user(user_id):
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    if user_id in admin_users:
+    if user_id in [six.ensure_text(u) for u in admin_users]:
         return ["admin"]
-    if user_id in guest_users:
+    if user_id in [six.ensure_text(u) for u in guest_users]:
         return ["guest"]
-    if users is not None and user_id in users:
+    if users is not None and user_id in [six.ensure_text(u) for u in users]:
         return ["user"]
     if user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
                                               "/automation.secret"):

@@ -573,6 +573,7 @@ class ActivateChangesManager(ActivateChanges):
                 # Just been initialized. Treat as running as it has not been
                 # started and could not lock the site stat file yet.
                 running.append(site_id)
+                continue
 
             # Check whether or not the process is still there
             try:

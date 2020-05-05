@@ -43,11 +43,11 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.2.1.25.2.3.1",
             oids=[
-                2,  # hrStorageType
-                3,  # hrStorageDescr
-                4,  # hrStorageAllocationUnits
-                5,  # hrStorageSize
-                6,  # hrStorageUsed
+                '2',  # hrStorageType
+                '3',  # hrStorageDescr
+                '4',  # hrStorageAllocationUnits
+                '5',  # hrStorageSize
+                '6',  # hrStorageUsed
             ],
         ),
     ],

@@ -254,8 +254,7 @@ def fillVolumeGroups(inventory_tree, parsed):
             convert(c) for c in re.split('([0-9]+)', volume['physical_volume_name'])
         ]
         return sorted(volumes, key=alphanum_key)
-
-    node = inv_tree_list(".hardware.volumes.physical_volumes:")
+    node = inventory_tree.get_dict("hardware.volumes.physical_volumes.")
     infos = []
     for item in parsed.activeVolumeGroups:
         vgName, pvName, pvStatus, pvTotalPartitions, pvFreePartitions, pvDistribution = item

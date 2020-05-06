@@ -30,6 +30,21 @@ from testlib.utils import is_enterprise_repo
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
+@pytest.fixture(autouse=True)
+def fixture_fake_site_states(monkeypatch):
+    # During these tests we treat all sites a being online
+    monkeypatch.setattr(
+        activate_changes.ActivateChanges, "_get_site_status", lambda a, b, c: ({
+            "state": "online",
+            "livestatus_version": "1.2.3",
+            "program_version": "1.2.3",
+            "program_start": 0,
+            "num_hosts": 123,
+            "num_services": 123,
+            "core": "cmc",
+        }, "online"))
+
+
 def _create_sync_snapshot(activation_manager, snapshot_data_collector_class, monkeypatch, tmp_path,
                           is_pre_17_site):
     _create_test_sync_config(monkeypatch)

@@ -117,6 +117,7 @@ SnapshotSettings = NamedTuple(
         ("snapshot_path", str),
         # TODO: Refactor to Path
         ("work_dir", str),
+        # TODO: Clarify naming (-> replication path or snapshot component?)
         ("snapshot_components", List[ReplicationPath]),
         ("component_names", Set[str]),
         ("site_config", SiteConfiguration),
@@ -1146,6 +1147,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._status_details = None  # type: Optional[Text]
         self._pid = None  # type: Optional[int]
         self._expected_duration = 10.0
+        self._logger = logger.getChild("site[%s]" % self._site_id)
 
         self._set_result(PHASE_INITIALIZED, _("Initialized"))
 
@@ -1196,7 +1198,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             self._do_run()
         except Exception:
-            logger.exception("error running activate changes")
+            self._logger.exception("error running activate changes")
 
     def _do_run(self):
         try:
@@ -1217,7 +1219,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             self._set_done_result(configuration_warnings)
         except Exception as e:
-            logger.exception("error activating changes")
+            self._logger.exception("error activating changes")
             self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
 
         finally:
@@ -1338,12 +1340,57 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         4. Collect needed files and send them over to the remote site (+ remote config hash)
         5. Raise when something failed on the remote site while applying the sent files
         """
+        self._logger.debug("Starting config sync with >1.7 site")
+        replication_paths = self._snapshot_settings.snapshot_components
+        remote_file_infos, remote_config_generation = self._get_config_sync_state(replication_paths)
+        self._logger.debug("Received %d file infos from remote", len(remote_file_infos))
+
+        # In case we experience performance issues here, we could postpone the hashing of the
+        # central files to only be done ad-hoc in _get_file_names_to_sync when the other attributes
+        # are not enough to detect a differing file.
+        central_file_infos = _get_config_sync_file_infos(replication_paths,
+                                                         Path(self._snapshot_settings.work_dir))
+        self._logger.debug("Got %d file infos from %s", len(remote_file_infos),
+                           self._snapshot_settings.work_dir)
+
+        to_sync_new, to_sync_changed, to_delete = _get_file_names_to_sync(
+            central_file_infos, remote_file_infos)
+
+        self._logger.debug("New files to be synchronized: %r", to_sync_new)
+        self._logger.debug("Changed files to be synchronized: %r", to_sync_changed)
+        self._logger.debug("Obsolete files to be deleted: %r", to_delete)
+
+        self._synchronize_files(to_sync_new + to_sync_changed, to_delete, remote_config_generation)
+        self._logger.debug("Finished config sync")
+
+    def _get_config_sync_state(self, replication_paths):
+        # type: (List[ReplicationPath]) -> Tuple[Dict[str, ConfigSyncFileInfo], int]
+        """Get the config file states from the remote sites
+
+        Calls the automation call "get-config-sync-state" on the remote site,
+        which is handled by AutomationGetConfigSyncState."""
+        site = config.site(self._site_id)
+        response = cmk.gui.watolib.automations.do_remote_automation(
+            site,
+            "get-config-sync-state",
+            [("replication_paths", repr([tuple(r) for r in replication_paths]))],
+        )
+
+        return {k: ConfigSyncFileInfo(*v) for k, v in response[0].items()}, response[1]
+
+    def _synchronize_files(self, files_to_sync, files_to_delete, remote_config_generation):
+        # type: (List[str], List[str], int) -> None
+        # TODO: Next commit will continue here
+        logger.warning(files_to_sync)
+        logger.warning(files_to_delete)
 
     # TODO: Compatibility for 1.6 -> 1.7 migration. Can be removed with 1.8.
     def _synchronize_pre_17_site(self):
         # type: () -> None
         """This is done on the central site to initiate the sync process"""
+        self._logger.debug("Starting config sync with pre 1.7 site")
         result = self._push_pre_17_snapshot_to_site()
+        self._logger.debug("Finished config sync")
 
         # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -1719,9 +1766,33 @@ def _add_pre_17_sitespecific_excludes(paths):
     return new_paths
 
 
-GetConfigSyncStateRequest = NamedTuple("GetConfigSyncStateRequest", [
-    ("replication_paths", List[ReplicationPath]),
-])
+def _get_file_names_to_sync(central_file_infos, remote_file_infos):
+    # type: (Dict[str, ConfigSyncFileInfo], Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]
+    """Compare the response with the site_config directory of the site
+
+    Comparing both file lists and returning all files for synchronization that
+
+    a) Do not exist on the remote site
+    b) Differ from the central site
+    c) Exist on the remote site but not on the central site as
+    """
+
+    # New files
+    central_files = set(central_file_infos.keys())
+    remote_files = set(remote_file_infos.keys())
+    to_sync_new = list(central_files - remote_files)
+
+    # Add differing files
+    to_sync_changed = []
+    for existing in central_files.intersection(remote_files):
+        if central_file_infos[existing] != remote_file_infos[existing]:
+            to_sync_changed.append(existing)
+
+    # Files to be deleted
+    to_delete = list(remote_files - central_files)
+
+    return to_sync_new, to_sync_changed, to_delete
+
 
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
     ("st_mode", int),
@@ -1729,10 +1800,13 @@ ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
     ("file_hash", str),
 ])
 
-GetConfigSyncStateResponse = NamedTuple("GetConfigSyncStateResponse", [
-    ("file_infos", Dict[str, ConfigSyncFileInfo]),
-    ("config_generation", int),
-])
+# Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
+# Using some simpler data structure for transport now to reduce the pain.
+#GetConfigSyncStateResponse = NamedTuple("GetConfigSyncStateResponse", [
+#    ("file_infos", Dict[str, ConfigSyncFileInfo]),
+#    ("config_generation", int),
+#])
+GetConfigSyncStateResponse = Tuple[Dict[str, Tuple[int, int, str]], int]
 
 
 @automation_command_registry.register
@@ -1748,16 +1822,21 @@ class AutomationGetConfigSyncState(AutomationCommand):
         return "get-config-sync-state"
 
     def get_request(self):
-        # type: () -> GetConfigSyncStateRequest
-        request = ast.literal_eval(html.request.get_ascii_input_mandatory("request"))
-        return GetConfigSyncStateRequest(request)
+        # type: () -> List[ReplicationPath]
+        return [
+            ReplicationPath(*e)
+            for e in ast.literal_eval(html.request.get_ascii_input_mandatory("replication_paths"))
+        ]
 
     def execute(self, request):
-        # type: (GetConfigSyncStateRequest) -> GetConfigSyncStateResponse
+        # type: (List[ReplicationPath]) -> GetConfigSyncStateResponse
         with store.lock_checkmk_configuration():
-            return GetConfigSyncStateResponse(_get_config_sync_file_infos(
-                request.replication_paths, base_dir=Path(cmk.utils.paths.omd_root)),
-                                              config_generation=_get_current_config_generation())
+            file_infos = _get_config_sync_file_infos(request,
+                                                     base_dir=Path(cmk.utils.paths.omd_root))
+            transport_file_infos = {
+                k: (v.st_mode, v.st_size, v.file_hash) for k, v in file_infos.items()
+            }
+            return (transport_file_infos, _get_current_config_generation())
 
 
 def _get_config_sync_file_infos(replication_paths, base_dir):

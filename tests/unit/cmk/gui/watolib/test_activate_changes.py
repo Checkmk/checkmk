@@ -17,11 +17,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui.watolib.activate_changes import (
-    ConfigSyncFileInfo,
-    GetConfigSyncStateResponse,
-    GetConfigSyncStateRequest,
-)
+from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
 import testlib
@@ -216,24 +212,17 @@ def test_is_pre_17_remote_site(site_status, expected):
 
 def test_automation_get_config_sync_state():
     get_state = activate_changes.AutomationGetConfigSyncState()
-    response = get_state.execute(
-        GetConfigSyncStateRequest([ReplicationPath("dir", "abc", "etc", [])]))
-    assert response == GetConfigSyncStateResponse(
-        file_infos={
-            'etc/check_mk/multisite.mk': ConfigSyncFileInfo(
-                st_mode=33204,
-                st_size=0,
-                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
-            'etc/check_mk/mkeventd.mk': ConfigSyncFileInfo(
-                st_mode=33204,
-                st_size=0,
-                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
-            'etc/htpasswd': ConfigSyncFileInfo(
-                st_mode=33204,
-                st_size=0,
-                file_hash='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+    response = get_state.execute([ReplicationPath("dir", "abc", "etc", [])])
+    assert response == (
+        {
+            'etc/check_mk/multisite.mk':
+                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+            'etc/check_mk/mkeventd.mk':
+                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+            'etc/htpasswd':
+                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
         },
-        config_generation=0,
+        0,
     )
 
 
@@ -310,3 +299,63 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
     base_dir.joinpath("bla/blub").mkdir(parents=True, exist_ok=True)
     with base_dir.joinpath("bla/blub/f2").open("w", encoding="utf-8") as f:
         f.write(u"Ef-zwei")
+
+
+def test_get_file_names_to_sync():
+    remote, central = _get_test_file_infos()
+    to_sync_new, to_sync_changed, to_delete = activate_changes._get_file_names_to_sync(
+        central, remote)
+
+    assert sorted(to_sync_new + to_sync_changed) == sorted(
+        ["both-differ-mode", "both-differ-size", "both-differ-hash", "central-only"])
+
+    assert sorted(to_delete) == sorted(["remote-only"])
+
+
+def _get_test_file_infos():
+    remote = {
+        'remote-only': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=2,
+            file_hash='9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa'),
+        'both': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=37,
+            file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-mode': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-size': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-hash': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            file_hash='xxxece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+    }
+    central = {
+        'central-only': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=2,
+            file_hash='9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa'),
+        'both': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=37,
+            file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-mode': ConfigSyncFileInfo(
+            st_mode=33202,
+            st_size=36,
+            file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-size': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=38,
+            file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'both-differ-hash': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+    }
+
+    return remote, central

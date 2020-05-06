@@ -1,0 +1,15 @@
+Title: Extend UCD SNMP scan function
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588754735
+
+The UCD SNMP scan function got extended to detect devices without system description OID.
+This change allows to detect devices like Dell EMC ECS systems.
+For these special devices make sure to set the rule "Hosts without system description OID".
+However this should normally be avoided if possible.

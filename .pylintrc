@@ -31,6 +31,15 @@ bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 [MESSAGES CONTROL]
 disable=
     #---------------------------------------------------------------------------
+    # Enabling this would be very desirable, but currently highly broken, see
+    # https://github.com/PyCQA/pylint/issues/3507. The pylint people seem to
+    # ignore mypy stuff as much as they can, it seems... :-/
+    isinstance-second-argument-not-valid-type,
+    #---------------------------------------------------------------------------
+    # New warnings with pylint 2.5, figure out the details later...
+    consider-iterating-dictionary,
+    super-init-not-called,
+    #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
     # through our code and fix a few obscure places.

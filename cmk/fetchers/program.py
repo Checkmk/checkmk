@@ -48,7 +48,7 @@ class ProgramDataFetcher(AbstractDataFetcher):
             # rather than doing it in a preexec_fn. The start_new_session parameter can take
             # the place of a previously common use of preexec_fn to call os.setsid() in the
             # child.
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # nosec
                 self._cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self._stdin else open(os.devnull),
@@ -61,7 +61,7 @@ class ProgramDataFetcher(AbstractDataFetcher):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # nosec
                 self._cmdline,
                 shell=True,
                 stdin=subprocess.PIPE if self._stdin else open(os.devnull),

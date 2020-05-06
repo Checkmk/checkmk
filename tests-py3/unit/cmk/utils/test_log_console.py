@@ -72,6 +72,20 @@ def test_vverbose_off(stream, caplog):
     assert not read(stream)
 
 
+def test_info_on(stream, caplog):
+    caplog.set_level(logging.INFO, logger="cmk.base")
+
+    console.info("hello", stream=stream)
+    assert read(stream) == "hello"
+
+
+def test_info_off(stream, caplog):
+    caplog.set_level(logging.INFO + 1, logger="cmk.base")
+
+    console.info("hello", stream=stream)
+    assert not read(stream)
+
+
 def test_warning(stream):
     console.warning("  hello  ", stream=stream)
     assert read(stream) == console._format_warning("  hello  ")

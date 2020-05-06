@@ -61,6 +61,15 @@ def log(level, text, *args, **kwargs):
         _console.log(level, text, *args)
 
 
+def debug(text, *args, **kwargs):
+    # type: (str, *Any, Optional[IO[str]]) -> None
+    """Output text if, opt_verbose >= 2 (-vv)."""
+    log(logging.DEBUG, text, *args, **kwargs)
+
+
+vverbose = debug
+
+
 def verbose(text, *args, **kwargs):
     # type: (str, *Any, Optional[IO[str]]) -> None
     """Output text if opt_verbose is set (-v).
@@ -71,10 +80,14 @@ def verbose(text, *args, **kwargs):
     log(VERBOSE, text, *args, **kwargs)
 
 
-def vverbose(text, *args, **kwargs):
+def info(text, *args, **kwargs):
     # type: (str, *Any, Optional[IO[str]]) -> None
-    """Output text if, opt_verbose >= 2 (-vv)."""
-    log(logging.DEBUG, text, *args, **kwargs)
+    """Output text if opt_verbose is set (-v).
+
+    Adds no linefeed.
+
+    """
+    log(logging.INFO, text, *args, **kwargs)
 
 
 #

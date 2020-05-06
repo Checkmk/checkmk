@@ -17,6 +17,7 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 import pytest  # type: ignore[import]
+import responses  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -29,6 +30,12 @@ import cmk.gui.watolib.config_sync as config_sync
 from testlib.utils import is_enterprise_repo
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
+
+
+@pytest.fixture(name="mocked_responses")
+def fixture_mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture(autouse=True)
@@ -515,6 +522,59 @@ def test_update_contacts_dict(master, slave, result):
     assert config_sync._update_contacts_dict(master, slave) == result
 
 
+# This test does not perform the full synchronization. It executes the central site parts and mocks
+# the remote site HTTP calls
+@pytest.mark.usefixtures("register_builtin_html")
+def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path, mocker):
+    if edition_short == "cme":
+        pytest.skip("Seems faked site environment is not 100% correct")
+
+    mocked_responses.add(
+        method=responses.POST,
+        url=
+        "http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state&debug=&secret=watosecret",
+        body=repr(({
+            'etc/check_mk/conf.d/wato/hosts.mk':
+                (33204, 15, '0fc4df48a03c3e972a86c9d573bc04f6e2a5d91aa368d7f4ce4ec5cd93ee5725'),
+            'etc/check_mk/multisite.d/wato/global.mk':
+                (33204, 6, '0e10d5fc5aedd798b68706c0189aeccadccae1fa6cc72324524293769336571c'),
+            'etc/htpasswd':
+                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+        }, 0)),
+    )
+
+    mocked_responses.add(
+        method=responses.POST,
+        url=
+        "http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync&debug=&secret=watosecret",
+        body=True,
+    )
+
+    snapshot_data_collector_class = ("CMESnapshotDataCollector"
+                                     if edition_short == "cme" else "CRESnapshotDataCollector")
+
+    is_pre_17_site = False
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+
+    activation_manager = _get_activation_manager(monkeypatch)
+    snapshot_settings = _create_sync_snapshot(activation_manager,
+                                              snapshot_data_collector_class,
+                                              monkeypatch,
+                                              tmp_path,
+                                              is_pre_17_site=is_pre_17_site)
+
+    site_activation = activate_changes.ActivateChangesSite("unit_remote_1",
+                                                           snapshot_settings,
+                                                           activation_manager._activation_id,
+                                                           prevent_activate=True)
+
+    site_activation._time_started = time.time()
+    site_activation._synchronize_site()
+
+
+# This test does not perform the full synchronization. It executes the central site parts and mocks
+# the remote site HTTP calls
 @pytest.mark.usefixtures("register_builtin_html")
 def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     snapshot_data_collector_class = ("CMESnapshotDataCollector"

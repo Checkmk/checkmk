@@ -123,6 +123,8 @@ def error(text, *args):
     log(logging.ERROR, text, *args, stream=sys.stderr)
 
 
+# Note: section_begin|success|error|step is a naive and incomplete
+# finite-state machine.  The four functions should be used together.
 def section_begin(text):
     # type: (str) -> None
     verbose("%s%s%s:\n", tty.bold, text, tty.normal)
@@ -138,6 +140,6 @@ def section_error(text):
     verbose("%sERROR%s - %s\n", tty.red, tty.normal, text)
 
 
-def step(text):
+def section_step(text):
     # type: (str) -> None
     verbose("%s+%s %s\n", tty.yellow, tty.normal, text.upper())

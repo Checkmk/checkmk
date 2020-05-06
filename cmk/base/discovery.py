@@ -160,7 +160,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         check_plugin_names = multi_host_sections.get_check_plugin_names()
         sources.enforce_check_plugin_names(check_plugin_names)
 
-    console.step("Executing discovery plugins (%d)" % len(check_plugin_names))
+    console.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
     discovered_services = _discover_services(
         hostname,
@@ -204,7 +204,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    console.step("Executing host label discovery")
+    console.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,
@@ -1205,7 +1205,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
 
-    console.step("Executing host label discovery")
+    console.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,

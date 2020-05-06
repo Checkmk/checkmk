@@ -288,7 +288,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
     if multi_host_sections is None:
         multi_host_sections = sources.get_host_sections()
 
-    console.step("Executing inventory plugins")
+    console.section_step("Executing inventory plugins")
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
@@ -413,7 +413,7 @@ def _run_inventory_export_hooks(host_config, inventory_tree):
     if not hooks:
         return
 
-    console.step("Execute inventory export hooks")
+    console.section_step("Execute inventory export hooks")
     for hookname, params in hooks:
         console.verbose("Execute export hook: %s%s%s%s" %
                         (tty.blue, tty.bold, hookname, tty.normal))

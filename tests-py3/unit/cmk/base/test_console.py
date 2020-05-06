@@ -145,10 +145,10 @@ def test_section_error(caplog, capsys):
     assert not captured.err  # Error on stdout (and not stderr) is not a typo.
 
 
-def test_step(caplog, capsys):
+def test_section_step(caplog, capsys):
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
-    console.step("hello")
+    console.section_step("hello")
 
     captured = capsys.readouterr()  # no `stream` arg
     assert "hello" not in captured.out

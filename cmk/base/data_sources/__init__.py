@@ -21,6 +21,7 @@ from typing import (  # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
+import cmk.utils.tty as tty
 
 import cmk.base.config as config
 import cmk.base.console as console
@@ -222,7 +223,7 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
         use source.get_summary_result() to get the state, output and perfdata of the agent excecution
         or source.exception() to get the exception object.
         """
-        console.step("Fetching data")
+        console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
 
         # First abstract clusters/nodes/hosts
         hosts = []

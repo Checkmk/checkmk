@@ -11,34 +11,34 @@ checkname = 'aws_ec2_limits'
 
 info = [
     [
-        u'[["running_ondemand_instances_t2.medium",', u'"Running',
-        u'On-Demand', u't2.medium', u'Instances",', u'20,', u'3,',
-        u'"eu-central-1"],', u'["running_ondemand_instances___vcpu",',
-        u'"Running', u'On-Demand', u'Standard', u'(A,', u'C,', u'D,', u'H,',
-        u'I,', u'M,', u'R,', u'T,', u'Z)', u'instances', u'vCPUs",', u'1152,',
-        u'8,', u'"eu-central-1"],', u'["running_ondemand_instances_t2.nano",',
-        u'"Running', u'On-Demand', u't2.nano', u'Instances",', u'20,', u'2,',
-        u'"eu-central-1"],', u'["running_ondemand_instances_total",',
-        u'"Total', u'Running', u'On-Demand', u'Instances",', u'20,', u'5,',
-        u'"eu-central-1"],', u'["vpc_elastic_ip_addresses",', u'"VPC',
-        u'Elastic', u'IP', u'Addresses",', u'5,', u'0,', u'"eu-central-1"],',
-        u'["elastic_ip_addresses",', u'"Elastic', u'IP', u'Addresses",', u'5,',
-        u'0,', u'"eu-central-1"],', u'["spot_inst_requests",', u'"Spot',
-        u'Instance', u'Requests",', u'20,', u'0,', u'"eu-central-1"],',
-        u'["active_spot_fleet_requests",', u'"Active', u'Spot', u'Fleet',
-        u'Requests",', u'1000,', u'0,', u'"eu-central-1"],',
-        u'["spot_fleet_total_target_capacity",', u'"Spot', u'Fleet',
-        u'Requests', u'Total', u'Target', u'Capacity",', u'5000,', u'0,',
-        u'"eu-central-1"]]'
+        '[["running_ondemand_instances_t2.medium",', '"Running',
+        'On-Demand', 't2.medium', 'Instances",', '20,', '3,',
+        '"eu-central-1"],', '["running_ondemand_instances___vcpu",',
+        '"Running', 'On-Demand', 'Standard', '(A,', 'C,', 'D,', 'H,',
+        'I,', 'M,', 'R,', 'T,', 'Z)', 'instances', 'vCPUs",', '1152,',
+        '8,', '"eu-central-1"],', '["running_ondemand_instances_t2.nano",',
+        '"Running', 'On-Demand', 't2.nano', 'Instances",', '20,', '2,',
+        '"eu-central-1"],', '["running_ondemand_instances_total",',
+        '"Total', 'Running', 'On-Demand', 'Instances",', '20,', '5,',
+        '"eu-central-1"],', '["vpc_elastic_ip_addresses",', '"VPC',
+        'Elastic', 'IP', 'Addresses",', '5,', '0,', '"eu-central-1"],',
+        '["elastic_ip_addresses",', '"Elastic', 'IP', 'Addresses",', '5,',
+        '0,', '"eu-central-1"],', '["spot_inst_requests",', '"Spot',
+        'Instance', 'Requests",', '20,', '0,', '"eu-central-1"],',
+        '["active_spot_fleet_requests",', '"Active', 'Spot', 'Fleet',
+        'Requests",', '1000,', '0,', '"eu-central-1"],',
+        '["spot_fleet_total_target_capacity",', '"Spot', 'Fleet',
+        'Requests', 'Total', 'Target', 'Capacity",', '5000,', '0,',
+        '"eu-central-1"]]'
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("eu-central-1", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "eu-central-1", {
                 'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
                 'running_ondemand_instances': [
                     ('a1.2xlarge', (None, 80.0, 90.0)),
@@ -236,52 +236,57 @@ checks = {
                 (
                     0, 'No levels reached', [
                         (
-                            u'aws_ec2_running_ondemand_instances_t2.medium', 3,
+                            'aws_ec2_running_ondemand_instances_t2.medium', 3,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances___vcpu', 8,
+                            'aws_ec2_running_ondemand_instances___vcpu', 8,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances_t2.nano', 2,
+                            'aws_ec2_running_ondemand_instances_t2.nano', 2,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances_total', 5,
+                            'aws_ec2_running_ondemand_instances_total', 5,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
+                            'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            u'aws_ec2_elastic_ip_addresses', 0, None, None,
+                            'aws_ec2_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            u'aws_ec2_spot_inst_requests', 0, None, None, None,
+                            'aws_ec2_spot_inst_requests', 0, None, None, None,
                             None
                         ),
                         (
-                            u'aws_ec2_active_spot_fleet_requests', 0, None,
+                            'aws_ec2_active_spot_fleet_requests', 0, None,
                             None, None, None
                         ),
                         (
-                            u'aws_ec2_spot_fleet_total_target_capacity', 0,
+                            'aws_ec2_spot_fleet_total_target_capacity', 0,
                             None, None, None, None
                         )
                     ]
                 ),
                 (
                     0,
-                    u'\nActive Spot Fleet Requests: 0 (of max. 1000) (Region eu-central-1)\nElastic IP Addresses: 0 (of max. 5) (Region eu-central-1)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs: 8 (of max. 1152) (Region eu-central-1)\nRunning On-Demand t2.medium Instances: 3 (of max. 20) (Region eu-central-1)\nRunning On-Demand t2.nano Instances: 2 (of max. 20) (Region eu-central-1)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000) (Region eu-central-1)\nSpot Instance Requests: 0 (of max. 20) (Region eu-central-1)\nTotal Running On-Demand Instances: 5 (of max. 20) (Region eu-central-1)\nVPC Elastic IP Addresses: 0 (of max. 5) (Region eu-central-1)',
-                    []
+                    '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
+                    'max. 5)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances '
+                    'vCPUs: 8 (of max. 1152)\nRunning On-Demand t2.medium Instances: 3 (of max. '
+                    '20)\nRunning On-Demand t2.nano Instances: 2 (of max. 20)\nSpot Fleet Requests '
+                    'Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. '
+                    '20)\nTotal Running On-Demand Instances: 5 (of max. 20)\nVPC Elastic IP '
+                    'Addresses: 0 (of max. 5)'
                 )
             ]
         ),
         (
-            None, {
+            "eu-central-1", {
                 'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
                 'running_ondemand_instances': [
                     ('t2.nano', (10, 80.0, 90.0)),
@@ -300,50 +305,56 @@ checks = {
             }, [
                 (
                     2,
-                    u'Levels reached: Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs',
+                    'Levels reached: Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) '
+                    'instances vCPUs',
                     [
                         (
-                            u'aws_ec2_running_ondemand_instances_t2.medium', 3,
+                            'aws_ec2_running_ondemand_instances_t2.medium', 3,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances___vcpu', 8,
+                            'aws_ec2_running_ondemand_instances___vcpu', 8,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances_t2.nano', 2,
+                            'aws_ec2_running_ondemand_instances_t2.nano', 2,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_running_ondemand_instances_total', 5,
+                            'aws_ec2_running_ondemand_instances_total', 5,
                             None, None, None, None
                         ),
                         (
-                            u'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
+                            'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            u'aws_ec2_elastic_ip_addresses', 0, None, None,
+                            'aws_ec2_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            u'aws_ec2_spot_inst_requests', 0, None, None, None,
+                            'aws_ec2_spot_inst_requests', 0, None, None, None,
                             None
                         ),
                         (
-                            u'aws_ec2_active_spot_fleet_requests', 0, None,
+                            'aws_ec2_active_spot_fleet_requests', 0, None,
                             None, None, None
                         ),
                         (
-                            u'aws_ec2_spot_fleet_total_target_capacity', 0,
+                            'aws_ec2_spot_fleet_total_target_capacity', 0,
                             None, None, None, None
                         )
                     ]
                 ),
                 (
                     0,
-                    u'\nActive Spot Fleet Requests: 0 (of max. 1000) (Region eu-central-1)\nElastic IP Addresses: 0 (of max. 5) (Region eu-central-1)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs: 8 (of max. 10) (Region eu-central-1), Usage: 80.0% (warn/crit at 50.0%/70.0%)(!!)\nRunning On-Demand t2.medium Instances: 3 (of max. 10) (Region eu-central-1)\nRunning On-Demand t2.nano Instances: 2 (of max. 10) (Region eu-central-1)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000) (Region eu-central-1)\nSpot Instance Requests: 0 (of max. 20) (Region eu-central-1)\nTotal Running On-Demand Instances: 5 (of max. 20) (Region eu-central-1)\nVPC Elastic IP Addresses: 0 (of max. 5) (Region eu-central-1)',
-                    []
+                    '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
+                    'max. 5)\nRunning On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances '
+                    'vCPUs: 8 (of max. 10), Usage: 80.0% (warn/crit at 50.0%/70.0%)(!!)\nRunning '
+                    'On-Demand t2.medium Instances: 3 (of max. 10)\nRunning On-Demand t2.nano '
+                    'Instances: 2 (of max. 10)\nSpot Fleet Requests Total Target Capacity: 0 (of '
+                    'max. 5000)\nSpot Instance Requests: 0 (of max. 20)\nTotal Running On-Demand '
+                    'Instances: 5 (of max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)'
                 )
             ]
         )

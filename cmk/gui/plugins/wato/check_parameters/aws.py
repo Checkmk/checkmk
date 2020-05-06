@@ -121,6 +121,10 @@ def _vs_latency():
             ))
 
 
+def _item_spec_aws_limits_generic():
+    return TextAscii(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
+
+
 def _vs_limits(resource,
                default_limit,
                vs_limit_cls=None,
@@ -215,9 +219,10 @@ def _parameter_valuespec_aws_glacier_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_glacier_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_glacier_limits,
         title=lambda: _("AWS/Glacier Limits"),
@@ -408,9 +413,10 @@ def _parameter_valuespec_aws_s3_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_s3_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_s3_limits,
         title=lambda: _("AWS/S3 Limits"),
@@ -485,9 +491,10 @@ def _parameter_valuespec_aws_ec2_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_ec2_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_ec2_limits,
         title=lambda: _("AWS/EC2 Limits"),
@@ -692,9 +699,10 @@ def _parameter_valuespec_aws_elb_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_elb_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elb_limits,
         title=lambda: _("AWS/ELB Limits"),
@@ -730,9 +738,10 @@ def _parameter_valuespec_aws_elbv2_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_elbv2_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elbv2_limits,
         title=lambda: _("AWS/ELBv2 Limits"),
@@ -837,9 +846,10 @@ def _parameter_valuespec_aws_ebs_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_ebs_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_ebs_limits,
         title=lambda: _("AWS/EBS Limits"),
@@ -1014,9 +1024,10 @@ def _parameter_valuespec_aws_rds_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_rds_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_rds_limits,
         title=lambda: _("AWS/RDS Limits"),
@@ -1040,9 +1051,10 @@ def _parameter_valuespec_aws_cloudwatch_alarms_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_cloudwatch_alarms_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_cloudwatch_alarms_limits,
         title=lambda: _("AWS/Cloudwatch Alarms Limits"),
@@ -1070,9 +1082,10 @@ def _parameter_valuespec_aws_dynamodb_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_dynamodb_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_dynamodb_limits,
         title=lambda: _("AWS/DynamoDB Limits"),
@@ -1185,6 +1198,12 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
+def _item_spec_aws_wafv2_limits():
+    return TextAscii(title=_("Region name"),
+                     help=_("An AWS region name such as 'eu-central-1' or 'CloudFront' for WAFs in "
+                            "front of CloudFront resources"))
+
+
 def _parameter_valuespec_aws_wafv2_limits():
     return Dictionary(title=_('Limits and levels'),
                       elements=[
@@ -1205,9 +1224,10 @@ def _parameter_valuespec_aws_wafv2_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="aws_wafv2_limits",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_wafv2_limits,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_wafv2_limits,
         title=lambda: _("AWS/WAFV2 Limits"),

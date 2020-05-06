@@ -10,14 +10,16 @@
 
 checkname = 'aws_elbv2_limits'
 
-info = [['[["application_load_balancers",', '"TITLE",', '10,', '1]]']]
+info = [
+    ['[["application_load_balancers",', '"TITLE",', '10,', '1,', '"REGION"]]']
+]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "REGION", {
                 'application_load_balancer_target_groups': (None, 80.0, 90.0),
                 'application_load_balancer_certificates': (None, 80.0, 90.0),
                 'application_load_balancer_rules': (None, 80.0, 90.0),

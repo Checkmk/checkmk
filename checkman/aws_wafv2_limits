@@ -34,4 +34,4 @@ description:
  of possibly configured restrictions to names or tags.
 
 inventory:
- One service is created.
+ One service is created per monitored AWS region.

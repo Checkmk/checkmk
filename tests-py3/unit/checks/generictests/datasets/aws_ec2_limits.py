@@ -14,12 +14,12 @@ info = [
     ['[["vpc_elastic_ip_addresses",', '"TITLE",', '10,', '1,', '"REGION"]]']
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "REGION", {
                 'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
                 'if_vpc_sec_group': (None, 80.0, 90.0),
                 'running_ondemand_instances': [
@@ -210,11 +210,11 @@ checks = {
                 (
                     0, 'No levels reached', [
                         (
-                            u'aws_ec2_vpc_elastic_ip_addresses', 1, None, None,
+                            'aws_ec2_vpc_elastic_ip_addresses', 1, None, None,
                             None, None
                         )
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10) (Region REGION)', [])
+                ), (0, '\nTITLE: 1 (of max. 10)')
             ]
         )
     ]

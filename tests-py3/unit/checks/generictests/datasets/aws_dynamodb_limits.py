@@ -17,12 +17,12 @@ info = [['[["number_of_tables",', '"Number', 'of', 'tables",', '256,', '3,', '"e
          '["read_capacity",', '"Read', 'Capacity",', '80000,', '4,', '"us-east-1"],',
          '["write_capacity",', '"Write', 'Capacity",', '80000,', '2,', '"us-east-1"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("eu-central-1", {}), ("us-east-1", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "eu-central-1", {
                 'number_of_tables': (None, 80.0, 90.0),
                 'read_capacity': (None, 80.0, 90.0),
                 'write_capacity': (None, 80.0, 90.0),
@@ -31,14 +31,26 @@ checks = {
                 (0,
                  'No levels reached',
                  [('aws_dynamodb_number_of_tables', 3), ('aws_dynamodb_read_capacity', 3),
-                  ('aws_dynamodb_write_capacity', 3), ('aws_dynamodb_number_of_tables', 1),
-                  ('aws_dynamodb_read_capacity', 4), ('aws_dynamodb_write_capacity', 2)]),
+                  ('aws_dynamodb_write_capacity', 3)]),
                 (0,
-                 '\nNumber of tables: 1 (of max. 256) (Region us-east-1)\nNumber of tables: 3 (of '
-                 'max. 256) (Region eu-central-1)\nRead Capacity: 3 (of max. 80000) (Region '
-                 'eu-central-1)\nRead Capacity: 4 (of max. 80000) (Region us-east-1)\nWrite '
-                 'Capacity: 2 (of max. 80000) (Region us-east-1)\nWrite Capacity: 3 (of max. '
-                 '80000) (Region eu-central-1)')
+                 '\nNumber of tables: 3 (of max. 256)\nRead Capacity: 3 (of max. 80000)\nWrite '
+                 'Capacity: 3 (of max. 80000)')
+            ]
+        ),
+        (
+            "us-east-1", {
+                'number_of_tables': (None, 80.0, 90.0),
+                'read_capacity': (None, 80.0, 90.0),
+                'write_capacity': (None, 80.0, 90.0),
+            },
+            [
+                (0,
+                 'No levels reached',
+                 [('aws_dynamodb_number_of_tables', 1), ('aws_dynamodb_read_capacity', 4),
+                  ('aws_dynamodb_write_capacity', 2)]),
+                (0,
+                 '\nNumber of tables: 1 (of max. 256)\nRead Capacity: 4 (of max. 80000)\nWrite '
+                 'Capacity: 2 (of max. 80000)')
             ]
         )
     ]

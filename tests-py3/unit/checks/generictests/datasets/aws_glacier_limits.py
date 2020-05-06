@@ -8,23 +8,25 @@
 # type: ignore
 
 
-checkname = 'aws_s3_limits'
+checkname = 'aws_glacier_limits'
 
-info = [['[["buckets",', '"TITLE",', '10,', '1]]']]
+info = [['[["number_of_vaults",', '"TITLE",', '10,', '1,', '"REGION"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
-                'buckets': (None, 80.0, 90.0)
+            "REGION", {
+                'number_of_vaults': (None, 80.0, 90.0)
             }, [
                 (
                     0, 'No levels reached', [
-                        (u'aws_s3_buckets', 1, None, None, None, None)
+                        (
+                            'aws_glacier_number_of_vaults', 1, None, None, None, None
+                        )
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10)', [])
+                ), (0, '\nTITLE: 1 (of max. 10)')
             ]
         )
     ]

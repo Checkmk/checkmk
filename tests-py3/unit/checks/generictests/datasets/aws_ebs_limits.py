@@ -10,14 +10,14 @@
 
 checkname = 'aws_ebs_limits'
 
-info = [['[["block_store_snapshots",', '"TITLE",', '10,', '1]]']]
+info = [['[["block_store_snapshots",', '"TITLE",', '10,', '1,', '"REGION"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "REGION", {
                 'block_store_space_gp2': (None, 80.0, 90.0),
                 'block_store_space_sc1': (None, 80.0, 90.0),
                 'block_store_space_st1': (None, 80.0, 90.0),
@@ -29,11 +29,11 @@ checks = {
                 (
                     0, 'No levels reached', [
                         (
-                            u'aws_ebs_block_store_snapshots', 1, None, None,
+                            'aws_ebs_block_store_snapshots', 1, None, None,
                             None, None
                         )
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10)', [])
+                ), (0, '\nTITLE: 1 (of max. 10)', [])
             ]
         )
     ]

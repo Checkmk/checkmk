@@ -8,25 +8,26 @@
 # type: ignore
 
 
-checkname = 'aws_elb_limits'
+checkname = 'aws_cloudwatch_alarms_limits'
 
-info = [['[["load_balancers",', '"TITLE",', '10,', '1,', '"REGION"]]']]
+info = [['[["cloudwatch_alarms",', '"TITEL",', '10,', '1,', '"REGION"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
-                'load_balancer_registered_instances': (None, 80.0, 90.0),
-                'load_balancer_listeners': (None, 80.0, 90.0),
-                'load_balancers': (None, 80.0, 90.0)
+            "REGION", {
+                'cloudwatch_alarms': (None, 80.0, 90.0)
             }, [
                 (
                     0, 'No levels reached', [
-                        (u'aws_elb_load_balancers', 1, None, None, None, None)
+                        (
+                            u'aws_cloudwatch_alarms_cloudwatch_alarms', 1,
+                            None, None, None, None
+                        )
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10) (Region REGION)', [])
+                ), (0, u'\nTITEL: 1 (of max. 10)')
             ]
         )
     ]

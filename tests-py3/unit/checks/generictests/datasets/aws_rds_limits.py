@@ -10,14 +10,14 @@
 
 checkname = 'aws_rds_limits'
 
-info = [['[["db_instances",', '"TITLE",', '10,', '1]]']]
+info = [['[["db_instances",', '"TITLE",', '10,', '1,', '"REGION"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("REGION", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "REGION", {
                 'manual_snapshots': (None, 80.0, 90.0),
                 'db_clusters': (None, 80.0, 90.0),
                 'db_parameter_groups': (None, 80.0, 90.0),
@@ -36,9 +36,9 @@ checks = {
             }, [
                 (
                     0, 'No levels reached', [
-                        (u'aws_rds_db_instances', 1, None, None, None, None)
+                        ('aws_rds_db_instances', 1, None, None, None, None)
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10)', [])
+                ), (0, '\nTITLE: 1 (of max. 10)')
             ]
         )
     ]

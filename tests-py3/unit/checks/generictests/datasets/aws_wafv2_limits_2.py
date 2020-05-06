@@ -14,12 +14,12 @@ info = [
     ['[["web_acl_capacity_units",', '"Web', 'ACL', 'capacity', 'units', '(WCUs)",', '1500,', '2,',
      '"eu-central-1"]]']]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("eu-central-1", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "eu-central-1", {
                 'web_acls': (None, 80.0, 90.0),
                 'rule_groups': (None, 80.0, 90.0),
                 'ip_sets': (None, 80.0, 90.0),
@@ -28,7 +28,7 @@ checks = {
             },
             [
                 (0, 'No levels reached', [('aws_wafv2_web_acl_capacity_units', 2)]),
-                (0, '\nWeb ACL capacity units (WCUs): 2 (of max. 1500) (Region eu-central-1)')
+                (0, '\nWeb ACL capacity units (WCUs): 2 (of max. 1500)')
             ]
         )
     ]

@@ -113,6 +113,8 @@ _exclude_aws_limits_perf_vars = [
     "if_vpc_sec_group",
 ]
 
+AWSLimitsByRegion = Dict[str, List]
+
 
 def _is_valid_aws_limits_perf_data(perfvar):
     if perfvar in _exclude_aws_limits_perf_vars:
@@ -120,23 +122,14 @@ def _is_valid_aws_limits_perf_data(perfvar):
     return True
 
 
-def parse_aws_limit_line(line):
-    if len(line) == 5:
-        return tuple(line)
-    return tuple(line + [None])
-
-
 def parse_aws_limits_generic(info):
-    parsed = []
+    limits_by_region = {}  # type: AWSLimitsByRegion
     for line in parse_aws(info):
-        parsed.append(parse_aws_limit_line(line) + (None,))
-    return parsed
+        limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])
+    return limits_by_region
 
 
-def check_aws_limits(aws_service,
-                     params,
-                     parsed,
-                     region_formatter=lambda region: " (Region %s)" % region if region else ""):
+def check_aws_limits(aws_service, params, parsed_region_data):
     """
     Generic check for checking limits of AWS resource.
     - levels: use plain resource_key
@@ -146,9 +139,7 @@ def check_aws_limits(aws_service,
     levels_reached = set()
     max_state = 0
     perfdata = []
-    for resource_key, resource_title, limit, amount, region, human_readable_func in parsed:
-        if human_readable_func is None:
-            human_readable_func = lambda x: "%s" % x
+    for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
 
         p_limit, warn, crit = params[resource_key]
         if p_limit is None:
@@ -156,9 +147,8 @@ def check_aws_limits(aws_service,
         else:
             limit_ref = p_limit
 
-        infotext = '%s: %s (of max. %s)%s' % (resource_title, human_readable_func(amount),
-                                              human_readable_func(limit_ref),
-                                              region_formatter(region))
+        infotext = '%s: %s (of max. %s)' % (resource_title, human_readable_func(amount),
+                                            human_readable_func(limit_ref))
         perfvar = "aws_%s_%s" % (aws_service, resource_key)
         if _is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))

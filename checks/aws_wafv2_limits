@@ -13,28 +13,16 @@ factory_settings['aws_wafv2_limits_default_levels'] = {
 }
 
 
-def _aws_wafv2_limits_region_formatter(region):
-    if region:
-        fmt = "(Region %s)"
-        if region == 'CloudFront':
-            fmt = "(%s)"
-        return " %s" % (fmt % region)
-    else:
-        return ""
-
-
-def check_aws_wafv2_limits(item, params, parsed):
-    return check_aws_limits("wafv2",
-                            params,
-                            parsed,
-                            region_formatter=_aws_wafv2_limits_region_formatter)
+@get_parsed_item_data
+def check_aws_wafv2_limits(item, params, region_data):
+    return check_aws_limits("wafv2", params, region_data)
 
 
 check_info['aws_wafv2_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_wafv2_limits,
-    'service_description': 'AWS/WAFV2 Limits',
+    'service_description': 'AWS/WAFV2 Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_wafv2_limits',
     'default_levels_variable': 'aws_wafv2_limits_default_levels',

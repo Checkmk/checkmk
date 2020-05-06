@@ -9,15 +9,16 @@ factory_settings['aws_cloudwatch_alarms_limits_default_levels'] = {
 }
 
 
-def check_aws_cloudwatch_alarms_limits(item, params, parsed):
-    return check_aws_limits("cloudwatch_alarms", params, parsed)
+@get_parsed_item_data
+def check_aws_cloudwatch_alarms_limits(item, params, region_data):
+    return check_aws_limits("cloudwatch_alarms", params, region_data)
 
 
 check_info['aws_cloudwatch_alarms_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_cloudwatch_alarms_limits,
-    'service_description': 'AWS/Cloudwatch Alarms Limits',
+    'service_description': 'AWS/Cloudwatch Alarms Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_cloudwatch_alarms_limits',
     'default_levels_variable': 'aws_cloudwatch_alarms_limits_default_levels',

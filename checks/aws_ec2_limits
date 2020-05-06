@@ -45,19 +45,20 @@ def _transform_ec2_limits(params):
     return transformed
 
 
-def check_aws_ec2_limits(item, params, parsed):
+@get_parsed_item_data
+def check_aws_ec2_limits(item, params, region_data):
     # params look like:
     # {'vpc_sec_group_rules': (50, 80.0, 90.0),
     #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
     params = _transform_ec2_limits(params)
-    return check_aws_limits("ec2", params, parsed)
+    return check_aws_limits("ec2", params, region_data)
 
 
 check_info['aws_ec2_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_ec2_limits,
-    'service_description': 'AWS/EC2 Limits',
+    'service_description': 'AWS/EC2 Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_ec2_limits',
     'default_levels_variable': 'aws_ec2_limits_default_levels',

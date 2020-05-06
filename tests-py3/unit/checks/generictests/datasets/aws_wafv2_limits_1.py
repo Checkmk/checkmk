@@ -20,14 +20,15 @@ info = [
      '"eu-central-1"]]'],
     ['[["web_acls",', '"Web', 'ACLs",', '100,', '1,', '"us-east-1"],', '["rule_groups",', '"Rule',
      'groups",', '100,', '0,', '"us-east-1"],', '["ip_sets",', '"IP', 'sets",', '100,', '1,',
-     '"us-east-1"],', '["regex_pattern_sets",', '"Regex', 'sets",', '10,', '0,', '"us-east-1"]]']]
+     '"us-east-1"],', '["regex_pattern_sets",', '"Regex', 'sets",', '10,', '0,', '"us-east-1"]]']
+]
 
-discovery = {'': [(None, {})]}
+discovery = {'': [("CloudFront", {}), ("eu-central-1", {}), ("us-east-1", {})]}
 
 checks = {
     '': [
         (
-            None, {
+            "CloudFront", {
                 'web_acls': (None, 80.0, 90.0),
                 'rule_groups': (None, 80.0, 90.0),
                 'ip_sets': (None, 80.0, 90.0),
@@ -37,20 +38,46 @@ checks = {
             [
                 (0, 'No levels reached',
                  [('aws_wafv2_web_acls', 1), ('aws_wafv2_rule_groups', 1), ('aws_wafv2_ip_sets', 0),
-                  ('aws_wafv2_regex_pattern_sets', 1), ('aws_wafv2_web_acls', 1),
+                  ('aws_wafv2_regex_pattern_sets', 1)]),
+                (0,
+                 '\nIP sets: 0 (of max. 100)\nRegex sets: 1 (of max. 10)\nRule groups: 1 (of max. '
+                 '100)\nWeb ACLs: 1 (of max. 100)')
+            ]
+        ),
+        (
+            "eu-central-1", {
+                'web_acls': (None, 80.0, 90.0),
+                'rule_groups': (None, 80.0, 90.0),
+                'ip_sets': (None, 80.0, 90.0),
+                'regex_pattern_sets': (None, 80.0, 90.0),
+                'web_acl_capacity_units': (None, 80.0, 90.0),
+            },
+            [
+                (0, 'No levels reached',
+                 [('aws_wafv2_web_acls', 1),
                   ('aws_wafv2_rule_groups', 1), ('aws_wafv2_ip_sets', 1),
-                  ('aws_wafv2_regex_pattern_sets', 1), ('aws_wafv2_web_acls', 1),
+                  ('aws_wafv2_regex_pattern_sets', 1), ]),
+                (0,
+                 '\nIP sets: 1 (of max. 100)\nRegex sets: 1 (of max. 10)\nRule groups: 1 (of max. '
+                 '100)\nWeb ACLs: 1 (of max. 100)')
+            ]
+        ),
+        (
+            "us-east-1", {
+                'web_acls': (None, 80.0, 90.0),
+                'rule_groups': (None, 80.0, 90.0),
+                'ip_sets': (None, 80.0, 90.0),
+                'regex_pattern_sets': (None, 80.0, 90.0),
+                'web_acl_capacity_units': (None, 80.0, 90.0),
+            },
+            [
+                (0, 'No levels reached',
+                 [('aws_wafv2_web_acls', 1),
                   ('aws_wafv2_rule_groups', 0), ('aws_wafv2_ip_sets', 1),
                   ('aws_wafv2_regex_pattern_sets', 0)]),
                 (0,
-                 '\nIP sets: 0 (of max. 100) (CloudFront)\nIP sets: 1 (of max. 100) (Region '
-                 'eu-central-1)\nIP sets: 1 (of max. 100) (Region us-east-1)\nRegex sets: 0 (of '
-                 'max. 10) (Region us-east-1)\nRegex sets: 1 (of max. 10) (CloudFront)\nRegex '
-                 'sets: 1 (of max. 10) (Region eu-central-1)\nRule groups: 0 (of max. 100) (Region '
-                 'us-east-1)\nRule groups: 1 (of max. 100) (CloudFront)\nRule groups: 1 (of max. '
-                 '100) (Region eu-central-1)\nWeb ACLs: 1 (of max. 100) (CloudFront)\nWeb ACLs: 1 '
-                 '(of max. 100) (Region eu-central-1)\nWeb ACLs: 1 (of max. 100) (Region '
-                 'us-east-1)')
+                 '\nIP sets: 1 (of max. 100)\nRegex sets: 0 (of max. 10)\nRule groups: 0 (of max. '
+                 '100)\nWeb ACLs: 1 (of max. 100)')
             ]
         )
     ]

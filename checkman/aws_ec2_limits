@@ -44,4 +44,4 @@ description:
  additionally fetched.
 
 inventory:
- One service is created.
+ One service is created per monitored AWS region.

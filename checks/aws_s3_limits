@@ -9,15 +9,16 @@ factory_settings['aws_s3_limits_default_levels'] = {
 }
 
 
-def check_aws_s3_limits(item, params, parsed):
-    return check_aws_limits("s3", params, parsed)
+@get_parsed_item_data
+def check_aws_s3_limits(item, params, region_data):
+    return check_aws_limits("s3", params, region_data)
 
 
 check_info['aws_s3_limits'] = {
     'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover_single,
+    'inventory_function': discover(),
     'check_function': check_aws_s3_limits,
-    'service_description': 'AWS/S3 Limits',
+    'service_description': 'AWS/S3 Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_s3_limits',
     'default_levels_variable': 'aws_s3_limits_default_levels',

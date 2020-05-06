@@ -8,11 +8,25 @@ of console input / output"""
 
 import logging
 import sys
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from typing import Any, Generator, IO, Optional  # pylint: disable=unused-import
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
+
+if sys.version_info > (3, 4):
+    from contextlib import suppress  # pylint: disable=ungrouped-imports
+else:
+    from typing import Tuple, Type  # pylint: disable=ungrouped-imports
+
+    @contextmanager
+    def suppress(*exceptions):
+        # type: (Tuple[Type[BaseException]]) -> Generator[None, None, None]
+        try:
+            yield
+        except exceptions:
+            pass
+
 
 #
 # Generic / low level functions
@@ -22,12 +36,14 @@ import cmk.utils.tty as tty
 # TODO: This should be obsoleted:
 #   - either pick a log level
 #   - or write to sys.stdout|err
-def output(text, *args, stream=None):
-    # type: (str, *Any, Optional[IO[str]]) -> None
+def output(text, *args, **kwargs):
+    # type: (str, *Any, **Any) -> None
     if args:
         text = text % args
-    if stream is None:
-        stream = sys.stdout
+    # TODO: Replace kwargs with keyword only arg in Python 3.
+    stream = kwargs.pop("stream", sys.stdout)  # type: IO[str]
+    assert not kwargs
+
     with suppress(IOError):
         # Suppress broken pipe due to, e.g., | head.
         stream.write(text)
@@ -57,29 +73,29 @@ _console.propagate = False
 isEnabledFor = _console.isEnabledFor
 
 
-def log(level, text, *args, stream=None):
-    # type: (int, str, *Any, Optional[IO[str]]) -> None
-    if stream is None:
-        stream = sys.stdout
+def log(level, text, *args, **kwargs):
+    # type: (int, str, *Any, **Any) -> None
+    stream = kwargs.pop("stream", sys.stdout)  # type: IO[str]
+    assert not kwargs
 
     with set_stream(_console, _handler, stream):
         _console.log(level, text, *args)
 
 
-def verbose(text, *args, stream=None):
+def verbose(text, *args, **kwargs):
     # type: (str, *Any, Optional[IO[str]]) -> None
     """Output text if opt_verbose is set (-v).
 
     Adds no linefeed.
 
     """
-    log(VERBOSE, text, *args, stream=stream)
+    log(VERBOSE, text, *args, **kwargs)
 
 
-def vverbose(text, *args, stream=None):
+def vverbose(text, *args, **kwargs):
     # type: (str, *Any, Optional[IO[str]]) -> None
     """Output text if, opt_verbose >= 2 (-vv)."""
-    log(logging.DEBUG, text, *args, stream=stream)
+    log(logging.DEBUG, text, *args, **kwargs)
 
 
 #
@@ -87,10 +103,10 @@ def vverbose(text, *args, stream=None):
 #
 
 
-def warning(text, *args, stream=None):
-    # type: (str, *Any, Optional[IO[str]]) -> None
-    if stream is None:
-        stream = sys.stderr
+def warning(text, *args, **kwargs):
+    # type: (str, *Any, **Any) -> None
+    stream = kwargs.pop("stream", sys.stderr)  # type: IO[str]
+    assert not kwargs
     log(logging.WARNING, _format_warning(text), *args, stream=stream)
 
 

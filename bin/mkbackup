@@ -889,7 +889,7 @@ class BackupStream(MKBackupStream):
             chunk = self._read_from_stream(1024 * AES.block_size)
 
             # Detect end of file and add padding to fill up to block size
-            if chunk == "" or len(chunk) % AES.block_size != 0:
+            if chunk == b"" or len(chunk) % AES.block_size != 0:
                 padding_length = (AES.block_size - len(chunk) % AES.block_size) or AES.block_size
                 chunk += padding_length * bytes((padding_length,))
                 finished = True
@@ -948,7 +948,7 @@ class RestoreStream(MKBackupStream):
         if not self._encrypt():
             # process unencrypted backup
             chunk = self._read_from_stream(1024 * 1024)
-            return chunk, chunk == ""
+            return chunk, chunk == b""
 
         assert self._cipher is not None
         this_chunk = self._cipher.decrypt(self._read_from_stream(1024 * AES.block_size))
@@ -989,7 +989,7 @@ class RestoreStream(MKBackupStream):
             return buf
 
         file_version = read_field()
-        if file_version not in ["1", "2"]:
+        if file_version not in [b"1", b"2"]:
             raise MKGeneralException("Failed to process backup file (invalid version %r)" %
                                      file_version)
 

@@ -12,6 +12,7 @@ echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
+    --exclude="*.pyc" \
     --exclude=api \
     --exclude=cee \
     --exclude=cee.py \
@@ -19,6 +20,7 @@ sudo rsync \
     --exclude=diagnostics.py \
     -a * $ROOT/lib/python/cmk/base/
 sudo rsync \
+    --exclude="*.pyc" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
@@ -48,6 +50,6 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
 fi
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo python -m compileall -qq $ROOT/lib/python/cmk/base
-    sudo python3 -m compileall -qq $ROOT/lib/python3/cmk/base
+    sudo $ROOT/bin/python -m compileall -qq $ROOT/lib/python/cmk/base
+    sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi

@@ -36,9 +36,6 @@ disable=
     # ignore mypy stuff as much as they can, it seems... :-/
     isinstance-second-argument-not-valid-type,
     #---------------------------------------------------------------------------
-    # New warning with pylint 2.5, figure out the details later...
-    super-init-not-called,
-    #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
     # through our code and fix a few obscure places.

@@ -1348,10 +1348,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         # In case we experience performance issues here, we could postpone the hashing of the
         # central files to only be done ad-hoc in _get_file_names_to_sync when the other attributes
         # are not enough to detect a differing file.
-        central_file_infos = _get_config_sync_file_infos(replication_paths,
-                                                         Path(self._snapshot_settings.work_dir))
-        self._logger.debug("Got %d file infos from %s", len(remote_file_infos),
-                           self._snapshot_settings.work_dir)
+        site_config_dir = Path(self._snapshot_settings.work_dir)
+        central_file_infos = _get_config_sync_file_infos(replication_paths, site_config_dir)
+        self._logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
 
         to_sync_new, to_sync_changed, to_delete = _get_file_names_to_sync(
             central_file_infos, remote_file_infos)
@@ -1360,7 +1359,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._logger.debug("Changed files to be synchronized: %r", to_sync_changed)
         self._logger.debug("Obsolete files to be deleted: %r", to_delete)
 
-        self._synchronize_files(to_sync_new + to_sync_changed, to_delete, remote_config_generation)
+        if not to_sync_new and not to_sync_changed and not to_delete:
+            self._logger.debug("Finished config sync (Nothing to be done)")
+            return
+
+        self._synchronize_files(to_sync_new + to_sync_changed, to_delete, remote_config_generation,
+                                site_config_dir)
         self._logger.debug("Finished config sync")
 
     def _get_config_sync_state(self, replication_paths):
@@ -1378,9 +1382,19 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         return {k: ConfigSyncFileInfo(*v) for k, v in response[0].items()}, response[1]
 
-    def _synchronize_files(self, files_to_sync, files_to_delete, remote_config_generation):
-        # type: (List[str], List[str], int) -> None
+    def _synchronize_files(self, files_to_sync, files_to_delete, remote_config_generation,
+                           site_config_dir):
+        # type: (List[str], List[str], int, Path) -> None
+        """Pack the files in a simple tar archive and send it to the remote site
+
+        We build a simple tar archive containing all files to be synchronized.  The list of file to
+        be deleted and the current config generation is handed over using dedicated HTTP parameters.
+        """
+
+        sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
+
         # TODO: Next commit will continue here
+        logger.warning("Sync archive size: %d", len(sync_archive))
         logger.warning(files_to_sync)
         logger.warning(files_to_delete)
 
@@ -1792,6 +1806,48 @@ def _get_file_names_to_sync(central_file_infos, remote_file_infos):
     to_delete = list(remote_files - central_files)
 
     return to_sync_new, to_sync_changed, to_delete
+
+
+def _get_sync_archive(to_sync, base_dir):
+    # type: (List[str], Path) -> bytes
+    # Use native tar instead of python tarfile for performance reasons
+    p = subprocess.Popen(
+        ["tar", "-c", "-C", str(base_dir), "-f", "-", "-T", "-"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        shell=False,
+    )
+    assert p.stdin is not None
+    assert p.stdout is not None
+    assert p.stderr is not None
+
+    p.stdin.write(b"\0".join(six.ensure_binary(f) for f in to_sync))
+    p.stdin.close()
+
+    archive = b""
+    stderr = b""
+    while p.poll() is None:
+        try:
+            stderr += p.stderr.read(1024)
+        except ValueError:
+            if p.stdout.closed:
+                continue
+            raise
+
+        try:
+            archive += p.stdout.read(1048576)
+        except ValueError:
+            if p.stdout.closed:
+                break
+            raise
+
+    if p.returncode != 0:
+        raise MKGeneralException(
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, six.ensure_text(stderr)))
+
+    return archive
 
 
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [

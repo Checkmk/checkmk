@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+import tarfile
+import io
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -359,3 +361,17 @@ def _get_test_file_infos():
     }
 
     return remote, central
+
+
+def test_get_sync_archive(tmp_path):
+    tmp_path.joinpath("etc").mkdir(parents=True, exist_ok=True)
+    with tmp_path.joinpath("etc/abc").open("w", encoding="utf-8") as f:
+        f.write(u"gä")
+
+    with tmp_path.joinpath("ding").open("w", encoding="utf-8") as f:
+        f.write(u"dong")
+
+    sync_archive = activate_changes._get_sync_archive(["etc/abc", "ding"], tmp_path)
+
+    with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
+        assert sorted(f.getnames()) == sorted(["etc/abc", "ding"])

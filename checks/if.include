@@ -993,6 +993,8 @@ def check_if_common_single(item,
             perfdata.append(("outqlen", saveint(interface.ifOutQLen)))
 
             def format_value(value):
+                # TODO: one of these uses 1000 as base, the other 1024.
+                # That is nasty, clean it up.
                 if unit == "Bit":
                     return get_nic_speed_human_readable(value * 8)
                 return "%s/s" % get_bytes_human_readable(value)

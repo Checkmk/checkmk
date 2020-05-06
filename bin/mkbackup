@@ -859,7 +859,7 @@ class MKBackupStream:
         keys = self._load_backup_keys()
 
         for key in keys.values():
-            digest = load_certificate_pem(key["certificate"]).digest(b"md5")  # type: bytes
+            digest = load_certificate_pem(key["certificate"]).digest("md5")  # type: bytes
             if key_id == digest:
                 return key
 

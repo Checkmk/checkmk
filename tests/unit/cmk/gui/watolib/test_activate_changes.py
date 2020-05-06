@@ -207,8 +207,6 @@ def test_add_replication_paths():
     }),
 ])
 def test_is_pre_17_remote_site(site_status, expected):
-    if expected is False:
-        pytest.skip("Disabled for the moment")
     assert activate_changes._is_pre_17_remote_site(site_status) == expected
 
 
@@ -384,6 +382,10 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
     remote_path = tmp_path.joinpath("remote")
     monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
 
+    # Disable for the moment, because the unit test fake environment is not ready for this yet
+    monkeypatch.setattr(cmk.gui.watolib.activate_changes, "_execute_post_config_sync_actions",
+                        lambda site_id: None)
+
     remote_path.mkdir(parents=True, exist_ok=True)
     to_delete_path = remote_path.joinpath("to_delete")
     with to_delete_path.open("w", encoding="utf-8") as f:
@@ -396,6 +398,7 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
     automation = activate_changes.AutomationReceiveConfigSync()
     automation.execute(
         activate_changes.ReceiveConfigSyncRequest(
+            site_id="remote",
             sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
             to_delete=["to_delete"],
             config_generation=0,

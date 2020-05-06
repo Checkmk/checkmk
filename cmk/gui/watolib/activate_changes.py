@@ -46,7 +46,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
-#from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -1393,10 +1393,16 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-        # TODO: Next commit will continue here
-        logger.warning("Sync archive size: %d", len(sync_archive))
-        logger.warning(files_to_sync)
-        logger.warning(files_to_delete)
+        site = config.site(self._site_id)
+        response = cmk.gui.watolib.automations.do_remote_automation(site, "receive-config-sync", [
+            ("site_id", self._site_id),
+            ("sync_archive", sync_archive),
+            ("to_delete", repr(files_to_delete)),
+            ("config_generation", "%d" % remote_config_generation),
+        ])
+
+        if response is not True:
+            raise MKGeneralException(_("Failed to synchronize with site: %s") % response)
 
     # TODO: Compatibility for 1.6 -> 1.7 migration. Can be removed with 1.8.
     def _synchronize_pre_17_site(self):
@@ -1604,16 +1610,21 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, base_dir, components):
     """Apply the snapshot received from a central site to the local site"""
     extract_from_buffer(tar_content, base_dir, components)
 
-    try:
-        _save_pre_17_site_globals_on_slave_site(tar_content)
+    _save_pre_17_site_globals_on_slave_site(tar_content)
 
+    # Create rule making this site only monitor our hosts
+    create_distributed_wato_file(distributed_wato_file_path(), site_id, is_slave=True)
+
+    _execute_post_config_sync_actions(site_id)
+    return True
+
+
+def _execute_post_config_sync_actions(site_id):
+    try:
         # pending changes are lost
         confirm_all_local_changes()
 
         hooks.call("snapshot-pushed")
-
-        # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(distributed_wato_file_path(), site_id, is_slave=True)
     except Exception:
         raise MKGeneralException(
             _("Failed to deploy configuration: \"%s\". "
@@ -1623,11 +1634,9 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, base_dir, components):
     cmk.gui.watolib.changes.log_audit(None, "replication",
                                       _("Synchronized with master (my site id is %s.)") % site_id)
 
-    return True
-
 
 def verify_remote_site_config(site_id):
-    # type: (str) -> None
+    # type: (SiteId) -> None
     our_id = config.omd_site()
 
     if not config.is_single_local_site():
@@ -1714,12 +1723,11 @@ def _is_pre_17_remote_site(site_status):
     new central site and an old remote site, we detect that case here and create the 1.6
     snapshots for the old sites.
     """
-    return True  # Temporarily enforce this during runtime.
-    #version = site_status.get("livestatus_version")
-    #if not version:
-    #    return False
+    version = site_status.get("livestatus_version")
+    if not version:
+        return False
 
-    #return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
+    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
 
 
 def _get_replication_components(work_dir, site_config, is_pre_17_remote_site):
@@ -1974,6 +1982,7 @@ def _get_current_config_generation():
 
 
 ReceiveConfigSyncRequest = NamedTuple("ReceiveConfigSyncRequest", [
+    ("site_id", SiteId),
     ("sync_archive", bytes),
     ("to_delete", List[str]),
     ("config_generation", int),
@@ -1993,14 +2002,18 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
     def get_request(self):
         # type: () -> ReceiveConfigSyncRequest
+        site_id = SiteId(html.request.get_ascii_input_mandatory("site_id"))
+        verify_remote_site_config(site_id)
+
         return ReceiveConfigSyncRequest(
+            site_id,
             html.request.get_binary_input_mandatory("sync_archive"),
             ast.literal_eval(html.request.get_ascii_input_mandatory("to_delete")),
             html.request.get_integer_input_mandatory("config_generation"),
         )
 
     def execute(self, request):
-        # type: (ReceiveConfigSyncRequest) -> None
+        # type: (ReceiveConfigSyncRequest) -> bool
         with store.lock_checkmk_configuration():
             if request.config_generation != _get_current_config_generation():
                 raise MKGeneralException(
@@ -2009,6 +2022,9 @@ class AutomationReceiveConfigSync(AutomationCommand):
                       "Please try again."))
 
             self._update_config_on_remote_site(request.sync_archive, request.to_delete)
+
+            _execute_post_config_sync_actions(request.site_id)
+            return True
 
     def _update_config_on_remote_site(self, sync_archive, to_delete):
         # type: (bytes, List[str]) -> None

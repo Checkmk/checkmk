@@ -99,7 +99,10 @@ def test_cfg(web, site, backup_path):
 
 def _execute_backup(site, job_id="testjob"):
     # Perform the backup
-    p = site.execute(["mkbackup", "backup", job_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "backup", job_id],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -108,7 +111,8 @@ def _execute_backup(site, job_id="testjob"):
     # Check successful backup listing
     p = site.execute(["mkbackup", "list", "test-target"],
                      stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -132,7 +136,8 @@ def _execute_restore(site, backup_id, env=None):
     p = site.execute(["mkbackup", "restore", "test-target", backup_id],
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE,
-                     env=env)
+                     env=env,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
 
     try:
@@ -161,7 +166,7 @@ def _execute_restore(site, backup_id, env=None):
 
 
 def test_mkbackup_help(site):
-    p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
     assert stdout.startswith("Usage:")
@@ -169,14 +174,20 @@ def test_mkbackup_help(site):
 
 
 def test_mkbackup_list_unconfigured(site):
-    p = site.execute(["mkbackup", "list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "list"],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stderr = p.communicate()[1]
     assert stderr.startswith("mkbackup is not configured yet")
     assert p.wait() == 3
 
 
 def test_mkbackup_list_targets(site, test_cfg):
-    p = site.execute(["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "targets"],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -187,7 +198,8 @@ def test_mkbackup_list_targets(site, test_cfg):
 def test_mkbackup_list_backups(site, test_cfg):
     p = site.execute(["mkbackup", "list", "test-target"],
                      stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -196,7 +208,10 @@ def test_mkbackup_list_backups(site, test_cfg):
 
 
 def test_mkbackup_list_backups_invalid_target(site, test_cfg):
-    p = site.execute(["mkbackup", "list", "xxx"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "list", "xxx"],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr.startswith("This backup target does not exist")
     assert p.wait() == 3
@@ -204,7 +219,10 @@ def test_mkbackup_list_backups_invalid_target(site, test_cfg):
 
 
 def test_mkbackup_list_jobs(site, test_cfg):
-    p = site.execute(["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "jobs"],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -221,12 +239,10 @@ def test_mkbackup_simple_restore(site, test_cfg):
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.skip("TODO: Loading of backup keys seems to be broken, needs to be analyzed later...")
 def test_mkbackup_encrypted_backup(site, test_cfg):
     _execute_backup(site, job_id="testjob-encrypted")
 
 
-@pytest.mark.skip("TODO: Loading of backup keys seems to be broken, needs to be analyzed later...")
 def test_mkbackup_encrypted_backup_and_restore(site, test_cfg):
     backup_id = _execute_backup(site, job_id="testjob-encrypted")
 

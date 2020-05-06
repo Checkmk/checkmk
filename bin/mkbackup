@@ -62,7 +62,7 @@ def dump_publickey_pem(pkey):
 
 
 def load_privatekey_pem(buf, passphrase):
-    # type: (bytes, str) -> crypto.PKey
+    # type: (bytes, bytes) -> crypto.PKey
     return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
 
 
@@ -777,7 +777,7 @@ def omd_command(cmd):
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(self, stream, is_alive, key_ident):
-        # type: (IO[bytes], Callable[[], bool], Any) -> None
+        # type: (IO[bytes], Callable[[], bool], Optional[str]) -> None
         self._stream = stream
         self._is_alive = is_alive
         self._cipher = None  # type: Optional[CbcMode]
@@ -811,10 +811,6 @@ class MKBackupStream:
                 break  # end of stream reached
 
             self._update_state()
-
-    def _encrypt(self):
-        # type: () -> bool
-        return self._key_ident is not None
 
     def _init_processing(self):
         # type: () -> Optional[bytes]
@@ -884,10 +880,11 @@ class MKBackupStream:
 class BackupStream(MKBackupStream):
     def _init_processing(self):
         # type: () -> Optional[bytes]
-        if not self._encrypt():
+        if self._key_ident is None:
             return None
 
-        secret_key, encrypted_secret_key = self._derive_key(self._get_encryption_public_key(), 32)
+        secret_key, encrypted_secret_key = self._derive_key(
+            self._get_encryption_public_key(self._key_ident.encode("utf-8")), 32)
         cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
         assert isinstance(cipher, CbcMode)
         self._cipher = cipher
@@ -902,7 +899,7 @@ class BackupStream(MKBackupStream):
     def _read_chunk(self):
         # type: () -> Tuple[bytes, bool]
         finished = False
-        if self._encrypt():
+        if self._key_ident is not None:
             chunk = self._read_from_stream(1024 * AES.block_size)
 
             # Detect end of file and add padding to fill up to block size
@@ -919,13 +916,14 @@ class BackupStream(MKBackupStream):
 
     def _process_chunk(self, chunk):
         # type: (bytes) -> bytes
-        if self._encrypt():
+        if self._key_ident is not None:
             assert self._cipher is not None
             return self._cipher.encrypt(chunk)
         return chunk
 
-    def _get_encryption_public_key(self):
-        key = self._get_key_spec(self._key_ident)
+    def _get_encryption_public_key(self, key_id):
+        # type: (bytes) -> RSA.RsaKey
+        key = self._get_key_spec(key_id)
 
         # First extract the public key part from the certificate
         cert = load_certificate_pem(key["certificate"])
@@ -950,11 +948,12 @@ class BackupStream(MKBackupStream):
 class RestoreStream(MKBackupStream):
     def _init_processing(self):
         # type: () -> Optional[bytes]
-        if not self._encrypt():
+        if self._key_ident is None:
             return None
 
         file_version, encrypted_secret_key = self._read_encrypted_secret_key()
-        secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key)
+        secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key,
+                                              self._key_ident.encode("utf-8"))
         cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
         assert isinstance(cipher, CbcMode)
         self._cipher = cipher
@@ -962,7 +961,7 @@ class RestoreStream(MKBackupStream):
 
     def _read_chunk(self):
         # type: () -> Tuple[bytes, bool]
-        if not self._encrypt():
+        if self._key_ident is None:
             # process unencrypted backup
             chunk = self._read_from_stream(1024 * 1024)
             return chunk, chunk == b""
@@ -995,6 +994,7 @@ class RestoreStream(MKBackupStream):
         return chunk
 
     def _read_encrypted_secret_key(self):
+        # type: () -> Tuple[bytes, bytes]
         def read_field():
             # type: () -> bytes
             buf = b""
@@ -1025,8 +1025,9 @@ class RestoreStream(MKBackupStream):
 
         return file_version, encrypted_secret_key
 
-    def _get_encryption_private_key(self):
-        key = self._get_key_spec(self._key_ident)
+    def _get_encryption_private_key(self, key_id):
+        # type: (bytes) -> RSA.RsaKey
+        key = self._get_key_spec(key_id)
 
         try:
             passphrase = os.environ["MKBACKUP_PASSPHRASE"]
@@ -1037,7 +1038,7 @@ class RestoreStream(MKBackupStream):
 
         # First decrypt the private key using PyOpenSSL (was unable to archieve
         # this with RSA.importKey(). :-(
-        pkey = load_privatekey_pem(key["private_key"], passphrase)
+        pkey = load_privatekey_pem(key["private_key"], passphrase.encode("utf-8"))
         priv_pem = dump_privatekey_pem(pkey)
 
         try:
@@ -1047,10 +1048,11 @@ class RestoreStream(MKBackupStream):
                 raise
             raise MKGeneralException("Failed to load private key (wrong passphrase?)")
 
-    def _decrypt_secret_key(self, file_version, encrypted_secret_key):
-        private_key = self._get_encryption_private_key()
+    def _decrypt_secret_key(self, file_version, encrypted_secret_key, key_id):
+        # type: (bytes, bytes, bytes) -> bytes
+        private_key = self._get_encryption_private_key(key_id)
 
-        if file_version == "1":
+        if file_version == b"1":
             raise MKGeneralException("You can not restore this backup using your current Check_MK "
                                      "version. You need to use a Check_MK 1.4 version that has "
                                      "been released before 2017-03-24. The last compatible "

@@ -88,6 +88,42 @@ def test_get_str_input_mandatory_default():
 
 
 @pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_type():
+    assert html.request.get_binary_input("xyz") == b"x"
+    assert isinstance(html.request.get_str_input("xyz"), bytes)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_non_ascii():
+    assert html.request.get_binary_input(b"abc") == b"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_default():
+    assert html.request.get_binary_input("get_default", b"xyz") == b"xyz"
+    assert html.request.get_binary_input("zzz") is None
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_input_type():
+    assert html.request.get_binary_input_mandatory("xyz") == b"x"
+    assert isinstance(html.request.get_binary_input_mandatory("xyz"), bytes)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_non_ascii():
+    assert html.request.get_binary_input_mandatory("abc") == b"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_binary_input_mandatory_default():
+    assert html.request.get_binary_input_mandatory("get_default", b"xyz") == b"xyz"
+
+    with pytest.raises(MKUserError, match="is missing"):
+        html.request.get_binary_input_mandatory("zzz")
+
+
+@pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_input_type():
     assert html.request.get_ascii_input("xyz") == "x"
     assert isinstance(html.request.get_ascii_input("xyz"), str)

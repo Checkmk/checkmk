@@ -339,6 +339,20 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         return value
 
+    def get_binary_input(self, varname, deflt=None):
+        # type: (str, Optional[bytes]) -> Optional[bytes]
+        val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
+        if val is None:
+            return None
+        return six.ensure_binary(val)
+
+    def get_binary_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[bytes]) -> bytes
+        value = self.get_binary_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
     def get_integer_input(self, varname, deflt=None):
         # type: (str, Optional[int]) -> Optional[int]
 

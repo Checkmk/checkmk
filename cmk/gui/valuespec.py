@@ -4906,7 +4906,7 @@ class Dictionary(ValueSpec):
                 s += html.render_tr(
                     html.render_td("%s:&nbsp;" % vs.title(), class_="title") +
                     html.render_td(self._funny_workaround(vs, value[param])))
-        return str(html.render_table(s))
+        return Text(html.render_table(s))
 
     def _funny_workaround(self, vs, value):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.

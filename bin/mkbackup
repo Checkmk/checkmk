@@ -54,6 +54,29 @@ VERSION = "1.4.0i1"
 # TODO: Use plain open() instead of os.fdopen() when we switch to Python 3, the
 # typing is better.
 
+# Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
+# files available... :-/
+
+
+def load_certificate_pem(buf):
+    # type: (bytes) -> crypto.X509
+    return crypto.load_certificate(crypto.FILETYPE_PEM, buf)
+
+
+def dump_publickey_pem(pkey):
+    # type: (crypto.PKey) -> bytes
+    return crypto.dump_publickey(crypto.FILETYPE_PEM, pkey)
+
+
+def load_privatekey_pem(buf, passphrase):
+    # type: (bytes, str) -> crypto.PKey
+    return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
+
+
+def dump_privatekey_pem(pkey):
+    # type: (crypto.PKey) -> bytes
+    return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
+
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
@@ -842,8 +865,8 @@ class MKBackupStream(object):
         keys = self._load_backup_keys()
 
         for key in keys.values():
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            if key_id == cert.digest("md5"):
+            digest = load_certificate_pem(key["certificate"]).digest(b"md5")  # type: bytes
+            if key_id == digest:
                 return key
 
         raise MKGeneralException("Failed to load the configured backup key: %s" %
@@ -911,9 +934,9 @@ class BackupStream(MKBackupStream):
         key = self._get_key_spec(self._key_ident)
 
         # First extract the public key part from the certificate
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-        pub = cert.get_pubkey()
-        pub_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, pub)
+        cert = load_certificate_pem(key["certificate"])
+        pub = cert.get_pubkey()  # type: crypto.PKey
+        pub_pem = dump_publickey_pem(pub)
 
         # Now constuct the public key object
         return RSA.importKey(pub_pem)
@@ -1020,8 +1043,8 @@ class RestoreStream(MKBackupStream):
 
         # First decrypt the private key using PyOpenSSL (was unable to archieve
         # this with RSA.importKey(). :-(
-        pkey = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"], passphrase)
-        priv_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
+        pkey = load_privatekey_pem(key["private_key"], passphrase)
+        priv_pem = dump_privatekey_pem(pkey)
 
         try:
             return RSA.importKey(priv_pem)

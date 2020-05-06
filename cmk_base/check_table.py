@@ -113,16 +113,19 @@ class HostCheckTable(object):
         # type: (config.HostConfig) -> List[Service]
         entries = []  # type: List[Service]
         for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
-            # Make sure, that for dictionary based checks at least those keys
-            # defined in the factory settings are present in the parameters
-            # TODO: Isn't this done during checking for all checks in more generic code?
-            if isinstance(params, dict) and check_plugin_name in config.check_info:
-                def_levels_varname = config.check_info[check_plugin_name].get(
-                    "default_levels_variable")
-                if def_levels_varname:
-                    for key, value in config.factory_settings.get(def_levels_varname, {}).items():
-                        if key not in params:
-                            params[key] = value
+            if config.has_timespecific_params(params):
+                timespec_params = [params]
+                params = {}
+            else:
+                timespec_params = []
+
+            new_params = config.compute_check_parameters(host_config.hostname, check_plugin_name,
+                                                         item, params)
+
+            if timespec_params:
+                params = config.set_timespecific_param_list(timespec_params, new_params)
+            else:
+                params = new_params
 
             descr = config.service_description(host_config.hostname, check_plugin_name, item)
             entries.append(Service(check_plugin_name, item, descr, params))

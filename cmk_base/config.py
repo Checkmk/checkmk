@@ -1862,10 +1862,10 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
 
     if entries:
-        if _has_timespecific_params(entries):
+        if has_timespecific_params(entries):
             # some parameters include timespecific settings
             # these will be executed just before the check execution
-            return TimespecificParamList(entries + [params])
+            return set_timespecific_param_list(entries, params)
 
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
@@ -1881,11 +1881,17 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     return params
 
 
-def _has_timespecific_params(entries):
+def has_timespecific_params(entries):
+    if isinstance(entries, dict) and "tp_default_value" in entries:
+        return True
     for entry in entries:
         if isinstance(entry, dict) and "tp_default_value" in entry:
             return True
     return False
+
+
+def set_timespecific_param_list(entries, params):
+    return TimespecificParamList(entries + [params])
 
 
 def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):

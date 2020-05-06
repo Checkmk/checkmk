@@ -15,7 +15,7 @@ checkname = 'systemd_units'
 info = [['[list-unit-files]'],
         ['[all]'],
         ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-        ['proc-sys-fs-binfmt_misc.automount',
+        ['proc-sys-fs-.service.binfmt_misc.automount',  # <- nasty ".service."!
          'loaded',
          'active',
          'running',

@@ -91,7 +91,7 @@ def parse_systemd_units(info):
             line = ' '.join(row)
             for unit_marker in _SYSTEMD_UNITS:
                 utype = unit_marker.strip(' ')
-                if utype in row[0]:
+                if row[0].endswith(utype):
                     unit_type = unit_marker.strip('. ')
                     name, remains = line.split(unit_marker, 1)
                     if "@" in name:

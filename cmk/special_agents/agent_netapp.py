@@ -393,6 +393,7 @@ class NetAppResponse:
     INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
 
     def __init__(self, response):
+        self.status = None
         self.content = None
         self.reason = None
 
@@ -1582,3 +1583,7 @@ def main(argv=None):
         return 1
     finally:
         output_error_section(args, server)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

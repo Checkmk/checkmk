@@ -10,10 +10,10 @@ from typing import List, Optional, Tuple
 import six
 
 # pylint: disable=cmk-module-layer-violation
-import cmk.base.agent_simulator
 import cmk.base.classic_snmp as classic_snmp
 from cmk.base.exceptions import MKSNMPError
 # pylint: enable=cmk-module-layer-violation
+import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 import cmk.utils.snmp_cache as snmp_cache
 from cmk.utils.exceptions import MKGeneralException
@@ -138,8 +138,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     # FIXME: This encoding ping-pong os horrible...
-                    value = six.ensure_str(
-                        cmk.base.agent_simulator.process(six.ensure_binary(parts[1])))
+                    value = six.ensure_str(agent_simulator.process(six.ensure_binary(parts[1])))
                 else:
                     value = ""
                 # Fix for missing starting oids

@@ -21,6 +21,7 @@ import cmk.utils.log  # TODO: Remove this!
 from cmk.utils.log import VERBOSE
 
 import cmk.utils
+import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.misc
@@ -33,7 +34,6 @@ from cmk.utils.encoding import (
 )
 from cmk.utils.werks import parse_check_mk_version
 
-import cmk.base.agent_simulator
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.ip_lookup as ip_lookup
@@ -717,7 +717,7 @@ class CheckMKAgentDataSource(
         # type: (RawAgentData) -> AgentHostSections
         raw_data = cast(RawAgentData, raw_data)
         if config.agent_simulator:
-            raw_data = cmk.base.agent_simulator.process(raw_data)
+            raw_data = agent_simulator.process(raw_data)
 
         return self._parse_host_section(raw_data)
 

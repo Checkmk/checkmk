@@ -23,6 +23,7 @@ pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
 pyfakefs = "*" # used for unit tests
 webtest = "*"  # used by WSGI based tests
+responses = "*" # used for unit tests
 yapf = "*"  # used for editor integration and the format-python Makefile target
 pre-commit = "*"  # used to fix / find issues before commiting changes
 flake8 = "*"

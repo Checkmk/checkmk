@@ -347,6 +347,7 @@ python-modules-dump-Pipfile:
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
 	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo 'webtest = "*"  # used by WSGI based tests'
+	@echo 'responses = "*" # used for unit tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'flake8 = "*"'

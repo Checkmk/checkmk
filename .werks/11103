@@ -1,0 +1,12 @@
+Title: systemd_units: Fix parsing error
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588795350
+
+In some cases the parsing of the systemd_units plugins output crashed with an IndexError. This has been fixed. 

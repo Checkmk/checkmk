@@ -6943,6 +6943,7 @@ class ModeEditLDAPConnection(LDAPMode):
                          "directory he is assigned to. Users without name conflict just need to provide their "
                          "regular username as usual."),
                 regex = re.compile('^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
+                validate = self._validate_ldap_connection_suffix,
             )),
         ]
 
@@ -7127,7 +7128,7 @@ class ModeEditLDAPConnection(LDAPMode):
 
     def _validate_ldap_connection_id(self, value, varprefix):
         if value in [ c['id'] for c in config.user_connections ]:
-            raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
+            raise MKUserError(varprefix, _("This ID is already used by another connection. Please choose another one."))
 
 
     def _validate_ldap_connection(self, value, varprefix):
@@ -7155,6 +7156,14 @@ class ModeEditLDAPConnection(LDAPMode):
                     varname = "connection_p_active_plugins_p_groups_to_roles_p_%s_1_%d" % (role_id, index)
                     raise MKUserError(varname, _("The configured DN does not match the group base DN."))
 
+    def _validate_ldap_connection_suffix(self, value, varprefix):
+        for connection in config.user_connections:
+            suffix = connection.get("suffix")
+            if suffix is None:
+                continue
+            if connection["id"] != self._connection_id and value == suffix:
+                raise MKUserError(varprefix, _("This suffix is already used by connection %s."
+                                               "Please choose another one.") % connection["id"])
 
 #.
 #   .--Global-Settings-----------------------------------------------------.

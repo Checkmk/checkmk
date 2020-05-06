@@ -11,9 +11,10 @@ import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
@@ -76,7 +77,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
                 console.verbose(six.ensure_str(output_txt))
             else:
-                console.output(six.ensure_str(output_txt))
+                out.output(six.ensure_str(output_txt))
 
             return status
 

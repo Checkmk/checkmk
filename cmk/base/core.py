@@ -16,9 +16,10 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.log import console
 from cmk.utils.type_defs import TimeperiodName  # pylint: disable=unused-import
 
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
@@ -140,7 +141,7 @@ def try_get_activation_lock():
 def do_core_action(action, quiet=False):
     # type: (str, bool) -> None
     if not quiet:
-        console.output("%sing monitoring core..." % action.title())
+        out.output("%sing monitoring core..." % action.title())
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
@@ -154,10 +155,10 @@ def do_core_action(action, quiet=False):
         assert p.stdout is not None
         output = p.stdout.read()
         if not quiet:
-            console.output("ERROR: %r\n" % output)
+            out.output("ERROR: %r\n" % output)
         raise MKGeneralException("Cannot %s the monitoring core: %r" % (action, output))
     if not quiet:
-        console.output(tty.ok + "\n")
+        out.output(tty.ok + "\n")
 
 
 #.

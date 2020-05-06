@@ -22,6 +22,7 @@ import cmk.utils.tty as tty
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.log import console
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
@@ -29,7 +30,7 @@ from cmk.utils.exceptions import MKException
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
-import cmk.base.console as console
+import cmk.base.section as section
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.item_state as item_state
@@ -97,7 +98,7 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
-        console.section_begin(hostname)
+        section.section_begin(hostname)
 
         try:
 
@@ -118,7 +119,7 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.section_error("%s" % e)
+            section.section_error("%s" % e)
         finally:
             cmk.base.cleanup.cleanup_globals()
 
@@ -160,7 +161,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         check_plugin_names = multi_host_sections.get_check_plugin_names()
         sources.enforce_check_plugin_names(check_plugin_names)
 
-    console.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
+    section.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
     discovered_services = _discover_services(
         hostname,
@@ -204,7 +205,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     autochecks.save_autochecks_file(hostname, new_services)
 
-    console.section_step("Executing host label discovery")
+    section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,
@@ -230,7 +231,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     else:
         messages.append("no%s host labels" % (only_new and " new" or ""))
 
-    console.section_success(", ".join(messages))
+    section.section_success(", ".join(messages))
 
 
 def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
@@ -854,11 +855,11 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
         for parsed_section_name in sorted(parsed_sections):
             try:
                 plugin = config.get_parsed_section_creator(parsed_section_name, raw_sections)
-                section = multi_host_sections.get_parsed_section(hostname, ipaddress,
-                                                                 parsed_section_name)
-                if plugin is None or section is None:
+                parsed = multi_host_sections.get_parsed_section(hostname, ipaddress,
+                                                                parsed_section_name)
+                if plugin is None or parsed is None:
                     continue
-                for label in plugin.host_label_function(section):
+                for label in plugin.host_label_function(parsed):
                     label.plugin_name = str(plugin.name)
                     discovered_host_labels.add_label(label)
             except (KeyboardInterrupt, MKTimeout):
@@ -1205,7 +1206,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
 
-    console.section_step("Executing host label discovery")
+    section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,

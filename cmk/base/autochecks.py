@@ -22,8 +22,8 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.type_defs import CheckVariables
+from cmk.utils.log import console
 
-import cmk.base.console
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.base.check_utils import CheckPluginName, CheckParameters, DiscoveredService, Item, Service
@@ -108,17 +108,17 @@ class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
 
         check_variables = get_check_variables()
         try:
-            cmk.base.console.vverbose("Loading autochecks from %s\n", path)
+            console.vverbose("Loading autochecks from %s\n", path)
             with path.open(encoding="utf-8") as f:
                 autochecks_raw = eval(f.read(), check_variables,
                                       check_variables)  # type: List[Dict]
         except SyntaxError as e:
-            cmk.base.console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
+            console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return result
         except Exception as e:
-            cmk.base.console.verbose("Error in file %s:\n%s\n", path, e, stream=sys.stderr)
+            console.verbose("Error in file %s:\n%s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return result

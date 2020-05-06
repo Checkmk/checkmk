@@ -9,7 +9,7 @@ import os
 import time
 from typing import Any, Callable, Dict, List, Tuple  # pylint: disable=unused-import
 
-import cmk.base.console as console
+from cmk.utils.log import console
 
 # TODO: Move state out of module scope
 # TODO: This should be rewritten to a context manager object. See cmk.utils.profile for

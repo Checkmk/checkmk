@@ -18,11 +18,12 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import console
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     LabelSources, Labels, HostName, HostAddress, ServiceName, CheckPluginName,
 )
 
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import (  # pylint: disable=unused-import
@@ -236,9 +237,9 @@ def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=No
 # TODO: Move to modes?
 def do_create_config(core, with_agents):
     # type: (MonitoringCore, bool) -> None
-    console.output("Generating configuration for core (type %s)..." % config.monitoring_core)
+    out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
     create_core_config(core)
-    console.output(tty.ok + "\n")
+    out.output(tty.ok + "\n")
 
     if with_agents:
         try:

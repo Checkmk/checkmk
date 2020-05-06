@@ -22,9 +22,9 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import (  # pylint: disable=unused-import

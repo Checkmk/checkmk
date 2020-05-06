@@ -10,9 +10,9 @@ from typing import Any, Dict, Set, Iterator, Tuple, Optional  # pylint: disable=
 import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.check_utils
 
 from cmk.base.api import PluginName

@@ -104,8 +104,8 @@ import cmk.utils.render as render
 # with an underscore. These names will be skipped when loading into the
 # check context.
 import cmk.utils as _cmk_utils
+import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.config as _config
-import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction

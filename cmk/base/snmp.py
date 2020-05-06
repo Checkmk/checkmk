@@ -22,12 +22,13 @@ from cmk.utils.exceptions import MKGeneralException, MKBailOut
 import cmk.utils.store as store
 import cmk.utils.snmp_cache as snmp_cache
 from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.classic_snmp as classic_snmp
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.agent_simulator
+import cmk.base.obsolete_output as out
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
@@ -777,7 +778,7 @@ def do_snmptranslate(walk_filename):
 
     # Output formatted
     for translation, line in translated_lines:
-        console.output("%s --> %s\n" % (six.ensure_str(line), six.ensure_str(translation)))
+        out.output("%s --> %s\n" % (six.ensure_str(line), six.ensure_str(translation)))
 
 
 def do_snmpwalk(options, hostnames):
@@ -810,10 +811,10 @@ def _do_snmpwalk_on(snmp_config, options, filename):
 
     oids = oids_to_walk(options)
 
-    with Path(filename).open("w", encoding="utf-8") as out:
+    with Path(filename).open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(snmp_config, oids):
             for oid, value in rows:
-                out.write(six.ensure_text("%s %s\n" % (oid, value)))
+                file.write(six.ensure_text("%s %s\n" % (oid, value)))
             console.verbose("%d variables.\n" % len(rows))
 
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
@@ -867,7 +868,7 @@ def do_snmpget(oid, hostnames):
         snmp_cache.initialize_single_oid_cache(snmp_config)
 
         value = get_single_oid(snmp_config, oid)
-        console.output("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
+        out.output("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
         cmk.base.cleanup.cleanup_globals()
 
 

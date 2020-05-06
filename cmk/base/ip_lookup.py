@@ -15,9 +15,9 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTimeout, MKTerminate
+from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache
-import cmk.base.console as console
 import cmk.base.config as config
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress)

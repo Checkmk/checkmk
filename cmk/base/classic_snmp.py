@@ -13,8 +13,8 @@ import six
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.log import console
 
-import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.exceptions import MKSNMPError
 from cmk.base.snmp_utils import SNMPHostConfig, ContextName, RawValue, OID

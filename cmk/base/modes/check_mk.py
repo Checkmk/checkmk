@@ -19,9 +19,9 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKBailOut
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import TagValue, HostgroupName  # pylint: disable=unused-import
+from cmk.utils.log import console
 
 import cmk.base.data_sources as data_sources
-import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.discovery as discovery
 import cmk.base.inventory as inventory
@@ -39,6 +39,7 @@ import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
 import cmk.base.diagnostics
+import cmk.base.obsolete_output as out
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
@@ -203,9 +204,9 @@ modes.register_general_option(
 def mode_list_hosts(options, args):
     # type: (Dict, List[str]) -> None
     hosts = _list_all_hosts(args, options)
-    console.output("\n".join(hosts))
+    out.output("\n".join(hosts))
     if hosts:
-        console.output("\n")
+        out.output("\n")
 
 
 # TODO: Does not care about internal group "check_mk"
@@ -276,9 +277,9 @@ modes.register(
 def mode_list_tag(args):
     # type: (List[str]) -> None
     hosts = _list_all_hosts_with_tags(args)
-    console.output("\n".join(sorted(hosts)))
+    out.output("\n".join(sorted(hosts)))
     if hosts:
-        console.output("\n")
+        out.output("\n")
 
 
 def _list_all_hosts_with_tags(tags):
@@ -345,7 +346,7 @@ def mode_list_checks():
             else:
                 title = "(no man page present)"
 
-            console.output(
+            out.output(
                 (tty.bold + "%-44s" + tty.normal + ty_color + " %-6s " + tty.normal + "%s\n") %
                 (check_plugin_name, what, title))
         except Exception as e:
@@ -397,7 +398,7 @@ def mode_dump_agent(hostname):
                 console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
-        console.output(six.ensure_str(output, errors="surrogateescape"))
+        out.output(six.ensure_str(output, errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -539,13 +540,13 @@ def mode_paths():
     def show_paths(title, t):
         # type: (str, int) -> None
         if t != inst:
-            console.output("\n")
-        console.output(tty.bold + title + tty.normal + "\n")
+            out.output("\n")
+        out.output(tty.bold + title + tty.normal + "\n")
         for path, filedir, typp, descr in paths:
             if typp == t:
                 if filedir == directory:
                     path += "/"
-                console.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
+                out.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
 
     for title, t in [
         ("Files copied or created during installation", inst),
@@ -933,13 +934,13 @@ def mode_flush(hosts):
     for host in hosts:
         host_config = config_cache.get_host_config(host)
 
-        console.output("%-20s: " % host)
+        out.output("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             os.remove(cmk.utils.paths.counters_dir + "/" + host)
-            console.output(tty.bold + tty.blue + " counters")
+            out.output(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -957,14 +958,14 @@ def mode_flush(hosts):
                     except OSError:
                         pass
             if d == 1:
-                console.output(tty.bold + tty.green + " cache")
+                out.output(tty.bold + tty.green + " cache")
             elif d > 1:
-                console.output(tty.bold + tty.green + " cache(%d)" % d)
+                out.output(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback.remove_source_status_file(host)
         if d:
-            console.output(tty.bold + tty.magenta + " piggyback(1)")
+            out.output(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir + "/" + host
@@ -979,24 +980,24 @@ def mode_flush(hosts):
                     except OSError:
                         pass
             if d > 0:
-                console.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                out.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = host_config.remove_autochecks()
         if count:
             flushed = True
-            console.output(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            out.output(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         path = cmk.utils.paths.var_dir + "/inventory/" + host
         if os.path.exists(path):
             os.remove(path)
-            console.output(tty.bold + tty.yellow + " inventory")
+            out.output(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            console.output("(nothing)")
+            out.output("(nothing)")
 
-        console.output(tty.normal + "\n")
+        out.output(tty.normal + "\n")
 
 
 modes.register(
@@ -1668,7 +1669,7 @@ modes.register(
 
 def mode_version():
     # type: () -> None
-    console.output(
+    out.output(
         """This is Check_MK version %s %s
 Copyright (C) 2009 Mathias Kettner
 
@@ -1713,7 +1714,7 @@ modes.register(
 
 def mode_help():
     # type: () -> None
-    console.output("""WAYS TO CALL:
+    out.output("""WAYS TO CALL:
 %s
 
 OPTIONS:

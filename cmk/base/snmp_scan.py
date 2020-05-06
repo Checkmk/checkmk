@@ -10,11 +10,11 @@ import re
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.tty as tty
 import cmk.utils.snmp_cache as snmp_cache
+from cmk.utils.log import console
 from cmk.utils.regex import regex
 
 import cmk.base.check_utils
 import cmk.base.config as config
-import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import

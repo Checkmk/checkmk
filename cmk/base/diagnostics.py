@@ -19,8 +19,9 @@ import six
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+from cmk.utils.log import console
 
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 
 SUFFIX = ".tar.gz"
 
@@ -29,8 +30,8 @@ def create_diagnostics_dump():
     # type: () -> None
     dump = DiagnosticsDump()
     dump.create()
-    console.output("Created diagnostics dump:\n")
-    console.output("  '%s'\n" % _get_short_filepath(dump.tarfile_path))
+    out.output("Created diagnostics dump:\n")
+    out.output("  '%s'\n" % _get_short_filepath(dump.tarfile_path))
 
 
 def _get_short_filepath(filepath):
@@ -101,14 +102,14 @@ class DiagnosticsDump:
 
     def _get_filepaths(self):
         # type: () -> List[Path]
-        console.output("Collect diagnostics information:\n")
+        out.output("Collect diagnostics information:\n")
         filepaths = []
         for element in self.elements:
             filepath = element.add_or_get_file(self.tmp_dump_folder)
             if filepath is None:
                 console.verbose("  %s: No informations\n" % element.ident)
                 continue
-            console.output("  %s\n" % element.description)
+            out.output("  %s\n" % element.description)
             filepaths.append(filepath)
         return filepaths
 

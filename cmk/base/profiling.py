@@ -11,7 +11,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
+from cmk.utils.log import console
 
 _profile = None
 _profile_path = Path("profile.out")
@@ -52,5 +53,5 @@ stats = pstats.Stats(profile_file)
 stats.sort_stats('time').print_stats()""" % _profile_path)
 
     show_profile.chmod(0o755)
-    console.output("Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile),
-                   stream=sys.stderr)
+    out.output("Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile),
+               stream=sys.stderr)

@@ -14,7 +14,7 @@ import cmk.utils.render
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.data_sources as data_sources
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
@@ -28,7 +28,7 @@ def dump_host(hostname):
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    console.output("\n")
+    out.output("\n")
     if host_config.is_cluster:
         nodes = host_config.nodes
         if nodes is None:
@@ -38,8 +38,7 @@ def dump_host(hostname):
     else:
         color = tty.bgblue
         add_txt = ""
-    console.output("%s%s%s%-78s %s\n" %
-                   (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
@@ -61,15 +60,15 @@ def dump_host(hostname):
         else:
             addresses += " (Primary: IPv4)"
 
-    console.output(tty.yellow + "Addresses:              " + tty.normal +
-                   (addresses if addresses is not None else "No IP") + "\n")
+    out.output(tty.yellow + "Addresses:              " + tty.normal +
+               (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
     tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
-    console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+    out.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
-    console.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+    out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
@@ -79,12 +78,12 @@ def dump_host(hostname):
     else:
         parents_list = host_config.parents
     if len(parents_list) > 0:
-        console.output(tty.yellow + "Parents:                " + tty.normal +
-                       ", ".join(parents_list) + "\n")
-    console.output(tty.yellow + "Host groups:            " + tty.normal +
-                   ", ".join(host_config.hostgroups) + "\n")
-    console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   ", ".join(host_config.contactgroups) + "\n")
+        out.output(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) +
+                   "\n")
+    out.output(tty.yellow + "Host groups:            " + tty.normal +
+               ", ".join(host_config.hostgroups) + "\n")
+    out.output(tty.yellow + "Contact groups:         " + tty.normal +
+               ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)
@@ -94,17 +93,17 @@ def dump_host(hostname):
     if host_config.is_ping_host:
         agenttypes.append('PING only')
 
-    console.output(tty.yellow + "Agent mode:             " + tty.normal)
-    console.output(sources.describe_data_sources() + "\n")
+    out.output(tty.yellow + "Agent mode:             " + tty.normal)
+    out.output(sources.describe_data_sources() + "\n")
 
-    console.output(tty.yellow + "Type of agent:          " + tty.normal)
+    out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:
-        console.output(agenttypes[0] + "\n")
+        out.output(agenttypes[0] + "\n")
     else:
-        console.output("\n  ")
-        console.output("\n  ".join(agenttypes) + "\n")
+        out.output("\n  ")
+        out.output("\n  ".join(agenttypes) + "\n")
 
-    console.output(tty.yellow + "Services:" + tty.normal + "\n")
+    out.output(tty.yellow + "Services:" + tty.normal + "\n")
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]

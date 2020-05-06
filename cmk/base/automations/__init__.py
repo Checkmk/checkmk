@@ -6,8 +6,10 @@
 
 import abc
 import signal
+import sys
 from types import FrameType  # pylint: disable=unused-import
 from typing import NoReturn, Dict, Any, List, Optional  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.debug
@@ -15,11 +17,12 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKException
 import cmk.utils.python_printer as python_printer
+from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.profiling as profiling
 import cmk.base.check_api as check_api
+import cmk.base.obsolete_output as out
 
 
 # TODO: Inherit from MKGeneralException
@@ -73,8 +76,8 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
         finally:
             profiling.output_profile()
 
-        console.output(python_printer.pformat(result))
-        console.output('\n')
+        out.output(python_printer.pformat(result))
+        out.output('\n')
 
         return 0
 

@@ -22,13 +22,13 @@ import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.log import console
 from cmk.utils.regex import regex
 import cmk.utils.debug
 
 import cmk.base.utils
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.ip_lookup as ip_lookup

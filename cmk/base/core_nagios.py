@@ -18,12 +18,13 @@ import six
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import console
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     ServiceName, HostName, Item, HostAddress, HostgroupName, ServicegroupName, ContactgroupName,
 )
 
 import cmk.base.utils
-import cmk.base.console as console
+import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
@@ -75,9 +76,9 @@ class NagiosCore(core_config.MonitoringCore):
 
     def precompile(self):
         # type: () -> None
-        console.output("Precompiling host checks...")
+        out.output("Precompiling host checks...")
         precompile_hostchecks()
-        console.output(tty.ok + "\n")
+        out.output(tty.ok + "\n")
 
 
 #   .--Create config-------------------------------------------------------.
@@ -991,7 +992,7 @@ def _precompile_hostcheck(config_cache, hostname):
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
-    output.write("import cmk.base.console as console\n")
+    output.write("from cmk.utils.log import console\n")
     output.write("import cmk.base.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")
@@ -1078,7 +1079,7 @@ if '-d' in sys.argv:
     output.write("try:\n")
     output.write("    sys.exit(checking.do_check(%r, None))\n" % hostname)
     output.write("except MKTerminate:\n")
-    output.write("    console.output('<Interrupted>\\n', stream=sys.stderr)\n")
+    output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")
     output.write("except SystemExit as e:\n")
     output.write("    sys.exit(e.code)\n")

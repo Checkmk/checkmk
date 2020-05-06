@@ -16,10 +16,11 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 import cmk.utils.debug
 
-import cmk.base.console as console
+import cmk.base.section as section
 import cmk.base.config as config
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.snmp_scan as snmp_scan
@@ -55,7 +56,7 @@ def do_inv(hostnames):
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
     for hostname in hostnames:
-        console.section_begin(hostname)
+        section.section_begin(hostname)
         try:
             config_cache = config.get_config_cache()
             host_config = config_cache.get_host_config(hostname)
@@ -79,16 +80,16 @@ def do_inv(hostnames):
             if cmk.utils.debug.enabled():
                 raise
 
-            console.section_error("%s" % e)
+            section.section_error("%s" % e)
         finally:
             cmk.base.cleanup.cleanup_globals()
 
 
 def _show_inventory_results_on_console(inventory_tree, status_data_tree):
     # type: (StructuredDataTree, StructuredDataTree) -> None
-    console.section_success("Found %s%s%d%s inventory entries" %
+    section.section_success("Found %s%s%d%s inventory entries" %
                             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
-    console.section_success("Found %s%s%d%s status entries" %
+    section.section_success("Found %s%s%d%s status entries" %
                             (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
 
@@ -292,7 +293,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
     if multi_host_sections is None:
         multi_host_sections = sources.get_host_sections()
 
-    console.section_step("Executing inventory plugins")
+    section.section_step("Executing inventory plugins")
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
@@ -417,7 +418,7 @@ def _run_inventory_export_hooks(host_config, inventory_tree):
     if not hooks:
         return
 
-    console.section_step("Execute inventory export hooks")
+    section.section_step("Execute inventory export hooks")
     for hookname, params in hooks:
         console.verbose("Execute export hook: %s%s%s%s" %
                         (tty.blue, tty.bold, hookname, tty.normal))

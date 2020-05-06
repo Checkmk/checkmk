@@ -48,13 +48,14 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.log import console
 from cmk.utils.type_defs import EventRule  # pylint: disable=unused-import
 
 import cmk.base.utils
 import cmk.base.config as config
-import cmk.base.console as console
 import cmk.base.core
 import cmk.base.events as events
+import cmk.base.obsolete_output as out
 from cmk.base.events import EventContext  # pylint: disable=unused-import
 
 try:
@@ -1499,7 +1500,7 @@ def call_notification_script(plugin_name, plugin_context):
             if line != '':
                 plugin_log("Output: %s" % line.rstrip())
                 if _log_to_stdout:
-                    console.output(six.ensure_str(line))
+                    out.output(six.ensure_str(line))
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the

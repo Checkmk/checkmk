@@ -17,8 +17,7 @@ from typing import List, Tuple  # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.render as render
 from cmk.utils.exceptions import MKGeneralException
-
-import cmk.base.console as console
+from cmk.utils.log import console
 
 BackupPath = Tuple[str, str, str, str, bool]
 

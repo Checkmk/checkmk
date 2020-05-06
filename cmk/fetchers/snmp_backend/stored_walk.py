@@ -9,9 +9,6 @@ from typing import List, Optional, Tuple
 
 import six
 
-# pylint: disable=cmk-module-layer-violation
-import cmk.base.classic_snmp as classic_snmp
-# pylint: enable=cmk-module-layer-violation
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 import cmk.utils.snmp_cache as snmp_cache
@@ -27,6 +24,7 @@ from cmk.utils.type_defs import (
 )
 
 from ._base import ABCSNMPBackend
+from ._utils import strip_snmp_value
 
 __all__ = ["StoredWalkSNMPBackend"]
 
@@ -141,7 +139,7 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
                 else:
                     value = ""
                 # Fix for missing starting oids
-                rows.append(('.' + o, classic_snmp.strip_snmp_value(value)))
+                rows.append(('.' + o, strip_snmp_value(value)))
                 index += direction
                 if index < 0 or index >= len(lines):
                     break

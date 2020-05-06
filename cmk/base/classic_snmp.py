@@ -10,6 +10,10 @@ from typing import List, Optional  # pylint: disable=unused-import
 
 import six
 
+# pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.snmp_backend._utils import strip_snmp_value
+# pylint: enable=cmk-module-layer-violation
+
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 import cmk.utils.cmk_subprocess as subprocess
@@ -275,60 +279,3 @@ class ClassicSNMPBackend(ABCSNMPBackend):
             options += ["-n", context_name]
 
         return command + options
-
-
-#.
-#   .--SNMP helpers--------------------------------------------------------.
-#   |     ____  _   _ __  __ ____    _          _                          |
-#   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
-#   |    \___ \|  \| | |\/| | |_) | | '_ \ / _ \ | '_ \ / _ \ '__/ __|     |
-#   |     ___) | |\  | |  | |  __/  | | | |  __/ | |_) |  __/ |  \__ \     |
-#   |    |____/|_| \_|_|  |_|_|     |_| |_|\___|_| .__/ \___|_|  |___/     |
-#   |                                            |_|                       |
-#   +----------------------------------------------------------------------+
-#   | Internal helpers for processing SNMP things                          |
-#   '----------------------------------------------------------------------'
-
-
-def strip_snmp_value(value):
-    # type: (str) -> RawValue
-    v = value.strip()
-    if v.startswith('"'):
-        v = v[1:-1]
-        if len(v) > 2 and _is_hex_string(v):
-            return _convert_from_hex(v)
-        # Fix for non hex encoded string which have been somehow encoded by the
-        # netsnmp command line tools. An example:
-        # Checking windows systems via SNMP with hr_fs: disk names like c:\
-        # are reported as c:\\, fix this to single \
-        return six.ensure_binary(v.strip().replace('\\\\', '\\'))
-    return six.ensure_binary(v)
-
-
-def _is_hex_string(value):
-    # type: (str) -> bool
-    # as far as I remember, snmpwalk puts a trailing space within
-    # the quotes in case of hex strings. So we require that space
-    # to be present in order make sure, we really deal with a hex string.
-    if value[-1] != ' ':
-        return False
-    hexdigits = "0123456789abcdefABCDEF"
-    n = 0
-    for x in value:
-        if n % 3 == 2:
-            if x != ' ':
-                return False
-        else:
-            if x not in hexdigits:
-                return False
-        n += 1
-    return True
-
-
-def _convert_from_hex(value):
-    # type: (str) -> bytes
-    """Convert string containing a Hex-String to bytes
-
-    e.g. "B2 E0 7D 2C 4D 15" -> b'\xb2\xe0},M\x15'
-    """
-    return bytes(bytearray(int(hx, 16) for hx in value.split()))

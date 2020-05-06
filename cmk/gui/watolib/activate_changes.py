@@ -1850,6 +1850,26 @@ def _get_sync_archive(to_sync, base_dir):
     return archive
 
 
+def _unpack_sync_archive(sync_archive, base_dir):
+    # type: (bytes, Path) -> None
+    p = subprocess.Popen(
+        ["tar", "-x", "-C", str(base_dir), "-f", "-"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        shell=False,
+    )
+    assert p.stdin is not None
+    assert p.stdout is not None
+    assert p.stderr is not None
+
+    stderr = p.communicate(sync_archive)[1]
+    if p.returncode != 0:
+        raise MKGeneralException(
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr))
+
+
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
     ("st_mode", int),
     ("st_size", int),
@@ -1951,3 +1971,55 @@ def _create_config_sync_file_hash(file_path):
 def _get_current_config_generation():
     # type: () -> int
     return 0  # TODO: Will be added later
+
+
+ReceiveConfigSyncRequest = NamedTuple("ReceiveConfigSyncRequest", [
+    ("sync_archive", bytes),
+    ("to_delete", List[str]),
+    ("config_generation", int),
+])
+
+
+@automation_command_registry.register
+class AutomationReceiveConfigSync(AutomationCommand):
+    """Called on remote site from a central site to update the Checkmk configuration
+
+    The central site hands over the a tar archive with the files to be written and a list of
+    files to be deleted. The configuration generation is used to validate that no modification has
+    been made between the two sync steps (get-config-sync-state and this autmoation).
+    """
+    def command_name(self):
+        return "receive-config-sync"
+
+    def get_request(self):
+        # type: () -> ReceiveConfigSyncRequest
+        return ReceiveConfigSyncRequest(
+            html.request.get_binary_input_mandatory("sync_archive"),
+            ast.literal_eval(html.request.get_ascii_input_mandatory("to_delete")),
+            html.request.get_integer_input_mandatory("config_generation"),
+        )
+
+    def execute(self, request):
+        # type: (ReceiveConfigSyncRequest) -> None
+        with store.lock_checkmk_configuration():
+            if request.config_generation != _get_current_config_generation():
+                raise MKGeneralException(
+                    _("The configuration was changed during activation. "
+                      "Terminating this activation to ensure configuration integrity. "
+                      "Please try again."))
+
+            self._update_config_on_remote_site(request.sync_archive, request.to_delete)
+
+    def _update_config_on_remote_site(self, sync_archive, to_delete):
+        # type: (bytes, List[str]) -> None
+        """Use the given tar archive and list of files to be deleted to update the local files"""
+        base_dir = Path(cmk.utils.paths.omd_root)
+        _unpack_sync_archive(sync_archive, base_dir)
+
+        for site_path in to_delete:
+            site_file = base_dir.joinpath(site_path)
+            try:
+                site_file.unlink()
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise

@@ -59,6 +59,7 @@ def test_registered_automation_commands():
         'ping',
         'push-snapshot',
         'get-config-sync-state',
+        'receive-config-sync',
         'service-discovery-job',
         'checkmk-remote-automation-start',
         'checkmk-remote-automation-get-status',

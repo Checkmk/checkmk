@@ -364,6 +364,12 @@ def _get_test_file_infos():
 
 
 def test_get_sync_archive(tmp_path):
+    sync_archive = _get_test_sync_archive(tmp_path)
+    with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
+        assert sorted(f.getnames()) == sorted(["etc/abc", "ding"])
+
+
+def _get_test_sync_archive(tmp_path):
     tmp_path.joinpath("etc").mkdir(parents=True, exist_ok=True)
     with tmp_path.joinpath("etc/abc").open("w", encoding="utf-8") as f:
         f.write(u"gä")
@@ -371,7 +377,30 @@ def test_get_sync_archive(tmp_path):
     with tmp_path.joinpath("ding").open("w", encoding="utf-8") as f:
         f.write(u"dong")
 
-    sync_archive = activate_changes._get_sync_archive(["etc/abc", "ding"], tmp_path)
+    return activate_changes._get_sync_archive(["etc/abc", "ding"], tmp_path)
 
-    with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
-        assert sorted(f.getnames()) == sorted(["etc/abc", "ding"])
+
+def test_automation_receive_config_sync(monkeypatch, tmp_path):
+    remote_path = tmp_path.joinpath("remote")
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
+
+    remote_path.mkdir(parents=True, exist_ok=True)
+    to_delete_path = remote_path.joinpath("to_delete")
+    with to_delete_path.open("w", encoding="utf-8") as f:
+        f.write(u"äää")
+
+    assert to_delete_path.exists()
+    assert not remote_path.joinpath("etc/abc").exists()
+    assert not remote_path.joinpath("ding").exists()
+
+    automation = activate_changes.AutomationReceiveConfigSync()
+    automation.execute(
+        activate_changes.ReceiveConfigSyncRequest(
+            sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
+            to_delete=["to_delete"],
+            config_generation=0,
+        ))
+
+    assert not to_delete_path.exists()
+    assert remote_path.joinpath("etc/abc").exists()
+    assert remote_path.joinpath("ding").exists()

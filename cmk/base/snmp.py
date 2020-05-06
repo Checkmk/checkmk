@@ -7,6 +7,7 @@
 import os
 import sys
 import subprocess
+from contextlib import suppress
 from typing import Any, Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
@@ -28,7 +29,6 @@ import cmk.base.config as config
 import cmk.base.classic_snmp as classic_snmp
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.agent_simulator
-import cmk.base.obsolete_output as out
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
@@ -776,9 +776,9 @@ def do_snmptranslate(walk_filename):
         translated_lines += translated
     console.error("\rfinished.                \n")
 
-    # Output formatted
-    for translation, line in translated_lines:
-        out.output("%s --> %s\n" % (six.ensure_str(line), six.ensure_str(translation)))
+    with suppress(IOError):
+        sys.stdout.write("\n".join("%s --> %s" % (six.ensure_str(line), six.ensure_str(translation))
+                                   for translation, line in translated_lines) + "\n")
 
 
 def do_snmpwalk(options, hostnames):
@@ -868,7 +868,7 @@ def do_snmpget(oid, hostnames):
         snmp_cache.initialize_single_oid_cache(snmp_config)
 
         value = get_single_oid(snmp_config, oid)
-        out.output("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
+        sys.stdout.write("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
         cmk.base.cleanup.cleanup_globals()
 
 

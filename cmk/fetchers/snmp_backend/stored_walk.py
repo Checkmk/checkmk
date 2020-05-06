@@ -11,12 +11,11 @@ import six
 
 # pylint: disable=cmk-module-layer-violation
 import cmk.base.classic_snmp as classic_snmp
-from cmk.base.exceptions import MKSNMPError
 # pylint: enable=cmk-module-layer-violation
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 import cmk.utils.snmp_cache as snmp_cache
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     OID,

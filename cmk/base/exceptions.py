@@ -8,9 +8,8 @@ import traceback
 from types import TracebackType  # pylint: disable=unused-import
 from typing import Tuple, Type  # pylint: disable=unused-import
 
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
+from cmk.utils.exceptions import (  # pylint: disable=unused-import
+    MKException, MKGeneralException, MKSNMPError,
 )
 
 
@@ -41,10 +40,6 @@ class MKParseFunctionError(MKException):
     def __str__(self):
         # type: () -> str
         return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
-
-
-class MKSNMPError(MKException):
-    pass
 
 
 class MKSkipCheck(MKException):

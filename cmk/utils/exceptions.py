@@ -81,3 +81,7 @@ class MKBailOut(MKException):
 # which have a timeout set.
 class MKTimeout(MKException):
     pass
+
+
+class MKSNMPError(MKException):
+    pass

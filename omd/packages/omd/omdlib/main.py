@@ -1684,7 +1684,7 @@ def clear_environment():
     # type: () -> None
     # first remove *all* current environment variables
     keep = ["TERM"]
-    for key in os.environ.keys():
+    for key in os.environ:
         if key not in keep:
             del os.environ[key]
 

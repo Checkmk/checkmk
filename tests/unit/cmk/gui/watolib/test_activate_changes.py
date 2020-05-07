@@ -419,3 +419,21 @@ def test_get_current_config_generation():
     activate_changes.update_config_generation()
     activate_changes.update_config_generation()
     assert activate_changes._get_current_config_generation() == 3
+
+
+def test_remove_site_config_directory():
+    site1_dir = cmk.utils.paths.site_config_dir / "site1"
+    site2_dir = cmk.utils.paths.site_config_dir / "site2"
+
+    site1_dir.mkdir(parents=True, exist_ok=True)
+    with site1_dir.joinpath("xyz").open("w", encoding="utf-8") as f:
+        f.write(u"ä")
+
+    site2_dir.mkdir(parents=True, exist_ok=True)
+    with site2_dir.joinpath("xyz").open("w", encoding="utf-8") as f:
+        f.write(u"b")
+
+    activate_changes.remove_site_config_directory("site1")
+
+    assert not site1_dir.exists()
+    assert site2_dir.exists()

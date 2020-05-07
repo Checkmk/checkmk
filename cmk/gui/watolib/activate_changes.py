@@ -283,6 +283,17 @@ def _load_replication_status(lock=False):
     return {site_id: _load_site_replication_status(site_id, lock=lock) for site_id in config.sites}
 
 
+def remove_site_config_directory(site_id):
+    # type: (SiteId) -> None
+    work_dir = cmk.utils.paths.site_config_dir / site_id
+
+    try:
+        shutil.rmtree(str(work_dir))
+    except IOError as e:
+        if e.errno != errno.ENOENT:  # No such file or directory
+            raise
+
+
 class ActivateChanges(object):
     def __init__(self):
         self._repstatus = {}

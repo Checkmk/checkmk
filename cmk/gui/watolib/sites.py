@@ -352,6 +352,7 @@ class SiteManagement(object):
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
+        cmk.gui.watolib.activate_changes.remove_site_config_directory(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,

@@ -53,7 +53,7 @@ def _expected_replication_paths():
 
     if testlib.is_enterprise_repo():
         expected += [
-            ReplicationPath('dir', 'dcd', 'etc/check_mk/dcd.d/wato/', ['distributed.mk']),
+            ReplicationPath('dir', 'dcd', 'etc/check_mk/dcd.d/wato/', []),
             ReplicationPath('dir', 'mknotify', 'etc/check_mk/mknotifyd.d/wato', []),
         ]
 
@@ -130,6 +130,9 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
             }:
                 if "sitespecific.mk" not in repl_path.excludes:
                     repl_path.excludes.append("sitespecific.mk")
+
+            if repl_path.ident == "dcd" and "distributed.mk" not in repl_path.excludes:
+                repl_path.excludes.append("distributed.mk")
 
         expected += [
             ReplicationPath(

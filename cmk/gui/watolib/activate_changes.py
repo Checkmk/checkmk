@@ -937,10 +937,9 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                                           custom_site_path=snapshot_settings.work_dir)
 
             if not self._site_snapshot_settings[site_id].create_pre_17_snapshot:
-                create_distributed_wato_file(Path(
-                    snapshot_settings.work_dir).joinpath("etc/check_mk/conf.d/distributed_wato.mk"),
-                                             site_id,
-                                             is_slave=True)
+                create_distributed_wato_files(Path(snapshot_settings.work_dir),
+                                              site_id,
+                                              is_remote=True)
 
     def _prepare_site_config_directory(self, site_id):
         # type: (SiteId) -> None
@@ -1613,7 +1612,7 @@ def apply_pre_17_sync_snapshot(site_id, tar_content, base_dir, components):
     _save_pre_17_site_globals_on_slave_site(tar_content)
 
     # Create rule making this site only monitor our hosts
-    create_distributed_wato_file(distributed_wato_file_path(), site_id, is_slave=True)
+    create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
     _execute_post_config_sync_actions(site_id)
     return True
@@ -1679,21 +1678,33 @@ def _save_pre_17_site_globals_on_slave_site(tarcontent):
         shutil.rmtree(tmp_dir)
 
 
-def distributed_wato_file_path():
-    # type: () -> Path
-    return Path(cmk.utils.paths.check_mk_config_dir, "distributed_wato.mk")
+def create_distributed_wato_files(base_dir, site_id, is_remote):
+    # type: (Path, SiteId, bool) -> None
+    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
+    _create_distributed_wato_file_for_dcd(base_dir)
 
 
-def create_distributed_wato_file(path, siteid, is_slave):
+def _create_distributed_wato_file_for_base(base_dir, site_id, is_remote):
     # type: (Path, SiteId, bool) -> None
     output = wato_fileheader()
     output += ("# This file has been created by the master site\n"
                "# push the configuration to us. It makes sure that\n"
                "# we only monitor hosts that are assigned to our site.\n\n")
-    output += "distributed_wato_site = '%s'\n" % siteid
-    output += "is_wato_slave_site = %r\n" % is_slave
+    output += "distributed_wato_site = '%s'\n" % site_id
+    output += "is_wato_slave_site = %r\n" % is_remote
 
-    store.save_file(path, output)
+    store.save_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
+
+
+def _create_distributed_wato_file_for_dcd(base_dir):
+    # type: (Path) -> None
+    if cmk_version.is_raw_edition():
+        return
+
+    with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",
+                                                                          encoding="utf-8") as f:
+        f.write(six.ensure_text(wato_fileheader()))
+        f.write(u"dcd_is_wato_remote_site = True\n")
 
 
 def create_site_globals_file(site_id, tmp_dir, site_config):
@@ -1777,11 +1788,15 @@ def _add_pre_17_sitespecific_excludes(paths):
     new_paths = []
     for p in paths:
         if p.ident in add_domains:
+            excludes = p.excludes[:] + ["sitespecific.mk"]
+            if p.ident == "dcd":
+                excludes.append("distributed.mk")
+
             p = ReplicationPath(
                 ty=p.ty,
                 ident=p.ident,
                 site_path=p.site_path,
-                excludes=p.excludes[:] + ["sitespecific.mk"],
+                excludes=excludes,
             )
 
         new_paths.append(p)

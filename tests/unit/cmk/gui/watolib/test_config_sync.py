@@ -152,6 +152,7 @@ def _generate_sync_snapshot(activation_manager, snapshot_data_collector_class, t
     snapshot_settings = site_snapshot_settings["unit_remote_1"]
 
     assert not Path(snapshot_settings.snapshot_path).exists()
+    assert not Path(snapshot_settings.work_dir).exists()
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
@@ -218,6 +219,9 @@ def _get_expected_paths(user_id, is_pre_17_site):
                 'etc/check_mk/mknotifyd.d/wato/sitespecific.mk',
             ]
 
+        if not cmk_version.is_raw_edition():
+            expected_paths += ['etc/check_mk/dcd.d/wato/distributed.mk']
+
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if not cmk_version.is_managed_edition():
@@ -271,6 +275,7 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
 
     activation_manager = _get_activation_manager(monkeypatch)
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+
     monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
 
     snapshot_settings = _create_sync_snapshot(activation_manager,

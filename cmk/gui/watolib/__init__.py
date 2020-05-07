@@ -164,7 +164,6 @@ from cmk.gui.watolib.activate_changes import (
     confirm_all_local_changes,
     get_pending_changes_info,
     get_number_of_pending_changes,
-    create_distributed_wato_file,
 )
 from cmk.gui.watolib.groups import (
     edit_group,

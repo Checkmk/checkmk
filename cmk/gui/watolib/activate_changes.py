@@ -1846,36 +1846,17 @@ def _get_sync_archive(to_sync, base_dir):
     # type: (List[str], Path) -> bytes
     # Use native tar instead of python tarfile for performance reasons
     p = subprocess.Popen(
-        ["tar", "-c", "-C", str(base_dir), "-f", "-", "-T", "-"],
+        ["tar", "-c", "-C", str(base_dir), "-f", "-", "--null", "-T", "-"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         close_fds=True,
         shell=False,
     )
-    assert p.stdin is not None
-    assert p.stdout is not None
-    assert p.stderr is not None
 
-    p.stdin.write(b"\0".join(six.ensure_binary(f) for f in to_sync))
-    p.stdin.close()
-
-    archive = b""
-    stderr = b""
-    while p.poll() is None:
-        try:
-            stderr += p.stderr.read(1024)
-        except ValueError:
-            if p.stdout.closed:
-                continue
-            raise
-
-        try:
-            archive += p.stdout.read(1048576)
-        except ValueError:
-            if p.stdout.closed:
-                break
-            raise
+    # Since we don't stream the archive to the remote site (we could probably do this) it should be
+    # no problem to buffer it in memory for the moment
+    archive, stderr = p.communicate(b"\0".join(six.ensure_binary(f) for f in to_sync))
 
     if p.returncode != 0:
         raise MKGeneralException(

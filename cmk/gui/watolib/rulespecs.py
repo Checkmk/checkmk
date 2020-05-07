@@ -1045,18 +1045,7 @@ def register_rule(
         deprecated=False,
         **kwargs):
 
-    if varname.startswith("static_checks:"):
-        base_class = ManualCheckParameterRulespec  # type: Type[Rulespec]
-    elif varname.startswith("checkgroup_parameters:"):
-        # Mypy does not understand this is in fact a Type[Rulespec] based class
-        base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem  # type: ignore[assignment]
-    elif valuespec is None:
-        # Mypy does not understand this is in fact a Type[Rulespec] based class
-        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec  # type: ignore[assignment]
-    else:
-        # Mypy does not understand this is in fact a Type[Rulespec] based class
-        base_class = ServiceRulespec if itemtype is not None else HostRulespec  # type: ignore[assignment]
-
+    base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
     class_kwargs = {
         "name": varname,
         "group": get_rulegroup(group).__class__ if isinstance(group, six.string_types) else group,
@@ -1085,6 +1074,25 @@ def register_rule(
         class_kwargs["item_name"] = lambda: _("Service")
 
     rulespec_registry.register(base_class(**class_kwargs))
+
+
+# NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
+# to nest ifs in a slightly ugly way.
+def _rulespec_class_for(varname, has_valuespec, has_itemtype):
+    # type: (str, bool, bool) -> Type[Rulespec]
+    if varname.startswith("static_checks:"):
+        return ManualCheckParameterRulespec
+    if varname.startswith("checkgroup_parameters:"):
+        if has_itemtype:
+            return CheckParameterRulespecWithItem
+        return CheckParameterRulespecWithoutItem
+    if has_valuespec:
+        if has_itemtype:
+            return ServiceRulespec
+        return HostRulespec
+    if has_itemtype:
+        return BinaryServiceRulespec
+    return BinaryHostRulespec
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):

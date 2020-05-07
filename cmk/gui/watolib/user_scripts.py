@@ -7,7 +7,7 @@
 
 # Example header of a notification script:
 
-#!/usr/bin/python
+#!/usr/bin/env python
 # HTML Emails with included graphs
 # Bulk: yes
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.

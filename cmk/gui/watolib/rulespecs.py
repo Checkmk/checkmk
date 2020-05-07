@@ -933,18 +933,26 @@ class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
-    def __init__(self,
-                 group,
-                 check_group_name,
-                 parameter_valuespec=None,
-                 title=None,
-                 item_spec=None,
-                 is_optional=False,
-                 is_deprecated=False):
+
+    # Required because of Rulespec.NO_FACTORY_DEFAULT
+    def __init__(  # pylint: disable=dangerous-default-value
+        self,
+        group,
+        check_group_name,
+        parameter_valuespec=None,
+        title=None,
+        item_spec=None,
+        is_optional=False,
+        is_deprecated=False,
+        name=None,
+        match_type="all",
+        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+    ):
 
         # Mandatory keys
         self._check_group_name = check_group_name
-        name = "static_checks:%s" % self._check_group_name
+        if name is None:
+            name = "static_checks:%s" % self._check_group_name
 
         arg_infos = [
             # (arg, is_callable, none_allowed)
@@ -957,12 +965,13 @@ class ManualCheckParameterRulespec(HostRulespec):
             group=group,
             name=name,
             title=title,
+            match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            factory_default=factory_default,
 
             # Explicit set
             valuespec=self._rulespec_valuespec,
-            match_type="all",
         )
 
         # Optional keys

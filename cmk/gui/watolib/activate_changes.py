@@ -1976,9 +1976,24 @@ def _create_config_sync_file_hash(file_path):
     return sha256.hexdigest()
 
 
-def _get_current_config_generation():
-    # type: () -> int
-    return 0  # TODO: Will be added later
+def update_config_generation():
+    """Increase the config generation ID
+
+    This ID is used to detect whether something else has been changed in the configuration between
+    two points in time. Therefore, all places that change the configuration must call this function
+    at least once.
+    """
+    store.save_object_to_file(_config_generation_path(),
+                              _get_current_config_generation(lock=True) + 1)
+
+
+def _get_current_config_generation(lock=False):
+    # type: (bool) -> int
+    return store.load_object_from_file(_config_generation_path(), default=0, lock=lock)
+
+
+def _config_generation_path():
+    return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
 
 
 ReceiveConfigSyncRequest = NamedTuple("ReceiveConfigSyncRequest", [

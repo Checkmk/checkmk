@@ -104,6 +104,7 @@ import cmk.gui.forms as forms
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
+from cmk.gui.watolib.activate_changes import update_config_generation
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
@@ -473,6 +474,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                 newmode, action_message = result
             else:
                 newmode = result
+
+            # We assume something has been modified and increase the config generation ID by one.
+            update_config_generation()
 
             # If newmode is False, then we shall immediately abort.
             # This is e.g. the case, if the page outputted non-HTML

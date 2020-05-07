@@ -407,3 +407,12 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
     assert not to_delete_path.exists()
     assert remote_path.joinpath("etc/abc").exists()
     assert remote_path.joinpath("ding").exists()
+
+
+def test_get_current_config_generation():
+    assert activate_changes._get_current_config_generation() == 0
+    activate_changes.update_config_generation()
+    assert activate_changes._get_current_config_generation() == 1
+    activate_changes.update_config_generation()
+    activate_changes.update_config_generation()
+    assert activate_changes._get_current_config_generation() == 3

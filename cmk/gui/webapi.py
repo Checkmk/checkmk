@@ -24,6 +24,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
+from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
@@ -220,6 +221,10 @@ def _execute_action_no_lock(api_call, request_object):
     if cmk.gui.watolib.read_only.is_enabled() and \
        not cmk.gui.watolib.read_only.may_override():
         raise MKUserError(None, cmk.gui.watolib.read_only.message())
+
+    # We assume something will be modified and increase the config generation
+    update_config_generation()
+
     return {
         "result_code": 0,
         "result": api_call["handler"](request_object),

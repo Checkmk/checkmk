@@ -30,7 +30,7 @@ import sys
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
 
 from typing import (  # pylint: disable=unused-import
     Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple)
@@ -1336,7 +1336,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         4. Collect needed files and send them over to the remote site (+ remote config hash)
         5. Raise when something failed on the remote site while applying the sent files
         """
-        pass
 
     # TODO: Compatibility for 1.6 -> 1.7 migration. Can be removed with 1.8.
     def _synchronize_pre_17_site(self):

@@ -30,8 +30,7 @@ class PasswordStore(WatoSimpleConfigFile):
         user_groups = userdb.contactgroups_of_user(config.user.id)
 
         passwords = self.filter_editable_entries(entries)
-        passwords.update(
-            dict([(k, v) for k, v in entries.items() if v["shared_with"] in user_groups]))
+        passwords.update({k: v for k, v in entries.items() if v["shared_with"] in user_groups})
         return passwords
 
     def filter_editable_entries(self, entries):
@@ -40,4 +39,4 @@ class PasswordStore(WatoSimpleConfigFile):
 
         assert config.user.id is not None
         user_groups = userdb.contactgroups_of_user(config.user.id)
-        return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])
+        return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}

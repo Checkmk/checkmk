@@ -164,7 +164,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         for main_group in sorted(main_groups, key=lambda g: g.title):
             if mode == "static_checks" and main_group.name != "static":
                 continue
-            elif mode != "static_checks" and main_group.name == "static":
+            if mode != "static_checks" and main_group.name == "static":
                 continue
 
             choices.append((main_group.name, main_group.choice_title))
@@ -1154,9 +1154,11 @@ class CheckTypeGroupSelection(ElementSelection):
 
     def get_elements(self):
         checks = check_mk_local_automation("get-check-information")
-        elements = dict([(cn, "%s - %s" % (cn, c["title"]))
-                         for (cn, c) in checks.items()
-                         if c.get("group") == self._checkgroup])
+        elements = {
+            cn: "%s - %s" % (cn, c["title"])
+            for (cn, c) in checks.items()
+            if c.get("group") == self._checkgroup
+        }
         return elements
 
     def value_to_text(self, value):

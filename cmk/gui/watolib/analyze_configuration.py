@@ -231,13 +231,10 @@ class ACTest(object):
             current_settings = sites[config.omd_site()].get("globals", {})
 
         if varname in current_settings:
-            value = current_settings[varname]
-        elif varname in global_settings:
-            value = global_settings[varname]
-        else:
-            value = default_values[varname]
-
-        return value
+            return current_settings[varname]
+        if varname in global_settings:
+            return global_settings[varname]
+        return default_values[varname]
 
 
 class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):

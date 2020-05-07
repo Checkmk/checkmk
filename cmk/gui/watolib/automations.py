@@ -309,10 +309,10 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
     if response.status_code == 401:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
 
-    elif response.status_code == 503 and "Site Not Started" in response.text:
+    if response.status_code == 503 and "Site Not Started" in response.text:
         raise MKUserError(None, _("Site is not running"))
 
-    elif response.status_code != 200:
+    if response.status_code != 200:
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
     return response
@@ -354,21 +354,20 @@ def do_site_login(site_id, name, password):
         if config.debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
-    elif not response:
+    if not response:
         raise MKAutomationException(_("Empty response from web service"))
-    else:
-        try:
-            eval_response = ast.literal_eval(response)
-        except SyntaxError:
-            raise MKAutomationException(response)
-        if isinstance(eval_response, dict):
-            if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
-                raise MKUserError(
-                    None,
-                    _("The Check_MK Managed Services Edition can only "
-                      "be connected with other sites using the CME."))
-            return eval_response["login_secret"]
-        return eval_response
+    try:
+        eval_response = ast.literal_eval(response)
+    except SyntaxError:
+        raise MKAutomationException(response)
+    if isinstance(eval_response, dict):
+        if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
+            raise MKUserError(
+                None,
+                _("The Check_MK Managed Services Edition can only "
+                  "be connected with other sites using the CME."))
+        return eval_response["login_secret"]
+    return eval_response
 
 
 CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [

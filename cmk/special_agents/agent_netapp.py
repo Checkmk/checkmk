@@ -291,7 +291,7 @@ class NetAppConnection:
 
         response = self.session.send(prepped, verify=False)
 
-        netapp_response = NetAppResponse(response)
+        netapp_response = NetAppResponse(response, self.debug)
 
         if self.debug:
             print("######## GOT RESPONSE #######")
@@ -392,7 +392,7 @@ class NetAppResponse:
     # these should never be in an XML output:
     INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
 
-    def __init__(self, response):
+    def __init__(self, response, debug):
         self.status = None
         self.content = None
         self.reason = None
@@ -407,14 +407,16 @@ class NetAppResponse:
 
         # We except an XML answer (not HTML)
         try:
-            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
-        except ET.ParseError:
             try:
+                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            except ET.ParseError:
                 clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
                 self.content = NetAppNode(ET.fromstring(clean))
-            except ET.ParseError as exc:
-                self.status = "parse-exception"
-                self.reason = str(exc)
+        except ET.ParseError as exc:
+            if debug:
+                raise
+            self.status = "parse-exception"
+            self.reason = str(exc)
             return
 
         self.status = self.content.child_get("results").node.attrib["status"]

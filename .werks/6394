@@ -13,3 +13,7 @@ which is in most cases equivalent to 'no levels'.
 These levels are configurable via the WATO rule
 {{CPU utilization for simple devices}} and can be
 disabled, too.
+
+A rediscovery is required for affected hosts.
+Please open and re-save the affected rules to avoid ineffective rulesets
+in some particular cases.

@@ -489,7 +489,7 @@ class Table(object):
         # type: (TableRows) -> int
         if self.headers:
             return len(self.headers)
-        elif self.rows:
+        if self.rows:
             return len(self.rows[0])
         return 0
 

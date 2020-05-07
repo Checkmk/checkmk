@@ -132,14 +132,12 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
         return result
 
-    else:
-        return sites.live().query(query_txt)
+    return sites.live().query(query_txt)
 
 
 def render_notification_table(failed_notifications):
     with table_element() as table:
-        header = dict([(name, idx) for idx, name in enumerate(g_columns)])
-
+        header = {name: idx for idx, name in enumerate(g_columns)}
         for row in failed_notifications:
             table.row()
             table.text_cell(_("Time"),

@@ -115,15 +115,16 @@ def load_all_plugins(only_modules=None):
 
 def _cmk_gui_top_level_modules():
     # type: () -> List[ModuleType]
-    return [module \
-            for name, module in sys.modules.items()
-            # None entries are only an import optimization of cPython and can be removed:
-            # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-            if module is not None
-            # top level modules only, please...
-            if (name.startswith("cmk.gui.") and len(name.split(".")) == 3 or
-                name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4 or
-                name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)
+    return [
+        module  #
+        for name, module in sys.modules.items()
+        # None entries are only an import optimization of cPython and can be removed:
+        # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
+        if module is not None
+        # top level modules only, please...
+        if (name.startswith("cmk.gui.") and len(name.split(".")) == 3 or
+            name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4 or
+            name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)
     ]
 
 
@@ -136,8 +137,7 @@ def _find_local_web_plugins():
     except OSError as e:
         if e.errno == errno.ENOENT:
             return
-        else:
-            raise
+        raise
 
     for plugins_dir in plugin_dirs:
         dir_path = basedir + plugins_dir

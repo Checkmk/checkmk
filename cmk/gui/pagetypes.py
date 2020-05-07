@@ -223,8 +223,7 @@ class Base(object):
                     break
             if not conflict:
                 return name
-            else:
-                nr += 1
+            nr += 1
 
     @classmethod
     def default_topic(cls):
@@ -568,14 +567,14 @@ class Overridable(Base):
     def may_delete(self):
         if self.is_builtin():
             return False
-        elif self.is_mine() and config.user.may(self._delete_permission()):
+        if self.is_mine() and config.user.may(self._delete_permission()):
             return True
         return config.user.may('general.delete_foreign_%s' % self.type_name())
 
     def may_edit(self):
         if self.is_builtin():
             return False
-        elif self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
+        if self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
             return True
         return config.user.may('general.edit_foreign_%s' % self.type_name())
 
@@ -739,11 +738,11 @@ class Overridable(Base):
 
         if mine:
             return mine
-        elif forced:
+        if forced:
             return forced
-        elif builtin:
+        if builtin:
             return builtin
-        elif foreign:
+        if foreign:
             return foreign
         return None
 
@@ -869,7 +868,7 @@ class Overridable(Base):
         def has_reporting():
             try:
                 # The suppression below is OK, we just want to check if the module is there.
-                import cmk.gui.cee.reporting  # noqa: F401 # pylint: disable=unused-variable,redefined-outer-name
+                import cmk.gui.cee.reporting as _dummy  # noqa: F401
                 return True
             except ImportError:
                 return False
@@ -1185,7 +1184,6 @@ class Overridable(Base):
             html.show_localization_hint()
 
         html.footer()
-        return
 
 
 def PublishTo(title=None, type_title=None, with_foreign_groups=True):

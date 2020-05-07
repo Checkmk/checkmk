@@ -63,7 +63,7 @@ def page_graph():
 
     timegroups.sort(key=lambda x: x["range"][0])
 
-    choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
+    choices = [(tg_info_["name"], tg_info_["name"].title()) for tg_info_ in timegroups]
 
     if not timegroup:
         if not timegroups:

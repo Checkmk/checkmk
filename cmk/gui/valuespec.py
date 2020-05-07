@@ -173,7 +173,6 @@ class ValueSpec(object):
         order to make the variable unique in case that another Value of the same
         type is being used as well.  The function may assume that the type of the
         value is valid."""
-        pass
 
     def set_focus(self, varprefix):
         # type: (str) -> None
@@ -255,7 +254,6 @@ class ValueSpec(object):
     def validate_datatype(self, value, varprefix):
         # type: (Any, str) -> None
         """Check if a given value matches the datatype of described by this class."""
-        pass
 
     def _validate_value(self, value, varprefix):
         # type: (Any, str) -> None
@@ -264,7 +262,6 @@ class ValueSpec(object):
         This function should assume that the data type is valid (either because
         it has been returned by from_html_vars() or because it has been checked
         with validate_datatype())."""
-        pass
 
 
 class FixedValue(ValueSpec):

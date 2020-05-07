@@ -50,7 +50,6 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
         # type: () -> None
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
-        pass
 
     def webapi_request(self):
         # type: () -> Dict[Text, Text]

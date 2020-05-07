@@ -1868,7 +1868,7 @@ def _get_sync_archive(to_sync, base_dir):
 def _unpack_sync_archive(sync_archive, base_dir):
     # type: (bytes, Path) -> None
     p = subprocess.Popen(
-        ["tar", "-x", "-C", str(base_dir), "-f", "-"],
+        ["tar", "-x", "-C", str(base_dir), "-f", "-", "-U", "--recursive-unlink"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -1882,13 +1882,14 @@ def _unpack_sync_archive(sync_archive, base_dir):
     stderr = p.communicate(sync_archive)[1]
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, six.ensure_text(stderr)))
 
 
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
     ("st_mode", int),
     ("st_size", int),
-    ("file_hash", str),
+    ("link_target", Optional[str]),
+    ("file_hash", Optional[str]),
 ])
 
 # Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
@@ -1897,7 +1898,7 @@ ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
 #    ("file_infos", Dict[str, ConfigSyncFileInfo]),
 #    ("config_generation", int),
 #])
-GetConfigSyncStateResponse = Tuple[Dict[str, Tuple[int, int, str]], int]
+GetConfigSyncStateResponse = Tuple[Dict[str, Tuple[int, int, Optional[str], Optional[str]]], int]
 
 
 @automation_command_registry.register
@@ -1925,7 +1926,8 @@ class AutomationGetConfigSyncState(AutomationCommand):
             file_infos = _get_config_sync_file_infos(request,
                                                      base_dir=Path(cmk.utils.paths.omd_root))
             transport_file_infos = {
-                k: (v.st_mode, v.st_size, v.file_hash) for k, v in file_infos.items()
+                k: (v.st_mode, v.st_size, v.link_target, v.file_hash)
+                for k, v in file_infos.items()
             }
             return (transport_file_infos, _get_current_config_generation())
 
@@ -1950,7 +1952,7 @@ def _get_config_sync_file_infos(replication_paths, base_dir):
 
         elif replication_path.ty == "dir":
             for entry in path.glob("**/*"):
-                if entry.is_dir():
+                if entry.is_dir() and not entry.is_symlink():
                     continue  # Do not add directories at all
 
                 entry_site_path = entry.relative_to(base_dir)
@@ -1963,11 +1965,13 @@ def _get_config_sync_file_infos(replication_paths, base_dir):
 
 def _get_config_sync_file_info(file_path):
     # type: (Path) -> ConfigSyncFileInfo
-    stat = file_path.stat()
+    stat = file_path.lstat()
+    is_symlink = file_path.is_symlink()
     return ConfigSyncFileInfo(
         stat.st_mode,
         stat.st_size,
-        _create_config_sync_file_hash(file_path),
+        os.readlink(str(file_path)) if is_symlink else None,
+        _create_config_sync_file_hash(file_path) if not is_symlink else None,
     )
 
 
@@ -2052,12 +2056,15 @@ class AutomationReceiveConfigSync(AutomationCommand):
         # type: (bytes, List[str]) -> None
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = Path(cmk.utils.paths.omd_root)
-        _unpack_sync_archive(sync_archive, base_dir)
 
         for site_path in to_delete:
             site_file = base_dir.joinpath(site_path)
             try:
                 site_file.unlink()
             except OSError as e:
-                if e.errno != errno.ENOENT:
+                # errno.ENOENT - File already removed. Fine
+                # errno.ENOTDIR - dir with files was replaced by e.g. symlink
+                if e.errno not in [errno.ENOENT, errno.ENOTDIR]:
                     raise
+
+        _unpack_sync_archive(sync_archive, base_dir)

@@ -219,11 +219,13 @@ def test_automation_get_config_sync_state():
     assert response == (
         {
             'etc/check_mk/multisite.mk':
-                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+                (33204, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+                ),
             'etc/check_mk/mkeventd.mk':
-                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
-            'etc/htpasswd':
-                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+                (33204, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+                ),
+            'etc/htpasswd': (33204, 0, None,
+                             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
         },
         0,
     )
@@ -240,6 +242,7 @@ def test_get_config_sync_file_infos():
         ReplicationPath("dir", "d4-multiple-files", "etc/d4", []),
         ReplicationPath("file", "f1-not-existing", "etc/f1", []),
         ReplicationPath("file", "f2", "bla/blub/f2", []),
+        ReplicationPath("dir", "links", "links", []),
     ]
     sync_infos = activate_changes._get_config_sync_file_infos(replication_paths, base_dir)
 
@@ -247,31 +250,56 @@ def test_get_config_sync_file_infos():
         'bla/blub/f2': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=7,
+            link_target=None,
             file_hash='ae973806ace987a1889dc02cfa6b320912b68b6eb3929e425762795955990f35'),
         'etc/d3/xyz': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=5,
+            link_target=None,
             file_hash='780518619e3c5dfc931121362c7f14fa8d06457995c762bd818072ed42e6e69e'),
         'etc/d4/layer1/layer2/x3.xyz': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=6,
+            link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/d4/layer1/layer2/x4.xyz': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=6,
+            link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/d4/x1': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=6,
+            link_target=None,
             file_hash='1c77fe07e738fd6cbf0075195a773043a7507d53d6deeb1161549244c02ea0ff'),
         'etc/d4/x2': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=6,
+            link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/f1': ConfigSyncFileInfo(
             st_mode=33204,
             st_size=7,
+            link_target=None,
             file_hash='4dd985602450dfdeb261cedf8562cb62c5173d1d8bb5f3ca26cd3519add67cf7'),
+        'links/broken-symlink': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=3,
+            link_target='eeg',
+            file_hash=None,
+        ),
+        'links/working-symlink-to-file': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=13,
+            link_target='../etc/d3/xyz',
+            file_hash=None,
+        ),
+        'links/working-symlink-to-dir': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=9,
+            link_target='../etc/d3',
+            file_hash=None,
+        ),
     }
 
 
@@ -303,16 +331,32 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
     with base_dir.joinpath("bla/blub/f2").open("w", encoding="utf-8") as f:
         f.write(u"Ef-zwei")
 
+    base_dir.joinpath("links").mkdir(parents=True, exist_ok=True)
+    base_dir.joinpath("links/broken-symlink").symlink_to("eeg")
+    base_dir.joinpath("links/working-symlink-to-dir").symlink_to("../etc/d3")
+    base_dir.joinpath("links/working-symlink-to-file").symlink_to("../etc/d3/xyz")
+
 
 def test_get_file_names_to_sync():
     remote, central = _get_test_file_infos()
     to_sync_new, to_sync_changed, to_delete = activate_changes._get_file_names_to_sync(
         central, remote)
 
-    assert sorted(to_sync_new + to_sync_changed) == sorted(
-        ["both-differ-mode", "both-differ-size", "both-differ-hash", "central-only"])
+    assert sorted(to_sync_new + to_sync_changed) == sorted([
+        "both-differ-mode",
+        "both-differ-size",
+        "both-differ-hash",
+        "central-only",
+        "central-file-remote-link",
+        "central-link-remote-file",
+        "link-changed",
+        "central-link-remote-dir-with-file",
+    ])
 
-    assert sorted(to_delete) == sorted(["remote-only"])
+    assert sorted(to_delete) == sorted([
+        "remote-only",
+        "central-link-remote-dir-with-file/file",
+    ])
 
 
 def _get_test_file_infos():
@@ -320,45 +364,115 @@ def _get_test_file_infos():
         'remote-only': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=2,
+            link_target=None,
             file_hash='9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa'),
         'both': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=37,
+            link_target=None,
             file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-mode': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=36,
+            link_target=None,
             file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-size': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=36,
+            link_target=None,
             file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-hash': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=36,
+            link_target=None,
             file_hash='xxxece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'link-equal': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='abc',
+            file_hash=None,
+        ),
+        'link-changed': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='abc',
+            file_hash=None,
+        ),
+        'central-file-remote-link': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            link_target=None,
+            file_hash='xxxece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08',
+        ),
+        'central-link-remote-file': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='abc',
+            file_hash=None,
+        ),
+        'central-link-remote-dir-with-file/file': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            link_target=None,
+            file_hash='xxxece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08',
+        ),
     }
     central = {
         'central-only': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=2,
+            link_target=None,
             file_hash='9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa'),
         'both': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=37,
+            link_target=None,
             file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-mode': ConfigSyncFileInfo(
             st_mode=33202,
             st_size=36,
+            link_target=None,
             file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-size': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=38,
+            link_target=None,
             file_hash='xbaece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
         'both-differ-hash': ConfigSyncFileInfo(
             st_mode=33200,
             st_size=36,
+            link_target=None,
             file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08'),
+        'link-equal': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='abc',
+            file_hash=None,
+        ),
+        'link-changed': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='/ddd/abc',
+            file_hash=None,
+        ),
+        'central-file-remote-link': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='abc',
+            file_hash=None,
+        ),
+        'central-link-remote-file': ConfigSyncFileInfo(
+            st_mode=33200,
+            st_size=36,
+            link_target=None,
+            file_hash='3baece9027e3e7e034d693c1bcd4bc64c5171135d562295cd482920ed9c8eb08',
+        ),
+        'central-link-remote-dir-with-file': ConfigSyncFileInfo(
+            st_mode=41471,
+            st_size=1,
+            link_target='auuuuu',
+            file_hash=None,
+        ),
     }
 
     return remote, central
@@ -367,7 +481,14 @@ def _get_test_file_infos():
 def test_get_sync_archive(tmp_path):
     sync_archive = _get_test_sync_archive(tmp_path)
     with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
-        assert sorted(f.getnames()) == sorted(["etc/abc", "ding"])
+        assert sorted(f.getnames()) == sorted([
+            "etc/abc",
+            "file-to-dir/aaa",
+            "dir-to-file",
+            "ding",
+            "broken-symlink",
+            "working-symlink",
+        ])
 
 
 def _get_test_sync_archive(tmp_path):
@@ -375,10 +496,27 @@ def _get_test_sync_archive(tmp_path):
     with tmp_path.joinpath("etc/abc").open("w", encoding="utf-8") as f:
         f.write(u"gä")
 
+    tmp_path.joinpath("file-to-dir").mkdir(parents=True, exist_ok=True)
+    with tmp_path.joinpath("file-to-dir/aaa").open("w", encoding="utf-8") as f:
+        f.write(u"gä")
+
+    with tmp_path.joinpath("dir-to-file").open("w", encoding="utf-8") as f:
+        f.write(u"di")
+
     with tmp_path.joinpath("ding").open("w", encoding="utf-8") as f:
         f.write(u"dong")
 
-    return activate_changes._get_sync_archive(["etc/abc", "ding"], tmp_path)
+    tmp_path.joinpath("broken-symlink").symlink_to("eeg")
+    tmp_path.joinpath("working-symlink").symlink_to("ding")
+
+    return activate_changes._get_sync_archive([
+        "etc/abc",
+        "file-to-dir/aaa",
+        "ding",
+        "dir-to-file",
+        "broken-symlink",
+        "working-symlink",
+    ], tmp_path)
 
 
 def test_automation_receive_config_sync(monkeypatch, tmp_path):
@@ -390,6 +528,21 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
                         lambda site_id: None)
 
     remote_path.mkdir(parents=True, exist_ok=True)
+
+    dir_to_symlink_file = remote_path.joinpath("working-symlink/file")
+    dir_to_symlink_file.parent.mkdir(parents=True, exist_ok=True)
+    with dir_to_symlink_file.open("w", encoding="utf-8") as f:
+        f.write(u"ig")
+
+    dir_to_file = remote_path.joinpath("dir-to-file/file")
+    dir_to_file.parent.mkdir(parents=True, exist_ok=True)
+    with dir_to_file.open("w", encoding="utf-8") as f:
+        f.write(u"fi")
+
+    file_to_dir = remote_path.joinpath("file-to-dir")
+    with file_to_dir.open("w", encoding="utf-8") as f:
+        f.write(u"za")
+
     to_delete_path = remote_path.joinpath("to_delete")
     with to_delete_path.open("w", encoding="utf-8") as f:
         f.write(u"äää")
@@ -403,13 +556,26 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
         activate_changes.ReceiveConfigSyncRequest(
             site_id="remote",
             sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
-            to_delete=["to_delete"],
+            to_delete=[
+                "to_delete",
+                "working-symlink/file",
+                "file-to-dir",
+            ],
             config_generation=0,
         ))
 
     assert not to_delete_path.exists()
     assert remote_path.joinpath("etc/abc").exists()
     assert remote_path.joinpath("ding").exists()
+
+    assert not dir_to_symlink_file.exists()
+    assert dir_to_symlink_file.parent.is_symlink()
+
+    assert not dir_to_file.parent.is_dir()
+    assert dir_to_file.parent.exists()
+
+    assert file_to_dir.is_dir()
+    assert file_to_dir.joinpath("aaa").exists()
 
 
 def test_get_current_config_generation():

@@ -540,11 +540,13 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
         "http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state&debug=&secret=watosecret",
         body=repr(({
             'etc/check_mk/conf.d/wato/hosts.mk':
-                (33204, 15, '0fc4df48a03c3e972a86c9d573bc04f6e2a5d91aa368d7f4ce4ec5cd93ee5725'),
+                (33204, 15, None, '0fc4df48a03c3e972a86c9d573bc04f6e2a5d91aa368d7f4ce4ec5cd93ee5725'
+                ),
             'etc/check_mk/multisite.d/wato/global.mk':
-                (33204, 6, '0e10d5fc5aedd798b68706c0189aeccadccae1fa6cc72324524293769336571c'),
+                (33204, 6, None, '0e10d5fc5aedd798b68706c0189aeccadccae1fa6cc72324524293769336571c'
+                ),
             'etc/htpasswd':
-                (33204, 0, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+                (33204, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
         }, 0)),
     )
 

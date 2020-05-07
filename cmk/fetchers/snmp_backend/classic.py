@@ -6,23 +6,27 @@
 
 import os
 import signal
-from typing import List, Optional  # pylint: disable=unused-import
+from typing import List, Optional
 
 import six
 
-# pylint: disable=cmk-module-layer-violation
-from cmk.fetchers.snmp_backend._utils import strip_snmp_value
-# pylint: enable=cmk-module-layer-violation
-
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+import cmk.base.snmp_utils as snmp_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.tty as tty
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.type_defs import (
+    OID,
+    ContextName,
+    RawValue,
+    SNMPHostConfig,
+    SNMPRowInfo,
+)
 
-import cmk.base.snmp_utils as snmp_utils
-from cmk.base.exceptions import MKSNMPError
-from cmk.base.snmp_utils import SNMPHostConfig, ContextName, RawValue, OID
-from cmk.fetchers.snmp_backend import ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
+from ._base import ABCSNMPBackend
+from ._utils import strip_snmp_value
+
+__all__ = ["ClassicSNMPBackend"]
 
 
 class ClassicSNMPBackend(ABCSNMPBackend):
@@ -91,7 +95,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
              check_plugin_name=None,
              table_base_oid=None,
              context_name=None):
-        # type: (snmp_utils.SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> snmp_utils.SNMPRowInfo
+        # type: (SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
         protospec = self._snmp_proto_spec(snmp_config)
 
         ipaddress = snmp_config.ipaddress
@@ -105,7 +109,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
 
         snmp_process = None
         exitstatus = None
-        rowinfo = []  # type: snmp_utils.SNMPRowInfo
+        rowinfo = []  # type: SNMPRowInfo
         try:
             snmp_process = subprocess.Popen(command,
                                             close_fds=True,
@@ -143,7 +147,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):
-        # type: (subprocess.Popen) -> snmp_utils.SNMPRowInfo
+        # type: (subprocess.Popen) -> SNMPRowInfo
         if snmp_process.stdout is None:
             raise TypeError()
 
@@ -183,20 +187,20 @@ class ClassicSNMPBackend(ABCSNMPBackend):
         return rowinfo
 
     def _snmp_proto_spec(self, snmp_config):
-        # type: (snmp_utils.SNMPHostConfig) -> str
+        # type: (SNMPHostConfig) -> str
         if snmp_config.is_ipv6_primary:
             return "udp6:"
 
         return ""
 
     def _snmp_port_spec(self, snmp_config):
-        # type: (snmp_utils.SNMPHostConfig) -> str
+        # type: (SNMPHostConfig) -> str
         if snmp_config.port == 161:
             return ""
         return ":%d" % snmp_config.port
 
     def _snmp_walk_command(self, snmp_config, context_name):
-        # type: (snmp_utils.SNMPHostConfig, Optional[ContextName]) -> List[str]
+        # type: (SNMPHostConfig, Optional[ContextName]) -> List[str]
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
@@ -213,7 +217,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
     def _snmp_base_command(self, what, snmp_config, context_name):
-        # type: (str, snmp_utils.SNMPHostConfig, Optional[ContextName]) -> List[str]
+        # type: (str, SNMPHostConfig, Optional[ContextName]) -> List[str]
         options = []
 
         if what == 'get':

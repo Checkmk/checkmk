@@ -26,12 +26,11 @@ from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.log import console
 
 import cmk.base.config as config
-import cmk.base.classic_snmp as classic_snmp
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.api.agent_based.section_types import SNMPTree
-from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
 
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     HostName, HostAddress,
@@ -297,7 +296,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
         if snmp_config.is_inline_snmp_host:
             return inline_snmp.InlineSNMPBackend()
 
-        return classic_snmp.ClassicSNMPBackend()
+        return ClassicSNMPBackend()
 
 
 def walk_for_export(snmp_config, oid):
@@ -305,7 +304,7 @@ def walk_for_export(snmp_config, oid):
     if snmp_config.is_inline_snmp_host:
         backend = inline_snmp.InlineSNMPBackend()  # type: ABCSNMPBackend
     else:
-        backend = classic_snmp.ClassicSNMPBackend()
+        backend = ClassicSNMPBackend()
 
     rows = backend.walk(snmp_config, oid)
     return _convert_rows_for_stored_walk(rows)

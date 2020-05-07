@@ -5,9 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+
 import pytest  # type: ignore[import]
-import cmk.base.classic_snmp as classic_snmp
-import cmk.base.snmp_utils as snmp_utils
+
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend
+from cmk.utils.type_defs import SNMPHostConfig
 
 
 @pytest.mark.parametrize("port,expected", [
@@ -15,7 +17,7 @@ import cmk.base.snmp_utils as snmp_utils
     (1234, ":1234"),
 ])
 def test_snmp_port_spec(port, expected):
-    snmp_config = snmp_utils.SNMPHostConfig(
+    snmp_config = SNMPHostConfig(
         is_ipv6_primary=False,
         hostname="localhost",
         ipaddress="127.0.0.1",
@@ -31,7 +33,7 @@ def test_snmp_port_spec(port, expected):
         is_usewalk_host=False,
         is_inline_snmp_host=False,
     )
-    assert classic_snmp.ClassicSNMPBackend()._snmp_port_spec(snmp_config) == expected
+    assert ClassicSNMPBackend()._snmp_port_spec(snmp_config) == expected
 
 
 @pytest.mark.parametrize("is_ipv6,expected", [
@@ -39,7 +41,7 @@ def test_snmp_port_spec(port, expected):
     (False, ""),
 ])
 def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
-    snmp_config = snmp_utils.SNMPHostConfig(
+    snmp_config = SNMPHostConfig(
         is_ipv6_primary=is_ipv6,
         hostname="localhost",
         ipaddress="127.0.0.1",
@@ -55,7 +57,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         is_usewalk_host=False,
         is_inline_snmp_host=False,
     )
-    assert classic_snmp.ClassicSNMPBackend()._snmp_proto_spec(snmp_config) == expected
+    assert ClassicSNMPBackend()._snmp_proto_spec(snmp_config) == expected
 
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
@@ -66,7 +68,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
 
 @pytest.mark.parametrize("settings,expected", [
     (SNMPSettings(
-        snmp_config=snmp_utils.SNMPHostConfig(
+        snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
             hostname="localhost",
             ipaddress="127.0.0.1",
@@ -91,7 +93,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '3', '-Cc'
     ]),
     (SNMPSettings(
-        snmp_config=snmp_utils.SNMPHostConfig(
+        snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
             hostname="lohost",
             ipaddress="127.0.0.1",
@@ -116,7 +118,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         'blabla', '-Cc'
     ]),
     (SNMPSettings(
-        snmp_config=snmp_utils.SNMPHostConfig(
+        snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
             hostname="lohost",
             ipaddress="public",
@@ -141,7 +143,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '-M', '', '-t', '5.00', '-r', '1', '-n', 'blabla', '-Cc'
     ]),
     (SNMPSettings(
-        snmp_config=snmp_utils.SNMPHostConfig(
+        snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
             hostname="lohost",
             ipaddress="public",
@@ -166,7 +168,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '-r', '1', '-Cc'
     ]),
     (SNMPSettings(
-        snmp_config=snmp_utils.SNMPHostConfig(
+        snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
             hostname="lohost",
             ipaddress="127.0.0.1",
@@ -192,5 +194,5 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     ]),
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
-    assert classic_snmp.ClassicSNMPBackend()._snmp_walk_command(settings.snmp_config,
-                                                                settings.context_name) == expected
+    assert ClassicSNMPBackend()._snmp_walk_command(settings.snmp_config,
+                                                   settings.context_name) == expected

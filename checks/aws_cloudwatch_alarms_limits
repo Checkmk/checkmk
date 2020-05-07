@@ -18,7 +18,7 @@ check_info['aws_cloudwatch_alarms_limits'] = {
     'parse_function': parse_aws_limits_generic,
     'inventory_function': discover(),
     'check_function': check_aws_cloudwatch_alarms_limits,
-    'service_description': 'AWS/Cloudwatch Alarms Limits %s',
+    'service_description': 'AWS/CloudWatch Alarms Limits %s',
     'includes': ['aws.include'],
     'group': 'aws_cloudwatch_alarms_limits',
     'default_levels_variable': 'aws_cloudwatch_alarms_limits_default_levels',

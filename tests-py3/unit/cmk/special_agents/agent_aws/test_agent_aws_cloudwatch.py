@@ -66,7 +66,7 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
     assert len(cloudwatch_alarms_limits_result.content) == 1
     cloudwatch_alarms_limits_content = cloudwatch_alarms_limits_result.content[0]
     assert cloudwatch_alarms_limits_content.key == 'cloudwatch_alarms'
-    assert cloudwatch_alarms_limits_content.title == 'Cloudwatch Alarms'
+    assert cloudwatch_alarms_limits_content.title == 'CloudWatch Alarms'
     assert cloudwatch_alarms_limits_content.limit == 5000
     assert cloudwatch_alarms_limits_content.amount == 2
 

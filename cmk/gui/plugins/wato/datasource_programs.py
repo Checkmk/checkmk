@@ -2088,8 +2088,16 @@ def _vs_element_aws_limits():
                        totext=_("Monitor service limits")))
 
 
+def _transform_aws(d):
+    services = d['services']
+    if 'cloudwatch' in services:
+        services['cloudwatch_alarms'] = services['cloudwatch']
+        del services['cloudwatch']
+    return d
+
+
 def _valuespec_special_agents_aws():
-    return Dictionary(
+    return Transform(Dictionary(
         title=_('Amazon Web Services (AWS)'),
         elements=[
             ("access_key_id",
@@ -2106,26 +2114,26 @@ def _valuespec_special_agents_aws():
             ("assume_role",
              Dictionary(
                  title=_("Assume a different IAM role"),
-                 elements=
-                 [("role_arn_id",
-                   Tuple(
-                       title=_("Use STS AssumeRole to assume a different IAM role"),
-                       elements=[
-                           TextAscii(
-                               title=_("The ARN of the IAM role to assume"),
-                               size=50,
-                               help=_("The Amazon Resource Name (ARN) of the role to assume.")),
-                           TextAscii(
-                               title=_("External ID (optional)"),
-                               size=50,
-                               help=
-                               _("A unique identifier that might be required when you assume a role in another "
-                                 +
-                                 "account. If the administrator of the account to which the role belongs provided "
-                                 +
-                                 "you with an external ID, then provide that value in the External ID parameter. "
-                                ))
-                       ]))])),
+                 elements=[(
+                     "role_arn_id",
+                     Tuple(
+                         title=_("Use STS AssumeRole to assume a different IAM role"),
+                         elements=[
+                             TextAscii(
+                                 title=_("The ARN of the IAM role to assume"),
+                                 size=50,
+                                 help=_("The Amazon Resource Name (ARN) of the role to assume.")),
+                             TextAscii(
+                                 title=_("External ID (optional)"),
+                                 size=50,
+                                 help=
+                                 _("A unique identifier that might be required when you assume a role in another "
+                                   +
+                                   "account. If the administrator of the account to which the role belongs provided "
+                                   +
+                                   "you with an external ID, then provide that value in the External ID parameter. "
+                                  ))
+                         ]))])),
             ("global_services",
              Dictionary(
                  title=_("Global services to monitor"),
@@ -2221,9 +2229,9 @@ def _valuespec_special_agents_aws():
                           optional_keys=["limits"],
                           default_keys=["limits"],
                       )),
-                     ("cloudwatch",
+                     ("cloudwatch_alarms",
                       Dictionary(
-                          title=_("Cloudwatch"),
+                          title=_("CloudWatch Alarms"),
                           elements=[
                               ('alarms',
                                CascadingDropdown(title=_("Selection of alarms"),
@@ -2266,15 +2274,16 @@ def _valuespec_special_agents_aws():
                       )),
                  ],
                  default_keys=[
-                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch", "dynamodb",
-                     "wafv2"
+                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch_alarms",
+                     "dynamodb", "wafv2"
                  ],
              )),
             ("overall_tags",
              _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
         optional_keys=["overall_tags"],
-    )
+    ),
+                     forth=_transform_aws)
 
 
 rulespec_registry.register(

@@ -1046,7 +1046,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_aws_cloudwatch_alarms_limits():
     return Dictionary(elements=[
-        ('cloudwatch_alarms', _vs_limits("Cloudwatch Alarms", 5000)),
+        ('cloudwatch_alarms', _vs_limits("CloudWatch Alarms", 5000)),
     ])
 
 
@@ -1057,7 +1057,7 @@ rulespec_registry.register(
         item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_cloudwatch_alarms_limits,
-        title=lambda: _("AWS/Cloudwatch Alarms Limits"),
+        title=lambda: _("AWS/CloudWatch Alarms Limits"),
     ))
 
 #.

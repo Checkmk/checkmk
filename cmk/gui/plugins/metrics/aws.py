@@ -758,6 +758,12 @@ metric_info['aws_wafv2_blocked_requests_perc'] = {
     'color': '16/a',
 }
 
+metric_info['aws_cloudwatch_alarms_cloudwatch_alarms'] = {
+    'title': _('CloudWatch alarms'),
+    'unit': 'count',
+    'color': '41/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

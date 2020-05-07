@@ -37,6 +37,6 @@ check_info['aws_cloudwatch_alarms'] = {
     'parse_function': parse_aws,
     'inventory_function': discover_single,
     'check_function': check_aws_cloudwatch_alarms,
-    'service_description': 'AWS/Cloudwatch Alarms',
+    'service_description': 'AWS/CloudWatch Alarms',
     'includes': ['aws.include'],
 }

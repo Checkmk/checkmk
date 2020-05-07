@@ -2070,8 +2070,8 @@ msgstr "Merkmale"
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
 
-msgid "AWS/Cloudwatch Alarms Limits"
-msgstr "Grenzwerte von AWS/Cloudwatch Alarme"
+msgid "AWS/CloudWatch Alarms Limits"
+msgstr "Grenzwerte von AWS/CloudWatch Alarme"
 
 msgid "AWS/DynamoDB Latency"
 msgstr "AWS/DynamoDB Lantenzzeit"
@@ -8725,8 +8725,11 @@ msgstr "Closing connection"
 msgid "Cloud Based Environments"
 msgstr "Cloud-basierte Umgebungen"
 
-msgid "Cloudwatch"
-msgstr "Cloudwatch"
+msgid "CloudWatch"
+msgstr "CloudWatch"
+
+msgid "CloudWatch Alarms"
+msgstr "CloudWatch-Alarme"
 
 msgid "Cluster"
 msgstr "Cluster"

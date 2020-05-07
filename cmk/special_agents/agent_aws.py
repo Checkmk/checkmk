@@ -2946,7 +2946,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         self._add_limit(
             "", AWSLimit(
                 'cloudwatch_alarms',
-                'Cloudwatch Alarms',
+                'CloudWatch Alarms',
                 5000,
                 len(raw_content.content),
             ))
@@ -2988,7 +2988,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
     def _compute_content(self, raw_content, colleague_contents):
         if raw_content.content:
             return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-        dflt_alarms = [{'AlarmName': 'Check_MK/Cloudwatch Alarms', 'StateValue': 'NO_ALARMS'}]
+        dflt_alarms = [{'AlarmName': 'Check_MK/CloudWatch Alarms', 'StateValue': 'NO_ALARMS'}]
         return AWSComputedContent(dflt_alarms, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -3877,7 +3877,7 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(rds_summary)
             self._sections.append(rds)
 
-        if 'cloudwatch' in services:
+        if 'cloudwatch_alarms' in services:
             if config.service_config.get('cloudwatch_alarms_limits'):
                 self._sections.append(cloudwatch_alarms_limits)
             if 'cloudwatch_alarms' in config.service_config:
@@ -3964,8 +3964,8 @@ AWSServices = [
                          filter_by_names=True,
                          filter_by_tags=True,
                          limits=True),
-    AWSServiceAttributes(key="cloudwatch",
-                         title="Cloudwatch",
+    AWSServiceAttributes(key="cloudwatch_alarms",
+                         title="CloudWatch Alarms",
                          global_service=False,
                          filter_by_names=False,
                          filter_by_tags=False,
@@ -4251,7 +4251,7 @@ def main(sys_argv=None):
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)
         aws_config.add_single_service_config("%s_limits" % service_key, service_limits)
 
-    for arg in ["s3_requests", "cloudwatch_alarms", "wafv2_cloudfront"]:
+    for arg in ["s3_requests", "cloudwatch_alarms_limits", "cloudwatch_alarms", "wafv2_cloudfront"]:
         aws_config.add_single_service_config(arg, getattr(args, arg))
 
     global_services, regional_services =\

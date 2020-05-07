@@ -95,7 +95,6 @@ def test_value_encoding(column):
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
-    monkeypatch.setattr(snmp_utils, "is_snmpv3_host", lambda _x: False)
 
     def get_all_snmp_tables(info):
         if not isinstance(info, list):

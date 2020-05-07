@@ -127,11 +127,6 @@ def binstring_to_int(binstring):
     return value
 
 
-def is_snmpv3_host(snmp_config):
-    # type: (SNMPHostConfig) -> bool
-    return isinstance(snmp_config.credentials, tuple)
-
-
 class MutexScanRegistry(object):  # pylint: disable=useless-object-inheritance
     """Register scan functions that are checked before a fallback is used
 

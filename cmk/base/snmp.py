@@ -252,7 +252,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
-    if check_plugin_name is not None and snmp_utils.is_snmpv3_host(snmp_config):
+    if check_plugin_name is not None and snmp_config.is_snmpv3_host:
         snmp_contexts = _snmpv3_contexts_of(snmp_config, check_plugin_name)
     else:
         snmp_contexts = [None]
@@ -418,7 +418,7 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
     # type: (SNMPHostConfig, CheckPluginName, OID, OID) -> SNMPRowInfo
     added_oids = set([])  # type: Set[OID]
     rowinfo = []  # type: SNMPRowInfo
-    if snmp_utils.is_snmpv3_host(snmp_config):
+    if snmp_config.is_snmpv3_host:
         snmp_contexts = _snmpv3_contexts_of(snmp_config, check_plugin_name)
     else:
         snmp_contexts = [None]

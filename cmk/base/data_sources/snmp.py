@@ -18,9 +18,8 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.check_utils as check_utils
 import cmk.base.config as config
-import cmk.base.snmp_utils as snmp_utils
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress,
+    HostName, HostAddress, SNMPHostConfig,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, PiggybackRawData, SectionCacheInfo, SectionName,
@@ -37,7 +36,7 @@ from .abstract import DataSource, management_board_ipaddress, verify_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
-    snmp_utils.SNMPHostConfig,
+    SNMPHostConfig,
     NamedArg(str, 'on_error'),
     NamedArg(bool, 'do_snmp_scan'),
     NamedArg(bool, 'for_mgmt_board')
@@ -85,7 +84,7 @@ class ABCSNMPDataSource(
                                     SNMPHostSections])):
     @abc.abstractproperty
     def _snmp_config(self):
-        # type: () -> snmp_utils.SNMPHostConfig
+        # type: () -> SNMPHostConfig
         raise NotImplementedError()
 
 
@@ -118,7 +117,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     @property
     def _snmp_config(self):
-        # type: () -> snmp_utils.SNMPHostConfig
+        # type: () -> SNMPHostConfig
         # TODO: snmp_config.ipaddress is not Optional. At least classic SNMP enforces that there
         # is an address set, Inline-SNMP has some lookup logic for some reason. We need to find
         # out whether or not we can really have None here. Looks like it could be the case for
@@ -138,12 +137,12 @@ class SNMPDataSource(ABCSNMPDataSource):
         else:
             inline = "no"
 
-        if snmp_utils.is_snmpv3_host(snmp_config):
+        if snmp_config.is_snmpv3_host:
             credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
             credentials_text = "Community: %r" % snmp_config.credentials
 
-        if snmp_utils.is_snmpv3_host(snmp_config) or snmp_config.is_bulkwalk_host:
+        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
             bulk = "yes"
         else:
             bulk = "no"
@@ -362,5 +361,5 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
 
     @property
     def _snmp_config(self):
-        # type: () -> snmp_utils.SNMPHostConfig
+        # type: () -> SNMPHostConfig
         return self._host_config.management_snmp_config

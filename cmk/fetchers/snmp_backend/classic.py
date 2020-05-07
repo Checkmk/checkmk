@@ -10,7 +10,6 @@ from typing import List, Optional
 
 import six
 
-import cmk.base.snmp_utils as snmp_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
@@ -231,7 +230,7 @@ class ClassicSNMPBackend(ABCSNMPBackend):
         else:
             command = ['snmpwalk']
 
-        if not snmp_utils.is_snmpv3_host(snmp_config):
+        if not snmp_config.is_snmpv3_host:
             # Handle V1 and V2C
             if snmp_config.is_bulkwalk_host:
                 options.append('-v2c')

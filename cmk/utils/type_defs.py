@@ -88,23 +88,29 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 # TODO: Cleanup to named tuple
 SNMPTiming = Dict
 
+
 # Wraps the configuration of a host into a single object for the SNMP code
-SNMPHostConfig = NamedTuple("SNMPHostConfig", [
-    ("is_ipv6_primary", bool),
-    ("hostname", HostName),
-    ("ipaddress", HostAddress),
-    ("credentials", SNMPCredentials),
-    ("port", int),
-    ("is_bulkwalk_host", bool),
-    ("is_snmpv2or3_without_bulkwalk_host", bool),
-    ("bulk_walk_size_of", int),
-    ("timing", SNMPTiming),
-    ("oid_range_limits", list),
-    ("snmpv3_contexts", list),
-    ("character_encoding", Optional[str]),
-    ("is_usewalk_host", bool),
-    ("is_inline_snmp_host", bool),
-])
+class SNMPHostConfig(
+        NamedTuple("SNMPHostConfig", [
+            ("is_ipv6_primary", bool),
+            ("hostname", HostName),
+            ("ipaddress", HostAddress),
+            ("credentials", SNMPCredentials),
+            ("port", int),
+            ("is_bulkwalk_host", bool),
+            ("is_snmpv2or3_without_bulkwalk_host", bool),
+            ("bulk_walk_size_of", int),
+            ("timing", SNMPTiming),
+            ("oid_range_limits", list),
+            ("snmpv3_contexts", list),
+            ("character_encoding", Optional[str]),
+            ("is_usewalk_host", bool),
+            ("is_inline_snmp_host", bool),
+        ])):
+    @property
+    def is_snmpv3_host(self):
+        # type: () -> bool
+        return isinstance(self.credentials, tuple)
 
 
 # TODO: We should really parse our configuration file and use a

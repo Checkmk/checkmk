@@ -1036,23 +1036,6 @@ def register_rule(
         deprecated=False,
         **kwargs):
 
-    factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
-
-    if isinstance(group, six.string_types):
-        group = get_rulegroup(group).__class__
-
-    class_kwargs = {
-        "name": varname,
-        "group": group,
-        "match_type": match,
-        "factory_default": factory_default,
-        "is_optional": optional,
-        "is_deprecated": deprecated,
-    }
-
-    if valuespec is not None:
-        class_kwargs["valuespec"] = lambda: valuespec
-
     if varname.startswith("static_checks:"):
         base_class = ManualCheckParameterRulespec  # type: Type[Rulespec]
     elif varname.startswith("checkgroup_parameters:"):
@@ -1065,25 +1048,30 @@ def register_rule(
         # Mypy does not understand this is in fact a Type[Rulespec] based class
         base_class = ServiceRulespec if itemtype is not None else HostRulespec  # type: ignore[assignment]
 
+    class_kwargs = {
+        "name": varname,
+        "group": get_rulegroup(group).__class__ if isinstance(group, six.string_types) else group,
+        "match_type": match,
+        "factory_default": kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT),
+        "is_optional": optional,
+        "is_deprecated": deprecated,
+    }
+    if valuespec is not None:
+        class_kwargs["valuespec"] = lambda: valuespec
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
-
     if title is not None:
         class_kwargs["title"] = lambda: title
-
-    for name, value, lambda_enclosed in [
-        ("help_func", help, True),
-        ("item_type", itemtype, False),
-        ("item_spec", itemspec, True),
-        ("item_name", itemname, True),
-        ("item_help", itemhelp, True),
-    ]:
-        if value is not None:
-            if lambda_enclosed:
-                class_kwargs[name] = lambda v=value: v
-            else:
-                class_kwargs[name] = value
-
+    if itemtype is not None:
+        class_kwargs["item_type"] = itemtype
+    if help is not None:
+        class_kwargs["help_func"] = lambda v=help: v
+    if itemspec is not None:
+        class_kwargs["item_spec"] = lambda v=itemspec: v
+    if itemname is not None:
+        class_kwargs["item_name"] = lambda v=itemname: v
+    if itemhelp is not None:
+        class_kwargs["item_help"] = lambda v=itemhelp: v
     if not itemname and itemtype == "service":
         class_kwargs["item_name"] = lambda: _("Service")
 

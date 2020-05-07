@@ -7,7 +7,7 @@
 import ast
 import time
 from multiprocessing.pool import ThreadPool
-from multiprocessing import TimeoutError
+from multiprocessing import TimeoutError as mp_TimeoutError
 
 from typing import NamedTuple
 
@@ -82,7 +82,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
             try:
                 results.append(job.get(timeout=0.5))
                 jobs.remove(job)
-            except TimeoutError:
+            except mp_TimeoutError:
                 pass
         if not jobs:
             break
@@ -166,8 +166,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
             if failed_info:
                 return "\n".join(failed_info)
             return True
-        else:
-            raise
+        raise
 
 
 def _legacy_push_user_profile_to_site(site, user_id, profile):

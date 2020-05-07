@@ -11,9 +11,9 @@ import errno
 import six
 
 if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
+    from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 import cmk.utils.store as store

@@ -21,7 +21,7 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
+from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
     multisite_cronjobs, register_job,
 )
 

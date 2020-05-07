@@ -2128,8 +2128,8 @@ def get_av_groups(availability_table, avoptions):
 # host (natural sort), then service
 def key_av_entry(a):
     # This local import currently needed
-    import cmk.gui.plugins.views  # pylint: disable=redefined-outer-name
-    return utils.key_num_split(a["service"]), cmk.gui.plugins.views.cmp_service_name_equiv(
+    import cmk.gui.plugins.views as views
+    return utils.key_num_split(a["service"]), views.cmp_service_name_equiv(
         a["service"]), utils.key_num_split(a["host"]), utils.key_num_split(a["site"])
 
 

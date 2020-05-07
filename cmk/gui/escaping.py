@@ -10,9 +10,9 @@ from typing import Text, Union  # pylint: disable=unused-import
 import six
 
 if sys.version_info[0] >= 3:
-    from html import escape as html_escape
+    from html import escape as html_escape  # type: ignore[attr-defined]
 else:
-    from future.moves.html import escape as html_escape  # type: ignore[import]
+    from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML

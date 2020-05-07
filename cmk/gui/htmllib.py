@@ -2633,10 +2633,9 @@ class html(ABCHTMLGenerator):
                 self.close_center()
 
             return False  # False --> "Dialog shown, no answer yet"
-        else:
-            # Now check the transaction
-            return True if self.check_transaction(
-            ) else None  # True: "Yes", None --> Browser reload of "yes" page
+
+        # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
+        return True if self.check_transaction() else None
 
     #
     # Radio groups

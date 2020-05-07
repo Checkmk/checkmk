@@ -197,7 +197,7 @@ def show_file(site, host_name, file_name):
         html.footer()
         return
 
-    elif log_chunks == []:
+    if log_chunks == []:
         html.end_context_buttons()
         html.show_message(_("This logfile contains no unacknowledged messages."))
         html.footer()
@@ -317,8 +317,9 @@ def do_log_ack(site, host_name, file_name):
         try:
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
         except Exception as e:
-            html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (display_name, this_host, e))
+            html.show_error(
+                _('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') %
+                (display_name, this_host, e))
             html.footer()
             return
 
@@ -471,9 +472,9 @@ nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 def level_name(level):
     if level == 'W':
         return 'WARN'
-    elif level == 'C':
+    if level == 'C':
         return 'CRIT'
-    elif level == 'O':
+    if level == 'O':
         return 'OK'
     return 'OK'
 
@@ -481,9 +482,9 @@ def level_name(level):
 def level_state(level):
     if level == 'W':
         return 1
-    elif level == 'C':
+    if level == 'C':
         return 2
-    elif level == 'O':
+    if level == 'O':
         return 0
     return 0
 

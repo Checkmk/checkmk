@@ -3241,7 +3241,10 @@ def create_aggregation_row(tree, status_info=None):
     #       To fix this properly we need a list of all hosts/services
     #       available to this user
 
-    state, assumed_state, node, _subtrees = tree_state
+    # TODO: The suppression seems to hide a real bug, but this is extremely
+    # hard to say given all those chaotic types in this module. Perhaps a
+    # triple is returned, perhaps a quadruple, who knows? :-/
+    state, assumed_state, node, _subtrees = tree_state  # pylint: disable=unbalanced-tuple-unpacking
     eff_state = state
     if assumed_state is not None:
         eff_state = assumed_state

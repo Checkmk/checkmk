@@ -674,7 +674,7 @@ class ActionHandler(object):
         if html.request.var(self.stop_job_var):
             self.stop_job()
             return True
-        elif html.request.var(self.delete_job_var):
+        if html.request.var(self.delete_job_var):
             self.delete_job()
             return True
         return False

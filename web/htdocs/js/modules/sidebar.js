@@ -947,6 +947,15 @@ export function set_snapin_site(event, ident, select_field) {
  *************************************************/
 
 export function fetch_nagvis_snapin_contents() {
+    var nagvis_snapin_update_interval = 30;
+
+    // Stop reload of the snapin content in case the browser window / tab is
+    // not visible for the user. Retry after short time.
+    if (!utils.is_window_active()) {
+        setTimeout(function(){ fetch_nagvis_snapin_contents(); }, 250);
+        return;
+    }
+
     // Needs to be fetched via JS from NagVis because it needs to
     // be done in the user context.
     const nagvis_url = "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
@@ -963,12 +972,20 @@ export function fetch_nagvis_snapin_contents() {
                     utils.update_contents("snapin_nagvis_maps", snapin_content_response);
                 },
             });
+
+            setTimeout(function() {
+                fetch_nagvis_snapin_contents();
+            }, nagvis_snapin_update_interval * 1000);
         },
         error_handler: function (_unused, status_code) {
             const msg = document.createElement("div");
             msg.classList.add("message", "error");
             msg.innerHTML = "Failed to update NagVis maps: " + status_code;
             utils.update_contents("snapin_nagvis_maps", msg.outerHTML);
+
+            setTimeout(function() {
+                fetch_nagvis_snapin_contents();
+            }, nagvis_snapin_update_interval * 1000);
         },
         method: "GET"
     });

@@ -34,9 +34,10 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def refresh_regularly(cls):
-        return True
+        return False
 
     def show(self):
+        html.div(_("Loading maps..."), class_="loading")
         html.javascript("cmk.sidebar.fetch_nagvis_snapin_contents()")
 
     def page_handlers(self):

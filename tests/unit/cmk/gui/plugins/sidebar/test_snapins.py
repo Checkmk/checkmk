@@ -66,7 +66,6 @@ def test_refresh_snapins():
         'performance',
         'hostmatrix',
         'mkeventd_performance',
-        'nagvis_maps',
         'problem_hosts',
         'sitestatus',
         'tactical_overview',

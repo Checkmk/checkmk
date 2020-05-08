@@ -18,7 +18,7 @@ from cmk.gui.plugins.metrics import (
     MAX_NUMBER_HOPS,
 )
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -214,6 +214,8 @@ metric_info["availability"] = {
     "color": "31",
 }
 
+# TODO: Metric names with preceeding numbers seems not to be capable
+# of adding scalars with graph_info (e.g. for horizontal warning levels)
 metric_info["5ghz_clients"] = {
     "title": _("Client connects for 5 Ghz Band"),
     "unit": "count",
@@ -719,6 +721,18 @@ metric_info["channel_utilization"] = {
     "title": _("Channel utilization"),
     "unit": "%",
     "color": "24/c",
+}
+
+metric_info["channel_utilization_24ghz"] = {
+    "title": _("Channel utilization for 2,4GHz Band"),
+    "unit": "%",
+    "color": "25/c",
+}
+
+metric_info["channel_utilization_5ghz"] = {
+    "title": _("Channel utilization for 5GHz Band"),
+    "unit": "%",
+    "color": "26/c",
 }
 
 metric_info["connector_outlets"] = {
@@ -1466,7 +1480,7 @@ metric_info['packets_rejected'] = {
     "color": "42/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -1898,4 +1912,21 @@ graph_info["nodes_by_type"] = {
         ("number_of_nodes", "area"),
         ("number_of_data_nodes", "area"),
     ],
+}
+graph_info["channel_utilization_24ghz"] = {
+    "metrics": [("channel_utilization_24ghz", "area"),],
+    "scalars": [
+        "channel_utilization_24ghz:warn",
+        "channel_utilization_24ghz:crit",
+    ],
+    "range": (0, 100),
+}
+
+graph_info["channel_utilization_5ghz"] = {
+    "metrics": [("channel_utilization_5ghz", "area"),],
+    "scalars": [
+        "channel_utilization_5ghz:warn",
+        "channel_utilization_5ghz:crit",
+    ],
+    "range": (0, 100),
 }

@@ -33,7 +33,6 @@ def debug_logging():
 
 def test_registered_background_jobs():
     expected_jobs = [
-        'ActivateChangesSchedulerBackgroundJob',
         'ParentScanBackgroundJob',
         'DummyBackgroundJob',
         'RenameHostsBackgroundJob',

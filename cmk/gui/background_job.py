@@ -28,7 +28,6 @@ else:
 import six
 
 import cmk.utils.log
-import cmk.utils.render as render
 from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
@@ -81,13 +80,10 @@ class BackgroundProcessInterface(object):
         # type: () -> logging.Logger
         return self._job_parameters["logger"]
 
-    def send_progress_update(self, info, with_timestamp=False):
-        # type: (Union[Text, str], bool) -> None
+    def send_progress_update(self, info):
+        # type: (Union[Text, str]) -> None
         """ The progress update is written to stdout and will be catched by the threads counterpart """
-        message = six.ensure_str(info)
-        if with_timestamp:
-            message = "%s %s" % (render.time_of_day(time.time()), message)
-        sys.stdout.write(message + "\n")
+        sys.stdout.write(six.ensure_str(info) + "\n")
 
     def send_result_message(self, info):
         # type: (Union[Text, str]) -> None

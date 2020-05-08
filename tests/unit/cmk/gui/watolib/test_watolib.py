@@ -180,7 +180,6 @@ def test_registered_configvars():
         'view_action_defaults',
         'virtual_host_trees',
         'wato_activation_method',
-        'wato_activate_changes_concurrency',
         'wato_hide_filenames',
         'wato_hide_folders_without_read_permissions',
         'wato_hide_help_in_lists',

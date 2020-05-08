@@ -208,10 +208,8 @@ function update_activation_state(_unused_handler_data, response)
             }
         }
 
-        // Due to the asynchroneous nature of the activate changes site scheduler
-        // the site state file may not be present within the first seconds
         if (is_empty)
-            continue
+            throw "Empty site state for " + site_id;
 
         update_site_activation_state(site_state);
     }

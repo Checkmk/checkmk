@@ -29,7 +29,8 @@ static long long convert(std::string Val) {
 }
 
 std::vector<std::string> SpecialProcesses = {
-    {"System Idle Process"}, {"Memory"}, {"Registry"}, {"Memory Compression"}};
+    {"System Idle Process"}, {"Memory"}, {"Registry"},
+    {"Memory Compression"},  {"vmmem"},  {"Secure System"}};
 
 TEST(PsTest, Time) {
     {
@@ -155,14 +156,16 @@ TEST(PsTest, All) {  //
 
             auto result = convert(by_comma[1]);
             EXPECT_TRUE(convert(by_comma[1]) >= 0);
-            EXPECT_TRUE(convert(by_comma[2]) > 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
             EXPECT_TRUE(convert(by_comma[3]) == 0);
             if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[9]) > 0);
+            if (!special)
+                EXPECT_TRUE(convert(by_comma[9]) > 0)
+                    << "'" << process_name << "'";
             EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
@@ -191,14 +194,14 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(!by_comma[0].empty());
 
             EXPECT_TRUE(convert(by_comma[1]) >= 0);
-            EXPECT_TRUE(convert(by_comma[2]) > 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
             EXPECT_TRUE(convert(by_comma[3]) == 0);
             if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[9]) > 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[9]) > 0);
             EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }

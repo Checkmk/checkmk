@@ -1,0 +1,15 @@
+Title: NagVis snapin: Fix empty content during refresh
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1588955976
+Class: fix
+
+When the NagVis snapin is used with a larger number of maps or objects on these
+maps, the refresh of the map states takes some time. During longer refresh
+times, the snapin was not displaying the maps at all.
+
+The already known state is now shown during refresh until the new information
+is available.

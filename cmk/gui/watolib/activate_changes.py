@@ -27,6 +27,7 @@ import traceback
 import subprocess
 import sys
 import hashlib
+import logging  # pylint: disable=unused-import
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -1366,7 +1367,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         self._set_sync_state(_("Computing differences"))
         to_sync_new, to_sync_changed, to_delete = _get_file_names_to_sync(
-            central_file_infos, remote_file_infos)
+            self._logger, central_file_infos, remote_file_infos)
 
         self._logger.debug("New files to be synchronized: %r", to_sync_new)
         self._logger.debug("Changed files to be synchronized: %r", to_sync_changed)
@@ -1831,8 +1832,8 @@ def _add_pre_17_sitespecific_excludes(paths):
     return new_paths
 
 
-def _get_file_names_to_sync(central_file_infos, remote_file_infos):
-    # type: (Dict[str, ConfigSyncFileInfo], Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]
+def _get_file_names_to_sync(site_logger, central_file_infos, remote_file_infos):
+    # type: (logging.Logger, Dict[str, ConfigSyncFileInfo], Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]
     """Compare the response with the site_config directory of the site
 
     Comparing both file lists and returning all files for synchronization that
@@ -1851,6 +1852,8 @@ def _get_file_names_to_sync(central_file_infos, remote_file_infos):
     to_sync_changed = []
     for existing in central_files.intersection(remote_files):
         if central_file_infos[existing] != remote_file_infos[existing]:
+            site_logger.debug("Sync needed %s: %r <> %r", existing, central_file_infos[existing],
+                              remote_file_infos[existing])
             to_sync_changed.append(existing)
 
     # Files to be deleted
@@ -1863,7 +1866,10 @@ def _get_sync_archive(to_sync, base_dir):
     # type: (List[str], Path) -> bytes
     # Use native tar instead of python tarfile for performance reasons
     p = subprocess.Popen(
-        ["tar", "-c", "-C", str(base_dir), "-f", "-", "--null", "-T", "-"],
+        [
+            "tar", "-c", "-C",
+            str(base_dir), "-f", "-", "--null", "-T", "-", "--preserve-permissions"
+        ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -1885,7 +1891,10 @@ def _get_sync_archive(to_sync, base_dir):
 def _unpack_sync_archive(sync_archive, base_dir):
     # type: (bytes, Path) -> None
     p = subprocess.Popen(
-        ["tar", "-x", "-C", str(base_dir), "-f", "-", "-U", "--recursive-unlink"],
+        [
+            "tar", "-x", "-C",
+            str(base_dir), "-f", "-", "-U", "--recursive-unlink", "--preserve-permissions"
+        ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

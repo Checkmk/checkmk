@@ -7,6 +7,7 @@
 import sys
 import tarfile
 import io
+import logging
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -25,6 +26,7 @@ from cmk.gui.watolib.config_sync import ReplicationPath
 import testlib
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -340,7 +342,7 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
 def test_get_file_names_to_sync():
     remote, central = _get_test_file_infos()
     to_sync_new, to_sync_changed, to_delete = activate_changes._get_file_names_to_sync(
-        central, remote)
+        logger, central, remote)
 
     assert sorted(to_sync_new + to_sync_changed) == sorted([
         "both-differ-mode",

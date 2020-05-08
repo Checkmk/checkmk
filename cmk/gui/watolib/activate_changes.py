@@ -1321,7 +1321,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _synchronize_site(self):
         """This is done on the central site to initiate the sync process"""
-        self._set_result(PHASE_SYNC, _("Synchronizing"))
+        self._set_sync_state()
 
         start = time.time()
 
@@ -1350,6 +1350,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         4. Collect needed files and send them over to the remote site (+ remote config hash)
         5. Raise when something failed on the remote site while applying the sent files
         """
+        self._set_sync_state(_("Fetching sync state"))
         self._logger.debug("Starting config sync with >1.7 site")
         replication_paths = self._snapshot_settings.snapshot_components
         remote_file_infos, remote_config_generation = self._get_config_sync_state(replication_paths)
@@ -1362,6 +1363,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         central_file_infos = _get_config_sync_file_infos(replication_paths, site_config_dir)
         self._logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
 
+        self._set_sync_state(_("Computing differences"))
         to_sync_new, to_sync_changed, to_delete = _get_file_names_to_sync(
             central_file_infos, remote_file_infos)
 
@@ -1373,9 +1375,16 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._logger.debug("Finished config sync (Nothing to be done)")
             return
 
+        self._set_sync_state(
+            _("Transfering: %d new, %d changed and %d vanished files") %
+            (len(to_sync_new), len(to_sync_changed), len(to_delete)))
         self._synchronize_files(to_sync_new + to_sync_changed, to_delete, remote_config_generation,
                                 site_config_dir)
         self._logger.debug("Finished config sync")
+
+    def _set_sync_state(self, status_details=None):
+        # type: (Optional[Text]) -> None
+        self._set_result(PHASE_SYNC, _("Synchronizing"), status_details=status_details)
 
     def _get_config_sync_state(self, replication_paths):
         # type: (List[ReplicationPath]) -> Tuple[Dict[str, ConfigSyncFileInfo], int]

@@ -14,7 +14,7 @@ freeze_time = '1970-01-01 00:00:01'
 info = [
     [
         u'systemStats', u'592290145', u'25568640', u'380156988', u'1565290934',
-        u'42658', u'1929381994', u'1861656198'
+        u'42658', u'0', u'1929381994', u'1861656198', u'349584702'
     ]
 ]
 
@@ -25,18 +25,18 @@ checks = {
         (
             None, {}, [
                 (
-                    0, 'User: 24.1%', [
-                        ('user', 24.103572982920337, None, None, None, None)
+                    0, 'User: 21.21%', [
+                        ('user', 21.210874355159238, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'System: 14.83%', [
-                        ('system', 14.830478950340037, None, None, None, None)
+                    0, 'System: 25.05%', [
+                        ('system', 25.051775056191136, None, None, None, None)
                     ]
-                ), (0, 'Wait: 0.002%', [('wait', 0.0016641508403986126, None, None, None, None)]),
+                ), (0, 'Wait: 0.001%', [('wait', 0.001464434107289391, None, None, None, None)]),
                 (
-                    0, 'Total CPU: 38.94%', [
-                        ('util', 38.93571608410077, None, None, 0, None)
+                    0, 'Total CPU: 46.26%', [
+                        ('util', 46.264113845457665, None, None, 0, None)
                     ]
                 ),
                 (

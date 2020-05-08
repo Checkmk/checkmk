@@ -291,7 +291,7 @@ def remove_site_config_directory(site_id):
 
     try:
         shutil.rmtree(str(work_dir))
-    except IOError as e:
+    except OSError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
 

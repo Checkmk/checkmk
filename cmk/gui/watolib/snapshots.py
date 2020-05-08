@@ -25,6 +25,7 @@ import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
+from cmk.gui.watolib.changes import log_audit
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 
@@ -38,6 +39,8 @@ backup_domains = {}  # type: Dict[str, Dict[str, Any]]
 
 # TODO: Remove once new changes mechanism has been implemented
 def create_snapshot(comment):
+    logger.debug("Start creating backup snapshot")
+    start = time.time()
     store.mkdir(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
@@ -56,7 +59,8 @@ def create_snapshot(comment):
     _do_create_snapshot(data)
     _do_snapshot_maintenance()
 
-    return snapshot_name
+    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
 # TODO: Remove once new changes mechanism has been implemented

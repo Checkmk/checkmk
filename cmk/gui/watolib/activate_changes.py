@@ -671,17 +671,15 @@ class ActivateChangesManager(ActivateChanges):
                       "to ensure you also want to activate it now and start the "
                       "activation again."))
 
-            # Create (legacy) WATO config snapshot
-            start = time.time()
-            logger.debug("Snapshot creation started")
-            # TODO: Remove/Refactor once new changes mechanism has been implemented
-            #       This single function is responsible for the slow activate changes (python tar packaging..)
-            snapshot_name = cmk.gui.watolib.snapshots.create_snapshot(self._comment)
-            log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+            backup_snapshot_proc = multiprocessing.Process(
+                target=cmk.gui.watolib.snapshots.create_snapshot, args=(self._comment,))
+            backup_snapshot_proc.start()
 
             if self._activation_id is None:
                 raise Exception("activation ID is not set")
 
+            logger.debug("Start creating config sync snapshots")
+            start = time.time()
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
 
             # Do not create a snapshot for the local site. All files are already in place
@@ -693,8 +691,12 @@ class ActivateChangesManager(ActivateChanges):
 
             snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()
+            logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
-            logger.debug("Snapshot creation took %.4f", time.time() - start)
+            logger.debug("Waiting for backup snapshot creation to complete")
+            backup_snapshot_proc.join()
+
+        logger.debug("Finished all snapshots")
 
     def _get_site_snapshot_settings(self, sites):
         # type: (List[SiteId]) -> Dict[SiteId, SnapshotSettings]

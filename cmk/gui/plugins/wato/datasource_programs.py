@@ -133,6 +133,8 @@ def _special_agents_kubernetes_transform(value):
         value['infos'] = ['nodes']
     if 'no-cert-check' not in value:
         value['no-cert-check'] = False
+    if 'namespaces' not in value:
+        value['namespaces'] = False
     return value
 
 
@@ -153,6 +155,22 @@ def _valuespec_special_agents_kubernetes():
                                             totext=""),
                              ],
                              default_value=False)),
+                (
+                    "namespaces",
+                    Alternative(
+                        title=_("Namespace prefix for hosts"),
+                        elements=[
+                            FixedValue(False, title=_("Don't use a namespace prefix"), totext=""),
+                            FixedValue(True, title=_("Use a namespace prefix"), totext=""),
+                        ],
+                        help=
+                        _("If a cluster uses multiple namespaces you need to activate this option. "
+                          "Hosts for namespaced Kubernetes objects will then be prefixed with the "
+                          "name of their namespace. This makes Kubernetes resources in different "
+                          "namespaces that have the same name distinguishable, but results in "
+                          "longer hostnames."),
+                        default_value=False),
+                ),
                 ("infos",
                  ListChoice(choices=[
                      ("nodes", _("Nodes")),

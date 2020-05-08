@@ -217,7 +217,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         "kept"    : 0
     }
 
-    if hostname not in config.all_active_realhosts():
+    if hostname not in config.all_active_hosts():
         return [0, 0, 0, 0], ""
 
     if service_filter is None:

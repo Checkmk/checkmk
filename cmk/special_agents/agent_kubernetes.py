@@ -74,6 +74,9 @@ def parse_arguments(args):
                    action=PathPrefixAction,
                    help='Optional URL path prefix to prepend to Kubernetes API calls')
     p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
+    p.add_argument('--prefix-namespace',
+                   action='store_true',
+                   help='Prefix piggyback hosts with namespace')
     p.add_argument('--profile',
                    metavar='FILE',
                    help='Profile the performance of the agent and write the output to a file')
@@ -153,19 +156,36 @@ def left_join_dicts(initial, new, operation):
 
 
 class Metadata:
-    def __init__(self, metadata):
-        # type: (Optional[client.V1ObjectMeta]) -> None
+    def __init__(self, metadata, prefix="", use_namespace=False):
+        # type: (Optional[client.V1ObjectMeta], str, bool) -> None
         if metadata:
-            self.name = metadata.name
+            self._name = metadata.name
             self.namespace = metadata.namespace
             self.creation_timestamp = (time.mktime(metadata.creation_timestamp.utctimetuple())
                                        if metadata.creation_timestamp else None)
             self.labels = metadata.labels if metadata.labels else {}
         else:
-            self.name = None
+            self._name = None
             self.namespace = None
             self.creation_timestamp = None
             self.labels = {}
+
+        # The names of elements may not be unique. Kubernetes guarantees e.g. that
+        # only one object of a given kind can have one one name at a time. I.e.
+        # there may only be one deployment with the name "foo", but there may exist
+        # a service with name "foo" as well.
+        # To obtain unique names for piggyback hosts it is therefore possible to
+        # specify a name prefix.
+        # see: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+        # If namespaces are used they have to be used as a prefix as well.
+        self.prefix = prefix
+        self.use_namespace = use_namespace
+
+    @property
+    def name(self):
+        if self.use_namespace:
+            return '_'.join([self.namespace, self.prefix, self._name]).lstrip('_')
+        return '_'.join([self.prefix, self._name]).lstrip('_')
 
     def matches(self, selectors):
         if not selectors:
@@ -247,8 +267,8 @@ class ComponentStatus(Metadata):
 
 
 class Service(Metadata):
-    def __init__(self, service):
-        super(Service, self).__init__(service.metadata)
+    def __init__(self, service, use_namespace):
+        super(Service, self).__init__(service.metadata, "service", use_namespace)
 
         spec = service.spec
         if spec:
@@ -298,9 +318,9 @@ class Service(Metadata):
 
 class Deployment(Metadata):
     # TODO: include pods of the deployment?
-    def __init__(self, deployment):
-        # type: (client.V1Deployment) -> None
-        super(Deployment, self).__init__(deployment.metadata)
+    def __init__(self, deployment, use_namespace):
+        # type: (client.V1Deployment, bool) -> None
+        super(Deployment, self).__init__(deployment.metadata, "deployment", use_namespace)
         spec = deployment.spec
         if spec:
             self._paused = spec.paused
@@ -346,8 +366,8 @@ class Deployment(Metadata):
 
 
 class Ingress(Metadata):
-    def __init__(self, ingress):
-        super(Ingress, self).__init__(ingress.metadata)
+    def __init__(self, ingress, use_namespace):
+        super(Ingress, self).__init__(ingress.metadata, "ingress", use_namespace)
         self._backends = []  # list of (path, service_name, service_port)
         self._hosts = defaultdict(list)  # secret -> list of hosts
         self._load_balancers = []
@@ -393,9 +413,9 @@ class Ingress(Metadata):
 
 
 class Pod(Metadata):
-    def __init__(self, pod):
-        # type: (client.V1Pod) -> None
-        super(Pod, self).__init__(pod.metadata)
+    def __init__(self, pod, use_namespace):
+        # type: (client.V1Pod, bool) -> None
+        super(Pod, self).__init__(pod.metadata, "pod", use_namespace)
         spec = pod.spec
         if spec:
             self.node = spec.node_name
@@ -519,8 +539,8 @@ class Endpoint(Metadata):
     # See Also:
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
 
-    def __init__(self, endpoint):
-        super(Endpoint, self).__init__(endpoint.metadata)
+    def __init__(self, endpoint, use_namespace):
+        super(Endpoint, self).__init__(endpoint.metadata, "endpoint", use_namespace)
         # There is no spec here.
         self._subsets = [
             self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
@@ -558,8 +578,8 @@ class Endpoint(Metadata):
 
 
 class Job(Metadata):
-    def __init__(self, job):
-        super(Job, self).__init__(job.metadata)
+    def __init__(self, job, use_namespace):
+        super(Job, self).__init__(job.metadata, "job", use_namespace)
         spec = job.spec
         if spec:
             self._pod = spec.template
@@ -630,8 +650,8 @@ class Job(Metadata):
 
 
 class DaemonSet(Metadata):
-    def __init__(self, daemon_set):
-        super(DaemonSet, self).__init__(daemon_set.metadata)
+    def __init__(self, daemon_set, use_namespace):
+        super(DaemonSet, self).__init__(daemon_set.metadata, "daemon_set", use_namespace)
         status = daemon_set.status
         if status:
             self.collision_count = status.collision_count
@@ -687,8 +707,8 @@ class DaemonSet(Metadata):
 
 
 class StatefulSet(Metadata):
-    def __init__(self, stateful_set):
-        super(StatefulSet, self).__init__(stateful_set.metadata)
+    def __init__(self, stateful_set, use_namespace):
+        super(StatefulSet, self).__init__(stateful_set.metadata, "stateful_set", use_namespace)
         spec = stateful_set.spec
         strategy = spec.update_strategy
         if strategy:
@@ -1092,18 +1112,11 @@ class PiggybackGroup:
             section.insert(data)
         return self
 
-    def output(self, piggyback_prefix=""):
-        # type: (str) -> List[str]
-        # The names of elements may not be unique. Kubernetes guarantees e.g. that
-        # only one object of a given kind can have one one name at a time. I.e.
-        # there may only be one deployment with the name "foo", but there may exist
-        # a service with name "foo" as well.
-        # To obtain unique names for piggyback hosts it is therefore possible to
-        # specify a name prefix.
-        # see: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+    def output(self):
+        # type: () -> List[str]
         data = []
         for name, element in self._elements.items():
-            data.append('<<<<%s>>>>' % (piggyback_prefix + name))
+            data.append('<<<<%s>>>>' % (name))
             data.extend(element.output())
             data.append('<<<<>>>>')
         return data
@@ -1162,8 +1175,8 @@ class ApiData:
     """
     Contains the collected API data.
     """
-    def __init__(self, api_client):
-        # type: (client.ApiClient) -> None
+    def __init__(self, api_client, prefix_namespace):
+        # type: (client.ApiClient, bool) -> None
         super(ApiData, self).__init__()
         logging.info('Collecting API data')
 
@@ -1217,14 +1230,18 @@ class ApiData:
         self.persistent_volumes = PersistentVolumeList(list(map(PersistentVolume, pvs.items)))
         self.persistent_volume_claims = PersistentVolumeClaimList(
             list(map(PersistentVolumeClaim, pvcs.items)))
-        self.pods = PodList(list(map(Pod, pods.items)))
-        self.endpoints = EndpointList(list(map(Endpoint, endpoints.items)))
-        self.jobs = JobList(list(map(Job, jobs.items)))
-        self.services = ServiceList(list(map(Service, services.items)))
-        self.deployments = DeploymentList(list(map(Deployment, deployments.items)))
-        self.ingresses = IngressList(list(map(Ingress, ingresses.items)))
-        self.daemon_sets = DaemonSetList(list(map(DaemonSet, daemon_sets.items)))
-        self.stateful_sets = StatefulSetList(list(map(StatefulSet, stateful_sets.items)))
+        self.pods = PodList([Pod(item, prefix_namespace) for item in pods.items])
+        self.endpoints = EndpointList(
+            [Endpoint(item, prefix_namespace) for item in endpoints.items])
+        self.jobs = JobList([Job(item, prefix_namespace) for item in jobs.items])
+        self.services = ServiceList([Service(item, prefix_namespace) for item in services.items])
+        self.deployments = DeploymentList(
+            [Deployment(item, prefix_namespace) for item in deployments.items])
+        self.ingresses = IngressList([Ingress(item, prefix_namespace) for item in ingresses.items])
+        self.daemon_sets = DaemonSetList(
+            [DaemonSet(item, prefix_namespace) for item in daemon_sets.items])
+        self.stateful_sets = StatefulSetList(
+            [StatefulSet(item, prefix_namespace) for item in stateful_sets.items])
 
         pods_custom_metrics = {
             "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
@@ -1326,14 +1343,14 @@ class ApiData:
         g.join('k8s_conditions', self.pods.conditions())
         g.join('k8s_pod_container', self.pods.containers())
         g.join('k8s_pod_info', self.pods.info())
-        return '\n'.join(g.output(piggyback_prefix="pod_"))
+        return '\n'.join(g.output())
 
     def endpoint_sections(self):
         logging.info('Output endpoint sections')
         g = PiggybackGroup()
         g.join('labels', self.endpoints.labels())
         g.join('k8s_endpoint_info', self.endpoints.info())
-        return '\n'.join(g.output(piggyback_prefix="endpoint_"))
+        return '\n'.join(g.output())
 
     def job_sections(self):
         logging.info('Output job sections')
@@ -1342,7 +1359,7 @@ class ApiData:
         g.join('k8s_job_container', self.jobs.containers())
         g.join('k8s_pod_info', self.jobs.pod_infos())
         g.join('k8s_job_info', self.jobs.info())
-        return '\n'.join(g.output(piggyback_prefix="job_"))
+        return '\n'.join(g.output())
 
     def service_sections(self):
         logging.info('Output service sections')
@@ -1357,21 +1374,21 @@ class ApiData:
             } for service_name, pods in self.pods.group_by(self.services.selector()).items()
         }
         g.join('k8s_assigned_pods', pod_names)
-        return '\n'.join(g.output(piggyback_prefix="service_"))
+        return '\n'.join(g.output())
 
     def deployment_sections(self):
         logging.info('Output deployment sections')
         g = PiggybackGroup()
         g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
-        return '\n'.join(g.output(piggyback_prefix="deployment_"))
+        return '\n'.join(g.output())
 
     def ingress_sections(self):
         logging.info('Output ingress sections')
         g = PiggybackGroup()
         g.join('labels', self.ingresses.labels())
         g.join('k8s_ingress_infos', self.ingresses.infos())
-        return '\n'.join(g.output(piggyback_prefix="ingress_"))
+        return '\n'.join(g.output())
 
     def daemon_set_sections(self):
         logging.info('Daemon set sections')
@@ -1379,14 +1396,14 @@ class ApiData:
         g.join('labels', self.daemon_sets.labels())
         g.join('k8s_daemon_pods', self.daemon_sets.info())
         g.join('k8s_daemon_pod_containers', self.daemon_sets.containers())
-        return '\n'.join(g.output(piggyback_prefix="daemon_set_"))
+        return '\n'.join(g.output())
 
     def stateful_set_sections(self):
         logging.info('Stateful set sections')
         g = PiggybackGroup()
         g.join('labels', self.stateful_sets.labels())
         g.join('k8s_stateful_set_replicas', self.stateful_sets.replicas())
-        return '\n'.join(g.output(piggyback_prefix="stateful_set_"))
+        return '\n'.join(g.output())
 
 
 def get_api_client(arguments):
@@ -1427,7 +1444,7 @@ def main(args=None):
         with cmk.utils.profile.Profile(enabled=bool(arguments.profile),
                                        profile_file=arguments.profile):
             api_client = get_api_client(arguments)
-            api_data = ApiData(api_client)
+            api_data = ApiData(api_client, arguments.prefix_namespace)
             print(api_data.cluster_sections())
             print(api_data.custom_metrics_section())
             if 'nodes' in arguments.infos:

@@ -265,7 +265,7 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def do_remote_automation(site, command, vars_, timeout=None):
+def do_remote_automation(site, command, vars_, files=None, timeout=None):
     auto_logger.info("RUN [%s]: %s", site["id"], command)
     auto_logger.debug("VARS: %r", vars_)
 
@@ -278,7 +278,11 @@ def do_remote_automation(site, command, vars_, timeout=None):
            URLEncoder().urlencode_vars([("command", command), ("secret", secret),
                                         ("debug", config.debug and '1' or '')]))
 
-    response = get_url(url, site.get('insecure', False), data=dict(vars_), timeout=timeout)
+    response = get_url(url,
+                       site.get('insecure', False),
+                       data=dict(vars_),
+                       files=files,
+                       timeout=timeout)
 
     auto_logger.debug("RESPONSE: %r", response)
 

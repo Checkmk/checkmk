@@ -15,6 +15,7 @@ SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
+import io
 import errno
 import ast
 import os
@@ -1413,12 +1414,19 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
         site = config.site(self._site_id)
-        response = cmk.gui.watolib.automations.do_remote_automation(site, "receive-config-sync", [
-            ("site_id", self._site_id),
-            ("sync_archive", sync_archive),
-            ("to_delete", repr(files_to_delete)),
-            ("config_generation", "%d" % remote_config_generation),
-        ])
+        response = cmk.gui.watolib.automations.do_remote_automation(
+            site,
+            "receive-config-sync",
+            [
+                ("site_id", self._site_id),
+                ("sync_archive", sync_archive),
+                ("to_delete", repr(files_to_delete)),
+                ("config_generation", "%d" % remote_config_generation),
+            ],
+            files={
+                "sync_archive": io.BytesIO(sync_archive),
+            },
+        )
 
         if response is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % response)
@@ -2042,7 +2050,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
         return ReceiveConfigSyncRequest(
             site_id,
-            html.request.get_binary_input_mandatory("sync_archive"),
+            html.request.uploaded_file("sync_archive")[2],
             ast.literal_eval(html.request.get_ascii_input_mandatory("to_delete")),
             html.request.get_integer_input_mandatory("config_generation"),
         )

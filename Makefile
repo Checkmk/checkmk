@@ -414,13 +414,14 @@ setup:
 	    libsasl2-dev \
 	    libldap2-dev \
 	    libkrb5-dev \
-	    libmysqlclient-dev \
+	    libmariadb-dev-compat \
 	    pngcrush \
 	    valgrind \
 	    shellcheck \
 	    direnv \
 	    python-pip \
 	    python3.7-dev \
+	    python-setuptools \
 	    chrpath \
 	    enchant \
 	    ksh \

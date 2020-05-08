@@ -426,7 +426,7 @@ setup:
 	    enchant \
 	    ksh \
 	    p7zip-full
-	sudo -H pip install -U pipenv
+	sudo -H pip install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup

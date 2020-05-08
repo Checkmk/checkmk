@@ -48,7 +48,7 @@ from cmk.notification_plugins.victorops import victorops_msg
         'entity_display_name': 'win7vm is UP',
         'entity_id': 'win7vm:10.3.1.239',
         'host_name': 'win7vm',
-        'message_type': 'OK',
+        'message_type': 'RECOVERY',
         'monitoring_tool': 'Check_MK notification',
         'state_message': 'Packet received via smart PING\n\nhttp://localhost/heute/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dwin7vm%26site%3Dheute'
     })

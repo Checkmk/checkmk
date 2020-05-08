@@ -838,7 +838,7 @@ class ReplicationStatusFetcher(object):
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any([p.is_alive() for site_id, p in processes]):
+        while any(p.is_alive() for site_id, p in processes):
             try:
                 result = result_queue.get_nowait()
                 result_queue.task_done()
@@ -848,8 +848,9 @@ class ReplicationStatusFetcher(object):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
-                logger.exception("error collecting replication results from site %s", site_id)
-                html.show_error("%s: %s" % (site_id, e))
+                logger.exception("error collecting replication results from site %s",
+                                 result.site_id)
+                html.show_error("%s: %s" % (result.site_id, e))
 
         self._logger.debug("Got results")
         return results_by_site

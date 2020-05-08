@@ -216,9 +216,8 @@ class ModeEditLDAPConnection(LDAPMode):
         config.user_connections = self._connections  # make directly available on current page
         if html.request.var("_save"):
             return "ldap_config"
-        else:
-            # Fix the case where a user hit "Save & Test" during creation
-            html.request.set_var('id', self._connection_id)
+        # Fix the case where a user hit "Save & Test" during creation
+        html.request.set_var('id', self._connection_id)
 
     def page(self):
         html.open_div(id_="ldap")
@@ -305,7 +304,7 @@ class ModeEditLDAPConnection(LDAPMode):
         connection.connect(enforce_new=True, enforce_server=address)
         if connection.user_base_dn_exists():
             return (True, _('The User Base DN could be found.'))
-        elif connection.has_bind_credentials_configured():
+        if connection.has_bind_credentials_configured():
             return (False,
                     _('The User Base DN could not be found. Maybe the provided '
                       'user (provided via bind credentials) has no permission to '

@@ -64,9 +64,7 @@ class ModeBulkEdit(WatoMode):
     def page(self):
         # type: () -> None
         host_names = get_hostnames_from_checkboxes()
-        hosts = dict([
-            (host_name, watolib.Folder.current().host(host_name)) for host_name in host_names
-        ])
+        hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
         current_host_hash = sha256(six.ensure_binary(repr(hosts))).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected

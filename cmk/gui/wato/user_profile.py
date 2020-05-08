@@ -261,10 +261,9 @@ def _show_page_user_profile(change_pw):
         if change_pw:
             html.show_message(_("Your password has been changed."))
             raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
-        else:
-            html.show_message(_("Successfully updated user profile."))
-            # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, html.makeuri([]))
+        html.show_message(_("Successfully updated user profile."))
+        # Ensure theme changes are applied without additional user interaction
+        html.immediate_browser_redirect(0.5, html.makeuri([]))
 
     if html.has_user_errors():
         html.show_user_errors()

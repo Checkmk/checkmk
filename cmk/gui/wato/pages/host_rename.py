@@ -155,10 +155,9 @@ class ModeBulkRenameHost(WatoMode):
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             raise HTTPRedirect(host_renaming_job.detail_url())
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
-        else:
-            return None  # browser reload
+        return None  # browser reload
 
     def _renaming_collision_error(self, renamings):
         name_collisions = set()
@@ -209,27 +208,26 @@ class ModeBulkRenameHost(WatoMode):
     def _host_renaming_operation(self, operation, hostname):
         if operation == "drop_domain":
             return hostname.split(".", 1)[0]
-        elif operation == "reverse_dns":
+        if operation == "reverse_dns":
             try:
                 reverse_dns = socket.gethostbyaddr(hostname)[0]
                 return reverse_dns
             except Exception:
                 return hostname
-
-        elif operation == ('case', 'upper'):
+        if operation == ('case', 'upper'):
             return hostname.upper()
-        elif operation == ('case', 'lower'):
+        if operation == ('case', 'lower'):
             return hostname.lower()
-        elif operation[0] == 'add_suffix':
+        if operation[0] == 'add_suffix':
             return hostname + operation[1]
-        elif operation[0] == 'add_prefix':
+        if operation[0] == 'add_prefix':
             return operation[1] + hostname
-        elif operation[0] == 'explicit':
+        if operation[0] == 'explicit':
             old_name, new_name = operation[1]
             if old_name == hostname:
                 return new_name
             return hostname
-        elif operation[0] == 'regex':
+        if operation[0] == 'regex':
             match_regex, new_name = operation[1]
             match = regex(match_regex).match(hostname)
             if match:
@@ -400,13 +398,13 @@ class ModeRenameHost(WatoMode):
 
             raise HTTPRedirect(host_renaming_job.detail_url())
 
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
 
     def _check_new_host_name(self, varname, host_name):
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
-        elif watolib.Folder.current().has_host(host_name):
+        if watolib.Folder.current().has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)

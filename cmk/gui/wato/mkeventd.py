@@ -1267,7 +1267,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     _("Copied the event rules from the master "
                       "into the local configuration"))
                 return None, _("Copied rules from master")
-            elif c is False:
+            if c is False:
                 return ""
 
         # Move rule packages
@@ -1665,7 +1665,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if not self._rules:
             html.show_message(_("This package does not yet contain any rules."))
             return
-        elif search_expression and not found_rules:
+        if search_expression and not found_rules:
             html.show_message(_("No rules found."))
             return
 
@@ -2007,7 +2007,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         if not self._new and old_id != self._rule["id"]:
             raise MKUserError("rule_p_id",
                               _("It is not allowed to change the ID of an existing rule."))
-        elif self._new:
+        if self._new:
             for pack in self._rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == self._rule["id"]:
@@ -2134,7 +2134,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             watolib.log_audit(None, "mkeventd-switchmode",
                               _("Switched replication slave mode to %s") % new_mode)
             return None, _("Switched to %s mode") % new_mode
-        elif c is False:
+        if c is False:
             return ""
         return
 
@@ -2262,7 +2262,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
             if action == "_reset":
                 return "mkeventd_config", msg
             return "mkeventd_config"
-        elif c is False:
+        if c is False:
             return ""
 
     def _edit_mode(self):
@@ -2381,8 +2381,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 except Exception as e:
                     if config.debug:
                         raise
-                    else:
-                        raise MKUserError("_upload_mib", "%s" % e)
+                    raise MKUserError("_upload_mib", "%s" % e)
 
         elif html.request.var("_bulk_delete_custom_mibs"):
             return self._bulk_delete_custom_mibs_after_confirm()
@@ -2529,7 +2528,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 for filename in selected_custom_mibs:
                     self._delete_mib(filename, custom_mibs[filename]["name"])
                 return
-            elif c is False:
+            if c is False:
                 return ""  # not yet confirmed
             return  # browser reload
 
@@ -3787,11 +3786,11 @@ class RulespecGroupEventConsole(RulespecGroup):
 def convert_mkevents_hostspec(value):
     if isinstance(value, list):
         return value
-    elif value == "$HOSTADDRESS$":
+    if value == "$HOSTADDRESS$":
         return ["$HOSTADDRESS$"]
-    elif value == "$HOSTNAME$":
+    if value == "$HOSTNAME$":
         return ["$HOSTNAME$"]
-    elif value == "$HOSTNAME$/$HOSTADDRESS$":
+    if value == "$HOSTNAME$/$HOSTADDRESS$":
         return ["$HOSTNAME$", "$HOSTADDRESS$"]
     # custom
     return value

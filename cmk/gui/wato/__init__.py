@@ -55,7 +55,8 @@
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# flake8: noqa
+# flake8: noqa: F401
+# pylint: disable=unused-import,cmk-module-layer-violation
 
 import abc
 import ast
@@ -79,7 +80,7 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
 import six
 
 import cmk.utils.version as cmk_version
@@ -90,7 +91,7 @@ from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import regex
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
-from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
@@ -110,7 +111,7 @@ import cmk.gui.view_utils
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.wato.mkeventd
-from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -265,7 +266,7 @@ wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
 
 # TODO: Kept for old plugin compatibility. Remove this one day
-from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,redefined-builtin
+from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
@@ -374,7 +375,7 @@ NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
 NetworkScanResult = Dict[str, Any]
 
 if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREFolder  # pylint: disable=unused-import
+    from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 #.
 #   .--Main----------------------------------------------------------------.

@@ -331,7 +331,7 @@ class ModeParentScan(WatoMode):
     def _include_host(self, host, select):
         if select == 'noexplicit' and host.has_explicit_attribute("parents"):
             return False
-        elif select == 'no':
+        if select == 'no':
             if host.effective_attribute("parents"):
                 return False
         return True

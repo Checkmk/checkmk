@@ -9,7 +9,7 @@ import sys
 if sys.version_info[0] >= 3:
     from pathlib import Path
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
 
 from typing import (  # pylint: disable=unused-import
     Text, List, Optional,

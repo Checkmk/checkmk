@@ -132,7 +132,7 @@ class ModeFolder(WatoMode):
                 return self._delete_subfolder_after_confirm(html.request.var("_delete_folder"))
             return
 
-        elif html.request.has_var("_move_folder_to"):
+        if html.request.has_var("_move_folder_to"):
             if html.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
@@ -170,7 +170,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_bulk_inventory"):
             return "bulkinventory"
 
-        elif html.request.var("_parentscan"):
+        if html.request.var("_parentscan"):
             return "parentscan"
 
         # Deletion
@@ -178,7 +178,7 @@ class ModeFolder(WatoMode):
             return self._delete_hosts_after_confirm(selected_host_names)
 
         # Move
-        elif html.request.var("_bulk_move"):
+        if html.request.var("_bulk_move"):
             target_folder_path = html.request.var("bulk_moveto",
                                                   html.request.var("_top_bulk_moveto"))
             if target_folder_path == "@":
@@ -189,13 +189,13 @@ class ModeFolder(WatoMode):
                                                       target_folder.title())
 
         # Move to target folder (from import)
-        elif html.request.var("_bulk_movetotarget"):
+        if html.request.var("_bulk_movetotarget"):
             return self._move_to_imported_folders(selected_host_names)
 
-        elif html.request.var("_bulk_edit"):
+        if html.request.var("_bulk_edit"):
             return "bulkedit"
 
-        elif html.request.var("_bulk_cleanup"):
+        if html.request.var("_bulk_cleanup"):
             return "bulkcleanup"
 
     def _delete_subfolder_after_confirm(self, subfolder_name):
@@ -212,7 +212,7 @@ class ModeFolder(WatoMode):
         if c:
             self._folder.delete_subfolder(subfolder_name)
             return "folder"
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -675,7 +675,7 @@ class ModeFolder(WatoMode):
         if c:
             self._folder.delete_hosts(host_names)
             return "folder", _("Successfully deleted %d hosts") % len(host_names)
-        elif c is False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -710,7 +710,7 @@ class ModeFolder(WatoMode):
               'done an <b>inventory</b> before moving the hosts.'))
         if c is False:  # not yet confirmed
             return ""
-        elif not c:
+        if not c:
             return None  # browser reload
 
         # Create groups of hosts with the same target folder
@@ -740,7 +740,7 @@ class ModeFolder(WatoMode):
         # The alias path is a '/' separated path of folder titles.
         # An empty path is interpreted as root path. The actual file
         # name is the host list with the name "Hosts".
-        if aliaspath == "" or aliaspath == "/":
+        if aliaspath in ("", "/"):
             folder = watolib.Folder.root_folder()
         else:
             parts = aliaspath.strip("/").split("/")
@@ -766,7 +766,7 @@ def delete_host_after_confirm(delname):
         watolib.Folder.current().delete_hosts([delname])
         # Delete host files
         return "folder"
-    elif c is False:  # not yet confirmed
+    if c is False:  # not yet confirmed
         return ""
     return None  # browser reload
 

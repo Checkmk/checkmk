@@ -105,8 +105,7 @@ class GlobalSettingsMode(WatoMode):
                         raise MKGeneralException(
                             "The configuration variable <tt>%s</tt> is unknown to "
                             "your local Check_MK installation" % varname)
-                    else:
-                        continue
+                    continue
 
                 if not config_variable.in_global_settings():
                     continue
@@ -225,7 +224,7 @@ class EditGlobalSettingMode(WatoMode):
                       "back to its default value?"))
                 if c is False:
                     return ""
-                elif c is None:
+                if c is None:
                     return None
             elif not html.check_transaction():
                 return
@@ -389,7 +388,7 @@ class ModeEditGlobals(GlobalSettingsMode):
             if action == "_reset":
                 return "globalvars", msg
             return "globalvars"
-        elif c is False:
+        if c is False:
             return ""
 
     def page(self):
@@ -473,6 +472,6 @@ def is_a_checkbox(vs):
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True
-    elif isinstance(vs, Transform):
+    if isinstance(vs, Transform):
         return is_a_checkbox(vs._valuespec)
     return False

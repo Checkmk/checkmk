@@ -283,7 +283,7 @@ def discover_on_host(config_cache,
         "clustered_vanished": 0,
     }
 
-    if hostname not in config_cache.all_active_realhosts():
+    if hostname not in config_cache.all_active_hosts():
         return counts, ""
 
     if service_filter is None:

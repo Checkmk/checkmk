@@ -7,7 +7,12 @@
 import abc
 import ast
 import os
-from typing import Dict  # pylint: disable=unused-import
+import sys
+from typing import Dict, Text  # pylint: disable=unused-import
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 import six
 
 import cmk.utils.store as store
@@ -76,10 +81,12 @@ class FetchAgentOutputRequest(object):
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
     def __init__(self):
+        # type: () -> None
         super(AgentOutputPage, self).__init__()
         self._from_vars()
 
     def _from_vars(self):
+        # type: () -> None
         config.user.need_permission("wato.download_agent_output")
 
         host_name = html.request.var("host")
@@ -112,6 +119,7 @@ class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
 @page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
+        # type: () -> None
         html.header(_("%s: Download agent output") % self._request.host.name())
 
         html.begin_context_buttons()
@@ -128,6 +136,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         html.footer()
 
     def _action(self):
+        # type: () -> None
         if not html.transaction_valid():
             return
 
@@ -142,6 +151,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                 ]))
 
     def _show_status(self):
+        # type: () -> None
         job_status = self._get_job_status()
 
         html.h3(_("Job status"))
@@ -194,6 +204,7 @@ class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCo
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
     def command_name(self):
+        # type: () -> str
         return "fetch-agent-output-start"
 
     def execute(self, request):
@@ -233,6 +244,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 
     @classmethod
     def gui_title(cls):
+        # type: () -> Text
         return _("Fetch agent output")
 
     def __init__(self, request):
@@ -274,15 +286,16 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 @page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self):
+        # type: () -> None
         file_name = self.file_name(self._request)
         file_content = self._get_agent_output_file()
 
         html.set_output_format("text")
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
-        html.write(file_content)
+        html.write_binary(file_content)
 
     def _get_agent_output_file(self):
-        # type: () -> str
+        # type: () -> bytes
         if config.site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
@@ -295,16 +308,19 @@ class PageDownloadAgentOutput(AgentOutputPage):
 @automation_command_registry.register
 class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
     def command_name(self):
+        # type: () -> str
         return "fetch-agent-output-get-file"
 
     def execute(self, request):
-        # type: (FetchAgentOutputRequest) -> str
+        # type: (FetchAgentOutputRequest) -> bytes
         return get_fetch_agent_output_file(request)
 
 
 def get_fetch_agent_output_file(request):
-    # type: (FetchAgentOutputRequest) -> str
+    # type: (FetchAgentOutputRequest) -> bytes
     job = FetchAgentOutputBackgroundJob(request)
-    filepath = os.path.join(job.get_work_dir(), AgentOutputPage.file_name(request))
-    with open(filepath) as f:
+    filepath = Path(job.get_work_dir(), AgentOutputPage.file_name(request))
+    # The agent output need to be treated as binary data since each agent section can have an
+    # individual encoding
+    with filepath.open("rb") as f:
         return f.read()

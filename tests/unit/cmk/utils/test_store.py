@@ -238,6 +238,21 @@ def test_aquire_lock_not_existing(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
+def test_locked(tmp_path, path_type):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
+
+    path = path_type(locked_file)
+
+    assert store.have_lock(path) is False
+
+    with store.locked(path):
+        assert store.have_lock(path) is True
+
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
 def test_aquire_lock(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")

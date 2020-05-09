@@ -380,6 +380,16 @@ def _save_data_to_file(path, content, mode=0o660):
 _acquired_locks = {}  # type: Dict[str, int]
 
 
+@contextmanager
+def locked(path, blocking=True):
+    # type: (Union[Path, str], bool) -> Iterator[None]
+    try:
+        aquire_lock(path, blocking)
+        yield
+    finally:
+        release_lock(path)
+
+
 def aquire_lock(path, blocking=True):
     # type: (Union[Path, str], bool) -> None
     if not isinstance(path, Path):

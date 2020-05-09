@@ -75,27 +75,26 @@ def page_run_cron():
     with lock_file.open("wb"):
         pass  # touches the file
 
-    store.aquire_lock(lock_file)
+    with store.locked(lock_file):
+        # The cron page is accessed unauthenticated. After leaving the page_run_cron area
+        # into the job functions we always want to have a user context initialized to keep
+        # the code free from special cases (if no user logged in, then...).
+        # The jobs need to be run in privileged mode in general. Some jobs, like the network
+        # scan, switch the user context to a specific other user during execution.
+        config.set_super_user()
 
-    # The cron page is accessed unauthenticated. After leaving the page_run_cron area
-    # into the job functions we always want to have a user context initialized to keep
-    # the code free from special cases (if no user logged in, then...).
-    # The jobs need to be run in privileged mode in general. Some jobs, like the network
-    # scan, switch the user context to a specific other user during execution.
-    config.set_super_user()
+        logger.debug("Starting cron jobs")
 
-    logger.debug("Starting cron jobs")
+        for cron_job in multisite_cronjobs:
+            try:
+                job_name = cron_job.__name__
 
-    for cron_job in multisite_cronjobs:
-        try:
-            job_name = cron_job.__name__
+                logger.debug("Starting [%s]", job_name)
+                cron_job()
+                logger.debug("Finished [%s]", job_name)
+            except Exception:
+                html.write("An exception occured. Take a look at the web.log.\n")
+                logger.exception("Exception in cron job [%s]", job_name)
 
-            logger.debug("Starting [%s]", job_name)
-            cron_job()
-            logger.debug("Finished [%s]", job_name)
-        except Exception:
-            html.write("An exception occured. Take a look at the web.log.\n")
-            logger.exception("Exception in cron job [%s]", job_name)
-
-    logger.debug("Finished all cron jobs")
-    html.write("OK\n")
+        logger.debug("Finished all cron jobs")
+        html.write("OK\n")

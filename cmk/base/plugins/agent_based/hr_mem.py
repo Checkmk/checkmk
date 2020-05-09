@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Tuple  # pylint: disable=unused-import
-from cmk.base.plugins.agent_based.v0 import register, SNMPTree  # type: ignore[import]
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection  # type: ignore[import]
+from cmk.base.plugins.agent_based.v0 import register, SNMPTree
+from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 
 def parse_hr_mem(string_table):

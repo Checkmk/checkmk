@@ -29,7 +29,13 @@ sudo rsync \
 # Ensure cmk.base[.cee] is a namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/base/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/__init__.pyc"
+    "$ROOT/lib/python3/cmk/base/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
 
 # Temporary fix until integration tests have been migrated to python3: remove
 # python3 only files that are installed to python 2 paths (by our packaging mechanism).

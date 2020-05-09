@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from cmk.base.plugins.agent_based.v0 import register, HostLabel  # type: ignore[import]
+from cmk.base.plugins.agent_based.v0 import register, HostLabel
 
 
 def parse_labels(string_table):

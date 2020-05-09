@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, List
+from typing import Callable, Dict, List
 import os.path
 import sys
 import ast
@@ -23,21 +23,22 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.section_types import SNMPDetectSpec
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import (  # type: ignore[import]
-    checkpoint, ucd_hr_detection, printer,
-)
+from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer
 
 MIGRATED_SCAN_FUNCTIONS = {
-    "scan_checkpoint": checkpoint.DETECT,
-    "scan_ricoh_printer": printer.DETECT_RICOH,
-    "_is_ucd": ucd_hr_detection.UCD,
-    "is_ucd": ucd_hr_detection.UCD,
-    "is_hr": ucd_hr_detection.HR,
-    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,
-    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,
-    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,
-    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,
-}
+    # I am not sure why the following suppressions are needed.
+    # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
+    # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
+    "scan_checkpoint": checkpoint.DETECT,  # type: ignore[has-type]
+    "scan_ricoh_printer": printer.DETECT_RICOH,  # type: ignore[has-type]
+    "_is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
+    "is_ucd": ucd_hr_detection.UCD,  # type: ignore[has-type]
+    "is_hr": ucd_hr_detection.HR,  # type: ignore[has-type]
+    "prefer_hr_else_ucd": ucd_hr_detection.PREFER_HR_ELSE_UCD,  # type: ignore[has-type]
+    "is_ucd_mem": ucd_hr_detection.USE_UCD_MEM,  # type: ignore[has-type]
+    "is_hr_mem": ucd_hr_detection.USE_HR_MEM,  # type: ignore[has-type]
+    "_is_ucd_mem": ucd_hr_detection._UCD_MEM,  # type: ignore[has-type]
+}  # type: Dict[str, SNMPDetectSpec]
 
 if sys.version_info[0] >= 3:
 

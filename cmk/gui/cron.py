@@ -4,9 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import time
+import sys
 from typing import Union  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -30,7 +35,10 @@ if not cmk_version.is_raw_edition():
 
 loaded_with_language = False  # type: Union[bool, None, str]
 
-lock_file = cmk.utils.paths.tmp_dir + "/cron.lastrun"
+
+def _lock_file():
+    # type: () -> Path
+    return Path(cmk.utils.paths.tmp_dir) / "cron.lastrun"
 
 
 # Load all view plugins
@@ -54,13 +62,19 @@ def load_plugins(force):
 @cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron():
     # type: () -> None
+
+    lock_file = _lock_file()
+
     # Prevent cron jobs from being run too often, also we need
     # locking in order to prevent overlapping runs
-    if os.path.exists(lock_file):
-        last_run = os.stat(lock_file).st_mtime
+    if lock_file.exists():
+        last_run = lock_file.stat().st_mtime
         if time.time() - last_run < 59:
             raise MKGeneralException("Cron called too early. Skipping.")
-    open(lock_file, "w")  # touches the file
+
+    with lock_file.open("wb"):
+        pass  # touches the file
+
     store.aquire_lock(lock_file)
 
     # The cron page is accessed unauthenticated. After leaving the page_run_cron area

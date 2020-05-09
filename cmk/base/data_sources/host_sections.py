@@ -151,7 +151,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         return {} if all(all(v is None for v in s.values()) for s in kwargs.values()) else kwargs
 
     def get_cache_info(self, section_names):
-        # type: (List[PluginName]) -> Union[Tuple[None, None], Tuple[int, int]]
+        # type: (List[PluginName]) -> Optional[Tuple[int, int]]
         """Aggregate information about the age of the data in the agent sections
         """
         cached_ats = []  # type: List[int]
@@ -168,7 +168,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
                     cached_ats.append(cache_info[0])
                     intervals.append(cache_info[1])
 
-        return (min(cached_ats), max(intervals)) if cached_ats else (None, None)
+        return (min(cached_ats), max(intervals)) if cached_ats else None
 
     def get_parsed_section(
             self,

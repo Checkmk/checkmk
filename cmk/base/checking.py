@@ -284,7 +284,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, service):
     # type: (data_sources.MultiHostSections, HostName, Optional[HostAddress], Service) -> bool
     check_function = config.check_info[service.check_plugin_name].get("check_function")
     if check_function is None:
-        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, (None, None))
+        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
 
     # Make a bit of context information globally available, so that functions
@@ -355,38 +355,22 @@ def execute_check(multi_host_sections, hostname, ipaddress, service):
 
 
 def _legacy_determine_cache_info(multi_host_sections, section_name):
+    # type: (data_sources.MultiHostSections, SectionName) -> Optional[Tuple[int, int]]
     """Aggregate information about the age of the data in the agent sections
 
     This is in data_sources.g_agent_cache_info. For clusters we use the oldest
     of the timestamps, of course.
     """
-    oldest_cached_at = None
-    largest_interval = None
-
-    def minn(a, b):
-        # type: (Optional[int], Optional[int]) -> Optional[int]
-        if a is None:
-            return b
-        if b is None:
-            return a
-        return min(a, b)
-
-    def maxn(a, b):
-        # type: (Optional[int], Optional[int]) -> Optional[int]
-        if a is None:
-            return b
-        if b is None:
-            return a
-        return max(a, b)
-
+    cached_ats = []  # type: List[int]
+    intervals = []  # type: List[int]
     for host_sections in multi_host_sections.get_host_sections().values():
         section_entries = host_sections.cache_info
         if section_name in section_entries:
             cached_at, cache_interval = section_entries[section_name]
-            oldest_cached_at = minn(oldest_cached_at, cached_at)
-            largest_interval = maxn(largest_interval, cache_interval)
+            cached_ats.append(cached_at)
+            intervals.append(cache_interval)
 
-    return oldest_cached_at, largest_interval
+    return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
 def determine_check_params(entries):
@@ -571,7 +555,7 @@ def _convert_perf_value(x):
 
 
 def _submit_check_result(host, servicedesc, result, cache_info):
-    # type: (HostName, ServiceDetails, ServiceCheckResult, Tuple[Optional[int], Optional[int]]) -> None
+    # type: (HostName, ServiceDetails, ServiceCheckResult, Optional[Tuple[int, int]]) -> None
     state, infotext, perfdata = result
 
     if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or
@@ -611,7 +595,7 @@ def _submit_check_result(host, servicedesc, result, cache_info):
             perftext = "|" + (" ".join(perftexts))
 
     if _submit_to_core:
-        _do_submit_to_core(host, servicedesc, state, infotext + perftext, *cache_info)
+        _do_submit_to_core(host, servicedesc, state, infotext + perftext, cache_info)
 
     _output_check_result(servicedesc, state, infotext, perftexts)
 
@@ -630,9 +614,16 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
                     six.ensure_str(p))
 
 
-def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
-    # type: (HostName, ServiceName, ServiceState, ServiceDetails, Optional[int], Optional[int]) -> None
+def _do_submit_to_core(
+        host,  # type: HostName
+        service,  # type: ServiceName
+        state,  # type: ServiceState
+        output,  # type: ServiceDetails
+        cache_info,  # type: Optional[Tuple[int, int]]
+):
+    # type: (...) -> None
     if _in_keepalive_mode():
+        cached_at, cache_interval = cache_info or (None, None)
         # Regular case for the CMC - check helpers are running in keepalive mode
         keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
                                              cache_interval)

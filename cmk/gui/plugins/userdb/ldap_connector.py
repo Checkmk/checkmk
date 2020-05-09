@@ -36,6 +36,12 @@ import re
 import shutil
 import sys
 import time
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 from typing import (  # pylint: disable=unused-import
     Optional, IO, Union, Dict, List, Set, Text,
 )
@@ -214,7 +220,8 @@ class LDAPUserConnector(UserConnector):
         self._group_search_cache = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = cmk.utils.paths.var_dir + '/web/ldap_%s_sync_time.mk' % self.id()
+        self._sync_time_file = Path(cmk.utils.paths.var_dir).joinpath('web/ldap_%s_sync_time.mk' %
+                                                                      self.id())
 
         self._save_suffix()
 
@@ -352,10 +359,12 @@ class LDAPUserConnector(UserConnector):
             raise
 
     def disconnect(self):
+        # type: () -> None
         self._ldap_obj = None
         self._ldap_obj_config = None
 
     def _discover_nearest_dc(self, domain):
+        # type: (str) -> str
         cached_server = self._get_nearest_dc_from_cache()
         if cached_server:
             self._logger.info('Using cached DC %s' % cached_server)
@@ -376,39 +385,47 @@ class LDAPUserConnector(UserConnector):
             return domain
 
     def _get_nearest_dc_from_cache(self):
+        # type: () -> Optional[str]
         try:
-            return open(self._nearest_dc_cache_filepath()).read()
+            return six.ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
         except IOError:
             pass
+        return None
 
     def _cache_nearest_dc(self, server):
+        # type: (str) -> None
         self._logger.debug('Caching nearest DC %s' % server)
         store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):
+        # type: () -> None
         if not self._uses_discover_nearest_server():
             return
 
         try:
-            os.unlink(self._nearest_dc_cache_filepath())
+            self._nearest_dc_cache_filepath().unlink()
         except OSError:
             pass
 
     def _nearest_dc_cache_filepath(self):
-        return os.path.join(self._ldap_caches_filepath(), "nearest_server.%s" % self.id())
+        # type: () -> Path
+        return self._ldap_caches_filepath() / ("nearest_server.%s" % self.id())
 
     @classmethod
     def _ldap_caches_filepath(cls):
-        return os.path.join(cmk.utils.paths.tmp_dir, "ldap_caches")
+        # type: () -> Path
+        return Path(cmk.utils.paths.tmp_dir) / "ldap_caches"
 
     @classmethod
     def config_changed(cls):
+        # type: () -> None
         cls.clear_all_ldap_caches()
 
     @classmethod
     def clear_all_ldap_caches(cls):
+        # type: () -> None
         try:
-            shutil.rmtree(cls._ldap_caches_filepath())
+            shutil.rmtree(str(cls._ldap_caches_filepath()))
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -1318,9 +1335,12 @@ class LDAPUserConnector(UserConnector):
         self._group_search_cache.clear()
 
     def _set_last_sync_time(self):
-        open(self._sync_time_file, 'w').write('%s\n' % time.time())
+        # type: () -> None
+        with self._sync_time_file.open('w', encoding="utf-8") as f:
+            f.write('%s\n' % time.time())
 
     def is_enabled(self):
+        # type: () -> bool
         sync_config = user_sync_config()
         if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
@@ -1328,11 +1348,14 @@ class LDAPUserConnector(UserConnector):
         return True
 
     def sync_is_needed(self):
+        # type: () -> bool
         return self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
 
     def _get_last_sync_time(self):
+        # type: () -> float
         try:
-            return float(open(self._sync_time_file).read().strip())
+            with self._sync_time_file.open(encoding="utf-8") as f:
+                return float(f.read().strip())
         except Exception:
             return 0
 

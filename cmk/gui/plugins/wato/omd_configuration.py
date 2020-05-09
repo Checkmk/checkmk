@@ -6,7 +6,6 @@
 
 import sys
 import os
-import glob
 import traceback
 from typing import (  # pylint: disable=unused-import
     Dict, Any,
@@ -287,7 +286,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def default_globals(self):
         diskspace_context = {}  # type: Dict[str, Any]
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
-        with (open(str(filename))) as f:
+        with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), 'exec')
             exec(code, {}, diskspace_context)
         return {
@@ -456,17 +455,17 @@ class ConfigDomainApache(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/apache/apache.conf")]
+        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/apache/apache.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d", "*.conf")))
+            Path(cmk.utils.paths.omd_root).joinpath("etc/apache/conf.d").glob("*.conf"))
 
         value = default_value
 
         for config_file in config_files:
-            if config_file.endswith("zzz_check_mk.conf"):
+            if config_file.name == "zzz_check_mk.conf":
                 continue  # Skip the file written by this config domain
 
-            for line in open(config_file):
+            for line in config_file.open(encoding="utf-8"):
                 if line.lstrip().startswith(varname):
                     raw_value = line.split()[1]
                     value = conv_func(raw_value)
@@ -576,17 +575,17 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.conf")]
+        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d", "*.conf")))
+            Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.d").glob("*.conf"))
 
         value = default_value
 
         for config_file in config_files:
-            if config_file.endswith("zzz_check_mk.conf"):
+            if config_file.name == "zzz_check_mk.conf":
                 continue  # Skip the file written by this config domain
 
-            for line in open(config_file):
+            for line in config_file.open(encoding="utf-8"):
                 if line.lstrip().startswith(varname):
                     raw_value = line.split("=")[1]
                     value = conv_func(raw_value)

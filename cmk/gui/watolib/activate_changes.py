@@ -1477,8 +1477,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 (escaping.escape_attribute(response_text)))
 
     def _upload_file(self, url, insecure):
-        return cmk.gui.watolib.automations.get_url(
-            url, insecure, files={"snapshot": open(self._snapshot_settings.snapshot_path, "r")})
+        with open(self._snapshot_settings.snapshot_path, "rb") as f:
+            return cmk.gui.watolib.automations.get_url(url, insecure, files={"snapshot": f})
 
     def _do_activate(self):
         # type: () -> ConfigWarnings

@@ -10,6 +10,7 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import sys
 import abc
 import errno
 import glob
@@ -21,6 +22,11 @@ import subprocess
 import time
 import json
 from typing import Any, List, Optional, Text, Tuple  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import six
 
@@ -203,11 +209,13 @@ class MKBackupJob(object):
         }[state]
 
     def state_file_path(self):
+        # type: () -> Path
         raise NotImplementedError()
 
     def cleanup(self):
+        # type: () -> None
         try:
-            os.unlink(self.state_file_path())
+            self.state_file_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -216,7 +224,8 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = json.load(open(self.state_file_path()))
+            with self.state_file_path().open(encoding="utf-8") as f:
+                state = json.load(f)
         except IOError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
@@ -235,16 +244,18 @@ class MKBackupJob(object):
             state.update({
                 "state": "finished",
                 "finished": max(state["started"],
-                                os.stat(self.state_file_path()).st_mtime),
+                                self.state_file_path().stat().st_mtime),
                 "success": False,
             })
 
         return state
 
     def was_started(self):
-        return os.path.exists(self.state_file_path())
+        # type: () -> bool
+        return self.state_file_path().exists()
 
     def is_running(self):
+        # type: () -> bool
         if not self.was_started():
             return False
 
@@ -326,12 +337,13 @@ class Job(MKBackupJob, BackupEntity):
         return "-".join([p.replace("-", "+") for p in parts])
 
     def state_file_path(self):
+        # type: () -> Path
         if not is_site():
-            path = "/var/lib/mkbackup"
+            path = Path("/var/lib/mkbackup")
         else:
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+            path = Path(os.environ["OMD_ROOT"], "var/check_mk/backup")
 
-        return "%s/%s.state" % (path, self.ident())
+        return path / ("%s.state" % self.ident())
 
     def _start_command(self):
         return [mkbackup_path(), "backup", "--background", self.ident()]
@@ -493,17 +505,17 @@ class Jobs(BackupEntityCollection):
         self.save_cronjobs()
 
     def save_cronjobs(self):
-        with open(self._cronjob_path, "w") as f:
+        with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
                 cron_config = job.cron_config()
                 if cron_config:
-                    f.write("%s\n" % "\n".join(cron_config))
+                    f.write(u"%s\n" % "\n".join(cron_config))
 
         self._apply_cron_config()
 
     def _write_cronjob_header(self, f):
-        f.write("# Written by mkbackup configuration\n")
+        f.write(u"# Written by mkbackup configuration\n")
 
     def _apply_cron_config(self):
         pass
@@ -1300,7 +1312,8 @@ class BackupTargetLocal(ABCBackupTargetType):
         # Check write access for the site user
         try:
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            open(test_file_path, "w")
+            with open(test_file_path, "wb"):
+                pass
             os.unlink(test_file_path)
         except IOError:
             if is_cma():
@@ -1340,7 +1353,8 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = json.load(open(path))
+        with Path(path).open(encoding="utf-8") as f:
+            info = json.load(f)
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved
@@ -1500,9 +1514,10 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self):
+        # type: () -> Path
         if not is_site():
-            return "/var/lib/mkbackup/restore.state"
-        return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
+            return Path("/var/lib/mkbackup/restore.state")
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
 
     def complete(self):
         self.cleanup()

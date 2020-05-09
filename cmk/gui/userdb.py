@@ -616,7 +616,7 @@ def load_users(lock=False):
 
     def readlines(f):
         try:
-            return open(f)
+            return Path(f).open(encoding="utf-8")
         except IOError:
             return []
 
@@ -680,8 +680,9 @@ def load_users(lock=False):
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                secret = open(directory + d +
-                              "/automation.secret").read().strip()  # type: Optional[str]
+                user_secret_path = Path(directory) / d / "automation.secret"
+                with user_secret_path.open(encoding="utf-8") as f:
+                    secret = six.ensure_str(f.read().strip())  # type: Optional[str]
             except IOError:
                 secret = None
 
@@ -707,9 +708,10 @@ def custom_attr_path(userid, key):
 
 def load_custom_attr(userid, key, conv_func, default=None):
     # type: (UserId, str, Callable[[str], Any], Any) -> Any
-    path = custom_attr_path(userid, key)
+    path = Path(custom_attr_path(userid, key))
     try:
-        return conv_func(open(path).read().strip())
+        with path.open(encoding="utf-8") as f:
+            return conv_func(six.ensure_str(f.read().strip()))
     except IOError:
         return default
 

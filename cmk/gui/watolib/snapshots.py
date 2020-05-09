@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import os
 import time
 import shutil
@@ -16,6 +17,10 @@ from hashlib import sha256
 from typing import (  # pylint: disable=unused-import
     Any, List, Dict, Text, Optional, Union,
 )
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 import six
 
 import cmk.utils
@@ -76,7 +81,8 @@ def _do_create_snapshot(data):
         filename_target = "%s/%s" % (snapshot_dir, snapshot_name)
         filename_work = "%s/%s.work" % (work_dir, snapshot_name)
 
-        open(filename_target, "w").close()
+        with open(filename_target, "wb"):
+            pass
 
         def get_basic_tarinfo(name):
             tarinfo = tarfile.TarInfo(name)
@@ -128,7 +134,9 @@ def _do_create_snapshot(data):
                     "Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
                     (name, exit_code, stderr, command))
 
-            subtar_hash = sha256(open(path_subtar, "rb").read()).hexdigest()
+            with open(path_subtar, "rb") as subtar:
+                subtar_hash = sha256(subtar.read()).hexdigest()
+
             subtar_signed = sha256(six.ensure_binary(subtar_hash) + _snapshot_secret()).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
@@ -329,8 +337,10 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
             # Check if this process is still running
             if os.path.exists(path_pid):
-                if os.path.exists(path_pid) and not os.path.exists(
-                        "/proc/%s" % open(path_pid).read()):
+                with Path(path_pid).open(encoding="utf-8") as f:
+                    pid = int(f.read())
+
+                if not os.path.exists("/proc/%d" % pid):
                     status["progress_status"] = _("ERROR: Snapshot progress no longer running!")
                     raise MKGeneralException(
                         _("Error: The process responsible for creating the snapshot is no longer running!"
@@ -339,7 +349,9 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
             # Read snapshot status file (regularly updated by snapshot process)
             if os.path.exists(path_status):
-                lines = open(path_status, "r").readlines()
+                with Path(path_status).open(encoding="utf-8") as f:
+                    lines = f.readlines()
+
                 status["comment"] = lines[0].split(":", 1)[1]
                 file_info = {}
                 for filename in lines[1:]:

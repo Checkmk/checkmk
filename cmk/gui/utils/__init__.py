@@ -132,11 +132,11 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
     # type: (int, int, int) -> str
     """Generate a random string (no cryptographic safety)"""
     secret = ""
-    urandom = open("/dev/urandom")
-    while len(secret) < size:
-        c = urandom.read(1)
-        if ord(c) >= from_ascii and ord(c) <= to_ascii:
-            secret += c
+    with Path("/dev/urandom").open("rb") as urandom:
+        while len(secret) < size:
+            c = urandom.read(1)
+            if ord(c) >= from_ascii and ord(c) <= to_ascii:
+                secret += six.ensure_str(c)
     return secret
 
 
@@ -144,7 +144,8 @@ def gen_id():
     # type: () -> str
     """Generates a unique id"""
     try:
-        return open('/proc/sys/kernel/random/uuid').read().strip()
+        with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
+            return six.ensure_str(f.read().strip())
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
@@ -173,10 +174,12 @@ def load_web_plugins(forwhat, globalvars):
         for file_path in sorted(plugins_path.iterdir()):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
-                    exec(_drop_comments(file_path.open().read()), globalvars)
+                    with file_path.open(encoding="utf-8") as f:
+                        exec(_drop_comments(f.read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
-                    code_bytes = file_path.open("rb").read()[8:]
+                    with file_path.open("rb") as pyc:
+                        code_bytes = pyc.read()[8:]
                     code = marshal.loads(code_bytes)
                     exec(code, globalvars)  # yapf: disable
 

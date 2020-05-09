@@ -17,6 +17,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+import six
+
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
@@ -157,7 +159,8 @@ class SiteChanges(object):
         self._site_id = site_id
 
     def _site_changes_path(self):
-        return os.path.join(var_dir, "replication_changes_%s.mk" % self._site_id)
+        # type: () -> Path
+        return Path(var_dir) / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
     def load(self, lock=False):
@@ -173,9 +176,10 @@ class SiteChanges(object):
 
         changes = []
         try:
-            for entry in open(path).read().split("\0"):
-                if entry:
-                    changes.append(ast.literal_eval(entry))
+            with path.open("rb") as f:
+                for entry in f.read().split(b"\0"):
+                    if entry:
+                        changes.append(ast.literal_eval(six.ensure_str(entry)))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -190,7 +194,8 @@ class SiteChanges(object):
 
     def save(self, changes):
         # First truncate the file
-        open(self._site_changes_path(), "w")
+        with self._site_changes_path().open("wb"):
+            pass
 
         for change_spec in changes:
             self.save_change(change_spec)
@@ -200,12 +205,12 @@ class SiteChanges(object):
         try:
             store.aquire_lock(path)
 
-            with open(path, "a+") as f:
-                f.write(repr(change_spec) + "\0")
+            with path.open("ab+") as f:
+                f.write(six.ensure_binary(repr(change_spec)) + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 
-            os.chmod(path, 0o660)
+            path.chmod(0o660)
 
         except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
@@ -215,7 +220,7 @@ class SiteChanges(object):
 
     def clear(self):
         try:
-            os.unlink(self._site_changes_path())
+            self._site_changes_path().unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK

@@ -35,8 +35,14 @@
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false whether or not the user is permitted
 
-import os
 import copy
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import six
 
 import cmk.utils.store as store
@@ -47,7 +53,9 @@ import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.watolib.groups import load_contact_group_information
 
-_auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
+
+def _auth_php():
+    return Path(cmk.utils.paths.var_dir) / "wato" / "auth" / "auth.php"
 
 
 # TODO: Fix copy-n-paste with cmk.gui.watolib.tags.
@@ -84,17 +92,7 @@ def _create_php_file(callee, users, role_permissions, groups):
     for user in nagvis_users.values():
         user.setdefault('language', config.default_language)
 
-    # need an extra lock file, since we move the auth.php.tmp file later
-    # to auth.php. This move is needed for not having loaded incomplete
-    # files into php.
-    tempfile = _auth_base_dir + '/auth.php.tmp'
-    lockfile = _auth_base_dir + '/auth.php.state'
-    open(lockfile, "a")
-    store.aquire_lock(lockfile)
-
-    # First write a temp file and then do a move to prevent syntax errors
-    # when reading half written files during creating that new file
-    open(tempfile, 'w').write('''<?php
+    content = '''<?php
 // Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_groups;
 $mk_users   = %s;
@@ -198,19 +196,15 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, _format_php(nagvis_users), _format_php(role_permissions), _format_php(groups)))
+''' % (callee, _format_php(nagvis_users), _format_php(role_permissions), _format_php(groups))
 
-    # Now really replace the file
-    os.rename(tempfile, _auth_base_dir + '/auth.php')
-
-    store.release_lock(lockfile)
+    store.makedirs(_auth_php().parent)
+    store.save_text_to_file(_auth_php(), content)
 
 
 def _create_auth_file(callee, users=None):
     if users is None:
         users = userdb.load_users()
-
-    store.mkdir(_auth_base_dir)
 
     contactgroups = load_contact_group_information()
     groups = {}
@@ -225,8 +219,7 @@ def _on_userdb_job():
     # Working around the problem that the auth.php file needed for multisite based
     # authorization of external addons might not exist when setting up a new installation
     # This is a good place to replace old api based files in the future.
-    auth_php = cmk.utils.paths.var_dir + '/wato/auth/auth.php'
-    if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
+    if not _auth_php().exists() or _auth_php().stat().st_size == 0:
         _create_auth_file("page_hook")
 
 

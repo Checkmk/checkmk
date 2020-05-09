@@ -6,7 +6,6 @@
 """Helper functions for dealing with host tags"""
 
 import sys
-import os
 import errno
 import six
 
@@ -58,7 +57,6 @@ class TagConfigFile(WatoSimpleConfigFile):
         return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
                                                     legacy_cfg["wato_aux_tags"])
 
-    # TODO: Move the hosttag export to a hook
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
         self._save_base_config(cfg)
@@ -211,21 +209,13 @@ def _extend_user_modified_tag_groups(host_tags):
 # taggroup_choice() for this tag group.
 #
 def _export_hosttags_to_php(cfg):
-    php_api_dir = cmk.utils.paths.var_dir + "/wato/php-api/"
-    path = php_api_dir + '/hosttags.php'
+    php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
+    path = php_api_dir / 'hosttags.php'
     store.mkdir(php_api_dir)
 
     tag_config = cmk.utils.tags.TagConfig()
     tag_config.parse_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
-
-    # need an extra lock file, since we move the auth.php.tmp file later
-    # to auth.php. This move is needed for not having loaded incomplete
-    # files into php.
-    tempfile = path + '.tmp'
-    lockfile = path + '.state'
-    open(lockfile, 'a')
-    store.aquire_lock(lockfile)
 
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict = {}
@@ -238,9 +228,7 @@ def _export_hosttags_to_php(cfg):
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    # First write a temp file and then do a move to prevent syntax errors
-    # when reading half written files during creating that new file
-    open(tempfile, 'w').write('''<?php
+    content = u'''<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
 $mk_hosttags = %s;
@@ -286,11 +274,9 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict)))
-    # Now really replace the destination file
-    os.rename(tempfile, path)
-    store.release_lock(lockfile)
-    os.unlink(lockfile)
+''' % (_format_php(hosttags_dict), _format_php(auxtags_dict))
+
+    store.save_text_to_file(path, content)
 
 
 # TODO: Fix copy-n-paste with cmk.gui.watolib.auth_pnp.

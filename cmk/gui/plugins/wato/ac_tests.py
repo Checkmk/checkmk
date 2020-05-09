@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import sys
 import subprocess
 from typing import (  # pylint: disable=unused-import
     Type, Iterator, Text,
@@ -13,6 +14,11 @@ from typing import (  # pylint: disable=unused-import
 import requests
 import urllib3  # type: ignore[import]
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 from livestatus import LocalConnection
 
@@ -235,7 +241,7 @@ class ACTestTmpfs(ACTest):
         # then in /proc/mounts the physical path will appear and be
         # different from tmp_path. We just check the suffix therefore.
         path_suffix = "sites/%s/tmp" % site_id
-        for line in open("/proc/mounts"):
+        for line in Path("/proc/mounts").open(encoding="utf-8"):
             try:
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':

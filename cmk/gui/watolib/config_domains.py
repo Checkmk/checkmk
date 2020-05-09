@@ -18,6 +18,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
+import six
+
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
@@ -110,9 +112,11 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                   _("Activating changes of Livestatus Proxy configuration"))
 
         try:
-            pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
+            pidfile = Path(cmk.utils.paths.livestatus_unix_socket) / "proxyd.pid"
             try:
-                pid = int(open(pidfile).read().strip())
+                with pidfile.open(encoding="utf-8") as f:
+                    pid = int(f.read().strip())
+
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:  # NOTE: In Python 3 IOError has been merged into OSError!
                 # No liveproxyd running: No reload needed.
@@ -202,8 +206,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         b"", re.DOTALL)
+    _PEM_RE = re.compile("-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
+                         "", re.DOTALL)
 
     def config_dir(self):
         return multisite_dir()
@@ -294,9 +298,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def _get_certificates_from_file(self, path):
         try:
-            return [
-                match.group(0) for match in self._PEM_RE.finditer(open("%s" % path, "rb").read())
-            ]
+            with Path(path).open(encoding="utf-8") as f:
+                return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
@@ -377,25 +380,28 @@ class ConfigDomainOMD(ABCConfigDomain):
     def _load_omd_config(self, path):
         settings = {}
 
-        if not os.path.exists(path):
+        file_path = Path(path)
+
+        if not file_path.exists():
             return {}
 
         try:
-            for line in open(path):
-                line = line.strip()
+            with file_path.open(encoding="utf-8") as f:
+                for line in f:
+                    line = six.ensure_str(line.strip())
 
-                if line == "" or line.startswith("#"):
-                    continue
+                    if line == "" or line.startswith("#"):
+                        continue
 
-                var, value = line.split("=", 1)
+                    var, value = line.split("=", 1)
 
-                if not var.startswith("CONFIG_"):
-                    continue
+                    if not var.startswith("CONFIG_"):
+                        continue
 
-                key = var[7:].strip()
-                val = value.strip().strip("'")
+                    key = var[7:].strip()
+                    val = value.strip().strip("'")
 
-                settings[key] = val
+                    settings[key] = val
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (path, e))
 

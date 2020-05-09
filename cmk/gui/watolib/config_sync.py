@@ -476,7 +476,7 @@ def _update_check_mk(path, tar_file):
     eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
     site_vars = {"contacts": {}}  # type: Dict[str, Any]
-    with open(os.path.join(path, "contacts.mk")) as f:
+    with Path(path).joinpath("contacts.mk").open(encoding="utf-8") as f:
         eval(f.read(), {}, site_vars)
 
     site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])

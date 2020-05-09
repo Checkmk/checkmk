@@ -16,7 +16,15 @@
 #   * [[link4]]
 
 import re
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import cmk.utils.paths
+
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -44,7 +52,7 @@ class Wiki(SidebarSnapin):
 
     def show(self):
         # type: () -> None
-        filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+        filename = Path(cmk.utils.paths.omd_root).joinpath('var/dokuwiki/data/pages/sidebar.txt')
 
         html.open_form(id_="wiki_search",
                        onsubmit="cmk.sidebar.wiki_search('%s');" % config.omd_site())
@@ -60,7 +68,7 @@ class Wiki(SidebarSnapin):
         ul_started = False
         try:
             title = None
-            for line in open(filename).readlines():
+            for line in filename.open(encoding="utf-8").readlines():
                 line = line.strip()
                 if line == "":
                     if ul_started:

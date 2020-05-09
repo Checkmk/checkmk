@@ -334,12 +334,12 @@ def _check_auth(request):
 def verify_automation_secret(user_id, secret):
     # type: (UserId, str) -> bool
     if secret and user_id and "/" not in user_id:
-        path = cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) + "/automation.secret"
-        if not os.path.isfile(path):
+        path = Path(cmk.utils.paths.var_dir) / "web" / six.ensure_str(user_id) / "automation.secret"
+        if not path.is_file():
             return False
 
-        with open(path) as f:
-            return f.read().strip() == secret
+        with path.open(encoding="utf-8") as f:
+            return six.ensure_str(f.read()).strip() == secret
 
     return False
 

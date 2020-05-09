@@ -550,7 +550,8 @@ class BILock(object):
 
     def __enter__(self):
         if not os.path.exists(self._filepath):
-            open(self._filepath, "a+")
+            with open(self._filepath, "ab+"):
+                pass
 
         lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
         lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
@@ -588,13 +589,14 @@ class BILock(object):
 
 
 def marshal_save_data(filepath, data):
-    with open(filepath, "w") as the_file:
+    with open(filepath, "wb") as the_file:
         marshal.dump(data, the_file)
         os.fsync(the_file.fileno())
 
 
 def marshal_load_data(filepath):
-    return marshal.load(open(filepath))
+    with open(filepath, "rb") as f:
+        return marshal.load(f)
 
 
 # This class allows you to load and save python data
@@ -614,7 +616,8 @@ class BICacheFile(object):
         self._filetime = None  # type: Optional[float]
 
         try:
-            open(self._filepath, "a")
+            with open(self._filepath, "ab"):
+                pass
         except IOError:
             pass
 
@@ -670,7 +673,8 @@ class BICacheFile(object):
     def truncate(self):
         log("Truncate %s" % self._filepath)
         with BILock(self._filepath):
-            open(self._filepath, "w")
+            with open(self._filepath, "wb"):
+                pass
             self._cached_data = None
             self._filetime = os.stat(self._filepath).st_mtime
 

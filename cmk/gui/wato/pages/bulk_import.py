@@ -7,12 +7,17 @@
 single WATO folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
-import os
 import csv
 import time
+import sys
 from typing import (  # pylint: disable=unused-import
-    Dict, Text,
+    Dict, Text, Type, List, Optional, Any,
 )
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 from difflib import SequenceMatcher
 import six
 
@@ -27,6 +32,7 @@ from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 
 from cmk.gui.valuespec import (
@@ -38,33 +44,43 @@ from cmk.gui.valuespec import (
     UploadOrPasteTextFile,
 )
 
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
+from cmk.gui.plugins.wato import (  # pylint: disable=unused-import
+    WatoMode, ActionResult, mode_registry,
 )
+
+# Was not able to get determine the type of csv._reader / _csv.reader
+CSVReader = Any
 
 
 @mode_registry.register
 class ModeBulkImport(WatoMode):
-    _upload_tmp_path = cmk.utils.paths.tmp_dir + "/host-import"
-
     @classmethod
     def name(cls):
+        # type: () -> str
         return "bulk_import"
 
     @classmethod
     def permissions(cls):
+        # type: () -> List[PermissionName]
         return ["hosts", "manage_hosts"]
 
     def __init__(self):
+        # type: () -> None
         super(ModeBulkImport, self).__init__()
-        self._params = None
+        self._params = None  # type: Optional[Dict[str, Any]]
         self._has_title_line = True
 
+    @property
+    def _upload_tmp_path(self):
+        # type: () -> Path
+        return Path(cmk.utils.paths.tmp_dir) / "host-import"
+
     def title(self):
+        # type: () -> Text
         return _("Bulk host import")
 
     def buttons(self):
+        # type: () -> None
         html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "folder")]),
                             "abort")
         if html.request.has_var("file_id"):
@@ -72,6 +88,7 @@ class ModeBulkImport(WatoMode):
                                 watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
 
     def action(self):
+        # type: () -> ActionResult
         if html.transaction_valid():
             if html.request.has_var("_do_upload"):
                 self._upload_csv_file()
@@ -80,16 +97,19 @@ class ModeBulkImport(WatoMode):
 
             if html.request.var("_do_import"):
                 return self._import(csv_reader)
+        return None
 
     def _file_path(self):
+        # type: () -> Path
         file_id = html.request.get_unicode_input_mandatory(
             "file_id", "%s-%d" % (config.user.id, int(time.time())))
-        return self._upload_tmp_path + "/%s.csv" % file_id
+        return self._upload_tmp_path / six.ensure_str("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
     # for this request. It needs to be available during several potential "confirm"
     # steps and then through the upload step.
     def _upload_csv_file(self):
+        # type: () -> None
         store.makedirs(self._upload_tmp_path)
 
         self._cleanup_old_files()
@@ -109,21 +129,23 @@ class ModeBulkImport(WatoMode):
             html.request.set_var("do_service_detection", "1")
 
     def _cleanup_old_files(self):
-        for f in os.listdir(self._upload_tmp_path):
-            path = self._upload_tmp_path + "/" + f
-            mtime = os.stat(path).st_mtime
+        # type: () -> None
+        for path in self._upload_tmp_path.iterdir():
+            mtime = path.stat().st_mtime
             if mtime < time.time() - 3600:
-                os.unlink(path)
+                path.unlink()
 
     def _get_custom_csv_dialect(self, delim):
+        # type: (str) -> Type[csv.Dialect]
         class CustomCSVDialect(csv.excel):
             delimiter = delim
 
-        return CustomCSVDialect()
+        return CustomCSVDialect
 
     def _open_csv_file(self):
+        # type: () -> CSVReader
         try:
-            csv_file = open(self._file_path())
+            csv_file = self._file_path().open(encoding="utf-8")
         except IOError:
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
@@ -131,7 +153,8 @@ class ModeBulkImport(WatoMode):
         params = self._vs_parse_params().from_html_vars("_preview")
         self._vs_parse_params().validate_value(params, "_preview")
         self._params = params
-        self._has_title_line = self._params.get("has_title_line")
+        assert self._params is not None
+        self._has_title_line = self._params.get("has_title_line", True)
 
         # try to detect the CSV format to be parsed
         if "field_delimiter" in params:
@@ -152,6 +175,7 @@ class ModeBulkImport(WatoMode):
         return csv.reader(csv_file, csv_dialect)
 
     def _import(self, csv_reader):
+        # type: (CSVReader) -> ActionResult
         if self._has_title_line:
             try:
                 next(csv_reader)  # skip header
@@ -198,7 +222,8 @@ class ModeBulkImport(WatoMode):
         return "folder", msg
 
     def _delete_csv_file(self):
-        os.unlink(self._file_path())
+        # type: () -> None
+        self._file_path().unlink()
 
     def _get_host_info_from_row(self, row):
         host_name = None
@@ -236,12 +261,14 @@ class ModeBulkImport(WatoMode):
         return host_name, attributes
 
     def page(self):
+        # type: () -> None
         if not html.request.has_var("file_id"):
             self._upload_form()
         else:
             self._preview()
 
     def _upload_form(self):
+        # type: () -> None
         html.begin_form("upload", method="POST")
         html.p(
             _("Using this page you can import several hosts at once into the choosen folder. You can "
@@ -272,6 +299,7 @@ class ModeBulkImport(WatoMode):
         )
 
     def _preview(self):
+        # type: () -> None
         html.begin_form("preview", method="POST")
         self._preview_form()
 
@@ -344,6 +372,7 @@ class ModeBulkImport(WatoMode):
         html.end_form()
 
     def _preview_form(self):
+        # type: () -> None
         if self._params is not None:
             params = self._params
         else:

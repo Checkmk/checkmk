@@ -266,7 +266,7 @@ def call_hook_activate_changes():
 
 
 def do_remote_automation(site, command, vars_, files=None, timeout=None):
-    auto_logger.info("RUN [%s]: %s", site["id"], command)
+    auto_logger.info("RUN [%s]: %s", site, command)
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]

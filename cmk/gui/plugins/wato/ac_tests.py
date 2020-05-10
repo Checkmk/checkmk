@@ -581,7 +581,9 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
     def _get_average_process_size(self):
         try:
-            ppid = int(open("%s/tmp/apache/run/apache.pid" % cmk.utils.paths.omd_root).read())
+            pid_file = Path(cmk.utils.paths.omd_root).joinpath("tmp/apache/run/apache.pid")
+            with pid_file.open(encoding="utf-8") as f:
+                ppid = int(f.read())
         except (IOError, ValueError):
             raise MKGeneralException(_("Failed to read the apache process ID"))
 

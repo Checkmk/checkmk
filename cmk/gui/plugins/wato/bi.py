@@ -5,12 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import os
+import sys
 import json
 import pprint
 from typing import (  # pylint: disable=unused-import
     Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union,
 )
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -118,7 +123,7 @@ class BIManagement(object):
     # '--------------------------------------------------------------------'
 
     def _load_config(self):
-        filename = watolib.multisite_dir() + "bi.mk"
+        filename = Path(watolib.multisite_dir()) / "bi.mk"
         try:
             vars_ = {
                 "aggregation_rules": {},
@@ -127,8 +132,11 @@ class BIManagement(object):
                 "bi_packs": {},
             }  # type: Dict[str, Any]
             vars_.update(self._bi_constants)
-            if os.path.exists(filename):
-                exec(open(filename).read(), vars_, vars_)
+
+            if filename.exists():
+                # TODO: Can be changed to text IO with Python 3
+                with filename.open("rb") as f:
+                    exec(f.read(), vars_, vars_)
             else:
                 exec(bi_example, vars_, vars_)
 

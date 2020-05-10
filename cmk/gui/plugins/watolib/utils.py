@@ -7,8 +7,14 @@
 import abc
 import os
 import pprint
+import sys
 from typing import Any, Dict, List, Optional, Text, Type  # pylint: disable=unused-import
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
@@ -71,18 +77,19 @@ class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
     def load(self, site_specific=False, custom_site_path=None):
-        filename = self.config_file(site_specific)
+        filename = Path(self.config_file(site_specific))
         if custom_site_path:
-            filename = os.path.join(custom_site_path,
-                                    os.path.relpath(filename, cmk.utils.paths.omd_root))
+            filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
 
         settings = {}  # type: Dict[str, Any]
 
-        if not os.path.exists(filename):
+        if not filename.exists():
             return {}
 
         try:
-            exec(open(filename).read(), settings, settings)
+            # TODO: Can be changed to text IO with Python 3
+            with filename.open("rb") as f:
+                exec(f.read(), settings, settings)
 
             # FIXME: Do not modify the dict while iterating over it.
             for varname in list(settings.keys()):

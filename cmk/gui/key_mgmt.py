@@ -7,7 +7,13 @@
 import os
 import pprint
 import time
+import sys
 from typing import Any, Dict  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 # This is needed for at least CentOS 5.5
 # TODO: Drop this until all supported platforms have newer versions available.
@@ -38,21 +44,22 @@ from cmk.gui.exceptions import MKUserError
 class KeypairStore(object):
     def __init__(self, path, attr):
         # type: (str, str) -> None
-        self._path = path
+        self._path = Path(path)
         self._attr = attr
         super(KeypairStore, self).__init__()
 
     def load(self):
-        filename = self._path
-        if not os.path.exists(filename):
+        if not self._path.exists():
             return {}
 
         variables = {self._attr: {}}  # type: Dict[str, Any]
-        exec(open(filename).read(), variables, variables)
+        # TODO: Can be changed to text IO with Python 3
+        with self._path.open("rb") as f:
+            exec(f.read(), variables, variables)
         return variables[self._attr]
 
     def save(self, keys):
-        store.makedirs(os.path.dirname(self._path))
+        store.makedirs(self._path.parent)
         store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
 
     def choices(self):

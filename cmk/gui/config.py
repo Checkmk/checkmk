@@ -159,7 +159,9 @@ def _load_config_file(path):
     # type: (str) -> None
     """Load the given GUI configuration file"""
     try:
-        exec(open(path).read(), globals(), globals())  # yapf: disable
+        # TODO: Can be changed to text IO with Python 3
+        with Path(path).open("rb") as f:
+            exec(f.read(), globals(), globals())  # yapf: disable
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise

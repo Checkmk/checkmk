@@ -755,21 +755,6 @@ def edit_werk(werkid, custom_files=None, commit=True):
             git_commit(werk, custom_files)
 
 
-def main_commit(args):
-    if len(g_modified) == 0:
-        bail_out("No new or modified werk.")
-    else:
-        sys.stdout.write("Commiting:\n")
-        for wid in g_modified:
-            list_werk(g_werks[wid])
-        cmd = "git commit -m 'Updated werk entries %s' ." % (", ".join(
-            ["#%05d" % wid for wid in g_modified]))
-        if os.system(cmd) == 0:  # nosec
-            sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
-        else:
-            bail_out("Cannot commit.")
-
-
 def main_pick(args):
     if len(args) == 0:
         bail_out("Please specify at least one commit ID to cherry-pick.")

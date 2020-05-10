@@ -3,7 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""Checkmk development script to manage werks
+"""
+import argparse
 import fcntl
 import os
 import struct
@@ -66,6 +68,159 @@ grep_colors = [
     tty_bold + tty_cyan,
     tty_bold + tty_green,
 ]
+
+
+def parse_arguments(argv):
+    # type: (List[str]) -> argparse.Namespace
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.required = True
+
+    # BLAME
+    parser_blame = subparsers.add_parser("blame", help="Show who worked on a werk")
+    parser_blame.add_argument(
+        "id",
+        nargs='?',
+        type=int,
+        help="werk ID",
+        default=None,
+    )
+    parser_blame.set_defaults(func=main_blame)
+
+    # DELETE
+    parser_delete = subparsers.add_parser("delete", help="delete werk(s)")
+    parser_delete.add_argument(
+        "id",
+        nargs='+',
+        type=int,
+        help="werk ID",
+    )
+    parser_delete.set_defaults(func=main_delete)
+
+    # EDIT
+    parser_edit = subparsers.add_parser("edit", help="open werk in editor")
+    parser_edit.add_argument(
+        "id",
+        nargs='?',
+        type=int,
+        help="werk ID (defaults to newest)",
+    )
+    parser_edit.set_defaults(func=main_edit)
+
+    # EXPORT
+    parser_export = subparsers.add_parser("export", help="List werks")
+    parser_export.add_argument(
+        "-r",
+        "--reverse",
+        action="store_true",
+        help="reverse order",
+    )
+    parser_export.add_argument(
+        "filter",
+        nargs="*",
+        help="filter for edition, component, state, class, knowledge state or target version",
+    )
+    parser_export.set_defaults(func=lambda args: main_list(args, "csv"))
+
+    # GREP
+    parser_grep = subparsers.add_parser(
+        "grep",
+        help="show werks containing all of the given keywords",
+    )
+    parser_grep.add_argument('-v', '--vebose', action='store_true')
+    parser_grep.add_argument(
+        "keywords",
+        nargs='+',
+        help="keywords to grep",
+    )
+    parser_grep.set_defaults(func=main_grep)
+
+    # IDS
+    parser_ids = subparsers.add_parser(
+        "ids",
+        help="Show the number of reserved werk IDs or reserve new werk IDs",
+    )
+    parser_ids.add_argument(
+        "count",
+        nargs='?',
+        type=int,
+        help="number of werks to reserve",
+    )
+    parser_ids.set_defaults(func=main_fetch_ids)
+
+    # KNOWNLEDGE
+    parser_knowledge = subparsers.add_parser(
+        "knowledge",
+        aliases=['knw'],
+        help="Change the knowlege state of a werk",
+    )
+    parser_knowledge.add_argument("id", type=int, help="werk ID")
+    parser_knowledge.add_argument(
+        "state",
+        choices=[c[0] for c in knowledge],
+        help=("knowlege state of werk. Allowed are %s." %
+              ", ".join("%s (%s)" % c for c in knowledge)),
+    )
+    parser_knowledge.set_defaults(func=main_knowledge)
+
+    # LIST
+    parser_list = subparsers.add_parser("list", help="List werks")
+    parser_list.add_argument(
+        "-r",
+        "--reverse",
+        action="store_true",
+        help="reverse order",
+    )
+    parser_list.add_argument(
+        "filter",
+        nargs="*",
+        help="filter for edition, component, state, class, knowledge state or target version",
+    )
+    parser_list.set_defaults(func=lambda args: main_list(args, "console"))
+
+    # NEW
+    parser_new = subparsers.add_parser("new", help="Create a new werk")
+    parser_new.add_argument(
+        "custom-files",
+        nargs='*',
+        help="files passed to 'git commit'",
+    )
+    parser_new.set_defaults(func=main_new)
+
+    # PICK
+    parser_pick = subparsers.add_parser(
+        "pick",
+        aliases=["cherry-pick"],
+        help="Pick these werks",
+    )
+    parser_pick.add_argument(
+        "-n",
+        "--no-commit",
+        action="store_true",
+        help="do not commit at the end",
+    )
+    parser_pick.add_argument(
+        "commit",
+        nargs='+',
+        help="Pick these commits",
+    )
+    parser_pick.set_defaults(func=main_pick)
+
+    # SHOW
+    parser_show = subparsers.add_parser("show", help="Show several werks")
+    parser_show.add_argument(
+        "ids",
+        nargs='*',
+        help="Show these werks, or 'all' for all, of leave out for last",
+    )
+    parser_show.set_defaults(func=main_show)
+
+    # URL
+    parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
+    parser_url.add_argument("id", type=int, help="werk ID")
+    parser_url.set_defaults(func=main_url)
+
+    return parser.parse_args(argv)
 
 
 def get_tty_size():
@@ -310,28 +465,6 @@ def add_comment(werk, title, comment):
 %s""" % (time.strftime("%F %T"), title, comment)
 
 
-def usage():
-    # type: () -> NoReturn
-    sys.stdout.write("""Usage: werk COMMAND [ARGS...]
-
-where COMMAND is one of:
-
-  ids [#]                - Shows the number of reserved werk IDS. With a number
-                           given as parameter the command will reserve new werk IDS.
-  list [-r] [STATE]      - list werks (-r: reverse)
-  new                    - create a new werk
-  show [# #..]           - show several werks, or 'all' for all, of leave out for last
-  delete #..             - delete werk(s)
-  grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
-  edit [#]               - open werk # in editor (or newest werk)
-  knowledge|knw ID STATE - change the knowlege state of a werk
-  blame [#]              - show who worked on a werk
-  url #                  - show the online URL of werk #
-
-""")
-    sys.exit(1)
-
-
 def num_color(n, colors, inverse):
     # type: (int, List[int], bool) -> str
     if inverse:
@@ -387,20 +520,15 @@ def show_werk(werk):
 
 
 def main_list(args, fmt):
-    # type: (List[str], str) -> None
+    # type: (argparse.Namespace, str) -> None
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
     filters = {}  # type: Dict[str, List]
 
-    reverse = False
-    for a in args:
+    for a in args.filter:
 
         if a == "current":
             a = g_current_version
-
-        if a == '-r':
-            reverse = True
-            continue
 
         hit = False
         for tp, values in [("edition", editions), ("component", all_components()),
@@ -433,7 +561,7 @@ def main_list(args, fmt):
         if not skip:
             newwerks.append(werk)
 
-    werks = sorted(newwerks, key=lambda w: int(w["date"]), reverse=reverse)
+    werks = sorted(newwerks, key=lambda w: int(w["date"]), reverse=args.reverse)
 
     # Output
     if fmt == "console":
@@ -493,11 +621,11 @@ def werk_effort(werk):
 
 
 def main_show(args):
-    # type: (List[str]) -> None
-    if 'all' in args:
+    # type: (argparse.Namespace) -> None
+    if 'all' in args.ids:
         ids = [wid for (wid, _werk) in g_werks.items()]
     else:
-        ids = [int(a) for a in args] if args else [get_last_werk()]
+        ids = args.ids or [get_last_werk()]
 
     for wid in ids:
         if wid != ids[0]:
@@ -610,7 +738,7 @@ werk_notes = """
 
 
 def main_new(args):
-    # type: (List[str]) -> None
+    # type: (argparse.Namespace) -> None
     sys.stdout.write(tty_green + werk_notes + tty_normal)
 
     werk = {}  # type: Werk
@@ -635,19 +763,14 @@ def main_new(args):
     g_werks[int(werk["id"])] = werk
     save_werk(werk)
     invalidate_my_werkid(int(werk["id"]))
-    edit_werk(int(werk["id"]), args)
+    edit_werk(int(werk["id"]), args.custom_files)
 
     sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk["id"]))
 
 
-def get_werk_arg(args):
-    # type: (List[str]) -> int
-    if len(args) == 0:
-        wid = get_last_werk()
-    else:
-        if len(args) != 1:
-            usage()
-        wid = int(args[0])
+def get_werk_arg(arg):
+    # type: (Optional[Union[str, int]]) -> int
+    wid = get_last_werk() if arg is None else int(arg)
 
     werk = g_werks.get(wid)
     if not werk:
@@ -657,20 +780,21 @@ def get_werk_arg(args):
 
 
 def main_blame(args):
-    # type: (List[str]) -> None
-    wid = get_werk_arg(args)
+    # type: (argparse.Namespace) -> None
+    wid = get_werk_arg(args.id)
     os.system("git blame %d" % wid)  # nosec
 
 
 def main_url(args):
-    # type: (List[str]) -> None
-    wid = get_werk_arg(args)
+    # type: (argparse.Namespace) -> None
+    wid = get_werk_arg(args.id)
     sys.stdout.write(online_url % wid + "\n")
 
 
 def main_delete(args):
-    # type: (List[str]) -> None
-    werks = [int(a) for a in args] if args else [get_last_werk()]
+    # type: (argparse.Namespace) -> None
+    werks = args.ids or [get_last_werk()]
+
     for werk_id in werks:
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
@@ -696,16 +820,7 @@ def grep(line, kw, n):
 
 
 def main_grep(args):
-    # type: (List[str]) -> None
-    if '-v' in args:
-        verbose = True
-        args = [a for a in args if a != '-v']
-    else:
-        verbose = False
-
-    if len(args) == 0:
-        usage()
-
+    # type: (argparse.Namespace) -> None
     for werk in g_werks.values():
         one_kw_didnt_match = False
         title = werk["title"]
@@ -715,7 +830,7 @@ def main_grep(args):
         # *all* of the keywords must match in order for the
         # werk to be displayed
         i = 0
-        for kw in args:
+        for kw in args.keywords:
             i += 1
             this_kw_matched = False
 
@@ -739,43 +854,26 @@ def main_grep(args):
 
         if not one_kw_didnt_match:
             list_werk(werk)
-            if verbose:
+            if args.verbose:
                 for x in sorted(list(bodylines)):
                     sys.stdout.write("  %s\n" % lines[x])
 
 
 def main_knowledge(args):
-    # type: (List[str]) -> None
-    if len(args) != 2:
-        bail_out("Usage: werk knowledge ID undoc|todoc|doc")
-    werkid = int(args[0])
-    if not werk_exists(werkid):
+    # type: (argparse.Namespace) -> None
+    if not werk_exists(args.id):
         bail_out("No such werk.")
-    werkid = int(werkid)
-    save_last_werkid(werkid)
+    save_last_werkid(args.id)
 
-    knw_state = args[1]
-    if knw_state not in [c[0] for c in knowledge]:
-        bail_out("Invalid knowledge state. Allowed are %s." %
-                 ", ".join(["%s (%s)" % c for c in knowledge]))
-
-    werk = load_werk(werkid)
-    werk["knowledge"] = knw_state
+    werk = load_werk(args.id)
+    werk["knowledge"] = args.state
     save_werk(werk)
 
 
 def main_edit(args):
-    # type: (List[str]) -> None
-    if len(args) == 0:
-        werkid = get_last_werk()
-    else:
-        try:
-            werkid = int(args[0])
-            args = args[1:]
-        except Exception:
-            werkid = get_last_werk()
-
-    edit_werk(werkid, args, commit=False)
+    # type: (argparse.Namespace) -> None
+    werkid = args.id or get_last_werk()
+    edit_werk(werkid, None, commit=False)  # custom files are pointless if commit=False
     save_last_werkid(werkid)
 
 
@@ -803,17 +901,9 @@ def edit_werk(werkid, custom_files=None, commit=True):
 
 
 def main_pick(args):
-    # type: (List[str]) -> None
-    if len(args) == 0:
-        bail_out("Please specify at least one commit ID to cherry-pick.")
-    if args[0] == '-n':
-        no_commit = True
-        args = args[1:]
-    else:
-        no_commit = False
-
-    for commit_id in args:
-        werk_cherry_pick(commit_id, no_commit)
+    # type: (argparse.Namespace) -> None
+    for commit_id in args.commit:
+        werk_cherry_pick(commit_id, args.no_commit)
 
 
 def werk_cherry_pick(commit_id, no_commit):
@@ -870,14 +960,10 @@ def current_branch():
 
 
 def main_fetch_ids(args):
-    # type: (List[str]) -> None
-    if not args:
+    # type: (argparse.Namespace) -> None
+    if args.count is None:
         sys.stdout.write('You have %d reserved IDs.\n' % (len(get_werk_ids())))
         sys.exit(0)
-    elif len(args) == 1:
-        num = int(args[0])
-    else:
-        usage()
 
     if current_branch() != "master":
         bail_out("It is not allowed to reserve IDs on any other branch than the master.")
@@ -888,24 +974,24 @@ def main_fetch_ids(args):
     except (IOError, ValueError):
         first_free = 0
 
-    new_first_free = first_free + num
+    new_first_free = first_free + args.count
     # enterprise werks were between 8000 and 8749. Skip over this area for new
     # reserved werk ids
     if 8000 <= first_free < 8780 or 8000 <= new_first_free < 8780:
         first_free = 8780
-        new_first_free = first_free + num
+        new_first_free = first_free + args.count
 
     # cmk-omd werk were between 7500 and 7680. Skip over this area for new
     # reserved werk ids
     if 7500 <= first_free < 7680 or 7500 <= new_first_free < 7680:
         first_free = 7680
-        new_first_free = first_free + num
+        new_first_free = first_free + args.count
 
     # cma werks are between 9000 and 9999. Skip over this area for new
     # reserved werk ids
     if 9000 <= first_free < 10000 or 9000 <= new_first_free < 10000:
         first_free = 10000
-        new_first_free = first_free + num
+        new_first_free = first_free + args.count
 
     # Store the werk_ids to reserve
     my_ids = get_werk_ids() + list(range(first_free, new_first_free))
@@ -915,9 +1001,9 @@ def main_fetch_ids(args):
     open('first_free', 'w').write(str(new_first_free) + "\n")
 
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
-                     (num, len(my_ids)))
+                     (args.count, len(my_ids)))
 
-    if os.system("git commit -m 'Reserved %d Werk IDS' ." % num) == 0:  # nosec
+    if os.system("git commit -m 'Reserved %d Werk IDS' ." % args.count) == 0:  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
@@ -946,42 +1032,6 @@ load_config()
 load_werks()
 g_current_version = load_current_version()
 
-if len(sys.argv) < 2:
-    usage()
-
-cmd_arg = sys.argv[1]
-commands = {
-    "list": lambda args: main_list(args, "console"),
-    "export": lambda args: main_list(args, "csv"),
-    "show": main_show,
-    "new": main_new,
-    "blame": main_blame,
-    "delete": main_delete,
-    "grep": main_grep,
-    "edit": main_edit,
-    "knowledge": main_knowledge,
-    "knw": main_knowledge,
-    "ids": main_fetch_ids,
-    "pick": main_pick,
-    "cherry-pick": main_pick,
-    "url": main_url,
-}
-
-hits = []  # type: List[Tuple[str,Callable[[List[str]], None]]]
-for cmd_name, func in commands.items():
-    if cmd_name == cmd_arg:
-        hits = [(cmd_name, func)]
-        break
-
-    if cmd_name.startswith(cmd_arg):
-        hits.append((cmd_name, func))
-
-if len(hits) < 1:
-    usage()
-
-elif len(hits) > 1:
-    sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" %
-                     (cmd_arg, ", ".join([candidate for (candidate, _f) in hits])))
-
-else:
-    hits[0][1](sys.argv[2:])
+if __name__ == "__main__":
+    main_args = parse_arguments(sys.argv[1:])
+    sys.exit(main_args.func(main_args))

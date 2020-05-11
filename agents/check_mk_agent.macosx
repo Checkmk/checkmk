@@ -82,6 +82,49 @@ fi
 echo '<<<tcp_conn_stats>>>'
 netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
+# Network I/O
+echo '<<<lnx_if>>>'
+echo "[start_iplink]"
+linkNum=1
+for link in $(netstat -inb | egrep '^en|^lo' | grep Link | sed -e 's/[*]//g' | awk '{ print $1}');do
+    printf "%s" "$linkNum: "
+    ifconfig $link
+    linkNum=$((linkNum+1))
+done
+echo "[end_iplink]"
+
+echo '<<<lnx_if:sep(58)>>>';
+
+netstat -inb | egrep '^en|^lo' | grep Link | sed -e 's/[*]//g' | awk '{ print $1": "$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
+
+printf "[lo0]\n Link detected: yes\n";
+for i in $(netstat -inb | sed -e 's/[*]//g' | grep en | grep Link | awk '{print $1;}'); do
+    IFNAME=$i;
+    IFSPEED='Unknown!';
+    IFDUPLEX="Half";
+    if ifconfig $i | grep -q "media: autoselect"; then
+        IFAUTO="on";
+    else
+        IFAUTO="off";
+    fi;
+    if ifconfig $i | grep -q "full-duplex"; then
+        IFDUPLEX="Full";
+    fi;
+    if ifconfig $i | grep -q "status: active"; then
+        IFLINK="yes";
+    else
+        IFLINK="no";
+    fi;
+    if ifconfig $i | egrep -q '[0-9]+baseT'; then
+        IFSPEED=$(ifconfig $i | egrep -o '[0-9]+baseT' | sed -e 's@baseT@Mb/s@');
+    fi;
+    echo "[$i]";
+    echo " Speed: $IFSPEED";
+    echo " Duplex: $IFDUPLEX";
+    echo " Auto-negotiation: $IFAUTO";
+    echo " Link detected: $IFLINK";
+done;
+
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 perl -e '

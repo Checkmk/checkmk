@@ -189,5 +189,7 @@ def test_result(state_, summary, notice, details, expected_triple):
 
 
 def test_ignore_results():
-    # This is just a plain object. Nothing to test, but it should exist.
-    assert isinstance(IgnoreResults(), object)
+    result1 = IgnoreResults()
+    result2 = IgnoreResults("Login to DB failed")
+    assert repr(result1) == "IgnoreResults('currently no results')"
+    assert str(result2) == "Login to DB failed"

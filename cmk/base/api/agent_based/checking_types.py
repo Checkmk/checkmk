@@ -303,7 +303,17 @@ class IgnoreResultsError(RuntimeError):
 
 
 class IgnoreResults:
-    pass
+    def __init__(self, value="currently no results"):
+        # type: (str) -> None
+        self._value = value
+
+    def __repr__(self):
+        # type: () -> str
+        return "%s(%r)" % (self.__class__.__name__, self._value)
+
+    def __str__(self):
+        # type: () -> str
+        return self._value if isinstance(self._value, str) else repr(self._value)
 
 
 DiscoveryFunction = Callable[..., Generator[Service, None, None]]

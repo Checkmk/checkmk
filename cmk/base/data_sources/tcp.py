@@ -4,16 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import Logger  # pylint: disable=unused-import
 import socket
-from typing import Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Tuple
 
-from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
+from cmk.base.check_utils import RawAgentData
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from cmk.fetchers import TCPDataFetcher  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress,
-)
+from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource, verify_ipaddress
 

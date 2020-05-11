@@ -12,8 +12,18 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import (  # pylint: disable=unused-import
-    TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
+from typing import (
+    TypeVar,
+    AnyStr,
+    Dict,
+    Set,
+    List,
+    cast,
+    Tuple,
+    Union,
+    Optional,
+    Text,
+    Generic,
 )
 import six
 
@@ -38,17 +48,31 @@ import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_api_utils as check_api_utils
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
-                                MKIPAddressLookupError
+from cmk.base.exceptions import (
+    MKAgentError,
+    MKEmptyAgentData,
+    MKSNMPError,
+    MKIPAddressLookupError,
+)
 from cmk.base.check_api_utils import state_markers
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    PersistedAgentSections, SectionName, AgentSectionContent, ServiceState, ServiceDetails,
-    ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData, SectionCacheInfo,
-    RawAgentData, BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
+from cmk.base.check_utils import (
+    PersistedAgentSections,
+    SectionName,
+    AgentSectionContent,
+    ServiceState,
+    ServiceDetails,
+    ServiceCheckResult,
+    Metric,
+    CheckPluginName,
+    AgentSections,
+    PiggybackRawData,
+    SectionCacheInfo,
+    RawAgentData,
+    BoundedAbstractRawData,
+    BoundedAbstractSections,
+    BoundedAbstractPersistedSections,
 )
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress,
-)
+from cmk.utils.type_defs import HostName, HostAddress
 
 from .host_sections import AbstractHostSections
 

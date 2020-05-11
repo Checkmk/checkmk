@@ -14,9 +14,7 @@
 #                cache info and piggyback lines that is used to process the
 #                data within Check_MK.
 
-from typing import (  # pylint: disable=unused-import
-    Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
-)
+from typing import Iterable, TYPE_CHECKING, List, Dict, Optional, Set
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -27,9 +25,8 @@ from cmk.utils.log import console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName,)
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckPluginName
+from cmk.utils.type_defs import HostName, HostAddress
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource

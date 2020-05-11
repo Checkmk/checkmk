@@ -7,7 +7,7 @@
 import abc
 import os
 import sys
-from typing import Dict, Optional, Set  # pylint: disable=unused-import
+from typing import Dict, Optional, Set
 
 import six
 
@@ -23,11 +23,10 @@ import cmk.utils.paths
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress)
+from cmk.base.check_utils import CheckPluginName
+from cmk.utils.type_defs import HostName, HostAddress
 
-from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
+from .abstract import CheckMKAgentDataSource, RawAgentData
 
 #.
 #   .--Datasoure Programs--------------------------------------------------.

@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Tuple, Optional, List  # pylint: disable=unused-import
+from typing import Tuple, Optional, List
 
 from cmk.fetchers import PiggyBackDataFetcher  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.piggyback import (  # pylint: disable=unused-import
-    get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings,
-)
 
 import cmk.base.config as config
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    RawAgentData, ServiceCheckResult)
+from cmk.base.check_utils import RawAgentData, ServiceCheckResult
 from cmk.base.exceptions import MKAgentError
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress
 
 from .abstract import CheckMKAgentDataSource
 

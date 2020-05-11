@@ -6,7 +6,18 @@
 
 import abc
 import sys
-from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic  # pylint: disable=unused-import
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Union,
+    Tuple,
+    Dict,
+    Set,
+    List,
+    Optional,
+    Generic,
+)
 import six
 
 import cmk.utils.debug
@@ -18,12 +29,25 @@ import cmk.base.item_state as item_state
 import cmk.base.check_utils
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.utils import parse_string_table
-from cmk.base.api.agent_based.section_types import AgentParseFunction, AgentSectionPlugin, SNMPParseFunction, SNMPSectionPlugin  # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, SectionCacheInfo, PiggybackRawData, AbstractSectionContent, SectionName,
-    ParsedSectionContent, BoundedAbstractRawData, BoundedAbstractSections,
-    BoundedAbstractPersistedSections, BoundedAbstractSectionContent, FinalSectionContent,
+from cmk.base.api.agent_based.section_types import (
+    AgentParseFunction,
+    AgentSectionPlugin,
+    SNMPParseFunction,
+    SNMPSectionPlugin,
+)
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName
+from cmk.base.check_utils import (
+    CheckPluginName,
+    SectionCacheInfo,
+    PiggybackRawData,
+    AbstractSectionContent,
+    SectionName,
+    ParsedSectionContent,
+    BoundedAbstractRawData,
+    BoundedAbstractSections,
+    BoundedAbstractPersistedSections,
+    BoundedAbstractSectionContent,
+    FinalSectionContent,
 )
 
 from cmk.base.exceptions import MKParseFunctionError

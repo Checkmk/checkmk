@@ -7,8 +7,7 @@
 import abc
 import ast
 import time
-from logging import Logger  # pylint: disable=unused-import
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union
 
 import six
 from mypy_extensions import NamedArg
@@ -18,14 +17,19 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.check_utils as check_utils
 import cmk.base.config as config
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress, SNMPHostConfig,
+from cmk.utils.type_defs import HostName, HostAddress, SNMPHostConfig
+from cmk.base.check_utils import (
+    CheckPluginName,
+    PiggybackRawData,
+    SectionCacheInfo,
+    SectionName,
 )
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, PiggybackRawData, SectionCacheInfo, SectionName,
-)
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    OIDInfo, SNMPTable, RawSNMPData, PersistedSNMPSections, SNMPSections, SNMPSectionContent,
+from cmk.base.snmp_utils import (
+    OIDInfo,
+    RawSNMPData,
+    PersistedSNMPSections,
+    SNMPSections,
+    SNMPSectionContent,
     SNMPCredentials,
 )
 from cmk.base.api import PluginName

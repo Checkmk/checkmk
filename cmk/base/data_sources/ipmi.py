@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import Logger  # pylint: disable=unused-import
-from typing import cast, Optional, Set, List  # pylint: disable=unused-import
+from typing import cast, Optional, Set, List
 
-from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.base.exceptions import MKAgentError
-from cmk.base.config import IPMICredentials  # pylint: disable=unused-import
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
+from cmk.base.config import IPMICredentials
+from cmk.base.check_utils import (
+    CheckPluginName,
+    ServiceCheckResult,
+    RawAgentData,
+    ServiceDetails,
 )
 from cmk.fetchers import IPMIDataFetcher  # pylint: disable=cmk-module-layer-violation
 

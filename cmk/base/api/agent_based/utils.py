@@ -155,11 +155,12 @@ def get_average(value_store, key, time, value, backlog_minutes):
     # type: (MutableMapping[str, Any], str, float, float, float) -> float
     """Return new average based on current value and last average
 
-    value_store : the Mapping that holds the last value. Usually this will
-                  be the value store provided by the API.
-    key         : unique ID for storing this average until the next check
-    time        : timestamp of new value
-    backlog     : averaging horizon in minutes
+    :param value_store:     The Mapping that holds the last value. Usually this will
+                            be the value store provided by the API.
+    :param key:             Unique ID for storing this average until the next check
+    :param time:            Timestamp of new value
+    :param value:           The new value
+    :param backlog_minutes: Averaging horizon in minutes
 
     This function returns the new average value aₙ as the weighted sum of the
     current value xₙ and the last average:
@@ -181,8 +182,9 @@ def get_average(value_store, key, time, value, backlog_minutes):
 
     For shorter timeseries we give the backlog more than those 50% weight
     with the advantages that
-      a) the initial value becomes irrelevant, and
-      b) for beginning timeseries we reach a meaningful value more quickly.
+
+        * the initial value becomes irrelevant, and
+        * for beginning timeseries we reach a meaningful value more quickly.
 
     """
     stored_value = value_store.get(key, ())

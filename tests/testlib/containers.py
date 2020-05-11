@@ -54,7 +54,7 @@ def execute_tests_in_container(distro_name, docker_tag, version, result_path, co
                 # Important to workaround really high default of docker which results
                 # in problems when trying to close all FDs in Python 2.
                 ulimits=[
-                    docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
+                    docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
                 ],
                 binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
                 # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support

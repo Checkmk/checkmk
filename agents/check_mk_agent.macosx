@@ -46,9 +46,44 @@ section_checkmk() {
     echo "LocalDirectory: $LOCALDIR"
 }
 
+section_lnx_if() {
+    echo '<<<lnx_if:sep(58)>>>'
+
+    netstat -inb | grep -E '^en|^lo' | grep Link | sed -e 's/[*]//g' | awk '{ print $1": "$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
+
+    printf "[lo0]\n Link detected: yes\n"
+    for ifname in $(netstat -inb | sed -e 's/[*]//g' | grep en | grep Link | awk '{print $1;}'); do
+        IFSPEED='Unknown!'
+        IFDUPLEX="Half"
+        if ifconfig "${ifname}" | grep -q "media: autoselect"; then
+            IFAUTO="on"
+        else
+            IFAUTO="off"
+        fi
+        if ifconfig "${ifname}" | grep -q "full-duplex"; then
+            IFDUPLEX="Full"
+        fi
+        if ifconfig "${ifname}" | grep -q "status: active"; then
+            IFLINK="yes"
+        else
+            IFLINK="no"
+        fi
+        if ifconfig "${ifname}" | grep -Eq '[0-9]+baseT'; then
+            IFSPEED=$(ifconfig "${ifname}" | grep -Eo '[0-9]+baseT' | sed -e 's@baseT@Mb/s@')
+        fi
+        echo "[${ifname}]"
+        echo " Speed: $IFSPEED"
+        echo " Duplex: $IFDUPLEX"
+        echo " Auto-negotiation: $IFAUTO"
+        echo " Link detected: $IFLINK"
+    done
+}
+
 run_purely_synchronous_sections() {
 
     section_checkmk
+
+    section_lnx_if
 
     echo '<<<df>>>'
     # SC2162: read without -r will mangle backslashes.

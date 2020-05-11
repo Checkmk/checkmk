@@ -12,7 +12,7 @@ def build(Map args) {
         // But it may be that we get to the point where we need an existing
         // user in the container.
         // The download credentials are needed by the image build part
-        COMMON_IMAGE.inside('--group-add=docker --ulimit nofile=1024:1024 --env HOME=/home/jenkins -v /var/run/docker.sock:/var/run/docker.sock') {
+        COMMON_IMAGE.inside('--group-add=docker --ulimit nofile=2048:2048 --env HOME=/home/jenkins -v /var/run/docker.sock:/var/run/docker.sock') {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
 

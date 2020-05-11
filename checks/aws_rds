@@ -38,7 +38,7 @@ def parse_aws_rds(info):
             #"MaximumUsedTransactionIDs",
         ],
             parse_aws(info),
-            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage']).values():
+            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage', 'Region']).values():
 
         for key, factor in [
             ('AllocatedStorage', 1.074e+9),
@@ -50,7 +50,8 @@ def parse_aws_rds(info):
                 metrics[key] *= factor
             except KeyError:
                 pass
-        parsed.setdefault(metrics['DBInstanceIdentifier'], metrics)
+        parsed.setdefault(aws_rds_service_item(metrics['DBInstanceIdentifier'], metrics['Region']),
+                          metrics)
     return parsed
 
 

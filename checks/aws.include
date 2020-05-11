@@ -250,3 +250,7 @@ def check_aws_elb_metrics(metric_infos):
 
     if go_stale:
         raise MKCounterWrapped("Currently no data from AWS")
+
+
+def aws_rds_service_item(instance_id, region):
+    return '%s [%s]' % (instance_id, region)

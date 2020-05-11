@@ -2801,7 +2801,7 @@ class RDSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(RDSSummary, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['rds_names']
-        self._tags = self._config.service_config['rds_tags']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['rds_tags'])
 
     @property
     def name(self):
@@ -2815,21 +2815,49 @@ class RDSSummary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        response = self._describe_db_instances()
-        return self._get_response_content(response, 'DBInstances')
+
+        db_instances = []
+
+        for instance in self._describe_db_instances():
+            tags = self._get_instance_tags(instance)
+            if self._matches_tag_conditions(tags):
+                instance['Region'] = self._region
+                db_instances.append(instance)
+
+        return db_instances
 
     def _describe_db_instances(self):
+        instances = []
+
+        if self._names is None:
+            for page in self._client.get_paginator('describe_db_instances').paginate():
+                instances.extend(self._get_response_content(page, 'DBInstances'))
+            return instances
+
+        for name in self._names:
+            try:
+                for page in self._client.get_paginator('describe_db_instances').paginate(
+                        DBInstanceIdentifier=name):
+                    instances.extend(self._get_response_content(page, 'DBInstances'))
+            except self._client.exceptions.DBInstanceNotFoundFault:
+                pass
+
+        return instances
+
+    def _get_instance_tags(self, instance):
+        # list_tags_for_resource cannot be paginated
+        return self._get_response_content(
+            self._client.list_tags_for_resource(ResourceName=instance['DBInstanceArn']), 'TagList')
+
+    def _matches_tag_conditions(self, tagging):
         if self._names is not None:
-            return [
-                self._client.describe_db_instances(DBInstanceIdentifier=name)
-                for name in self._names
-            ]
-        if self._tags is not None:
-            # TODO: The None-related logic in this method seems to be wrong.
-            if self._names is None:
-                raise Exception("huh? no names...")
-            return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
-        return self._client.describe_db_instances()
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(
@@ -2841,6 +2869,10 @@ class RDSSummary(AWSSectionGeneric):
 
 
 class RDS(AWSSectionCloudwatch):
+    def __init__(self, client, region, config, distributor=None):
+        super(RDS, self).__init__(client, region, config, distributor=distributor)
+        self._separator = " "
+
     @property
     def name(self):
         return "rds"
@@ -2857,7 +2889,7 @@ class RDS(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        for idx, instance_id in enumerate(colleague_contents.content):
+        for idx, (instance_id, instance) in enumerate(colleague_contents.content.items()):
             for metric_name, unit in [
                 ("BinLogDiskUsage", "Bytes"),
                 ("BurstBalance", "Percent"),
@@ -2887,7 +2919,7 @@ class RDS(AWSSectionCloudwatch):
             ]:
                 metric = {
                     'Id': self._create_id_for_metric_data_query(idx, metric_name),
-                    'Label': instance_id,
+                    'Label': instance_id + self._separator + instance['Region'],
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/RDS',
@@ -2908,7 +2940,8 @@ class RDS(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
         for row in raw_content.content:
-            row.update(colleague_contents.content.get(row['Label'], {}))
+            instance_id = row['Label'].split(self._separator)[0]
+            row.update(colleague_contents.content.get(instance_id, {}))
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):

@@ -1,0 +1,10 @@
+Title: mk_docker.py: Do not create agent section when executed on non-docker host
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1589219118
+Class: fix
+
+

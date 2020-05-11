@@ -59,8 +59,11 @@ def which(prg):
     return None
 
 
-if not os.path.isfile('/var/lib/docker') and not os.path.isfile('/var/run/docker') and not which(
-        'docker'):
+# The "import docker" checks below result in agent sections being created. This
+# is a way to end the plugin in case it is being executed on a non docker host
+if (not os.path.isfile('/var/lib/docker') and not os.path.isfile('/var/run/docker') and
+        not which('docker')):
+    sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
     sys.exit(1)
 
 try:

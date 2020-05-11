@@ -65,7 +65,7 @@ To set up the development environment do the following:
 
     Then change to the just created project directory.
 
-    ```
+    ```console
     $ cd checkmk
     ```
 
@@ -75,7 +75,7 @@ To set up the development environment do the following:
     additional software, like tools for development and testing. Execute this in
     the project directory:
 
-    ```
+    ```console
     $ make setup
     ```
 
@@ -96,15 +96,15 @@ To set up the development environment do the following:
     > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
     > your environment and leave you unable to use pip due to a backports module clash!
 
-    ```
-    pip3 install pre-commit
+    ```console
+    $ pip3 install pre-commit
     ```
 
     After successful installation, hook it up to your git-repository by issuing
     the following command inside your git repository:
 
-    ```
-    pre-commit install --allow-missing-config
+    ```console
+    $ pre-commit install --allow-missing-config
     ```
     The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
     support this feature and are missing the configuration file won't throw errors.
@@ -118,8 +118,8 @@ To set up the development environment do the following:
     which checks your commit *after* it has been made. You can then fix errors and amend or squash
     your commit. You can also use this script in a rebase like such:
 
-    ```
-    git rebase --exec scripts/check-current-commit
+    ```console
+    $ git rebase --exec scripts/check-current-commit
     ```
 
     This will rebase your current changes and check each commit for errors. After fixing them you can
@@ -134,7 +134,7 @@ Once done, you are ready for the next chapter.
 
     The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
 
-    ```
+    ```console
     $ git checkout master
     $ git checkout -b my-feature-branch
     ```
@@ -144,7 +144,7 @@ Once done, you are ready for the next chapter.
 
     Let's check if everything worked fine:
 
-    ```
+    ```console
     $ git status
     On branch my-feature-branch
     (...)
@@ -161,7 +161,7 @@ Once done, you are ready for the next chapter.
 
     Once you are done with the commits and tests in your feature branch you could push them to your own GitHub fork like this.
 
-    ```
+    ```console
     $ git push -u origin my-feature-branch
     ```
 
@@ -186,14 +186,14 @@ current upstream branch.
 To be able to do this, you need to prepare your project directory once with
 this command:
 
-```
-git remote add upstream https://github.com/tribe29/checkmk.git
+```console
+$ git remote add upstream https://github.com/tribe29/checkmk.git
 ```
 
 From now, you can always update your feature branches with this command:
 
-```
-git pull --rebase upstream master
+```console
+$ git pull --rebase upstream master
 ```
 
 > Using rebase instead of merge gives us a clean git history.
@@ -224,7 +224,7 @@ It is recommended to run all tests locally before submitting a PR. If you want
 to execute the full test suite, you can do this by executing these commands in
 the project base directory:
 
-```
+```console
 $ make -C tests test-pylint
 $ make -C tests test-bandit
 $ make -C tests test-unit
@@ -316,7 +316,7 @@ names are really available and needed in the current namespace.
 
 - Easier to ask for forgiveness than permission
 
-    ```
+    ```python
     def get_status(file):
         if not os.path.exists(file):
             print "file not found"
@@ -326,7 +326,7 @@ names are really available and needed in the current namespace.
 
     vs.
 
-    ```
+    ```python
     def get_status(file):
         try:
             return open(file).readline()
@@ -343,7 +343,7 @@ names are really available and needed in the current namespace.
 
 - Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
 
-  ```
+  ```python
   from pathlib2 import Path
   ```
 
@@ -463,7 +463,7 @@ names are really available and needed in the current namespace.
   Have a look [below](#automatic-formatting) for further information.
 - Multi line imports: Use braces instead of continuation character
 
-    ```
+    ```python
     from germany import bmw, \
         mercedes, \
         audi
@@ -471,7 +471,7 @@ names are really available and needed in the current namespace.
 
     vs.
 
-    ```
+    ```python
     from germany import (
         bmw,
         mercedes,
@@ -488,24 +488,24 @@ a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run
 
 #### Manual invocation: Single file
 
-```
-yapf -i [the_file.py]
+```console
+$ yapf -i [the_file.py]
 ```
 
 #### Manual invocation: Whole code base
 
 If you want to format all Python files in the repository, you can run:
 
-```
-make format-python
+```console
+$ make format-python
 ```
 
 #### Integration with CI
 
 Our CI executes the following formatting test on the whole code base:
 
-```
-make -C tests test-format-python
+```console
+$ make -C tests test-format-python
 ```
 
 Our review tests jobs prevent un-formatted code from being added to the
@@ -528,7 +528,7 @@ repository.
 
 Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
-```
+```vim
 let g:ale_fixers = {'python': ['isort', 'yapf']}
 let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.venv/bin/yapf'
 let g:ale_fix_on_save = 1
@@ -550,7 +550,7 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
 
 - Add mypy to the liners. With me it looks like this:
 
-  ```
+  ```vim
   let g:ale_linters = {
   \ 'python': ['pylint', 'mypy'],
   \ 'javascript': ['eslint'],
@@ -559,7 +559,7 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
 
 - Then tell the linter how to run pylint and mypy:
 
-  ```
+  ```vim
   let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
   let g:ale_python_pylint_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-pylint'
   let g:ale_python_pylint_options = '--rcfile YOUR_REPO_PATH/check_mk/.pylintrc'
@@ -585,7 +585,7 @@ about the error diagnosis below, if it doesn't work.
   checker after the pylint checker the following snippet can be used e.g. in
   the `dotspacemacs/user-config`:
 
-  ```
+  ```lisp
     (with-eval-after-load 'flycheck
       (flycheck-add-next-checker 'python-pylint 'python-mypy))
   ```
@@ -593,7 +593,7 @@ about the error diagnosis below, if it doesn't work.
 - To disable the risky variable warning that is triggered by setting the mypy
   executable the `safe-local-variables` variable has to be extended by:
 
-  ```
+  ```lisp
   (eval setq flycheck-python-mypy-executable
              (concat
               (projectile-locate-dominating-file default-directory dir-locals-file)
@@ -602,7 +602,7 @@ about the error diagnosis below, if it doesn't work.
 
 - An example value of the `safe-local-variables` variable is e.g.:
 
-  ```
+  ```lisp
   ((eval setq flycheck-python-mypy-executable
          (concat
           (projectile-locate-dominating-file default-directory dir-locals-file)
@@ -639,8 +639,8 @@ following things:
 
   Execute this in Checkmk git directory:
 
-```
-  sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
+```console
+$ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
 ```
 
 ## Localization

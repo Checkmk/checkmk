@@ -1,0 +1,10 @@
+Title: Agent Updater supports Windows UTF-8 encoding
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.6.0p12
+Date: 1589201914
+Class: feature
+
+With this release Agent Updater supports UTF-8 Encoding in windows.

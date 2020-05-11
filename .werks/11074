@@ -1,0 +1,12 @@
+Title: Fix broken activate changes when EC config sync is enabled
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.6.0p12
+Date: 1589199525
+Class: fix
+
+This issue only affected users of the CME. In the moment the configuration
+replication of the Event Console configuration to a remote site is enabled,
+this could result in an error during activate changes procedure.

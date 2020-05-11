@@ -78,6 +78,12 @@ else
     unset IS_LXC_CONTAINER
 fi
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # Function to list CIFS mounts for use by section_nfs
 get_cifs_mounts() {
     if [ -r /proc/mounts ]; then
@@ -103,7 +109,8 @@ semver_to_int() {
     _sem_ver="${1:?No version number supplied}"
 
     # Strip the variable of any non-numerics or dots
-    _sem_ver="$(echo "${_sem_ver}" | sed 's/[^0-9.]//g')"
+    # Portable version if needed: "$(echo "${_sem_ver}" | sed 's/[^0-9.]//g')"
+    _sem_ver="${_sem_ver/[^0-9.]//}"
 
     # Swap the dots for spaces and assign the outcome to the positional param array
     # We want word splitting here, so we disable shellcheck's complaints

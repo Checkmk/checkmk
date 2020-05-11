@@ -616,34 +616,386 @@ about the error diagnosis below, if it doesn't work.
 ## Shell scripts
 
 The Linux / Unix agents and several plugins are written in shell code for best
-portability and transparency. In case you want to change something respect the
-following things:
+portability and transparency. If you would like to change or contribute
+something, please respect the following things:
 
-* Bash scripts are written for Bash version 3.1 or newer
-* Set `set -e -o pipefail` at the top of your script
-* Use [shellcheck](https://www.shellcheck.net/) for your changes before
-  submitting patches.
+### Is it appropriate
 
-  The best results are achieved with a direct integration into the editor, so
-  that you are immediately informed about possible problems during programming.
-  The agent itself is not clean at the moment, but we aim to clean this up in
-  the near future.
+#### Contributed Plugins and Local Checks
 
-* Format the code according to the [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml) with these exceptions:
-  - Line length up to 100 characters is allowed
-  - Use 4 spaces for indentation
+If you think you need to use more advanced (read: less portable) shell
+capability for your plugin or local check, such as associative arrays found in
+e.g. `bash`, `zsh`, then you should probably consider using another language
+like `python`.
 
-* You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
+If you're only familiar with shell, or it's all that's available to your
+particular situation, that's fine, but you should:
 
-  If you don't have a Go environment ready, the easiest way is to use it is using
-  a prepared docker image (See bottom of project README). We have a shortcut to
-  this, which is also used by our CI system.
+* Put a comment in your code stating that you're open to having your check or
+  plugin rewritten, or why you don't want it rewritten
+* Fail-fast, fail-early e.g
 
-  Execute this in Checkmk git directory:
+```bash
+# Restrict this plugin script to bash 4 and newer
+if [[ -z "${BASH_VERSION}" ]] || (( "${BASH_VERSINFO[0]}" < 4 )); then
+  printf -- '%s\n' "This check requires bash 4 or newer" >&2
+  exit 1
+fi
+```
+
+#### Contributions to the agent scripts
+
+If you think you need to use more advanced shell capability for the agent code,
+then you will need to find another way to achieve what you want to do.
+
+### Code style
+
+Format your code according to the following guidelines:
+
+* [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
+* [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
+
+checkmk specific guidance below supersedes what's offered in those guidelines:
+
+### Indentation and column width
+
+* Line length up to 100 characters is allowed
+* Use 4 spaces for indentation
+
+### Function Names
+
+Names are in lowercase, underscored i.e. `snake_case()`.  Names should be
+meaningful, so the `verb_noun` style may be worth considering.  Microsoft has
+documentation for [approved
+verbs](https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7)
+that may provide some useful guidance.
+
+The Google/ChromiumOS style guides allow for `class::function()` style names,
+but do note that this does not appear to be portable.  No workaround is
+suggested at this time, but we expect something like `__class_function()` may
+be suitable.
+
+Do not use the `function` keyword.  It is non-portable and considered obsolete.
+
+Bad:
+
+```bash
+# Haha I gave this function a funny name!
+function blurgh() {
+    ...
+}
+```
+
+Better:
+
+```bash
+get_checkmk_api() {
+    ...
+}
+```
+
+### Variables and Constants
+
+#### Typing
+
+Variables in Linux/UNIX shells are untyped.  Attempts have been made to bring in
+some degree of typing via `typeset` and `declare`, but these are not portable
+solutions, so should be avoided.
+
+If you need a variable to be of a specific type, the best advice right now
+(that we're aware of) is to validate it before you use it.
+
+#### Pseudoscoping
+
+We practice psuedoscoping to minimise the chances of variables within scripts or
+functions from clobbering variables within the environment and vice versa.
+
+Variables must be in the appropriate format for its "scope" as defined below:
+
+##### Environment
+
+We know from long-established convention that *environment* variables are
+almost always in UPPERCASE.  You can see this in e.g. `bash` by running `set`
+and/or `printenv`.
+
+We generally shouldn't need to put any variables into the environment, so you
+should avoid UPPERCASE as much as possible.  If you *do* need a variable
+in the environment "scope" for whatever reason, use the form `MK_VARNAME`
+e.g. `MK_VERSION`
+
+You might often see this "scope" referred to as the *global* scope, or *shell*
+scope.  This scope also contains shell builtin variables.
+
+##### Script
+
+Variables in the *script* "scope" tend often to be mistakenly written in
+UPPERCASE, which gives rise to the possibility of clobbering a legitimate
+variable in the *environment* "scope".  This can have results that are
+[potentially hilarious, or potentially bad](https://stackoverflow.com/q/28310594)
+depending on your point of view.
+
+For that reason, UPPERCASE variable names are strongly discouraged outside of
+the *environment* scope.
+
+Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
+
+GNU Autoconf's documentation also states:
+
+>As a general rule, shell variable names containing a lower-case letter are safe;
+>you can define and use these variables without worrying about their effect on
+>the underlying system, and without worrying about whether the shell changes
+>them unexpectedly.
+
+Try, also, to use meaningful names.  This is meaningless:
+
+```bash
+for f in $(lsblk -ln -o NAME); do
+    ...
+```
+
+Whereas this is better:
+
+```bash
+for block_device in $(lsblk -ln -o NAME); do
+    ...
+```
+
+This also reduces/eliminates unexpected in-scope collisions.
+
+*Exception:*
+*C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
+*as the var `i` is usually self-contained and is short-hand for 'integer'*
+
+You should consider `unset`ting your variables once you're done with them,
+though this isn't strictly necessary.
+
+##### Function / Local
+
+`bash` and others allow you to define variables as local within a function e.g.
+
+```bash
+get_api_user() {
+    local username
+    username=Shelly
+    ...
+}
+```
+
+Unfortunately this is not portable and attempts at workarounds are...
+[somewhat hackish](https://stackoverflow.com/q/18597697).  So our approach to
+solve this is to simply prepend any variables within a function with an
+underscore. We also `unset` the variable immediately prior to the function
+closure.  For example:
+
+```bash
+get_api_user() {
+    _username=Shelly
+    ...
+    unset -v _username
+}
+```
+
+##### Curly braces
+
+Curly braces are used on `${arrays[@]}` and `${variable/modif/ications}`.
+To maintain consistency, you should use curly braces on normal variables too.
+
+Curly braces around variables improves readability when syntax colouring is not
+available.  ${this_variable} stands out within this block of text.
+
+They also allow us to more robustly format outputs e.g.
+
+```console
+$ time_metric=5
+$ echo "$time_metricmins"
+
+$ echo "${time_metric}mins"
+5mins
+```
+
+In the first example, there is no such variable as `$timemetricmins`.
+
+In the second example, the curly braces explicitly tell the shell interpreter
+where the variable name boundaries are.  Instead of applying this via trial and
+error, the simplest approach is to just use curly braces by default.
+
+*Exception: When you're in an arithmetic context e.g. `$(( time_metric + 10 ))`*
+
+*Exceptions to the exception: If your var is an array element or requires*
+*transformation e.g.*
+
+* *`$(( "${time_metrics[2]}" + 20 ))`*
+* *`$(( "${10#time_metric}" + 10 ))`*
+
+##### Constants
+
+To make a variable constant (a.k.a. an "immutable variable"), use `readonly`,
+defined and set separately e.g.
+
+```bash
+MK_CONSTANT="Polaris"
+readonly MK_CONSTANT
+```
+
+#### Variable pseudoscopes re-cap
+
+* **Environment**:       `${MK_UPPERCASE}`
+* **Script**:            `${meaningful_snake_case}`
+* **Function / Local**:  `${_underscore_prepended_snake_case}` with `unset -v`
+* **Constants**:         The appropriate above form set to `readonly`
+
+### Linting
+
+Use [shellcheck](https://www.shellcheck.net/) for your changes before
+submitting patches.
+
+The best results are achieved with
+[a direct integration](https://github.com/koalaman/shellcheck#user-content-in-your-editor)
+into your preferred editor, so that you are immediately informed about
+possible problems during programming.
+
+The various agent scripts are not clean at the moment, but we aim to clean
+this up in the near future.
+
+Do note that while Shellcheck is an excellent tool, it's not perfect.
+Sometimes it alerts on code that may actually be desired.  In this scenario,
+you must use a `disable` directive with a comment that justifies your reason
+for this.  It may also be useful to reference a git commit hash or werk number.
+
+```bash
+# This function is sourced outside of this library, where it does parse args
+# See commit abcd3456 and/or werk 1234
+# shellcheck disable=SC2120
+foo() {
+```
+
+### Formatting
+
+You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
+
+If you don't have a Go environment ready, the easiest way is to use it is using
+a prepared docker image (See bottom of project README). We have a shortcut to
+this, which is also used by our CI system.
+
+Execute this in checkmk git directory:
 
 ```console
 $ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -ci -w agents/check_mk_agent.linux
 ```
+
+### Portability
+
+* We are loosely aiming for "POSIX plus simple named arrays"
+
+* `echo` is a portability nightmare.  Prefer `printf` instead.
+
+* Existing scripts have been written using a variety of shells.  Scripts that
+  use `bash` have tended to be written for `bash` 3.x.
+
+* In the future, we will attempt to make our shell code more portable, which
+  means reducing `bash`isms.  If you're making shell code now, try to approach
+  it with portability in mind. Your code may be used on older systems and/or
+  commercial unices (e.g. AIX, Solaris etc).
+
+* `ksh` is in some ways a reasonable lowest common denominator to target as it's
+  [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and
+  its syntax is almost directly runnable in `bash`, `zsh` and others.  Be aware,
+  however, that there are many variants of `ksh`.  [`oksh`](https://github.com/ibara/oksh)
+  is a decent variant.
+
+* Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give
+  you some ideas on more portable scripting, and `dash` is a readily available
+  shell that you can test your code within.  Do be aware that `dash` is stricter
+  than our goals.
+
+* The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
+
+* A tool like [shall](https://github.com/mklement0/shall) might be useful
+
+### The Unofficial Strict Mode
+
+There is a lot of advice on the internet to "always use The Unofficial Strict Mode."
+
+It is usually presented as a brilliant catch-all that will magically fix every
+shell scripting issue.  It is usually in a form similar to:
+
+```bash
+set -euo pipefail
+```
+
+This is well meaning, but flawed advice.  Firstly, it's not portable, so it's
+disqualified by default for our purposes.  Secondly, it comes with its own flaws.
+Some of these options have reasonable uses, but it's dangerous to think that
+this one-line incantation is somehow perfect.  You can read more about it, and
+specifically `set -e` at one of the following links (read *at least* the first):
+
+* <https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/>
+* <http://wiki.bash-hackers.org/scripting/obsolete>
+* <http://mywiki.wooledge.org/BashFAQ/105>
+* <http://mywiki.wooledge.org/BashFAQ/112>
+* <https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/>
+
+### Performance
+
+Let's be honest: Compared to almost anything else, shell performance is
+suboptimal.  Especially in `bash`.  We use shell for Linux/UNIX hosts because,
+for better or worse, it is the most portable option.  Nonetheless, we can at
+least try to be mindful about how we construct our code, in order to squeeze out
+as much performance as we can.
+
+It may help to think of this competitively, or as a challenge.  Constantly ask
+yourself "can I optimize this code any further?"
+
+For a simple and classic example, we have the good old
+["Useless Use of Cat"](http://porkmail.org/era/unix/award.html):
+
+```bash
+cat haystack.txt | grep needle
+```
+
+This causes a pointless fork and process, as well as a waste of a pipe with
+associated buffering and broken pipe risks, as `grep` can address files directly
+i.e.
+
+```bash
+grep needle haystack.txt
+```
+
+We also often find "Useless Use of Cat" paired with "Useless Use of Grep | Awk"
+e.g.
+
+```bash
+cat haystack.txt | grep needle | awk '{print $2}'
+```
+
+`awk`, like `grep`, can address files directly, and given that it has searching
+built in, it can actually do all of this in one shot:
+
+```bash
+awk '/needle/{print $2}' haystack.txt
+```
+
+Or to do so case insensitively:
+
+```bash
+awk 'tolower($0) ~ /needle/{print $2}' haystack.txt
+```
+
+Often we see blocks of `if...elif...elif...elif`'s that can and should be
+replaced with a cleaner and meaner `case...esac` statement.
+
+The style guides linked to earlier both state:
+
+>Given the choice between invoking a shell builtin and invoking a separate
+>process, choose the builtin.
+>
+>We prefer the use of builtins such as the Parameter Expansion functions in
+>bash(1) as it’s more robust and portable (especially when compared to things
+>like sed).
+
+Often (but not always) there are massive performance gains to be had through
+the use of builtins, usually at the expense of some readability.  This can be
+counter-balanced via explanatory comments.
 
 ## Localization
 

@@ -147,13 +147,14 @@ def _create_new_result(
     # type: (...) -> Generator[Union[Metric, Result], None, bool]
     result_state = state(legacy_state)
 
-    if is_details:
-        summary = None  # type: Optional[str]
-        details = legacy_text  # type: Optional[str]
-    else:
-        is_details = "\n" in legacy_text
-        summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
-    yield Result(state=result_state, summary=summary, details=details)
+    if legacy_state or legacy_text:  # skip "Null"-Result
+        if is_details:
+            summary = None  # type: Optional[str]
+            details = legacy_text  # type: Optional[str]
+        else:
+            is_details = "\n" in legacy_text
+            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
+        yield Result(state=result_state, summary=summary, details=details)
 
     for metric in legacy_metrics:
         # fill up with None:

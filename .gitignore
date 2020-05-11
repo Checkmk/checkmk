@@ -42,6 +42,8 @@ config.status
 config.sub
 configure
 depcomp
+doc/plugin-api/build/
+doc/plugin-api/source/apidoc/
 install-sh
 missing
 mk-livestatus-*.tar.gz

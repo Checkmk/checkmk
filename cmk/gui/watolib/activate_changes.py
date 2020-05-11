@@ -759,10 +759,9 @@ class ActivateChangesManager(ActivateChanges):
     def _start_activation(self):
         # type: () -> None
         self._log_activation()
-        site_snapshots = dict([
-            (site_id, self._site_snapshot_file(site_id)) for site_id in self._sites
-        ])
-        job = ActivateChangesSchedulerBackgroundJob(self._activation_id, site_snapshots,
+        assert self._activation_id is not None
+        job = ActivateChangesSchedulerBackgroundJob(self._activation_id,
+                                                    self._site_snapshot_settings,
                                                     self._prevent_activate)
         job.start()
 
@@ -1136,13 +1135,14 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Activate Changes Scheduler")
 
-    def __init__(self, activation_id, site_snapshots, prevent_activate):
+    def __init__(self, activation_id, site_snapshot_settings, prevent_activate):
+        # type: (str, Dict[SiteId, SnapshotSettings], bool) -> None
         super(ActivateChangesSchedulerBackgroundJob,
               self).__init__("%s-%s" % (self.job_prefix, activation_id),
                              deletable=False,
                              stoppable=False)
         self._activation_id = activation_id
-        self._site_snapshots = site_snapshots
+        self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
         self.set_function(self._schedule_sites)
 
@@ -1209,9 +1209,10 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
     def _get_queued_jobs(self):
         # type: () -> List[ActivateChangesSite]
         queued_jobs = []
-        for site_id in sorted(self._site_snapshots):
-            site_job = ActivateChangesSite(site_id, self._activation_id,
-                                           self._site_snapshots[site_id], self._prevent_activate)
+        for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
+                                                 key=lambda e: e[0]):
+            site_job = ActivateChangesSite(site_id, snapshot_settings, self._activation_id,
+                                           self._prevent_activate)
             site_job.load()
             if site_job.lock_activation():
                 queued_jobs.append(site_job)

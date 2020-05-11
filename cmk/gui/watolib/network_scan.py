@@ -9,11 +9,11 @@ import os
 import re
 import threading
 import socket
-import subprocess
 from typing import (  # pylint: disable=unused-import
     NamedTuple, List, Tuple,
 )
 
+import cmk.utils.cmk_subprocess as subprocess
 from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 
 from cmk.gui.globals import html
@@ -230,4 +230,5 @@ def _ping(address):
     return subprocess.Popen(['ping', '-c2', '-w2', address],
                             stdout=open(os.devnull, "a"),
                             stderr=subprocess.STDOUT,
+                            encoding="utf-8",
                             close_fds=True).wait() == 0

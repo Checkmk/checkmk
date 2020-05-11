@@ -11,11 +11,11 @@ import os
 import abc
 import json
 import re
-import subprocess
 from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
 
 import six
 
+import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.plugin_registry
 
 import cmk.gui.mkeventd
@@ -92,7 +92,7 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
     config_variable_registry, register_configvar, sample_config_generator_registry,
 )
 
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob  # noqa: F401 # pylint: disable=unused-import
 
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (
@@ -1652,6 +1652,7 @@ class SiteBackupJobs(backup.Jobs):
                              close_fds=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
+                             encoding="utf-8",
                              stdin=open(os.devnull))
         if p.wait() != 0:
             out = "Huh???" if p.stdout is None else p.stdout.read()

@@ -18,7 +18,6 @@ import os
 import shutil
 import signal
 import socket
-import subprocess
 import time
 import json
 from typing import Any, List, Optional, Text, Tuple  # pylint: disable=unused-import
@@ -30,6 +29,7 @@ else:
 
 import six
 
+import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.render as render
 import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time
@@ -269,6 +269,7 @@ class MKBackupJob(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              stdin=open(os.devnull),
+                             encoding="utf-8",
                              env=env)
         if p.stdout is None:
             raise Exception("cannot happen")

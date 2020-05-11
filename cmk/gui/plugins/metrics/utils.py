@@ -18,6 +18,8 @@ import six
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
+from cmk.utils.werks import parse_check_mk_version
+import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -911,11 +913,21 @@ def render_color_icon(color):
 
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name):
-    "Return all known perf data names that are translated into canonical_name"
-    return [canonical_name] + list({
-        metric for trans in check_metrics.values() for metric, options in trans.items()
-        if options.get('name', '') == canonical_name and not options.get("deprecated")
-    })
+    "Return all known perf data names that are translated into canonical_name with corresponding scaling"
+    # We should get all metrics unified before Cmk 2.0
+    # 1.7 is version where metric migration started to happen
+    migration_end_version = parse_check_mk_version('2.0.0')
+    current_version = parse_check_mk_version(cmk_version.__version__)
+
+    possible_translations = []
+    for trans in check_metrics.values():
+        for metric, options in trans.items():
+            if (options.get('name', '') == canonical_name and
+                    options.get("deprecated", migration_end_version) >= current_version):
+
+                possible_translations.append((metric, options.get('scale', 1)))
+
+    return [(canonical_name, 1)] + sorted(set(possible_translations))
 
 
 def MetricName():

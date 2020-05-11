@@ -17,9 +17,9 @@ from cmk.gui.htmllib import HTML
 
 from cmk.utils.plugin_loader import load_plugins
 
-from cmk.gui.plugins.views.icons.utils import (
-    Icon,
-    icon_and_action_registry,
+# Imported for plugins
+from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
+    Icon, icon_and_action_registry,
 )
 
 #.

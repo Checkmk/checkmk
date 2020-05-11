@@ -8,6 +8,7 @@ import cmk.gui.config as config
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views import url_to_view
 
 
 @icon_and_action_registry.register
@@ -20,8 +21,6 @@ class InventoryIcon(Icon):
         return ["name"]
 
     def render(self, what, row, tags, custom_vars):
-        # TODO: Clean this up somehow
-        from cmk.gui.plugins.views import url_to_view
         if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
             and inventory.has_inventory(row["host_name"]):
 

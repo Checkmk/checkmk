@@ -9,7 +9,7 @@ import cmk.utils.render
 import cmk.gui.utils as utils
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from . import (
+from cmk.gui.plugins.views.perfometers import (
     perfometers,
     render_perfometer,
     perfometer_linear,

@@ -113,7 +113,8 @@ class MasterControlSnapin(SidebarSnapin):
             # Do not show event handlers on Check_MK Micro Core
             if is_cmc and title == _("Event handlers"):
                 continue
-            elif not is_cmc and title == _("Alert handlers"):
+
+            if not is_cmc and title == _("Alert handlers"):
                 continue
 
             colvalue = site_info[i]
@@ -184,8 +185,9 @@ class MasterControlSnapin(SidebarSnapin):
 
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
         sites.live().set_only_sites([site])
-        sites.live().query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
-               (column, state, column))
+        sites.live().query(
+            "GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n"
+            % (column, state, column))
         sites.live().set_only_sites()
 
         self.show()

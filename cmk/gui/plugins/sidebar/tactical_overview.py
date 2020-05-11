@@ -16,7 +16,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 # Things imported here are used by pre legacy (pre 1.6) cron plugins)
-from . import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.sidebar import (  # noqa: F401 # pylint: disable=unused-import
     CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
 )
 
@@ -340,7 +340,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
-            ec_filters = ("Filter: event_contact_groups != \n" "Filter: host_name != \n" "Or: 2\n")
+            ec_filters = (  #
+                "Filter: event_contact_groups != \n"
+                "Filter: host_name != \n"
+                "Or: 2\n")
 
         event_query = (
             # "Events" column

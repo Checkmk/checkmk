@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
 )
 
-from . import (
+from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
     iconlink,

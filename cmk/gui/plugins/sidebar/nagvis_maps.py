@@ -93,12 +93,14 @@ class NagVisMaps(SidebarSnapin):
     def _sub_state_class(self, map_cfg):
         if map_cfg["summary_in_downtime"]:
             return "stated"
-        elif map_cfg["summary_problem_has_been_acknowledged"]:
+        if map_cfg["summary_problem_has_been_acknowledged"]:
             return "statea"
+        return None
 
     def _stale_class(self, map_cfg):
         if map_cfg["summary_stale"]:
             return "stale"
+        return None
 
     def _state_title(self, map_cfg):
         title = map_cfg["summary_state"]

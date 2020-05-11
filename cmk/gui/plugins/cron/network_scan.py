@@ -6,6 +6,6 @@
 
 import cmk.gui.wato as wato
 
-from . import register_job
+from cmk.gui.plugins.cron import register_job
 
 register_job(wato.execute_network_scan_job)

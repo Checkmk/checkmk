@@ -11,7 +11,7 @@ from cmk.gui.globals import html
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 
-from . import (
+from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
     render_link,

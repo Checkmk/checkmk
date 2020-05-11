@@ -5,6 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.watolib.activate_changes import execute_activation_cleanup_background_job
-from . import register_job
+from cmk.gui.plugins.cron import register_job
 
 register_job(execute_activation_cleanup_background_job)

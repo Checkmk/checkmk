@@ -6,7 +6,7 @@
 """Home of our open source SNMP backends."""
 
 try:
-    from . import cee  # type: ignore[attr-defined] # pylint: disable=import-error,import-self
+    from . import cee
 except ImportError:
     cee = None  # type: ignore[assignment]
 from ._base import *

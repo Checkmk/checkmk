@@ -15,7 +15,6 @@ import logging
 import os
 import pprint
 import tempfile
-import time
 from typing import (  # pylint: disable=unused-import
     Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast,
 )
@@ -160,8 +159,7 @@ def save_mk_file(path, mk_content, add_header=True):
     content = ""
 
     if add_header:
-        content += "# Written by Check_MK store (%s)\n\n" % \
-                    time.strftime("%Y-%m-%d %H:%M:%S")
+        content += "# Written by Checkmk store\n\n"
 
     content += mk_content
     content += "\n"

@@ -246,13 +246,15 @@ check_info["qlogic_fcport"] = {
             "4.3.1.5",  # fcFxPortC3Discards
         ],
     ),
+    # .1.3.6.1.4.1.1663.1.1  SANbox 5600 FC Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
     # .1.3.6.1.4.1.3873.1.9  QLogic SANBox 5802 FC Switch
     # .1.3.6.1.4.1.3873.1.11 HP StorageWorks 8/20q Fibre Channel Switch
     # .1.3.6.1.4.1.3873.1.12 QLogic 8 Gb and 4/8 Gb Intelligent Pass-thru Module
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     "snmp_scan_function": lambda oid: (
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8")
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1663.1.1")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8")
         or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.9")
         or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.11")
         or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.12")

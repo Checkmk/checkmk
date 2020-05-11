@@ -92,7 +92,7 @@ def _create_php_file(callee, users, role_permissions, groups):
     for user in nagvis_users.values():
         user.setdefault('language', config.default_language)
 
-    content = '''<?php
+    content = u'''<?php
 // Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_groups;
 $mk_users   = %s;

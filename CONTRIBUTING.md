@@ -257,11 +257,11 @@ Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_g
 
 ## Commit messages
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- The first line is a short title (limit to 72 characters or less)
-- Reference issues and pull requests liberally after the first line
-- Write [good commit messages](https://chris.beams.io/posts/git-commit/)
+* Use the present tense ("Add feature" not "Added feature")
+* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+* The first line is a short title (limit to 72 characters or less)
+* Reference issues and pull requests liberally after the first line
+* Write [good commit messages](https://chris.beams.io/posts/git-commit/)
 
 ## Python
 
@@ -314,7 +314,7 @@ names are really available and needed in the current namespace.
 
 ### Exception handling
 
-- Easier to ask for forgiveness than permission
+* Easier to ask for forgiveness than permission
 
     ```python
     def get_status(file):
@@ -335,103 +335,103 @@ names are really available and needed in the current namespace.
             sys.exit(1)
     ```
 
-- Be as specific as possible when catching exceptions
-- Keep try-blocks as small as possible
-- Don't use `except:` (Slightly better for special cases: `except Exception`)
+* Be as specific as possible when catching exceptions
+* Keep try-blocks as small as possible
+* Don't use `except:` (Slightly better for special cases: `except Exception`)
 
 ### Paths and files
 
-- Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
+* Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
 
   ```python
   from pathlib2 import Path
   ```
 
-- Use context-managers (the `with` keyword) to open files.
-- You are welcome to refactor old style file IO to pathlib (with tests :-))
+* Use context-managers (the `with` keyword) to open files.
+* You are welcome to refactor old style file IO to pathlib (with tests :-))
 
 ### String formatting
 
-- Use classic format strings (`%s`) for the time being. We'll move over to the
+* Use classic format strings (`%s`) for the time being. We'll move over to the
   new `format()` syntax in the future, but for the moment we'd like to stay
   consistent.
 
 ### Sub processes
 
-- Use mechanisms that are natively available in Python instead of
+* Use mechanisms that are natively available in Python instead of
   subprocess/command line tools. Example: Don't use `tar` command line tools.
   Use the `tarfile` module instead. There may be good reasons to go with the
   command line tools in special situations.
 
-- Use secure methods for calling external programs to prevent shell injections
-  - Use the `subprocess` module instead of `os.system()` or `os.popen()`
-  - Use `shell=False` and `close_fds=True` with subprocess.
-  - Use `pipes.quote()` in case you need to create a command line string
+* Use secure methods for calling external programs to prevent shell injections
+  * Use the `subprocess` module instead of `os.system()` or `os.popen()`
+  * Use `shell=False` and `close_fds=True` with subprocess.
+  * Use `pipes.quote()` in case you need to create a command line string
 
 ### Argument parsing
 
-- Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
+* Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
   have to support Python <2.5, use `optparse`.
 
 
 ### Logging
 
-- Use logger or `cmk.log`, `cmk.gui.log` as base for logging
-- Add a logger object to `self._logger` to all classes (Use either a
+* Use logger or `cmk.log`, `cmk.gui.log` as base for logging
+* Add a logger object to `self._logger` to all classes (Use either a
   class/object specific child logger, the module level `logger` or
   `cmk.log.logger`)
-- Don't use format strings for log messages. Use: `logger.info('Hello, %s', world)`
+* Don't use format strings for log messages. Use: `logger.info('Hello, %s', world)`
 
 ### HTTP requests
 
-- Use `requests`, it's great!
-- Work with requests sessions in case you need to perform multiple requests
+* Use `requests`, it's great!
+* Work with requests sessions in case you need to perform multiple requests
 
 ### Times and Dates
 
-- Use top level functionality, e.g.: `datetime`, `dateutil`
+* Use top level functionality, e.g.: `datetime`, `dateutil`
 
 ### Comments
 
-- Document the non-obvious. Don't document the how, do document the why.
-- Use doc-strings for classes and methods.
+* Document the non-obvious. Don't document the how, do document the why.
+* Use doc-strings for classes and methods.
 
 ### Code structuring
 
-- Use the right data structure for combining data. For more complex code it
+* Use the right data structure for combining data. For more complex code it
   is important to carefully think about this. This may help you find the right
   data structure for your data. In increasing order of preference:
-    - Dictionaries: Worst possible representation. One has no clue whatsoever
+    * Dictionaries: Worst possible representation. One has no clue whatsoever
       about the valid keys nor the valid values for a given key. In addition,
       they are mutable, which might not be what one wants. In effect, we are
       abusing a useful mapping type to simulate a struct.
-    - Tuples of varying length: Basically the same as dictionaries with all the
+    * Tuples of varying length: Basically the same as dictionaries with all the
       downsides.
-    - Tuples of a fixed length: Slightly better, they have a fixed number of
+    * Tuples of a fixed length: Slightly better, they have a fixed number of
       slots and are immutable. Still, one has no clue what a slot should mean.
-    - `collectons.namedtuple`: A bit better than tuples of a fixed length, at
+    * `collectons.namedtuple`: A bit better than tuples of a fixed length, at
       least the slots have names now. Still no clue about the valid values of a
       slot.
-    - `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still
+    * `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still
       not really OO, because it is still a dumb data container, but at least we
       have reached a state where Pascal was in the 70s.
-    - A `class`: This is almost what we want. Note: Classes with tons of
+    * A `class`: This is almost what we want. Note: Classes with tons of
       static/class methods are actually //not// a class, they are a namespace
       in disguise, so we should not use them like that.
-    - A `class` with mypy type annotations: This is the optimum.  Now we're
+    * A `class` with mypy type annotations: This is the optimum.  Now we're
       talking OO and mypy can help us tremendously during e.g. refactorings.
-- Don't use global variables unless you have to and can do so thread-safe.
-- Don't assign attributes to function objects.
-- Use `abc` for specifying abstract classes, methods and properties and add
+* Don't use global variables unless you have to and can do so thread-safe.
+* Don't assign attributes to function objects.
+* Use `abc` for specifying abstract classes, methods and properties and add
   `raise NotImplementedError()` in abstract methods and properties)
-- Make class attributes explicit in the constructor or helper functions (Don't
+* Make class attributes explicit in the constructor or helper functions (Don't
   add them dynamically e.g. via a dict argument and ''getattr()'')
-- Extensive getter/setters: In Python it is acceptable to simply access class
+* Extensive getter/setters: In Python it is acceptable to simply access class
   or object members directly. In case you want to protect things from external
   access make use of `@property`
-- Use `@staticmethod` and `@classmethod` decorators for methods without
+* Use `@staticmethod` and `@classmethod` decorators for methods without
   references to `cls` or `self`
-- Use early exits in your functions.
+* Use early exits in your functions.
 
 ### Module: cmk
 * The entire Python code of Checkmk should be under the main module `cmk` in
@@ -455,13 +455,13 @@ names are really available and needed in the current namespace.
 
 ### Code formatting
 
-- We supply an `.editorconfig` file, which is used to automatically configure
+* We supply an `.editorconfig` file, which is used to automatically configure
   your editor to adhere to the most basic formatting style, like indents or
   line-lengths. If your editor doesn't already come with Editorconfig support,
   install [one of the available plugins](https://editorconfig.org/#download).
-- We use YAPF for automatic formatting of the Python code.
+* We use YAPF for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-- Multi line imports: Use braces instead of continuation character
+* Multi line imports: Use braces instead of continuation character
 
     ```python
     from germany import bmw, \
@@ -513,18 +513,18 @@ repository.
 
 #### Editor integration: *macs
 
-- plugins for vim and emacs with installation instructions can be found here:
+* plugins for vim and emacs with installation instructions can be found here:
   https://github.com/google/yapf/tree/master/plugins
-- in Spacemacs yapfify-buffer is available in the Python layer; formatting on
+* in Spacemacs yapfify-buffer is available in the Python layer; formatting on
   save can be enabled by setting ''python-enable-yapf-format-on-save'' to
   ''t''
-- In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
+* In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
   are many large files you may want to increase the timeout for rpc calls by
   setting ''elpy-rpc-timeout'' to ''20''
 
 #### Editor integration: vim
 
-- It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
+* It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
 
 Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
@@ -534,7 +534,7 @@ let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.ve
 let g:ale_fix_on_save = 1
 ```
 
-- for vim formatting on save should work with [autocmds](http://learnvimscriptthehardway.stevelosh.com/chapters/12.html)
+* for vim formatting on save should work with [autocmds](http://learnvimscriptthehardway.stevelosh.com/chapters/12.html)
 
 ### Type checking: mypy
 
@@ -548,7 +548,7 @@ Checkmk repository. For info about how to type hint refer to
 
 This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy there adjust the following things in the `.vimrc`:
 
-- Add mypy to the liners. With me it looks like this:
+* Add mypy to the liners. With me it looks like this:
 
   ```vim
   let g:ale_linters = {
@@ -557,7 +557,7 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
   \}
   ```
 
-- Then tell the linter how to run pylint and mypy:
+* Then tell the linter how to run pylint and mypy:
 
   ```vim
   let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
@@ -578,10 +578,10 @@ about the error diagnosis below, if it doesn't work.
 
 #### Editor integration: *macs
 
-- The mypy.ini should be found by Flycheck without further configuration.
-- To use the correct mypy executable a `.dir-locals.el` in the root directory
+* The mypy.ini should be found by Flycheck without further configuration.
+* To use the correct mypy executable a `.dir-locals.el` in the root directory
   of the Checkmk repository is used.
-- Flycheck by default does not execute multiple checkers. To enable the mypy
+* Flycheck by default does not execute multiple checkers. To enable the mypy
   checker after the pylint checker the following snippet can be used e.g. in
   the `dotspacemacs/user-config`:
 
@@ -590,7 +590,7 @@ about the error diagnosis below, if it doesn't work.
       (flycheck-add-next-checker 'python-pylint 'python-mypy))
   ```
 
-- To disable the risky variable warning that is triggered by setting the mypy
+* To disable the risky variable warning that is triggered by setting the mypy
   executable the `safe-local-variables` variable has to be extended by:
 
   ```lisp
@@ -600,7 +600,7 @@ about the error diagnosis below, if it doesn't work.
               "scripts/run-mypy"))
   ```
 
-- An example value of the `safe-local-variables` variable is e.g.:
+* An example value of the `safe-local-variables` variable is e.g.:
 
   ```lisp
   ((eval setq flycheck-python-mypy-executable
@@ -617,9 +617,9 @@ The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. In case you want to change something respect the
 following things:
 
-- Bash scripts are written for Bash version 3.1 or newer
-- Set `set -e -o pipefail` at the top of your script
-- Use [shellcheck](https://www.shellcheck.net/) for your changes before
+* Bash scripts are written for Bash version 3.1 or newer
+* Set `set -e -o pipefail` at the top of your script
+* Use [shellcheck](https://www.shellcheck.net/) for your changes before
   submitting patches.
 
   The best results are achieved with a direct integration into the editor, so
@@ -627,11 +627,11 @@ following things:
   The agent itself is not clean at the moment, but we aim to clean this up in
   the near future.
 
-- Format the code according to the [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml) with these exceptions:
+* Format the code according to the [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml) with these exceptions:
   - Line length up to 100 characters is allowed
   - Use 4 spaces for indentation
 
-- You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
+* You may use [shfmt](https://github.com/mvdan/sh) to help with formatting.
 
   If you don't have a Go environment ready, the easiest way is to use it is using
   a prepared docker image (See bottom of project README). We have a shortcut to
@@ -660,11 +660,11 @@ to the common usage for that technology.
 There are several terms in Checkmk that may be kept for a better understanding.
 Some of them are:
 
-- Host
-- Service
-- Check
-- Item
-- DOWN, UP, PENDING
+* Host
+* Service
+* Check
+* Item
+* DOWN, UP, PENDING
 
 ### Consistency
 

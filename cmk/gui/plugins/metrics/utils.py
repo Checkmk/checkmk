@@ -920,8 +920,12 @@ def render_color_icon(color):
 
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name):
-    "Return all known perf data names that are translated into canonical_name"
-    return set([
-        metric for trans in check_metrics.values()
-        for metric, options in trans.items() if options.get('name', '') == canonical_name
-    ] + [canonical_name])
+    "Return all known perf data names that are translated into canonical_name with corresponding scaling"
+    possible_translations = []
+    for trans in check_metrics.values():
+        for metric, options in trans.items():
+            if options.get('name', '') == canonical_name:
+
+                possible_translations.append((metric, options.get('scale', 1)))
+
+    return [(canonical_name, 1)] + sorted(set(possible_translations))

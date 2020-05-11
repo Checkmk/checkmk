@@ -10,9 +10,10 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the instance
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
 
 inventory:
- One service is created for each database if all required metrics
+ One service is created for each instance if all required metrics
  (DBInstanceStatus) are given.
 

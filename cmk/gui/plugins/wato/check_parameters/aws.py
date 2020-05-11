@@ -865,24 +865,23 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _item_spec_aws_rds_cpu_credits():
-    return TextAscii(title=_("Database identifier"))
+def _item_spec_aws_rds():
+    return TextAscii(
+        title=_("Instance identifier & region"),
+        help="Identfier of the DB instance and the name of the region in square brackets, e.g. "
+        "'db-instance-1 \[eu-central-1\]'.")  # pylint: disable=anomalous-backslash-in-string
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_rds_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_rds_cpu_credits,
+        item_spec=_item_spec_aws_rds,
         match_type="dict",
         parameter_valuespec=lambda: Dictionary(
             elements=[_vs_cpu_credits_balance(), _vs_burst_balance()]),
         title=lambda: _("AWS/RDS CPU Credits"),
     ))
-
-
-def _item_spec_aws_rds_disk_usage():
-    return TextAscii(title=_("Database identifier"))
 
 
 def _parameter_valuespec_aws_rds_disk_usage():
@@ -909,15 +908,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_rds_disk_usage",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_rds_disk_usage,
+        item_spec=_item_spec_aws_rds,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_rds_disk_usage,
         title=lambda: _("AWS/RDS Disk Usage"),
     ))
-
-
-def _item_spec_aws_rds_connections():
-    return TextAscii(title=_("Database identifier"))
 
 
 def _parameter_valuespec_aws_rds_connections():
@@ -944,15 +939,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_rds_connections",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_rds_connections,
+        item_spec=_item_spec_aws_rds,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_rds_connections,
         title=lambda: _("AWS/RDS Connections"),
     ))
-
-
-def _item_spec_aws_rds_replica_lag():
-    return TextAscii(title=_("Database identifier"))
 
 
 def _parameter_valuespec_aws_rds_replica_lag():
@@ -994,7 +985,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_rds_replica_lag",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_rds_replica_lag,
+        item_spec=_item_spec_aws_rds,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_rds_replica_lag,
         title=lambda: _("AWS/RDS Replica lag"),

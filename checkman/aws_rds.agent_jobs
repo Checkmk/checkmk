@@ -12,7 +12,8 @@ description:
  The service goes {WARN} if at least one jobs fails.
 
 item:
- Name of the instance
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
 
 inventory:
  One service is created for each database if the required metrics

@@ -511,6 +511,11 @@ class RDSDescribeDBInstancesIB(InstanceBuilder):
         ]
 
 
+class RDSListTagsForResourceIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [Str('Key'), Str('Value')]
+
+
 #.
 #   .--ELB------------------------------------------------------------------
 

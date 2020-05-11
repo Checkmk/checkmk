@@ -19,6 +19,11 @@ def register(linter):
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
+# https://www.python.org/dev/peps/pep-0616/
+def removeprefix(text, prefix):
+    return text[len(prefix):] if text.startswith(prefix) else text
+
+
 _COMPONENTS = (
     "cmk.base",
     "cmk.gui",
@@ -92,7 +97,8 @@ class CMKModuleLayerChecker(BaseChecker):
     def _get_module_name_of_file(self, node, file_path):
         """Fixup module names
         """
-        module_name = node.root().name
+        # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
+        module_name = removeprefix(node.root().name, "flycheck_")
 
         for segments in [
             ("cmk", "base", "plugins", "agent_based", "utils", ""),

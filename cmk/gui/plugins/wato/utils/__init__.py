@@ -91,6 +91,9 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
     ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
     config_variable_registry, register_configvar, sample_config_generator_registry,
 )
+
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (
     PermissionSection,

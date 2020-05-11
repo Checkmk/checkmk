@@ -37,6 +37,7 @@ else:
 
 from typing import (  # pylint: disable=unused-import
     Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple)
+import psutil  # type: ignore[import]
 import six
 
 from livestatus import (  # pylint: disable=unused-import
@@ -66,6 +67,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
+    RequestTimeout,
     MKUserError,
 )
 import cmk.gui.gui_background_job as gui_background_job
@@ -91,8 +93,9 @@ from cmk.gui.watolib.changes import (
 from cmk.gui.plugins.watolib import ABCConfigDomain
 
 # TODO: Make private
-PHASE_INITIALIZED = "initialized"  # Thread object has been initialized (not in thread yet)
-PHASE_STARTED = "started"  # Thread just started, nothing happened yet
+PHASE_INITIALIZED = "initialized"  # Process has been initialized (not in thread yet)
+PHASE_QUEUED = "queued"  # Process queued by site scheduler
+PHASE_STARTED = "started"  # Process just started, nothing happened yet
 PHASE_SYNC = "sync"  # About to sync
 PHASE_ACTIVATE = "activate"  # sync done activating changes
 PHASE_FINISHING = "finishing"  # Remote work done, finalizing local state
@@ -592,7 +595,13 @@ class ActivateChangesManager(ActivateChanges):
                 continue
 
             # Check whether or not the process is still there
+            # The pid refers to
+            # - the site scheduler PID as long as the site is in queue
+            # - the site activate changes PID
+            # - None, if the site was locked by another process
             try:
+                if site_state["_pid"] is None:
+                    continue
                 os.kill(site_state["_pid"], 0)
                 running.append(site_id)
             except OSError as e:
@@ -750,31 +759,12 @@ class ActivateChangesManager(ActivateChanges):
     def _start_activation(self):
         # type: () -> None
         self._log_activation()
-        for site_id in self._sites:
-            self._start_site_activation(site_id)
-
-    def _start_site_activation(self, site_id):
-        # type: (SiteId) -> None
-        self._log_site_activation(site_id)
-
-        # This is doing the first fork and the ActivateChangesSite() is doing the second
-        # (to avoid zombie processes when sync processes exit)
-        p = multiprocessing.Process(target=self._do_start_site_activation, args=(site_id,))
-        p.start()
-        p.join()
-
-    def _do_start_site_activation(self, site_id):
-        # type: (SiteId) -> None
-        try:
-            assert self._activation_id is not None
-            snapshot_settings = self._site_snapshot_settings[site_id]
-            site_activation = ActivateChangesSite(site_id, snapshot_settings, self._activation_id,
-                                                  self._prevent_activate)
-            site_activation.load()
-            site_activation.start()
-            os._exit(0)
-        except Exception:
-            logger.exception("error starting site activation for site %s", site_id)
+        site_snapshots = dict([
+            (site_id, self._site_snapshot_file(site_id)) for site_id in self._sites
+        ])
+        job = ActivateChangesSchedulerBackgroundJob(self._activation_id, site_snapshots,
+                                                    self._prevent_activate)
+        job.start()
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
@@ -782,9 +772,6 @@ class ActivateChangesManager(ActivateChanges):
 
         if self._comment:
             log_audit(None, "activate-changes", "%s: %s" % (_("Comment"), self._comment))
-
-    def _log_site_activation(self, site_id):
-        log_audit(None, "activate-changes", _("Started activation of site %s") % site_id)
 
     def get_state(self):
         return {
@@ -1139,12 +1126,103 @@ def execute_activation_cleanup_background_job():
     job.start()
 
 
+@gui_background_job.job_registry.register
+class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
+    job_prefix = "activate-changes-scheduler"
+    housekeeping_max_age_sec = 86400 * 30
+    housekeeping_max_count = 10
+
+    @classmethod
+    def gui_title(cls):
+        return _("Activate Changes Scheduler")
+
+    def __init__(self, activation_id, site_snapshots, prevent_activate):
+        super(ActivateChangesSchedulerBackgroundJob,
+              self).__init__("%s-%s" % (self.job_prefix, activation_id),
+                             deletable=False,
+                             stoppable=False)
+        self._activation_id = activation_id
+        self._site_snapshots = site_snapshots
+        self._prevent_activate = prevent_activate
+        self.set_function(self._schedule_sites)
+
+    def _schedule_sites(self, job_interface):
+        # Prepare queued jobs
+
+        job_interface.send_progress_update(_("Activate Changes Scheduler started"),
+                                           with_timestamp=True)
+        queued_jobs = self._get_queued_jobs()
+
+        job_interface.send_progress_update(_("Going to update %d sites") % len(queued_jobs),
+                                           with_timestamp=True)
+
+        running_jobs = []  # type: List[ActivateChangesSite]
+        max_jobs = self._get_maximum_concurrent_jobs()
+        while queued_jobs or len(running_jobs) > 0:
+            # Housekeeping, remove finished jobs
+            for job in running_jobs[:]:
+                if job.is_alive():
+                    continue
+                job_interface.send_progress_update(_("Finished site update: %s") % job.site_id,
+                                                   with_timestamp=True)
+                job.join()
+                running_jobs.remove(job)
+
+            time.sleep(0.1)
+
+            # Continue if at max concurrent jobs
+            if len(running_jobs) == max_jobs:
+                continue
+
+            # Start new jobs
+            while queued_jobs:
+                job = queued_jobs.pop(0)
+                job_interface.send_progress_update(_("Starting site update: %s") % job.site_id,
+                                                   with_timestamp=True)
+                job.start()
+                running_jobs.append(job)
+                if len(running_jobs) == max_jobs:
+                    break
+
+        job_interface.send_result_message(_("Activate changes finished"))
+
+    def _get_maximum_concurrent_jobs(self):
+        if config.wato_activate_changes_concurrency == "auto":
+            processes = self._max_processes_based_on_ram()
+        else:  # (maximum, 23)
+            processes = config.wato_activate_changes_concurrency[1]
+        return max(5, processes)
+
+    def _max_processes_based_on_ram(self):
+        # This process will be forked mulitple times
+        # Determine its current rss usage and compute a reasonable maximum value
+        try:
+            # We are going to fork this process
+            process = psutil.Process(os.getpid())
+            size = process.memory_info().rss
+            return (0.9 * psutil.virtual_memory().available) // size
+        except RequestTimeout:
+            raise
+        except Exception:
+            return 1
+
+    def _get_queued_jobs(self):
+        # type: () -> List[ActivateChangesSite]
+        queued_jobs = []
+        for site_id in sorted(self._site_snapshots):
+            site_job = ActivateChangesSite(site_id, self._activation_id,
+                                           self._site_snapshots[site_id], self._prevent_activate)
+            site_job.load()
+            if site_job.lock_activation():
+                queued_jobs.append(site_job)
+        return queued_jobs
+
+
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     """Executes and monitors a single activation for one site"""
     def __init__(self, site_id, snapshot_settings, activation_id, prevent_activate=False):
         # type: (SiteId, SnapshotSettings, str, bool) -> None
         super(ActivateChangesSite, self).__init__()
-
         self._site_id = site_id
         self._site_changes = []  # type: List
         self._activation_id = activation_id
@@ -1164,6 +1242,10 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._logger = logger.getChild("site[%s]" % self._site_id)
 
         self._set_result(PHASE_INITIALIZED, _("Initialized"))
+
+    @property
+    def site_id(self):
+        return self._site_id
 
     def load(self):
         super(ActivateChangesSite, self).load()
@@ -1217,7 +1299,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     def _do_run(self):
         try:
             self._time_started = time.time()
-            self._lock_activation()
+
+            # Update PID
+            # Initially the SiteScheduler set its own PID into the sites state file
+            # The PID itself is used to detect whether the sites activation process is still running
+            self._mark_running()
+
+            log_audit(None, "activate-changes", _("Started activation of site %s") % self._site_id)
 
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
@@ -1273,33 +1361,40 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         html_code += "</div>"
         return html_code
 
-    def _lock_activation(self):
+    def lock_activation(self):
         # This locks the site specific replication status file
         repl_status = _load_site_replication_status(self._site_id, lock=True)
+        got_lock = False
         try:
             if self._is_currently_activating(repl_status):
-                raise MKGeneralException(
+                self._set_result(
+                    PHASE_DONE,
+                    _("Locked"),
+                    status_details=
                     _("The site is currently locked by another activation process. Please try again later"
-                     ))
+                     ),
+                    state=STATE_WARNING)
+                return False
 
-            # This is needed to detect stale activation progress entries
-            # (where activation thread is not running anymore)
-            self._mark_running()
+            got_lock = True
+            self._mark_queued()
+            return True
         finally:
             # This call unlocks the replication status file after setting "current_activation"
             # which will prevent other users from starting an activation for this site.
-            _update_replication_status(self._site_id, {"current_activation": self._activation_id})
+            # If the site was already locked, simply release the lock without further changes
+            if got_lock:
+                _update_replication_status(self._site_id,
+                                           {"current_activation": self._activation_id})
+            else:
+                store.release_lock(_site_replication_status_path(self._site_id))
 
-    def _is_currently_activating(self, rep_status):
-        if not rep_status.get("current_activation"):
+    def _is_currently_activating(self, site_rep_status):
+        current_activation_id = site_rep_status.get("current_activation")
+        if not current_activation_id:
             return False
 
-        #
         # Is this activation still in progress?
-        #
-
-        current_activation_id = rep_status.get(self._site_id, {}).get("current_activation")
-
         manager = ActivateChangesManager()
         manager.load()
 
@@ -1313,7 +1408,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         return False
 
+    def _mark_queued(self):
+        # Is set by site scheduler
+        self._pid = os.getpid()
+        self._set_result(PHASE_QUEUED, _("Queued"))
+
     def _mark_running(self):
+        # Is set by active site process
         self._pid = os.getpid()
         self._set_result(PHASE_STARTED, _("Started"))
 
@@ -1553,11 +1654,18 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._save_state()
 
     def _set_status_details(self, phase, status_details):
-        if self._time_started is None:
-            raise Exception("start time not set")
-        self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+        # As long as the site is lying in queue, there is no time started
+        if phase == PHASE_QUEUED:
+            self._status_details = _("Queued for update")
+        else:
+            if self._time_started is None:
+                raise Exception("start time not set")
+            self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
 
-        if phase != PHASE_DONE:
+        if phase == PHASE_DONE:
+            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
+        elif phase != PHASE_QUEUED:
+            assert isinstance(self._time_started, (int, float))
             estimated_time_left = self._expected_duration - (time.time() - self._time_started)
             if estimated_time_left < 0:
                 self._status_details += " " + _("Takes %.1f seconds longer than expected") % \
@@ -1565,8 +1673,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             else:
                 self._status_details += " " + _("Approximately finishes in %.1f seconds") % \
                                                                         estimated_time_left
-        else:
-            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
 
         if status_details:
             self._status_details += "<br>%s" % status_details

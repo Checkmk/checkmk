@@ -294,7 +294,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
             return StoredWalkSNMPBackend()
 
         if snmp_config.is_inline_snmp_host:
-            return inline_snmp.InlineSNMPBackend()
+            return inline_snmp.InlineSNMPBackend(config.record_inline_snmp_stats)
 
         return ClassicSNMPBackend()
 
@@ -302,7 +302,8 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
     if snmp_config.is_inline_snmp_host:
-        backend = inline_snmp.InlineSNMPBackend()  # type: ABCSNMPBackend
+        backend = inline_snmp.InlineSNMPBackend(
+            config.record_inline_snmp_stats)  # type: ABCSNMPBackend
     else:
         backend = ClassicSNMPBackend()
 

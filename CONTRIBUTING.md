@@ -51,9 +51,11 @@ this:
 in case in didn't meet the requirements (e.g. failed checks).
 If there's no response from the author for at least 14 days, the PR will be closed.
 
-If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/). You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
+If it’s your first time to contribute to an open source project, we recommend reading
+[this guide](https://opensource.guide/how-to-contribute/). You may also want to
+try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
 
-## How to prepare for contributing?
+## How to prepare for contributing
 
 We are developing Checkmk on **Ubuntu Linux** systems. It's not a hard requirement, but
 most helper scripts are optimized for this, so we highly recommend it for best
@@ -106,6 +108,7 @@ To set up the development environment do the following:
     ```console
     $ pre-commit install --allow-missing-config
     ```
+
     The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
     support this feature and are missing the configuration file won't throw errors.
 
@@ -125,10 +128,9 @@ To set up the development environment do the following:
     This will rebase your current changes and check each commit for errors. After fixing them you can
     then continue rebasing.
 
-
 Once done, you are ready for the next chapter.
 
-## How to change Checkmk?
+## How to change Checkmk
 
 1. Create your feature branch
 
@@ -210,7 +212,7 @@ then meld them together with the previous commit.
 
 This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-to-amend-a-commit-on-a-github-pull-request) may help you.
 
-## How to execute tests?
+## How to execute tests
 
 The public repository of [Checkmk](https://github.com/tribe29/checkmk) is
 integrated with Travis CI. Each time a Pull request is submitted, Travis will
@@ -373,7 +375,6 @@ names are really available and needed in the current namespace.
 * Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
   have to support Python <2.5, use `optparse`.
 
-
 ### Logging
 
 * Use logger or `cmk.log`, `cmk.gui.log` as base for logging
@@ -434,6 +435,7 @@ names are really available and needed in the current namespace.
 * Use early exits in your functions.
 
 ### Module: cmk
+
 * The entire Python code of Checkmk should be under the main module `cmk` in
   the future
 * Below `cmk.utils` there is a module that provides functionalities for all
@@ -514,7 +516,7 @@ repository.
 #### Editor integration: *macs
 
 * plugins for vim and emacs with installation instructions can be found here:
-  https://github.com/google/yapf/tree/master/plugins
+  <https://github.com/google/yapf/tree/master/plugins>
 * in Spacemacs yapfify-buffer is available in the Python layer; formatting on
   save can be enabled by setting ''python-enable-yapf-format-on-save'' to
   ''t''
@@ -671,7 +673,6 @@ Some of them are:
 Be consistent in the terms you use for a thing. E.g. in case for a server one
 could say something like "host", "system", "server" or "device". Decide to use
 one name for one thing and use it consistently in all translations.
-
 
 ## Copyright and Licensing
 

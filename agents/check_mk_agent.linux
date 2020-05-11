@@ -92,16 +92,6 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
-# 'coreutils' 5.3.0 broke how 'stat' handled its output.  This was reverted
-# in 5.9.4 STABLE.  Just in case we happen across this particular version
-# we catch it and build a workaround to correct its behaviour globally
-# See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
-if stat --version 2>&1 | head -n 1 | grep "5.3.0" >/dev/null 2>&1; then
-    stat() {
-        printf -- '%s\n' "$(command stat "${@}")"
-    }
-fi
-
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
@@ -182,31 +172,6 @@ section_mem() {
         echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
         grep -F 'MemTotal:' /proc/meminfo
     fi
-}
-
-section_nfs() {
-    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
-    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
-    if inpath waitmax; then
-        echo '<<<nfsmounts>>>'
-        get_nfs_mounts | while read -r mountPoint; do
-            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-            || echo "${mountPoint} hanging 0 0 0 0"
-        done
-
-        echo '<<<cifsmounts>>>'
-        get_cifs_mounts | while read -r mountPoint; do
-            if [ ! -r "${mountPoint}" ]; then
-                echo "${mountPoint} Permission denied"
-            else
-                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-                    || echo "${mountPoint} hanging 0 0 0 0"
-            fi
-        done
-    fi
-
-    # Clean up our function variables
-    unset mountPoint
 }
 
 section_cpu() {

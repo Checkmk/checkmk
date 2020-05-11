@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Implements a first shot at the "value_store". Quite literally only an AP*I*
 """
-from typing import Any, Iterator, MutableMapping  # pylint: disable=unused-import
+from typing import Any, Iterator, MutableMapping, Optional
 from contextlib import contextmanager
+from cmk.base.api import PluginName
 from cmk.base.item_state import (
-    ItemStateKeyElement,  # for typing only
     set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
     get_all_item_states,  # for __len__, __iter__
@@ -83,11 +83,11 @@ def get_value_store():
 
 
 @contextmanager
-def context(plugin, item):
-    # type: (ItemStateKeyElement, ItemStateKeyElement) -> Iterator[None]
+def context(plugin_name, item):
+    # type: (PluginName, Optional[str]) -> Iterator[None]
     """Set item state prefix"""
     saved_prefix = get_item_state_prefix()
-    set_item_state_prefix(plugin, item)
+    set_item_state_prefix(str(plugin_name), item)
 
     try:
         yield

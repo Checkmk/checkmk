@@ -47,7 +47,7 @@ from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: di
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-    import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
+    from cmk.fetchers.snmp_backend.cee import inline as inline_snmp  # pylint: disable=no-name-in-module, cmk-module-layer-violation
 else:
     keepalive = None  # type: ignore[assignment]
     inline_snmp = None  # type: ignore[assignment]

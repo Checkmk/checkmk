@@ -5,6 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Home of our open source SNMP backends."""
 
+try:
+    from . import cee
+except ImportError:
+    cee = None  # type: ignore[assignment]
 from ._base import *
 from .classic import *
 from .stored_walk import *

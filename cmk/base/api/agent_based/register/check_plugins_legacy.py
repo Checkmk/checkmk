@@ -236,6 +236,13 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
         raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
                                   check_plugin_name)
 
+    if check_info_dict.get("node_info"):
+        # We refuse to tranform these. The requirement of adding the node info
+        # makes rewriting of the base code too difficult.
+        # Affected Plugins must be migrated manually after CMK-4240 is done.
+        raise NotImplementedError("[%s]: cannot auto-migrate plugins with node info" %
+                                  check_plugin_name)
+
     # make sure we haven't missed something important:
     unconsidered_keys = set(check_info_dict) - CONSIDERED_KEYS
     assert not unconsidered_keys, ("Unconsidered key(s) in check_info[%r]: %r" %

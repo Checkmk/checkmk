@@ -165,7 +165,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if config.record_inline_snmp_stats \
            and ipaddress is not None \
            and host_config.snmp_config(ipaddress).is_inline_snmp_host:
-            inline_snmp.save_snmp_stats()
+            inline_snmp.snmp_stats_save()
 
 
 def _check_missing_sections(missing_sections, exit_spec):

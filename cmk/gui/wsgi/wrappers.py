@@ -9,7 +9,6 @@ from connexion import ProblemException  # type: ignore[import]
 
 class ProblemKeyError(ProblemException, KeyError):  # pylint: disable=too-many-ancestors
     """Composite Exception representing a connexion ProblemException and a dict KeyError"""
-    pass
 
 
 class ParameterDict(dict):

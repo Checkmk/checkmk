@@ -123,6 +123,9 @@ def _create_check_function(name, check_info_dict, ruleset_name):
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
         subresults = sig_function(**kwargs)
+        if subresults is None:
+            return
+
         if isinstance(subresults, tuple):  # just one result
             subresults = [subresults]
 

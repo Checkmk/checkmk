@@ -16,6 +16,7 @@ from cmk.base.api.agent_based.checking_types import (
     CheckPlugin,
     Metric,
     state,
+    Parameters,
     Result,
     Service,
 )
@@ -303,7 +304,13 @@ def wrap_parameters(parameters):
 
 
 def unwrap_parameters(parameters):
-    # type: (Dict[str, Any]) -> Any
+    # type: (Union[Dict[str, Any], Parameters]) -> Any
+    if isinstance(parameters, Parameters):
+        # In the new API check_functions will be passed an immutable mapping
+        # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
+        # call sites to introduce this into legacy code, so use the plain dict.
+        parameters = parameters._data
+
     if PARAMS_WRAPPER_KEY not in parameters:
         return parameters
     assert len(parameters) == 1, "unexpected keys in parameters: %r" % (parameters,)

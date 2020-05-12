@@ -179,3 +179,84 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 
     CheckManager().load(["mgmt_ipmi_sensors", "ipmi_sensors"])
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
+
+
+# verify static check outcome, including timespecific params
+@pytest.mark.parametrize(
+    "hostname,expected_result",
+    [
+        ("df_host", [("df", "/snap/core/9066")]),
+        # old format, without TimespecificParamList
+        ("df_host_1", [("df", "/snap/core/9067")]),
+    ])
+def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
+    static_checks = {
+        "df_host": [
+            Service('df', '/snap/core/9066', u'Filesystem /snap/core/9066', [{
+                'tp_values': [('24X7', {
+                    'inodes_levels': None
+                })],
+                'tp_default_value': {}
+            }, {
+                'trend_range': 24,
+                'show_levels': 'onmagic',
+                'inodes_levels': (10.0, 5.0),
+                'magic_normsize': 20,
+                'show_inodes': 'onlow',
+                'levels': (80.0, 90.0),
+                'show_reserved': False,
+                'levels_low': (50.0, 60.0),
+                'trend_perfdata': True
+            }]),
+        ],
+        "df_host_1": [
+            Service(
+                'df', '/snap/core/9067', u'Filesystem /snap/core/9067', {
+                    'trend_range': 24,
+                    'show_levels': 'onmagic',
+                    'inodes_levels': (10.0, 5.0),
+                    'magic_normsize': 20,
+                    'show_inodes': 'onlow',
+                    'levels': (80.0, 90.0),
+                    'tp_default_value': {
+                        'levels': (87.0, 90.0)
+                    },
+                    'show_reserved': False,
+                    'tp_values': [('24X7', {
+                        'inodes_levels': None
+                    })],
+                    'levels_low': (50.0, 60.0),
+                    'trend_perfdata': True
+                })
+        ],
+    }
+
+    ts = Scenario().add_host(hostname, tags={"criticality": "test"})
+    ts.add_host("df_host")
+    ts.set_option(
+        "static_checks",
+        {
+            "filesystem": [(('df', '/snap/core/9066', [{
+                'tp_values': [('24X7', {
+                    'inodes_levels': None
+                })],
+                'tp_default_value': {}
+            }, {
+                'trend_range': 24,
+                'show_levels': 'onmagic',
+                'inodes_levels': (10.0, 5.0),
+                'magic_normsize': 20,
+                'show_inodes': 'onlow',
+                'levels': (80.0, 90.0),
+                'show_reserved': False,
+                'levels_low': (50.0, 60.0),
+                'trend_perfdata': True
+            }]), [], ["node1"]),],
+        },
+    )
+
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: static_checks.get(h, []))
+
+    CheckManager().load(["df"])
+    assert list(check_table.get_check_table(hostname).keys()) == expected_result

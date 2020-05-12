@@ -4,20 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Text  # pylint: disable=unused-import
 import json
+import json.encoder  # type: ignore[import]
 import pytest  # type: ignore[import]
 import six
 
 from cmk.gui.utils.html import HTML
 
 
+# TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
+# the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
+# custom subclass of the JSONEncoder.
+#
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
-    return getattr(obj.__class__, "to_json", _default.default)(obj)
+    # type: (json.JSONEncoder, object) -> Text
+    # ignore attr-defined: See hack below
+    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 
 
-_default.default = json.JSONEncoder().default  # Save unmodified default.
-json.JSONEncoder.default = _default  # replacement
+# TODO: suppress mypy warnings for this monkey patch right now. See also:
+# https://github.com/python/mypy/issues/2087
+# Save unmodified default:
+_default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
+# replacement:
+json.JSONEncoder.default = _default  # type: ignore[assignment]
 
 
 @pytest.mark.parametrize("value", [
@@ -48,14 +60,15 @@ def test_class_HTML():
     assert HTML() == HTML('')
     assert HTML(HTML()) == HTML()
     # One day we will fix this!
-    assert six.text_type(A) == a.decode("utf-8"), six.text_type(A)
-    assert "%s" % A == a.decode("utf-8"), "%s" % A
+    assert six.text_type(A) == six.ensure_text(a), six.text_type(A)
+    assert "%s" % A == six.ensure_text(a), "%s" % A
     assert json.loads(json.dumps(A)) == A
-    assert repr(A) == 'HTML(\"%s\")' % A.value.encode("utf-8")
+    assert repr(A) == 'HTML(\"%s\")' % six.ensure_str(A.value)
     assert len(B) == len(b)
     assert six.text_type(B) == six.text_type(b)
 
-    assert "1" + B + "2" + C == "1" + b + "2" + c
+    # TODO: Investigate
+    assert "1" + B + "2" + C == "1" + b + "2" + c  # type: ignore[type-var]
 
     assert (A + B) == (a + b)
     assert HTML().join([A, B]) == A + B
@@ -74,9 +87,11 @@ def test_class_HTML():
     assert isinstance(HTML('').join([A, B]), HTML)
     assert isinstance(HTML().join([A, B]), HTML)
     assert isinstance(HTML('').join([a, b]), HTML)
-    assert isinstance("TEST" + HTML(), HTML)
+    # TODO: Investigate
+    assert isinstance("TEST" + HTML(), HTML)  # type: ignore[type-var]
     assert isinstance(HTML() + "TEST", HTML)
-    assert isinstance("TEST" + HTML() + "TEST", HTML)
+    # TODO: Investigate
+    assert isinstance("TEST" + HTML() + "TEST", HTML)  # type: ignore[type-var]
 
     #assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
     #assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
@@ -91,12 +106,13 @@ def test_class_HTML():
     assert A.count(a) == 1
     assert A.index(a) == 0
 
-    assert isinstance(A[1:3], HTML)
-    assert A[1:3] == a[1:3], A[1:3]
+    # TODO: Investigate type annotation
+    assert isinstance(A[1:3], HTML)  # type: ignore[index]
+    assert A[1:3] == a[1:3], A[1:3]  # type: ignore[index]
 
     assert A == a
 
-    assert ("%s" % A) == a.decode("utf-8")
+    assert ("%s" % A) == six.ensure_text(a)
 
     assert B + C != C + B
 
@@ -120,7 +136,7 @@ def test_class_HTML():
 
     assert isinstance("TEST%s" % A, six.text_type)
 
-    assert "test" + C == "test" + c
+    assert "test" + C == "test" + c  # type: ignore[type-var]
 
     assert D == d
     assert "%s" % D == "%s" % d

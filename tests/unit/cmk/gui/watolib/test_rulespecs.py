@@ -20,7 +20,6 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroup,
     RulespecSubGroup,
     RulespecRegistry,
-    Rulespec,
     HostRulespec,
     rulespec_registry,
     CheckTypeGroupSelection,
@@ -1260,6 +1259,7 @@ def test_grouped_rulespecs():
         rulespec_names = [rulespec.name for rulespec in rulespec_registry.get_by_group(group_name)]
         assert sorted(by_group[group_name]) == sorted(rulespec_names)
 
+
 def _expected_rulespec_group_choices():
     expected = [
         ('activechecks', u'Active checks (HTTP, TCP, etc.)'),
@@ -1447,8 +1447,6 @@ def test_rulespec_get_host_groups():
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
-
-
 def test_legacy_register_rule(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
@@ -1535,14 +1533,14 @@ def test_legacy_register_rule_attributes(monkeypatch):
     assert spec.factory_default == "humpf"
 
 
-@pytest.fixture()
-def patch_rulespec_registries(monkeypatch):
+@pytest.fixture(name="patch_rulespec_registries")
+def fixture_patch_rulespec_registries(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
     group_registry.register(RulespecGroupManualChecks)
-    rulespec_registry = RulespecRegistry(group_registry)
+    test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", rulespec_registry)
-    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", rulespec_registry)
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", test_rulespec_registry)
+    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
 def test_register_check_parameters(patch_rulespec_registries):
@@ -1702,52 +1700,7 @@ def test_rulespecs_get_by_group():
         name = "dummy_name",
         group = DummyGroup,
         valuespec = lambda: FixedValue(None)
-        ))
+    ))
     result = registry.get_by_group("group")
     assert len(result) == 1
     assert isinstance(result[0], HostRulespec)
-
-
-# These tests make adding new elements needlessly painful.
-# Skip pending discussion with development team.
-@pytest.mark.skip
-def test_registered_rulespecs():
-    names = rulespec_registry.keys()
-    assert sorted(expected_rulespecs.keys()) == sorted(names)
-
-    for rulespec in rulespec_registry.values():
-        spec = expected_rulespecs[rulespec.name]
-
-        assert rulespec.title == spec["title"]
-        assert rulespec.help == spec["help"]
-        assert rulespec.group_name == spec["group_name"]
-        assert rulespec.valuespec.__class__.__name__ == spec["valuespec_class_name"]
-
-        if isinstance(rulespec, cmk.gui.watolib.rulespecs.ABCHostRulespec):
-            assert rulespec.item_name is None
-            # Static checks rulespecs are always host rulespecs, but have an item_spec for rendering
-            # the item configured in the value oO. A little bit surprising. Needs to be cleaned up
-            if not rulespec.name.startswith("static_checks:"):
-                assert rulespec.item_spec is None
-            assert rulespec.item_type is None
-            assert rulespec.item_help is None
-            assert rulespec.item_enum is None
-
-        assert rulespec.item_name == spec["item_name"], rulespec.title
-
-        if rulespec.name.startswith(
-                "static_checks:") and spec["item_spec_class_name"] == "NoneType":
-            # was changed during plugin rewrite. Instead of implicitly changing None to FixedValue
-            # during registration the classes now default to a FixedValue(None, ...)
-            item_spec_class_name = "FixedValue"
-        else:
-            item_spec_class_name = spec["item_spec_class_name"]
-
-        assert rulespec.item_spec.__class__.__name__ == item_spec_class_name, rulespec.name
-        assert rulespec.item_type == spec["item_type"]
-        assert rulespec.item_help == spec["item_help"]
-        assert rulespec.item_enum == spec["item_enum"]
-        assert rulespec.match_type == spec["match_type"]
-        assert rulespec.factory_default == spec["factory_default"]
-        assert rulespec.is_optional == spec["is_optional"]
-        assert rulespec.is_deprecated == spec["is_deprecated"]

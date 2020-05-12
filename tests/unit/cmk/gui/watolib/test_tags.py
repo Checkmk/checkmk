@@ -6,8 +6,14 @@
 
 # pylint: disable=redefined-outer-name
 
+import sys
 import pytest  # type: ignore[import]
-from pathlib2 import Path
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import cmk.gui.watolib.utils
 import cmk.utils.tags as tags

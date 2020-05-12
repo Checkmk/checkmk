@@ -135,7 +135,7 @@ def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
         # Read data back
         read_folder_hosts = read_data_folder.hosts()
         assert len(read_folder_hosts) == 1
-        for _, host in read_folder_hosts.iteritems():
+        for _, host in read_folder_hosts.items():
             assert host.attributes() == attributes
 
 
@@ -256,8 +256,8 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
     assert data[base_variable]["mgmt-host"] == folder_credentials
 
 
-@pytest.fixture
-def make_folder(mocker, fs):
+@pytest.fixture(name="make_folder")
+def fixture_make_folder(mocker, fs):
     """
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
@@ -296,7 +296,8 @@ def make_folder(mocker, fs):
                                           parent_folder=parent_folder,
                                           title=title,
                                           root_dir=root_dir)
-        folder._may_see = may_see
+        # Attribute only used for testing
+        folder._may_see = may_see  # type: ignore[attr-defined]
         return folder
 
     return f

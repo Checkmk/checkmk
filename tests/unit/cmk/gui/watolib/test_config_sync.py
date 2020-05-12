@@ -8,6 +8,8 @@ import sys
 import time
 import tarfile
 import shutil
+from io import IOBase
+from typing import Dict, List  # pylint: disable=unused-import
 import six
 
 # Explicitly check for Python 3 (which is understood by mypy)
@@ -360,7 +362,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
         'auth.serials.tar': ["auth.serials"],
         'mknotify.tar': [],
         'diskspace.tar': [],
-    }
+    }  # type: Dict[str, List[str]]
 
     if cmk_version.is_managed_edition():
         expected_files.update({
@@ -554,7 +556,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
         method=responses.POST,
         url=
         "http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync&debug=&secret=watosecret",
-        body=True,
+        body="True",
     )
 
     snapshot_data_collector_class = ("CMESnapshotDataCollector"
@@ -613,11 +615,18 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     site_activation._synchronize_site()
 
     get_url_mock.assert_called_once()
-    assert get_url_mock.call_args.args == (
+    args, kwargs = get_url_mock.call_args
+
+    assert args == (
         'http://localhost/unit_remote_1/check_mk/automation.py?command=push-snapshot&debug=&secret=watosecret&siteid=unit_remote_1',
         False)
-    assert get_url_mock.call_args.kwargs.keys() == ["files"]
-    assert get_url_mock.call_args.kwargs["files"].keys() == ["snapshot"]
-    assert isinstance(get_url_mock.call_args.kwargs["files"]["snapshot"], file)
-    assert get_url_mock.call_args.kwargs["files"][
-        "snapshot"].name == snapshot_settings.snapshot_path
+    assert list(kwargs.keys()) == ["files"]
+    assert list(kwargs["files"].keys()) == ["snapshot"]
+    # TODO: Add correct type once we are on Python 3 only
+    if sys.version_info[0] >= 3:
+        assert isinstance(kwargs["files"]["snapshot"], IOBase)
+    else:
+        assert isinstance(kwargs["files"]["snapshot"], file)  # pylint: disable=undefined-variable
+
+    file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
+    assert file_name == snapshot_settings.snapshot_path

@@ -15,7 +15,7 @@ from cmk.gui.http import Response
 class OutputFunnelTester(OutputFunnel):
     def __init__(self, response):
         super(OutputFunnelTester, self).__init__(response)
-        self.written = ""
+        self.written = b""
 
     def _lowlevel_write(self, text):
         self.written += text
@@ -29,7 +29,7 @@ def html():
 
 def test_output_funnel_not_plugged(html):
     html.write("A")
-    assert html.written == "A"
+    assert html.written == b"A"
 
 
 def test_output_funnel_plugged(html):
@@ -46,7 +46,7 @@ def test_output_funnel_2nd_plug(html):
             html.write("C")
             assert html.plug_text == [["B"], ["C"]]
         assert html.plug_text == [["B", "C"]]
-    assert html.written == "BC"
+    assert html.written == b"BC"
 
 
 def test_output_funnel_drain(html):
@@ -57,12 +57,12 @@ def test_output_funnel_drain(html):
 
         html.write("B")
         assert html.plug_text == [["B"]]
-    assert html.written == "B"
+    assert html.written == b"B"
 
 
 def test_output_funnel_context_nesting(html):
     html.write("A")
-    assert html.written == "A"
+    assert html.written == b"A"
     with html.plugged():
         html.write("B")
         assert html.plug_text == [["B"]]
@@ -70,25 +70,25 @@ def test_output_funnel_context_nesting(html):
             html.write("C")
             assert html.plug_text == [["B"], ["C"]]
         assert html.plug_text == [["B", "C"]]
-    assert html.written == "ABC"
+    assert html.written == b"ABC"
 
 
 def test_output_funnel_context_drain(html):
     html.write("A")
-    assert html.written == "A"
+    assert html.written == b"A"
     with html.plugged():
         html.write("B")
         assert html.plug_text == [['B']]
         code = html.drain()
         assert html.plug_text == [[]]
     assert code == 'B'
-    assert html.written == "A"
+    assert html.written == b"A"
 
 
 def test_output_funnel_context_raise(html):
     try:
         html.write("A")
-        assert html.written == "A"
+        assert html.written == b"A"
         with html.plugged():
             html.write("B")
             assert html.plug_text == [['B']]
@@ -105,7 +105,7 @@ def test_output_funnel_try_finally(html):
         try:
             html.write("try2\n")
             raise Exception("Error")
-        except Exception as e:
+        except Exception:
             html.write("except2\n")
             raise
         finally:
@@ -115,4 +115,4 @@ def test_output_funnel_try_finally(html):
         html.write("%s\n" % e)
     finally:
         html.write("finally1\n")
-    assert html.written == "try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"
+    assert html.written == b"try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"

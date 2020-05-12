@@ -723,6 +723,12 @@ class TextUnicode(TextAscii):
                 _("The value must be of type str or unicode, but it has type %s") %
                 _type_name(value))
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
 
 # TODO: Cleanup kwargs
 def ID(**kwargs):

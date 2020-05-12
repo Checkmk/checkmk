@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Version 0
-=========
+---------
 
 .. warning::
     This Version of the **Check API** is only used during development

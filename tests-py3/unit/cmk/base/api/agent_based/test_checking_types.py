@@ -17,7 +17,7 @@ from cmk.base.api.agent_based.checking_types import (
     Result,
 )
 # get the exposed version for states (so we have state.worst)
-from cmk.base.plugins.agent_based.v0 import state  # type: ignore[import]
+from cmk.base.plugins.agent_based.agent_based_api.v0 import state  # type: ignore[import]
 
 
 @pytest.mark.parametrize("data", [

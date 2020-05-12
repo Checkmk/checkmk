@@ -10,6 +10,7 @@ import ast
 import contextlib
 import json
 import threading
+from typing import Dict, Any
 if sys.version_info[0] >= 3:
     from http.cookiejar import CookieJar  # pylint: disable=import-error
 else:
@@ -26,7 +27,7 @@ import webtest  # type: ignore[import]
 
 import pytest  # type: ignore[import]
 import six
-from six.moves.urllib.parse import urlencode  # pylint: disable=relative-import
+from six.moves.urllib.parse import urlencode
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -76,7 +77,7 @@ def load_config(register_builtin_html):
 
 @pytest.fixture()
 def load_plugins(register_builtin_html, monkeypatch, tmp_path):
-    import cmk.gui.modules as modules
+    import cmk.gui.modules as modules  # pylint: disable=import-outside-toplevel
     config_dir = tmp_path / "var/check_mk/web"
     config_dir.mkdir(parents=True)
     monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
@@ -96,7 +97,7 @@ def _mk_user_obj(username, password, automation=False):
             },
             'is_new_user': True,
         }
-    }
+    }  # type: Dict[str, Dict[str, Any]]
     if automation:
         user[username]['attributes'].update(automation_secret=password,)
     return user
@@ -152,7 +153,7 @@ def with_user_login(with_user):
 # noinspection PyDefaultArgument
 @pytest.fixture(scope='function')
 def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.openapi import generate
+    from cmk.gui.openapi import generate  # pylint: disable=import-outside-toplevel
     spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
     openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
     openapi_spec_dir.return_value = spec_path
@@ -185,7 +186,7 @@ def suppress_automation_calls(mocker):
 def inline_local_automation_calls(mocker):
     # Only works from Python3 code.
     def call_automation(cmd, args):
-        from cmk.base.automations import automations
+        from cmk.base.automations import automations  # pylint: disable=import-outside-toplevel
         return automations.execute(cmd, args)
 
     mocker.patch("cmk.gui.watolib.automations.check_mk_automation", new=call_automation)
@@ -286,10 +287,11 @@ class WebTestAppForCMK(webtest.TestApp):
 
         if output_format == 'python':
             return ast.literal_eval(_resp.body)
-        elif output_format == 'json':
+
+        if output_format == 'json':
             return json.loads(_resp.body)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
+
+        raise NotImplementedError("Format %s not implemented" % output_format)
 
 
 @pytest.fixture(scope='function')

@@ -4,16 +4,87 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import socket
+import shutil
+import sys
+import logging
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 import pytest  # type: ignore[import]
+
+import cmk.utils.paths
+import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+from testlib import is_managed_repo, is_enterprise_repo
 
-@pytest.fixture(autouse=True)
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
+def fixture_edition_short(monkeypatch, request):
+    edition_short = request.param
+    if edition_short == "cme" and not is_managed_repo():
+        pytest.skip("Needed files are not available")
+
+    if edition_short == "cee" and not is_enterprise_repo():
+        pytest.skip("Needed files are not available")
+
+    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    yield edition_short
+
+
+@pytest.fixture(autouse=True, scope="function")
 def patch_omd_site(monkeypatch):
+    monkeypatch.setenv("OMD_SITE", "NO_SITE")
     monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
+
+    _touch(cmk.utils.paths.htpasswd_file)
+    store.makedirs(cmk.utils.paths.var_dir + '/web')
+    store.makedirs(cmk.utils.paths.var_dir + '/php-api')
+    store.makedirs(cmk.utils.paths.var_dir + '/wato/php-api')
+    store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
+    store.makedirs(cmk.utils.paths.omd_root + '/var/log')
+    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
+    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
+    _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
+    _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
+
+
+def _touch(path):
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).touch()
+
+
+@pytest.fixture(autouse=True, scope="function")
+def cleanup_after_test():
+    yield
+
+    # Ensure there is no file left over in the unit test fake site
+    # to prevent tests involving eachother
+    for entry in Path(cmk.utils.paths.omd_root).iterdir():
+        # This randomly fails for some unclear reasons. Looks like a race condition, but I
+        # currently have no idea which triggers this since the tests are not executed in
+        # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
+        try:
+            if entry.is_dir():
+                shutil.rmtree(str(entry))
+            else:
+                entry.unlink()
+        except OSError as e:
+            logger.debug("Failed to cleanup %s after test: %s. Keep going anyway", entry, e)
+
+
+# Unit tests should not be executed in site.
+# -> Disabled site fixture for them
+@pytest.fixture(scope="session")
+def site(request):
+    pass
 
 
 # TODO: This fixes our unit tests when executing the tests while the local
@@ -26,6 +97,7 @@ def fixup_ip_lookup(monkeypatch):
     # Fix IP lookup when
     def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
         if family == socket.AF_INET:
+            # TODO: This is broken. It should return (family, type, proto, canonname, sockaddr)
             return "0.0.0.0"
         raise NotImplementedError()
 

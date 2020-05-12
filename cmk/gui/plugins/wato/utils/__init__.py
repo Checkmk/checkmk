@@ -1308,7 +1308,8 @@ def sort_sites(sites):
     # type: (SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(sites.items(),
-                  key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
+                  key=lambda sid_s:
+                  (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
 
 
 class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):

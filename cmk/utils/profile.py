@@ -17,7 +17,7 @@ from typing import Callable, Type, Union, Any, Optional  # pylint: disable=unuse
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.log
 

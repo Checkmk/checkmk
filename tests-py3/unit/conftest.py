@@ -24,6 +24,13 @@ from testlib import is_managed_repo, is_enterprise_repo
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+def fixture_umask(autouse=True):
+    """Ensure the unit tests always use the same umask"""
+    with cmk.utils.misc.umask(0o0007):
+        yield
+
+
 @pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
 def fixture_edition_short(monkeypatch, request):
     edition_short = request.param

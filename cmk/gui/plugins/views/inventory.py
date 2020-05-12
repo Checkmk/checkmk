@@ -273,6 +273,7 @@ class PainterInventoryTree(Painter):
 
 class ABCRowTable(RowTable):
     def __init__(self, info_names, add_host_columns):
+        super(ABCRowTable, self).__init__()
         self._info_names = info_names
         self._add_host_columns = add_host_columns
 

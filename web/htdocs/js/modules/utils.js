@@ -80,7 +80,11 @@ export function is_window_active()
 export function has_class(o, cn) {
     if (typeof(o.className) === "undefined")
         return false;
-    var parts = o.className.split(" ");
+    let classname = o.className;
+    if (o.className.baseVal !== undefined) // SVG className
+        classname = o.className.baseVal;
+
+    var parts = classname.split(" ");
     for (var x=0; x<parts.length; x++) {
         if (parts[x] == cn)
             return true;

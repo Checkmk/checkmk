@@ -163,7 +163,18 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
         sys.stdin.close()
         sys.stdout.close()
-        sys.stderr.close()
+        # Caused trouble with Python 3:
+        # ---
+        # mod_wsgi (pid=121215): Exception occurred within exit functions.
+        # Traceback (most recent call last):
+        #   File "/omd/sites/heute/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+        #     self.run()
+        #   File "/omd/sites/heute/lib/python3/cmk/gui/background_job.py", line 166, in run
+        #     sys.stderr.close()
+        # RuntimeError: log object has expired
+        # ---
+        # Disabling this for the moment and check whether or not it is OK to skip this.
+        #sys.stderr.close()
         daemon.closefrom(0)
 
         try:

@@ -25,5 +25,7 @@ class APICallInventory(APICallCollection):
         }
 
     def _get_inventory(self, request):
-        return {host_name: inventory_of_host(host_name, request) \
-                for host_name in request.get("hosts")}
+        return {
+            host_name: inventory_of_host(host_name, request)  #
+            for host_name in request.get("hosts")
+        }

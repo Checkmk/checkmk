@@ -6,8 +6,13 @@
 import collections
 import hashlib
 import json
-from typing import (  # pylint: disable=unused-import
-    Text, Dict, Tuple, Any, List, Literal, Optional, Union, Callable)
+import sys
+from typing import Any, Callable, Dict, List, Optional, Text, Union  # pylint: disable=unused-import
+
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from typing_extensions import Literal
+else:
+    from typing import Literal  # pylint: disable=no-name-in-module
 
 from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags

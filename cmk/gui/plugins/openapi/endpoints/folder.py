@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Folders"""
 import sys
-if sys.version_info[0] > 2:
+if sys.version_info[0] >= 3:
     import http.client as http_client
 else:
-    import httplib as http_client
+    import httplib as http_client  # pylint: disable=import-error
 
 from connexion import ProblemException  # type: ignore
 

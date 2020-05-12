@@ -602,8 +602,7 @@ def _transform_aws_elb_http(p):
 
     if "levels_load_balancers" in p:
         return p
-    else:
-        p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
+    p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
 
     for http_err_code in ['4xx', '5xx']:
         levels_key = "levels_http_%s_perc" % http_err_code

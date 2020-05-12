@@ -16,7 +16,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unused-import
     UserAttribute,  #
     user_attribute_registry,  #
     get_user_attributes,  #

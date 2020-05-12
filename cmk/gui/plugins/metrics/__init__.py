@@ -16,34 +16,10 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.metrics.utils import (
-    unit_info,
-    metric_info,
-    check_metrics,
-    perfometer_info,
-    graph_info,
-    scalar_colors,
-    parse_color,
-    render_color,
-    darken_color,
-    lighten_color,
-    KB,
-    MB,
-    GB,
-    TB,
-    PB,
-    m,
-    K,
-    M,
-    G,
-    T,
-    P,
-    scale_symbols,
-    parse_color_into_hexrgb,
-    MAX_CORES,
-    MAX_NUMBER_HOPS,
-    indexed_color,
-    skype_mobile_devices,
+from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
+    unit_info, metric_info, check_metrics, perfometer_info, graph_info, scalar_colors, parse_color,
+    render_color, darken_color, lighten_color, KB, MB, GB, TB, PB, m, K, M, G, T, P, scale_symbols,
+    parse_color_into_hexrgb, MAX_CORES, MAX_NUMBER_HOPS, indexed_color, skype_mobile_devices,
 )
 
 #.

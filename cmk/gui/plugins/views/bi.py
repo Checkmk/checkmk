@@ -254,12 +254,11 @@ class PainterAggrAcknowledged(Painter):
 def paint_aggr_state_short(state, assumed=False):
     if state is None:
         return "", ""
-    else:
-        name = short_service_state_name(state["state"], "")
-        classes = "state svcstate state%s" % state["state"]
-        if assumed:
-            classes += " assumed"
-        return classes, name
+    name = short_service_state_name(state["state"], "")
+    classes = "state svcstate state%s" % state["state"]
+    if assumed:
+        classes += " assumed"
+    return classes, name
 
 
 @painter_registry.register

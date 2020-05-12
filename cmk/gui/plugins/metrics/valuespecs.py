@@ -24,7 +24,7 @@ from cmk.gui.plugins.metrics import artwork
 
 # This was moved from pnp_graph reportlet specific code
 def transform_graph_render_options_title_format(p):
-    if p == "add_host_name" or p == "add_host_alias":
+    if p in ('add_host_name', 'add_host_alias'):
         p = ("add_title_infos", [p])
     return p
 

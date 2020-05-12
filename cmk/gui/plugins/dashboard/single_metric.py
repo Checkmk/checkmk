@@ -260,7 +260,7 @@ class SingleMetricDashlet(Dashlet):
                 varname = check_metrics[self._check_command][varname]["name"]
             metric_title = t_metrics[varname]["title"]
             metric_choices.append((varname, "%s (%s)" % (varname, metric_title)))
-            if varname == given_metric_name or orig_varname == given_metric_name:
+            if given_metric_name in (varname, orig_varname):
                 chosen_metric_name = varname
         return chosen_metric_name, metric_choices
 

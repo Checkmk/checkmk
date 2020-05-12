@@ -97,7 +97,7 @@ def _transform_userdb_automatic_sync(val):
         # legacy compat - disabled
         return None
 
-    elif isinstance(val, list) and val:
+    if isinstance(val, list) and val:
         # legacy compat - all connections
         return "all"
 

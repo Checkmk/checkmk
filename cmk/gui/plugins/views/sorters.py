@@ -529,7 +529,7 @@ def cmp_log_what(col, a, b):
 def log_what(t):
     if "HOST" in t:
         return 1
-    elif "SERVICE" in t or "SVC" in t:
+    if "SERVICE" in t or "SVC" in t:
         return 2
     return 0
 

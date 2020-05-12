@@ -130,7 +130,6 @@ def test_metric_kwarg():
     ("name", "7", (None, None), (None, None)),
     ("n me", "7", (None, None), (None, None)),
     ("n=me", "7", (None, None), (None, None)),
-    ("name", 7, (23, 42), None),
     ("name", 7, ("warn", "crit"), (None, None)),
     ("name", 7, (23, 42), (None, "max")),
 ])

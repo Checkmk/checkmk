@@ -18,6 +18,9 @@ from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.base.api import PluginName
 from cmk.base.discovered_labels import ServiceLabel
 
+# we may have 0/None for min/max for instance.
+_OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
+
 
 @enum.unique
 class management_board(enum.Enum):
@@ -163,27 +166,37 @@ class Metric:
 
     @staticmethod
     def _sanitize_single_value(field, value):
-        # (str, Optional[float]) -> Optional[MetricFloat]
+        # type: (str, Optional[float]) -> Optional[MetricFloat]
         if value is None:
             return None
         if isinstance(value, (int, float)):
             return MetricFloat(value)
         raise TypeError("%s values for metric must be float, int or None" % field)
 
-    def _sanitize_optionals(self, field, values):
-        # (str, Tuple[Optional[float], Optional[float]]) -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
+    def _sanitize_optionals(
+            self,
+            field,  # type: str
+            values,  # type: _OptionalPair
+    ):
+        # type: (...) -> Tuple[Optional[MetricFloat], Optional[MetricFloat]]
+        if values is None:
+            return None, None
+
         if not isinstance(values, tuple) or len(values) != 2:
             raise TypeError("%r for metric must be a 2-tuple" % field)
 
-        return tuple(self._sanitize_single_value(field, v) for v in values)
+        return (
+            self._sanitize_single_value(field, values[0]),
+            self._sanitize_single_value(field, values[1]),
+        )
 
     def __init__(
             self,
             name,  # type: str
             value,  # type: float
             # *args,  # type: str  # *, # type shoud be "nothing"
-        levels=(None, None),  # type: Tuple[Optional[float], Optional[float]]
-            boundaries=(None, None),  # type: Tuple[Optional[float], Optional[float]]
+        levels=None,  # type: _OptionalPair
+            boundaries=None,  # type: _OptionalPair
     ):
         # type: (...) -> None
         # if args:

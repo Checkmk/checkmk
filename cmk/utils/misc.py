@@ -8,10 +8,12 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import os
 import itertools
 import sys
 import time
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from contextlib import contextmanager
+from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -146,3 +148,27 @@ def make_kwargs_for(function, **kwargs):
         for arg_indicator, arg in kwargs.items()
         if arg_name == arg_indicator
     }
+
+
+def with_umask(mask):
+    # type: (int) -> Callable
+    def umask_wrapper(fun):
+        # type: (Callable) -> Callable
+        def fun_wrapper(*args, **kwargs):
+            # type: (Any, Any) -> Any
+            with umask(mask):
+                return fun(*args, **kwargs)
+
+        return fun_wrapper
+
+    return umask_wrapper
+
+
+@contextmanager
+def umask(mask):
+    # type: (int) -> Iterator[None]
+    old_mask = os.umask(mask)
+    try:
+        yield None
+    finally:
+        os.umask(old_mask)

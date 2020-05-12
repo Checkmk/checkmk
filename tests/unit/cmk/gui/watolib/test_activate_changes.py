@@ -221,12 +221,12 @@ def test_automation_get_config_sync_state():
     assert response == (
         {
             'etc/check_mk/multisite.mk':
-                (33204, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+                (33200, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
                 ),
             'etc/check_mk/mkeventd.mk':
-                (33204, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+                (33200, 0, None, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
                 ),
-            'etc/htpasswd': (33204, 0, None,
+            'etc/htpasswd': (33200, 0, None,
                              'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
         },
         0,
@@ -250,37 +250,37 @@ def test_get_config_sync_file_infos():
 
     assert sync_infos == {
         'bla/blub/f2': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=7,
             link_target=None,
             file_hash='ae973806ace987a1889dc02cfa6b320912b68b6eb3929e425762795955990f35'),
         'etc/d3/xyz': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=5,
             link_target=None,
             file_hash='780518619e3c5dfc931121362c7f14fa8d06457995c762bd818072ed42e6e69e'),
         'etc/d4/layer1/layer2/x3.xyz': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=6,
             link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/d4/layer1/layer2/x4.xyz': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=6,
             link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/d4/x1': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=6,
             link_target=None,
             file_hash='1c77fe07e738fd6cbf0075195a773043a7507d53d6deeb1161549244c02ea0ff'),
         'etc/d4/x2': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=6,
             link_target=None,
             file_hash='c213b1ced86472704fdc0f77e15cc41f67341c4370def7a0ae9d90bedf37c8ca'),
         'etc/f1': ConfigSyncFileInfo(
-            st_mode=33204,
+            st_mode=33200,
             st_size=7,
             link_target=None,
             file_hash='4dd985602450dfdeb261cedf8562cb62c5173d1d8bb5f3ca26cd3519add67cf7'),

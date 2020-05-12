@@ -1526,4 +1526,4 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-section_spooldir
+[ -z "${MK_SKIP_SPOOLDIR+x}" ] && section_spooldir

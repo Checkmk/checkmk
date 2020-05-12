@@ -7,12 +7,12 @@
 
 These are meant to be exposed in the API
 """
-from typing import Any, List, MutableMapping, TypeVar
+from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
 import re
 import itertools
 from cmk.base.snmp_utils import SNMPTable
 from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
-from cmk.base.api.agent_based.checking_types import IgnoreResultsError
+from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
 
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
@@ -112,6 +112,94 @@ def not_equals(oidstr, value):
 def not_exists(oidstr):
     # type: (str) -> SNMPDetectSpec
     return _negate(exists(oidstr))
+
+
+#          _               _        _                _
+#      ___| |__   ___  ___| | __   | | _____   _____| |___
+#     / __| '_ \ / _ \/ __| |/ /   | |/ _ \ \ / / _ \ / __|
+#    | (__| | | |  __/ (__|   <    | |  __/\ V /  __/ \__ \
+#     \___|_| |_|\___|\___|_|\_\___|_|\___| \_/ \___|_|___/
+#                             |_____|
+
+
+def _do_check_levels(
+        value,  # type: float
+        levels_upper,  # type: Optional[Tuple[float, float]]
+        levels_lower,  # type: Optional[Tuple[float, float]]
+        render_func,  # type: Callable[[float], str]
+):
+    # type: (...) -> Tuple[state, str]
+    # Typing says that levels are either None, or a Tuple of float.
+    # However we also deal with (None, None) to avoid crashes of custom plugins.
+    # CRIT ?
+    if levels_upper and levels_upper[1] is not None and value >= levels_upper[1]:
+        return state.CRIT, _levelsinfo_ty("at", levels_upper, render_func)
+    if levels_lower and levels_lower[1] is not None and value < levels_lower[1]:
+        return state.CRIT, _levelsinfo_ty("below", levels_lower, render_func)
+
+    # WARN ?
+    if levels_upper and levels_upper[0] is not None and value >= levels_upper[0]:
+        return state.WARN, _levelsinfo_ty("at", levels_upper, render_func)
+    if levels_lower and levels_lower[0] is not None and value < levels_lower[0]:
+        return state.WARN, _levelsinfo_ty("below", levels_lower, render_func)
+
+    return state.OK, ""
+
+
+def _levelsinfo_ty(preposition, levels, render_func):
+    # type: (str, Tuple[float, float], Callable[[float], str]) -> str
+    # Again we are forgiving if we get passed 'None' in the levels.
+    warn_str = "never" if levels[0] is None else render_func(levels[0])
+    crit_str = "never" if levels[1] is None else render_func(levels[1])
+    return " (warn/crit %s %s/%s)" % (preposition, warn_str, crit_str)
+
+
+_SENTINEL = object()  # remove with CMK-3983
+
+
+def check_levels(
+        value,  # type: float
+        _sentinel=_SENTINEL,  # type: Any # enforce keyword usage, remove with CMK-3983 # *,
+        levels_upper=None,  # tpye: Optional[Tuple[float, float]]
+        levels_lower=None,  # tpye: Optional[Tuple[float, float]]
+        metric_name=None,  # type: str
+        render_func=None,  # type: Callable[[float], str]
+        label=None,  # type: str
+        boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
+):
+    # type: (...) -> Generator[Union[Result, Metric], None, None]
+    """Generic function for checking a value against levels
+
+    :param value:        Currently measured value
+    :param levels_upper: Pair of upper thresholds. If value is larger than these, the
+                         service goes to **WARN** or **CRIT**, respecively.
+    :param levels_lower: Pair of lower thresholds. If value is smaller than these, the
+                         service goes to **WARN** or **CRIT**, respecively.
+    :param metric_name:   Name of the datasource in the RRD that corresponds to this value
+                         or None in order to skip perfdata
+    :param render_func:  Single argument function to convert the value from float into a
+                         human readable string.
+                         readable fashion
+    :param label:        Label to prepend to the output.
+    :param boundaries:   Minimum and maximum to add to the metric.
+    """
+    # TODO (mo): unhack this CMK-3983
+    if _sentinel is not _SENTINEL:
+        raise TypeError("check_levels only accepts one positional argument")
+
+    if metric_name:
+        yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
+
+    if render_func is None:
+        render_func = "%.2f".format
+
+    info_text = str(render_func(value))  # forgive wrong output type
+    if label:
+        info_text = "%s: %s" % (label, info_text)
+
+    value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
+
+    yield Result(state=value_state, summary=info_text + levels_text)
 
 
 #    __     __    _            ____  _                   _   _ _   _ _

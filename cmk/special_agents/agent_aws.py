@@ -308,6 +308,30 @@ class ResultDistributor:
                 colleague.receive(sender, result)
 
 
+class ResultDistributorS3Limits(ResultDistributor):
+    """
+    Special mediator for distributing results from S3Limits. This mediator stores any received
+    results and distributes both upon receiving and upon adding a new colleague. This is done
+    because we want to run S3Limits only once (does not matter for which region, results are the
+    same for all regions) and later distribute the results to S3Summary objects in other regions.
+    """
+    def __init__(self):
+        super(ResultDistributorS3Limits, self).__init__()
+        self._received_results = {}
+
+    def add(self, colleague):
+        super(ResultDistributorS3Limits, self).add(colleague)
+        for sender, content in self._received_results.values():
+            colleague.receive(sender, content)
+
+    def distribute(self, sender, result):
+        self._received_results.setdefault(sender.name, (sender, result))
+        super(ResultDistributorS3Limits, self).distribute(sender, result)
+
+    def is_empty(self):
+        return len(self._colleagues) == 0
+
+
 #   ---sections/colleagues--------------------------------------------------
 
 AWSSectionResults = NamedTuple("AWSSectionResults", [
@@ -1554,13 +1578,18 @@ class S3BucketHelper:
             # request additional LocationConstraint information
             try:
                 response = client.get_bucket_location(Bucket=bucket_name)
-            except botocore.exceptions.ClientError as e:
-                # An error occurred (AccessDenied) when calling the GetBucketLocation operation: Access Denied
+            except client.exceptions.ClientError as e:
+                # An error occurred (AccessDenied) when calling the GetBucketLocation operation:
+                # Access Denied
                 logging.info("S3BucketHelper/%s: Access denied, %s", bucket_name, e)
                 continue
 
-            if response and response['LocationConstraint']:
-                bucket['LocationConstraint'] = response['LocationConstraint']
+            if response:
+                if response['LocationConstraint'] is None:
+                    location_constraint = 'us-east-1'  # for this region, LocationConstraint is None
+                else:
+                    location_constraint = response['LocationConstraint']
+                bucket['LocationConstraint'] = location_constraint
         return bucket_list['Buckets'] if bucket_list else []
 
 
@@ -1585,7 +1614,9 @@ class S3Limits(AWSSectionLimits):
         return bucket_list
 
     def _compute_content(self, raw_content, colleague_contents):
-        self._add_limit("", AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)))
+        self._add_limit("",
+                        AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)),
+                        region='Global')
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
@@ -1615,14 +1646,9 @@ class S3Summary(AWSSectionGeneric):
         for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
 
-            #TODO
-            # Why do we get the following error while calling these methods:
-            #_response = self._client.get_public_access_block(Bucket=bucket_name)
-            #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
-            # 'S3' object has no attribute 'get_bucket_policy_status'
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
-            except botocore.exceptions.ClientError as e:
+            except self._client.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
                 response = {}
@@ -1638,11 +1664,19 @@ class S3Summary(AWSSectionGeneric):
         if colleague_contents.content:
             bucket_list = colleague_contents.content
         else:
+            # filter buckets by region
             bucket_list = S3BucketHelper.list_buckets(self._client)
 
+        # filter buckets by region
+        bucket_list = [
+            bucket for bucket in bucket_list
+            if 'LocationConstraint' in bucket and bucket['LocationConstraint'] == self.region
+        ]
+
         # filter buckets by name if there is a filter
-        if self._tags is None and self._names is not None:
+        if self._names is not None:
             return [bucket for bucket in bucket_list if bucket['Name'] in self._names]
+
         return bucket_list
 
     def _matches_tag_conditions(self, tagging):
@@ -1752,8 +1786,10 @@ class S3Requests(AWSSectionCloudwatch):
                 ("HeadRequests", "Count", "Sum"),
                 ("PostRequests", "Count", "Sum"),
                 ("SelectRequests", "Count", "Sum"),
-                ("SelectScannedBytes", "Bytes", "Sum"),
-                ("SelectReturnedBytes", "Bytes", "Sum"),
+                    # The following two metrics seem to have the wrong name in the documentation
+                    # https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html
+                ("SelectBytesScanned", "Bytes", "Sum"),
+                ("SelectBytesReturned", "Bytes", "Sum"),
                 ("ListRequests", "Count", "Sum"),
                 ("BytesDownloaded", "Bytes", "Sum"),
                 ("BytesUploaded", "Bytes", "Sum"),
@@ -1771,7 +1807,10 @@ class S3Requests(AWSSectionCloudwatch):
                             'MetricName': metric_name,
                             'Dimensions': [{
                                 'Name': "BucketName",
-                                'Value': bucket_name,
+                                'Value': bucket_name
+                            }, {
+                                "Name": "FilterId",
+                                "Value": "EntireBucket"
                             }]
                         },
                         'Period': self.period,
@@ -3547,7 +3586,7 @@ class AWSSections(abc.ABC):
         self._sections = []
 
     @abc.abstractmethod
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
         pass
 
     def _init_client(self, client_key):
@@ -3641,29 +3680,19 @@ class AWSSectionsUSEast(AWSSections):
     Some clients like CostExplorer only work with US East region:
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     US East is the AWS Standard region.
-
-    Note that for buckets created in the US Standard region, us-east-1, the value of
-    LocationConstraint will be null.
     """
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
         cloudwatch_client = self._init_client('cloudwatch')
-        s3_client = self._init_client('s3')
         wafv2_client = self._init_client('wafv2')
 
         #---distributors----------------------------------------------------
-        s3_limits_distributor = ResultDistributor()
-        s3_summary_distributor = ResultDistributor()
-
         wafv2_limits_distributor = ResultDistributor()
         wafv2_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
-        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
-
         wafv2_limits = WAFV2Limits(wafv2_client,
                                    region,
                                    config,
@@ -3678,30 +3707,15 @@ class AWSSectionsUSEast(AWSSections):
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client, region, config)
 
-        s3 = S3(cloudwatch_client, region, config)
-        s3_requests = S3Requests(cloudwatch_client, region, config)
-
         wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, False)
 
         #---register sections to distributors-------------------------------
-        s3_limits_distributor.add(s3_summary)
-        s3_summary_distributor.add(s3)
-        s3_summary_distributor.add(s3_requests)
-
         wafv2_limits_distributor.add(wafv2_summary)
         wafv2_summary_distributor.add(wafv2_web_acl)
 
         #---register sections for execution---------------------------------
         if 'ce' in services:
             self._sections.append(ce)
-
-        if 's3' in services:
-            if config.service_config.get('s3_limits'):
-                self._sections.append(s3_limits)
-            self._sections.append(s3_summary)
-            self._sections.append(s3)
-            if config.service_config['s3_requests']:
-                self._sections.append(s3_requests)
 
         if 'wafv2' in services and config.service_config['wafv2_cloudfront']:
             if config.service_config.get('wafv2_limits'):
@@ -3711,9 +3725,16 @@ class AWSSectionsUSEast(AWSSections):
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
+
+        assert s3_limits_distributor is not None, "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
+        assert isinstance(
+            s3_limits_distributor, ResultDistributorS3Limits
+        ), "AWSSectionsGeneric.init_sections: s3_limits_distributor should be an instance of ResultDistributorS3Limits"
+
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
+        s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
         elbv2_client = self._init_client('elbv2')
         service_quotas_client = self._init_client('service-quotas')
@@ -3736,6 +3757,8 @@ class AWSSectionsGeneric(AWSSections):
 
         ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
+
+        s3_summary_distributor = ResultDistributor()
 
         glacier_limits_distributor = ResultDistributor()
         glacier_summary_distributor = ResultDistributor()
@@ -3771,6 +3794,19 @@ class AWSSectionsGeneric(AWSSections):
                                           config,
                                           elbv2_summary_distributor,
                                           resource='elbv2')
+
+        # S3 is special because there are no per-region limits, but only a global per-account limit.
+        # The list of buckets can be queried from any region, however, the metrics for the
+        # individual buckets must be queried from the region the bucket resides in. Therefore, we
+        # only want to run S3Limits once, namely for the first region (does not matter which region
+        # that is). The results will then be distributed to the S3Summary objects across all regions
+        # using the special distributor for S3 limits.
+        if s3_limits_distributor.is_empty():
+            s3_limits = S3Limits(s3_client, region, config,
+                                 s3_limits_distributor)  # type: Union[None, S3Limits]
+        else:
+            s3_limits = None
+        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
 
         glacier_limits = GlacierLimits(glacier_client, region, config, glacier_limits_distributor)
         glacier_summary = GlacierSummary(glacier_client, region, config,
@@ -3820,6 +3856,9 @@ class AWSSectionsGeneric(AWSSections):
         rds_limits = RDSLimits(rds_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
 
+        s3 = S3(cloudwatch_client, region, config)
+        s3_requests = S3Requests(cloudwatch_client, region, config)
+
         glacier = Glacier(cloudwatch_client, region, config)
 
         cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
@@ -3850,6 +3889,10 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_summary_distributor.add(elbv2_application_target_groups_http)
         elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
         elbv2_summary_distributor.add(elbv2_network)
+
+        s3_limits_distributor.add(s3_summary)
+        s3_summary_distributor.add(s3)
+        s3_summary_distributor.add(s3_requests)
 
         glacier_limits_distributor.add(glacier_summary)
         glacier_summary_distributor.add(glacier)
@@ -3897,6 +3940,14 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_application_target_groups_http)
             self._sections.append(elbv2_application_target_groups_lambda)
             self._sections.append(elbv2_network)
+
+        if 's3' in services:
+            if config.service_config.get('s3_limits') and s3_limits:
+                self._sections.append(s3_limits)
+            self._sections.append(s3_summary)
+            self._sections.append(s3)
+            if config.service_config['s3_requests']:
+                self._sections.append(s3_requests)
 
         if 'glacier' in services:
             if config.service_config.get('glacier_limits'):
@@ -3969,7 +4020,7 @@ AWSServices = [
                          limits=True),
     AWSServiceAttributes(key="s3",
                          title="Simple Storage Service (S3)",
-                         global_service=True,
+                         global_service=False,
                          filter_by_names=True,
                          filter_by_tags=True,
                          limits=True),
@@ -4292,8 +4343,11 @@ def main(sys_argv=None):
                                       r_and_g_aws_services=('wafv2',))
 
     use_cache = aws_config.is_up_to_date() and not args.no_cache
-
     has_exceptions = False
+
+    # Special distributor for S3 limits which distributes results across different regions
+    s3_limits_distributor = ResultDistributorS3Limits()
+
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
@@ -4309,7 +4363,10 @@ def main(sys_argv=None):
                     session = create_session(args.access_key_id, args.secret_access_key, region)
 
                 sections = aws_sections(hostname, session, debug=args.debug)
-                sections.init_sections(aws_services, region, aws_config)
+                sections.init_sections(aws_services,
+                                       region,
+                                       aws_config,
+                                       s3_limits_distributor=s3_limits_distributor)
                 sections.run(use_cache=use_cache)
             except AwsAccessError as ae:
                 # can not access AWS, retreat

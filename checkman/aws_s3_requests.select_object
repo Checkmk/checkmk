@@ -9,15 +9,15 @@ description:
 
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}. Furthermore, you
- have to enable request metrics in the AWS/S3 console. This
- is a paid feature
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
 
  The service is always {OK}.
 
 item:
- Name of the instance
+ Name of the bucket
 
 inventory:
  One service is created for each bucket if all required metrics
- (SelectScannedBytes, SelectReturnedBytes) are given.
+ (SelectBytesScanned, SelectBytesReturned) are given.
 

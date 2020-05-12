@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List, Union, Optional, Tuple, Callable, Iterable
+import functools
 import cmk.utils.aws_constants as agent_aws_types
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
@@ -212,9 +213,13 @@ def check_aws_error_rate(error_rate, request_rate, metric_name_rate, metric_name
                        infoname="%s of total requests" % display_text)
 
 
-def check_aws_http_elb(params, parsed, http_err_codes, cloudwatch_metrics_format):
+def check_aws_http_errors(params,
+                          parsed,
+                          http_err_codes,
+                          cloudwatch_metrics_format,
+                          key_all_requests='RequestCount'):
 
-    request_rate = parsed.get('RequestCount')
+    request_rate = parsed.get(key_all_requests)
     if request_rate is None:
         raise MKCounterWrapped("Currently no data from AWS")
 
@@ -230,8 +235,8 @@ def check_aws_http_elb(params, parsed, http_err_codes, cloudwatch_metrics_format
             yield result
 
 
-def check_aws_elb_metrics(metric_infos):
-    # type: (List[Dict[str, Union[float, str, Optional[Tuple], Optional[Callable]]]]) -> Iterable[ServiceCheckResult]
+def check_aws_metrics(metric_infos):
+    # type: (List[Dict[str, Union[float, Optional[str], Optional[Tuple], Optional[Callable]]]]) -> Iterable[ServiceCheckResult]
 
     go_stale = True
 
@@ -243,7 +248,7 @@ def check_aws_elb_metrics(metric_infos):
         go_stale = False
 
         yield check_levels(metric_val,
-                           metric_info['metric_name'],
+                           metric_info.get('metric_name'),
                            metric_info.get('levels'),
                            human_readable_func=metric_info.get('human_readable_func'),
                            infoname=metric_info.get('info_name'))
@@ -254,3 +259,21 @@ def check_aws_elb_metrics(metric_infos):
 
 def aws_rds_service_item(instance_id, region):
     return '%s [%s]' % (instance_id, region)
+
+
+def aws_get_parsed_item_data(check_function):
+    # type: (Callable) -> Callable
+    """
+    Modified version of get_parsed_item_data which lets services go stale instead of UNKN if the
+    item is not found.
+    """
+    @functools.wraps(check_function)
+    def wrapped_check_function(item, params, parsed):
+        if not isinstance(parsed, dict):
+            return 3, "Wrong usage of decorator function 'aws_get_parsed_item_data': parsed is " \
+                      "not a dict"
+        if item not in parsed:
+            raise MKCounterWrapped("Currently no data from AWS")
+        return check_function(item, params, parsed[item])
+
+    return wrapped_check_function

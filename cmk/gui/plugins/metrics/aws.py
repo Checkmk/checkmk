@@ -362,25 +362,25 @@ metric_info['aws_tcp_target_rst'] = {
 
 metric_info['aws_s3_downloads'] = {
     'title': _('Download'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '21/a',
 }
 
 metric_info['aws_s3_uploads'] = {
     'title': _('Upload'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '31/a',
 }
 
 metric_info['aws_s3_select_object_scanned'] = {
     'title': _('SELECT Object Scanned'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '31/a',
 }
 
 metric_info['aws_s3_select_object_returned'] = {
     'title': _('SELECT Object Returned'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '41/a',
 }
 

@@ -1390,47 +1390,23 @@ metric_info['write_avg_exe_ms'] = {
     'color': '#90ee90',
 }
 
-metric_info['get_requests'] = {
-    'title': _('GET Requests'),
-    'unit': '1/s',
-    'color': '11/a',
-}
 
-metric_info['put_requests'] = {
-    'title': _('PUT Requests'),
-    'unit': '1/s',
-    'color': '13/a',
-}
+def register_requests_metrics():
+    for request, color in zip(['get', 'put', 'delete', 'head', 'post', 'select', 'list'],
+                              ['11/a', '13/a', '15/a', '21/a', '23/a', '25/a', '31/a']):
+        metric_info['%s_requests' % request] = {
+            'title': _('%s Requests' % request.upper()),
+            'unit': '1/s',
+            'color': color,
+        }
+        metric_info['%s_requests_perc' % request] = {
+            'title': _('Percentage %s Requests' % request.upper()),
+            'unit': '%',
+            'color': color,
+        }
 
-metric_info['delete_requests'] = {
-    'title': _('DELETE Requests'),
-    'unit': '1/s',
-    'color': '15/a',
-}
 
-metric_info['head_requests'] = {
-    'title': _('HEAD Requests'),
-    'unit': '1/s',
-    'color': '21/a',
-}
-
-metric_info['post_requests'] = {
-    'title': _('POST Requests'),
-    'unit': '1/s',
-    'color': '23/a',
-}
-
-metric_info['select_requests'] = {
-    'title': _('SELECT Requests'),
-    'unit': '1/s',
-    'color': '25/a',
-}
-
-metric_info['list_requests'] = {
-    'title': _('LIST Requests'),
-    'unit': '1/s',
-    'color': '31/a',
-}
+register_requests_metrics()
 
 metric_info['channels'] = {
     "title": _("Channels"),

@@ -8,6 +8,7 @@ import operator
 import functools
 
 import cmk.utils.version as cmk_version
+from cmk.utils.prediction import TimeSeries
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
@@ -78,7 +79,8 @@ def evaluate_time_series_expression(expression, rrd_data):
                       "Checkmk Enterprise Editions"))
             # Suppression is needed to silence pylint in CRE environment
             from cmk.gui.cee.plugins.metrics.forecasts import time_series_transform_forecast  # pylint: disable=no-name-in-module
-            return time_series_transform_forecast(operands_evaluated, conf)
+            return time_series_transform_forecast(
+                TimeSeries(operands_evaluated, rrd_data['__range']), conf)
 
     if expression[0] == "rrd":
         key = tuple(expression[1:])

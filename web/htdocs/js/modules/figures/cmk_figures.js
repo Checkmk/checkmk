@@ -17,6 +17,7 @@ class FigureRegistry{
 
 export let figure_registry = new FigureRegistry();
 
+
 // Data update scheduler
 // Receives one function pointer which is regularly called
 // Supports scheduling modes
@@ -90,13 +91,18 @@ class Scheduler {
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
     constructor() {
+        this.reset();
+        this.scheduler = new Scheduler(()=>this._schedule_operations(), 1);
+    }
+
+    reset() {
+        // Urls to call
         // {"url": {"body": {"interval": 10}}
         this._fetch_operations = {};
 
+        // Hooks to call when receiving data
         // {"url": {"body": [funcA, funcB]}}
         this._fetch_hooks = {};
-
-        this.scheduler = new Scheduler(()=>this._schedule_operations(), 1);
     }
 
     subscribe_hook(post_url, post_body, subscriber_func) {
@@ -155,7 +161,7 @@ export class MultiDataFetcher {
 
 
     _fetch(post_url, post_body) {
-        // TODO: improve error handling, d3js uses promises
+        // TODO: improve error handling, d3js supports promises
         d3.json(encodeURI(post_url),
             {
                 credentials: "include",
@@ -173,6 +179,10 @@ export class MultiDataFetcher {
         let data = response.data;
 
         let now = Math.floor(new Date().getTime()/1000);
+
+        if (this._fetch_operations[post_url] == undefined ||
+            this._fetch_operations[post_url][post_body] == undefined)
+            return;
         this._fetch_operations[post_url][post_body].last_update  = now;
         this._fetch_operations[post_url][post_body].fetch_in_progress = false;
 
@@ -183,25 +193,34 @@ export class MultiDataFetcher {
     }
 }
 
+
+// Base class for all cmk_figure based figures
+// Introduces
+//  - Figure sizing
+//  - Post url and body
+//  - Automatic update of data via scheduler
+//  - Various hooks for each phase
+//  - Loading icon
 export class FigureBase {
     static ident() {
         return "figure_base_class";
     }
 
-    constructor(div_selector, width, height) {
+    constructor(div_selector, fixed_size=null) {
         this._div_selector = div_selector;                          // The main container
         this._div_selection = d3.select(this._div_selector);  // The d3-seletion of the main container
 
+        if (fixed_size !== null)
+            this._fixed_size = fixed_size;
+        else
+            this._fixed_size = null;
 
-        // Expecting absolute 124px ranges from enclosing div
-        if (width == undefined)
-            width = parseInt(this._div_selection.style("width"));
-        if (height == undefined)
-            height = parseInt(this._div_selection.style("height"));
+        this._div_selection
+            .classed(this.constructor.ident(), true)
+            .classed("cmk_figure", true);
 
-
-        this._div_selection.classed(this.constructor.ident(), true);
-        this._size = {width: width, height: height};
+        // Parameters used for profiling
+        this._fetch_start = 0;
         this._fetch_data_latency = 0;
 
         // List of hooks which may modify data received from api call
@@ -221,10 +240,25 @@ export class FigureBase {
         // Post url and body for fetching the graph data
         this._post_url = "";
         this._post_body = "";
+    }
 
-        // Parameters used for profiling
-        this._fetch_start = 0;
-        this._fetch_data_latency = 0;
+    initialize(with_debugging) {
+        if (with_debugging)
+            this._add_scheduler_debugging();
+        this.show_loading_image();
+    }
+
+    resize() {}
+
+    show_loading_image() {
+        this._div_selection.selectAll("img.loading").data([null]).enter()
+            .insert("img", ":first-child")
+            .classed("loading", true)
+            .attr("src", "themes/facelift/images/load_graph.png");
+    }
+
+    remove_loading_image() {
+        this._div_selection.selectAll("img.loading").remove();
     }
 
     subscribe_data_pre_processor_hook(func) {
@@ -291,8 +325,10 @@ export class FigureBase {
                 }
             }
         ).then(json_data=>this._process_api_response(json_data)).catch(
-            ()=>this._show_error_info("Error fetching data")
-        );
+            ()=> {
+                this._show_error_info("Error fetching data");
+                this.remove_loading_image();
+            });
     }
 
     _process_api_response(api_response) {
@@ -306,7 +342,7 @@ export class FigureBase {
         }
         this._clear_error_info();
 
-        let data = api_response.result;
+        let data = api_response.result.data;
         this.process_data(data);
         this._fetch_data_latency = +(new Date() - this._fetch_start) / 1000;
     }
@@ -317,6 +353,8 @@ export class FigureBase {
         });
         this._call_pre_render_hooks(data);
         this.update_data(data);
+        this.remove_loading_image();
+        this._div_selection.selectAll("img.loading").remove();
         this.update_gui(data);
         this._call_post_render_hooks(data);
     }
@@ -347,7 +385,6 @@ export class FigureBase {
     // Triggers gui update mechanics in a figure, e.g. rendering
     update_gui() {}
 
-
     // Adds some basic debug features for the scheduler
     _add_scheduler_debugging() {
         let debugging = this._div_selection.append("div");
@@ -374,26 +411,28 @@ export class FigureBase {
     }
 }
 
-
-// Class which handles the display of a tooltips
-export class FigureTooltip {
-    constructor(div_selection) {
-        this._setup_tooltip(div_selection);
+// Base class for dc.js based figures (using crossfilter)
+export class DCFigureBase extends FigureBase {
+    constructor(div_selector, crossfilter, graph_group) {
+        super(div_selector);
+        this._crossfilter = crossfilter; // Shared dataset
+        this._graph_group = graph_group; // Shared group among graphs
+        this._dc_chart = null;
     }
 
-    _setup_tooltip(div_selection) {
-        this._tooltip = div_selection
-            .append("div")
-            .style("opacity", 0)
-            .attr("class", "tooltip")
-            // TODO: move styling to scss
+    get_dc_chart() {
+        return this._dc_chart;
+    }
+}
+
+// Class which handles the display of a tooltip
+// It generates basic tooltips and handles its correct positioning
+export class FigureTooltip {
+    constructor(tooltip_selection) {
+        this._tooltip = tooltip_selection;
+        this._tooltip.style("opacity", 0)
             .style("position", "absolute")
-            .style("pointer-events", "none")
-            .style("background-color", "white")
-            .style("border", "solid")
-            .style("border-width", "2px")
-            .style("border-radius", "5px")
-            .style("padding", "5px");
+            .classed("tooltip", true);
     }
 
     add_support(node) {
@@ -405,38 +444,34 @@ export class FigureTooltip {
 
     _mouseover(){
         let node_data = d3.select(d3.event.target).datum();
-        if (node_data.tooltip == undefined)
+        if (node_data == undefined || node_data.tooltip == undefined)
             return;
 
         this._tooltip.style("opacity", 1);
-        d3.select(d3.event.target).style("stroke", "black")
-            .style("opacity", 0.8);
     }
 
     _mousemove(){
         let node_data = d3.select(d3.event.target).datum();
+        if (node_data == undefined || node_data.tooltip == undefined)
+            return;
+        let parentWidth = this._tooltip.node().parentNode.clientWidth;
         this._tooltip.html(node_data.tooltip)
-            .style("left", (d3.event.layerX+20) + "px")
-            .style("top", d3.event.layerY + "px");
+            .style("left", ()=>{
+                if (parentWidth - d3.event.layerX > Math.max(.2 * parentWidth, 165)) {
+                    return (d3.event.layerX + 20) + "px";
+                }
+                return "auto";
+            })
+            .style("right", ()=>{
+                if (parentWidth - d3.event.layerX <= Math.max(.2 * parentWidth, 165)) {
+                    return (parentWidth - d3.event.layerX + 20) + "px";
+                }
+                return "auto";
+            })
+            .style("top", d3.event.layerY - 50 + "px");
     }
 
     _mouseleave(){
         this._tooltip.style("opacity", 0);
-        d3.select(d3.event.target).style("stroke", "none")
-            .style("opacity", null);
     }
-}
-
-// Helper function to set a list of classes for a node
-export function set_classes(node, list_of_classes) {
-    let node_selection = d3.select(node);
-    let existing_classes = [...node.classList];
-    existing_classes.forEach(classname=>{
-        node_selection.classed(classname, false);
-    });
-    if (!list_of_classes)
-        return;
-    list_of_classes.forEach(new_class=>{
-        node_selection.classed(new_class, true);
-    });
 }

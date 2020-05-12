@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
+import time
 import abc
 import json
 import copy
@@ -15,9 +16,11 @@ import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
 from cmk.gui.type_defs import VisualContext
 
+import cmk.gui.sites as sites
+
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException, MKTimeout
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html
@@ -28,6 +31,8 @@ from cmk.gui.plugins.views.utils import (
     transform_painter_spec,
 )
 from cmk.gui.utils.url_encoder import HTTPVariables
+from cmk.gui.metrics import translate_perf_data
+from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -671,3 +676,78 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     dashlet['name'] = 'dashlet_%d' % nr
     dashlet['show_title'] = True
     dashlet['mustsearch'] = False
+
+
+class site_query:
+    def __init__(self, f):
+        self.f = f
+
+    def __call__(self, cls, properties, context):
+        filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
+        columns = self.f(cls, properties, context)
+
+        query = ("GET services\n"
+                 "Columns: %(cols)s\n"
+                 "%(filter)s" % {
+                     "cols": " ".join(columns),
+                     "filter": filter_headers,
+                 })
+
+        with sites.only_sites(only_sites), sites.prepend_site():
+            try:
+                rows = sites.live().query(query)
+            except MKTimeout:
+                raise
+            except Exception:
+                raise MKGeneralException(_("The query returned no data."))
+
+        return ['site'] + columns, rows
+
+
+def create_data_for_single_metric(cls, properties, context):
+    columns, data_rows = cls._get_data(properties, context)
+
+    data = []
+    used_metrics = []
+
+    for idx, row in enumerate(data_rows):
+        d_row = dict(zip(columns, row))
+        translated_metrics = translate_perf_data(d_row["service_perf_data"],
+                                                 d_row["service_check_command"])
+        metric = translated_metrics.get(properties['metric'])
+
+        if metric is None:
+            continue
+
+        series = merge_multicol(d_row, columns, properties)
+        site = d_row['site']
+        host = d_row["host_name"]
+        svc_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host),
+                                ("service", d_row['service_description'])],
+                               filename="view.py")
+
+        row_id = "row_%d" % idx
+
+        # Live value
+        if properties["time_range"] == "current":
+            data.append({
+                "tag": row_id,
+                "timestamp": int(time.time()),
+                "value": metric['value'],
+                "url": svc_url,
+                "label": host,
+            })
+        # Historic values
+        else:
+            for ts, elem in series.time_data_pairs():
+                if elem:
+                    data.append({
+                        "tag": row_id,
+                        "timestamp": ts,
+                        "value": elem,
+                        "label": host,
+                    })
+
+        used_metrics.append((row_id, host, metric))
+
+    return data, used_metrics

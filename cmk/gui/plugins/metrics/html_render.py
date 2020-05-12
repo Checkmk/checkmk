@@ -632,7 +632,6 @@ def ajax_render_graph_content():
     html.set_output_format("json")
     try:
         request = html.get_request()
-
         response = {
             "result_code": 0,
             "result": render_graph_content_html(request["graph_recipe"],

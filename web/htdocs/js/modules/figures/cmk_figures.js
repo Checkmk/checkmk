@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as crossfilter from "crossfilter2";
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry{
@@ -210,14 +211,19 @@ export class FigureBase {
         this._div_selector = div_selector;                          // The main container
         this._div_selection = d3.select(this._div_selector);  // The d3-seletion of the main container
 
+        this.svg = null;  // The svg representing the figure
+        this.plot = null; // The plot representing the drawing area, is shifted by margin
+
         if (fixed_size !== null)
             this._fixed_size = fixed_size;
         else
             this._fixed_size = null;
+        this.margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
         this._div_selection
             .classed(this.constructor.ident(), true)
-            .classed("cmk_figure", true);
+            .classed("cmk_figure", true)
+            .datum(this);
 
         // Parameters used for profiling
         this._fetch_start = 0;
@@ -240,6 +246,11 @@ export class FigureBase {
         // Post url and body for fetching the graph data
         this._post_url = "";
         this._post_body = "";
+
+        // Current data of this figure
+        this._data = {data: [], plot_definitions: []};
+
+        this._crossfilter = new crossfilter.default();
     }
 
     initialize(with_debugging) {
@@ -248,7 +259,40 @@ export class FigureBase {
         this.show_loading_image();
     }
 
-    resize() {}
+
+    add_plot_definition(plot_definition) {
+        this._data.plot_definitions.push(plot_definition);
+    }
+
+    add_data(data) {
+        this._data.data = this._data.data.concat(data);
+    }
+
+    remove_plot_definition(plot_definition) {
+        let plot_id = plot_definition.id;
+        for (let idx in this._data.plot_definitions) {
+            let plot_def = this._data.plot_definitions[idx];
+            if (plot_def.id == plot_id) {
+                this._data.plot_definitions.splice(+idx, 1);
+                return;
+            }
+        }
+    }
+
+    resize () {
+        let new_size = this._fixed_size;
+        if (new_size === null) {
+            new_size = {
+                width: this._div_selection.node().parentNode.offsetWidth,
+                height: this._div_selection.node().parentNode.offsetHeight
+            };
+        }
+        this.figure_size = new_size;
+        this.plot_size = {
+            width: this.figure_size.width - this.margin.left - this.margin.right,
+            height: this.figure_size.height - this.margin.top - this.margin.bottom
+        };
+    }
 
     show_loading_image() {
         this._div_selection.selectAll("div.loading_img").data([null]).enter()
@@ -304,10 +348,6 @@ export class FigureBase {
     }
 
     _fetch_data() {
-        // API Spec is WIP
-        // {
-        //
-        // }
         let post_settings = this.get_post_settings();
 
         if (!post_settings.url)
@@ -333,16 +373,17 @@ export class FigureBase {
     _process_api_response(api_response) {
         // Current api data format
         // {"result_code": 0, "result": {
-        //      "data": {},    // data relevant for rendering
+        //      "figure_response": {
+        //         "plot_definitions": [] // definitions for the plots to render
+        //         "data": []             // the actual data
+        //      },
         // }}
         if (api_response.result_code != 0) {
             this._show_error_info(api_response.result);
             return;
         }
         this._clear_error_info();
-
-        let data = api_response.result.data;
-        this.process_data(data);
+        this.process_data(api_response.result.figure_response);
         this._fetch_data_latency = +(new Date() - this._fetch_start) / 1000;
     }
 
@@ -378,10 +419,16 @@ export class FigureBase {
     }
 
     // Triggers data update mechanics in a figure, e.g. store some data from response
-    update_data() {}
+    update_data(data) {
+        this._data = data;
+    }
 
     // Triggers gui update mechanics in a figure, e.g. rendering
     update_gui() {}
+
+    // Simple re-rendering of existing data
+    // TODO: merge with update_gui?
+    render() {}
 
     // Adds some basic debug features for the scheduler
     _add_scheduler_debugging() {
@@ -407,6 +454,19 @@ export class FigureBase {
             .attr("value", "Force")
             .on("click", ()=>this.scheduler.force_update());
     }
+
+    render_title(title) {
+        if (!this.svg)
+            return;
+
+        this.svg.selectAll(".title").data([title])
+            .join("text")
+            .text(d=>d)
+            .attr("y", 18)
+            .attr("x", this.figure_size.width/2)
+            .attr("text-anchor", "middle")
+            .classed("title", true);
+    }
 }
 
 // Base class for dc.js based figures (using crossfilter)
@@ -431,6 +491,44 @@ export class FigureTooltip {
         this._tooltip.style("opacity", 0)
             .style("position", "absolute")
             .classed("tooltip", true);
+        this.figure_size = { width: null, height: null };
+        this.plot_size = { width: null, height: null };
+    }
+
+    update_sizes(figure_size, plot_size) {
+        this.figure_size = figure_size;
+        this.plot_size = plot_size;
+    }
+
+    update_position() {
+        let ev = (("sourceEvent" in d3.event) ? d3.event.sourceEvent : d3.event);
+        let tooltip_size = { width: this._tooltip.node().offsetWidth, height: this._tooltip.node().offsetHeight };
+        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+
+        this._tooltip
+            .style("left", ()=>{
+                if (!render_to_the_left)
+                    return ev.layerX + 20 + "px";
+                return "auto";
+            })
+            .style("right", ()=>{
+                if (render_to_the_left)
+                    return this.plot_size.width - ev.layerX + 75 + "px";
+                return "auto";
+            })
+            .style("bottom", ()=>{
+                if (render_upwards)
+                    return "6px";
+                return "auto";
+            })
+            .style("top", ()=>{
+                if (!render_upwards)
+                    return ev.layerY - 20 + "px";
+                return "auto";
+            })
+            .style("pointer-events", "none")
+            .style("opacity", 1);
     }
 
     add_support(node) {
@@ -452,24 +550,51 @@ export class FigureTooltip {
         let node_data = d3.select(d3.event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined)
             return;
-        let parentWidth = this._tooltip.node().parentNode.clientWidth;
-        this._tooltip.html(node_data.tooltip)
-            .style("left", ()=>{
-                if (parentWidth - d3.event.layerX > Math.max(.2 * parentWidth, 165)) {
-                    return (d3.event.layerX + 20) + "px";
-                }
-                return "auto";
-            })
-            .style("right", ()=>{
-                if (parentWidth - d3.event.layerX <= Math.max(.2 * parentWidth, 165)) {
-                    return (parentWidth - d3.event.layerX + 20) + "px";
-                }
-                return "auto";
-            })
-            .style("top", d3.event.layerY - 50 + "px");
+        this._tooltip.html(node_data.tooltip);
+        this.update_position();
     }
 
     _mouseleave(){
         this._tooltip.style("opacity", 0);
     }
+}
+
+export class FigureLegend {
+    constructor(legend_selection) {
+        this._legend = legend_selection;
+        this._legend.classed("legend", true);
+    }
+
+    _dragstart() {
+        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
+    }
+
+    _drag() {
+        this._dragged_object.style("position", "absolute")
+            .style("top", d3.event.y + "px")
+            .style("right", -d3.event.x + "px");
+    }
+
+    _dragend() {
+        this._dragged_object.remove();
+
+        let point_in_rect = (r,p)=>((p.x > r.x1 && p.x < r.x2) && (p.y > r.y1 && p.y < r.y2));
+        let renderer_instances = d3.selectAll("svg.renderer");
+        let target_renderer = null;
+        renderer_instances.each((d, idx, nodes)=>{
+            let rect = nodes[idx].getBoundingClientRect();
+            let x1 = rect.left;
+            let x2 = x1 + rect.width;
+            let y1 = rect.top;
+            let y2 = y1 + rect.height;
+            if (point_in_rect({x1: x1, y1: y1, x2: x2, y2: y2}, {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}))
+                target_renderer = d;
+        });
+
+        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
+            d3.event.subject.migrate_to(target_renderer);
+    }
+
+
+
 }

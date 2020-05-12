@@ -4,35 +4,397 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Union, Tuple
+import json
+from typing import Dict, List, Union, Tuple, Optional
 
-import livestatus
-import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
-    CascadingDropdown,
     Dictionary,
-    DropdownChoice,
     Fontsize,
+    Timerange,
     TextUnicode,
-    Transform,
+    CascadingDropdown,
+    DropdownChoice,
 )
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
-from cmk.gui.plugins.metrics.utils import (
-    parse_perf_data,
-    translate_metrics,
-    check_metrics,
-)
+
+from cmk.gui.htmllib import HTML
+from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.plugins.dashboard import dashlet_registry
+from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
+from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
+from cmk.gui.metrics import translate_perf_data
+from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
+
+from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
+
+
+class SingleMetricDataGenerator(ABCDataGenerator):
+    """Data generator for a scatterplot with average lines"""
+    @classmethod
+    def vs_parameters(cls):
+        return Dictionary(title=_("Properties"),
+                          render="form",
+                          optional_keys=["title"],
+                          elements=cls._vs_elements())
+
+    @classmethod
+    def _vs_elements(cls):
+        return [
+            ("title", TextUnicode(default_value="", title=_("Figure title"))),
+            ("metric", MetricName()),  # MetricChoice would be nicer, but is CEE
+            ("rrd_consolidation",
+             DropdownChoice(
+                 choices=[
+                     ("average", _("Average")),
+                     ("min", _("Minimum")),
+                     ("max", _("Maximum")),
+                 ],
+                 default_value="average",
+                 title="RRD consolidation",
+                 help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
+             )),
+            (
+                "time_range",
+                CascadingDropdown(
+                    title=_("Timerange"),
+                    orientation="horizontal",
+                    choices=[
+                        ("current", _("Only show current value")),
+                        (
+                            "range",
+                            _("Show historic values"),
+                            # TODO: add RRD consolidation, here and in _get_data below
+                            Timerange(title=_("Time range to consider"),
+                                      default_value="d0",
+                                      allow_empty=True)),
+                    ],
+                    default_value="current"))
+        ]
+
+    @classmethod
+    @site_query
+    def _get_data(cls, properties, context):
+        cmc_cols = [
+            "host_name", "service_check_command", "service_description", "service_perf_data"
+        ]
+        metric_columns = []
+        if properties["time_range"] != "current":
+            from_time, until_time = map(int,
+                                        Timerange().compute_range(properties["time_range"][1])[0])
+            data_range = "%s:%s:%s" % (from_time, until_time, 60)
+            _metrics: List[Tuple[str, Optional[str], float]] = [
+                (name, None, scale)
+                for name, scale in reverse_translate_metric_name(properties["metric"])
+            ]
+            metric_columns = list(rrd_columns(_metrics, properties["rrd_consolidation"],
+                                              data_range))
+
+        return cmc_cols + metric_columns
+
+    @classmethod
+    def generate_response_data(cls, properties, context):
+        data, metrics = create_data_for_single_metric(cls, properties, context)
+        return cls._create_single_metric_config(data, metrics, properties, context)
+
+    @classmethod
+    def _create_single_metric_config(cls, data, metrics, properties, context):
+        plot_definitions = []
+
+        # Historic values are always added as plot_type area
+        if properties["time_range"] != "current":
+            for row_id, host, metric in metrics:
+                plot_definition = {
+                    "plot_type": "area",
+                    "label": host,
+                    "id": row_id,
+                    "use_tags": [row_id]
+                }
+                if "color" in metric:
+                    plot_definition["color"] = metric["color"]
+                plot_definitions.append(plot_definition)
+
+        # The current/last value definition also gets the metric levels
+        for row_id, host, metric in metrics:
+            plot_definition = {
+                "plot_type": "single_value",
+                "id": "%s_single" % row_id,
+                "use_tags": [row_id],
+                "label": host,
+                "metrics": {
+                    "warn": metric["scalar"].get("warn"),
+                    "crit": metric["scalar"].get("crit"),
+                    "min": metric["scalar"].get("min"),
+                    "max": metric["scalar"].get("max"),
+                }
+            }
+            if "color" in metric:
+                plot_definition["color"] = metric["color"]
+
+            plot_definitions.append(plot_definition)
+
+        response = {
+            "plot_definitions": plot_definitions,
+            "data": data,
+        }
+
+        response["title"] = properties.get("title")
+        return response
+
+
+@page_registry.register_page("single_metric_data")
+class SingleMetricPage(AjaxPage):
+    def page(self):
+        return SingleMetricDataGenerator.generate_response_from_request()
+
+
+#   .--Gauge---------------------------------------------------------------.
+#   |                     ____                                             |
+#   |                    / ___| __ _ _   _  __ _  ___                      |
+#   |                   | |  _ / _` | | | |/ _` |/ _ \                     |
+#   |                   | |_| | (_| | |_| | (_| |  __/                     |
+#   |                    \____|\__,_|\__,_|\__, |\___|                     |
+#   |                                      |___/                           |
+#   +----------------------------------------------------------------------+
 
 
 @dashlet_registry.register
-class SingleMetricDashlet(Dashlet):
+class GaugeDashlet(ABCFigureDashlet):
+    """Dashlet that displays a scatterplot and average lines for a selected type of service"""
+    @classmethod
+    def type_name(cls):
+        return "gauge"
+
+    @classmethod
+    def title(cls):
+        return _("Gauge")
+
+    @classmethod
+    def description(cls):
+        return _("Displays Gauge")
+
+    @classmethod
+    def data_generator(cls):
+        return SingleMetricDataGenerator
+
+    @classmethod
+    def single_infos(cls):
+        return ["service"]
+
+    def show(self):
+        html.header("")
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
+
+        fetch_url = "single_metric_data.py"
+        args = []  # type: HTTPVariables
+        args.append(("context", json.dumps(self._dashlet_spec["context"])))
+        args.append(
+            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        body = html.urlencode_vars(args)
+
+        html.javascript(
+            """
+            let gauge_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("gauge");
+            let %(instance_name)s = new gauge_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(body),
+                "update": 60,
+            })
+
+
+#   .--Bar Plot------------------------------------------------------------.
+#   |                ____               ____  _       _                    |
+#   |               | __ )  __ _ _ __  |  _ \| | ___ | |_                  |
+#   |               |  _ \ / _` | '__| | |_) | |/ _ \| __|                 |
+#   |               | |_) | (_| | |    |  __/| | (_) | |_                  |
+#   |               |____/ \__,_|_|    |_|   |_|\___/ \__|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+@dashlet_registry.register
+class BarplotDashlet(ABCFigureDashlet):
+    @classmethod
+    def type_name(cls):
+        return "barplot"
+
+    @classmethod
+    def title(cls):
+        return _("Barplot")
+
+    @classmethod
+    def data_generator(cls):
+        return SingleMetricDataGenerator
+
+    @classmethod
+    def description(cls):
+        return _("Barplot")
+
+    @classmethod
+    def single_infos(cls):
+        return ["service"]
+
+    def show(self):
+        html.header("")
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
+
+        fetch_url = "single_metric_data.py"
+        args = []  # type: HTTPVariables
+        args.append(("context", json.dumps(self._dashlet_spec["context"])))
+        args.append(
+            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        body = html.urlencode_vars(args)
+
+        html.javascript(
+            """
+            let barplot_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("barplot");
+            let %(instance_name)s = new barplot_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(body),
+                "update": 60,
+            })
+
+
+#   .--Single Graph--------------------------------------------------------.
+#   |      ____  _             _         ____                 _            |
+#   |     / ___|(_)_ __   __ _| | ___   / ___|_ __ __ _ _ __ | |__         |
+#   |     \___ \| | '_ \ / _` | |/ _ \ | |  _| '__/ _` | '_ \| '_ \        |
+#   |      ___) | | | | | (_| | |  __/ | |_| | | | (_| | |_) | | | |       |
+#   |     |____/|_|_| |_|\__, |_|\___|  \____|_|  \__,_| .__/|_| |_|       |
+#   |                    |___/                         |_|                 |
+#   +----------------------------------------------------------------------+
+
+
+class SingleGraphValueDataGenerator(SingleMetricDataGenerator):
+    @classmethod
+    def _vs_elements(cls):
+        elements = super()._vs_elements()
+        elements += cls._render_options()
+        return elements
+
+    @classmethod
+    def _render_options(cls):
+        return [
+            (
+                "render_options",
+                Dictionary(
+                    title=_("Render options"),
+                    elements=[
+                        ("font_size",
+                         CascadingDropdown(
+                             title=_("Metric value font size"),
+                             orientation="horizontal",
+                             choices=[
+                                 ("fix", _("Set the metric value font size to:"),
+                                  Fontsize(default_value="22.5")),
+                                 ("dynamic",
+                                  _("Dynamically adapt the metric font size to the dashlet size"))
+                             ],
+                             default_value="dynamic")),
+                        ("link_to_svc_detail",
+                         DropdownChoice(
+                             title=_("Link to service detail page"),
+                             choices=[
+                                 ("true",
+                                  _("Open service detail page when clicking on the metric value")),
+                                 ("false", _("Do not add a link to the metric value"))
+                             ],
+                             default_value="true")),
+                        ("show_site",
+                         CascadingDropdown(
+                             title=_("Show the site name"),
+                             orientation="horizontal",
+                             sorted=False,
+                             choices=[("above", _("... above the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("below", _("... below the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("tooltip",
+                                       _("... in a tooltip when hovering the metric value")),
+                                      ("false", _("Do not show the site name"))],
+                             default_value="false")),
+                        ("show_host",
+                         CascadingDropdown(
+                             title=_("Show the host name"),
+                             orientation="horizontal",
+                             sorted=False,
+                             choices=[("above", _("... above the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("below", _("... below the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("tooltip",
+                                       _("... in a tooltip when hovering the metric value")),
+                                      ("false", _("Do not show the host name"))],
+                             default_value="false")),
+                        ("show_service",
+                         CascadingDropdown(
+                             title=_("Show the service name"),
+                             orientation="horizontal",
+                             sorted=False,
+                             choices=[("above", _("... above the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("below", _("... below the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("tooltip",
+                                       _("... in a tooltip when hovering the metric value")),
+                                      ("false", _("Do not show the service name"))],
+                             default_value="tooltip")),
+                        ("show_metric",
+                         CascadingDropdown(
+                             title=_("Show the metric name"),
+                             orientation="horizontal",
+                             sorted=False,
+                             choices=[("above", _("... above the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("below", _("... below the metric value with font size:"),
+                                       Fontsize(default_value="12.0")),
+                                      ("tooltip",
+                                       _("... in a tooltip when hovering the metric value")),
+                                      ("false", _("Do not show the metric name"))],
+                             default_value="above")),
+                        ("show_state_color",
+                         DropdownChoice(title=_("Show the service state color"),
+                                        choices=[
+                                            ("background", _("... as background color")),
+                                            ("font", _("... as font color")),
+                                            ("false", _("Do not show the service state color")),
+                                        ],
+                                        default_value="background")),
+                        ("show_unit",
+                         DropdownChoice(title=_("Show the metric's unit"),
+                                        choices=[
+                                            ("true", _("Show the metric's unit")),
+                                            ("false", _("Do not show the metric's unit")),
+                                        ],
+                                        default_value="true")),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
+        ]
+
+
+@dashlet_registry.register
+class SingleMetricDashlet(ABCFigureDashlet):
     """Dashlet that displays a single metric"""
     def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
         super(SingleMetricDashlet, self).__init__(dashboard_name, dashboard, dashlet_id, dashlet)
@@ -50,216 +412,6 @@ class SingleMetricDashlet(Dashlet):
     @classmethod
     def description(cls):
         return _("Displays a single metric of a specific host and service.")
-
-    @classmethod
-    def sort_index(cls):
-        return 95
-
-    @classmethod
-    def initial_refresh_interval(cls):
-        return 60
-
-    @classmethod
-    def initial_size(cls):
-        return (30, 12)
-
-    @classmethod
-    def infos(cls):
-        return ["host", "service"]
-
-    @classmethod
-    def single_infos(cls):
-        return ["host", "service"]
-
-    @classmethod
-    def has_context(cls):
-        return True
-
-    @classmethod
-    def default_settings(cls):
-        return {"show_title": False}
-
-    @classmethod
-    def vs_parameters(cls):
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=[],
-            elements=cls._metric_info() + cls._render_options(),
-        )
-
-    @classmethod
-    def _metric_info(cls):
-        return [("metric",
-                 TextUnicode(
-                     title=_('Metric'),
-                     size=50,
-                     help=_("Enter the name of a metric here to display it's value "
-                            "with respect to the selected host and service"),
-                 ))]
-
-    @classmethod
-    def _render_options(cls):
-        return [
-            (
-                "metric_render_options",
-                Transform(
-                    Dictionary(
-                        elements=[
-                            ("font_size",
-                             CascadingDropdown(
-                                 title=_("Metric value font size"),
-                                 orientation="horizontal",
-                                 choices=[
-                                     ("fix", _("Set the metric value font size to:"),
-                                      Fontsize(default_value="22.5")),
-                                     ("dynamic",
-                                      _("Dynamically adapt the metric font size to the dashlet size"
-                                       ))
-                                 ],
-                                 default_value="dynamic")),
-                            ("link_to_svc_detail",
-                             DropdownChoice(
-                                 title=_("Link to service detail page"),
-                                 choices=[
-                                     ("true",
-                                      _("Open service detail page when clicking on the metric value"
-                                       )), ("false", _("Do not add a link to the metric value"))
-                                 ],
-                                 default_value="true")),
-                            ("show_site",
-                             CascadingDropdown(
-                                 title=_("Show the site name"),
-                                 orientation="horizontal",
-                                 sorted=False,
-                                 choices=[("above", _("... above the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("below", _("... below the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("tooltip",
-                                           _("... in a tooltip when hovering the metric value")),
-                                          ("false", _("Do not show the site name"))],
-                                 default_value="false")),
-                            ("show_host",
-                             CascadingDropdown(
-                                 title=_("Show the host name"),
-                                 orientation="horizontal",
-                                 sorted=False,
-                                 choices=[("above", _("... above the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("below", _("... below the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("tooltip",
-                                           _("... in a tooltip when hovering the metric value")),
-                                          ("false", _("Do not show the host name"))],
-                                 default_value="false")),
-                            ("show_service",
-                             CascadingDropdown(
-                                 title=_("Show the service name"),
-                                 orientation="horizontal",
-                                 sorted=False,
-                                 choices=[("above", _("... above the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("below", _("... below the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("tooltip",
-                                           _("... in a tooltip when hovering the metric value")),
-                                          ("false", _("Do not show the service name"))],
-                                 default_value="tooltip")),
-                            ("show_metric",
-                             CascadingDropdown(
-                                 title=_("Show the metric name"),
-                                 orientation="horizontal",
-                                 sorted=False,
-                                 choices=[("above", _("... above the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("below", _("... below the metric value with font size:"),
-                                           Fontsize(default_value="12.0")),
-                                          ("tooltip",
-                                           _("... in a tooltip when hovering the metric value")),
-                                          ("false", _("Do not show the metric name"))],
-                                 default_value="above")),
-                            ("show_state_color",
-                             DropdownChoice(title=_("Show the service state color"),
-                                            choices=[
-                                                ("background", _("... as background color")),
-                                                ("font", _("... as font color")),
-                                                ("false", _("Do not show the service state color")),
-                                            ],
-                                            default_value="background")),
-                            ("show_unit",
-                             DropdownChoice(title=_("Show the metric's unit"),
-                                            choices=[
-                                                ("true", _("Show the metric's unit")),
-                                                ("false", _("Do not show the metric's unit")),
-                                            ],
-                                            default_value="true")),
-                        ],
-                        optional_keys=[],
-                        title=_("Metric rendering options"),
-                    ),),
-            ),
-        ]
-
-    def _get_site_by_host_name(self, host_name):
-        if html.request.has_var('site'):
-            site = html.request.var('site')
-        else:
-            query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host_name)
-            try:
-                sites.live().set_prepend_site(True)
-                site = sites.live().query_column(query)[0]
-            except IndexError:
-                raise MKUserError("host", _("The host could not be found on any active site."))
-            finally:
-                sites.live().set_prepend_site(False)
-        return site
-
-    def _query_for_metrics_of_host(self, site_id, host_name, service_name):
-        if not host_name or not service_name:
-            return {}
-
-        query = ("GET services\n"
-                 "Columns: description check_command service_perf_data host_state service_state\n"
-                 "Filter: host_name = %s\n"
-                 "Filter: service_description = %s\n" %
-                 (livestatus.lqencode(host_name), service_name))
-        try:
-            rows = sites.live().query(query)
-        except Exception:
-            raise MKGeneralException(
-                _("The query for the given metric, service and host names returned no data."))
-
-        for service_description, check_command, service_perf_data, host_state, svc_state in rows:
-            return {
-                "service_description": service_description,
-                "check_command": check_command,
-                "service_perf_data": service_perf_data,
-                "host_state": host_state,
-                "svc_state": svc_state,
-            }
-
-    def _get_translated_metrics_from_perf_data(self, row):
-        perf_data_string = row["service_perf_data"].strip()
-        if not perf_data_string:
-            return
-        self._perf_data, self._check_command = parse_perf_data(perf_data_string,
-                                                               row["check_command"])
-        return translate_metrics(self._perf_data, self._check_command)
-
-    def _get_chosen_metric(self, t_metrics, given_metric_name):
-        chosen_metric_name = ""
-        metric_choices = []
-        for data in self._perf_data:
-            varname = data[0]
-            orig_varname = varname
-            if varname not in t_metrics:
-                varname = check_metrics[self._check_command][varname]["name"]
-            metric_title = t_metrics[varname]["title"]
-            metric_choices.append((varname, "%s (%s)" % (varname, metric_title)))
-            if given_metric_name in (varname, orig_varname):
-                chosen_metric_name = varname
-        return chosen_metric_name, metric_choices
 
     def _get_titles(self, metric_spec, links, render_options):
         titles = {
@@ -281,10 +433,9 @@ class SingleMetricDashlet(Dashlet):
         return titles
 
     def _get_rendered_metric_value(self, metric, render_options, tooltip_titles, service_url):
-        if render_options["show_unit"] == "true":
-            rendered_value = metric["unit"]["render"](metric["value"])
-        else:
-            rendered_value = " ".join(metric["unit"]["render"](metric["value"]).split()[:-1])
+        rendered_value = metric["unit"]["render"](metric["value"])
+        if render_options["show_unit"] != "true":
+            rendered_value = " ".join(rendered_value.split()[:-1])
         return html.render_a(
             content=rendered_value,
             href=service_url if render_options["link_to_svc_detail"] == "true" else "",
@@ -343,20 +494,75 @@ class SingleMetricDashlet(Dashlet):
         html.javascript(self._adjust_font_size_js())
 
     def on_resize(self):
+        if self._dashlet_spec["time_range"] != "current":
+            return super(SingleMetricDashlet, self).on_resize()
         return self._adjust_font_size_js()
 
-    def show(self):
-        host = self._dashlet_spec['context'].get("host", html.request.var("host"))
-        if not host:
-            raise MKUserError('host', _('Missing needed host parameter.'))
+    @classmethod
+    def single_infos(cls):
+        return ["service"]
 
-        service = self._dashlet_spec['context'].get("service")
-        if not service:
-            service = "_HOST_"
+    def show_with_timeseries(self):
+        html.header("")
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
 
-        metric = self._dashlet_spec["metric"] if "metric" in self._dashlet_spec else ""
-        site = self._get_site_by_host_name(host)
-        metric_spec = {"site": site, "host": host, "service": service, "metric": metric}
+        fetch_url = "ajax_single_graph_metric_data.py"
+        args = []  # type: HTTPVariables
+        args.append(("context", json.dumps(self._dashlet_spec["context"])))
+        args.append(
+            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        body = html.urlencode_vars(args)
+
+        html.javascript(
+            """
+            let single_metric_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("single_metric");
+            let %(instance_name)s = new single_metric_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(body),
+                "update": 60,
+            })
+
+    def show_without_timeseries(self):
+        @site_query
+        def query(cls, properties, context):
+            return [
+                "host_name", "service_check_command", "service_description", "service_perf_data",
+                "service_state"
+            ]
+
+        col_names, data = query(  # pylint: disable=unbalanced-tuple-unpacking
+            self, json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec)),
+            self._dashlet_spec["context"])
+
+        row = dict(zip(col_names, data[0]))
+
+        site = row["site"]
+        host = row["host_name"]
+        service = row["service_description"]
+        metric = self._dashlet_spec.get("metric", "")
+
+        t_metrics = translate_perf_data(row["service_perf_data"], row["service_check_command"])
+        chosen_metric = t_metrics.get(metric)
+        if chosen_metric is None:
+            html.show_warning(_("There are no metrics meeting your context filters."))
+            warning_txt = HTML(
+                _("The given metric \"%s\" could not be found.\
+                        For the selected service \"%s\" you can choose from the following metrics:"
+                  % (metric, service)))
+            warning_txt += html.render_ul("".join(
+                [str(html.render_li(m["title"])) for m in t_metrics.values()]))
+            html.show_warning(warning_txt)
+            return
+
         svc_url = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
             html.urlencode(site), html.urlencode(host), html.urlencode(service))
         links = {
@@ -367,34 +573,33 @@ class SingleMetricDashlet(Dashlet):
                 (html.urlencode(site), html.urlencode(host))),
             "service": html.render_a(service, svc_url)
         }
-        render_options = self._dashlet_spec["metric_render_options"]
-        metrics = self._query_for_metrics_of_host(site, host, service)
-        t_metrics = self._get_translated_metrics_from_perf_data(metrics)
-        chosen_metric_name, metric_choices = self._get_chosen_metric(t_metrics, metric)
-        svc_state = metrics["svc_state"]
+        render_options = self._dashlet_spec["render_options"]
+
+        svc_state = row["service_state"]
 
         html.open_div(class_="metric")
-        if metrics:
-            if chosen_metric_name:
-                chosen_metric = t_metrics[chosen_metric_name]
-                titles = self._get_titles(metric_spec, links, render_options)
-                self._render_metric_content(chosen_metric, render_options, titles, svc_state,
-                                            svc_url)
-            else:
-                html.open_div(class_="no_metric_match")
-                if metric_choices:
-                    # TODO: Fix this handling of no available/matching metric
-                    # after the implementation of host/site contexts
-                    warning_txt = HTML(
-                        _("The given metric \"%s\" could not be found.\
-                            For the selected service \"%s\" you can choose from the following metrics:"
-                          % (metric, service)))
-                    warning_txt += html.render_ul("".join(
-                        [str(html.render_li(b)) for _a, b in metric_choices]))
-                    html.show_warning(warning_txt)
-                else:
-                    html.show_warning(_("No metric could be found."))
-                html.close_div()
-        else:
-            html.show_warning(_("There are no metrics meeting your context filters."))
+        metric_spec = {
+            "site": site,
+            "host": host,
+            "service": service,
+            "metric": chosen_metric.get("title", metric)
+        }
+        titles = self._get_titles(metric_spec, links, render_options)
+        self._render_metric_content(chosen_metric, render_options, titles, svc_state, svc_url)
         html.close_div()
+
+    def show(self):
+        if self._dashlet_spec["time_range"] != "current":
+            self.show_with_timeseries()
+        else:
+            self.show_without_timeseries()
+
+    @classmethod
+    def data_generator(cls):
+        return SingleGraphValueDataGenerator
+
+
+@page_registry.register_page("ajax_single_graph_metric_data")
+class SingleMetricDataPage(AjaxPage):
+    def page(self):
+        return SingleGraphValueDataGenerator.generate_response_from_request()

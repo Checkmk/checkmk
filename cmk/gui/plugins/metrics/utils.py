@@ -909,7 +909,7 @@ def render_color_icon(color):
 
 
 @MemoizeCache
-def reverse_translate_metric_name(canonical_name):
+def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]]:
     "Return all known perf data names that are translated into canonical_name with corresponding scaling"
     # We should get all metrics unified before Cmk 2.0
     # 1.7 is version where metric migration started to happen
@@ -925,9 +925,9 @@ def reverse_translate_metric_name(canonical_name):
                 migration_end = migration_end_version
 
             if (options.get('name', '') == canonical_name and migration_end >= current_version):
-                possible_translations.append((metric, options.get('scale', 1)))
+                possible_translations.append((metric, options.get('scale', 1.0)))
 
-    return [(canonical_name, 1)] + sorted(set(possible_translations))
+    return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
 def MetricName():

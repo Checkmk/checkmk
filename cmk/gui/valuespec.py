@@ -4764,12 +4764,16 @@ class Dictionary(ValueSpec):
     def value_to_json(self, value):
         json_value = {}
         for param, vs in self._get_elements():
+            if param not in value:
+                continue
             json_value[param] = vs.value_to_json(value[param])
         return json_value
 
     def value_from_json(self, json_value):
         real_value = {}
         for param, vs in self._get_elements():
+            if param not in json_value:
+                continue
             real_value[param] = vs.value_from_json(json_value[param])
         return real_value
 

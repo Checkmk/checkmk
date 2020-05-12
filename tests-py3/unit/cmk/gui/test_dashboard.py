@@ -37,6 +37,8 @@ def test_dashlet_registry_plugins():
     expected_plugins = [
         'average_scatterplot',
         'alerts_bar_chart',
+        'barplot',
+        'gauge',
         'notifications_bar_chart',
         'hoststats',
         'notify_failed_notifications',

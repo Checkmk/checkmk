@@ -172,7 +172,9 @@ test-pipenv-deps:
 	$(PIPENV3) check
 
 bandit.ini:
-	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 3 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
+	( echo -n -e "[bandit]\ntargets: "; \
+	  ../scripts/find-python-files 3 | tr '\n' ',' | sed 's/,$$//'; \
+	  echo ) > bandit.ini
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,

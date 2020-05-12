@@ -6,6 +6,9 @@
 
 # Basic functions for cmk_figures
 
+from typing import Type  # pylint: disable=unused-import
+import abc
+import six
 from cmk.gui.plugins.dashboard import Dashlet
 
 
@@ -19,7 +22,14 @@ def create_figures_response(data, context=None):
     return response
 
 
-class ABCFigureDashlet(Dashlet):
+class ABCDataGenerator(six.with_metaclass(abc.ABCMeta, object)):
+    @classmethod
+    @abc.abstractmethod
+    def vs_parameters(cls):
+        raise NotImplementedError()
+
+
+class ABCFigureDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
     """ Base class for cmk_figures based graphs
         Only contains the dashlet spec, the data generation is handled in the
         DataGenerator classes, to split visualization and data
@@ -60,6 +70,11 @@ class ABCFigureDashlet(Dashlet):
     def instance_name(self):
         # Note: This introduces the restriction one graph type per dashlet
         return "%s_%s" % (self.type_name(), self._dashlet_id)
+
+    @abc.abstractmethod
+    def data_generator(self):
+        # type: () -> Type[ABCDataGenerator]
+        raise NotImplementedError()
 
     @property
     def update_interval(self):

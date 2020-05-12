@@ -35,6 +35,8 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
+        'alerts_bar_chart',
+        'notifications_bar_chart',
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',

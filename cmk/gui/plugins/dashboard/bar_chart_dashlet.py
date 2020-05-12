@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any  # pylint: disable=unused-import
+from typing import Any, Type  # pylint: disable=unused-import
 
 from livestatus import lqencode
 import cmk.gui.sites as sites
@@ -23,9 +23,10 @@ from cmk.gui.valuespec import (
     TextUnicode,
     Timerange,
 )
+from cmk.gui.figures import ABCDataGenerator
 
 
-class BarChartDataGenerator(object):
+class BarChartDataGenerator(ABCDataGenerator):
     """Contains code to generate the data for a barchart dashlet
        The dashlet logic/visualization is specified in ABCFigureDashlet
     """
@@ -267,16 +268,14 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         return new_response
 
 
-class EventBarChartDataGenerator(BarBarChartDataGenerator):
+class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
     """ Generates the data for host/service alert/notifications bar charts """
     @classmethod
-    def log_class(cls):
-        # type: () -> int
+    def log_type(cls):
         raise NotImplementedError()
 
     @classmethod
-    def log_type(cls):
-        # type: () -> str
+    def log_class(cls):
         raise NotImplementedError()
 
     @classmethod
@@ -290,7 +289,7 @@ class EventBarChartDataGenerator(BarBarChartDataGenerator):
             title=_("Properties"),
             render="form",
             optional_keys=[],
-            elements=super(EventBarChartDataGenerator, cls).bar_chart_vs_components() +
+            elements=super(ABCEventBarChartDataGenerator, cls).bar_chart_vs_components() +
             [("log_target",
               DropdownChoice(
                   title=_("Host or service %ss" % cls.log_type()),
@@ -342,7 +341,7 @@ class EventBarChartDataGenerator(BarBarChartDataGenerator):
         tooltip = html.render_table(
             html.render_tr(html.render_td(_("From:")) + html.render_td(from_time_str)) +
             html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) + \
-            html.render_tr(html.render_td("%ss:" % cls.log_type().capitalize()) +
+            html.render_tr(html.render_td("%ss:" % properties["log_target"].capitalize()) +
                 html.render_td(time_frame["value"])))
 
         args = []  # type: HTTPVariables

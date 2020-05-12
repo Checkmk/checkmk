@@ -486,3 +486,15 @@ $dashlet-inner-bg-color:		    $white;
 $states-font-color:			    null;
 $statep-font-color:			    $white;
 $state3-font-color:			    $white;
+
+$bar-fill-color:			    rgba(0, 185, 255, .95);
+$bar-hover-fill-color:			    rgba(0, 220, 255, .9);
+$barbar-fill-color:			    rgba(25, 65, 100, .9);
+$barbar-hover-fill-color:		    rgba(40, 75, 110, .9);
+$tooltip-border:			    1px solid $black;
+
+$dc-graph-color-0:			    rgb(25, 85, 140); //rgb(44, 160, 44);
+$dc-graph-color-1:			    rgb(40, 145, 85);
+$dc-graph-color-2:			    rgb(255, 125, 20);
+$timeseries-legend-bg-color:		    rgba($white, .87);
+$scatterdot-hilite-color:		    rgb(0, 185, 255);

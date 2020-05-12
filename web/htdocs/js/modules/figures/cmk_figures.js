@@ -251,14 +251,13 @@ export class FigureBase {
     resize() {}
 
     show_loading_image() {
-        this._div_selection.selectAll("img.loading").data([null]).enter()
-            .insert("img", ":first-child")
-            .classed("loading", true)
-            .attr("src", "themes/facelift/images/load_graph.png");
+        this._div_selection.selectAll("div.loading_img").data([null]).enter()
+            .insert("div", ":first-child")
+            .classed("loading_img", true);
     }
 
     remove_loading_image() {
-        this._div_selection.selectAll("img.loading").remove();
+        this._div_selection.selectAll("div.loading_img").remove();
     }
 
     subscribe_data_pre_processor_hook(func) {
@@ -354,7 +353,6 @@ export class FigureBase {
         this._call_pre_render_hooks(data);
         this.update_data(data);
         this.remove_loading_image();
-        this._div_selection.selectAll("img.loading").remove();
         this.update_gui(data);
         this._call_post_render_hooks(data);
     }

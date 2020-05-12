@@ -1,0 +1,274 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+
+div.cmk_tab {
+  a {
+    text-decoration: none;
+  }
+
+  nav.main-navigation {
+    position: relative;
+    padding: 0 0 0 1rem;
+    overflow: hidden;
+
+    a {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      font-family: "Oswald", sans-serif;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+  }
+
+
+    li {
+      position: relative;
+      float: left;
+      width: 12rem;
+      height: 5rem;
+      margin: 0 0 0 -1rem;
+
+      svg {
+//        fill: #dcdcdc;
+        fill: #eee;
+
+        use {
+//          stroke: $grey-2;
+          stroke: #ddd;
+          stroke-width: 1;
+        }
+      }
+    }
+
+    li.active {
+      z-index: 10;
+
+      svg use {
+        fill: #ddd;
+//        fill: $grey-2;
+      }
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      width: 120%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    span { // Text in tabs
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      padding: 1rem 0 0 3.3rem;
+      pointer-events: none;
+    }
+  }
+
+  div.main-content {
+    position: relative;
+    z-index: 20;
+    padding: 3rem;
+    margin: -1.6rem 0 0;
+    background: #ddd;
+    border-radius: 15px;
+    border-top-left-radius: 0;
+
+    svg {
+      stroke: $grey-3;
+      stroke-width: 0.5;
+    }
+
+    .cmk_tab_element {
+      display: none;
+    }
+
+    .cmk_tab_element.active {
+      display: unset;
+    }
+  }
+}
+
+.bar_chart {
+  a {
+    outline: none;
+  }
+
+  rect.bar.bar_chart {
+    fill: $bar-fill-color;
+    stroke: rgba(0, 0, 0, .2);
+
+    &:hover {
+      fill: $bar-hover-fill-color;
+      stroke: rgb(0, 0, 0);
+    }
+  }
+
+  rect.bar.bar_chart.barbar_chart {
+    fill: $barbar-fill-color;
+    stroke: rgba(0, 0, 0, .3);
+
+    &:hover {
+      fill: $barbar-hover-fill-color;
+      stroke: rgb(0, 0, 0);
+    }
+  }
+}
+
+div.cmk_figure {
+  div.loading_img {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    background-image: url("images/load_graph.png");
+  }
+
+  div.tooltip {
+    position: absolute;
+    z-index: 1;
+    padding: 5px;
+    pointer-events: none;
+    background-color: rgba($bg-color-secondary, .87);
+    border: $tooltip-border;
+    border-radius: 5px;
+
+    td {
+      font-size: 11px;
+    }
+  }
+
+  div.legend {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    padding: 5px;
+    background-color: $timeseries-legend-bg-color;
+    border: $tooltip-border;
+    border-radius: 5px;
+
+    div.legend_item {
+      display: flex;
+
+      div.color_code {
+	width: 12px;
+	height: 12px;
+	margin-right: 4px;
+      }
+    }
+  }
+
+  &.average_scatterplot {
+    div.tooltip {
+      max-width: 300px;
+      min-width: 11px;
+      min-height: 10px;
+      overflow: hidden;
+
+      table {
+	border-collapse: collapse;
+
+        tr {
+           max-width: 450px;
+           min-width: 450px;
+        }
+
+	td {
+           padding: 2px;
+        }
+
+        tr:first-child td {
+          max-width: 250px;
+          min-width: 250px;
+	  text-align: left;
+        }
+
+        td:first-child {
+          padding-right: 12px;
+        }
+
+        tr:nth-child(2) {
+          max-width: 50px;
+          min-width: 50px;
+          padding-right: 12px;
+        }
+
+        tr.mean + tr.median {
+          td {
+            padding-bottom: 4px;
+          }
+
+          + tr td {
+	    padding-top: 4px;
+	    padding-bottom: 4px;
+	  }
+        }
+
+        tr.scatterpoint + tr, tr.median + tr {
+          border-top: 1px solid $color-text;
+
+	  td { padding-top: 4px; }
+        }
+
+        tr.mean td:nth-child(2) { color: $dc-graph-color-1; }
+        tr.median td:nth-child(2) { color: $dc-graph-color-2; }
+        tr.top_matches td:nth-child(2) { color: rgb(255, 40, 40); }
+        tr.bottom_matches td:nth-child(2) { color: rgb(31, 150, 240); }
+      }
+
+      div.collapser {
+	position: absolute;
+	top: 4px;
+	right: 6px;
+	width: 12px;
+	height: 12px;
+	pointer-events: auto;
+
+	img {
+	  height: 12px;
+	  transform: rotate(90deg);
+	}
+
+	&.active {
+	  img {
+	    transform: rotate(180deg);
+	  }
+
+	  + table tr:not(.scatterpoint):not(.date) {
+	    display: none;
+	  }
+	}
+      }
+    }
+
+    path.line { stroke-width: 2px; }
+    path.mean_line { stroke: $dc-graph-color-1; }
+    path.median_line { stroke: $dc-graph-color-2; }
+    path.pin { stroke: $color-text; }
+    path.host.hilite { stroke: rgb(70, 130, 180); }
+    circle.scatterdot {
+      fill: $dc-graph-color-0;
+
+      &.hilite {
+	fill: $scatterdot-hilite-color;
+      }
+    }
+  }
+}
+
+circle.scatterdot { fill: $dc-graph-color-0; }

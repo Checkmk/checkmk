@@ -156,7 +156,6 @@ main_module_registry = ModuleRegistry()
 
 class WatoModule(MenuItem):
     """Used with register_modules() in pre 1.6 versions to register main modules"""
-    pass
 
 
 def register_modules(*args):

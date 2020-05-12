@@ -14,9 +14,8 @@
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    ABCConfigDomain, config_domain_registry,
 )
 
 #.

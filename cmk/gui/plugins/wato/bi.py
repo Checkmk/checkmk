@@ -218,9 +218,9 @@ class BIManagement(object):
         return output
 
     def _convert_pack_to_bi(self, pack):
-        converted_rules = dict([
-            (rule_id, self._convert_rule_to_bi(rule)) for (rule_id, rule) in pack["rules"].items()
-        ])
+        converted_rules = {
+            rule_id: self._convert_rule_to_bi(rule) for rule_id, rule in pack["rules"].items()
+        }
         converted_aggregations = []  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
         converted_host_aggregations = [
         ]  # type: List[_Tuple[BIAggrOptions, BIAggrGroups, BIAggrNode]]
@@ -270,13 +270,13 @@ class BIManagement(object):
     def _convert_node_to_bi(self, node):
         if node[0] == "call":
             return node[1]
-        elif node[0] == "host":
+        if node[0] == "host":
             return (node[1][0], self._bi_constants['HOST_STATE'])
-        elif node[0] == "remaining":
+        if node[0] == "remaining":
             return (node[1][0], self._bi_constants['REMAINING'])
-        elif node[0] == "service":
+        if node[0] == "service":
             return node[1]
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             what = node[1][0]
 
             tags = node[1][1]
@@ -295,7 +295,7 @@ class BIManagement(object):
                        + self._convert_node_to_bi(node[1][3])
             return (self._bi_constants["FOREACH_" + what.upper()], tags,
                     hostspec) + self._convert_node_to_bi(node[1][3])
-        elif node[0] == "foreach_service":
+        if node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
                 spec = node[1][1]
@@ -383,49 +383,46 @@ class BIManagement(object):
         if len(node) == 2:
             if isinstance(node[1], list):
                 return ("call", node)
-            elif node[1] == self._bi_constants['HOST_STATE']:
+            if node[1] == self._bi_constants['HOST_STATE']:
                 return ("host", (node[0],))
-            elif node[1] == self._bi_constants['REMAINING']:
+            if node[1] == self._bi_constants['REMAINING']:
                 return ("remaining", (node[0],))
             return ("service", node)
 
-        else:  # FOREACH_...
+        foreach_spec = node[0]
+        if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            # extract the conditions meant for matching the childs
+            child_conditions = list(node[1:3])
+            if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
+                child_conditions[1] = None
+            node = node[0:1] + node[3:]
 
-            foreach_spec = node[0]
-            if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                # extract the conditions meant for matching the childs
-                child_conditions = list(node[1:3])
-                if child_conditions[1] == self._bi_constants['ALL_HOSTS']:
-                    child_conditions[1] = None
-                node = node[0:1] + node[3:]
+        # Extract the list of tags
+        if isinstance(node[1], list):
+            tags = node[1]
+            node = node[0:1] + node[2:]
+        else:
+            tags = []
 
-            # Extract the list of tags
-            if isinstance(node[1], list):
-                tags = node[1]
-                node = node[0:1] + node[2:]
-            else:
-                tags = []
+        hostspec = node[1]
+        if hostspec == self._bi_constants['ALL_HOSTS']:
+            hostspec = None
 
-            hostspec = node[1]
-            if hostspec == self._bi_constants['ALL_HOSTS']:
-                hostspec = None
+        if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
+            service = node[2]
+            subnode = self._convert_node_from_bi(node[3:])
+            return ("foreach_service", (tags, hostspec, service, subnode))
 
-            if foreach_spec == self._bi_constants['FOREACH_SERVICE']:
-                service = node[2]
-                subnode = self._convert_node_from_bi(node[3:])
-                return ("foreach_service", (tags, hostspec, service, subnode))
-            else:
-
-                subnode = self._convert_node_from_bi(node[2:])
-                if foreach_spec == self._bi_constants['FOREACH_HOST']:
-                    what = "host"  # type: Union[str, _Tuple]
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
-                    what = "child"
-                elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
-                    what = ("child_with", child_conditions)
-                elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
-                    what = "parent"
-                return ("foreach_host", (what, tags, hostspec, subnode))
+        subnode = self._convert_node_from_bi(node[2:])
+        if foreach_spec == self._bi_constants['FOREACH_HOST']:
+            what = "host"  # type: Union[str, _Tuple]
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD']:
+            what = "child"
+        elif foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
+            what = ("child_with", child_conditions)
+        elif foreach_spec == self._bi_constants['FOREACH_PARENT']:
+            what = "parent"
+        return ("foreach_host", (what, tags, hostspec, subnode))
 
     def get_packs(self):
         return self._packs
@@ -485,7 +482,7 @@ class BIManagement(object):
             else:
                 args = _("without arguments")
             return node[1][0], _("Explicit call ") + args
-        elif node[0] == "foreach_host":
+        if node[0] == "foreach_host":
             subnode = node[1][-1]
             if subnode[0] == 'call':
                 if node[1][0] == 'host':
@@ -934,11 +931,10 @@ class ModeBI(WatoMode, BIManagement):
                 if ru_id == ruleid:  # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
-                else:
-                    subrule = self.find_rule_by_id(ru_id)
-                    lv = self.rule_uses_rule(subrule, ruleid, level + 1)
-                    if lv:
-                        return lv
+                subrule = self.find_rule_by_id(ru_id)
+                lv = self.rule_uses_rule(subrule, ruleid, level + 1)
+                if lv:
+                    return lv
         return False
 
     def count_rule_references(self, ruleid):
@@ -1233,10 +1229,10 @@ class ModeBIAggregations(ModeBI):
         if html.request.var("_del_aggr"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_aggregations"):
+        if html.request.var("_bulk_delete_bi_aggregations"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_aggregations"):
+        if html.request.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
@@ -1462,10 +1458,10 @@ class ModeBIRules(ModeBI):
         if html.request.var("_del_rule"):
             return self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_rules"):
+        if html.request.var("_bulk_delete_bi_rules"):
             return self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_rules"):
+        if html.request.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):

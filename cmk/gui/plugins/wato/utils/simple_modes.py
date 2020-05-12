@@ -186,10 +186,8 @@ class SimpleListMode(SimpleWatoModeBase):
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
             return False
-
-        elif not confirm:
+        if not confirm:
             return
-
         html.check_transaction()  # invalidate transid
 
         entries = self._store.load_for_modification()
@@ -215,7 +213,6 @@ class SimpleListMode(SimpleWatoModeBase):
 
     def _validate_deletion(self, ident, entry):
         """Override this to implement custom validations"""
-        pass
 
     def _delete_confirm_message(self):
         return _("Do you really want to delete this %s?") % self._mode_type.name_singular()

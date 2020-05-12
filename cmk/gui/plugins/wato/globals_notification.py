@@ -197,7 +197,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
         # The decprecated value 0 is transformed to the default logging value.
         if level in [0, 1]:
             return 20
-        elif level == 2:
+        if level == 2:
             return 10
         return level
 

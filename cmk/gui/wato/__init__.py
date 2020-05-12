@@ -55,7 +55,7 @@
 
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
-# flake8: noqa: F401
+# flake8: noqa
 # pylint: disable=unused-import,cmk-module-layer-violation
 
 import abc

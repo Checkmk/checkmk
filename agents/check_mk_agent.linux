@@ -109,13 +109,13 @@ semver_to_int() {
     _sem_ver="${1:?No version number supplied}"
 
     # Strip the variable of any non-numerics or dots
-    # Portable version if needed: "$(echo "${_sem_ver}" | sed 's/[^0-9.]//g')"
-    _sem_ver="${_sem_ver/[^0-9.]//}"
+    # Portable version: _sem_ver="$(echo "${_sem_ver}" | sed 's/[^0-9.]//g')"
+    _sem_ver="${_sem_ver//[!0-9.]/}"
 
     # Swap the dots for spaces and assign the outcome to the positional param array
     # We want word splitting here, so we disable shellcheck's complaints
-    # shellcheck disable=SC2046
-    set -- $(echo "${_sem_ver}" | tr '.' ' ')
+    # shellcheck disable=SC2086
+    set -- ${_sem_ver//./ }
 
     # Assemble and print our integer
     printf -- '%d%02d%02d' "${1}" "${2:-0}" "${3:-0}"

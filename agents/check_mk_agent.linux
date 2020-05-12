@@ -28,7 +28,7 @@ fi
 ####################################################################################################
 # Environment variables
 # Make sure that locally installed binaries are found
-PATH=$PATH:/usr/local/bin
+PATH=${PATH}:/usr/local/bin
 export PATH
 
 # If HOSTNAME isn't set, then set it
@@ -56,8 +56,20 @@ MK_SPOOLDIR="${MK_VARDIR:?}"/spool
 # Optionally set a tempdir for all subsequent calls
 #MK_TMPDIR=
 
+# Now we load our configuration files
+# shellcheck source=/dev/null
+{
+    chmod 640 "${MK_CONFDIR}"/* 2>/dev/null
+    [ -r "${MK_CONFDIR}/agent.cfg" ] && . "${MK_CONFDIR}/agent.cfg"
+    [ -r "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
+    [ -r "${MK_CONFDIR}/exclude_sections.cfg" ] && . "${MK_CONFDIR}/exclude_sections.cfg"
+    RTC_PLUGINS="" # Is this still necessary?
+    # This provides RTC_TIMEOUT, RTC_PORT, RTC_SECRET and RTC_SECTIONS
+    [ -r "${MK_CONFDIR}/real_time_checks.cfg" ] && . "${MK_CONFDIR}/real_time_checks.cfg"
+}
+
 # Define the version of Check_MK
-MK_VERSION="1.7.0i1"
+MK_VERSION="${MK_VERSION:-1.7.0i1}"
 
 # Protect our globals, making them constant...
 readonly MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_VERSION
@@ -65,14 +77,7 @@ readonly MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK
 # ...and export them to the environment
 export MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_VERSION
 
-####################################################################################################
-
-# The package name gets patched for baked agents to either
-# "check-mk-agent" or the name set by the "name of agent packages" rule
-XINETD_SERVICE_NAME=check_mk
-
-# Detect whether or not the agent is being executed in a container
-# environment.
+# Detect whether or not the agent is being executed in a container environment.
 if [ -f /.dockerenv ]; then
     MK_IS_DOCKERIZED=1
 elif grep 'container=lxc' /proc/1/environ >/dev/null 2>&1; then
@@ -85,6 +90,22 @@ elif grep 'lxcfs /proc/cpuinfo fuse.lxcfs' /proc/mounts >/dev/null 2>&1; then
 else
     unset -v MK_IS_DOCKERIZED MK_IS_LXC_CONTAINER
 fi
+
+# Provide information about the remote host.
+# That helps when data is being sent only once to each remote host.
+if [ "${REMOTE_HOST}" ]; then
+    MK_RTC_HOST="${REMOTE_HOST}"
+    export MK_RTC_HOST
+elif [ "${SSH_CLIENT}" ]; then
+    MK_RTC_HOST="${SSH_CLIENT%% *}"
+    export MK_RTC_HOST
+fi
+
+####################################################################################################
+
+# The package name gets patched for baked agents to either
+# "check-mk-agent" or the name set by the "name of agent packages" rule
+XINETD_SERVICE_NAME=check_mk
 
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
@@ -102,16 +123,6 @@ if inpath timeout; then
     export -f waitmax
 fi
 
-if [ -f "${MK_CONFDIR}/encryption.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "${MK_CONFDIR}/encryption.cfg"
-fi
-
-if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/exclude_sections.cfg"
-fi
-
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
     if [ $OPENSSL_VERSION -ge 10000 ]; then
@@ -121,27 +132,6 @@ if [ "$ENCRYPTED" == "yes" ]; then
         echo -n "00"
         exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
     fi
-fi
-
-# Load our variables for realtime data
-RTC_PLUGINS=""
-# Load our config file.  This provides RTC_TIMEOUT, RTC_PORT, RTC_SECRET and RTC_SECTIONS
-if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
-    # We ensure that this file is secure
-    chmod 640 "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null
-
-    # shellcheck source=/dev/null
-    . "${MK_CONFDIR}/real_time_checks.cfg"
-fi
-
-# Provide information about the remote host.
-# That helps when data is being sent only once to each remote host.
-if [ "${REMOTE_HOST}" ]; then
-    MK_RTC_HOST="${REMOTE_HOST}"
-    export MK_RTC_HOST
-elif [ "${SSH_CLIENT}" ]; then
-    MK_RTC_HOST="${SSH_CLIENT%% *}"
-    export MK_RTC_HOST
 fi
 
 section_checkmk() {
@@ -162,7 +152,7 @@ EOF
 # CHECK SECTIONS
 
 section_mem() {
-    if [ -z "${MK_IS_DOCKERIZED}" ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ]; then
         echo '<<<mem>>>'
         grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
     else
@@ -182,7 +172,7 @@ section_cpu() {
     fi
     NUM_CPUS=$(grep -c -E $CPU_REGEX </proc/cpuinfo)
 
-    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ] && [ -z "${MK_IS_LXC_CONTAINER+x}" ]; then
         echo '<<<cpu>>>'
         echo "$(cat /proc/loadavg) $NUM_CPUS"
         if [ -f "/proc/sys/kernel/threads-max" ]; then
@@ -203,7 +193,7 @@ section_cpu() {
 
 section_uptime() {
     echo '<<<uptime>>>'
-    if [ -z "${MK_IS_DOCKERIZED}" ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ]; then
         cat /proc/uptime
     else
         echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
@@ -386,7 +376,7 @@ section_multipathing() {
 }
 
 section_diskstat() {
-    if [ -z "${MK_IS_DOCKERIZED}" ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ]; then
         echo '<<<diskstat>>>'
         date +%s
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
@@ -425,7 +415,7 @@ section_chrony() {
 }
 
 section_kernel() {
-    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ] && [ -z "${MK_IS_LXC_CONTAINER+x}" ]; then
         echo '<<<kernel>>>'
         date +%s
         cat /proc/vmstat /proc/stat
@@ -574,7 +564,7 @@ section_nvidia() {
 }
 
 section_drbd() {
-    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && [ -e /proc/drbd ]; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ] && [ -z "${MK_IS_LXC_CONTAINER+x}" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
     fi
@@ -837,7 +827,7 @@ section_job() {
 }
 
 section_thermal() {
-    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+    if [ -z "${MK_IS_DOCKERIZED+x}" ] && [ -z "${MK_IS_LXC_CONTAINER+x}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
         echo '<<<lnx_thermal:sep(124)>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"

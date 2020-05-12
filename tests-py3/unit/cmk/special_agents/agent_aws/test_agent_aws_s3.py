@@ -81,12 +81,22 @@ def get_s3_sections():
 
 
 s3_params = [
-    (None, (None, None), 4),
+    (None, (None, None), 3),
     (['Name-0'], (None, None), 1),
     (['Name-0', 'Name-1'], (None, None), 2),
     (['Name-0', 'Name-1', 'Name-2'], (None, None), 3),
     (['Name-0', 'Name-1', 'Name-2', 'string4'], (None, None), 3),
     (['Name-0', 'Name-1', 'Name-2', 'FOOBAR'], (None, None), 3),
+    (['Name-0'], ([['Key-0', 'unknown-tag']], [['Value-0', 'Value-1'], ['unknown-val']]), 1),
+    (['Name-0', 'Name-1'], ([['Key-0', 'unknown-tag']], [['Value-0', 'Value-1'],
+                                                         ['unknown-val']]), 2),
+    (['Name-0', 'Name-1', 'Name-2'], ([['Key-0', 'unknown-tag']], [['Value-0', 'Value-1'],
+                                                                   ['unknown-val']]), 3),
+    (['Name-0', 'Name-1', 'Name-2', 'string4'], ([['Key-0',
+                                                   'unknown-tag']], [['Value-0', 'Value-1'],
+                                                                     ['unknown-val']]), 3),
+    (['Name-0', 'Name-1', 'Name-2', 'FOOBAR'], ([['Key-0', 'unknown-tag']], [['Value-0', 'Value-1'],
+                                                                             ['unknown-val']]), 3),
     (None, ([
         ['Key-1'],
     ], [

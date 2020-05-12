@@ -71,7 +71,7 @@ def check_aws_elb_statistics(item, params, parsed):
             'human_readable_func': human_readable_func,
             'info_name': info_name
         })
-    return check_aws_elb_metrics(metric_infos)
+    return check_aws_metrics(metric_infos)
 
 
 check_info['aws_elb'] = {
@@ -97,7 +97,7 @@ check_info['aws_elb'] = {
 
 
 def check_aws_elb_latency(item, params, parsed):
-    return check_aws_elb_metrics([{
+    return check_aws_metrics([{
         'metric_val': parsed.get("Latency"),
         'metric_name': 'aws_load_balancer_latency',
         'levels': params.get('levels_latency'),
@@ -244,7 +244,7 @@ check_info['aws_elb.healthy_hosts'] = {
 
 
 def check_aws_elb_backend_connection_errors(item, params, parsed):
-    return check_aws_elb_metrics([{
+    return check_aws_metrics([{
         'metric_val': parsed.get("BackendConnectionErrors"),
         'metric_name': 'aws_backend_connection_errors_rate',
         'levels': params.get('levels_backend_connection_errors_rate'),

@@ -107,7 +107,7 @@ def check_aws_elbv2_application_connections(item, params, parsed):
             'human_readable_func': aws_get_counts_rate_human_readable
         })
 
-    return check_aws_elb_metrics(metric_infos)
+    return check_aws_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.connections'] = {
@@ -132,9 +132,9 @@ check_info['aws_elbv2_application.connections'] = {
 
 
 def check_aws_elbv2_application_http_elb(item, params, parsed):
-    return check_aws_http_elb(params.get("levels_load_balancers", params), parsed,
-                              ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
-                              'HTTPCode_ELB_%s_Count')
+    return check_aws_http_errors(params.get("levels_load_balancers", params), parsed,
+                                 ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                                 'HTTPCode_ELB_%s_Count')
 
 
 check_info['aws_elbv2_application.http_elb'] = {
@@ -164,7 +164,7 @@ _aws_elbv2_application_http_redirects_metrics = [
 
 
 def check_aws_elbv2_application_http_redirects(item, params, parsed):
-    return check_aws_elb_metrics([{
+    return check_aws_metrics([{
         'metric_val': parsed.get(cw_metric_name),
         'metric_name': 'aws_%s' % key,
         'info_name': info_name,
@@ -225,7 +225,7 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
             'human_readable_func': human_readable_func
         })
 
-    return check_aws_elb_metrics(metric_infos)
+    return check_aws_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.statistics'] = {

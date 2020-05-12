@@ -2156,6 +2156,9 @@ msgstr "AWS/S3 Bucket-Anforderungen"
 msgid "AWS/S3 Buckets"
 msgstr "AWS/S3 Buckets"
 
+msgid "AWS/S3 HTTP Errors"
+msgstr "AWS/S3 HTTP-Fehler"
+
 msgid "AWS/S3 Latency"
 msgstr "AWS/S3 Latenzzeit"
 
@@ -6252,9 +6255,11 @@ msgstr "Defekte GUI-Erweiterungen"
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 
-#, fuzzy
+msgid "Bucket name"
+msgstr "Bucket-Name"
+
 msgid "Bucket names"
-msgstr "Der Bucketname"
+msgstr "Bucket-Namen"
 
 msgid "Bucket size"
 msgstr "Bucketgröße"
@@ -41819,9 +41824,6 @@ msgstr "Die beiden neuen Passworte stimmen nicht überein."
 msgid "The both passwords do not match."
 msgstr "Die beiden Passwörter stimmen nicht überein."
 
-msgid "The bucket name"
-msgstr "Der Bucketname"
-
 msgid "The cell padding is only applied when rules are being rendered."
 msgstr ""
 "Der Zellinnenabstand wird nur dann verwendet, wenn Trennlinien gezeichnet "
@@ -50651,6 +50653,9 @@ msgstr "Obere Schwellwerte für den prozentualen Anteil zugelassener Anfragen"
 
 msgid "Upper levels on percentage of blocked requests"
 msgstr "Obere Schwellwerte für den prozentualen Anteil blockierter Anfragen"
+
+msgid "Upper levels on total request latency"
+msgstr "Obere Schwellwerte für die totale Latenzzeit von Anfragen"
 
 msgid "Upper levels replica lag"
 msgstr "Obere Schwellen für die Replikaverzögerung"

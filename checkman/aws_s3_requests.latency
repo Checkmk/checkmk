@@ -14,13 +14,14 @@ description:
 
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}. Furthermore, you
- have to enable requests metrics in AWS/S3 console. This s a
- paid feature.
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
 
- No default levels are set. Upper levels are configurable.
+ No default levels are set. Upper levels on the first latency
+ are configurable via the rule "AWS/S3 Latency".
 
 item:
- Name of the instance
+ Name of the bucket
 
 inventory:
  One service is created for each bucket if all required metrics

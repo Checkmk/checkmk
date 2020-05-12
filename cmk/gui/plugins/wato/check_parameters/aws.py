@@ -252,15 +252,15 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _item_spec_aws_s3_buckets_objects():
-    return TextAscii(title=_("The bucket name"))
+def _item_spec_aws_s3_buckets():
+    return TextAscii(title=_("Bucket name"))
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_buckets_objects",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_buckets_objects,
+        item_spec=_item_spec_aws_s3_buckets,
         match_type="dict",
         parameter_valuespec=lambda: Dictionary(elements=[_vs_s3_buckets()]),
         title=lambda: _("AWS/S3 Bucket Objects"),
@@ -279,10 +279,6 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_aws_s3_buckets,
         title=lambda: _("AWS/S3 Buckets"),
     ))
-
-
-def _item_spec_aws_s3_requests():
-    return TextAscii(title=_("The bucket name"))
 
 
 def _parameter_valuespec_aws_s3_requests():
@@ -399,30 +395,38 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_requests",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_requests,
+        item_spec=_item_spec_aws_s3_buckets,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_s3_requests,
         title=lambda: _("AWS/S3 Bucket Requests"),
     ))
 
 
-def _item_spec_aws_s3_latency():
-    return TextAscii(title=_("The bucket name"))
+def _parameter_valuespec_aws_s3_latency():
+    return Dictionary(title=_("Levels on latency"),
+                      elements=[("levels_seconds",
+                                 Tuple(title=_("Upper levels on total request latency"),
+                                       elements=[
+                                           Float(title=_("Warning at"), unit='ms'),
+                                           Float(title=_("Critical at"), unit='ms')
+                                       ]))])
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_latency",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_latency,
+        item_spec=_item_spec_aws_s3_buckets,
         match_type="dict",
-        parameter_valuespec=lambda: Dictionary(elements=[_vs_latency()]),
+        parameter_valuespec=_parameter_valuespec_aws_s3_latency,
         title=lambda: _("AWS/S3 Latency"),
     ))
 
 
 def _parameter_valuespec_aws_s3_limits():
-    return Dictionary(elements=[('buckets', _vs_limits("Buckets", 100))])
+    return Dictionary(
+        elements=[('buckets',
+                   _vs_limits("Buckets", 100, title_default="Default limit set by AWS"))])
 
 
 rulespec_registry.register(
@@ -433,6 +437,22 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_s3_limits,
         title=lambda: _("AWS/S3 Limits"),
+    ))
+
+
+def _parameter_valuespec_aws_s3_http_erros():
+    return Dictionary(title=_("Upper levels for HTTP errors"),
+                      elements=_vs_elements_http_errors(['4xx', '5xx']))
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_s3_http_errors",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_s3_buckets,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_s3_http_erros,
+        title=lambda: _("AWS/S3 HTTP Errors"),
     ))
 
 #.

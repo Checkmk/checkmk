@@ -2071,3 +2071,17 @@ check_metrics["check_mk-aws_elbv2_application.connections"] = {
         "name": "aws_client_tls_errors"
     },
 }
+check_metrics["check_mk-aws_s3_requests.http_errors"] = {
+    "http_4xx_rate": {
+        "name": "aws_http_4xx_rate"
+    },
+    "http_5xx_rate": {
+        "name": "aws_http_5xx_rate"
+    },
+    "http_4xx_perc": {
+        "name": "aws_http_4xx_perc"
+    },
+    "http_5xx_perc": {
+        "name": "aws_http_5xx_perc"
+    },
+}

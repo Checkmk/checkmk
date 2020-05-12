@@ -235,7 +235,7 @@ def main(options):
     socket.setdefaulttimeout(options.timeout)
 
     try:
-        imap = ImapWrapper(options.server, options.username, options.password, True)
+        imap = ImapWrapper(options.server, options.username, options.password, options.ssl)
     except LoginError:
         output("login failed")
         sys.exit(2)

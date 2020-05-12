@@ -1,0 +1,12 @@
+Title: check_mailboxes: only use SSL encryption if configured
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1589273549
+Class: fix
+
+Previously, the active check check_mailboxes used the
+SSL encryption even if "Use no encryption" was configured.
+This is fixed.

@@ -9,6 +9,8 @@ YAPF     := $(PIPENV3) run yapf
 BANDIT   := $(PIPENV3) run bandit
 MYPY     := ../scripts/run-mypy
 
+ADDITIONAL_MYPY_ARGS :=
+
 .PHONY: help prepare-node-modules test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
@@ -64,23 +66,19 @@ test-unit-coverage-html:
 	    --no-cov-on-fail \
 	    -T unit unit
 
-
-MYPY3_FILES=$(shell \
-    ../scripts/find-python-files 3 | \
-    `: filter out plugins, they are not real modules` \
-    grep -v $$(realpath '../checks') | \
-    grep -v $$(realpath '../inventory') | \
-    if test -d ../enterprise; then \
-        grep -v $$(realpath '../agents')/bakery; \
-    else \
-        cat; \
-    fi)
-
 test-mypy3:
-	$(MYPY) $(MYPY3_FILES)
+	../scripts/find-python-files 3 | \
+	`: filter out plugins, they are not real modules` \
+	grep -v $$(realpath '../checks') | \
+	grep -v $$(realpath '../inventory') | \
+	if test -d ../enterprise; then \
+	    grep -v $$(realpath '../agents')/bakery; \
+	else \
+	    cat; \
+	fi | xargs -n 1500 echo $(MYPY) $(ADDITIONAL_MYPY_ARGS)
 
 test-mypy3-raw:
-	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $(MYPY3_FILES)
+	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 MYPY2_FILES=$(shell \
     ../scripts/find-python-files 2 | \

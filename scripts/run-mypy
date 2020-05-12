@@ -30,6 +30,7 @@ PYTHON_VERSION_TO_TEST=$("$REPO_PATH/scripts/detect-python-version" "$@")
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
+# NOTE: In case of failure, we exit with code 255 to stop a potential xargs.
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
     exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
     --python-version ${PYTHON_VERSION_TO_TEST} \
@@ -38,4 +39,4 @@ MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/om
     --check-untyped-defs \
     --strict-equality \
     ${JUNIT_XML} \
-    "$@"
+    "$@" || exit 255

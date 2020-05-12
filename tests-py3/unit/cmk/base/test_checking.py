@@ -187,7 +187,7 @@ def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expe
     monkeypatch.setattr(cmk.base.core, "timeperiod_active",
                         lambda tp: _check_timeperiod(tp, active_timeperiods))
 
-    determined_check_params = cmk.base.checking.determine_check_params(rules)
+    determined_check_params = cmk.base.checking.legacy_determine_check_params(rules)
     assert expected_result == determined_check_params,\
            "Determine params: Expected '%s' but got '%s'" % (expected_result, determined_check_params)
 

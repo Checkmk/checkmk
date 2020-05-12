@@ -1429,7 +1429,8 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     item_state.reset_wrapped_counters()
                     exitcode, output, perfdata = checking.sanitize_check_result(
                         check_function(discovered_service.item,
-                                       checking.determine_check_params(params), section_content))
+                                       checking.legacy_determine_check_params(params),
+                                       section_content))
                     item_state.raise_counter_wrap()
                 except item_state.MKCounterWrapped:
                     output = u"WAITING - Counter based check, cannot be done offline"
@@ -1457,7 +1458,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         if isinstance(params, config.TimespecificParamList):
             params = {
                 "tp_computed_params": {
-                    "params": checking.determine_check_params(params),
+                    "params": checking.legacy_determine_check_params(params),
                     "computed_at": time.time(),
                 }
             }

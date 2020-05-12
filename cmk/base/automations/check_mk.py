@@ -677,7 +677,8 @@ class AutomationAnalyseServices(Automation):
 
                 check_parameters = service.parameters
                 if isinstance(check_parameters, cmk.base.config.TimespecificParamList):
-                    check_parameters = cmk.base.checking.determine_check_params(check_parameters)
+                    check_parameters = cmk.base.checking.legacy_determine_check_params(
+                        check_parameters)
                     check_parameters = {
                         "tp_computed_params": {
                             "params": check_parameters,

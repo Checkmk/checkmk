@@ -324,7 +324,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(service.item, determine_check_params(service.parameters),
+        raw_result = check_function(service.item, legacy_determine_check_params(service.parameters),
                                     section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
@@ -377,7 +377,7 @@ def _legacy_determine_cache_info(multi_host_sections, section_name):
     return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
-def determine_check_params(entries):
+def legacy_determine_check_params(entries):
     # type: (CheckParameters) -> CheckParameters
     if not isinstance(entries, cmk.base.config.TimespecificParamList):
         return entries

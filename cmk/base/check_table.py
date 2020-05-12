@@ -233,7 +233,7 @@ def get_precompiled_check_table(hostname,
 
        3. Execute the check
          During check execution will update the check parameters once more with
-         checking.determine_check_params() right before execution the check.
+         checking.legacy_determine_check_params() right before execution the check.
     """
     host_checks = _get_sorted_check_table(hostname,
                                           remove_duplicates,

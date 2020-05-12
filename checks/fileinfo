@@ -250,7 +250,7 @@ def fileinfo_groups_precompile(hostname, item, params):
 
     # TODO: Cleanup this separation violation. This should be accessed through the check API
     import cmk.base.checking
-    precomped = cmk.base.checking.determine_check_params(params).copy()
+    precomped = cmk.base.checking.legacy_determine_check_params(params).copy()
     precomped['precompiled_patterns'] = patterns
     return precomped
 

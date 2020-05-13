@@ -23,6 +23,8 @@ else:
 os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
 from OpenSSL import crypto  # type: ignore[import]
 
+import six
+
 import cmk.utils.render
 import cmk.utils.store as store
 
@@ -213,7 +215,8 @@ class PageEditKey(object):
         cert = create_self_signed_cert(pkey)
         return {
             "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
-            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256", passphrase),
+            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
+                                                  six.ensure_binary(passphrase)),
             "alias": alias,
             "owner": config.user.id,
             "date": time.time(),

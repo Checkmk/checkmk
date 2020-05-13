@@ -95,6 +95,13 @@ def test_openapi_hosts(
 
     resp = wsgi_app.follow_link(
         resp,
+        'self',
+        base=base,
+        status=200,
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
         '.../update',
         base=base,
         status=200,

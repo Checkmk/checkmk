@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/gui/test_userdb_htpasswd_connector.py

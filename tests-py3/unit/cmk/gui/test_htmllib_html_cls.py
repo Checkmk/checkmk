@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/gui/test_htmllib_html_cls.py

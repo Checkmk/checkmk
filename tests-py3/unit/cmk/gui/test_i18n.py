@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/gui/test_i18n.py

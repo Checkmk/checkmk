@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/gui/test_htmllib_input_vars.py

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, Any  # pylint: disable=unused-import
+
 import cmk.utils.version as cmk_version
 import cmk.gui.views
 
@@ -68,7 +70,7 @@ def test_legacy_icon_plugin():
         "paint": lambda: "bla",
         "sort_index": 10,
         "toplevel": True,
-    }
+    }  # type: Dict[str, Any]
     cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
     cmk.gui.views.transform_old_dict_based_icons()
 

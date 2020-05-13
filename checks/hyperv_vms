@@ -46,6 +46,35 @@
 #    }
 # }
 
+# these default values were suggested by Aldi Sued
+factory_settings["hyperv_vms_default_levels"] = {
+    'FastSaved': 0,
+    'FastSavedCritical': 2,
+    'FastSaving': 0,
+    'FastSavingCritical': 2,
+    'Off': 1,
+    'OffCritical': 2,
+    'Other': 3,
+    'Paused': 0,
+    'PausedCritical': 2,
+    'Pausing': 0,
+    'PausingCritical': 2,
+    'Reset': 1,
+    'ResetCritical': 2,
+    'Resuming': 0,
+    'ResumingCritical': 2,
+    'Running': 0,
+    'RunningCritical': 2,
+    'Saved': 0,
+    'SavedCritical': 2,
+    'Saving': 0,
+    'SavingCritical': 2,
+    'Starting': 0,
+    'StartingCritical': 2,
+    'Stopping': 1,
+    'StoppingCritical': 2
+}
+
 
 def parse_hyperv_vms(info):
     parsed = {}
@@ -84,28 +113,40 @@ def inventory_hyperv_vms(parsed):
     return [(vm_name, {'state': vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
-def check_hyperv_vms(item, params, parsed):
+@get_parsed_item_data
+def check_hyperv_vms(_item, params, vm):
 
-    if item in parsed:
+    # compare against discovered VM state
+    if params.get("compare_discovery"):
 
-        vm = parsed[item]
+        discovery_state = params.get('state')
 
-        # check if there is a rule
-        if vm["state"] in params:
-            state = params[vm["state"]]
-            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
-
-        # if there is no rule, we check against the state found during discovery
-        elif vm["state"] == params['state']:
-            state = 0
+        # this means that the check is executed as a manual check
+        if discovery_state is None:
+            service_state = 3
+            message = "State is %s (%s), discovery state is not available" % (vm["state"],
+                                                                              vm["state_msg"])
+        elif vm["state"] == discovery_state:
+            service_state = 0
             message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
-
         else:
+            service_state = 2
             message = "State %s (%s) does not match discovery (%s)" % (vm["state"], vm["state_msg"],
                                                                        params['state'])
-            state = 2
 
-        return state, message
+    # service state defined in rule
+    else:
+        service_state = params.get(vm["state"])
+
+        # as a precaution, if in the future there are new VM states we do not know about
+        if service_state is None:
+            service_state = 3
+            message = "Unknown state %s (%s)" % (vm["state"], vm["state_msg"])
+
+        else:
+            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+
+    yield service_state, message
 
 
 check_info["hyperv_vms"] = {
@@ -113,5 +154,6 @@ check_info["hyperv_vms"] = {
     "check_function": check_hyperv_vms,
     "inventory_function": inventory_hyperv_vms,
     "service_description": "VM %s",
-    "group": "hyperv_vms"
+    "group": "hyperv_vms",
+    "default_levels_variable": "hyperv_vms_default_levels"
 }

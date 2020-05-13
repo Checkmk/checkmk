@@ -32,6 +32,8 @@ from cmk.base.api.agent_based.utils import (
     not_matches,
     not_equals,
     not_exists,
+    check_levels,
+    check_levels_predictive,
     get_rate,
     get_average,
 )
@@ -76,6 +78,8 @@ __all__ = [
     # persising values
     "get_value_store",
     # utils
+    "check_levels",
+    "check_levels_predictive",
     "get_rate",
     "get_average",
 ]

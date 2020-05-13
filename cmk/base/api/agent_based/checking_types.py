@@ -236,7 +236,7 @@ class Metric:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name))
+                            (self.__class__.__name__, other.__class__.__name__))
         return all((
             self.name == other.name,
             self.value == other.value,

@@ -54,10 +54,10 @@ from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: di
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation
+    import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
     keepalive = None  # type: ignore[assignment]
-    inline = None  # type: ignore[assignment]
+    inline_snmp = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -172,7 +172,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if config.record_inline_snmp_stats \
            and ipaddress is not None \
            and host_config.snmp_config(ipaddress).is_inline_snmp_host:
-            inline.snmp_stats_save()
+            inline_snmp.snmp_stats_save()
 
 
 def _check_missing_sections(missing_sections, exit_spec):

@@ -181,7 +181,7 @@ def parse_arguments(argv):
     # NEW
     parser_new = subparsers.add_parser("new", help="Create a new werk")
     parser_new.add_argument(
-        "custom-files",
+        "custom_files",
         nargs='*',
         help="files passed to 'git commit'",
     )

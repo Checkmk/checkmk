@@ -3,7 +3,7 @@ import json
 import cmk.gui.htmllib  # noqa: F401 pylint: disable=unused-import
 
 
-class Bla(object):
+class Bla(object):  # pylint: disable=bad-option-value,useless-object-inheritance
     def to_json(self):
         return {"class": "Bla"}
 

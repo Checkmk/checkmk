@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+from typing import Optional  # pylint: disable=unused-import
+
+import pytest  # type: ignore[import]
 
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config
@@ -110,11 +112,10 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
         if result is None:
             assert "does not exist" in "%s" % e
             return
-        else:
-            raise
+        raise
 
     try:
-        before = user_config.get_snapin(before_id)
+        before = user_config.get_snapin(before_id)  # type: Optional[UserSidebarSnapin]
     except KeyError:
         before = None
 

@@ -7,6 +7,8 @@
 # pylint: disable=redefined-outer-name
 
 import sys
+from typing import Dict, List, Union  # pylint: disable=unused-import
+
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
@@ -74,7 +76,7 @@ def _ldap_tree():
             "dn": ["ou=groups,dc=check-mk,dc=org"],
             "ou": "groups",
         },
-    }
+    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
 
     users = {
         "cn=admin,ou=users,dc=check-mk,dc=org": {
@@ -103,7 +105,7 @@ def _ldap_tree():
             "samaccountname": ["sync-user"],
             "userPassword": ["sync-secret"],
         },
-    }
+    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
 
     groups = {
         "cn=admins,ou=groups,dc=check-mk,dc=org": {
@@ -208,7 +210,7 @@ def _ldap_tree():
                 "cn=admin,ou=users,dc=check-mk,dc=org",
             ],
         },
-    }
+    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
 
     tree.update(users)
     tree.update(groups)
@@ -218,7 +220,9 @@ def _ldap_tree():
     for group_dn, group in sorted(groups.items()):
         for member_dn in group["member"]:
             if member_dn in tree:
-                tree[member_dn].setdefault("memberof", []).append(group_dn)
+                member_of = tree[member_dn].setdefault("memberof", [])
+                assert isinstance(member_of, list)
+                member_of.append(group_dn)
 
     return tree
 
@@ -229,11 +233,11 @@ def encode_to_byte_strings(inp):
             encode_to_byte_strings(key): encode_to_byte_strings(value)
             for key, value in inp.items()
         }
-    elif isinstance(inp, list):
+    if isinstance(inp, list):
         return [encode_to_byte_strings(element) for element in inp]
-    elif isinstance(inp, tuple):
+    if isinstance(inp, tuple):
         return tuple([encode_to_byte_strings(element) for element in inp])
-    elif isinstance(inp, six.text_type):
+    if isinstance(inp, six.text_type):
         return inp.encode("utf-8")
     return inp
 
@@ -316,9 +320,8 @@ def mocked_ldap(monkeypatch):
     LDAPObject.search_ext = search_ext
 
     def result_3(self, *args, **kwargs):
-        unused_code, response, unused_msgid, serverctrls = \
-            tuple(list(LDAPObject.result(self, *args, **kwargs)) + [None, []])
-        return unused_code, encode_to_byte_strings(response), unused_msgid, serverctrls
+        unused_code, response = LDAPObject.result(self, *args, **kwargs)
+        return unused_code, encode_to_byte_strings(response), None, []
 
     LDAPObject.result3 = result_3
 

@@ -1939,7 +1939,7 @@ def convert_check_info():
 
 
 AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
-                          "Please refer to Werk 10601 for more information.")
+                          "Please refer to Werk 10601 for more information.\n")
 
 
 def _extract_agent_and_snmp_sections():

@@ -11,10 +11,14 @@ import itertools
 import re
 from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
 
+import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import SNMPTable
 
 from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
 from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.prediction
 
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 
@@ -170,14 +174,14 @@ def check_levels(
         boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
 ):
     # type: (...) -> Generator[Union[Result, Metric], None, None]
-    """Generic function for checking a value against levels
+    """Generic function for checking a value against levels.
 
     :param value:        Currently measured value
     :param levels_upper: Pair of upper thresholds. If value is larger than these, the
                          service goes to **WARN** or **CRIT**, respecively.
     :param levels_lower: Pair of lower thresholds. If value is smaller than these, the
                          service goes to **WARN** or **CRIT**, respecively.
-    :param metric_name:   Name of the datasource in the RRD that corresponds to this value
+    :param metric_name:  Name of the datasource in the RRD that corresponds to this value
                          or None in order to skip perfdata
     :param render_func:  Single argument function to convert the value from float into a
                          human readable string.
@@ -201,6 +205,89 @@ def check_levels(
     yield Result(state=value_state, summary=info_text + levels_text)
     if metric_name:
         yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
+
+
+def check_levels_predictive(
+        value,  # type: float
+        _sentinel=_SENTINEL,  # type: Any # enforce keyword usage, remove with CMK-3983 # *,
+        levels=None,  # tpye: Optional[Dict[str, Any]] # will be mandatory CMK-3983
+        metric_name=None,  # type: Optional[str] # will be mandatory CMK-3983
+        render_func=None,  # type: Optional[Callable[[float], str]]
+        label=None,  # type: Optional[str]
+        boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
+):
+    # type: (...) -> Generator[Union[Result, Metric], None, None]
+    """Generic function for checking a value against levels.
+
+    :param value:        Currently measured value
+    :param levels:       Predictive levels. These are used automatically.
+                         Lower levels are imposed if the passed dictionary contains "lower"
+                         as key, upper levels are imposed if it contains "upper" or
+                         "levels_upper_min" as key.
+                         If value is lower/higher than these, the service goes to **WARN**
+                         or **CRIT**, respecively.
+    :param metric_name:  Name of the datasource in the RRD that corresponds to this value
+    :param render_func:  Single argument function to convert the value from float into a
+                         human readable string.
+                         readable fashion
+    :param label:        Label to prepend to the output.
+    :param boundaries:   Minimum and maximum to add to the metric.
+    """
+    # TODO (mo): unhack this CMK-3983
+    if _sentinel is not _SENTINEL:
+        raise TypeError("check_levels_predictive only accepts one positional argument")
+    if levels is None:
+        raise TypeError("'levels' must not be None")
+    if metric_name is None:
+        raise TypeError("'metric_name' must not be None")
+
+    if render_func is None:
+        render_func = "%.2f".format
+
+    # validate the metric name, before we can get the levels.
+    Metric.validate_name(metric_name)
+
+    try:
+        ref_value, levels_tuple = cmk.base.prediction.get_levels(
+            check_api_utils.host_name(),
+            check_api_utils.service_description(),
+            metric_name,
+            levels,
+            "MAX",
+        )
+        if ref_value:
+            predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
+        else:
+            predictive_levels_msg = " (no reference for prediction yet)"
+
+    except MKGeneralException as e:
+        ref_value = None
+        levels_tuple = (None, None, None, None)
+        predictive_levels_msg = " (no reference for prediction: %s)" % e
+
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        yield Result(state=state.UNKNOWN, summary="%s" % e)
+        return
+
+    levels_upper = (None if levels_tuple[0] is None or levels_tuple[1] is None else
+                    (levels_tuple[0], levels_tuple[1]))
+
+    levels_lower = (None if levels_tuple[2] is None or levels_tuple[3] is None else
+                    (levels_tuple[2], levels_tuple[3]))
+
+    value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
+
+    if label:
+        info_text = "%s: %s%s" % (label, render_func(value), predictive_levels_msg)
+    else:
+        info_text = "%s%s" % (render_func(value), predictive_levels_msg)
+
+    yield Result(state=value_state, summary=info_text + levels_text)
+    yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
+    if ref_value:
+        Metric("predict_%s" % metric_name, ref_value)
 
 
 #    __     __    _            ____  _                   _   _ _   _ _

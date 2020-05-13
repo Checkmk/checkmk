@@ -4,18 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import sys
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
+import pytest  # type: ignore[import]
 import six
-import pathlib2 as pathlib
-from passlib.hash import sha256_crypt
+from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
 
-@pytest.fixture()
-def htpasswd_file(tmp_path):
-    htpasswd_file = tmp_path / "htpasswd"
-    htpasswd_file.write_text(
+@pytest.fixture(name="htpasswd_file")
+def htpasswd_file_fixture(tmp_path):
+    htpasswd_file_path = tmp_path / "htpasswd"
+    htpasswd_file_path.write_text(
         (
             # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
             u"bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/\n"
@@ -27,7 +32,7 @@ def htpasswd_file(tmp_path):
             u"sha256user:$5$rounds=535000$5IFtH0zYpQ6STBre$Nkem2taHfBFswWj3xERRpmEI.20G5is0VBcPpUuf3J2\n"
         ),
         encoding="utf-8")
-    return pathlib.Path(htpasswd_file)
+    return Path(htpasswd_file_path)
 
 
 def test_htpasswd_exists(htpasswd_file):
@@ -72,4 +77,4 @@ def test_user_connector_verify_password(htpasswd_file, monkeypatch):
     assert c.check_credentials(u"sha256user", u"cmk") == u"sha256user"
     assert c.check_credentials(u"harry", u"cmk") == u"harry"
     assert c.check_credentials(u"dingeling", u"aaa") is None
-    assert c.check_credentials(u"locked", u"locked") == False
+    assert c.check_credentials(u"locked", u"locked") is False

@@ -6,7 +6,12 @@
 
 # pylint: disable=redefined-outer-name
 
-from pathlib2 import Path
+import sys
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import pytest  # type: ignore[import]
 from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 import six
@@ -222,7 +227,7 @@ def encode_to_byte_strings(inp):
     if isinstance(inp, dict):
         return {
             encode_to_byte_strings(key): encode_to_byte_strings(value)
-            for key, value in inp.iteritems()
+            for key, value in inp.items()
         }
     elif isinstance(inp, list):
         return [encode_to_byte_strings(element) for element in inp]

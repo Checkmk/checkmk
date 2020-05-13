@@ -6,11 +6,16 @@
 
 # pylint: disable=redefined-outer-name
 
-import subprocess
 import gettext
+import subprocess
+import sys
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import pytest  # type: ignore[import]
 import six
-from pathlib2 import Path
 from testlib import cmk_path
 
 import cmk.utils.paths

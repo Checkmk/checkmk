@@ -6,15 +6,16 @@
 
 # force loading of web API plugins
 import cmk.utils.version as cmk_version
-import cmk.gui.webapi  # pylint: disable=unused-import
+import cmk.gui.webapi  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
 
 
 def test_registered_api_call_collections():
-    registered_api_actions = (action \
-                              for cls in api_call_collection_registry.values()
-                              for action in cls().get_api_calls().iterkeys())
+    registered_api_actions = (
+        action  #
+        for cls in api_call_collection_registry.values()  #
+        for action in cls().get_api_calls().keys())
 
     expected_api_actions = [
         'activate_changes',

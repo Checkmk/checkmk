@@ -3611,7 +3611,7 @@ def _convert_aggregation(aggr_tuple):
     old_groups = None
     options = {}
     for idx, token in enumerate(list(aggr_tuple)):
-        if token in special_values.keys():
+        if any(token == k for k in special_values):
             options[special_values[token]] = True
             continue
         if isinstance(token, dict):

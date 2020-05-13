@@ -26,5 +26,5 @@ def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
     assert isinstance(key_dict["owner"], six.text_type)
     assert key_dict["owner"] == u"dingdöng"
 
-    assert key_dict["certificate"].startswith("-----BEGIN CERTIFICATE---")
-    assert key_dict["private_key"].startswith("-----BEGIN ENCRYPTED PRIVATE KEY---")
+    assert key_dict["certificate"].startswith(b"-----BEGIN CERTIFICATE---")
+    assert key_dict["private_key"].startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY---")

@@ -21,7 +21,7 @@ def test_http_request_allowed_vars():
     environ = dict(create_environ(
         method="POST",
         content_type="application/x-www-form-urlencoded",
-        input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc")),
+        input_stream=io.BytesIO(b"asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc")),
                    REQUEST_URI='')
     req = http.Request(environ)
     assert req.var("asd") == "x"
@@ -60,7 +60,7 @@ def test_get_str_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_non_ascii():
-    assert html.request.get_str_input("abc") == u"äbc".encode("utf-8")
+    assert html.request.get_str_input("abc") == six.ensure_str("äbc")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -77,7 +77,7 @@ def test_get_str_input_mandatory_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_non_ascii():
-    assert html.request.get_str_input_mandatory("abc") == u"äbc".encode("utf-8")
+    assert html.request.get_str_input_mandatory("abc") == six.ensure_str(u"äbc")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -91,7 +91,7 @@ def test_get_str_input_mandatory_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_type():
     assert html.request.get_binary_input("xyz") == b"x"
-    assert isinstance(html.request.get_str_input("xyz"), bytes)
+    assert isinstance(html.request.get_str_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -314,10 +314,11 @@ def test_pre_16_format_cookie_handling(monkeypatch):
     environ = dict(
         create_environ(),
         HTTP_COOKIE=
-        "xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123")
+        u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
+            "utf-8"))
     request = http.Request(environ)
 
-    assert isinstance(request.cookie("auth_stable"), bytes)
+    assert isinstance(request.cookie("auth_stable"), str)
     assert request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"
 
     assert request.has_cookie("xyz")

@@ -29,14 +29,14 @@ def test_del_vars():
         html.del_var_from_env("_password")
 
         # Make test independent of dict sorting
-        assert html.request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
+        assert html.request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
 
         assert '_password' not in html.request.args
         assert '_username' not in html.request.args
 
         # Check the request local proxied version too.
         # Make test independent of dict sorting
-        assert request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
+        assert request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
         assert '_password' not in request.args
         assert '_username' not in request.args
 

@@ -622,6 +622,7 @@ class TextAscii(ValueSpec):
         # type: () -> str
         return ""
 
+    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def render_input(self, varprefix, value):
         # type: (str, _Optional[str]) -> None
         if self._label:
@@ -640,6 +641,7 @@ class TextAscii(ValueSpec):
             onkeyup=self._onkeyup if self._onkeyup else None,
         )
 
+    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def value_to_text(self, value):
         # type: (str) -> Text
         if not value:
@@ -665,10 +667,12 @@ class TextAscii(ValueSpec):
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
+    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def _validate_value(self, value, varprefix):
         # type: (str, str) -> None
         try:
-            six.text_type(value)
+            if isinstance(value, bytes):
+                value.decode("ascii")
         except UnicodeDecodeError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
 
@@ -681,7 +685,7 @@ class TextAscii(ValueSpec):
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
-            if not self._regex.match(value):
+            if not self._regex.match(six.ensure_text(value)):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:

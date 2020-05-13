@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import pytest  # type: ignore[import]
+
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
@@ -199,10 +200,10 @@ def test_email_validation_non_compliance(address):
 @pytest.mark.parametrize(
     "address",
     [
-        "text",
-        "user@foo",
-        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
-        "אሗ@test.com",  # UTF-8 encoded bytestrings are not allowed
+        b"text",
+        b"user@foo",
+        b"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        u"אሗ@test.com".encode("utf-8"),  # UTF-8 encoded bytestrings are not allowed
         u"text",
         u"user@foo",
         u"\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars

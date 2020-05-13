@@ -64,7 +64,7 @@ def virtualenv_path(version=None):
 def find_git_rm_mv_files(dirpath):
     # type: (Path) -> List[str]
     del_files = []
-    out = six.ensure_str(subprocess.check_output(["git", "status", dirpath])).split("\n")
+    out = six.ensure_str(subprocess.check_output(["git", "status", str(dirpath)])).split("\n")
 
     for line in out:
         if "deleted:" in line or "renamed:" in line:

@@ -12,8 +12,8 @@ from typing import Dict, List, Optional, Type, Union
 import cmk.base.snmp as snmp
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_utils import section_name_of
-from cmk.base.snmp_utils import OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
 # pylint: enable=cmk-module-layer-violation
+from cmk.utils.type_defs import OIDInfo, SNMPHostConfig, SNMPTable, RawSNMPData
 
 
 class SNMPDataFetcher:

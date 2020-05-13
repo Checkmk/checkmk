@@ -11,7 +11,7 @@ from typing import (  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     CheckPluginName, HostName, HostState, Item, Metric, RawAgentData, ServiceAdditionalDetails,
-    ServiceCheckResult, ServiceDetails, ServiceState,
+    ServiceCheckResult, ServiceDetails, ServiceState, SectionName,
 )
 
 from cmk.base.caching import runtime_cache as _runtime_cache
@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 CheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
 
-SectionName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[Text]]

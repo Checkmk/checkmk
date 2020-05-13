@@ -13,35 +13,20 @@ import six
 
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     DecodedString, ContextName, OID, RawValue, SNMPCommunity, SNMPCredentials, SNMPHostConfig,
-    SNMPRowInfo, SNMPTiming,
+    SNMPRowInfo, SNMPTiming, CheckPluginName, DecodedBinary, DecodedValues, SectionName, SNMPTable,
+    SNMPSectionContent, SNMPSections, SNMPValueEncoding, PersistedSNMPSection,
+    PersistedSNMPSections, RawSNMPData, Column, Columns, OIDWithColumns, OIDWithSubOIDsAndColumns,
+    SingleOIDInfo, MultiOIDInfo, OIDInfo,
 )
-from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
-SNMPValueEncoding = str
-Column = Union[str, int, Tuple[SNMPValueEncoding, str]]
-Columns = List[Column]
-OIDWithColumns = Tuple[OID, Columns]
-OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
-SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
-MultiOIDInfo = List[SingleOIDInfo]
-OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
 SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
-DecodedBinary = List[int]
-DecodedValues = Union[DecodedString, DecodedBinary]
 ResultColumnsDecoded = List[List[DecodedValues]]
-SNMPTable = List[List[DecodedValues]]
 SNMPContext = Optional[str]
-
-SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
-SNMPSections = Dict[SectionName, SNMPSectionContent]
-PersistedSNMPSection = Tuple[int, int, SNMPSectionContent]
-PersistedSNMPSections = Dict[SectionName, PersistedSNMPSection]
-RawSNMPData = SNMPSections
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."

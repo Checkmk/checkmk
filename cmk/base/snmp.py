@@ -31,16 +31,29 @@ import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation, no-name-in-module
-from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    HostName, HostAddress,
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    OIDInfo,
+    OIDWithColumns,
+    OIDWithSubOIDsAndColumns,
+    OID,
+    Column,
+    SNMPValueEncoding,
+    SNMPHostConfig,
+    SNMPTable,
+    SNMPRowInfo,
+    RawValue,
+    DecodedBinary,
+    DecodedString,
+    Columns,
 )
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName,)
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Column, SNMPValueEncoding,
-    SNMPHostConfig, SNMPRowInfo, SNMPRowInfoForStoredWalk, SNMPTable, ResultColumnsUnsanitized,
-    ResultColumnsSanitized, ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
-    DecodedString, Columns,
+from cmk.base.snmp_utils import (
+    SNMPRowInfoForStoredWalk,
+    ResultColumnsUnsanitized,
+    ResultColumnsSanitized,
+    ResultColumnsDecoded,
+    SNMPContext,
 )
 
 try:

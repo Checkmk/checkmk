@@ -63,7 +63,28 @@ TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
 
 ContextName = str
 DecodedString = Text
+DecodedBinary = List[int]
+DecodedValues = Union[DecodedString, DecodedBinary]
+SNMPValueEncoding = str
+SNMPTable = List[List[DecodedValues]]
+
+SectionName = str
+SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
+SNMPSections = Dict[SectionName, SNMPSectionContent]
+PersistedSNMPSection = Tuple[int, int, SNMPSectionContent]
+PersistedSNMPSections = Dict[SectionName, PersistedSNMPSection]
+RawSNMPData = SNMPSections
+
+Column = Union[str, int, Tuple[SNMPValueEncoding, str]]
+Columns = List[Column]
+
 OID = str
+OIDWithColumns = Tuple[OID, Columns]
+OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
+MultiOIDInfo = List[SingleOIDInfo]
+OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
+
 RawValue = bytes
 SNMPRowInfo = List[Tuple[OID, RawValue]]
 

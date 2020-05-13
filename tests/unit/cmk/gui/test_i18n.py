@@ -22,6 +22,12 @@ import cmk.utils.paths
 import cmk.gui.i18n as i18n
 
 
+def _gettext(trans, message):
+    if sys.version_info[0] >= 3:
+        return trans.gettext(message)
+    return trans.ugettext(message)
+
+
 @pytest.fixture(autouse=True)
 def locale_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(cmk.utils.paths, "locale_dir", Path("%s/locale" % cmk_path()))
@@ -102,7 +108,7 @@ def test_init_language_only_builtin():
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
 
-    translated = trans.ugettext("bla")
+    translated = _gettext(trans, "bla")
     assert isinstance(translated, six.text_type)
     assert translated == "bla"
 
@@ -113,7 +119,7 @@ def test_init_language_with_local_modification(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = trans.ugettext("bla")
+    translated = _gettext(trans, "bla")
     assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
@@ -124,13 +130,13 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert trans.info()["language"] == "de"
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
-    translated = trans.ugettext("bla")
+    translated = _gettext(trans, "bla")
     assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
     # This string is localized in the standard file, not in the locally
     # overridden file
-    translated = trans.ugettext("Age")
+    translated = _gettext(trans, "Age")
     assert isinstance(translated, six.text_type)
     assert translated == "Alter"
 
@@ -138,7 +144,7 @@ def test_init_language_with_local_modification_fallback(local_translation):
 def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
     assert trans is not None
-    translated = trans.ugettext("pkg1")
+    translated = _gettext(trans, "pkg1")
     assert isinstance(translated, six.text_type)
     assert translated == "lala"
 

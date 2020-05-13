@@ -212,6 +212,8 @@ python3-modules-dump-Pipfile:
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo 'flake8 = "*"'
+	@echo 'sphinx = "*" # used for API documentation'
+	@echo 'sphinx-autodoc-typehints = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

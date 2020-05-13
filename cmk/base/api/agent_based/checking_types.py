@@ -158,6 +158,9 @@ class MetricFloat(float):
 class Metric:
     @staticmethod
     def validate_name(metric_name):
+        if not metric_name:
+            raise TypeError("metric name must not be empty")
+
         # this is not very elegant, but it ensures consistency to cmk.utils.misc.pnp_cleanup
         pnp_name = quote_pnp_string(metric_name)
         if metric_name != pnp_name:

@@ -127,6 +127,7 @@ def test_metric_kwarg():
 
 
 @pytest.mark.parametrize("name, value, levels, boundaries", [
+    ("", 7, None, None),
     ("name", "7", (None, None), (None, None)),
     ("n me", "7", (None, None), (None, None)),
     ("n=me", "7", (None, None), (None, None)),

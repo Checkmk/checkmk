@@ -476,14 +476,14 @@ function sap_hana_host_from_landscape() {
                 continue
             fi
 
-            cur_IP=$(nslookup "$cur_hostname" | grep "Address" | grep -v "127." | awk '{print $2}')
+            cur_IP=$(nslookup "$cur_hostname" | grep "Address" | grep -v "#" | awk '{print $2}')
 
             if [[ -z "$cur_IP" ]]; then
                 continue
             fi
 
             # Return *only* hostname with active IP
-            if ifconfig -a | grep -q "$cur_IP"; then
+            if ip a | grep -q "$cur_IP"; then
                 echo "$cur_hostname"
                 break
             fi

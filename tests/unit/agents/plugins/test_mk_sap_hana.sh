@@ -37,10 +37,22 @@ Address: 192.168.1.1
 output
         fi
     }
-    ifconfig () {
+    ip () {
         cat <<"output"
-wlo1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-    inet 192.168.1.1
+2: wlo1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.1/24 brd 192.111.111.111 scope global dynamic noprefixroute wlo1
+       valid_lft 836967sec preferred_lft 836967sec
+    inet6 0000::0000:0000:000:000/64 scope global temporary dynamic
+       valid_lft 6931sec preferred_lft 3331sec
+    inet6 0000::0000:0000:0000:0000/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 6931sec preferred_lft 3331sec
+    inet6 0000:000:0000:0000:0000:0000:0000:c3b/64 scope global temporary dynamic
+       valid_lft 6063sec preferred_lft 2463sec
+    inet6 0000:000:0000:0000:0000:0000:0000:c3b/64 scope global temporary dynamic
+       valid_lft 6063sec preferred_lft 2463sec
+    inet6 0000:000:0000:0000:0000:0000:0000:c3b/64 scope global temporary dynamic
+       valid_lft forever preferred_lft forever
 output
     }
 #

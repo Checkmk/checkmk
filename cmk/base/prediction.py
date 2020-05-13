@@ -11,7 +11,14 @@ import json
 import logging
 import math
 import os
+import sys
 import time
+
+# TODO: Can be removed with python 3.8+
+if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
+    from mypy_extensions import TypedDict
+else:
+    from typing import TypedDict  # pylint: disable=no-name-in-module,ungrouped-imports
 
 import cmk.utils.debug
 import cmk.utils
@@ -35,6 +42,20 @@ DataStatValue = Optional[float]
 DataStat = List[DataStatValue]
 DataStats = List[DataStat]
 PredictionParameters = Dict[str, Any]
+
+# TODO: This is somehow related to cmk.utils.prediction.PreditionInfo,
+# but using this *instead* of PredicionInfo (==Dict) is not possible.
+PredictionData = TypedDict(
+    'PredictionData',
+    {
+        "columns": List[str],
+        "points": DataStats,
+        "num_points": int,
+        "data_twindow": List[Timestamp],
+        "step": Seconds,
+    },
+    total=False,
+)
 
 
 def window_start(timestamp, span):
@@ -177,7 +198,7 @@ def data_stats(slices):
 
 
 def calculate_data_for_prediction(time_windows, rrd_datacolumn):
-    # type: (TimeSlices, RRDColumnFunction) -> Dict
+    # type: (TimeSlices, RRDColumnFunction) -> PredictionData
     twindow, slices = retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     descriptors = data_stats(slices)
@@ -192,7 +213,7 @@ def calculate_data_for_prediction(time_windows, rrd_datacolumn):
 
 
 def save_predictions(pred_file, info, data_for_pred):
-    # type: (str, PredictionInfo, Dict) -> None
+    # type: (str, PredictionInfo, PredictionData) -> None
     with open(pred_file + '.info', "w") as fname:
         json.dump(info, fname)
     with open(pred_file, "w") as fname:
@@ -241,8 +262,15 @@ def is_prediction_up2date(pred_file, timegroup, params):
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
-def get_levels(hostname, service_description, dsname, params, cf, levels_factor=1.0):
-    # type: (HostName, ServiceName, MetricName, PredictionParameters, ConsolidationFunctionName, float) -> Tuple[int, EstimatedLevels]
+def get_levels(
+        hostname,  # type: HostName
+        service_description,  # type: ServiceName
+        dsname,  # type: MetricName
+        params,  # type: PredictionParameters
+        cf,  # type: ConsolidationFunctionName
+        levels_factor=1.0,  # type: float
+):
+    # type: (...) -> Tuple[Optional[float], EstimatedLevels]
     now = int(time.time())
     period_info = prediction_periods[params["period"]]  # type: Dict
 
@@ -254,9 +282,12 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     pred_file = os.path.join(pred_dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
-    data_for_pred = None
+    data_for_pred = None  # type: Optional[PredictionData]
     if is_prediction_up2date(pred_file, timegroup, params):
-        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
+        # Suppression: I am not sure how to check what this function returns
+        #              For now I hope this is compatible.
+        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(  # type: ignore[assignment]
+            pred_file, timegroup)
 
     if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)

@@ -286,6 +286,7 @@ def clean_prediction_files(pred_file, force=False):
 
 # TODO: We should really *parse* the loaded data, currently the type signature
 # is a blatant lie!
+# (mo) And, in fact, this function returns at least 2 different types of dataset.
 def retrieve_data_for_prediction(info_file, timegroup):
     # type: (Text, Timegroup) -> Optional[PredictionInfo]
     try:
@@ -299,33 +300,51 @@ def retrieve_data_for_prediction(info_file, timegroup):
     return None
 
 
-def estimate_levels(reference, params, levels_factor):
-    # type: (Dict[str, int], Dict, float) -> Tuple[int, EstimatedLevels]
+def estimate_levels(
+        reference,  # type: Dict[str, Optional[float]]
+        params,  # type: Dict
+        levels_factor,  # type: float
+):
+    # type: (...) -> Tuple[Optional[float], EstimatedLevels]
     ref_value = reference["average"]
     if not ref_value:  # No reference data available
         return ref_value, (None, None, None, None)
 
     stdev = reference["stdev"]
 
-    def _get_levels_from_params(what, sig):
-        # type: (str, int) -> Tuple[EstimatedLevel, EstimatedLevel]
-        p = "levels_" + what
-        if p not in params:
-            return None, None
-
-        this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
-        if what == "upper" and "levels_upper_min" in params:
-            limit_warn, limit_crit = params["levels_upper_min"]
-            this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-        return this_levels
-
-    upper_warn, upper_crit = _get_levels_from_params("upper", 1)
-    lower_warn, lower_crit = _get_levels_from_params("lower", -1)
-    return ref_value, (upper_warn, upper_crit, lower_warn, lower_crit)
+    levels_upper = _get_levels_from_params("upper", 1, params, ref_value, stdev, levels_factor)
+    levels_lower = _get_levels_from_params("lower", -1, params, ref_value, stdev, levels_factor)
+    return ref_value, levels_upper + levels_lower
 
 
-def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
-    # type: (int, int, int, Dict, float) -> Tuple[float, float]
+def _get_levels_from_params(
+        what,  # type: str
+        sig,  # type: int
+        params,  # type: Dict
+        ref_value,  # type: float
+        stdev,  # type: Optional[float]
+        levels_factor,  # type: float
+):
+    # type: (...) -> Tuple[EstimatedLevel, EstimatedLevel]
+    p = "levels_" + what
+    if p not in params:
+        return None, None
+
+    this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
+    if what == "upper" and "levels_upper_min" in params:
+        limit_warn, limit_crit = params["levels_upper_min"]
+        this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+    return this_levels
+
+
+def estimate_level_bounds(
+        ref_value,  # type: float
+        stdev,  # type: Optional[float]
+        sig,  # type: int
+        params,  # type: Tuple[str, Tuple[float, float]]
+        levels_factor,  # type: float
+):
+    # type: (...) -> Tuple[float, float]
     how, (warn, crit) = params
     if how == "absolute":
         return (
@@ -337,7 +356,11 @@ def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
             ref_value + sig * (ref_value * warn / 100.0),
             ref_value + sig * (ref_value * crit / 100.0),
         )
+
     # how == "stdev":
+    if stdev is None:  # just make explicit what would have happend anyway:
+        raise TypeError("stdev is None")
+
     return (
         ref_value + sig * (stdev * warn),
         ref_value + sig * (stdev * crit),

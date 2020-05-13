@@ -13,4 +13,4 @@ def test_to_json():
 
 
 def test_forward_slash_escape():
-    assert json.dumps("<script>alert(1)</script>") == '"<script>alert(1)<\/script>"'
+    assert json.dumps("<script>alert(1)</script>") == '"<script>alert(1)<\\/script>"'

@@ -11,7 +11,7 @@ import os
 import re
 import signal
 import traceback
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple, Set  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -206,8 +206,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    _PEM_RE = re.compile("-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         "", re.DOTALL)
+    _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
+                         b"", re.DOTALL)
 
     def config_dir(self):
         return multisite_dir()
@@ -249,19 +249,22 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             ]
 
     def _update_trusted_cas(self, current_config):
-        trusted_cas, errors = [], []
+        trusted_cas = []  # type: List[bytes]
+        errors = []  # type: List[str]
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += current_config["trusted_cas"]
+        trusted_cas += [six.ensure_binary(e) for e in current_config["trusted_cas"]]
 
-        store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
+        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors
 
     def _get_system_wide_trusted_ca_certificates(self):
-        trusted_cas, errors = set([]), []
+        # type: () -> Tuple[List[bytes], List[str]]
+        trusted_cas = set()  # type: Set[bytes]
+        errors = []  # type: List[str]
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
 
@@ -276,7 +279,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except IOError:
-                    logger.exception("error updating CA")
+                    logger.exception("Error reading certificates from %s", cert_file_path)
 
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -297,8 +300,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return list(trusted_cas), errors
 
     def _get_certificates_from_file(self, path):
+        # type: (Path) -> List[bytes]
         try:
-            with Path(path).open(encoding="utf-8") as f:
+            # This IO is done as binary IO, even if the files are text files. Since we work with
+            # arbitrary files here, we can not be sure about the encoding of these files. Since we
+            # only want to concatenate them to a Checkmk global file, it is OK to treat them all as
+            # binary.
+            with path.open("rb") as f:
                 return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
         except IOError as e:
             if e.errno == errno.ENOENT:

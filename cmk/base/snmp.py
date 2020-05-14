@@ -30,8 +30,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.api.agent_based.section_types import SNMPTree
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation
-
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation, no-name-in-module
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     HostName, HostAddress,
 )
@@ -45,9 +44,9 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 )
 
 try:
-    import cmk.base.cee.inline_snmp as inline_snmp
+    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation
 except ImportError:
-    inline_snmp = None  # type: ignore[assignment]
+    inline = None  # type: ignore[assignment]
 
 _enforce_stored_walks = False
 
@@ -294,7 +293,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
             return StoredWalkSNMPBackend()
 
         if snmp_config.is_inline_snmp_host:
-            return inline_snmp.InlineSNMPBackend(config.record_inline_snmp_stats)
+            return inline.InlineSNMPBackend(config.record_inline_snmp_stats)
 
         return ClassicSNMPBackend()
 
@@ -302,8 +301,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
     if snmp_config.is_inline_snmp_host:
-        backend = inline_snmp.InlineSNMPBackend(
-            config.record_inline_snmp_stats)  # type: ABCSNMPBackend
+        backend = inline.InlineSNMPBackend(config.record_inline_snmp_stats)  # type: ABCSNMPBackend
     else:
         backend = ClassicSNMPBackend()
 
@@ -751,5 +749,5 @@ def do_snmpget(oid, hostnames):
 
 
 cmk.base.cleanup.register_cleanup(snmp_cache.cleanup_host_caches)
-if inline_snmp:
-    cmk.base.cleanup.register_cleanup(inline_snmp.cleanup_inline_snmp_globals)
+if inline:
+    cmk.base.cleanup.register_cleanup(inline.cleanup_inline_snmp_globals)

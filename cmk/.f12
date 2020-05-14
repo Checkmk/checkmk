@@ -35,7 +35,6 @@ PYTHON3_PATHS=(
     gui
     utils
     ec
-    fetchers
     notification_plugins
     special_agents/__init__.py
     special_agents/agent_3par.py
@@ -140,3 +139,5 @@ if [ -z "$ONLY_COPY" ]; then
         sudo $ROOT/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
     )
 fi
+
+bash fetchers/.f12

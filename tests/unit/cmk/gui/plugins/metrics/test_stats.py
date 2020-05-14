@@ -11,6 +11,8 @@ from cmk.gui.plugins.metrics import stats
 @pytest.mark.parametrize("q, array, result", [
     (50, [1], 1),
     (50, [1, 5, 6], 5),
+    (40, [1, 5, 6], 3),
+    (55, [1, 5, 6], 5.5),
     (50, [1, 5, 6, 6], 5.5),
     (100, [1, 5, 6, 6], 6),
     (100, [1, 5, 6], 6),

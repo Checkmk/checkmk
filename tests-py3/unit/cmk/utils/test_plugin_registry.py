@@ -1,1 +1,0 @@
-../../../../tests/unit/cmk/utils/test_plugin_registry.py

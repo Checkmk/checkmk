@@ -1,0 +1,14 @@
+Title: Service Discovery: Skip not existing checks
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p25
+Date: 1589480775
+Class: fix
+
+If already discovered Services are not existing any more, e.g. if you used a
+mkp package and removed it, the discovery page crashed with an error message
+like "Service discovery failed for this host: Got invalid data: Invalid check
+parameter string 'None'". From now on, such services are skipped during
+discovery.

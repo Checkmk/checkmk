@@ -1200,7 +1200,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         exitcode = None
         perfdata = []
         if check_source not in [ 'legacy', 'active', 'custom' ]:
+            if check_plugin_name not in checks.check_info:
+                continue # Skip not existing check silently
             # apply check_parameters
+
             try:
                 if type(paramstring) == str:
                     params = resolve_paramstring(check_plugin_name, paramstring)
@@ -1222,8 +1225,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             checks.set_service(check_plugin_name, descr)
             section_name = checks.section_name_of(check_plugin_name)
 
-            if check_plugin_name not in checks.check_info:
-                continue # Skip not existing check silently
 
             try:
                 try:

@@ -30,8 +30,8 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "metric_name": "battery",
         "render_func": render.percent,
     }, [
-        Metric("battery", 5.0),
         Result(state=state.OK, summary="5.00%"),
+        Metric("battery", 5.0),
     ]),
     (6, {
         "metric_name": "disk",
@@ -39,9 +39,9 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "render_func": lambda x: "%.2f years" % x,
         "label": "Disk Age",
     }, [
-        Metric("disk", 6.0, levels=(4., 8.)),
         Result(state=state.WARN,
                summary="Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)"),
+        Metric("disk", 6.0, levels=(4., 8.)),
     ]),
     (5e-7, {
         "metric_name": "H_concentration",
@@ -51,8 +51,8 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "label": "Water acidity",
         "boundaries": (0, None),
     }, [
-        Metric("H_concentration", 5e-7, levels=(4e-7, 8e-7), boundaries=(0, None)),
         Result(state=state.WARN, summary="Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)"),
+        Metric("H_concentration", 5e-7, levels=(4e-7, 8e-7), boundaries=(0, None)),
     ]),
 ])
 def test_check_levels(value, kwargs, result):

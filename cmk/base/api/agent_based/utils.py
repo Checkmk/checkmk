@@ -187,9 +187,6 @@ def check_levels(
     if _sentinel is not _SENTINEL:
         raise TypeError("check_levels only accepts one positional argument")
 
-    if metric_name:
-        yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
-
     if render_func is None:
         render_func = "%.2f".format
 
@@ -200,6 +197,8 @@ def check_levels(
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
     yield Result(state=value_state, summary=info_text + levels_text)
+    if metric_name:
+        yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
 
 
 #    __     __    _            ____  _                   _   _ _   _ _

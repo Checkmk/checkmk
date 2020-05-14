@@ -45,7 +45,7 @@ public:
             // The cast below is OK because int has at least 32 bits on all
             // platforms we care about: The timeout is then limited to 24.85
             // days, which should be more than enough for our needs.
-            retval = ::poll(&_pollfds[0], _pollfds.size(),
+            retval = ::poll(_pollfds.data(), _pollfds.size(),
                             static_cast<int>(millis.count()));
         } while (retval == -1 && errno == EINTR);
 

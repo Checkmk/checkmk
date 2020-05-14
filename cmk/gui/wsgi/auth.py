@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import functools
 import time
 
 from typing import Optional  # pylint: disable=unused-import
@@ -69,7 +68,9 @@ def verify_user(user_id, token_info):
 
 
 def with_user(func):
-    @functools.wraps(func)
+    # NOTE: Don't use @functools.wraps here, as under Python3 connexion will only ever check the
+    # signature of the wrapped function (which has no keyword arguments) and only gives us the
+    # context if the wrapped function accepts keyword arguments (which it does not).
     def wrapper(*args, **kw):
         user_id = kw.get('user')
         token_info = kw.get('token_info')

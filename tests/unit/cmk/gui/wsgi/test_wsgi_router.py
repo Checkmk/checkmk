@@ -32,16 +32,16 @@ def test_normal_auth(
     login.form['_password'] = password
     resp = login.form.submit('_login', index=1)
 
-    assert "Invalid credentials." not in resp.body
+    assert "Invalid credentials." not in resp.text
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app):
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
-    assert response.body.startswith("ERROR: Missing or invalid")
+    assert response.text.startswith("ERROR: Missing or invalid")
 
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py?mode=agent')
-    assert response.body.startswith("ERROR: Missing host")
+    assert response.text.startswith("ERROR: Missing host")
 
 
 def test_openapi_version(
@@ -336,18 +336,18 @@ def test_cmk_run_cron(wsgi_app):
 
 def test_cmk_automation(wsgi_app):
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
-    assert response.body == "Missing secret for automation command."
+    assert response.text == "Missing secret for automation command."
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.body.startswith("You are not allowed")
+    assert resp.text.startswith("You are not allowed")
 
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py",
                         status=200,
                         extra_environ={'REMOTE_ADDR': '127.0.0.1'})
-    assert resp.body == ""
+    assert resp.text == ""
 
 
 def test_options_disabled(wsgi_app):

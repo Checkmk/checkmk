@@ -439,7 +439,7 @@ def etag_of_dict(dict_):
     """
     _hash = hashlib.sha256()
     for key in sorted(dict_.keys()):
-        _hash.update(dict_[key])
+        _hash.update(dict_[key].encode('utf-8'))
     return ETags(strong_etags=_hash.hexdigest())
 
 

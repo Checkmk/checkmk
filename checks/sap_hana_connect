@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-state_map = {
+sap_hana_connect_state_map = {
     "Worker: OK": {
         "cmk_state": 0,
         "fun": lambda inp: inp == "0"
@@ -35,7 +35,7 @@ def parse_sap_hana_connect(info):
         for elem in lines[0]:
             if "retcode" in elem:
                 retcode = elem.split(":")[1].replace(" ", "")
-                for k, v in state_map.items():
+                for k, v in sap_hana_connect_state_map.items():
                     if v["fun"](retcode):
                         inst["cmk_state"] = v["cmk_state"]
                         inst["message"] = k

@@ -7,7 +7,7 @@
 import datetime
 
 # With reference to SQL sample output (see internal ticket SUP-253)
-state_map = {
+sap_hana_ess_migration_state_map = {
     "Done (error)": {
         "cmk_state": 2,
         "state_readable": "Done with errors."
@@ -51,11 +51,14 @@ def inventory_sap_hana_ess_migration(parsed):
 def check_sap_hana_ess_migration(item, params, data):
 
     key = None
-    for ident in state_map.keys():
+    for ident in sap_hana_ess_migration_state_map.keys():
         if ident.lower() in data["log"].lower():
             key = ident
 
-    states = state_map.get(key, {"cmk_state": 3, "state_readable": "Unknown [%s]" % data["log"]})
+    states = sap_hana_ess_migration_state_map.get(key, {
+        "cmk_state": 3,
+        "state_readable": "Unknown [%s]" % data["log"]
+    })
     infotext = "ESS State: %s Timestamp: %s" % (states["state_readable"], data["timestamp"])
     return states["cmk_state"], infotext
 

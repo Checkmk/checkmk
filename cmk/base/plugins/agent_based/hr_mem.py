@@ -24,14 +24,20 @@ def parse_hr_mem(string_table):
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
     }
 
+    def to_bytes(units):
+        # type: (str) -> int
+        """In some cases instead of a plain byte-count an extra quantifier is appended
+        e.g. '4096 Bytes' instead of just '4096'"""
+        components = units.split(" ", 1)
+        factor = 1 if len(components) == 1 or components[1] != "KBytes" else 1024
+        return int(components[0]) * factor
+
     parsed = {}  # type: Dict[str, List[Tuple[str, int, int]]]
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        try:
-            size = int(hrsize) * int(hrunits)
-            used = int(hrused) * int(hrunits)
-            parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
-        except (ValueError, KeyError):
-            pass
+        units = to_bytes(hrunits)
+        size = int(hrsize) * units
+        used = int(hrused) * units
+        parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
 
     return parsed
 

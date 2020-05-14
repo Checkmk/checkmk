@@ -163,6 +163,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
+	$(MAKE) -C doc/plugin-api apidoc html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
 	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
@@ -192,7 +193,11 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
 	rm -rf mk-livestatus-$(VERSION)
 
-	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
+	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude plugin-api $$(cd doc ; ls)
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) \
+	    -C doc \
+	    --transform "s/^plugin-api\/build/plugin-api/" \
+	    plugin-api/build/html
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar

@@ -36,6 +36,9 @@ info = [[u'Reference', u'ID', u':', u'55DCBEF6', u'(ernie.gerger-net.de)'],
         [u'Leap', u'status', u':', u'Normal']]
 
 
+extra_sections = {'': [[]]}
+
+
 discovery = {'': [(None, {})]}
 
 

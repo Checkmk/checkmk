@@ -28,6 +28,9 @@ info = [[u'Reference', u'ID', u':', u'0.0.0.0', u'()'],
         [u'Leap', u'status', u':', u'Not', u'synchronised']]
 
 
+extra_sections = {'': [[]]}
+
+
 discovery = {'': [(None, {})]}
 
 

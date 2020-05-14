@@ -346,9 +346,14 @@ def add_rule_pack_proxies(file_names):
     """
     rule_packs = []  # type: ECRulePacks
     rule_packs += load_rule_packs()
+    rule_pack_ids = {rp['id']: i for i, rp in enumerate(rule_packs)}
     ids = [os.path.splitext(fn)[0] for fn in file_names]
     for id_ in ids:
-        rule_packs.append(MkpRulePackProxy(id_))
+        index = rule_pack_ids.get(id_)
+        if index is not None and isinstance(rule_packs[index], MkpRulePackProxy):
+            rule_packs[index] = MkpRulePackProxy(id_)
+        else:
+            rule_packs.append(MkpRulePackProxy(id_))
     save_rule_packs(rule_packs)
 
 

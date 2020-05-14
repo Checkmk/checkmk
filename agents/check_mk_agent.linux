@@ -150,31 +150,6 @@ section_mem() {
     fi
 }
 
-section_nfs() {
-    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
-    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
-    if inpath waitmax; then
-        echo '<<<nfsmounts>>>'
-        get_nfs_mounts | while read -r mountPoint; do
-            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-            || echo "${mountPoint} hanging 0 0 0 0"
-        done
-
-        echo '<<<cifsmounts>>>'
-        get_cifs_mounts | while read -r mountPoint; do
-            if [ ! -r "${mountPoint}" ]; then
-                echo "${mountPoint} Permission denied"
-            else
-                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-                    || echo "${mountPoint} hanging 0 0 0 0"
-            fi
-        done
-    fi
-
-    # Clean up our function variables
-    unset mountPoint
-}
-
 section_cpu() {
     if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
@@ -243,7 +218,7 @@ section_df() {
     echo '[df_inodes_end]'
 }
 
-section_systemd() {
+sections_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
@@ -1035,16 +1010,10 @@ run_runas_executor() {
 # does not have certain patterns within its name
 is_valid_plugin() {
     case "${1:?No plugin defined}" in
-        (*dpkg-new|*dpkg-old|*dpkg-temp)
-            return 1
-        ;;
-        (*)
-            if [ -x "${1}" ]; then
-                return 0
-            else
-                return 1
-            fi
-        ;;
+        (*dpkg-new)  return 1 ;;
+        (*dpkg-old)  return 1 ;;
+        (*dpkg-temp) return 1 ;;
+        (*)          [ -x "${1}" ] && return "${?}" ;;
     esac
 }
 

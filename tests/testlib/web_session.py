@@ -93,26 +93,35 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
                 (response.history[0].status_code, response.history[0].url, response.url)
 
         if self._get_mime_type(response) == "text/html":
-            self.transids += self._extract_transids(response.text)
+            soup = BeautifulSoup(response.text, "lxml")
+
+            self.transids += self._extract_transids(response.text, soup)
             self._find_errors(response.text)
-            self._check_html_page_resources(response.url, response.text)
+            self._check_html_page_resources(response.url, soup)
 
     def _get_mime_type(self, response):
         assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _extract_transids(self, body):
+    def _extract_transids(self, body, soup):
         """Extract transids from pages used in later actions issued by tests."""
-        return re.findall('name="_transid" value="([^"]+)"', body) + \
-               re.findall('_transid=([0-9/]+)', body)
+
+        transids = set()
+
+        # Extract from form hidden fields
+        for element in soup.findAll(attrs={"name": "_transid"}):
+            transids.add(element["value"])
+
+        # Extract from URLs in the body
+        transids.update(re.findall('_transid=([0-9/]+)', body))
+
+        return list(transids)
 
     def _find_errors(self, body):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
         assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, url, body):
-        soup = BeautifulSoup(body, "lxml")
-
+    def _check_html_page_resources(self, url, soup):
         base_url = urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)

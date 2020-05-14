@@ -55,7 +55,7 @@ def check_azure_users(item, _no_params, data):
     if count is not None:
         yield check_levels(
             count,
-            item,
+            'num_objects',
             None,
             unit='User Accounts',
             human_readable_func=int,
@@ -68,6 +68,7 @@ check_info['azure_ad'] = {
     'check_function': check_azure_users,
     'service_description': 'AD Users',
     'includes': ['azure.include'],
+    'has_perfdata': True,
 }
 
 #.

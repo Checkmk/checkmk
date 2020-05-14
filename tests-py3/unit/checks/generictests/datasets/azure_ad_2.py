@@ -22,7 +22,7 @@ discovery = {'': [(None, {})], 'sync': [(u'Standardverzeichnis', {})]}
 checks = {
     '': [
         (None, {}, [
-            (0, '2 User Accounts', []),
+            (0, '2 User Accounts', [('num_objects', 2)]),
         ]),
     ],
     'sync': [

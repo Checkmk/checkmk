@@ -20,5 +20,5 @@ info = [
 discovery = {'': [(None, {})], 'sync': []}
 
 checks = {
-    '': [(None, {}, [(0, '2 User Accounts', [])])],
+    '': [(None, {}, [(0, '2 User Accounts', [('num_objects', 2)])])],
 }

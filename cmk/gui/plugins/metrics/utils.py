@@ -922,9 +922,12 @@ def reverse_translate_metric_name(canonical_name):
     possible_translations = []
     for trans in check_metrics.values():
         for metric, options in trans.items():
-            if (options.get('name', '') == canonical_name and
-                    options.get("deprecated", migration_end_version) >= current_version):
+            if "deprecated" in options:
+                migration_end = parse_check_mk_version(options["deprecated"])
+            else:
+                migration_end = migration_end_version
 
+            if (options.get('name', '') == canonical_name and migration_end >= current_version):
                 possible_translations.append((metric, options.get('scale', 1)))
 
     return [(canonical_name, 1)] + sorted(set(possible_translations))

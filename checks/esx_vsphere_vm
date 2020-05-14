@@ -32,7 +32,7 @@ def inventory_esx_vsphere_vm_mem(info):
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
+def check_esx_vsphere_vm_mem(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
     # If the machine is powered of, we do not get data
@@ -56,27 +56,26 @@ def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
         raise MKCounterWrapped(
             "Hostsystem did not provide memory information (reason may be high load)")
 
-    perf = [
+    for perfname, value in [
         ("host", host_memory_usage),
         ("guest", guest_memory_usage),
         ("ballooned", ballooned_memory),
-        ("shared", shared_memory),
         ("private", private_memory),
-    ]
-
-    message = "Host: %s, Guest: %s, " \
-              "Ballooned: %s, Private: %s, Shared: %s" % \
-    (get_bytes_human_readable(host_memory_usage), \
-     get_bytes_human_readable(guest_memory_usage), get_bytes_human_readable(ballooned_memory), \
-     get_bytes_human_readable(private_memory), get_bytes_human_readable(shared_memory) )
-    return (0, message, perf)
+        ("shared", shared_memory),
+    ]:
+        yield check_levels(value,
+                           perfname,
+                           params=params.get(perfname),
+                           infoname=perfname.title(),
+                           human_readable_func=get_bytes_human_readable)
 
 
 check_info['esx_vsphere_vm.mem_usage'] = {
     "inventory_function": inventory_esx_vsphere_vm_mem,
     "check_function": check_esx_vsphere_vm_mem,
     "service_description": "ESX Memory",
-    "has_perfdata": True
+    "group": "esx_vsphere_vm_memory",
+    "has_perfdata": True,
 }
 
 #.

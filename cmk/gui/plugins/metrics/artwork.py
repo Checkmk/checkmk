@@ -369,7 +369,7 @@ def _render_scalar_value(value, unit):
 
 
 def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
-    nth_value = (pin_time - start_time) / step
+    nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
 
@@ -578,7 +578,11 @@ def _get_min_max_from_curves(layouted_curves):
 
             # Line points
             if isinstance(point, (float, int)):
-                max_value = max(max_value, point)
+                if max_value is None:
+                    max_value = point
+                elif point is not None:
+                    max_value = max(max_value, point)
+
                 if min_value is None:
                     min_value = point
                 elif point is not None:
@@ -587,7 +591,12 @@ def _get_min_max_from_curves(layouted_curves):
             # Area points
             elif isinstance(point, tuple):
                 lower, higher = point
-                max_value = max(max_value, higher)
+
+                if max_value is None:
+                    max_value = higher
+                elif higher is not None:
+                    max_value = max(max_value, higher)
+
                 if min_value is None:
                     min_value = lower
                 elif lower is not None:

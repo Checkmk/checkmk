@@ -598,7 +598,7 @@ class APICallUsers(APICallCollection):
                     userdb.locked_attributes(connector_id)
 
             locked_attributes = locked_attributes_by_connection[connector_id]
-            for attr in set_attributes.keys() + unset_attributes:
+            for attr in list(set_attributes.keys()) + unset_attributes:
                 if attr in locked_attributes:
                     raise MKUserError(
                         None,

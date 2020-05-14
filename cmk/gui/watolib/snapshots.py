@@ -163,7 +163,7 @@ def _do_create_snapshot(data):
         tar_in_progress = tarfile.open(filename_work, "a")
         tarinfo = get_basic_tarinfo("checksums")
         tarinfo.size = len(info)
-        tar_in_progress.addfile(tarinfo, io.BytesIO(info))
+        tar_in_progress.addfile(tarinfo, io.BytesIO(six.ensure_binary(info)))
         tar_in_progress.close()
 
         shutil.move(filename_work, filename_target)

@@ -11,21 +11,18 @@ import string
 import typing
 import uuid
 
-import pytest
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 if typing.TYPE_CHECKING:
-    import webtest  # pylint: disable=unused-import
+    import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 # pylint: disable=redefined-outer-name
 
 
-def test_normal_auth(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_user,
-):
+def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
     login = wsgi_app.get('/NO_SITE/check_mk/login.py')  # type: webtest.TestResponse
     login.form['_username'] = username
@@ -44,20 +41,14 @@ def test_deploy_agent(wsgi_app):
     assert response.text.startswith("ERROR: Missing host")
 
 
-def test_openapi_version(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
     assert resp.json['site'] == cmk_version.omd_site()
 
 
-def test_openapi_app_exception(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_app_exception(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
@@ -66,20 +57,13 @@ def test_openapi_app_exception(
     # TODO: Check CrashReport storage
 
 
-def test_openapi_missing_folder(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_missing_folder(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder/asdf" + uuid.uuid4().hex, status=404)
 
 
-def test_openapi_hosts(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-    suppress_automation_calls,
-):
+def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
@@ -121,11 +105,7 @@ def test_openapi_hosts(
 
 
 @pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
-def test_openapi_groups(
-    group_type,
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
@@ -185,10 +165,7 @@ def test_openapi_groups(
     )
 
 
-def test_openapi_folders(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_openapi_folders(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
@@ -268,10 +245,7 @@ def test_openapi_folders(
 
 
 @pytest.mark.skip
-def test_legacy_webapi(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
+def test_legacy_webapi(wsgi_app, with_automation_user):
     username, password = with_automation_user
     wsgi_app.set_credentials(username, password)
     hostname = 'foobar'

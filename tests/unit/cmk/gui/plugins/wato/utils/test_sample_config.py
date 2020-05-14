@@ -6,7 +6,7 @@
 
 import cmk.utils.version as cmk_version
 # Following import is used to trigger plugin loading
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils as utils
 
 

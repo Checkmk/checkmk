@@ -13,15 +13,16 @@ import pytest  # type: ignore[import]
 import six
 from testlib import wait_until
 
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.paths
-import cmk.utils.log as log
-import cmk.utils.debug as debug
-import cmk.utils.snmp_cache as snmp_cache
-
-from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
-import cmk.base.snmp_utils as snmp_utils
+from cmk.base.exceptions import MKSNMPError
+from cmk.base.snmp_utils import OID_END, OID_END_BIN, OID_STRING, OID_BIN
+
+import cmk.utils.debug as debug
+import cmk.utils.log as log
+import cmk.utils.paths
+import cmk.utils.snmp_cache as snmp_cache
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import SNMPHostConfig, OIDWithColumns
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ def snmp_config_fixture(request, snmpsim, monkeypatch):
         source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
         monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
 
-    return snmp_utils.SNMPHostConfig(
+    return SNMPHostConfig(
         is_ipv6_primary=False,
         ipaddress="127.0.0.1",
         hostname="localhost",
@@ -157,7 +158,7 @@ def test_get_single_oid_ipv6(snmp_config):
     cfg_dict = snmp_config._asdict()
     cfg_dict["is_ipv6_primary"] = True
     cfg_dict["ipaddress"] = "::1"
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -169,7 +170,7 @@ def test_get_single_oid_snmpv3(snmp_config):
 
     cfg_dict = snmp_config._asdict()
     cfg_dict["credentials"] = ('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser')
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -181,7 +182,7 @@ def test_get_single_oid_wrong_credentials(snmp_config):
 
     cfg_dict = snmp_config._asdict()
     cfg_dict["credentials"] = "dingdong"
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result is None
@@ -261,7 +262,7 @@ def test_get_single_oid_not_resolvable(snmp_config):
 
     cfg_dict = snmp_config._asdict()
     cfg_dict["ipaddress"] = "bla.local"
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0") is None
 
@@ -272,7 +273,7 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config):
 
     cfg_dict = snmp_config._asdict()
     cfg_dict["ipaddress"] = "bla.local"
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
@@ -286,7 +287,7 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config):
         oid_info = (
             ".1.3.6.1.2.1.1",
             ["1.0", "2.0", "5.0"],
-        )  # type: snmp_utils.OIDWithColumns
+        )  # type: OIDWithColumns
         snmp.get_snmp_table(
             snmp_config,
             check_plugin_name="",
@@ -300,7 +301,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
 
     cfg_dict = snmp_config._asdict()
     cfg_dict["credentials"] = "dingdong"
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
@@ -314,7 +315,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
         oid_info = (
             ".1.3.6.1.2.1.1",
             ["1.0", "2.0", "5.0"],
-        )  # type: snmp_utils.OIDWithColumns
+        )  # type: OIDWithColumns
         snmp.get_snmp_table(
             snmp_config,
             check_plugin_name="",
@@ -326,12 +327,12 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
 def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
     cfg_dict = snmp_config._asdict()
     cfg_dict["is_bulkwalk_host"] = bulk
-    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+    snmp_config = SNMPHostConfig(**cfg_dict)
 
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: snmp_utils.OIDWithColumns
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -352,7 +353,7 @@ def test_get_simple_snmp_table(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],
-    )  # type: snmp_utils.OIDWithColumns
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -372,8 +373,8 @@ def test_get_simple_snmp_table(snmp_config):
 def test_get_simple_snmp_table_oid_end(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", snmp_utils.OID_END],
-    )  # type: snmp_utils.OIDWithColumns
+        ["1", "2", "3", OID_END],
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -389,8 +390,8 @@ def test_get_simple_snmp_table_oid_end(snmp_config):
 def test_get_simple_snmp_table_oid_string(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", snmp_utils.OID_STRING],
-    )  # type: snmp_utils.OIDWithColumns
+        ["1", "2", "3", OID_STRING],
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -406,8 +407,8 @@ def test_get_simple_snmp_table_oid_string(snmp_config):
 def test_get_simple_snmp_table_oid_bin(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", snmp_utils.OID_BIN],
-    )  # type: snmp_utils.OIDWithColumns
+        ["1", "2", "3", OID_BIN],
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -423,8 +424,8 @@ def test_get_simple_snmp_table_oid_bin(snmp_config):
 def test_get_simple_snmp_table_oid_end_bin(snmp_config):
     oid_info = (
         ".1.3.6.1.2.1.2.2.1",
-        ["1", "2", "3", snmp_utils.OID_END_BIN],
-    )  # type: snmp_utils.OIDWithColumns
+        ["1", "2", "3", OID_END_BIN],
+    )  # type: OIDWithColumns
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name="",
@@ -443,7 +444,7 @@ def test_get_simple_snmp_table_with_hex_str(snmp_config):
         [
             "6",
         ],
-    )  # type: snmp_utils.OIDWithColumns
+    )  # type: OIDWithColumns
 
     table = snmp.get_snmp_table(
         snmp_config,

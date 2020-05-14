@@ -7,33 +7,33 @@
 import abc
 import ast
 import time
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union, cast
 
 import six
 from mypy_extensions import NamedArg
 
-from cmk.base.exceptions import MKAgentError
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    OIDInfo,
+    PersistedSNMPSections,
+    RawSNMPData,
+    SectionName,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPSectionContent,
+    SNMPSections,
+)
 
 import cmk.base.check_utils as check_utils
 import cmk.base.config as config
-from cmk.utils.type_defs import HostName, HostAddress, SNMPHostConfig
-from cmk.base.check_utils import (
-    CheckPluginName,
-    PiggybackRawData,
-    SectionCacheInfo,
-    SectionName,
-)
-from cmk.base.snmp_utils import (
-    OIDInfo,
-    RawSNMPData,
-    PersistedSNMPSections,
-    SNMPSections,
-    SNMPSectionContent,
-    SNMPCredentials,
-)
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
+from cmk.base.exceptions import MKAgentError
+
 from cmk.fetchers import SNMPDataFetcher  # pylint: disable=cmk-module-layer-violation
 
 from .abstract import DataSource, management_board_ipaddress, verify_ipaddress

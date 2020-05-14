@@ -5,18 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import (  # pylint: disable=unused-import
-    Any, Text, Callable, List, Union, Tuple, Optional, Dict,
-)
 import string
+from typing import (  # pylint: disable=unused-import
+    Any, Callable, Dict, List, Optional, Text, Tuple, Union,
+)
+
 import six
 
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    DecodedString, ContextName, OID, RawValue, SNMPCommunity, SNMPCredentials, SNMPHostConfig,
-    SNMPRowInfo, SNMPTiming, CheckPluginName, DecodedBinary, DecodedValues, SectionName, SNMPTable,
-    SNMPSectionContent, SNMPSections, SNMPValueEncoding, PersistedSNMPSection,
-    PersistedSNMPSections, RawSNMPData, Column, Columns, OIDWithColumns, OIDWithSubOIDsAndColumns,
-    SingleOIDInfo, MultiOIDInfo, OIDInfo,
+from cmk.utils.type_defs import (
+    OID,
+    CheckPluginName,
+    DecodedString,
+    DecodedValues,
+    RawValue,
+    SNMPRowInfo,
+    SNMPValueEncoding,
 )
 
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],

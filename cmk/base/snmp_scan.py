@@ -4,30 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Callable, Dict, Optional, Set, Union
 import re
+from typing import Any, Callable, Dict, Iterable, Optional, Set, Union
 
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.tty as tty
 import cmk.utils.snmp_cache as snmp_cache
+import cmk.utils.tty as tty
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.regex import regex
+from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, SNMPHostConfig
 
+import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_utils
 import cmk.base.config as config
-from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    ScanFunction, SNMPHostConfig, OID, DecodedString,
-)
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 from cmk.base.api import PluginName
-
-from cmk.base.api.agent_based.section_types import (
-    SNMPDetectAtom,
-    SNMPDetectSpec,
-)
+from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
+from cmk.base.exceptions import MKSNMPError
+from cmk.base.snmp_utils import ScanFunction
 
 
 def _evaluate_snmp_detection(oid_function, detect_spec):

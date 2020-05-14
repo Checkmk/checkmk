@@ -9,8 +9,9 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Set, Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Set, Text, Tuple
 
+import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -18,24 +19,28 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
-import cmk.utils.debug
-
-import cmk.base.section as section
-import cmk.base.config as config
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.snmp_scan as snmp_scan
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.data_sources as data_sources
-import cmk.base.cleanup
-import cmk.base.decorator
-import cmk.base.check_api as check_api
-from cmk.base.data_sources.snmp import SNMPHostSections
-
-from cmk.utils.type_defs import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
-from cmk.base.snmp_utils import SNMPHostConfig  # pylint: disable=unused-import
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails, ServiceAdditionalDetails, Metric,
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    Metric,
+    ServiceAdditionalDetails,
+    ServiceDetails,
+    ServiceState,
+    SNMPHostConfig,
 )
+
+import cmk.base.check_api as check_api
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.cleanup
+import cmk.base.config as config
+import cmk.base.data_sources as data_sources
+import cmk.base.decorator
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.section as section
+import cmk.base.snmp_scan as snmp_scan
+from cmk.base.data_sources.snmp import SNMPHostSections
+from cmk.base.discovered_labels import HostLabel
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -444,8 +449,6 @@ def _run_inventory_export_hooks(host_config, inventory_tree):
 #   | to all things defined by the regular Check_MK check API and all the  |
 #   | things declared here.                                                |
 #   '----------------------------------------------------------------------'
-
-from cmk.base.discovered_labels import HostLabel
 
 
 def get_inventory_context():

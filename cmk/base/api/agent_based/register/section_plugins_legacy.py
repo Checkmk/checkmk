@@ -7,9 +7,14 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.base.check_api_utils import Service
-from cmk.base.snmp_utils import SNMPTable
-from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
+from cmk.utils.type_defs import SNMPTable
+
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
+from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+    create_detect_spec,)
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     AgentSectionContent,
@@ -20,13 +25,8 @@ from cmk.base.api.agent_based.section_types import (
     SNMPTree,
 )
 from cmk.base.api.agent_based.utils import parse_string_table
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
-
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
-    create_detect_spec,)
+from cmk.base.check_api_utils import Service
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 LayoutRecoverSuboids = List[Tuple[str]]
 

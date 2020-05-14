@@ -6,20 +6,18 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.base.config as config
-import cmk.base.snmp as snmp
-import cmk.base.snmp_utils as snmp_utils
-from cmk.base.check_api import OID_END, BINARY
-
-from cmk.base.api.agent_based.section_types import (
-    SNMPTree,
-    OIDEnd,
-)
-
-from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from testlib.base import Scenario
 
-SNMPConfig = snmp_utils.SNMPHostConfig(
+from cmk.utils.type_defs import SNMPHostConfig
+
+import cmk.base.config as config
+import cmk.base.snmp as snmp
+from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
+from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
+from cmk.base.check_api import BINARY, OID_END
+from cmk.base.snmp_utils import OIDBytes
+
+SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
     hostname="testhost",
     ipaddress="1.2.3.4",
@@ -84,7 +82,7 @@ def test_value_encoding(column):
             base='.1.3.6.1.4.1.13595.2.2.3.1',
             oids=[
                 OIDEnd(),
-                snmp_utils.OIDBytes("16"),
+                OIDBytes("16"),
             ],
         ),
         DATA_2TUPLE,

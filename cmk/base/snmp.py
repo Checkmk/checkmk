@@ -5,59 +5,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
 import subprocess
+import sys
 from contextlib import suppress
-from typing import Any, Text, cast, Iterable, Set, Tuple, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional, Set, Text, Tuple, Union, cast
+
+import six
+
+import cmk.utils.debug
+import cmk.utils.snmp_cache as snmp_cache
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.log import console
+from cmk.utils.type_defs import (
+    OID,
+    CheckPluginName,
+    Column,
+    Columns,
+    DecodedBinary,
+    DecodedString,
+    HostName,
+    OIDInfo,
+    OIDWithColumns,
+    OIDWithSubOIDsAndColumns,
+    RawValue,
+    SNMPHostConfig,
+    SNMPRowInfo,
+    SNMPTable,
+    SNMPValueEncoding,
+)
+
+import cmk.base.cleanup
+import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.snmp_utils as snmp_utils
+from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.snmp_utils import (
+    ResultColumnsDecoded,
+    ResultColumnsSanitized,
+    ResultColumnsUnsanitized,
+    SNMPContext,
+    SNMPRowInfoForStoredWalk,
+)
+
+from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation, no-name-in-module
+    ABCSNMPBackend, ClassicSNMPBackend, StoredWalkSNMPBackend,
+)
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import six
-
-import cmk.utils.debug
-import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKBailOut
-import cmk.utils.store as store
-import cmk.utils.snmp_cache as snmp_cache
-from cmk.utils.encoding import convert_to_unicode
-from cmk.utils.log import console
-
-import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.cleanup
-import cmk.base.snmp_utils as snmp_utils
-from cmk.base.api.agent_based.section_types import SNMPTree
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend, ABCSNMPBackend  # pylint: disable=cmk-module-layer-violation, no-name-in-module
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    OIDInfo,
-    OIDWithColumns,
-    OIDWithSubOIDsAndColumns,
-    OID,
-    Column,
-    SNMPValueEncoding,
-    SNMPHostConfig,
-    SNMPTable,
-    SNMPRowInfo,
-    RawValue,
-    DecodedBinary,
-    DecodedString,
-    Columns,
-)
-from cmk.base.snmp_utils import (
-    SNMPRowInfoForStoredWalk,
-    ResultColumnsUnsanitized,
-    ResultColumnsSanitized,
-    ResultColumnsDecoded,
-    SNMPContext,
-)
-
 try:
-    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation
+    from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation, ungrouped-imports
 except ImportError:
     inline = None  # type: ignore[assignment]
 

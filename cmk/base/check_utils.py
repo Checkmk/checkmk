@@ -4,23 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Union, TypeVar, Text, Optional, Dict, Tuple, Any, List, NoReturn,
-)
+from typing import Any, Dict, List, NoReturn, Optional, Text, Tuple, TypeVar, Union
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    CheckPluginName, HostName, HostState, Item, Metric, RawAgentData, ServiceAdditionalDetails,
-    ServiceCheckResult, ServiceDetails, ServiceState, SectionName,
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    Item,
+    PersistedSNMPSections,
+    RawAgentData,
+    RawSNMPData,
+    SectionName,
+    SNMPSectionContent,
+    SNMPSections,
 )
 
 from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
-
-if TYPE_CHECKING:
-    from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
-        RawSNMPData, SNMPSections, PersistedSNMPSections, SNMPSectionContent,
-    )
 
 CheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
@@ -36,10 +36,10 @@ PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
 FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
-AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
-AbstractRawData = Union[RawAgentData, "RawSNMPData"]
-AbstractSections = Union[AgentSections, "SNMPSections"]
-AbstractPersistedSections = Union[PersistedAgentSections, "PersistedSNMPSections"]
+AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
+AbstractRawData = Union[RawAgentData, RawSNMPData]
+AbstractSections = Union[AgentSections, SNMPSections]
+AbstractPersistedSections = Union[PersistedAgentSections, PersistedSNMPSections]
 
 BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
 BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",

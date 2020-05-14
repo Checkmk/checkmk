@@ -5,16 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Tuple, Optional, List
+from typing import List, Optional, Tuple
 
-from cmk.fetchers import PiggyBackDataFetcher  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
+from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
 
 import cmk.base.config as config
-from cmk.base.check_utils import RawAgentData, ServiceCheckResult
 from cmk.base.exceptions import MKAgentError
-from cmk.utils.type_defs import HostName, HostAddress
+
+from cmk.fetchers import PiggyBackDataFetcher  # pylint: disable=cmk-module-layer-violation
 
 from .abstract import CheckMKAgentDataSource
 

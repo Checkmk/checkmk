@@ -7,12 +7,14 @@
 
 These are meant to be exposed in the API
 """
-from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
-import re
 import itertools
-from cmk.base.snmp_utils import SNMPTable
-from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
+import re
+from typing import Any, Callable, Generator, List, MutableMapping, Optional, Tuple, TypeVar, Union
+
+from cmk.utils.type_defs import SNMPTable
+
 from cmk.base.api.agent_based.checking_types import IgnoreResultsError, Metric, Result, state
+from cmk.base.api.agent_based.section_types import AgentSectionContent, SNMPDetectSpec
 
 RawSection = TypeVar('RawSection', List[SNMPTable], AgentSectionContent)
 

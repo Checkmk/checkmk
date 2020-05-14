@@ -4,75 +4,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import errno
+import logging
 import os
 import socket
-import time
-import abc
-import logging
 import sys
+import time
 from pathlib import Path
-from typing import (
-    TypeVar,
-    AnyStr,
-    Dict,
-    Set,
-    List,
-    cast,
-    Tuple,
-    Union,
-    Optional,
-    Text,
-    Generic,
-)
-import six
+from typing import AnyStr, Dict, Generic, List, Optional, Set, Text, Tuple, TypeVar, Union, cast
 
-import cmk.utils.log  # TODO: Remove this!
-from cmk.utils.log import VERBOSE
+import six
 
 import cmk.utils
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
-import cmk.utils.paths
+import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
+import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
+from cmk.utils.encoding import convert_to_unicode, ensure_bytestr
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.utils.encoding import (
-    convert_to_unicode,
-    ensure_bytestr,
+from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    Metric,
+    RawAgentData,
+    SectionName,
+    ServiceCheckResult,
+    ServiceDetails,
+    ServiceState,
 )
 from cmk.utils.werks import parse_check_mk_version
 
+import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.exceptions import (
-    MKAgentError,
-    MKEmptyAgentData,
-    MKSNMPError,
-    MKIPAddressLookupError,
-)
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
-    PersistedAgentSections,
-    SectionName,
     AgentSectionContent,
-    ServiceState,
-    ServiceDetails,
-    ServiceCheckResult,
-    Metric,
-    CheckPluginName,
     AgentSections,
-    PiggybackRawData,
-    SectionCacheInfo,
-    RawAgentData,
+    BoundedAbstractPersistedSections,
     BoundedAbstractRawData,
     BoundedAbstractSections,
-    BoundedAbstractPersistedSections,
+    PersistedAgentSections,
+    PiggybackRawData,
+    SectionCacheInfo,
 )
-from cmk.utils.type_defs import HostName, HostAddress
+from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError, MKSNMPError
 
 from .host_sections import AbstractHostSections
 

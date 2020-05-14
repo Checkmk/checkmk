@@ -6,10 +6,12 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.base.data_sources.abstract as _abstract
-from cmk.base.check_utils import ServiceCheckResult
-from cmk.base.data_sources.tcp import TCPDataSource
 from testlib.base import Scenario
+
+from cmk.utils.type_defs import ServiceCheckResult
+
+import cmk.base.data_sources.abstract as _abstract
+from cmk.base.data_sources.tcp import TCPDataSource
 
 
 @pytest.mark.parametrize("result,reported,rule", [

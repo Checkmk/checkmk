@@ -5,59 +5,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import contextlib
 import errno
 import glob
+import io
 import os
+import shutil
 import sys
 import time
-import shutil
-import io
-import contextlib
-from typing import Iterator, Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
+
 import six
+
+import cmk.utils.cmk_subprocess as subprocess
+import cmk.utils.debug
+import cmk.utils.log as log
+import cmk.utils.man_pages as man_pages
+import cmk.utils.paths
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    ServiceDetails,
+    ServiceName,
+    ServiceState,
+    SNMPCredentials,
+    SNMPHostConfig,
+)
+
+import cmk.base.check_api as check_api
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.check_table as check_table
+import cmk.base.check_utils
+import cmk.base.checking
+import cmk.base.config as config
+import cmk.base.core
+import cmk.base.core_config as core_config
+import cmk.base.data_sources as data_sources
+import cmk.base.discovery as discovery
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.nagios_utils
+import cmk.base.notify as notify
+import cmk.base.parent_scan
+import cmk.base.snmp as snmp
+from cmk.base.automations import Automation, MKAutomationError, automations
+from cmk.base.core_factory import create_core
+from cmk.base.diagnostics import DiagnosticsDump
+from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
-
-import cmk.utils.paths
-import cmk.utils.debug
-import cmk.utils.log as log
-import cmk.utils.man_pages as man_pages
-from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.encoding import convert_to_unicode
-import cmk.utils.cmk_subprocess as subprocess
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
-
-import cmk.base.config as config
-import cmk.base.core
-import cmk.base.core_config as core_config
-import cmk.base.snmp as snmp
-import cmk.base.snmp_utils as snmp_utils
-import cmk.base.discovery as discovery
-import cmk.base.check_table as check_table
-from cmk.base.automations import automations, Automation, MKAutomationError
-import cmk.base.check_utils
-import cmk.base.nagios_utils
-import cmk.base.checking
-from cmk.base.core_factory import create_core
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.check_api as check_api
-import cmk.base.parent_scan
-import cmk.base.notify as notify
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.data_sources as data_sources
-from cmk.base.discovered_labels import (  # pylint: disable=unused-import
-    DiscoveredServiceLabels, DiscoveredHostLabels, ServiceLabel,
-)
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails,
-)
-from cmk.base.diagnostics import DiagnosticsDump
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -1324,7 +1327,7 @@ class AutomationDiagHost(Automation):
         # ('authNoPriv', 'md5', '11111111', '22222222')
         # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-        credentials = snmp_config.credentials  # type: snmp_utils.SNMPCredentials
+        credentials = snmp_config.credentials  # type: SNMPCredentials
 
         # Insert preconfigured communitiy
         if test == "snmpv3":
@@ -1374,7 +1377,7 @@ class AutomationDiagHost(Automation):
             return 1, "SNMP command not implemented"
 
         #TODO: What about SNMP management boards?
-        snmp_config = snmp_utils.SNMPHostConfig(
+        snmp_config = SNMPHostConfig(
             is_ipv6_primary=snmp_config.is_ipv6_primary,
             hostname=hostname,
             ipaddress=ipaddress,

@@ -5,58 +5,72 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import signal
 import socket
 import time
-import signal
-from types import FrameType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    Pattern, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn, Any,
+from types import FrameType
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Pattern,
+    Set,
+    Text,
+    Tuple,
+    Union,
 )
+
 import six
 
 import livestatus
 
-from cmk.utils.regex import regex
-import cmk.utils.misc
-import cmk.utils.tty as tty
 import cmk.utils.debug
+import cmk.utils.misc
 import cmk.utils.paths
+import cmk.utils.tty as tty
+from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
-from cmk.utils.encoding import convert_to_unicode
-from cmk.utils.exceptions import MKException
+from cmk.utils.regex import regex
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    HostState,
+    Item,
+    Metric,
+    RulesetName,
+    ServiceState,
+)
 
-from cmk.base.caching import config_cache as _config_cache
-import cmk.base.crash_reporting
-import cmk.base.config as config
-import cmk.base.section as section
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.item_state as item_state
-import cmk.base.checking as checking
-import cmk.base.data_sources as data_sources
-import cmk.base.check_table as check_table
 import cmk.base.autochecks as autochecks
-import cmk.base.core
-import cmk.base.cleanup
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.check_table as check_table
 import cmk.base.check_utils
+import cmk.base.checking as checking
+import cmk.base.cleanup
+import cmk.base.config as config
+import cmk.base.core
+import cmk.base.crash_reporting
+import cmk.base.data_sources as data_sources
 import cmk.base.decorator
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.item_state as item_state
+import cmk.base.section as section
 import cmk.base.snmp_scan as snmp_scan
-from cmk.base.exceptions import MKParseFunctionError
 import cmk.base.utils
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
-from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, CheckParameters, DiscoveredService, Item, ServiceState, Metric, RulesetName,
-    HostState, FinalSectionContent,
-)
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    DiscoveredHostLabels,
-    HostLabel,
-)
+
 from cmk.base.api import PluginName
+from cmk.base.caching import config_cache as _config_cache
+from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
+from cmk.base.core_config import MonitoringCore
+from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, HostLabel
+from cmk.base.exceptions import MKParseFunctionError
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120

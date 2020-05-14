@@ -16,8 +16,19 @@ import struct
 import sys
 import itertools
 import contextlib
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Text, Tuple, Union,
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Text,
+    Tuple,
+    Union,
     cast,
 )
 
@@ -49,10 +60,30 @@ from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.piggyback as piggyback
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
-    TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
+from cmk.utils.type_defs import (
+    HostName,
+    ServiceName,
+    Item,
+    HostAddress,
+    CheckPluginName,
+    ActiveCheckPluginName,
+    TimeperiodName,
+    ServicegroupName,
+    Labels,
+    RulesetName,
+    ContactgroupName,
+    HostgroupName,
+    LabelSources,
+    TagValue,
+    Tags,
+    TagList,
+    TagGroups,
+    Ruleset,
+    CheckVariables,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPTiming,
+)
 from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
@@ -61,13 +92,14 @@ import cmk.base.default_config as default_config
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
-import cmk.base.snmp_utils
+import cmk.base.snmp_utils as snmp_utils
 from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
-    OIDBytes, OIDCached,  # these are required in the modules' namespace to load the configuration!
-    ScanFunction, SNMPCredentials,
+    OIDBytes, OIDCached  # these are required in the modules' namespace to load the configuration!
 )
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    SectionName, CheckParameters, DiscoveredService,
+from cmk.base.check_utils import (
+    SectionName,
+    CheckParameters,
+    DiscoveredService,
 )
 try:
     from cmk.base.api import PluginName
@@ -1363,7 +1395,7 @@ check_config_variables = []  # type:  List[Any]
 # whichs OIDs to fetch for which check (for tabular information)
 snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
 # SNMP autodetection
-snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
+snmp_scan_functions = {}  # type: Dict[str, snmp_utils.ScanFunction]
 # definitions of active "legacy" checks
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
@@ -2583,8 +2615,8 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return used_parents
 
     def snmp_config(self, ipaddress):
-        # type: (HostAddress) -> cmk.base.snmp_utils.SNMPHostConfig
-        return cmk.base.snmp_utils.SNMPHostConfig(
+        # type: (HostAddress) -> SNMPHostConfig
+        return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=ipaddress,
@@ -2644,7 +2676,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         return ports[0]
 
     def _snmp_timing(self):
-        # type: () -> cmk.base.snmp_utils.SNMPTiming
+        # type: () -> SNMPTiming
         timing = self._config_cache.host_extra_conf(self.hostname, snmp_timing)
         if not timing:
             return {}
@@ -3058,7 +3090,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def management_snmp_config(self):
-        # type: () -> cmk.base.snmp_utils.SNMPHostConfig
+        # type: () -> SNMPHostConfig
         if self.management_protocol != "snmp":
             raise MKGeneralException("Management board is not configured to be contacted via SNMP")
 
@@ -3066,7 +3098,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         if address is None:
             raise MKGeneralException("Management board address is not configured")
 
-        return cmk.base.snmp_utils.SNMPHostConfig(
+        return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=address,

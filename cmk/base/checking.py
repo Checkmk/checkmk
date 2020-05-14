@@ -5,27 +5,62 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
-import os
-import signal
-from random import Random
-import time
 import copy
 import errno
-from types import FrameType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    cast, Callable, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
+import os
+import signal
+import time
+from random import Random
+from types import FrameType
+from typing import (
+    IO,
+    Any,
+    AnyStr,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Text,
+    Tuple,
+    Union,
+    cast,
 )
 
 import six
 
-import cmk.utils.version as cmk_version
+import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-import cmk.utils.debug
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    Item,
+    Metric,
+    SectionName,
+    ServiceAdditionalDetails,
+    ServiceCheckResult,
+    ServiceDetails,
+    ServiceName,
+    ServiceState,
+)
 
+import cmk.base.check_api_utils as check_api_utils
+import cmk.base.check_table as check_table
+import cmk.base.check_utils
+import cmk.base.config as config
+import cmk.base.core
+import cmk.base.cpu_tracking as cpu_tracking
+import cmk.base.crash_reporting
+import cmk.base.data_sources as data_sources
+import cmk.base.decorator
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.item_state as item_state
+import cmk.base.utils
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
@@ -33,24 +68,8 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
     wrap_parameters,
 )
-import cmk.base.utils
-import cmk.base.core
-import cmk.base.crash_reporting
-import cmk.base.config as config
-import cmk.base.cpu_tracking as cpu_tracking
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.data_sources as data_sources
-import cmk.base.item_state as item_state
-import cmk.base.check_table as check_table
+from cmk.base.check_utils import CheckParameters, Service
 from cmk.base.exceptions import MKParseFunctionError
-import cmk.base.check_utils
-import cmk.base.decorator
-import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric, Service,
-    CheckPluginName, Item, SectionName, CheckParameters,
-)
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module

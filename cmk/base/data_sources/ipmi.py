@@ -4,18 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Optional, Set, List
+from typing import List, Optional, Set, cast
 
-from cmk.utils.type_defs import HostAddress, HostName
-
-from cmk.base.exceptions import MKAgentError
-from cmk.base.config import IPMICredentials
-from cmk.base.check_utils import (
+from cmk.utils.type_defs import (
     CheckPluginName,
-    ServiceCheckResult,
+    HostAddress,
+    HostName,
     RawAgentData,
+    ServiceCheckResult,
     ServiceDetails,
 )
+
+from cmk.base.config import IPMICredentials
+from cmk.base.exceptions import MKAgentError
+
 from cmk.fetchers import IPMIDataFetcher  # pylint: disable=cmk-module-layer-violation
 
 from .abstract import CheckMKAgentDataSource, management_board_ipaddress

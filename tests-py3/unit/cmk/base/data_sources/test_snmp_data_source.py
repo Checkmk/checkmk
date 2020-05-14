@@ -9,19 +9,18 @@ from contextlib import suppress
 import pytest  # type: ignore[import]
 from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
+from testlib.base import Scenario
+
+from cmk.utils.type_defs import RawSNMPData, SNMPTable
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp as snmp
-import cmk.base.snmp_utils as snmp_utils
-from cmk.base.api.agent_based.section_types import (
-    SNMPTree,
-    OIDEnd,
-)
+from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
 from cmk.base.data_sources.abstract import DataSource, FileCache, store
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
-from cmk.base.snmp_utils import RawSNMPData, SNMPTable
-from testlib.base import Scenario
+from cmk.base.snmp_utils import OIDBytes
 
 
 @pytest.fixture(autouse=True)
@@ -259,7 +258,7 @@ def test_execute_with_canned_responses(monkeypatch):
         base='.1.3.6.1.4.1.13595.2.2.3.1',
         oids=[
             OIDEnd(),
-            snmp_utils.OIDBytes("16"),
+            OIDBytes("16"),
         ],
     )
     name = "acme_agent_sessions"  # Must be in config.registered_snmp_sections

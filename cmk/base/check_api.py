@@ -87,24 +87,50 @@ import time
 import pprint  # noqa: F401 # pylint: disable=unused-import
 import calendar
 
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union,
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Text,
+    Tuple,
+    Union,
 )
 
 import six
 
+import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
+import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
-
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
-import cmk.utils as _cmk_utils
-import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.rulesets.tuple_rulesets import (
+    # TODO: Only used by logwatch check. Can we clean this up?
+    get_rule_options,
+    # These functions were used in some specific checks until 1.6. Don't add it to
+    # the future check API. It's kept here for compatibility reasons for now.
+    in_extraconf_hostlist,
+    hosttags_match_taglist,
+)
+from cmk.utils.type_defs import (
+    HostName,
+    ServiceName,
+    CheckPluginName,
+    MetricName,
+    ServiceState,
+    ServiceDetails,
+    ServiceCheckResult,
+)
+
 import cmk.base.config as _config
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
@@ -128,20 +154,6 @@ from cmk.base.check_api_utils import (
     service_description,
     check_type,
     Service,
-)
-from cmk.utils.rulesets.tuple_rulesets import (
-    # TODO: Only used by logwatch check. Can we clean this up?
-    get_rule_options,
-    # These functions were used in some specific checks until 1.6. Don't add it to
-    # the future check API. It's kept here for compatibility reasons for now.
-    in_extraconf_hostlist,
-    hosttags_match_taglist,
-)
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName, CheckPluginName, MetricName,
-)
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    ServiceState, ServiceDetails, ServiceCheckResult,
 )
 
 Warn = Union[None, int, float]

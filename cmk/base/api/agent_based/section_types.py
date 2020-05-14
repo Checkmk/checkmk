@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for agent_based plugins
 """
-from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 import collections
+from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
+
+from cmk.utils.type_defs import SNMPTable
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
-from cmk.base.snmp_utils import SNMPTable, OIDSpec
 from cmk.base.discovered_labels import HostLabel
+from cmk.base.snmp_utils import OIDSpec
 
 AgentParseFunction = Callable[[AgentSectionContent], Any]
 

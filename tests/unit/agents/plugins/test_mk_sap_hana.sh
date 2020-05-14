@@ -306,5 +306,24 @@ test_mk_sap_hana_unknown_version() {
 
 }
 
+test_mk_sap_hana_skip_sql_queries() {
+
+    # Mocks
+    mk_hdbsql () {
+        # Return code 43 in case SQL DB is not open (see SUP-1436 for details)
+        return 43
+    }
+
+    actual=$(do_query "sid" "inst" "inst_user")
+    # SQL DB not available so we only want non-sql sections to be executed
+    expected_sections=("sap_hana_replication_status" "sap_hana_connect:sep(59)")
+
+    for exp_section in "${expected_sections[@]}"
+    do
+        :
+        assertContains "$actual" "$exp_section"
+    done
+}
+
 # shellcheck disable=SC1090
 . "${DIR}/../../../shunit2"

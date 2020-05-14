@@ -11,10 +11,20 @@ checkname = 'sap_hana_replication_status'
 info = [
     ['[[H62', '10]]'], ['systemReplicationStatus:', '10'],
     ['this', 'system', 'is', 'not', 'a', 'system', 'replication', 'site'],
-    ['[[Y04', '0]]'], ['systemReplicationStatus:', '0'], ['mode:', 'primary']
-]
+    ['[[Y04', '0]]'], ['systemReplicationStatus:', '0'], ['mode:', 'primary'],
+    ['[[AH', '1234]]'], ['systemReplicationStatus:', '12'],
+    ['this', 'system', 'is', 'either', 'not', 'running', 'or', 'not', 'primary', 'system', 'replication', 'site'],
+    ['Local', 'System', 'Replication', 'State'],
+    ['~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'],
+    ['mode:', 'SYNC'],
+    ['site', 'id:', '2'],
+    ['site', 'name:', 'foo'],
+    ['active', 'primary', 'site:', '1'],
+    ['primary', 'masters:', 'host1', 'host2', 'host3']
+    ]
 
-discovery = {'': [('Y04 0', {})]}
+discovery = {'': [('Y04 0', {}), ('AH 1234', {})]}
+
 
 checks = {
     '': [
@@ -23,6 +33,15 @@ checks = {
                 (
                     3,
                     'System replication: unknown status from replication script',
+                    []
+                )
+            ]
+        ),
+        (
+            'AH 1234', {}, [
+                (
+                    0,
+                    'System replication: passive',
                     []
                 )
             ]

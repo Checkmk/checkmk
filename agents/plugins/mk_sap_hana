@@ -521,60 +521,73 @@ function do_query () {
         HOSTNAME=$(hostname)
     fi
 
-    echo "<<<sap_hana_status:sep(59)>>>"
-    if ! status_output=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_status)"); then
-        # For single instances we could execute the line above, however,
-        # this will create problems when we want to cluster the check,
-        # so we now exit nothing if an instance isn't running.
-        return
+    if status_output=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_status)"); then
+        # We only execute all SQL queries in case the SQL DB is open & responding.
+        # Otherwise only execute sections which are using other interfaces (e.g. python or odbcreg).
+        # This accelerates the plugin execution tremendously as we do not have to wait for all the sql timeouts.
+
+        echo "<<<sap_hana_status:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        echo "$status_output"
+
+        echo "<<<sap_hana_backup:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_snapshots)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_complete)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_log)"
+
+        echo "<<<sap_hana_diskusage:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_diskusage)"
+
+        echo "<<<sap_hana_data_volume:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_data_volume "$HOSTNAME")"
+
+        echo "<<<sap_hana_license:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_license)"
+
+        echo "<<<sap_hana_ess:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_started "$HOSTNAME")"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_active)"
+
+        echo "<<<sap_hana_ess_migration:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_migration)"
+
+        echo "<<<sap_hana_memrate:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_memrate "$HOSTNAME")"
+
+        echo "<<<sap_hana_events:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_open)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_disabled_alerts)"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_high_alerts)"
+
+        echo "<<<sap_hana_proc:sep(59)>>>"
+        echo "$INSTANCE_NAME"
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_proc "$HOSTNAME")"
+
+        echo "<<<fileinfo:sep(59)>>>"
+        date +%s
+        mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_fileinfo "$SID" "$INSTANCE" "$HOSTNAME")"
+
+        # echo "<<<sap_hana_threads:sep(59)>>>"
+        # echo $INSTANCE_NAME
+        # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_max "$HOSTNAME")"
+        # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_service_name "$HOSTNAME")"
+
+        echo "<<<logwatch>>>"
+        echo "[[[SAP HANA Alerts for ${SID} ${INSTANCE}]]]"
+        sap_hana_check_alerts "$SID" "$INSTANCE" "$INSTANCE_USER"
     fi
-    echo "$INSTANCE_NAME"
-    echo "$status_output"
-
-    echo "<<<sap_hana_backup:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_snapshots)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_complete)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_backup_log)"
-
-    echo "<<<sap_hana_diskusage:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_diskusage)"
-
-    echo "<<<sap_hana_data_volume:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_data_volume "$HOSTNAME")"
-
-    echo "<<<sap_hana_license:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_license)"
 
     echo "<<<sap_hana_replication_status>>>"
     echo "$INSTANCE_NAME"
     sap_hana_replication_status "$SID" "$INSTANCE" "$INSTANCE_USER"
-
-    echo "<<<sap_hana_ess:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_started "$HOSTNAME")"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_active)"
-
-    echo "<<<sap_hana_ess_migration:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_ess_migration)"
-
-    echo "<<<sap_hana_memrate:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_memrate "$HOSTNAME")"
-
-    echo "<<<sap_hana_events:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_open)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_disabled_alerts)"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_events_high_alerts)"
-
-    echo "<<<sap_hana_proc:sep(59)>>>"
-    echo "$INSTANCE_NAME"
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_proc "$HOSTNAME")"
 
     if [ -v PASSWORD_CONNECT ] && [ -v USER_CONNECT ]; then
         echo "<<<sap_hana_connect:sep(59)>>>"
@@ -582,18 +595,6 @@ function do_query () {
         sap_hana_connect "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$status_output"
     fi
 
-    # echo "<<<sap_hana_threads:sep(59)>>>"
-    # echo $INSTANCE_NAME
-    # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_max "$HOSTNAME")"
-    # mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_sap_hana_threads_service_name "$HOSTNAME")"
-
-    echo "<<<fileinfo:sep(59)>>>"
-    date +%s
-    mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$(query_fileinfo "$SID" "$INSTANCE" "$HOSTNAME")"
-
-    echo "<<<logwatch>>>"
-    echo "[[[SAP HANA Alerts for ${SID} ${INSTANCE}]]]"
-    sap_hana_check_alerts "$SID" "$INSTANCE" "$INSTANCE_USER"
 }
 
 

@@ -9,7 +9,7 @@ import traceback
 import six
 
 from cmk.gui.globals import html
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def test_ABCHTMLGenerator(register_builtin_html):
@@ -54,7 +54,7 @@ def test_ABCHTMLGenerator(register_builtin_html):
                                      id_=six.text_type("something"),
                                      class_=six.text_type("test_%s") % a)
             except Exception as e:
-                print(traceback.print_exc())
+                traceback.print_exc()
                 print(e)
 
 
@@ -69,7 +69,7 @@ def test_exception_handling(register_builtin_html):
     try:
         raise Exception("Test")
     except Exception as e:
-        assert compare_html(html.render_div(e), "<div>%s</div>" % e)
+        assert compare_html(html.render_div(str(e)), "<div>%s</div>" % e)
 
 
 def test_text_input(register_builtin_html):

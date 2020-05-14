@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-# pylint: disable=redefined-outer-name
+
 import copy
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import pytest  # type: ignore[import]
 import six
-import cmk.gui.config as config
 
+import cmk.gui.config as config
 import cmk.utils.version as cmk_version
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
@@ -20,9 +22,11 @@ from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.type_defs import PainterSpec
+import cmk.gui.views
 
-@pytest.fixture()
-def view(register_builtin_html):
+
+@pytest.fixture(name="view")
+def view_fixture(register_builtin_html):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -308,7 +312,7 @@ def test_registered_commands():
             'tables': ['crash'],
             'title': u'Delete crash reports',
         },
-    }
+    }  # type: Dict[str, Dict[str, Any]]
 
     if not cmk_version.is_raw_edition():
         expected.update({'edit_downtimes': {
@@ -684,7 +688,7 @@ def test_registered_datasources():
             'table': 'servicesbyhostgroup',
             'title': u'Services grouped by host groups'
         },
-    }
+    }  # type: Dict[str, Dict[str, Any]]
 
     names = cmk.gui.plugins.views.data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
@@ -3997,7 +4001,7 @@ def test_registered_painters():
             'sorter': 'inv_software_packages',
             'title': u'Inventory: Software \u27a4 Packages'
         },
-    }
+    }  # type: Dict[str, Dict[str, Any]]
 
     #xx = {}
     #for ident, p in cmk.gui.plugins.views.multisite_painters.items():
@@ -4057,7 +4061,7 @@ def test_legacy_register_painter(monkeypatch):
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
     def rendr(row):
-        return "xyz"
+        return ("abc", "xyz")
 
     cmk.gui.plugins.views.utils.register_painter(
         "abc", {
@@ -4081,7 +4085,7 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=None) == "xyz"
+    assert painter.render(row={}, cell=dummy_cell) == ("abc", "xyz")
     assert painter.group_by(row={}) == "xyz"
 
 
@@ -5690,7 +5694,7 @@ def test_registered_sorters():
             'columns': ['host_filename'],
             'title': u'WATO folder - relative path'
         },
-    }
+    }  # type: Dict[str, Dict[str, Any]]
 
     for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
         sorter = sorter_class()
@@ -5790,6 +5794,7 @@ def test_get_needed_join_columns(view):
 
     assert sorted(columns) == sorted(expected_columns)
 
+
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
@@ -5803,10 +5808,12 @@ def test_create_view_basics():
     assert view.user_sorters is None
     assert view.only_sites is None
 
+
 def test_view_row_limit(view):
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
+
 
 @pytest.mark.parametrize("limit,permissions,result", [
     (None, [], 1000),
@@ -5832,10 +5839,12 @@ def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, p
     mocker.patch.object(config.user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 
+
 def test_view_only_sites(view):
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
+
 
 def test_view_user_sorters(view):
     assert view.user_sorters is None
@@ -6290,6 +6299,7 @@ def test_registered_display_hints():
 
     found = cmk.gui.plugins.views.inventory_displayhints.keys()
     assert sorted(expected) == sorted(found)
+
 
 def test_get_inventory_display_hint():
     hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")

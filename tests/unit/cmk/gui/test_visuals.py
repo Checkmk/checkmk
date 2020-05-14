@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
@@ -14,6 +16,8 @@ import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
+import cmk.gui.plugins.visuals.filters
+from cmk.gui.type_defs import Visual  # pylint: disable=unused-import
 
 
 def test_get_filter():
@@ -72,7 +76,6 @@ def _expected_visual_types():
         'title': u'report',
         },
         })
-
 
     return expected_visual_types
 
@@ -3458,7 +3461,7 @@ expected_filters = {
         'sort_index': 10,
         'title': u'WATO Folder'
     },
-}
+}  # type: Dict[str, Dict[str, Any]]
 
 
 # These tests make adding new elements needlessly painful.
@@ -3659,7 +3662,7 @@ expected_infos = {
         'title': u'Service Group',
         'title_plural': u'Service Groups'
     },
-}
+}  # type: Dict[str, Dict[str, Any]]
 
 
 # These tests make adding new elements needlessly painful.
@@ -3740,6 +3743,7 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
+
 @pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
     # No single context, no filter
     (["host"], [], [("abc", "dingeling")], {}),
@@ -3793,15 +3797,17 @@ def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_co
 
     assert context == expected_context
 
+
 def test_verify_single_infos_has_context():
-    visual = {"single_infos": ["host"], "context": {"host": "abc"},}
+    visual = {"single_infos": ["host"], "context": {"host": "abc"},}  # type: Visual
     visuals.verify_single_infos(visual, visual["context"])
 
 
 def test_verify_single_infos_missing_context():
-    visual = {"single_infos": ["host"], "context": {},}
+    visual = {"single_infos": ["host"], "context": {},}  # type: Visual
     with pytest.raises(MKUserError, match="Missing context information"):
         visuals.verify_single_infos(visual, visual["context"])
+
 
 def test_context_uri_vars(register_builtin_html):
     visual = {
@@ -3812,14 +3818,14 @@ def test_context_uri_vars(register_builtin_html):
                 "ag": "1"
             },
         },
-    }
+    }  # type: Visual
 
     visual2 = {
         "single_infos": [],
         "context": {
             "hu_filter": {"hu": "hu"},
         },
-    }
+    }  # type: Visual
 
     html.request.set_var("bla", "blub")
     assert html.request.var("bla") == "blub"

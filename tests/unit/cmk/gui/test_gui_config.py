@@ -906,7 +906,7 @@ def test_theme_broken_meta(my_theme):
 
 
 def test_html_set_theme(my_theme, register_builtin_html):
-    html.set_theme(None)
+    html.set_theme("")
     assert html.get_theme() == "facelift"
 
     html.set_theme("not_existing")

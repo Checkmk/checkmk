@@ -178,7 +178,12 @@ def test_registered_pages():
             'sla_details',
         ]
 
-    assert sorted(cmk.gui.pages.page_registry.keys()) == sorted(expected_pages)
+    # TODO: Depending on how we call the test (single test or whole package) we
+    # see this page or we don't...
+    actual = sorted(p  #
+                    for p in cmk.gui.pages.page_registry.keys()
+                    if p != "switch_customer")
+    assert actual == sorted(expected_pages)
 
 
 def test_pages_register(monkeypatch, capsys):
@@ -189,7 +194,7 @@ def test_pages_register(monkeypatch, capsys):
         sys.stdout.write("123")
 
     handler = cmk.gui.pages.get_page_handler("123handler")
-    assert hasattr(handler, '__call__')
+    assert callable(handler)
 
     handler()
     assert capsys.readouterr()[0] == "123"
@@ -205,7 +210,7 @@ def test_pages_register_handler(monkeypatch, capsys):
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
 
     handler = cmk.gui.pages.get_page_handler("234handler")
-    assert hasattr(handler, '__call__')
+    assert callable(handler)
 
     handler()
     assert capsys.readouterr()[0] == "234"
@@ -227,5 +232,8 @@ def test_page_registry_register_page(monkeypatch, capsys):
 
 
 def test_get_page_handler_default():
-    handler = cmk.gui.pages.get_page_handler("123handler", "XYZ")
-    assert handler == "XYZ"
+    def dummy():
+        pass
+
+    handler = cmk.gui.pages.get_page_handler("123handler", dummy)
+    assert handler is dummy

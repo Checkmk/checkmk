@@ -13,7 +13,7 @@ import six
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.globals import html
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def read_out_simple_table(text):

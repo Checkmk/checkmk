@@ -129,11 +129,15 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 def test_timerange_value_to_json_conversion():
     with on_time("2020-03-02", "UTC"):
         for choice in vs.Timerange().choices():
+            # TODO: Figure out what's going on here regarding types...
             if choice[0] == "age":
-                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds")
+                choice = (
+                    ("age", 12345),  # type: ignore[assignment]
+                    "The last..., 3 hours 25 minutes 45 seconds")
             elif choice[0] == "date":
-                choice = (("date", (1582671600.0, 1582844400.0)),
-                          "Date range, 2020-02-25, 2020-02-27")
+                choice = (
+                    ("date", (1582671600.0, 1582844400.0)),  # type: ignore[assignment]
+                    "Date range, 2020-02-25, 2020-02-27")
             assert vs.Timerange().value_to_text(choice[0]) == choice[1]
             json_value = vs.Timerange().value_to_json(choice[0])
             assert vs.Timerange().value_from_json(json_value) == choice[0]

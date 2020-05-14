@@ -75,7 +75,7 @@ test-mypy3:
 	    grep -v $$(realpath '../agents')/bakery; \
 	else \
 	    cat; \
-	fi | xargs -n 1500 echo $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+	fi | xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
 
 test-mypy3-raw:
 	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

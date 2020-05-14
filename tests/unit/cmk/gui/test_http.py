@@ -96,7 +96,7 @@ def test_get_binary_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_non_ascii():
-    assert html.request.get_binary_input(b"abc") == u"äbc".encode("utf-8")
+    assert html.request.get_binary_input("abc") == u"äbc".encode("utf-8")
 
 
 @pytest.mark.usefixtures("set_vars")

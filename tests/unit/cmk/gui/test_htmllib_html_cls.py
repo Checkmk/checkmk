@@ -7,7 +7,7 @@
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def test_render_help_empty(register_builtin_html):

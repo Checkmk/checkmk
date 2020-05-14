@@ -12,7 +12,7 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Optional, Text  # pylint: disable=unused-import
+from typing import Dict, Mapping, Optional, Text  # pylint: disable=unused-import
 
 import six
 
@@ -556,7 +556,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
 
 def _pack_crash_report(serialized_crash_report):
-    # type: (Dict[str, Optional[bytes]]) -> bytes
+    # type: (Mapping[str, Optional[bytes]]) -> bytes
     """Returns a byte string representing the current crash report in tar archive format"""
     buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:

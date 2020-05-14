@@ -22,9 +22,10 @@ sudo rsync \
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
         if [ -e ../../$WHAT/cmk/fetchers/.f12 ]; then
-			ONLY_COPY=1 ALL_EDITIONS=0 \
-				bash \
-				../../$WHAT/cmk/fetchers/.f12
+            (
+                cd ../../$WHAT/cmk/fetchers
+                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
+            )
         fi
     done
 fi

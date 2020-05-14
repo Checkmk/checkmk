@@ -140,4 +140,7 @@ if [ -z "$ONLY_COPY" ]; then
     )
 fi
 
-bash fetchers/.f12
+(
+    cd fetchers
+    bash .f12
+)

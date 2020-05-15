@@ -117,13 +117,18 @@ def test_active_check_macros(test_cfg, site, web):
     def descr(var):
         return "Macro %s" % var.strip("$")
 
+    if not is_gui_py3:
+        api_str_type = bytes
+    else:
+        api_str_type = str
+
     ruleset = []
     for var, value in macros.items():
         ruleset.append({
             "value": {
                 'service_description': descr(var),
                 # TODO: Remove this once the GUI uses Python 3
-                'command_line': ('echo "Output: %s"' % var).encode("utf-8"),
+                'command_line': api_str_type('echo "Output: %s"' % var),
             },
             "condition": {},
         })

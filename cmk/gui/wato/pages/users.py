@@ -940,7 +940,9 @@ class ModeEditUser(WatoMode):
         return watolib.load_configuration_settings().get("enable_rulebased_notifications")
 
     def _pw_suffix(self):
-        return 'new' if self._user_id is None else base64.b64encode(self._user_id.encode("utf-8"))
+        # type: () -> str
+        return 'new' if self._user_id is None else six.ensure_str(
+            base64.b64encode(self._user_id.encode("utf-8")))
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only

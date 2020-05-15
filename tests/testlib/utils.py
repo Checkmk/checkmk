@@ -170,7 +170,7 @@ def is_running_as_site_user():
 
 # TODO: Drop this and cleanup all call sites
 def is_gui_py3():
-    return True
+    return False
 
 
 def add_python_paths():

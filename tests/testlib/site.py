@@ -638,7 +638,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     # Add some test configuration that is not test specific. These settings are set only to have a
     # bit more complex Check_MK config.
     def _add_wato_test_config(self, web):
-        if not is_gui_py3:
+        if not is_gui_py3():
             api_str_type = bytes
         else:
             api_str_type = str

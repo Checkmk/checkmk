@@ -50,9 +50,8 @@ from cmk.base.snmp_utils import (
     SNMPRowInfoForStoredWalk,
 )
 
-from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation, no-name-in-module
-    ABCSNMPBackend, ClassicSNMPBackend, StoredWalkSNMPBackend,
-)
+from cmk.fetchers.snmp_backend import ABCSNMPBackend, ClassicSNMPBackend  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -275,8 +274,10 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_contexts:
         try:
-            snmp_backend = SNMPBackendFactory().factory(snmp_config,
-                                                        enforce_stored_walks=_enforce_stored_walks)
+            snmp_backend = SNMPBackendFactory().factory(
+                snmp_config,
+                enforce_stored_walks=_enforce_stored_walks,
+                record_inline_stats=config.record_inline_snmp_stats)
             value = snmp_backend.get(snmp_config, oid, context_name)
 
             if value is not None:
@@ -299,19 +300,6 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
     snmp_cache.set_single_oid_cache(oid, decoded_value)
     return decoded_value
-
-
-class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
-    @staticmethod
-    def factory(snmp_config, enforce_stored_walks):
-        # type: (SNMPHostConfig, bool) -> ABCSNMPBackend
-        if enforce_stored_walks or snmp_config.is_usewalk_host:
-            return StoredWalkSNMPBackend()
-
-        if snmp_config.is_inline_snmp_host:
-            return inline.InlineSNMPBackend(config.record_inline_snmp_stats)
-
-        return ClassicSNMPBackend()
 
 
 def walk_for_export(snmp_config, oid):
@@ -439,8 +427,10 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        snmp_backend = SNMPBackendFactory().factory(snmp_config,
-                                                    enforce_stored_walks=_enforce_stored_walks)
+        snmp_backend = SNMPBackendFactory().factory(
+            snmp_config,
+            enforce_stored_walks=_enforce_stored_walks,
+            record_inline_stats=config.record_inline_snmp_stats)
 
         rows = snmp_backend.walk(snmp_config,
                                  fetchoid,

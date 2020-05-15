@@ -437,13 +437,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                logger.debug("Executing .f12 in \"%s\"...", path)
+                print("Executing .f12 in \"%s\"...", path)
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash .f12" % (path, self.id)) >> 8 == 0
-                logger.debug("Executing .f12 in \"%s\" DONE", path)
+                print("Executing .f12 in \"%s\" DONE", path)
                 sys.stdout.flush()
 
     def _set_number_of_helpers(self):

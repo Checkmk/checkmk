@@ -1145,7 +1145,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
             u'identification': [
                 u'combined', {
                     u'context': {
-                        u'host_name': u'test-host-get-graph',
+                        u'host': u'test-host-get-graph',
                         u'service': {
                             u'service': u'CPU load'
                         },

@@ -11,7 +11,6 @@ from __future__ import print_function
 import logging
 import collections
 import pytest  # type: ignore[import]
-import six
 
 from testlib.utils import api_str_type
 from testlib import web  # pylint: disable=unused-import

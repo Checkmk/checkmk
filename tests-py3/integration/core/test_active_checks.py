@@ -12,6 +12,7 @@ import logging
 import collections
 import pytest  # type: ignore[import]
 
+from testlib.utils import is_gui_py3
 from testlib import web  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
@@ -43,19 +44,24 @@ def test_cfg(request, web, site):
 
 def test_active_check_execution(test_cfg, site, web):
     try:
+        if not is_gui_py3:
+            api_str_type = bytes
+        else:
+            api_str_type = str
+
         # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            b"custom_checks",
+            api_str_type("custom_checks"),
             {
-                b"ruleset": {
+                api_str_type("ruleset"): {
                     # Main folder
-                    b"": [{
-                        b"value": {
-                            b'service_description': u'\xc4ctive-Check',
-                            b'command_line': b'echo "123"'
+                    api_str_type(""): [{
+                        api_str_type("value"): {
+                            api_str_type('service_description'): u'\xc4ctive-Check',
+                            api_str_type('command_line'): api_str_type('echo "123"')
                         },
-                        b"condition": {},
-                        b"options": {},
+                        api_str_type("condition"): {},
+                        api_str_type("options"): {},
                     },],
                 }
             })
@@ -73,12 +79,17 @@ def test_active_check_execution(test_cfg, site, web):
         assert result[2] == 0
         assert result[3] == "123"
     finally:
+        if not is_gui_py3:
+            api_str_type = bytes
+        else:
+            api_str_type = str
+
         # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            b"custom_checks",
+            api_str_type("custom_checks"),
             {
-                b"ruleset": {
-                    b"": [],  # -> folder
+                api_str_type("ruleset"): {
+                    api_str_type(""): [],  # -> folder
                 }
             })
         web.activate_changes()

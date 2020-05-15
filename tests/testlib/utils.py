@@ -168,6 +168,11 @@ def is_running_as_site_user():
         return False
 
 
+# TODO: Drop this and cleanup all call sites
+def is_gui_py3():
+    return True
+
+
 def add_python_paths():
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))

@@ -159,9 +159,14 @@ class APICallGrafanaConnector(APICallCollection):
         return response
 
     def _get_graph_annotations(self, request):
+        if "host" in request["context"]:
+            single_infos = ["host"]
+        else:
+            single_infos = []
+
         filter_headers, only_sites = self._get_filter_headers_of_context(datasource_name="services",
                                                                          context=request["context"],
-                                                                         single_infos=[])
+                                                                         single_infos=single_infos)
 
         return {
             "availability_timelines": self._get_availability_timelines(

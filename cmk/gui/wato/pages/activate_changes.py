@@ -444,9 +444,12 @@ class ModeAjaxStartActivation(AjaxPage):
 
         activate_foreign = request.get("activate_foreign", "0") == "1"
 
-        activation_id = manager.start(affected_sites, six.ensure_str(activate_until),
-                                      None if comment is None else six.ensure_str(comment),
-                                      activate_foreign)
+        activation_id = manager.start(
+            sites=affected_sites,
+            activate_until=six.ensure_str(activate_until),
+            comment=None if comment is None else six.ensure_str(comment),
+            activate_foreign=activate_foreign,
+        )
 
         return {
             "activation_id": activation_id,

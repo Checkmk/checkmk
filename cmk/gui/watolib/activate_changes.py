@@ -507,12 +507,13 @@ class ActivateChangesManager(ActivateChanges):
             activate_foreign=False,  # type: bool
             prevent_activate=False  # type: bool
     ):
+        self._activate_foreign = activate_foreign
+
         self._sites = self._get_sites(sites)
         self._site_snapshot_settings = self._get_site_snapshot_settings(self._sites)
         self._activate_until = (self._get_last_change_id()
                                 if activate_until is None else activate_until)
         self._comment = comment
-        self._activate_foreign = activate_foreign
         self._activation_id = self._new_activation_id()
         self._time_started = time.time()
         self._prevent_activate = prevent_activate

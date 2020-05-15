@@ -7,9 +7,13 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-colorama = "==0.4.1"  # Windows has to have some color output
-pyyaml = "==5.1.2"  # to support the agent config
-
+colorama = "==0.4.1"    # Windows has to have some color output
+pyyaml = "==5.1.2"      # to support the agent config
+certifi= "==2020.4.5.1" # jolokia
+chardet = "==3.0.4"     # jolokia
+idna = "==2.9"          # jolokia
+requests = "==2.23.0"   # jolokia
+urllib3 = "==1.25.9"    # jolokia
 
 [requires]
 python_version = "3.8"

@@ -173,6 +173,12 @@ def is_gui_py3():
     return False
 
 
+def api_str_type(s):
+    if not is_gui_py3():
+        return six.ensure_binary(s)
+    return six.ensure_str(s)
+
+
 def add_python_paths():
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))

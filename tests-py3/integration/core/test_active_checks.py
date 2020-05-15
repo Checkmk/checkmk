@@ -11,8 +11,9 @@ from __future__ import print_function
 import logging
 import collections
 import pytest  # type: ignore[import]
+import six
 
-from testlib.utils import is_gui_py3
+from testlib.utils import api_str_type
 from testlib import web  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
@@ -44,11 +45,6 @@ def test_cfg(request, web, site):
 
 def test_active_check_execution(test_cfg, site, web):
     try:
-        if not is_gui_py3():
-            api_str_type = bytes
-        else:
-            api_str_type = str
-
         # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
             api_str_type("custom_checks"),
@@ -79,11 +75,6 @@ def test_active_check_execution(test_cfg, site, web):
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        if not is_gui_py3():
-            api_str_type = bytes
-        else:
-            api_str_type = str
-
         # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
             api_str_type("custom_checks"),
@@ -116,11 +107,6 @@ def test_active_check_macros(test_cfg, site, web):
 
     def descr(var):
         return "Macro %s" % var.strip("$")
-
-    if not is_gui_py3():
-        api_str_type = bytes
-    else:
-        api_str_type = str
 
     ruleset = []
     for var, value in macros.items():

@@ -29,7 +29,7 @@ from testlib.utils import (
     cmc_path,
     virtualenv_path,
     current_base_branch_name,
-    is_gui_py3,
+    api_str_type,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -638,11 +638,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     # Add some test configuration that is not test specific. These settings are set only to have a
     # bit more complex Check_MK config.
     def _add_wato_test_config(self, web):
-        if not is_gui_py3():
-            api_str_type = bytes
-        else:
-            api_str_type = str
-
         # This entry is interesting because it is a check specific setting. These
         # settings are only registered during check loading. In case one tries to
         # load the config without loading the checks in advance, this leads into an

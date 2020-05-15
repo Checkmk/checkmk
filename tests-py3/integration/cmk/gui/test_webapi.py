@@ -1136,7 +1136,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
                 "site": {
                     "site": web.site.id
                 },
-                "host_name": "test-host-get-graph",
+                "host": "test-host-get-graph",
             },
         })
 
@@ -1177,7 +1177,7 @@ def test_get_graph_annotations(web, graph_test_config):
                 "service": {
                     "service": "CPU load",
                 },
-                "host_name": "test-host-get-graph",
+                "host": "test-host-get-graph",
             },
             "start_time": start_time,
             "end_time": end_time,

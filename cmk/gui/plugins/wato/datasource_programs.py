@@ -468,7 +468,9 @@ def _valuespec_generic_metrics_prometheus():
 def _validate_prometheus_service_metrics(value, _varprefix):
     used_metric_names = []
     for metric_details in value:
-        metric_name = metric_details["metric_name"]
+        metric_name = metric_details.get("metric_name")
+        if not metric_name:
+            continue
         if metric_name in used_metric_names:
             raise MKUserError(metric_name, _("Each metric must be unique for a service"))
         used_metric_names.append(metric_name)

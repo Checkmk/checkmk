@@ -160,11 +160,13 @@ class NodeExporter:
             ("Buffers", "node_memory_Buffers_bytes/1024"),
             ("Cached", "node_memory_Cached_bytes/1024"),
             ("SwapCached", "node_memory_SwapCached_bytes/1024"),
-            ("Active(anon)", "node_memory_Active_bytes/1024"),
-            ("Inactive(anon)", "node_memory_Inactive_bytes/1024"),
+            ("Active", "node_memory_Active_bytes/1024"),
+            ("Inactive", "node_memory_Inactive_bytes/1024"),
+            ("Active(anon)", "node_memory_AnonPages_bytes/1024"),
+            ("Inactive(anon)", "node_memory_Inactive_anon_bytes/1024"),
             ("Active(file)", "node_memory_Active_file_bytes/1024"),
             ("Inactive(file)", "node_memory_Inactive_bytes/1024"),
-            ("Unevctaible", "node_memory_Unevictable_bytes/1024"),
+            ("Unevictable", "node_memory_Unevictable_bytes/1024"),
             ("Mlocked", "node_memory_Mlocked_bytes/1024"),
             ("SwapTotal", "node_memory_SwapTotal_bytes/1024"),
             ("SwapFree", "node_memory_SwapFree_bytes/1024"),
@@ -204,7 +206,6 @@ class NodeExporter:
             ("DirectMap2M", "node_memory_DirectMap2M_bytes/1024"),
             ("DirectMap1G", "node_memory_DirectMap1G_bytes/1024"),
         ]
-
         return self._generate_memory_stats(memory_list)
 
     def _generate_memory_stats(self, promql_list):
@@ -213,7 +214,7 @@ class NodeExporter:
             promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
             if len(promql_result) != 1:
                 return []
-            result.append("{}: {} kb".format(entity_name, promql_result[0]["value"]))
+            result.append("{}: {} kB".format(entity_name, promql_result[0]["value"]))
         return result
 
     def kernel_summary(self):
@@ -1103,7 +1104,7 @@ class PrometheusAPI:
             service_metrics = []
             for metric in service["metric_components"]:
                 metric_info = {
-                    "name": metric["metric_name"],
+                    "name": metric.get("metric_name"),
                     "label": metric["metric_label"],
                     "promql_query": metric["promql_query"]
                 }

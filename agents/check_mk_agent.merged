@@ -2022,14 +2022,14 @@ section_net() {
                 case "${_ifData}" in
                     (*full-duplex*)  println -e "\\tDuplex: Full" ;;
                     (*half-duplex*)  println -e "\\tDuplex: Half" ;;
-                    (*)              println -e "\\tDuplex: Unknown" ;;
+                    (*)             println -e "\\tDuplex: Unknown" ;;
                 esac
 
                 # Auto-negotiation
                 # shellcheck disable=SC2039
                 case "${_ifData}" in
                     (*autoselect*)   println -e "\\tAuto-negotiation: on" ;;
-                    (*)              println -e "\\tAuto-negotiation: off" ;;
+                    (*)             println -e "\\tAuto-negotiation: off" ;;
                 esac
 
                 # Detect detected link
@@ -2199,13 +2199,6 @@ section_ntp() {
             unset -v _ntp_daemon
         ;;
     esac
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> Split ntp and timesyncd into separate functions and plumb them together
-=======
->>>>>>> Promote 'get_ntpq()' to toplevel
 }
 
 section_nvidia() {
@@ -2218,11 +2211,7 @@ section_nvidia() {
 
     if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
         println '<<<nvidia>>>'
-<<<<<<< HEAD
         for _var in ${_nvidia_settings:-GPUErrors GPUCoreTemp}; do
-=======
-        for _var in GPUErrors GPUCoreTemp; do
->>>>>>> Update merged script, include var_* functions and mac improvements
             DISPLAY=:0 waitmax 2 nvidia-settings -t -q "${_var}" | sed "s/^/${_var}: /"
         done
     fi
@@ -2237,56 +2226,24 @@ section_omd() {
         println -j "cmk/check_mk_server" "yes"
 
         run_cached omd_status 60 "omd status --bare || true"
-<<<<<<< HEAD
-<<<<<<< HEAD
         println '<<<mknotifyd:sep(0)>>>'
-=======
-        mkecho '<<<mknotifyd:sep(0)>>>'
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-        println '<<<mknotifyd:sep(0)>>>'
->>>>>>> Update merged script, include var_* functions and mac improvements
         get_epoch
         for _statefile in /omd/sites/*/var/log/mknotifyd.state; do
             if [ -e "${_statefile}" ]; then
                 _site=${_statefile%/var/log*}
                 _site=${_site#/omd/sites/}
-<<<<<<< HEAD
-<<<<<<< HEAD
                 println "[${_site}]"
-=======
-                mkecho "[${_site}]"
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-                println "[${_site}]"
->>>>>>> Update merged script, include var_* functions and mac improvements
                 grep -v '^#' <"${_statefile}"
             fi
             unset -v _site
         done
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         println '<<<omd_apache:sep(124)>>>'
-=======
-        mkecho '<<<omd_apache:sep(124)>>>'
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-        println '<<<omd_apache:sep(124)>>>'
->>>>>>> Update merged script, include var_* functions and mac improvements
         for _statsfile in /omd/sites/*/var/log/apache/stats; do
             if [ -e "${_statsfile}" ]; then
                 _site=${_statsfile%/var/log*}
                 _site=${_site#/omd/sites/}
-<<<<<<< HEAD
-<<<<<<< HEAD
                 println "[${_site}]"
-=======
-                mkecho "[${_site}]"
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-                println "[${_site}]"
->>>>>>> Update merged script, include var_* functions and mac improvements
                 cat "${_statsfile}"
                 : >"${_statsfile}"
                 # prevent next section to fail caused by a missing newline at the end of the statsfile
@@ -2296,21 +2253,9 @@ section_omd() {
         done
     fi
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     println '<<<omd_info:sep(59)>>>'
     println '[versions]'
     println 'version;number;edition;demo'
-=======
-    mkecho '<<<omd_info:sep(59)>>>'
-    mkecho '[versions]'
-    mkecho 'version;number;edition;demo'
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-    println '<<<omd_info:sep(59)>>>'
-    println '[versions]'
-    println 'version;number;edition;demo'
->>>>>>> Update merged script, include var_* functions and mac improvements
     for _versiondir in /omd/versions/*; do
         _omd_version=${_versiondir#/omd/versions/}
 
@@ -2327,24 +2272,10 @@ section_omd() {
         esac
         _omd_edition=${_omd_number##*.}
         _omd_number=${_omd_number%.*}
-<<<<<<< HEAD
-<<<<<<< HEAD
         println "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
     done
     println '[sites]'
     println 'site;used_version;autostart'
-=======
-        mkecho "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
-    done
-    mkecho '[sites]'
-    mkecho 'site;used_version;autostart'
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-        println "${_omd_version};${_omd_number};${_omd_edition};${_omd_demo}"
-    done
-    println '[sites]'
-    println 'site;used_version;autostart'
->>>>>>> Update merged script, include var_* functions and mac improvements
     for _sitedir in /omd/sites/*; do
         _site=${_sitedir#/omd/sites/}
         _used_version=$(readlink "${_sitedir}"/version)
@@ -2353,8 +2284,6 @@ section_omd() {
         if grepq "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "${_sitedir}"/etc/omd/site.conf; then
             _autostart="1"
         fi
-<<<<<<< HEAD
-<<<<<<< HEAD
         println "${_site};${_used_version};${_autostart}"
     done
 
@@ -2363,67 +2292,23 @@ section_omd() {
 }
 
 section_omd_core() (
-=======
-        mkecho "${_site};${_used_version};${_autostart}"
-    done
-
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-        println "${_site};${_used_version};${_autostart}"
-    done
-
-    unset -v _autostart _site _sitedir _statefile _statsfile _used_version _versiondir
-    unset -v _omd_demo _omd_edition _omd_number _omd_site _omd_version
-}
-
-section_omd_core() (
->>>>>>> Update merged script, include var_* functions and mac improvements
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
     if cd /omd/sites; then
-<<<<<<< HEAD
-<<<<<<< HEAD
         println '<<<livestatus_status:sep(59)>>>'
         for _site in *; do
             if [ -S "/omd/sites/${_site}/tmp/run/live" ]; then
                 println "[${_site}]"
                 # shellcheck disable=SC2039
                 println -e "GET status" |
-=======
-        mkecho '<<<livestatus_status:sep(59)>>>'
-=======
-        println '<<<livestatus_status:sep(59)>>>'
->>>>>>> Update merged script, include var_* functions and mac improvements
-        for _site in *; do
-            if [ -S "/omd/sites/${_site}/tmp/run/live" ]; then
-                println "[${_site}]"
-                # shellcheck disable=SC2039
-<<<<<<< HEAD
-                mkecho -e "GET status" |
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-                println -e "GET status" |
->>>>>>> Update merged script, include var_* functions and mac improvements
                     waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/live"
             fi
         done
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         println '<<<livestatus_ssl_certs:sep(124)>>>'
         for _site in *; do
             println "[${_site}]"
-=======
-        mkecho '<<<livestatus_ssl_certs:sep(124)>>>'
-        for _site in *; do
-            mkecho "[${_site}]"
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-        println '<<<livestatus_ssl_certs:sep(124)>>>'
-        for _site in *; do
-            println "[${_site}]"
->>>>>>> Update merged script, include var_* functions and mac improvements
             for _pem_path in "/omd/sites/${_site}/etc/ssl/ca.pem" "/omd/sites/${_site}/etc/ssl/sites/${_site}.pem"; do
                 if [ -f "${_pem_path}" ]; then
                     _cert_date=$(
@@ -2432,60 +2317,23 @@ section_omd_core() (
                             awk '{printf("%s %02d %d %s\n", $1,$2,$4,$3)}'
                     )
                     # TO-DO: Confirm that this works
-<<<<<<< HEAD
-<<<<<<< HEAD
                     println "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
-=======
-                    mkecho "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-                    println "${_pem_path}|$(calculate_cert_epoch "${_cert_date}")"
->>>>>>> Update merged script, include var_* functions and mac improvements
                 fi
             done
         done
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         println '<<<mkeventd_status:sep(0)>>>'
         for _site in *; do
             if [ -S "/omd/sites/${_site}/tmp/run/mkeventd/status" ]; then
                 println "[\"${_site}\"]"
                 # shellcheck disable=SC2039
                 println -e "GET status\\nOutputFormat: json" |
-=======
-        mkecho '<<<mkeventd_status:sep(0)>>>'
-=======
-        println '<<<mkeventd_status:sep(0)>>>'
->>>>>>> Update merged script, include var_* functions and mac improvements
-        for _site in *; do
-            if [ -S "/omd/sites/${_site}/tmp/run/mkeventd/status" ]; then
-                println "[\"${_site}\"]"
-                # shellcheck disable=SC2039
-<<<<<<< HEAD
-                mkecho -e "GET status\\nOutputFormat: json" |
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-                println -e "GET status\\nOutputFormat: json" |
->>>>>>> Update merged script, include var_* functions and mac improvements
                     waitmax 3 "/omd/sites/${_site}/bin/unixcat" "/omd/sites/${_site}/tmp/run/mkeventd/status"
             fi
         done
     fi
-<<<<<<< HEAD
-<<<<<<< HEAD
     unset -v _site _pem_path _cert_date
 )
-=======
-
-    unset -v _autostart _site _sitedir _statefile _statsfile _used_version _versiondir
-    unset -v _omd_demo _omd_edition _omd_number _omd_site _omd_version
-}
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
-    unset -v _site _pem_path _cert_date
-)
->>>>>>> Update merged script, include var_* functions and mac improvements
 
 section_openvpn() {
     # OpenVPN Clients.  These are our two known log locations.
@@ -2633,68 +2481,6 @@ section_soft_raid() {
             cat /proc/mdstat
         ;;
     esac
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    # RAID status of LSI controllers via cfggen
-    if inpath cfggen; then
-        mkecho '<<<lsi>>>'
-        cfggen 0 DISPLAY |
-            grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
-            sed -e 's/ *//g' -e 's/:/ /'
-    fi
-
-    # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
-    # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-    # From this list, the first that's found in PATH (if any) is mapped to lsicli()
-    for cliAlt in MegaCli MegaCli64 megacli storcli storcli64; do
-        if inpath "${cliAlt}"; then
-            lsicli() { "${cliAlt}"; }
-            break
-        fi
-        unset cliAlt
-    done
-
-    if inpath lsicli; then
-        mkecho '<<<megaraid_pdisks>>>'
-        for part in $(lsicli -EncInfo -aALL -NoLog </dev/null |
-            sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ "$part" = adapter ] && mkecho ""
-            # shellcheck disable=SC2039
-            [ "$part" = 'Enclosure' ] && mkecho -ne "\\ndev2enc"
-            # shellcheck disable=SC2039
-            mkecho -n " $part"
-        done
-        mkecho
-        lsicli -PDList -aALL -NoLog </dev/null |
-            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
-        mkecho '<<<megaraid_ldisks>>>'
-        lsicli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
-        mkecho '<<<megaraid_bbu>>>'
-        lsicli -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
-    fi
-
-    # RAID status of 3WARE disk controller (by Radoslaw Bak)
-    if inpath tw_cli; then
-        for _tw_ctl in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
-            mkecho '<<<3ware_info>>>'
-            tw_cli "/${_tw_ctl}" show all | grep -E 'Model =|Firmware|Serial'
-            mkecho '<<<3ware_disks>>>'
-            tw_cli "/${_tw_ctl}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${_tw_ctl}\\//"
-            mkecho '<<<3ware_units>>>'
-            tw_cli "/${_tw_ctl}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${_tw_ctl}\\//"
-        done
-        unset -v _tw_ctl
-    fi
-
-    # RAID controllers from areca (Taiwan)
-    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    if inpath cli64; then
-        run_cached arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
-    fi
->>>>>>> Merge in latest tranche of changes to various *nix agents
-=======
->>>>>>> Update merged script, include var_* functions and mac improvements
 }
 
 # Start new liveupdate process in background on each agent execution. 

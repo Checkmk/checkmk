@@ -200,9 +200,10 @@ case $(uname -s) in
     ;;
     ("Darwin")
         MK_OSSTR=mac
-        #MK_LIBDIR="${MK_LIBDIR:-/to/be/changed}"
-        #MK_CONFDIR="${MK_CONFDIR:-/to/be/changed}"
-        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+        MK_OSVER="$(sw_vers | sed 1d | paste -sd ' ' - | awk -F" " '{print $2" ("$4")"}')"
+        MK_LIBDIR="${MK_LIBDIR:-/usr/local/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+        MK_VARDIR="${MK_VARDIR:-/var/lib/check_mk_agent}"
     ;;
     ("FreeBSD")
         MK_OSSTR=freebsd
@@ -1044,7 +1045,8 @@ section_df() {
 
             # The exclusion list is getting a bit of a problem.
             # -l should hide any remote FS but seems to be all but working.
-            _df_excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs"
+            _df_excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs"
+            _df_excludefs="${_df_excludefs} -x prl_fs -x squashfs -x devtmpfs -x autofs"
             if var_is_unset "${MK_IS_LXC_CONTAINER}"; then
                 _df_excludefs="${_df_excludefs} -x zfs"
             fi
@@ -1064,7 +1066,9 @@ section_df() {
         ;;
         (mac)
             println '<<<df>>>'
-            df -kPT hfs,apfs | sed 1d | \
+            df -kPT hfs,apfs | 
+                grep -Ev "Time Machine|com.apple.TimeMachine.localsnapshots|/Volumes/|/private/var/vm" | 
+                sed 1d |
             while read -r _df_dev _df_rest; do
                 _df_type=$(diskutil info "${_df_dev}" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
                 println "${_df_dev} ${_df_type} ${_df_rest}"
@@ -1201,7 +1205,7 @@ section_head() {
 cat << EOF
 "<<<check_mk>>>"
 "Version: ${MK_VERSION}"
-"AgentOS: ${MK_OSSTR}"
+"AgentOS: ${MK_OSSTR} ${MK_OSVER}"
 "Hostname: ${HOSTNAME}"
 "AgentDirectory: ${MK_CONFDIR}"
 "DataDirectory: ${MK_VARDIR}"
@@ -1455,13 +1459,41 @@ section_mac() {
     fi
 }
 
+# TODO: Flesh this out
+# See https://apple.stackexchange.com/questions/117864/how-can-i-tell-if-my-mac-is-keeping-the-clock-updated-properly
+section_mac_time() {
+    # If we're not using network time, there's no point continuing
+    systemsetup -getusingnetworktime | grepq "Network Time: On" || return 1
+    # Figure out our OS version so that we can determine our approach
+    var_is_blank "${MK_OSVER}" && return 1
+    _macver=$(println "${MK_OSVER}" | tr -d '.')
+    if [ "${_macver}" -ge "1014" ]; then
+        # If this file is missing, create it
+        [ -f /var/db/ntp-kod ] || touch /var/db/ntp-kod
+        chown root:wheel /var/db/ntp-kod >/dev/null 2>&1
+
+        # Alt: systemsetup -getnetworktimeserver | awk -F ': ' '{print $2; exit}'
+        _ntp_server=$(awk '/^server/{print $2; exit}' /etc/ntp.conf)
+        var_is_blank "${_ntp_server}" && return
+        # Call sntp
+        sntp -sS pool.ntp.org "${_ntp_server}"
+    elif [ "${_macver}" -eq "1013" ]; then
+        defaults read /var/db/timed/com.apple.timed TMLastSystemTime
+        # TODO: parse /var/db/timed/com.apple.timed.plist and provide compatible output
+        # defaults read /var/db/timed/com.apple.timed TMSystemSource | grep TMTimeError | head -n1 | awk -F'"' '{print $2}'
+    elif [ "${_macver}" -le "1012" ]; then
+        get_ntpq
+    fi
+    unset -v _macver _ntp_server
+}
+
 #TO-DO: De-duplicate this mess
 section_mailqueue() {
     # Postfix mailqueue monitoring
     # Determine the number of mails and their size in several postfix mail queues
     read_postfix_queue_dirs() {
         _postfix_queue_dir="${1}"
-        if var_is_set "${_postfix_queue_dir}" ]; then
+        if var_is_set "${_postfix_queue_dir}"; then
             println '<<<postfix_mailq>>>'
             println "[[[${2}]]]"
 
@@ -1636,18 +1668,24 @@ section_mem() {
             fi
         ;;
         (mac)
-            _memFreeSpec=$(vm_stat | grep speculative: | awk '{print $3}')
-            _memFreeInactive=$(vm_stat | grep inactive: | awk '{print $3}')
-            _memFree=$(vm_stat | grep free: | awk '{print $3}')
-            _memFreeMach=$(vm_stat | grep Mach | awk '{print $8}')
+            # TODO: Validate if 'bc' is required here or if we can use builtin integer arithmetic
+            _pagesSpeculative=$(vm_stat | awk '/speculative:/{print $3}')
+            _pagesInactive=$(vm_stat | awk '/inactive:/{print $3}')
+            _pagesFree=$(vm_stat | awk '/free:/{print $3}')
+            _pageSize=$(vm_stat | awk '/^Mach/{print $8}')
+            _compressedPagesStored=$(vm_stat | awk '/stored in compressor:/{print $5}')
+            _compressedPagesOccupied=$(vm_stat | awk '/occupied by compressor:/{print $5}')
+            _memFree=$(println "( ${_pagesSpeculative} + ${_pagesInactive} + ${_pagesFree} ) * ${_pageSize} / 1024" | bc)
+            _swapTotal=$(println "${_compressedPagesStored} * ${_pageSize} / 1024" | bc)
+            _swapFree=$(println "( ${_compressedPagesStored} - ${_compressedPagesOccupied} ) * ${_pageSize} / 1024" | bc)
             println '<<<mem>>>'
             println "MemTotal: $(println "$(sysctl -n hw.memsize)/1024" | bc) kB"
-            println "MemFree: $(println "( ${_memFreeSpec} + ${_memFreeInactive} + ${_memFree} ) * ${_memFreeMach} / 1024" | bc) kB"
-            println "SwapTotal: 0 kB"
-            println "SwapFree: 0 kB"
-            # FIXME: Just call vm_stat here, write a check plugin that uses that
-            # native output of vm_stat
-            unset -v _memFreeSpec _memFreeInactive _memFree _memFreeMach
+            println "MemFree: ${_memFree} kB"
+            println "SwapTotal: ${_swapTotal} kB"
+            println "SwapFree: ${_swapFree} kB"
+
+            unset -v _pagesSpeculative _pagesInactive _pagesFree _pageSize _swapTotal _swapFree
+            unset -v _compressedPagesStored _compressedPagesOccupied _memFree
         ;;
         (openbsd)
             println "<<<mem>>>"
@@ -1883,7 +1921,7 @@ section_net() {
                     var_is_set "${_speed}" && println -e "\tSpeed: ${_speed}Mb/s\n"
                 fi
                 # shellcheck disable=SC2039
-                println -e "\\tAddress: $(cat "/sys/class/net/${_eth}/address")\\n"
+                println -e "\tAddress: $(cat "/sys/class/net/${_eth}/address")\n"
             done
             unset -v _eth _speed
         ;;
@@ -1891,33 +1929,53 @@ section_net() {
             println '<<<lnx_if>>>'
             println "[start_iplink]"
             _linkNum=1
-            for _link in $(netstat -inb | awk '/(^en|^lo).*Link/{print $1}'); do
-                printf '%s: %s' "${_linkNum}" "$(ifconfig "${_link}")"
-                _linkNum=$(( _linkNum + 1 ))
-            done
+            if inpath ip; then
+                _interfaces=$(ip a | awk -F ':' '/^[a-z]/{print $1}' | grep -Ev '^(awdl0|utun|llw)')
+                var_is_blank "${_interfaces}" && return
+                for _link in ${_interfaces}; do
+                    println "${_linkNum}: $(ip a show "${_link}")"
+                    _linkNum=$(( _linkNum + 1 ))
+                done
+            else
+                _interfaces=$(netstat -inb | awk '/(^en|^lo).*Link/ && $7>0{print $1}')
+                var_is_blank "${_interfaces}" && return
+                for _link in ${_interfaces}; do
+                    println "${_linkNum}: $(ifconfig "${_link}")"
+                    _linkNum=$(( _linkNum + 1 ))
+                done
+            fi
             println "[end_iplink]"
 
             println '<<<lnx_if:sep(58)>>>';
+            # Format:
+            # Name, IBytes, IPckts, IErr, Drop, 0 (fifo), 0 (frame), 0 (compressed), 0 (multicast),
+            #    Coll, Obyts, OPckts, OErrs, 0 (drop), 0 (fifo), 0 (coll), 0 (drop)
+            # Collisions & drops are not broken out into in/out, so I'm assuming receive for now
+            netstat -inb |
+                grep -E "${_interfaces}" |
+                awk '/Link/{print $1": "$7,$5,$6,$12,"0 0 0 0",$11,$10,$8,$9,"0 0 0 0";}'
 
-            netstat -inb | 
-                awk '/(^en|^lo).*Link/{print $1": "$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0";}'
-
-            printf '%s\n%s\n' "[lo0]" "Link detected: yes"
-            for _iface in $(netstat -inb | sed -e 's/[*]//g' | awk '/^en.*Link/{print $1;}'); do
-                ifconfig "${_iface}" | grepq "media: autoselect" && _ifauto="on"
-                ifconfig "${_iface}" | grepq "full-duplex" && _ifduplex="Full"
-                ifconfig "${_iface}" | grepq "status: active" && _iflink="yes"
-                if ifconfig "${_iface}" | grepq -E '[0-9]+baseT'; then
-                    _ifspeed=$(ifconfig "${_iface}" | grep -Eo '[0-9]+baseT' | sed -e 's@baseT@Mb/s@')
-                fi
+            # Convert OSX ifconfig to lnx_if format:
+            #   Note: Wifi interfaces may have variable speeds each call
+            printf '%s\n\t%s\n' "[lo0]" "Link detected: yes"
+            for _iface in ${_interfaces}; do
+                _cur_ifconfig=$(ifconfig -v "${_iface}")
+                # Alt: grep -E "^\s*(down)?link rate:\s*" | cut -d " " -f3,4 | sed -E 's, (.)bps$,\1b/s,'
+                _ifspeed=$(println "${_cur_ifconfig}" | grep -Eo '[0-9]+baseT' | sed -e 's@baseT@Mb/s@')
+                println "${_cur_ifconfig}" | grepq "full-duplex" && _ifduplex="Full"
+                println "${_cur_ifconfig}" | grepq "media: autoselect" && _ifauto="on"
+                println "${_cur_ifconfig}" | grepq "status: active" && _iflink="yes"
+                [ "${_iface}" = "lo0" ] && _iflink="yes"
+                _ifaddr=$(println "${_cur_ifconfig}" | grep -E '^\s*ether' | cut -d " " -f2)
                 println "[${_iface}]"
-                println " Speed: ${_ifspeed:-Unknown!}"
-                println " Duplex: ${_ifduplex:-Half}"
-                println " Auto-negotiation: ${_ifauto:-off}"
-                println " Link detected: ${_iflink:-no}"
+                println -e "\tSpeed: ${_ifspeed:-Unknown!}"
+                println -e "\tDuplex: ${_ifduplex:-Half}"
+                println -e "\tAuto-negotiation: ${_ifauto:-off}"
+                println -e "\tLink detected: ${_iflink:-no}"
+                println -e "\tAddress: ${_ifaddr:-00:00:00:00:00:00}"
             done
 
-            unset -v _linkNum _link _iface _ifspeed _ifduplex _ifauto _iflink
+            unset -v _linkNum _link _iface _cur_ifconfig _ifspeed _ifduplex _ifauto _iflink _ifaddr
         ;;
         (openbsd)
             println '<<<lnx_if:sep(58)>>>'
@@ -2018,8 +2076,7 @@ section_net_ctr() {
             get_epoch
             netstat -inb | 
                 grep -Ev '(^Name|lo|plip)' | 
-                grep Link | 
-                awk '{ print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
+                awk '/Link/{ print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
         ;;
         (netbsd)
             println '<<<netctr>>>'

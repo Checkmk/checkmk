@@ -411,7 +411,7 @@ class NonStaticChecksRulesets(FilteredRulesetCollection):
         self._remove_static_checks_rulesets()
 
     def _remove_static_checks_rulesets(self):
-        for name, ruleset in self._rulesets.items():
+        for name, ruleset in list(self._rulesets.items()):
             if ruleset.rulespec.main_group_name == "static":
                 del self._rulesets[name]
 

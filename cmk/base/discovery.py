@@ -123,8 +123,13 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname, ipaddress, arg_check_plugin_names,
-                                                 do_snmp_scan, on_error)
+            sources = _get_sources_for_discovery(hostname, ipaddress, do_snmp_scan, on_error)
+
+            # When check types are specified via command line,
+            # enforce them and disable auto detection
+            if arg_check_plugin_names:
+                sources.enforce_check_plugin_names(arg_check_plugin_names)
+
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections,
@@ -320,7 +325,6 @@ def discover_on_host(config_cache,
 
         sources = _get_sources_for_discovery(hostname,
                                              ipaddress,
-                                             check_plugin_names=None,
                                              do_snmp_scan=do_snmp_scan,
                                              on_error=on_error,
                                              for_check_discovery=True)
@@ -431,7 +435,6 @@ def check_discovery(hostname, ipaddress):
 
     sources = _get_sources_for_discovery(hostname,
                                          ipaddress,
-                                         check_plugin_names=None,
                                          do_snmp_scan=params["inventory_check_do_scan"],
                                          on_error="raise")
 
@@ -958,11 +961,10 @@ def _discover_services(
 
 def _get_sources_for_discovery(hostname,
                                ipaddress,
-                               check_plugin_names,
                                do_snmp_scan,
                                on_error,
                                for_check_discovery=False):
-    # type: (HostName, Optional[HostAddress], Optional[Set[CheckPluginName]], bool, str, bool) -> data_sources.DataSources
+    # type: (HostName, Optional[HostAddress], bool, str, bool) -> data_sources.DataSources
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -980,10 +982,6 @@ def _get_sources_for_discovery(hostname,
                 data_sources.SNMPDataSource.disable_data_source_cache()
 
             source.set_check_plugin_name_filter(snmp_scan.gather_available_raw_section_names)
-
-    # When check types are specified via command line, enforce them and disable auto detection
-    if check_plugin_names:
-        sources.enforce_check_plugin_names(check_plugin_names)
 
     return sources
 
@@ -1302,10 +1300,14 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
         node_sources = _get_sources_for_discovery(
             node,
             node_ipaddress,
-            check_plugin_names=sources.get_enforced_check_plugin_names(),
             do_snmp_scan=do_snmp_scan,
             on_error=on_error,
         )
+
+        # enforce check plugin names in all contained sources (and disable auto detection)
+        check_plugin_names = node_sources.get_enforced_check_plugin_names()
+        if check_plugin_names:
+            node_sources.enforce_check_plugin_names(check_plugin_names)
 
         services, discovered_host_labels = _get_discovered_services(node, node_ipaddress,
                                                                     node_sources,
@@ -1358,7 +1360,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     sources = _get_sources_for_discovery(hostname,
                                          ipaddress,
-                                         check_plugin_names=None,
                                          do_snmp_scan=do_snmp_scan,
                                          on_error=on_error)
 

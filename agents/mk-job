@@ -35,10 +35,9 @@ exit "${1:-0}"
 output_path="${MK_VARDIR}/job/${USER}"
 ident="${1:?}"
 running_file="${output_path}/${ident}.$$running"
-tmp_file="${running_file}.tmp"
 
 # Shift to the rest of the positional parameters
-shift
+shift 1
 
 if [ ! -d "${output_path}" ]; then
     if [ "${USER}" = root ]; then
@@ -54,46 +53,62 @@ if ! inpath "${1}"; then
     help 1
 fi
 
-echo "start_time $(get_epoch)" > "${running_file}" 2>/dev/null
+# Structure GNU's time format into an NDJSON format
+gnu_time_fmt="{\"$(get_epoch)\": {\"exit_code\": %x, \"real_time\": \"%E\", \"user_time\": \"%U\","
+gnu_time_fmt="${gnu_time_fmt} \"system_time\": \"%S\", \"reads\": %I, \"writes\": %O,"
+gnu_time_fmt="${gnu_time_fmt} \"max_res_kbytes\": %M, \"avg_mem_kbytes\": %K,"
+gnu_time_fmt="${gnu_time_fmt} \"invol_context_switches\": %c, \"vol_context_switches\": %w}"
+
+# Structure our dummy data for older systems
+dummy_data="\"reads\": 0, \"writes\": 0, \"max_res_kbytes\": 0, \"avg_mem_kbytes\": 0,"
+dummy_data="${dummy_data} \"invol_context_switches\": 0, \"vol_context_switches\": 0}}"
 
 if [ ! -w "${running_file}" ] ; then
-  # Looks like we are lacking the permissions to create this file..
+  # Looks like we are lacking the permissions to create this file...
   # In this scenario no mk-job status file is created. We simply execute the command
   exec "$@"
 fi
 
 case "${MK_OSSTR}" in
     (aix)
-        /usr/bin/time -p "$@" > "${tmp_file}"                   # execute the command
-        return_code="${?}"                                      # save return code
-        echo "exit_code ${return_code}" >> "${running_file}"    # then add the return code
-        # and finally add the output of /usr/bin/time
-        grep -E  '^real   |^user   |^sys    ' "${tmp_file}" | 
-            sed -e 's/,/\./g' \
-                -e 's/^real  /real_time/g' \
-                -e 's/^user  /user_time/g' \
-                -e 's/^sys   /system_time/g' \
-            >> "${running_file}"
-        echo "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0" >> "${running_file}"
+        # TO-DO: Test if the AIX approach a) works and b) also works for Solaris, if so, merge them
+        # We want word splitting here so that our positional params are assigned properly
+        # shellcheck disable=SC2046
+        set -- $( (/usr/bin/time -p "${@}" 2>&1; echo "${?}") | tail -n 4 | paste -sd ' ' -)
+        
+        # Start building our output format
+        classic_fmt="{\"$(get_epoch)\": {\"exit_code\": ${7}, \"real_time\": \"${2}\","
+        classic_fmt="${classic_fmt} \"user_time\": \"${4}\", \"system_time\": \"${6}\","
+        classic_fmt="${classic_fmt} ${dummy_data}"
+        return_code="${7}"
+
+        echo "${classic_fmt}" >> "${running_file}"
     ;;
     (linux)
-        /usr/bin/time -o "${running_file}" --append \
-            -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
+        /usr/bin/time -o "${running_file}" --append -f "${gnu_time_fmt}" "${@}"
+        return_code="${?}"
+    ;;
+    (mac)
+        # For OSX: requires GNU-time installed (`brew install gnu-time`)
+        inpath gtime || return 1
+        /usr/local/bin/gtime -o "${running_file}" --append -f "${gnu_time_fmt}" "${@}"
         return_code="${?}"
     ;;
     (solaris)
-        info=$( (/usr/bin/time -p sh -c "$* 2>/dev/null 1>&2" 2>&1; echo $?) | sed -e 's/,/\./g')
-        return_code=$(echo "${info}" | awk '{print $7}')
+        # TO-DO: Test if the AIX approach a) works and b) also works for Solaris, if so, merge them
+        # We want word splitting here so that our positional params are assigned properly
+        # shellcheck disable=SC2046
+        set -- $( (/usr/bin/time -p sh -c "$* 2>/dev/null 1>&2" 2>&1; echo $?) | sed -e 's/,/\./g')
 
-        (echo "${info}" | 
-            awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}'
-        ) >> "${running_file}"
+        # Start building our output format
+        classic_fmt="{\"$(get_epoch)\": {\"exit_code\": ${7}, \"real_time\": \"${2}\","
+        classic_fmt="${classic_fmt} \"user_time\": \"${4}\", \"system_time\": \"${6}\","
+        classic_fmt="${classic_fmt} ${dummy_data}"
+        return_code="${7}"
 
-        (echo -e "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0";
-        ) >> "${running_file}"
+        echo "${classic_fmt}" >> "${running_file}"
     ;;
 esac
 
 mv "${running_file}" "${output_path}/${ident}"
-[ -e "${tmp_file}" ] && rm -f "${tmp_file}"
 exit "${return_code}"

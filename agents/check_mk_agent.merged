@@ -41,7 +41,8 @@ newPath=
 # to the 'newPath' variable.  This way, we dynamically build PATH, and bias Solaris towards XPG4
 for dir in /usr/gnu/bin /usr/xpg6/bin /usr/xpg4/bin /usr/kerberos/bin /usr/kerberos/sbin /bin \
     /sbin /usr/bin /usr/sbin /usr/contrib/bin/usr/local/bin /usr/local/sbin /opt/csw/bin \
-    /opt/csw/sbin /opt/sfw/bin /opt/sfw/sbin /usr/pkg/bin /usr/sfw/bin /usr/sfw/sbin /snap/bin; do
+    /opt/csw/sbin /opt/sfw/bin /opt/sfw/sbin /usr/pkg/bin /usr/sfw/bin /usr/sfw/sbin /snap/bin \
+    /opt/lsi /opt/MegaRAID/storcli; do
 
     [ -d "${dir}" ] && newPath="${newPath}:${dir}"
 done
@@ -53,10 +54,9 @@ PATH="${newPath#:}"
 export PATH
 unset -v newPath
 
-# 'println()' abstracts the portability of 'printf' and solves the major 
-# portability headaches caused by various implementations of 'echo'
-# This is called 'println()' rather than an 'echo()' override because 
-# some shells protect their builtins, denying us the override cleanliness
+# 'println()' abstracts the portability of 'printf' and solves the major portability headaches 
+# caused by various implementations of 'echo'.  This is called 'println()' rather than 'echo()' as 
+# an override function, because some shells protect their builtins and complain.
 # Fun exercise: look at Oracle's man page for 'echo', specifically the USAGE section.
 # This also adds the '-j' option to output in json keypair format
 println() {
@@ -1476,7 +1476,7 @@ section_mac_time() {
         _ntp_server=$(awk '/^server/{print $2; exit}' /etc/ntp.conf)
         var_is_blank "${_ntp_server}" && return
         # Call sntp
-        sntp -sS pool.ntp.org "${_ntp_server}"
+        sntp -sS "${_ntp_server}"
     elif [ "${_macver}" -eq "1013" ]; then
         defaults read /var/db/timed/com.apple.timed TMLastSystemTime
         # TODO: parse /var/db/timed/com.apple.timed.plist and provide compatible output
@@ -1608,12 +1608,12 @@ section_megaraid() {
     # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
     # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
     # From this list, the first that's found in PATH (if any) is mapped to lsicli()
-    for cliAlt in MegaCli MegaCli64 megacli storcli storcli64; do
-        if inpath "${cliAlt}"; then
-            lsicli() { "${cliAlt}"; }
+    for _cliAlt in MegaCli MegaCli64 megacli storcli storcli64; do
+        if inpath "${_cliAlt}"; then
+            lsicli() { "${_cliAlt}"; }
             break
         fi
-        unset cliAlt
+        unset -v _cliAlt
     done
 
     if inpath lsicli; then
@@ -1633,6 +1633,13 @@ section_megaraid() {
         lsicli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         println '<<<megaraid_bbu>>>'
         lsicli -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
+        # CMK-3937 / c6ecb68 / PR #120
+        # if lsicli is storcli64; then
+        #     println "<<<storcli_pdisks>>>"
+        #     lsicli /call/eall/sall show
+        #     println "<<<storcli_vdrives>>>"
+        #     /opt/MegaRAID/storcli/storcli64 /call/vall show
+        # fi
     fi
 }
 
@@ -1957,7 +1964,6 @@ section_net() {
 
             # Convert OSX ifconfig to lnx_if format:
             #   Note: Wifi interfaces may have variable speeds each call
-            printf '%s\n\t%s\n' "[lo0]" "Link detected: yes"
             for _iface in ${_interfaces}; do
                 _cur_ifconfig=$(ifconfig -v "${_iface}")
                 # Alt: grep -E "^\s*(down)?link rate:\s*" | cut -d " " -f3,4 | sed -E 's, (.)bps$,\1b/s,'
@@ -2196,13 +2202,20 @@ section_ntp() {
 }
 
 section_nvidia() {
+    # See PR #129 / f8a96be
+    if inpath nvidia-smi; then
+        _nvidia_settings="GPUErrors"
+        println '<<<nvidia-smi>>>'
+        waitmax 2 nvidia-smi --query-gpu=temperature.gpu --format=csv,nounits,noheader | sed "s/^/GPUCoreTemp: /"
+    fi
+
     if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
         println '<<<nvidia>>>'
-        for _var in GPUErrors GPUCoreTemp; do
+        for _var in ${_nvidia_settings:-GPUErrors GPUCoreTemp}; do
             DISPLAY=:0 waitmax 2 nvidia-settings -t -q "${_var}" | sed "s/^/${_var}: /"
         done
-        unset -v _var
     fi
+    unset -v _var _nvidia_settings
 }
 
 section_omd() {

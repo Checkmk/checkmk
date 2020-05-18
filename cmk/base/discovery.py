@@ -13,6 +13,8 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generator,
+    Iterable,
     Iterator,
     List,
     NoReturn,
@@ -31,7 +33,6 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -50,9 +51,9 @@ import cmk.utils.cleanup
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based import checking_types
+from cmk.base.api.agent_based.register.check_plugins import MANAGEMENT_NAME_PREFIX
 from cmk.base.api.agent_based.register.check_plugins_legacy import (
     maincheckify,
-    resolve_legacy_name,
     wrap_parameters,
 )
 import cmk.base.autochecks as autochecks
@@ -66,7 +67,6 @@ import cmk.base.crash_reporting
 import cmk.base.data_sources as data_sources
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.item_state as item_state
 import cmk.base.section as section
 import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
@@ -74,8 +74,7 @@ import cmk.base.utils
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
 from cmk.base.core_config import MonitoringCore
-from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, HostLabel
-from cmk.base.exceptions import MKParseFunctionError
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -946,12 +945,9 @@ def _discover_services(
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
 
-    # For now, we have to re-map the plugins back to the original name. Not for long!
-    plugin_candidates_str = {resolve_legacy_name(n) for n in plugin_candidates}
-
     service_table = {}  # type: cmk.base.check_utils.DiscoveredCheckTable
     try:
-        for check_plugin_name in sorted(plugin_candidates_str):
+        for check_plugin_name in sorted(plugin_candidates):
             try:
                 for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
                                                   check_plugin_name, on_error):
@@ -1018,7 +1014,7 @@ def _execute_discovery(
         multi_host_sections,  # type: data_sources.MultiHostSections
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
-        check_plugin_name,  # type: str
+        check_plugin_name,  # type: PluginName
         on_error,  # type: str
 ):
     # type: (...) -> Iterator[DiscoveredService]
@@ -1027,131 +1023,50 @@ def _execute_discovery(
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
+    # TODO (mo): for now. the plan is to create management versions on the fly.
+    source_type = (SourceType.MANAGEMENT if
+                   str(check_plugin_name).startswith(MANAGEMENT_NAME_PREFIX) else SourceType.HOST)
+
+    check_plugin = config.registered_check_plugins.get(check_plugin_name)
+    if check_plugin is None:
+        console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
+        return
+
     try:
-        # TODO: There is duplicate code with checking.execute_check(). Find a common place!
-        try:
-            section_content = multi_host_sections.get_section_content(
-                hostname,
-                ipaddress,
-                config.get_management_board_precedence(check_plugin_name, config.check_info),
-                check_plugin_name,
-                for_discovery=True,
-            )
-        except MKParseFunctionError as e:
-            if cmk.utils.debug.enabled() or on_error == "raise":
-                x = e.exc_info()
-                if x[0] == item_state.MKCounterWrapped:
-                    return
-                # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
-                # exception which need to lead to a skipped check instead of a crash
-                # TODO CMK-3729, PEP-3109
-                new_exception = x[0](x[1])
-                new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
-                raise new_exception
+        kwargs = multi_host_sections.get_section_kwargs(
+            (hostname, ipaddress, source_type),
+            check_plugin.sections,
+        )
+    except Exception as exc:
+        if cmk.utils.debug.enabled() or on_error == "raise":
+            raise
+        if on_error == "warn":
+            console.warning("  Exception while parsing agent section: %s\n" % exc)
+        return
+    if not kwargs:
+        return
 
-            if on_error == "warn":
-                section_name = section_name_of(check_plugin_name)
-                console.warning("Exception while parsing agent section '%s': %s\n" %
-                                (section_name, e))
+    # TODO: add discovery parameters to kwargs CMK-4727
 
-            return
-
-        if section_content is None:  # No data for this check type
-            return
-
-        # *SERVICE* discovery
-        discovery_function = _get_discovery_function_of(check_plugin_name)
-        discovered_items = _execute_discovery_function(discovery_function, section_content)
-        for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-            yield entry
+    try:
+        plugins_services = check_plugin.discovery_function(**kwargs)
+        yield from _enriched_discovered_services(hostname, check_plugin.name, plugins_services)
     except Exception as e:
         if on_error == "warn":
-            console.warning("  Exception in discovery function of check type '%s': %s" %
-                            (check_plugin_name, e))
+            console.warning("  Exception in discovery function of check plugin '%s': %s" %
+                            (check_plugin.name, e))
         elif on_error == "raise":
             raise
 
 
-def _get_discovery_function_of(check_plugin_name):
-    # type: (CheckPluginName) -> DiscoveryFunction
-    try:
-        discovery_function = config.check_info[check_plugin_name]["inventory_function"]
-    except KeyError:
-        raise MKGeneralException("No such check type '%s'" % check_plugin_name)
-
-    if discovery_function is None:
-        return lambda _info: _no_discovery_possible(check_plugin_name)
-
-    discovery_function_args = cmk.utils.misc.getfuncargs(discovery_function)
-    if len(discovery_function_args) != 1:
-        raise MKGeneralException(
-            "The discovery function \"%s\" of the check \"%s\" is expected to take a "
-            "single argument (info or parsed), but it's taking the following arguments: %r. "
-            "You will have to change the arguments of the discovery function to make it "
-            "compatible with this Checkmk version." %
-            (discovery_function.__name__, check_plugin_name, discovery_function_args))
-
-    return discovery_function
-
-
-def _no_discovery_possible(check_plugin_name):
-    # type: (CheckPluginName) -> List
-    console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
-    return []
-
-
-# FIXME: The whole typing here is fundamentally broken and actually a lie: We
-# don't have any static guarantees about the discovery function, so the type
-# below is just wishful thinking. We only know something *after* validation,
-# but that is a dynamic thing...
-def _execute_discovery_function(discovery_function, section_content):
-    # type: (DiscoveryFunction, FinalSectionContent) -> DiscoveryResult
-    discovered_items = discovery_function(section_content)
-
-    # tolerate function not explicitely returning []
-    if discovered_items is None:
-        discovered_items = []
-
-    # New yield based api style
-    elif not isinstance(discovered_items, list):
-        discovered_items = list(discovered_items)
-
-    return discovered_items
-
-
-# FIXME: Broken typing, see comment for _execute_discovery_function.
-def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[DiscoveredService]
-    for entry in discovered_items:
-        if isinstance(entry, check_api_utils.Service):
-            item = entry.item
-            parameters_unresolved = entry.parameters
-            service_labels = entry.service_labels
-
-        # silently skip host labels, we're discovering them separately now.
-        # TODO: remove this case once we discover using the new registered_check_plugins data
-        elif isinstance(entry, (DiscoveredHostLabels, HostLabel)):
-            continue
-
-        elif isinstance(entry, tuple):
-            service_labels = DiscoveredServiceLabels()
-            if len(entry) == 2:  # comment is now obsolete
-                item, parameters_unresolved = entry
-            elif len(entry) == 3:  # allow old school
-                # FIXME: Broken typing, see comment for _execute_discovery_function.
-                item, __, parameters_unresolved = entry  # type: ignore[misc]
-            else:
-                # we really don't want longer tuples (or 1-tuples).
-                console.error(
-                    "%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
-                    (hostname, check_plugin_name, repr(entry)))
-                continue
-        else:
-            console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
-                          (hostname, check_plugin_name, repr(entry)))
-            continue
-
-        description = config.service_description(hostname, check_plugin_name, item)
+def _enriched_discovered_services(
+        hostname,  # type: HostName
+        check_plugin_name,  # type: PluginName
+        plugins_services,  # type: Iterable[checking_types.Service]
+):
+    # type: (...) -> Generator[DiscoveredService, None, None]
+    for service in plugins_services:
+        description = config.service_description(hostname, check_plugin_name, service.item)
         # make sanity check
         if len(description) == 0:
             console.error("%s: Check %s returned empty service description - ignoring it.\n" %
@@ -1159,11 +1074,11 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             continue
 
         yield DiscoveredService(
-            check_plugin_name=check_plugin_name,
-            item=item,
+            check_plugin_name=str(check_plugin_name),
+            item=service.item,
             description=description,
-            parameters_unresolved=parameters_unresolved,
-            service_labels=service_labels,
+            parameters_unresolved=service.parameters,
+            service_labels=service.labels,
         )
 
 

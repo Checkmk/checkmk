@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 
 import cmk.base.discovery as discovery
-from cmk.base.discovered_labels import ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel, DiscoveredServiceLabels
 
 
 def test_discovered_service_init():
@@ -18,9 +18,8 @@ def test_discovered_service_init():
     assert s.parameters_unresolved == "None"
     assert s.service_labels.to_dict() == {}
 
-    s = discovery.DiscoveredService(
-        "abc", u"Item", u"ABC Item", "None",
-        discovery.DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
+    s = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None",
+                                    DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
     assert s.service_labels.to_dict() == {u"läbel": u"lübel"}
 
     with pytest.raises(AttributeError):

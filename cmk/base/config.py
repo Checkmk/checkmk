@@ -137,6 +137,7 @@ RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
+SectionPlugin = Union[SNMPSectionPlugin, AgentSectionPlugin]
 
 
 class TimespecificParamList(list):
@@ -1272,7 +1273,7 @@ def get_http_proxy(http_proxy):
 
 
 def get_registered_section_plugin(plugin_name):
-    # type: (PluginName) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
+    # type: (PluginName) -> Optional[SectionPlugin]
     if plugin_name in registered_agent_sections:
         return registered_agent_sections[plugin_name]
     if plugin_name in registered_snmp_sections:
@@ -1280,8 +1281,28 @@ def get_registered_section_plugin(plugin_name):
     return None
 
 
+def get_relevant_raw_sections(check_plugin_names):
+    # type: (Iterable[PluginName]) -> Set[SectionPlugin]
+    """return the raw sections potentially relevant for the given check plugins"""
+    parsed_section_names = set()  # type: Set[PluginName]
+    for check_plguin_name in check_plugin_names:
+        plugin = registered_check_plugins.get(check_plguin_name)
+        if plugin:
+            parsed_section_names.update(plugin.sections)
+
+    iter_all_sections = itertools.chain(
+        registered_agent_sections.values(),
+        registered_snmp_sections.values(),
+    )  # type: Iterable[SectionPlugin]
+
+    return {
+        section for section in iter_all_sections
+        if section.parsed_section_name in parsed_section_names
+    }
+
+
 def get_parsed_section_creator(parsed_section_name, available_raw_sections):
-    # type: (PluginName, List[PluginName]) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
+    # type: (PluginName, List[PluginName]) -> Optional[SectionPlugin]
     """return the section definition required to create the enquired parsed section"""
     section_defs = (get_registered_section_plugin(name) for name in available_raw_sections)
     candidates = [

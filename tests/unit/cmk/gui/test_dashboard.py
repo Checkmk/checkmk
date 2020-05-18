@@ -35,6 +35,7 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
+        'average_scatterplot',
         'alerts_bar_chart',
         'notifications_bar_chart',
         'hoststats',

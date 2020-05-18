@@ -7,8 +7,12 @@
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import serve_group, serialize_group
-from cmk.gui.plugins.openapi.restful_objects import constructors, endpoint_schema, response_schemas, \
-    request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    endpoint_schema,
+    request_schemas,
+    response_schemas,
+)
 from cmk.gui.watolib.groups import edit_group, add_group, load_contact_group_information
 
 
@@ -36,7 +40,7 @@ def list_group(params):
     return constructors.serve_json({
         'id': 'folders',
         'value': [
-            constructors.collection_object('contact_group', 'contact_group', group)
+            constructors.collection_item('contact_group', 'contact_group', group)
             for group in load_contact_group_information().values()
         ],
         'links': [constructors.link_rel('self', '/collections/contact_group')]

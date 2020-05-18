@@ -118,7 +118,7 @@ def list_folders(_params):
     return constructors.serve_json({
         'id': 'folders',
         'value': [
-            constructors.collection_object('folders', 'folder', folder)
+            constructors.collection_item('folder', 'folder', folder)
             for folder in watolib.Folder.root_folder().subfolders()
         ],
         'links': [constructors.link_rel('self', '/collections/folder')]

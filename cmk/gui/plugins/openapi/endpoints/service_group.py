@@ -36,7 +36,7 @@ def list_groups(params):
     return constructors.serve_json({
         'id': 'folders',
         'value': [
-            constructors.collection_object('service_group', 'service_group', group)
+            constructors.collection_item('service_group', 'service_group', group)
             for group in load_service_group_information().values()
         ],
         'links': [constructors.link_rel('self', '/collections/service_group')]

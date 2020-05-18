@@ -99,7 +99,7 @@ def parse_cisco_temperature(info):
     #              [u'2008', u'SW#2, Sensor#1, GREEN', u'37', u'68', u'1'],
     #              ...]
 
-    description_info, state_info, levels_info, perfstuff, admin_states = info
+    description_info, state_info, levels_info, perfstuff, admin_states, partnumbers = info
 
     # Create dict of sensor descriptions
     descriptions = dict(description_info)
@@ -126,6 +126,11 @@ def parse_cisco_temperature(info):
         sensor_id, _subid = endoid.split('.')
         thresholds.setdefault(sensor_id, []).append(level)
 
+    # Create dict with DOM partnumbers
+    partnumbers_dict = {}
+    for sensor_id, value in partnumbers:
+        partnumbers_dict[sensor_id] = value
+
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
     entity_parsed = {}
     for sensor_id, sensortype_id, scalecode, magnitude, value, sensorstate in state_info:
@@ -148,6 +153,7 @@ def parse_cisco_temperature(info):
             'raw_dev_state': sensorstate,  # used in discovery function
             'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate)),
             'admin_state': admin_states_dict.get(sensor_id),
+            'partnumber' : partnumbers_dict.get(sensor_id),
         }
 
         if sensorstate == '1':
@@ -238,9 +244,11 @@ def parse_cisco_temperature(info):
 
 
 def inventory_cisco_temperature(parsed):
+    discovery_options = host_extra_conf_merged(host_name(), discovery_cisco_dom_rules)
     for item, value in parsed.get('8', {}).items():
-        if not value.get("obsolete", False):
-            yield item, {}
+        if dom_filter(value.get('partnumber'), discovery_options.get('dom_blacklist', [])):
+            if not value.get("obsolete", False):
+                yield item, {}
 
 
 def check_cisco_temperature(item, params, parsed):
@@ -307,6 +315,12 @@ check_info['cisco_temperature'] = {
                                  CACHED_OID(2),  # Description of the sensor
                                  CACHED_OID(7),  # ifAdminStatus
                                ]),
+
+                               # DOM module type
+                               ( ".1.3.6.1.2.1.47.1.1.1.1", [
+                                 OID_END,
+                                 CACHED_OID(13), # entPhysicalModelName
+                               ]),
                             ],
     "includes"          : [ "temperature.include", 'cisco_sensor_item.include' ],
 }
@@ -326,6 +340,13 @@ check_info['cisco_temperature'] = {
 discovery_cisco_dom_rules = []
 
 
+def dom_filter(part_number, blacklist):
+    for i in blacklist:
+        if i == 'part_number' or (i.startswith("~") and regex(i[1:]).match(part_number)):
+            return
+    return True
+
+
 def inventory_cisco_temperature_dom(parsed):
     discovery_options = host_extra_conf_merged(host_name(), discovery_cisco_dom_rules)
     parsed_dom = parsed.get('14', {})
@@ -333,11 +354,14 @@ def inventory_cisco_temperature_dom(parsed):
         cisco_temperature_admin_state_map[admin_state]
         for admin_state in discovery_options.get('admin_states', ['1'])
     } | {None}
+    dom_blacklist = discovery_options.get('dom_blacklist', [])
     for item, attrs in parsed_dom.items():
         dev_state = attrs.get('raw_dev_state')
         adm_state = attrs.get('admin_state')
-        if dev_state == '1' and adm_state in admin_states_to_discover:
-            yield item, {}
+        part_number = attrs.get('partnumber')
+        if dom_filter(part_number, dom_blacklist):
+            if dev_state == '1' and adm_state in admin_states_to_discover:
+                yield item, {}
 
 
 def _determine_levels(user_levels, device_levels):

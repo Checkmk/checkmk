@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
     ListChoice,
+    ListOfStrings,
 )
 from cmk.gui.plugins.wato import (
     HostRulespec,
@@ -109,6 +110,12 @@ def _valuespec_discovery_cisco_dom_rules():
                                },
                                toggle_all=True,
                                default_value=['1', '2', '3'],
+                           )),
+                           ("dom_blacklist",
+                           ListOfStrings(
+                               title=_("DOMs to exclude by Partnumber."),
+                               help=_("Various DOMs do not provide correct temperature or damping values. You can exclude those by its partnumber from ENTITY-MIB (.1.3.6.1.2.1.47.1.1.1.1.13)"),
+                               default_value=[],
                            )),
                       ])
 

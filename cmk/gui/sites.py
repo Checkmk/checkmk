@@ -19,7 +19,7 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports
 
 import cmk.gui.config as config
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, request
 from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 
 #   .--API-----------------------------------------------------------------.
@@ -107,7 +107,7 @@ def _ensure_connected(user, force_authuser):
         user = config.user
 
     if force_authuser is None:
-        request_force_authuser = html.request.get_unicode_input("force_authuser")
+        request_force_authuser = request.get_unicode_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
     g.site_status = {}

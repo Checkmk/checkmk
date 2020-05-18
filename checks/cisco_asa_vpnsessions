@@ -55,6 +55,7 @@ factory_settings['cisco_asa_vpnsessions_defaults'] = {
     'WarnCrit': (10, 100),
 }
 
+
 def parse_cisco_asa_vpnsessions(info):
 
     IPSecNumSessions, IPSecCumulateSessions, IPSecPeakConcurrentSessions, L2LNumSessions, L2LCumulateSessions, \
@@ -75,11 +76,15 @@ def parse_cisco_asa_vpnsessions(info):
     WebvpnPeakConcurrentSessions = int(WebvpnPeakConcurrentSessions)
     MaxSessionsSupportable = int(MaxSessionsSupportable)
 
-    parsed = {       # current,         peak,                     cumulative,          system max
-        'AnyConnect': (SVCNumSessions, SVCPeakConcurrentSessions, SVCCumulateSessions, MaxSessionsSupportable),
-        'Clientless': (WebvpnNumSessions, WebvpnPeakConcurrentSessions, WebvpnCumulateSessions, MaxSessionsSupportable),
-        'IPSec RA': (IPSecNumSessions, IPSecPeakConcurrentSessions, IPSecCumulateSessions, MaxSessionsSupportable),
-        'IPSec L2L': (L2LNumSessions, L2LPeakConcurrentSessions, L2LCumulateSessions, MaxSessionsSupportable)
+    parsed = {  # current,         peak,                     cumulative,          system max
+        'AnyConnect': (SVCNumSessions, SVCPeakConcurrentSessions, SVCCumulateSessions,
+                       MaxSessionsSupportable),
+        'Clientless': (WebvpnNumSessions, WebvpnPeakConcurrentSessions, WebvpnCumulateSessions,
+                       MaxSessionsSupportable),
+        'IPSec RA': (IPSecNumSessions, IPSecPeakConcurrentSessions, IPSecCumulateSessions,
+                     MaxSessionsSupportable),
+        'IPSec L2L':
+            (L2LNumSessions, L2LPeakConcurrentSessions, L2LCumulateSessions, MaxSessionsSupportable)
     }
 
     return parsed
@@ -95,7 +100,8 @@ def check_cisco_asa_vpnsessions(item, params, parsed):
     state = 0
     warn, crit = params['WarnCrit']
     current, peak, cumulative, sysmax = parsed[item]
-    infotext = '%s %d/%d/%d/%d (current/peak/system max./cumulative)' % (item, current, peak, sysmax, cumulative)
+    infotext = '%s %d/%d/%d/%d (current/peak/system max./cumulative)' % (item, current, peak,
+                                                                         sysmax, cumulative)
     longoutput = ''
 
     VPNType = str(item).lower().replace(' ', '')
@@ -140,4 +146,3 @@ check_info['cisco_asa_vpnsessions'] = {
                                                            '1.1',   # crasMaxSessionsSupportable
                                                        ]),
 }
-

@@ -766,19 +766,7 @@ class CheckMKAgentDataSource(
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                section_header = six.ensure_str(stripped_line[3:-3])
-                headerparts = section_header.split(":")
-                section_name = headerparts[0]
-                section_options = {}
-                opt_args = None  # type: Optional[str]
-                for o in headerparts[1:]:
-                    opt_parts = o.split("(")
-                    opt_name = opt_parts[0]
-                    if len(opt_parts) > 1:
-                        opt_args = opt_parts[1][:-1]
-                    else:
-                        opt_args = None
-                    section_options[opt_name] = opt_args
+                section_name, section_options = self._parse_section_header(stripped_line[3:-3])
 
                 content = sections.get(section_name, None)
                 if content is None:  # section appears in output for the first time
@@ -824,6 +812,20 @@ class CheckMKAgentDataSource(
 
         return AgentHostSections(sections, agent_cache_info, piggybacked_raw_data,
                                  persisted_sections)
+
+    @staticmethod
+    def _parse_section_header(headerline):
+        # type: (bytes) -> Tuple[str, Dict[str, Optional[str]]]
+        headerparts = six.ensure_str(headerline).split(":")
+        section_name = headerparts[0]
+        section_options = {}  # type: Dict[str, Optional[str]]
+        for option in headerparts[1:]:
+            if "(" not in option:
+                section_options[option] = None
+            else:
+                opt_name, opt_part = option.split("(", 1)
+                section_options[opt_name] = opt_part[:-1]
+        return section_name, section_options
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
         # type: (bytes) -> Optional[HostName]

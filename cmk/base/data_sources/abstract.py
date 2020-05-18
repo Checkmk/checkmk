@@ -768,12 +768,7 @@ class CheckMKAgentDataSource(
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                 section_name, section_options = self._parse_section_header(stripped_line[3:-3])
 
-                content = sections.get(section_name, None)
-                if content is None:  # section appears in output for the first time
-                    section_content = []
-                    sections[section_name] = section_content
-                else:
-                    section_content = content
+                section_content = sections.setdefault(section_name, [])
 
                 raw_separator = section_options.get("sep")
                 if raw_separator is None:

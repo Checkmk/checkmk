@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
-# Author : Th.L.
-# Date  : 2020-04-27
+# Author : thl-cmk[at]outlook[dot]com
+# Date   : 2020-04-27
 # Content: wato plugin for snmp check 'cisco_asa_vpnsessions'
 #          to configure waring/critical levels
 #

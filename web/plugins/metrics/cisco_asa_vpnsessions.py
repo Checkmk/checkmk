@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
-# Cisco ASA cras Sessions (SVC and L2L) metrics plugin
+# Cisco ASA VPN Sessions metrics plugin
 #
-# Author: Th.L.
+# Author: thl-cmk[at]outlook[dot]com
 # Date  : 2018-02-16
 #
 #

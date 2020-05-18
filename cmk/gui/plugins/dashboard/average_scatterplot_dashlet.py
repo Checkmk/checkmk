@@ -31,10 +31,6 @@ from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 class AverageScatterplotDataGenerator(ABCDataGenerator):
     """Data generator for a scatterplot with average lines"""
     @classmethod
-    def type_name(cls):
-        return "average_scatterplot"
-
-    @classmethod
     def scatterplot_title(cls, properties, context):
         title_config = properties["scatterplot_title"]
         if title_config == "show":
@@ -265,7 +261,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
     """Dashlet that displays a scatterplot and average lines for a selected type of service"""
     @classmethod
     def type_name(cls):
-        return "average_scatterplot_dashlet"
+        return "average_scatterplot"
 
     @classmethod
     def title(cls):

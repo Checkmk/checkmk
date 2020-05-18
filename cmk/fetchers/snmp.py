@@ -55,11 +55,13 @@ class SNMPDataFetcher:
             # and fetches a separate snmp table.
             get_snmp = snmp.get_snmp_table_cached if self._use_snmpwalk_cache else snmp.get_snmp_table
             if isinstance(oid_info, list):
+                # branch: List[SNMPTree]
                 check_info = []  # type: List[SNMPTable]
                 for entry in oid_info:
                     check_info_part = get_snmp(self._snmp_config, check_plugin_name, entry)
                     check_info.append(check_info_part)
                 info[section_name] = check_info
             else:
+                # branch: OIDInfo
                 info[section_name] = get_snmp(self._snmp_config, check_plugin_name, oid_info)
         return info

@@ -81,6 +81,10 @@ Columns = List[Column]
 OID = str
 OIDWithColumns = Tuple[OID, Columns]
 OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+
+# TODO (CMK-4490): Typing here is just wrong as there is no practical
+# difference between an OIDWithColumns and OIDWithSubOIDsAndColumns with
+# an empty List[OID].
 SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
 MultiOIDInfo = List[SingleOIDInfo]
 OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]

@@ -181,11 +181,18 @@ def _value_encoding(column):
 
 def _make_target_columns(oid_info):
     # type: (Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], Columns]
-    # oid_info is either ( oid, columns ) or
-    # ( oid, suboids, columns )
-    # suboids is a list if OID-infixes that are put between baseoid
-    # and the columns and also prefixed to the index column. This
-    # allows to merge distinct SNMP subtrees with a similar structure
+    #
+    # OIDInfo is one of:
+    #   - OIDWithColumns = Tuple[OID, Columns]
+    #   - OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+    #     where List[OID] is a list if OID-infixes that are put between the
+    #     baseoid and the columns and prefixed with the index column.
+    #
+    # TODO: The Union[OIDWithColumns, OIDWithSubOIDsAndColumns] dance is absurd!
+    #       Here, we should just have OIDWithSubOIDsAndColumns and
+    #       replace `OIDWithColumns` with `Tuple[OID, [], Columns]`.
+    #
+    # This allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
     suboids = [None]  # type: List
     if isinstance(oid_info, SNMPTree):

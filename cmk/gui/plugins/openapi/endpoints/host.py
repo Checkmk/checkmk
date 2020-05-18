@@ -29,7 +29,7 @@ from cmk.gui.plugins.webapi import check_hostname, validate_host_attributes
                  etag='output',
                  request_body_required=True,
                  request_schema=request_schemas.CreateHost,
-                 response_schema=response_schemas.Host)
+                 response_schema=response_schemas.ConcreteHost)
 def create_host(params):
     """Create a host"""
     body = params['body']
@@ -55,13 +55,28 @@ def create_host(params):
     return _serve_host(host)
 
 
+@endpoint_schema('/domain-types/host/collections/hosts',
+                 method='get',
+                 response_schema=response_schemas.HostCollection)
+def list_hosts(param):
+    """List all hosts"""
+    return constructors.serve_json({
+        'id': 'host',
+        'value': [
+            constructors.collection_item('host', 'host', host)
+            for host in watolib.Folder.root_folder().all_hosts_recursively()
+        ],
+        'links': [constructors.link_rel('self', '/collections/host')]
+    })
+
+
 @endpoint_schema('/objects/host/{hostname}',
                  method='put',
                  parameters=['hostname'],
                  etag='both',
                  request_body_required=True,
                  request_schema=request_schemas.UpdateHost,
-                 response_schema=response_schemas.Host)
+                 response_schema=response_schemas.ConcreteHost)
 def update_host(params):
     """Update a host"""
     hostname = params['hostname']
@@ -94,7 +109,7 @@ def delete(params):
                  method='get',
                  parameters=['hostname'],
                  etag='output',
-                 response_schema=response_schemas.Host)
+                 response_schema=response_schemas.ConcreteHost)
 def show_host(params):
     """Show a host"""
     hostname = params['hostname']

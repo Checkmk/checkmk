@@ -125,6 +125,17 @@ components:
       - message
       - title
       type: object
+    ConcreteHost:
+      discriminator:
+        mapping:
+          host: '#/components/schemas/Host'
+          link: '#/components/schemas/Link'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/Host'
+      - $ref: '#/components/schemas/Link'
+      properties: {}
+      type: object
     ContactGroup:
       properties:
         domainType:
@@ -256,7 +267,7 @@ components:
       properties:
         hosts:
           allOf:
-          - $ref: '#/components/schemas/ObjectPropertyMember'
+          - $ref: '#/components/schemas/ObjectCollectionMember'
           description: A list of links pointing to the actual host-resources.
         move:
           allOf:
@@ -286,6 +297,28 @@ components:
       - domainType
       - links
       type: object
+    HostCollection:
+      properties:
+        domainType:
+          default: host
+          type: string
+        id:
+          type: string
+        links:
+          description: list of links to other resources.
+          items:
+            $ref: '#/components/schemas/Link'
+          type: array
+        title:
+          type: string
+        value:
+          items:
+            $ref: '#/components/schemas/ConcreteHost'
+          type: array
+      required:
+      - domainType
+      - links
+      type: object
     HostGroup:
       properties:
         domainType:
@@ -310,7 +343,7 @@ components:
       properties:
         folder:
           allOf:
-          - $ref: '#/components/schemas/ObjectPropertyMember'
+          - $ref: '#/components/schemas/Folder'
           description: The folder in which this host resides. It is represented by
             a hexadecimal identifier which is it's 'primary key'. The folder can be
             accessed via the `self`-link provided in the links array.
@@ -727,18 +760,18 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/collections/contact_group\",\n    json={\n        \"alias\"\
-          : \"Not on Sundays.\", \n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
+          : \"Not on Sundays.\",\n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Not on Sundays.\"\
-          , \n          \"name\": \"OnCall\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"OnCall\",\n  \
+          \        \"alias\": \"Not on Sundays.\"\n        }' \\\n    \"$API_URL/collections/contact_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/contact_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Not\
-          \ on Sundays.' \\\n    name='OnCall'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='OnCall'\
+          \ \\\n    alias='Not on Sundays.'"
   /objects/contact_group/{name}:
     delete:
       description: ''
@@ -884,19 +917,19 @@ paths:
           \    API_URL + \"/objects/contact_group/pathname\",\n    headers={ \n  \
           \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n    json={\n        \"alias\": \"Not on\
-          \ Sundays.\", \n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
+          \ Sundays.\",\n        \"name\": \"OnCall\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Not on Sundays.\", \n          \"name\"\
-          : \"OnCall\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
+          \    -d '{\n          \"name\": \"OnCall\",\n          \"alias\": \"Not\
+          \ on Sundays.\"\n        }' \\\n    \"$API_URL/objects/contact_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/contact_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Not on Sundays.' \\\n    name='OnCall'"
+          \ a20ceacf346041dc' \\\n    name='OnCall' \\\n    alias='Not on Sundays.'"
   /collections/folder:
     get:
       description: ''
@@ -973,23 +1006,23 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/collections/folder\",\n    json={\n        \"attributes\"\
-          : {\n            \"foo\": \"bar\"\n        }, \n        \"name\": \"production\"\
-          , \n        \"parent\": \"root\", \n        \"title\": \"Production Hosts\"\
+          : {\n            \"foo\": \"bar\"\n        },\n        \"name\": \"production\"\
+          ,\n        \"parent\": \"root\",\n        \"title\": \"Production Hosts\"\
           \n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"attributes\": {\n      \
-          \      \"foo\": \"bar\"\n          }, \n          \"name\": \"production\"\
-          , \n          \"parent\": \"root\", \n          \"title\": \"Production\
-          \ Hosts\"\n        }' \\\n    \"$API_URL/collections/folder\""
+          \ application/json\" \\\n    -d '{\n          \"title\": \"Production Hosts\"\
+          ,\n          \"name\": \"production\",\n          \"attributes\": {\n  \
+          \          \"foo\": \"bar\"\n          },\n          \"parent\": \"root\"\
+          \n        }' \\\n    \"$API_URL/collections/folder\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/folder\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    attributes='{\"\
-          foo\": \"bar\"}' \\\n    name='production' \\\n    parent='root' \\\n  \
-          \  title='Production Hosts'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    title='Production\
+          \ Hosts' \\\n    name='production' \\\n    attributes='{\"foo\": \"bar\"\
+          }' \\\n    parent='root'"
   /objects/folder/{ident}:
     delete:
       description: ''
@@ -1137,24 +1170,23 @@ paths:
           \    API_URL + \"/objects/folder/49167bd012b44719a67956cf3ef7b3dd\",\n \
           \   headers={ \n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
           \ The ETag of the object to be modified.\n    },\n    json={\n        \"\
-          attributes\": [\n            {\n                \"key\": \"foo\", \n   \
-          \             \"value\": \"bar\"\n            }\n        ], \n        \"\
-          title\": \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()"
+          attributes\": [\n            {\n                \"key\": \"foo\",\n    \
+          \            \"value\": \"bar\"\n            }\n        ],\n        \"title\"\
+          : \"Virtual Servers.\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"attributes\": [\n            {\n              \"\
-          value\": \"bar\", \n              \"key\": \"foo\"\n            }\n    \
-          \      ], \n          \"title\": \"Virtual Servers.\"\n        }' \\\n \
-          \   \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
+          \    -d '{\n          \"title\": \"Virtual Servers.\",\n          \"attributes\"\
+          : [\n            {\n              \"key\": \"foo\",\n              \"value\"\
+          : \"bar\"\n            }\n          ]\n        }' \\\n    \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/folder/49167bd012b44719a67956cf3ef7b3dd\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    attributes='[{\"value\": \"bar\", \"key\": \"\
-          foo\"}]' \\\n    title='Virtual Servers.'"
+          \ a20ceacf346041dc' \\\n    title='Virtual Servers.' \\\n    attributes='[{\"\
+          key\": \"foo\", \"value\": \"bar\"}]'"
   /objects/folder/{ident}/actions/move/invoke:
     post:
       description: ''
@@ -1235,7 +1267,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/ConcreteHost'
           description: ''
           headers:
             ETag:
@@ -1255,23 +1287,59 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/collections/host\",\n    json={\n        \"attributes\"\
-          : {}, \n        \"folder\": \"root\", \n        \"hostname\": \"example.com\"\
-          , \n        \"nodes\": [\n            \"host1\", \n            \"host2\"\
-          , \n            \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
+          : {},\n        \"folder\": \"root\",\n        \"hostname\": \"example.com\"\
+          ,\n        \"nodes\": [\n            \"host1\",\n            \"host2\",\n\
+          \            \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"attributes\": {}, \n   \
-          \       \"folder\": \"root\", \n          \"hostname\": \"example.com\"\
-          , \n          \"nodes\": [\n            \"host1\", \n            \"host2\"\
-          , \n            \"host3\"\n          ]\n        }' \\\n    \"$API_URL/collections/host\""
+          \ application/json\" \\\n    -d '{\n          \"hostname\": \"example.com\"\
+          ,\n          \"nodes\": [\n            \"host1\",\n            \"host2\"\
+          ,\n            \"host3\"\n          ],\n          \"folder\": \"root\",\n\
+          \          \"attributes\": {}\n        }' \\\n    \"$API_URL/collections/host\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    attributes='{}'\
-          \ \\\n    folder='root' \\\n    hostname='example.com' \\\n    nodes='[\"\
-          host1\", \"host2\", \"host3\"]'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    hostname='example.com'\
+          \ \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\n    folder='root'\
+          \ \\\n    attributes='{}'"
+  /domain-types/host/collections/hosts:
+    get:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host.list_hosts
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostCollection'
+          description: ''
+      summary: List all hosts
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host
+      x-code-samples:
+      - lang: requests
+        source: "import requests\n\nsession = requests.session()\nsession.headers['Authorization']\
+          \ = 'Bearer username password'\nsession.headers['Accept'] = 'application/json'\n\
+          \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
+          API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.get(\n\
+          \    API_URL + \"/domain-types/host/collections/hosts\",\n)\nresp.raise_for_status()"
+      - lang: curl
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X GET \\\n    --header\
+          \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
+          \ application/json\" \\\n    \"$API_URL/domain-types/host/collections/hosts\""
+      - lang: httpie
+        source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
+          \ = \"...\"\nPASSWORD = \"...\"\n\nhttp GET \"$API_URL/domain-types/host/collections/hosts\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\""
   /objects/host/{hostname}:
     delete:
       description: ''
@@ -1335,7 +1403,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/ConcreteHost'
           description: ''
           headers:
             ETag:
@@ -1395,7 +1463,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Host'
+                $ref: '#/components/schemas/ConcreteHost'
           description: ''
           headers:
             ETag:
@@ -1416,23 +1484,23 @@ paths:
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.put(\n\
           \    API_URL + \"/objects/host/example.com\",\n    headers={ \n        \"\
           If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object to\
-          \ be modified.\n    },\n    json={\n        \"attributes\": {}, \n     \
-          \   \"nodes\": [\n            \"host1\", \n            \"host2\", \n   \
-          \         \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
+          \ be modified.\n    },\n    json={\n        \"attributes\": {},\n      \
+          \  \"nodes\": [\n            \"host1\",\n            \"host2\",\n      \
+          \      \"host3\"\n        ]\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"attributes\": {}, \n          \"nodes\": [\n   \
-          \         \"host1\", \n            \"host2\", \n            \"host3\"\n\
-          \          ]\n        }' \\\n    \"$API_URL/objects/host/example.com\""
+          \    -d '{\n          \"nodes\": [\n            \"host1\",\n           \
+          \ \"host2\",\n            \"host3\"\n          ],\n          \"attributes\"\
+          : {}\n        }' \\\n    \"$API_URL/objects/host/example.com\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host/example.com\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    attributes='{}' \\\n    nodes='[\"host1\", \"\
-          host2\", \"host3\"]'"
+          \ a20ceacf346041dc' \\\n    nodes='[\"host1\", \"host2\", \"host3\"]' \\\
+          \n    attributes='{}'"
   /collections/host_group:
     post:
       description: ''
@@ -1474,18 +1542,18 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/collections/host_group\",\n    json={\n        \"alias\"\
-          : \"Windows Servers\", \n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
+          : \"Windows Servers\",\n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Windows Servers\"\
-          , \n          \"name\": \"windows\"\n        }' \\\n    \"$API_URL/collections/host_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"windows\",\n \
+          \         \"alias\": \"Windows Servers\"\n        }' \\\n    \"$API_URL/collections/host_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/host_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Windows\
-          \ Servers' \\\n    name='windows'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='windows'\
+          \ \\\n    alias='Windows Servers'"
   /objects/host_group/{name}:
     delete:
       description: ''
@@ -1631,19 +1699,19 @@ paths:
           \    API_URL + \"/objects/host_group/pathname\",\n    headers={ \n     \
           \   \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the object\
           \ to be modified.\n    },\n    json={\n        \"alias\": \"Windows Servers\"\
-          , \n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
+          ,\n        \"name\": \"windows\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Windows Servers\", \n          \"name\"\
-          : \"windows\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
+          \    -d '{\n          \"name\": \"windows\",\n          \"alias\": \"Windows\
+          \ Servers\"\n        }' \\\n    \"$API_URL/objects/host_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/host_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Windows Servers' \\\n    name='windows'"
+          \ a20ceacf346041dc' \\\n    name='windows' \\\n    alias='Windows Servers'"
   /collections/service_group:
     get:
       description: ''
@@ -1720,19 +1788,19 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/collections/service_group\",\n    json={\n        \"alias\"\
-          : \"Environment Sensors\", \n        \"name\": \"environment\"\n    },\n\
+          : \"Environment Sensors\",\n        \"name\": \"environment\"\n    },\n\
           )\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"alias\": \"Environment Sensors\"\
-          , \n          \"name\": \"environment\"\n        }' \\\n    \"$API_URL/collections/service_group\""
+          \ application/json\" \\\n    -d '{\n          \"name\": \"environment\"\
+          ,\n          \"alias\": \"Environment Sensors\"\n        }' \\\n    \"$API_URL/collections/service_group\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/collections/service_group\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    alias='Environment\
-          \ Sensors' \\\n    name='environment'"
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    name='environment'\
+          \ \\\n    alias='Environment Sensors'"
   /objects/service_group/{name}:
     delete:
       description: ''
@@ -1878,19 +1946,20 @@ paths:
           \    API_URL + \"/objects/service_group/pathname\",\n    headers={ \n  \
           \      \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
           \ object to be modified.\n    },\n    json={\n        \"alias\": \"Environment\
-          \ Sensors\", \n        \"name\": \"environment\"\n    },\n)\nresp.raise_for_status()"
+          \ Sensors\",\n        \"name\": \"environment\"\n    },\n)\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X PUT \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
           \ application/json\" \\\n    --header \"If-Match: a20ceacf346041dc\" \\\n\
-          \    -d '{\n          \"alias\": \"Environment Sensors\", \n          \"\
-          name\": \"environment\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
+          \    -d '{\n          \"name\": \"environment\",\n          \"alias\": \"\
+          Environment Sensors\"\n        }' \\\n    \"$API_URL/objects/service_group/pathname\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp PUT \"$API_URL/objects/service_group/pathname\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    'If-Match:\
-          \ a20ceacf346041dc' \\\n    alias='Environment Sensors' \\\n    name='environment'"
+          \ a20ceacf346041dc' \\\n    name='environment' \\\n    alias='Environment\
+          \ Sensors'"
   /version:
     get:
       description: ''
@@ -1959,14 +2028,14 @@ paths:
           \n# Replace HOST_NAME and SITE_NAME with the names from your host and site.\n\
           API_URL = 'http://HOST_NAME/SITE_NAME/check_mk/api/v0'\n\nresp = session.post(\n\
           \    API_URL + \"/domain-types/agent/actions/sign\",\n    json={\n     \
-          \   \"key_id\": \"asdf\", \n        \"passphrase\": \"sw0rdfish\"\n    },\n\
+          \   \"key_id\": \"asdf\",\n        \"passphrase\": \"sw0rdfish\"\n    },\n\
           )\nresp.raise_for_status()"
       - lang: curl
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\ncurl \\\n    -X POST \\\n    --header\
           \ \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept:\
-          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\", \n \
-          \         \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
+          \ application/json\" \\\n    -d '{\n          \"key_id\": \"asdf\",\n  \
+          \        \"passphrase\": \"sw0rdfish\"\n        }' \\\n    \"$API_URL/domain-types/agent/actions/sign\""
       - lang: httpie
         source: "API_URL = \"http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\nUSERNAME\
           \ = \"...\"\nPASSWORD = \"...\"\n\nhttp POST \"$API_URL/domain-types/agent/actions/sign\"\
@@ -2237,7 +2306,7 @@ tags:
     \ can hold special configuration parameters which control various aspects of\n\
     \    the monitoring system. Most of these attributes will be inherited by hosts\
     \ within that\n    folder. For more information please have a look at the\n  \
-    \  [Host Administration chapter of the handbook](https://checkmk.com/cms_wato_hosts.html#Introduction)\n\
+    \  [Host Administration chapter of the handbook](https://checkmk.com/cms_wato_hosts.html#Introduction).\n\
     \n<SchemaDefinition schemaRef=\"#/components/schemas/CreateFolder\" showReadOnly={true}\
     \ showWriteOnly={true} />"
   name: CreateFolder

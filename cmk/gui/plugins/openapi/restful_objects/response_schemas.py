@@ -13,6 +13,7 @@ from cmk.gui.plugins.openapi import plugins
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
+# TODO: websocket verbindung um events/etc. zu streamen.
 
 
 class ApiError(Schema):
@@ -47,7 +48,7 @@ class UserSchema(Schema):
                               doc_default="The current datetime")
 
 
-class Link(Schema):
+class LinkSchema(Schema):
     """A Link representation according to A-24 (2.7)
 
     """
@@ -89,7 +90,7 @@ class Link(Schema):
 
 class Linkable(Schema):
     links = fields.List(
-        fields.Nested(Link),
+        fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
     )
@@ -167,7 +168,7 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
-    value = fields.List(fields.Nested(Link()))
+    value = fields.List(fields.Nested(LinkSchema()))
 
 
 class ObjectPropertyMember(ObjectMemberBase):
@@ -225,6 +226,7 @@ class AttributeDict(plugins.ValueTypedDictSchema):
 
 class DomainObject(Linkable):
     domainType = fields.String(required=True)
+    # Generic things to ease development. Should be changed for more concrete schemas.
     id = fields.String()
     title = fields.String()
     members = fields.Nested(ObjectMemberDict())
@@ -232,7 +234,7 @@ class DomainObject(Linkable):
 
 class FolderMembers(Schema):
     hosts = fields.Nested(
-        ObjectPropertyMember(),
+        ObjectCollectionMember(),
         description="A list of links pointing to the actual host-resources.",
     )
     move = fields.Nested(
@@ -248,7 +250,7 @@ class Folder(Linkable):
     )
     id = fields.String()
     title = fields.String()
-    members = fields.Nested(FolderMembers(),)
+    members = fields.Nested(FolderMembers())
 
 
 class MoveFolder(Schema):
@@ -282,22 +284,47 @@ class ContactGroup(DomainObject):
     )
 
 
+class Configuration(DomainObject):
+    domainType = fields.Constant("config", required=True)
+
+
+class SiteStateMembers(Schema):
+    sites = fields.Dict()
+
+
+class SiteState(Linkable):
+    domainType = fields.Constant("site-state", required=True)
+    members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
+
+
 class HostMembers(Schema):
     folder = fields.Nested(
-        ObjectPropertyMember(),
+        Folder(),
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
         "`self`-link provided in the links array.")
 
 
-class Host(Linkable):
-    domainType = fields.Constant(
-        "host",
-        required=True,
-    )
+class HostSchema(Linkable):
+    domainType = fields.Constant("host", required=True)
     id = fields.String()
     title = fields.String()
     members = fields.Nested(HostMembers, description="All the members of the host object.")
+
+
+class ConcreteHost(OneOfSchema):
+    type_schemas = {
+        'host': HostSchema,
+        'link': LinkSchema,
+    }
+    type_field = 'type'
+
+
+class HostCollection(Linkable):
+    domainType = fields.Constant("host", required=True)
+    id = fields.String()
+    title = fields.String()
+    value = fields.List(fields.Nested(ConcreteHost))
 
 
 class ObjectAction(Linkable):
@@ -305,7 +332,7 @@ class ObjectAction(Linkable):
 
 
 class DomainObjectCollection(Linkable):
-    value = fields.List(fields.Nested(Link))
+    value = fields.List(fields.Nested(LinkSchema))
 
 
 class User(Linkable):
@@ -353,7 +380,7 @@ class VersionCapabilities(Schema):
     )
 
 
-class Version(Link):
+class Version(LinkSchema):
     specVersion = fields.Str(
         description=('The "major.minor" parts of the version of the spec supported by this '
                      'implementation, e.g. "1.0"'),

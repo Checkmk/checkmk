@@ -177,7 +177,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         # _discover_services(..) would discover check plugin names again.
         # In order to avoid a second discovery (SNMP data source would do
         # another SNMP scan) we enforce this selection to be used.
-        check_plugin_names = multi_host_sections.get_check_plugin_names()
+        check_plugin_names = {str(n) for n in multi_host_sections.get_check_plugin_candidates()}
         sources.enforce_check_plugin_names(check_plugin_names)
 
     section.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
@@ -1197,7 +1197,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     # _discover_services(..) would discover check plugin names again.
     # In order to avoid a second discovery (SNMP data source would do
     # another SNMP scan) we enforce this selection to be used.
-    check_plugin_names = multi_host_sections.get_check_plugin_names()
+    check_plugin_names = {str(n) for n in multi_host_sections.get_check_plugin_candidates()}
     sources.enforce_check_plugin_names(check_plugin_names)
 
     # Handle discovered services -> "new"

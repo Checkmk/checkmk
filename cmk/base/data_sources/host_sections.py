@@ -472,15 +472,32 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
-    def get_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        # TODO: There is a function 'section_name_of' in check_utils.py
-        # but no inverse function, ie. get all subchecks of main check.
-        check_keys = set(config.check_info)
-        check_plugin_names = set()
-        for v in self._multi_host_sections.values():
-            for k in v.sections:
-                for check_k in check_keys:
-                    if check_k.startswith(k):
-                        check_plugin_names.add(check_k)
-        return check_plugin_names
+    def get_check_plugin_candidates(self):
+        # type: () -> Set[PluginName]
+        """Return names of check plugins that this multi_host_section may contain data for.
+
+        Given this mutli_host_section, there is no point in trying to discover any check plugins
+        not returned by this function.
+        This does not address the question wether or not the returned check plugins will discover
+        something.
+        """
+        raw_section_names = {
+            PluginName(name)
+            for node_data in self._multi_host_sections.values()
+            for name in node_data.sections
+        }
+
+        raw_sections = [
+            (name, config.get_registered_section_plugin(name)) for name in raw_section_names
+        ]
+
+        parsed_section_names = {
+            name if section is None else section.parsed_section_name
+            for name, section in raw_sections
+        }
+
+        return {
+            plugin.name
+            for plugin in config.registered_check_plugins.values()
+            if any(section in parsed_section_names for section in plugin.sections)
+        }

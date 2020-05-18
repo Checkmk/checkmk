@@ -11804,6 +11804,15 @@ msgstr ""
 "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
 msgid ""
+"Define a translation of the possible states of the MTree to monitoring states, "
+"i.e. to the result of the check. This overwrites the default mapping used by the "
+"check."
+msgstr ""
+"Definiere eine Übersetzung der möglichen MTree-Status in Monitoring-Status, sprich "
+"in das Ergebnis des Checks. Dies überschreibt die ursprünglich vom Checks verwendete "
+"Zuordnung."
+
+msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern (* "
 "and ?) are supported and will produce multiple services at once."
 msgstr ""
@@ -26175,6 +26184,9 @@ msgstr "Mapped memory usage"
 msgid "Mapped size"
 msgstr "Mapped size"
 
+msgid "Mapping of MTree state to monitoring state"
+msgstr "Zuordnung MTree-Status -- Monitoring-Status"
+
 msgid "March"
 msgstr "März"
 
@@ -27501,6 +27513,27 @@ msgstr "Monitoring-Zustand"
 
 msgid "Monitoring state for any other service state"
 msgstr "Monitoring State für alle übrigen Service Zustände"
+
+msgid "Monitoring state if MTree state is 'deleted'"
+msgstr "Monitoring-Status, falls der MTree-Status 'deleted' ist"
+
+msgid "Monitoring state if MTree state is 'read-only'"
+msgstr "Monitoring-Status, falls der MTree-Status 'read-only' ist"
+
+msgid "Monitoring state if MTree state is 'read-write'"
+msgstr "Monitoring-Status, falls der MTree-Status 'read-write' ist"
+
+msgid "Monitoring state if MTree state is 'replication destination'"
+msgstr "Monitoring-Status, falls der MTree-Status 'replication destination' ist"
+
+msgid "Monitoring state if MTree state is 'retention lock disabled'"
+msgstr "Monitoring-Status, falls der MTree-Status 'retention lock disabled' ist"
+
+msgid "Monitoring state if MTree state is 'retention lock enabled'"
+msgstr "Monitoring-Status, falls der MTree-Status 'retention lock enabled' ist"
+
+msgid "Monitoring state if MTree state is 'unknown'"
+msgstr "Monitoring-Status, falls der MTree-Status 'unknown' ist"
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
@@ -39240,6 +39273,9 @@ msgstr "Zustandsautomat in ungültigem Zustand"
 
 msgid "State of Citrix VMs"
 msgstr "Status von Citrix-VMs"
+
+msgid "State of EMC Data Domain MTree"
+msgstr "Status von EMC Data Domain MTree"
 
 msgid "State of ESX hosts and virtual machines"
 msgstr "Status von ESX hosts und Virtual Machines"

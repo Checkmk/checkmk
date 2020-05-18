@@ -153,7 +153,7 @@ def parse_cisco_temperature(info):
             'raw_dev_state': sensorstate,  # used in discovery function
             'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate)),
             'admin_state': admin_states_dict.get(sensor_id),
-            'partnumber' : partnumbers_dict.get(sensor_id),
+            'partnumber': partnumbers_dict.get(sensor_id),
         }
 
         if sensorstate == '1':

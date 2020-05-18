@@ -1275,13 +1275,27 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         # Ensure this process is not detected as apache process by the apache init script
         daemon.set_procname(b"cmk-activate-changes")
 
-        # Detach from parent (apache) -> Remain running when apache is restarted
-        os.setsid()
+        self._detach_from_parent()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
         if g:
             sites_disconnect()
 
+        self._close_apache_fds()
+
+        # Reinitialize logging targets
+        log.init_logging()  # NOTE: We run in a subprocess!
+
+        try:
+            self._do_run()
+        except Exception:
+            self._logger.exception("error running activate changes")
+
+    def _detach_from_parent(self):
+        # Detach from parent (apache) -> Remain running when apache is restarted
+        os.setsid()
+
+    def _close_apache_fds(self):
         # Cleanup resources of the apache
         for x in range(3, 256):
             try:
@@ -1291,14 +1305,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     pass
                 else:
                     raise
-
-        # Reinitialize logging targets
-        log.init_logging()  # NOTE: We run in a subprocess!
-
-        try:
-            self._do_run()
-        except Exception:
-            self._logger.exception("error running activate changes")
 
     def _do_run(self):
         try:

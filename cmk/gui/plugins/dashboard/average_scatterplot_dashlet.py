@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import (  # pylint: disable=unused-import
-    Dict, Text, List)
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKTimeout, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
@@ -25,6 +23,9 @@ from cmk.utils.render import date_and_time
 from cmk.gui.visuals import get_filter_headers
 
 from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, Text, List)
+
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
 
@@ -242,12 +243,12 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _create_tooltip(cls, timestamp, host_to_value_dict, additional_rows=None):
+        return ""
         table_rows = sorted(host_to_value_dict.items(), key=lambda item: item[1]) + additional_rows
         table_html = ""
-        # TODO: cleanup str casting
         for a, b in table_rows:
-            table_html += str(html.render_tr(html.render_td(a) + html.render_td(b)))
-        table_html = str(html.render_table(table_html))
+            table_html += html.render_tr(html.render_td(a) + html.render_td(b))
+        table_html = html.render_table(table_html)
         tooltip = html.render_div(date_and_time(timestamp)) + table_html
         return tooltip
 

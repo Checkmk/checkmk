@@ -71,7 +71,7 @@ def create_snapshot(comment):
 # TODO: Remove once new changes mechanism has been implemented
 def _do_create_snapshot(data):
     snapshot_name = data["snapshot_name"]
-    work_dir = snapshot_dir + "/workdir/%s" % snapshot_name
+    work_dir = snapshot_dir.rstrip('/') + "/workdir/%s" % snapshot_name
 
     try:
         if not os.path.exists(work_dir):

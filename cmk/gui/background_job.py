@@ -158,24 +158,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
     def run(self):
         # type: () -> None
-        # Detach from parent and cleanup inherited file descriptors
-        os.setsid()
-        daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
-        sys.stdin.close()
-        sys.stdout.close()
-        # Caused trouble with Python 3:
-        # ---
-        # mod_wsgi (pid=121215): Exception occurred within exit functions.
-        # Traceback (most recent call last):
-        #   File "/omd/sites/heute/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
-        #     self.run()
-        #   File "/omd/sites/heute/lib/python3/cmk/gui/background_job.py", line 166, in run
-        #     sys.stderr.close()
-        # RuntimeError: log object has expired
-        # ---
-        # Disabling this for the moment and check whether or not it is OK to skip this.
-        #sys.stderr.close()
-        daemon.closefrom(0)
+        self._detach_from_parent()
 
         try:
             self.initialize_environment()
@@ -208,6 +191,26 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             self._logger.error("Exception while preparing background function environment",
                                exc_info=True)
             self._jobstatus.update_status({"state": JobStatusStates.EXCEPTION})
+
+    def _detach_from_parent(self):
+        # Detach from parent and cleanup inherited file descriptors
+        os.setsid()
+        daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
+        sys.stdin.close()
+        sys.stdout.close()
+        # Caused trouble with Python 3:
+        # ---
+        # mod_wsgi (pid=121215): Exception occurred within exit functions.
+        # Traceback (most recent call last):
+        #   File "/omd/sites/heute/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
+        #     self.run()
+        #   File "/omd/sites/heute/lib/python3/cmk/gui/background_job.py", line 166, in run
+        #     sys.stderr.close()
+        # RuntimeError: log object has expired
+        # ---
+        # Disabling this for the moment and check whether or not it is OK to skip this.
+        # sys.stderr.close()
+        daemon.closefrom(0)
 
     def initialize_environment(self):
         # type: () -> None
@@ -550,8 +553,14 @@ class BackgroundJob(object):
             p.start()
         except Exception as e:
             self._logger.exception("Error while starting subprocess: %s", e)
-            os._exit(1)
-        os._exit(0)
+            self._exit(1)
+        self._exit(0)
+
+    def _exit(self, code):
+        """Exit the interpreter.
+
+        This is here so we can mock this away cleanly."""
+        os._exit(code)
 
 
 class JobStatusStates(object):

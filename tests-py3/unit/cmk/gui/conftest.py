@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,7 +10,9 @@ import ast
 import contextlib
 import json
 import threading
-from typing import Dict, Any
+
+from typing import NamedTuple, Any
+
 if sys.version_info[0] >= 3:
     from http.cookiejar import CookieJar  # pylint: disable=import-error
 else:
@@ -23,11 +25,12 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+from mock import MagicMock
 import webtest  # type: ignore[import]
 
 import pytest  # type: ignore[import]
 import six
-from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode  # pylint: disable=relative-import
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -45,6 +48,13 @@ from cmk.utils import store
 from testlib.utils import DummyApplication
 
 SPEC_LOCK = threading.Lock()
+
+Automation = NamedTuple("Automation", [
+    ("automation", MagicMock),
+    ("local_automation", MagicMock),
+    ("remote_automation", MagicMock),
+    ("responses", Any),
+])
 
 
 @pytest.fixture(scope='function')
@@ -77,7 +87,7 @@ def load_config(register_builtin_html):
 
 @pytest.fixture()
 def load_plugins(register_builtin_html, monkeypatch, tmp_path):
-    import cmk.gui.modules as modules  # pylint: disable=import-outside-toplevel
+    import cmk.gui.modules as modules
     config_dir = tmp_path / "var/check_mk/web"
     config_dir.mkdir(parents=True)
     monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
@@ -97,7 +107,7 @@ def _mk_user_obj(username, password, automation=False):
             },
             'is_new_user': True,
         }
-    }  # type: Dict[str, Dict[str, Any]]
+    }
     if automation:
         user[username]['attributes'].update(automation_secret=password,)
     return user
@@ -153,7 +163,7 @@ def with_user_login(with_user):
 # noinspection PyDefaultArgument
 @pytest.fixture(scope='function')
 def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.openapi import generate  # pylint: disable=import-outside-toplevel
+    from cmk.gui.openapi import generate
     spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
     openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
     openapi_spec_dir.return_value = spec_path
@@ -164,11 +174,12 @@ def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-defau
                 _cache.append(generate())
 
     spec_data = six.ensure_text(_cache[0])
+    store.makedirs(spec_path)
     store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
 
 
 @pytest.fixture()
-def suppress_automation_calls(mocker):
+def suppress_automation_calls(mocker, inline_background_jobs):
     """Stub out calls to the "automation" system
 
     This is needed because in order for automation calls to work, the site needs to be set up
@@ -179,18 +190,33 @@ def suppress_automation_calls(mocker):
     local_automation = mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
     mocker.patch("cmk.gui.watolib.check_mk_local_automation", new=local_automation)
 
-    yield automation, local_automation
+    remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
+    mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
+
+    yield Automation(automation=automation,
+                     local_automation=local_automation,
+                     remote_automation=remote_automation,
+                     responses=None)
 
 
 @pytest.fixture()
 def inline_local_automation_calls(mocker):
     # Only works from Python3 code.
     def call_automation(cmd, args):
-        from cmk.base.automations import automations  # pylint: disable=import-outside-toplevel
+        from cmk.base.automations import automations
         return automations.execute(cmd, args)
 
     mocker.patch("cmk.gui.watolib.automations.check_mk_automation", new=call_automation)
     mocker.patch("cmk.gui.watolib.check_mk_automation", new=call_automation)
+
+
+@pytest.fixture()
+def make_html_object_explode(mocker):
+    class HtmlExploder(object):
+        def __init__(self, *args, **kw):
+            raise NotImplementedError("Tried to instantiate html")
+
+    mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
 
 
 @pytest.fixture()
@@ -204,11 +230,10 @@ def inline_background_jobs(mocker):
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
-    mocker.patch("os.setsid")
-    mocker.patch("os._exit")
-    mocker.patch("sys.stdout.close")
-    mocker.patch("sys.stdin.close")
-    mocker.patch("sys.stderr.close")
+    mocker.patch("cmk.gui.watolib.ActivateChangesSite._detach_from_parent")
+    mocker.patch("cmk.gui.watolib.ActivateChangesSite._close_apache_fds")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
+    mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
     mocker.patch("cmk.utils.daemon.daemonize")
     mocker.patch("cmk.utils.daemon.closefrom")
 
@@ -287,11 +312,10 @@ class WebTestAppForCMK(webtest.TestApp):
 
         if output_format == 'python':
             return ast.literal_eval(_resp.body)
-
-        if output_format == 'json':
+        elif output_format == 'json':
             return json.loads(_resp.body)
-
-        raise NotImplementedError("Format %s not implemented" % output_format)
+        else:
+            raise NotImplementedError("Format %s not implemented" % output_format)
 
 
 @pytest.fixture(scope='function')

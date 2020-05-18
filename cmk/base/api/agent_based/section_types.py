@@ -6,14 +6,14 @@
 """Types and classes used by the API for agent_based plugins
 """
 import collections
+
 from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.utils.type_defs import SNMPTable
+from cmk.utils.type_defs import OIDSpec, SNMPTable, CompatibleOIDEnd, ABCSNMPTree
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.snmp_utils import OIDSpec
 
 AgentParseFunction = Callable[[AgentSectionContent], Any]
 
@@ -25,7 +25,9 @@ SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 SNMPDetectSpec = List[List[SNMPDetectAtom]]
 
 
-class OIDEnd(int):
+# We inherit from CompatibleOIDEnd = int because we must be compatible with the
+# old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
+class OIDEnd(CompatibleOIDEnd):
     """OID specification to get the end of the OID string
 
     When specifying an OID in an SNMPTree object, the parse function
@@ -39,16 +41,7 @@ class OIDEnd(int):
         return "OIDEnd()"
 
 
-# We inherit from int in the above, because we must be compatible
-# to the old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-# Once we can drop those, we can make this a simple object,
-# and adjust the type hints in SNMPTree. We use a type alias for
-# the time beeing, in order to make it easier to find all occurrances.
-# Once it's not needed anymore, replace all ocurrances by OIDEnd:
-CompatibleOIDEnd = Union[int, OIDEnd]
-
-
-class SNMPTree:
+class SNMPTree(ABCSNMPTree):
     """Specify an OID table to fetch
 
     For every SNMPTree that is specified, the parse function will
@@ -57,6 +50,7 @@ class SNMPTree:
     """
     def __init__(self, base=None, oids=None):
         # type: (str, List[Union[str, OIDSpec, OIDEnd]]) -> None
+        super(SNMPTree, self).__init__()
         if base is None or oids is None:
             # TODO (mo): unhack this CMK-3983
             raise TypeError("specify exactly 'base' and 'oids' keyword arguments")
@@ -140,5 +134,5 @@ SNMPSectionPlugin = NamedTuple("SNMPSectionPlugin", [
     ("host_label_function", HostLabelFunction),
     ("supersedes", List[PluginName]),
     ("detect_spec", SNMPDetectSpec),
-    ("trees", List[SNMPTree]),
+    ("trees", List[ABCSNMPTree]),
 ])

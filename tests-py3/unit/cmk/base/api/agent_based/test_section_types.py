@@ -6,9 +6,10 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.type_defs import OIDSpec
+
 from cmk.base.check_api import OID_END
 from cmk.base.snmp_utils import (
-    OIDSpec,
     OIDCached,
     OIDBytes,
 )

@@ -6,11 +6,15 @@
 
 # pylint: disable=protected-access
 
+from typing import List
+
 import pytest  # type: ignore[import]
 
-from cmk.base.api import PluginName
-import cmk.base.api.agent_based.section_types as section_types
+from cmk.utils.type_defs import ABCSNMPTree
+
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
+import cmk.base.api.agent_based.section_types as section_types
+from cmk.base.api import PluginName
 
 
 def _generator_function():
@@ -112,7 +116,7 @@ def test_create_snmp_section_plugin():
             base='.1.2.3',
             oids=[section_types.OIDEnd(), '2.3'],
         ),
-    ]
+    ]  # type: List[ABCSNMPTree]
 
     detect = [
         [('.1.2.3.4.5', 'Foo.*', True)],

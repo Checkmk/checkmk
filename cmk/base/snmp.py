@@ -21,6 +21,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     OID,
+    OIDSpec,
     CheckPluginName,
     Column,
     Columns,
@@ -35,13 +36,13 @@ from cmk.utils.type_defs import (
     SNMPRowInfo,
     SNMPTable,
     SNMPValueEncoding,
+    ABCSNMPTree,
 )
 
 import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.snmp_utils import (
     ResultColumnsDecoded,
     ResultColumnsSanitized,
@@ -94,12 +95,12 @@ def create_snmp_host_config(hostname):
 
 
 def get_snmp_table(snmp_config, check_plugin_name, oid_info):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, SNMPTree]) -> SNMPTable
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree]) -> SNMPTable
     return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False)
 
 
 def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, SNMPTree]) -> SNMPTable
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree]) -> SNMPTable
     return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True)
 
 
@@ -114,7 +115,7 @@ SPECIAL_COLUMNS = [
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo,SNMPTree], bool) -> SNMPTable
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool) -> SNMPTable
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
@@ -180,7 +181,7 @@ def _value_encoding(column):
 
 
 def _make_target_columns(oid_info):
-    # type: (Union[OIDInfo, SNMPTree]) -> Tuple[OID, List[Any], Columns]
+    # type: (Union[OIDInfo, ABCSNMPTree]) -> Tuple[OID, List[Any], Columns]
     #
     # OIDInfo is one of:
     #   - OIDWithColumns = Tuple[OID, Columns]
@@ -195,7 +196,7 @@ def _make_target_columns(oid_info):
     # This allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
     suboids = [None]  # type: List
-    if isinstance(oid_info, SNMPTree):
+    if isinstance(oid_info, ABCSNMPTree):
         # TODO (mo): Via SNMPTree is the way to go. Remove all other cases
         #            once we have the auto-conversion of SNMPTrees in place.
         #            In particular:
@@ -465,7 +466,7 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
 
 
 def _compute_fetch_oid(oid, suboid, column):
-    # type: (Union[OID,snmp_utils.OIDSpec], Optional[OID], Column) -> OID
+    # type: (Union[OID, OIDSpec], Optional[OID], Column) -> OID
     if suboid:
         fetchoid = "%s.%s" % (oid, suboid)
     else:

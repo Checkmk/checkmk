@@ -24,7 +24,7 @@ else:
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-import cmk.base.snmp_utils as snmp_utils
+from cmk.utils.type_defs import ABCSNMPTree, OIDSpec
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
@@ -35,7 +35,6 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.section_types import SNMPTree
 
 
 def _validate_parse_function(parse_function):
@@ -89,7 +88,7 @@ def _validate_detect_spec(detect_spec):
         if not str(oid_string).startswith('.'):
             raise ValueError("OID in value of 'detect' keyword must start with '.': %r" %
                              (oid_string,))
-        snmp_utils.OIDSpec.validate(oid_string.rstrip('.*'))
+        OIDSpec.validate(oid_string.rstrip('.*'))
 
         if expression is not None:
             try:
@@ -103,13 +102,13 @@ def _validate_detect_spec(detect_spec):
 
 
 def _validate_snmp_trees(trees):
-    # type: (List[SNMPTree]) -> None
+    # type: (List[ABCSNMPTree]) -> None
     type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
     if not isinstance(trees, list):
         raise type_error
     if not trees:
         raise type_error
-    if any(not isinstance(element, SNMPTree) for element in trees):
+    if any(not isinstance(element, ABCSNMPTree) for element in trees):
         raise type_error
 
 
@@ -196,7 +195,7 @@ def create_snmp_section_plugin(
         host_label_function=None,  # type: Optional[HostLabelFunction]
         supersedes=None,  # type:  Optional[List[str]]
         detect_spec=None,  # type: Optional[SNMPDetectSpec]
-        trees=None,  # type: Optional[List[SNMPTree]]
+        trees=None,  # type: Optional[List[ABCSNMPTree]]
         forbidden_names=None,  # type: Optional[List[PluginName]]
 ):
     # type: (...) -> SNMPSectionPlugin

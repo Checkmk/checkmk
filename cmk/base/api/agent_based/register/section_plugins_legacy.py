@@ -7,7 +7,7 @@
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
-from cmk.utils.type_defs import SNMPTable
+from cmk.utils.type_defs import ABCSNMPTree, SNMPTable
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -104,7 +104,7 @@ def _extract_conmmon_part(oids):
 
 
 def _create_snmp_trees_from_tuple(snmp_info_element):
-    # type: (tuple) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]
+    # type: (tuple) -> Tuple[List[ABCSNMPTree], Optional[LayoutRecoverSuboids]]
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -141,7 +141,7 @@ def _create_snmp_trees_from_tuple(snmp_info_element):
 
 
 def _create_snmp_trees(snmp_info):
-    # type: (Any) -> Tuple[List[SNMPTree], Callable]
+    # type: (Any) -> Tuple[List[ABCSNMPTree], Callable]
     """Create SNMPTrees from legacy definition
 
     Legacy definitions can be 2-tuple, 3-tuple, or a list
@@ -160,7 +160,7 @@ def _create_snmp_trees(snmp_info):
     assert isinstance(snmp_info, list)
 
     trees_and_suboids = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-    trees = sum((tree for tree, _suboids in trees_and_suboids), [])  # type: List[SNMPTree]
+    trees = sum((tree for tree, _suboids in trees_and_suboids), [])  # type: List[ABCSNMPTree]
     suboids_list = [suboids for _tree, suboids in trees_and_suboids]
 
     layout_recover_function = _create_layout_recover_function(suboids_list)

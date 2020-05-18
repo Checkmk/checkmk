@@ -14,6 +14,7 @@ from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
+    ABCSNMPTree,
     CheckPluginName,
     HostAddress,
     HostName,
@@ -30,7 +31,6 @@ from cmk.utils.type_defs import (
 import cmk.base.check_utils as check_utils
 import cmk.base.config as config
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
@@ -241,8 +241,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         raise MKAgentError("Failed to read data")
 
     def _make_oid_infos(self):
-        # type: () -> Dict[CheckPluginName, Union[OIDInfo, List[SNMPTree]]]
-        oid_infos = {}  # Dict[CheckPluginName, Union[OIDInfo, List[SNMPTree]]]
+        # type: () -> Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
+        oid_infos = {}  # Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
         for check_plugin_name in self._sort_check_plugin_names(self.get_check_plugin_names()):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
@@ -268,10 +268,10 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     @staticmethod
     def _oid_info_from_section_name(section_name):
-        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[SNMPTree]], bool]
+        # type: (str) -> Tuple[Union[Optional[OIDInfo], List[ABCSNMPTree]], bool]
         import cmk.base.inventory_plugins  # pylint: disable=import-outside-toplevel
         has_snmp_info = False
-        oid_info = None  # type: Optional[Union[OIDInfo, List[SNMPTree]]]
+        oid_info = None  # type: Optional[Union[OIDInfo, List[ABCSNMPTree]]]
         snmp_section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
         if snmp_section_plugin:
             oid_info = snmp_section_plugin.trees

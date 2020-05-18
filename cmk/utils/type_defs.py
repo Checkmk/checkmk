@@ -5,7 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk wide type definitions"""
 
+import abc
+import string
 from typing import Union, NamedTuple, NewType, Any, Text, Optional, Dict, Set, List, Tuple
+
+import six
 
 HostName = str
 HostAddress = str
@@ -136,6 +140,81 @@ class SNMPHostConfig(
     def is_snmpv3_host(self):
         # type: () -> bool
         return isinstance(self.credentials, tuple)
+
+
+class OIDSpec(object):  # pylint: disable=bad-option-value, useless-object-inheritance
+    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
+    """
+    VALID_CHARACTERS = '.' + string.digits
+
+    @classmethod
+    def validate(cls, value):
+        # type: (str) -> None
+        if not isinstance(value, str):
+            raise TypeError("expected a non-empty string: %r" % (value,))
+        if not value:
+            raise ValueError("expected a non-empty string: %r" % (value,))
+
+        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
+        if invalid:
+            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
+
+        if value.endswith('.'):
+            raise ValueError("%r should not end with '.'" % (value,))
+
+    def __init__(self, value):
+        # type: (str) -> None
+        self.validate(value)
+        self._value = value
+
+    def __add__(self, right):
+        # type: (Any) -> OIDSpec
+        """Concatenate two OID specs
+
+        We only allow adding (left to right) a "base" (starting with a '.')
+        to an "column" (not starting with '.').
+        We preserve the type of the column, which may signal caching or byte encoding.
+        """
+        if not isinstance(right, OIDSpec):
+            raise TypeError("cannot add %r" % (right,))
+        if not self._value.startswith('.') or right._value.startswith('.'):
+            raise ValueError("can only add full OIDs to partial OIDs")
+        return right.__class__("%s.%s" % (self, right))
+
+    def __eq__(self, other):
+        # type: (Any) -> bool
+        if other.__class__ != self.__class__:
+            return False
+        return self._value == other._value
+
+    def __str__(self):
+        # type: () -> str
+        return self._value
+
+    def __repr__(self):
+        # type: () -> str
+        return "%s(%r)" % (self.__class__.__name__, self._value)
+
+
+# The old API defines OID_END = 0.  Once we can drop the old API,
+# replace every occurence of this with OIDEnd.
+CompatibleOIDEnd = int
+
+
+class ABCSNMPTree(six.with_metaclass(abc.ABCMeta)):
+    # pylint: disable=no-init
+
+    @property
+    @abc.abstractmethod
+    def base(self):
+        # type: () -> OIDSpec
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def oids(self):
+        # type: () -> List[Union[OIDSpec, CompatibleOIDEnd]]
+        raise NotImplementedError()
 
 
 # TODO: We should really parse our configuration file and use a

@@ -5,22 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import (
-    Optional,
-    List,
-)
-from cmk.base import config
+from typing import List, Optional
 
+from cmk.utils.type_defs import ABCSNMPTree
+
+from cmk.base import config
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     HostLabelFunction,
     SNMPDetectSpec,
     SNMPParseFunction,
-    SNMPTree,
-)
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
 )
 
 
@@ -76,7 +74,7 @@ def snmp_section(
         parse_function=None,  # type: Optional[SNMPParseFunction]
         host_label_function=None,  # type: Optional[HostLabelFunction]
         detect=None,  # type: Optional[SNMPDetectSpec]
-        trees=None,  # type: Optional[List[SNMPTree]]
+        trees=None,  # type: Optional[List[ABCSNMPTree]]
         supersedes=None,  # type: Optional[List[str]]
 ):
     # type: (...) -> None

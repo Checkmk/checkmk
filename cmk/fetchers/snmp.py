@@ -10,16 +10,15 @@ from typing import Dict, List, Optional, Type, Union
 
 # pylint: disable=cmk-module-layer-violation
 import cmk.base.snmp as snmp
-from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_utils import section_name_of
 # pylint: enable=cmk-module-layer-violation
-from cmk.utils.type_defs import OIDInfo, SNMPHostConfig, SNMPTable, RawSNMPData
+from cmk.utils.type_defs import OIDInfo, SNMPHostConfig, SNMPTable, RawSNMPData, ABCSNMPTree
 
 
 class SNMPDataFetcher:
     def __init__(
             self,
-            oid_infos,  # type: Dict[str, Union[OIDInfo, List[SNMPTree]]]
+            oid_infos,  # type: Dict[str, Union[OIDInfo, List[ABCSNMPTree]]]
             use_snmpwalk_cache,  # type: bool
             snmp_config,  # type: SNMPHostConfig
     ):
@@ -55,7 +54,7 @@ class SNMPDataFetcher:
             # and fetches a separate snmp table.
             get_snmp = snmp.get_snmp_table_cached if self._use_snmpwalk_cache else snmp.get_snmp_table
             if isinstance(oid_info, list):
-                # branch: List[SNMPTree]
+                # branch: List[ABCSNMPTree]
                 check_info = []  # type: List[SNMPTable]
                 for entry in oid_info:
                     check_info_part = get_snmp(self._snmp_config, check_plugin_name, entry)

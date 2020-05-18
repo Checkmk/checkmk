@@ -2802,10 +2802,12 @@ class CascadingDropdown(ValueSpec):
         choices = self.choices()
         if not choices:
             return None
-
-        if choices[0][2] is not None:
-            return choices[0][0], choices[0][2].canonical_value()
-        return choices[0][0]
+        first_choice = choices[0]  # type: CascadingDropdownCleanChoice
+        value = first_choice[0]  # type: CascadingDropdownChoiceElementValue
+        vs = first_choice[2]  # type: _Optional[ValueSpec]
+        if vs is None:
+            return value
+        return value, vs.canonical_value()
 
     def default_value(self):
         # type: () -> CascadingDropdownChoiceValue
@@ -2815,10 +2817,12 @@ class CascadingDropdown(ValueSpec):
             choices = self.choices()
             if not choices:
                 return None
-
-            if choices[0][2] is not None:
-                return choices[0][0], choices[0][2].default_value()
-            return choices[0][0]
+            first_choice = choices[0]  # type: CascadingDropdownCleanChoice
+            value = first_choice[0]  # type: CascadingDropdownChoiceElementValue
+            vs = first_choice[2]  # type: _Optional[ValueSpec]
+            if vs is None:
+                return value
+            return value, vs.default_value()
 
     def render_input(self, varprefix, value):
         # type: (str, CascadingDropdownChoiceValue) -> None
@@ -3008,10 +3012,12 @@ class CascadingDropdown(ValueSpec):
             return self.default_value()
 
         sel = html.request.get_integer_input_mandatory(varprefix + "_sel", 0)
-        choice_val, _title, vs = choices[sel]
-        if vs:
-            return choice_val, vs.from_html_vars(varprefix + "_%d" % sel)
-        return choice_val
+        choice = choices[sel]  # type: CascadingDropdownCleanChoice
+        value = choice[0]  # type: CascadingDropdownChoiceElementValue
+        vs = choice[2]  # type: _Optional[ValueSpec]
+        if vs is None:
+            return value
+        return value, vs.from_html_vars(varprefix + "_%d" % sel)
 
     def validate_datatype(self, value, varprefix):
         # type: (CascadingDropdownChoiceValue, str) -> None

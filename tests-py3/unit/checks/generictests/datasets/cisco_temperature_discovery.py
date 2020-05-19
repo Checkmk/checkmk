@@ -54,7 +54,8 @@ info = [[[u'300000013', u'Ethernet1/1 Lane 1 Transceiver Receive Power Sensor'],
          [u'Ethernet1/3 Lane 1 Transceiver Receive Power Sensor', u'2'],
          [u'Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor', u'2'],
          [u'Ethernet1/4 Lane 1 Transceiver Receive Power Sensor', u'3'],
-         [u'Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor', u'3']]]
+         [u'Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor', u'3']],
+        []]
 
 
 discovery = {'': [],

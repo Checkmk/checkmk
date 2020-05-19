@@ -71,6 +71,7 @@ info = [
         [u'3008', u'SW#2, Sensor#1, GREEN', u'37', u'68', u'1'],
     ],
     [],
+    [],
 ]
 
 discovery = {

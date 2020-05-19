@@ -40,6 +40,16 @@ from cmk.base.api.agent_based.utils import (
 
 from cmk.base.api.agent_based.value_store import get_value_store
 
+from cmk.base.api.agent_based.checking_types import (
+    IgnoreResults,
+    IgnoreResultsError,
+    management_board,
+    Metric,
+    Parameters,
+    Result,
+    Service,
+    ServiceLabel,
+)
 from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.snmp_utils import OIDCached, OIDBytes
@@ -74,6 +84,14 @@ __all__ = [
     "not_equals",
     "not_exists",
     # CHECKING related
+    "IgnoreResults",
+    "IgnoreResultsError",
+    "management_board",
+    "Metric",
+    "Parameters",  # typing only!
+    "Result",
+    "Service",
+    "ServiceLabel",
     "state",
     # persising values
     "get_value_store",

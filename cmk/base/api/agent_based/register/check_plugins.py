@@ -203,9 +203,18 @@ def create_check_plugin(
     'register' namespace of the API.
     """
     # TODO (mo): unhack this CMK-3983
-    if (name is None or service_name is None or discovery_function is None or
-            check_function is None or forbidden_names is None or cluster_check_function is None):
-        raise TypeError()
+    if name is None:
+        raise TypeError("name must not be None")
+    if service_name is None:
+        raise TypeError("service_name must not be None")
+    if discovery_function is None:
+        raise TypeError("discovery_function must not be None")
+    if check_function is None:
+        raise TypeError("check_function must not be None")
+    if cluster_check_function is None:
+        raise TypeError("cluster_check_function must not be None")
+    if forbidden_names is None:
+        raise TypeError("forbidden_names must not be None")
 
     plugin_name = PluginName(name, forbidden_names)
 

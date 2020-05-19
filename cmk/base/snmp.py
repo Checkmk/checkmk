@@ -51,7 +51,6 @@ from cmk.base.snmp_utils import (
     SNMPRowInfoForStoredWalk,
 )
 
-from cmk.fetchers.snmp_backend import ABCSNMPBackend, ClassicSNMPBackend  # pylint: disable=cmk-module-layer-violation
 from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
 
 if sys.version_info[0] >= 3:
@@ -312,11 +311,9 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
-    if snmp_config.is_inline_snmp_host:
-        backend = inline.InlineSNMPBackend(config.record_inline_snmp_stats)  # type: ABCSNMPBackend
-    else:
-        backend = ClassicSNMPBackend()
-
+    backend = SNMPBackendFactory.factory(snmp_config,
+                                         enforce_stored_walks=False,
+                                         record_inline_stats=False)
     rows = backend.walk(snmp_config, oid)
     return _convert_rows_for_stored_walk(rows)
 

@@ -2686,9 +2686,8 @@ def HostState(**kwargs):
 CascadingDropdownChoiceElementValue = Union[None, Text, str, bool, int]
 CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceElementValue,
                                      _Tuple[CascadingDropdownChoiceElementValue, Any]]
-CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceElementValue, Text,
-                                      _Optional[ValueSpec]]
-CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceElementValue, Text]
+CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceValue, Text, _Optional[ValueSpec]]
+CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceValue, Text]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
 CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
                                  Callable[[], List[CascadingDropdownChoice]]]
@@ -2803,10 +2802,14 @@ class CascadingDropdown(ValueSpec):
         if not choices:
             return None
         first_choice = choices[0]  # type: CascadingDropdownCleanChoice
-        value = first_choice[0]  # type: CascadingDropdownChoiceElementValue
+        value = first_choice[0]  # type: CascadingDropdownChoiceValue
         vs = first_choice[2]  # type: _Optional[ValueSpec]
         if vs is None:
             return value
+        # TODO: What should we do when we have a complex value *and* a ValueSpec?
+        # We can't nest things arbitrarily deep, so we just return the first part.
+        if isinstance(value, tuple):
+            return value[0]
         return value, vs.canonical_value()
 
     def default_value(self):
@@ -2818,10 +2821,14 @@ class CascadingDropdown(ValueSpec):
             if not choices:
                 return None
             first_choice = choices[0]  # type: CascadingDropdownCleanChoice
-            value = first_choice[0]  # type: CascadingDropdownChoiceElementValue
+            value = first_choice[0]  # type: CascadingDropdownChoiceValue
             vs = first_choice[2]  # type: _Optional[ValueSpec]
             if vs is None:
                 return value
+            # TODO: What should we do when we have a complex value *and* a ValueSpec?
+            # We can't nest things arbitrarily deep, so we just return the first part.
+            if isinstance(value, tuple):
+                return value[0]
             return value, vs.default_value()
 
     def render_input(self, varprefix, value):
@@ -2899,6 +2906,10 @@ class CascadingDropdown(ValueSpec):
                 self.show_sub_valuespec(vp, vs, def_val_2)
                 html.close_span()
             else:
+                # TODO: What should we do when we have a complex value? We can't
+                # nest things arbitrarily deep, so we just use the first part.
+                if isinstance(val, tuple):
+                    val = val[0]
                 self._show_sub_valuespec_container(vp, val, def_val_2)
 
     def show_sub_valuespec(self, varprefix, vs, value):
@@ -3013,10 +3024,14 @@ class CascadingDropdown(ValueSpec):
 
         sel = html.request.get_integer_input_mandatory(varprefix + "_sel", 0)
         choice = choices[sel]  # type: CascadingDropdownCleanChoice
-        value = choice[0]  # type: CascadingDropdownChoiceElementValue
+        value = choice[0]  # type: CascadingDropdownChoiceValue
         vs = choice[2]  # type: _Optional[ValueSpec]
         if vs is None:
             return value
+        # TODO: What should we do when we have a complex value *and* a ValueSpec?
+        # We can't nest things arbitrarily deep, so we just return the first part.
+        if isinstance(value, tuple):
+            return value[0]
         return value, vs.from_html_vars(varprefix + "_%d" % sel)
 
     def validate_datatype(self, value, varprefix):

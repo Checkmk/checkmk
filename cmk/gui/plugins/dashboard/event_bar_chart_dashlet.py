@@ -15,7 +15,7 @@ from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
-from cmk.gui.figures import ABCFigureDashlet
+from cmk.gui.figures import ABCFigureDashlet, create_figures_response
 from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
@@ -140,6 +140,10 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         # type: () -> Type[ABCEventBarChartDataGenerator]
         raise NotImplementedError()
 
+    @classmethod
+    def vs_parameters(cls):
+        return cls.data_generator().vs_parameters()
+
     def show(self):
         args = []  # type: HTTPVariables
         args.append(("context", json.dumps(self._dashlet_spec["context"])))
@@ -167,6 +171,14 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
                 "body": json.dumps(body),
                 "update": self.update_interval,
             })
+
+
+def _get_response_of_data_generator(data_generator):
+    properties = data_generator.vs_parameters().value_from_json(
+        json.loads(html.request.get_str_input_mandatory("properties")))
+    context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+    response_data = data_generator.generate_response_data(properties, context)
+    return create_figures_response(response_data)
 
 
 #   .--Notifications-------------------------------------------------------.
@@ -219,7 +231,7 @@ class NotificationsBarChartDataGenerator(ABCEventBarChartDataGenerator):
 @page_registry.register_page("ajax_notifications_bar_chart_dashlet")
 class NotificationsDataPage(AjaxPage):
     def page(self):
-        return NotificationsBarChartDataGenerator.generate_response_from_request()
+        return _get_response_of_data_generator(NotificationsBarChartDataGenerator)
 
 
 #   .--Alerts--------------------------------------------------------------.
@@ -272,4 +284,4 @@ class AlertBarChartDataGenerator(ABCEventBarChartDataGenerator):
 @page_registry.register_page("ajax_alerts_bar_chart_dashlet")
 class AlertsDataPage(AjaxPage):
     def page(self):
-        return AlertBarChartDataGenerator.generate_response_from_request()
+        return _get_response_of_data_generator(AlertBarChartDataGenerator)

@@ -15,7 +15,6 @@ import cmk.gui.pages
 def test_registered_pages():
     expected_pages = [
         'add_bookmark',
-        'ajax_average_scatterplot_data',
         'ajax_alerts_bar_chart_dashlet',
         'ajax_notifications_bar_chart_dashlet',
         'ajax_cascading_render_painer_parameters',

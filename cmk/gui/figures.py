@@ -8,10 +8,8 @@
 
 from typing import Type  # pylint: disable=unused-import
 import abc
-import json
 import six
 from cmk.gui.plugins.dashboard import Dashlet
-from cmk.gui.globals import html
 
 
 def create_figures_response(data, context=None):
@@ -29,19 +27,6 @@ class ABCDataGenerator(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def vs_parameters(cls):
         raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def generate_response_data(cls, properties, context):
-        raise NotImplementedError()
-
-    @classmethod
-    def generate_response_from_request(cls):
-        properties = cls.vs_parameters().value_from_json(
-            json.loads(html.request.get_str_input_mandatory("properties")))
-        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context)
-        return create_figures_response(response_data)
 
 
 class ABCFigureDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
@@ -86,13 +71,8 @@ class ABCFigureDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
         # Note: This introduces the restriction one graph type per dashlet
         return "%s_%s" % (self.type_name(), self._dashlet_id)
 
-    @classmethod
-    def vs_parameters(cls):
-        return cls.data_generator().vs_parameters()
-
-    @classmethod
     @abc.abstractmethod
-    def data_generator(cls):
+    def data_generator(self):
         # type: () -> Type[ABCDataGenerator]
         raise NotImplementedError()
 

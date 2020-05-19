@@ -6,6 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Age,
     Dictionary,
     Integer,
     Tuple,
@@ -61,6 +62,29 @@ def _parameter_valuespec_graylog_messages():
              elements=[
                  Integer(title=_("Warning if below")),
                  Integer(title=_("Critical if below")),
+             ],
+         )),
+        ("msgs_diff",
+         Age(
+             title=_("Timespan for difference calculation of total number of "
+                     "messages"),
+             display=["days", "hours", "minutes"],
+             default_value=1800,
+         )),
+        ("msgs_diff_lower",
+         Tuple(
+             title=_("Number of messages in defined timespan lower level"),
+             elements=[
+                 Integer(title=_("Warning below"), unit="messages"),
+                 Integer(title=_("Critical below"), unit="messages"),
+             ],
+         )),
+        ("msgs_diff_upper",
+         Tuple(
+             title=_("Number of messages in defined timespan upper level"),
+             elements=[
+                 Integer(title=_("Warning at"), unit="messages"),
+                 Integer(title=_("Critical at"), unit="messages"),
              ],
          )),
     ],)

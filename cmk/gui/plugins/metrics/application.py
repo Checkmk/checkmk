@@ -450,6 +450,12 @@ metric_info['graylog_decoded'] = {
     "color": "42/a",
 }
 
+metric_info['graylog_diff'] = {
+    "title": _("Number of messages in defined timespan"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 metric_info["collectors_running"] = {
     "title": _("Running collectors"),
     "unit": "count",

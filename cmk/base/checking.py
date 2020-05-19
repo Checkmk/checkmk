@@ -32,6 +32,7 @@ import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -51,7 +52,6 @@ from cmk.utils.type_defs import (
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.cpu_tracking as cpu_tracking
@@ -280,7 +280,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         if success:
             num_success += 1
         else:
-            missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
+            missing_sections.add(section_name_of(service.check_plugin_name))
 
     import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
@@ -382,7 +382,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
     check_api_utils.set_service(service.check_plugin_name, service.description)
     item_state.set_item_state_prefix(service.check_plugin_name, service.item)
 
-    section_name = cmk.base.check_utils.section_name_of(service.check_plugin_name)
+    section_name = section_name_of(service.check_plugin_name)
 
     section_content = None
     try:

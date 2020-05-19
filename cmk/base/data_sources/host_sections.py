@@ -21,12 +21,12 @@ from typing import (
 import six
 
 import cmk.utils.debug
+from cmk.utils.check_utils import section_name_of
 
 import cmk.base.config as config
 import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
-import cmk.base.check_utils
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.utils import parse_string_table
 from cmk.base.api.agent_based.section_types import (
@@ -273,7 +273,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         for this check available.
         """
 
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         nodes_of_clustered_service = self._get_nodes_of_clustered_service(
             hostname, service_description)
         cache_key = (hostname, ipaddress, section_name, for_discovery,

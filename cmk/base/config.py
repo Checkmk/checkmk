@@ -54,6 +54,7 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 import cmk.utils
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -1895,7 +1896,7 @@ def convert_check_info():
     }  # type: CheckInfo
 
     for check_plugin_name, info in check_info.items():
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
 
         if not isinstance(info, dict):
             # Convert check declaration from old style to new API
@@ -1946,7 +1947,7 @@ def convert_check_info():
     # Make sure that setting for node_info of check and subcheck matches
     for check_plugin_name, info in check_info.items():
         if "." in check_plugin_name:
-            section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+            section_name = section_name_of(check_plugin_name)
             if section_name not in check_info:
                 if info["node_info"]:
                     raise MKGeneralException("Invalid check implementation: node_info for %s is "
@@ -1962,7 +1963,7 @@ def convert_check_info():
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
     for check_plugin_name, info in check_info.items():
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         if info["snmp_info"] and section_name not in snmp_info:
             snmp_info[section_name] = info["snmp_info"]
 
@@ -1982,7 +1983,7 @@ def _extract_agent_and_snmp_sections():
     in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
     """
     for check_plugin_name in sorted(check_info):
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         is_snmp_plugin = section_name in snmp_info
 
         if get_registered_section_plugin(PluginName(section_name)):
@@ -2089,7 +2090,7 @@ def initialize_check_type_caches():
 
     tcp_cache = _runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
             tcp_cache.add(section_name)
 
@@ -2365,7 +2366,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
             # '_get_management_board_precedence'.
             for name in plugins_info:
-                if cmk.base.check_utils.section_name_of(name) == check_plugin_name:
+                if section_name_of(name) == check_plugin_name:
                     lookup_plugin_name = name
                     break
 
@@ -3635,7 +3636,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         try:
             return self._cache_section_name_of[section]
         except KeyError:
-            section_name = cmk.base.check_utils.section_name_of(section)
+            section_name = section_name_of(section)
             self._cache_section_name_of[section] = section_name
             return section_name
 

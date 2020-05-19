@@ -4,30 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import contextmanager
+
 import pytest  # type: ignore[import]
 
 from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES
-import cmk.base.config as config
+
+from cmk.utils.check_utils import section_name_of
+
 import cmk.base.check_api as check_api
-import cmk.base.check_utils as check_utils
-
+import cmk.base.config as config
 from cmk.base.api import PluginName
-
-from cmk.base.api.agent_based.section_types import (
-    AgentSectionPlugin,
-    SNMPSectionPlugin,
-    SNMPTree,
-)
-
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
-    create_detect_spec,
-    _explicit_conversions,
-)
-
 from cmk.base.api.agent_based.register.section_plugins_legacy import (  # pylint: disable=unused-import
     _create_snmp_trees, create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
+from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+    _explicit_conversions,
+    create_detect_spec,
+)
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin, SNMPTree
 
 pytestmark = pytest.mark.checks
 
@@ -84,7 +79,7 @@ def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent
                                            migrated_snmp_sections):
     for name, check_info_dict in check_info.items():
         # only test main checks
-        if name != check_utils.section_name_of(name):
+        if name != section_name_of(name):
             continue
 
         section_name = PluginName(name)
@@ -155,7 +150,7 @@ def test_explicit_conversion(check_manager, check_name, func_name):
 
 def test_no_subcheck_with_snmp_keywords(snmp_info):
     for name in snmp_info:
-        assert name == check_utils.section_name_of(name)
+        assert name == section_name_of(name)
 
 
 def test_exception_required(check_info):

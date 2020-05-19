@@ -23,6 +23,7 @@ import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -1095,7 +1096,7 @@ class AutomationGetCheckManPage(Automation):
                 if key in info:
                     manpage[key] = info[key]
             if "." in check_plugin_name:
-                section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+                section_name = section_name_of(check_plugin_name)
                 if section_name in config.check_info and "snmp_info" in config.check_info[
                         section_name]:
                     manpage["snmp_info"] = config.check_info[section_name]["snmp_info"]

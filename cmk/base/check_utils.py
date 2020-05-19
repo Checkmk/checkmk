@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, NoReturn, Optional, Text, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NoReturn, Text, Tuple, TypeVar, Union
 
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -149,11 +150,6 @@ class DiscoveredService(Service):
         return "DiscoveredService(check_plugin_name=%r, item=%r, description=%r, parameters_unresolved=%r, service_lables=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
-
-
-def section_name_of(check_plugin_name):
-    # type: (str) -> str
-    return check_plugin_name.split(".")[0]
 
 
 def is_snmp_check(check_plugin_name):

@@ -8,11 +8,10 @@ import logging
 from types import TracebackType
 from typing import Dict, List, Optional, Type, Union
 
-# pylint: disable=cmk-module-layer-violation
-import cmk.base.snmp as snmp
-from cmk.base.check_utils import section_name_of
-# pylint: enable=cmk-module-layer-violation
-from cmk.utils.type_defs import OIDInfo, SNMPHostConfig, SNMPTable, RawSNMPData, ABCSNMPTree
+from cmk.utils.check_utils import section_name_of
+from cmk.utils.type_defs import ABCSNMPTree, OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
+
+import cmk.base.snmp as snmp  # pylint: disable=cmk-module-layer-violation
 
 
 class SNMPDataFetcher:

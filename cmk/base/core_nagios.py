@@ -17,6 +17,7 @@ import six
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
@@ -29,7 +30,6 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
-import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
@@ -909,7 +909,7 @@ def _find_check_plugins(checktype):
     In case of checks with a period (subchecks) we might have to include both "mem" and "mem.used".
     The subcheck *may* be implemented in a separate file."""
     if '.' in checktype:
-        candidates = [cmk.base.check_utils.section_name_of(checktype), checktype]
+        candidates = [section_name_of(checktype), checktype]
     else:
         candidates = [checktype]
 
@@ -1163,7 +1163,7 @@ def _get_needed_check_file_names(needed_check_plugin_names):
     # check table.
     filenames = []  # type: List[str]
     for check_plugin_name in needed_check_plugin_names:
-        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        section_name = section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
         for lib in set(config.check_includes.get(section_name, [])):
             local_path = cmk.utils.paths.local_checks_dir / lib

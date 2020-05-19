@@ -32,6 +32,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -1019,7 +1020,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 raise new_exception
 
             if on_error == "warn":
-                section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+                section_name = section_name_of(check_plugin_name)
                 console.warning("Exception while parsing agent section '%s': %s\n" %
                                 (section_name, e))
 
@@ -1387,8 +1388,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)
-            section_name = cmk.base.check_utils.section_name_of(
-                discovered_service.check_plugin_name)
+            section_name = section_name_of(discovered_service.check_plugin_name)
 
             try:
                 try:

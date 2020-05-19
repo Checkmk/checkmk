@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import contextmanager
+
 import pytest  # type: ignore[import]
 
 from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES_INV
-import cmk.base.inventory_plugins as inventory_plugins
-import cmk.base.config as config
+
+from cmk.utils.check_utils import section_name_of
+
 import cmk.base.check_api as check_api
-import cmk.base.check_utils as check_utils
-
+import cmk.base.config as config
+import cmk.base.inventory_plugins as inventory_plugins
 from cmk.base.api import PluginName
-
 from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
@@ -43,7 +44,7 @@ def test_create_section_plugin_from_legacy(inv_info):
         if 'snmp_info' not in inv_info_dict:
             continue
 
-        section_name = PluginName(check_utils.section_name_of(name))
+        section_name = PluginName(section_name_of(name))
         with known_exceptions(name):
             if section_name not in config.registered_snmp_sections:
                 raise NotImplementedError(name)

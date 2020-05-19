@@ -9,6 +9,7 @@ from typing import Any, Dict, Set, Iterator, Tuple, Optional  # pylint: disable=
 
 import cmk.utils.paths
 import cmk.utils.debug
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 
@@ -84,7 +85,7 @@ def _extract_snmp_sections():
     for plugin_name, plugin_info in sorted(inv_info.items()):
         if 'snmp_info' not in plugin_info:
             continue
-        section_name = cmk.base.check_utils.section_name_of(plugin_name)
+        section_name = section_name_of(plugin_name)
         if config.get_registered_section_plugin(PluginName(section_name)):
             continue
 
@@ -154,7 +155,7 @@ def _include_file_path(name):
 
 def is_snmp_plugin(check_plugin_name):
     # type: (str) -> bool
-    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+    section_name = section_name_of(check_plugin_name)
     return "snmp_info" in inv_info.get(section_name, {}) \
            or cmk.base.check_utils.is_snmp_check(check_plugin_name)
 

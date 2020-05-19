@@ -9,13 +9,13 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Union
 
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, SNMPHostConfig
 
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
@@ -176,7 +176,7 @@ def _snmp_scan(host_config,
 def _get_detection_spec_from_plugin_name(check_plugin_name, inv_info):
     # type: (CheckPluginName, Dict[str, Any]) -> Union[SNMPDetectSpec, Optional[ScanFunction]]
     # This function will hopefully shrink and finally disappear during API development.
-    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+    section_name = section_name_of(check_plugin_name)
     section_plugin = config.registered_snmp_sections.get(PluginName(section_name))
     if section_plugin:
         return section_plugin.detect_spec

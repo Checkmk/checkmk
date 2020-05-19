@@ -12,6 +12,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple, Union, cast
 import six
 from mypy_extensions import NamedArg
 
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
     ABCSNMPTree,
@@ -28,7 +29,6 @@ from cmk.utils.type_defs import (
     SNMPSections,
 )
 
-import cmk.base.check_utils as check_utils
 import cmk.base.config as config
 from cmk.base.api import PluginName
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
@@ -247,7 +247,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
-            section_name = check_utils.section_name_of(check_plugin_name)
+            section_name = section_name_of(check_plugin_name)
             oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
 
             if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:

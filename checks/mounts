@@ -10,52 +10,57 @@
 # to
 # knvmsapprd:/transreorg/sap/trans /transreorg/sap/trans\040(deleted) nfs4 rw,relatime,vers=4.0,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.24.98.63,local_lock=none,addr=172.24.98.57 0 0
 
+#
+# (mo): This plugin is a good example for plugins that would massively benefit from a
+#       section definition (parse_function).
+#       However, I need an exapmle for a plugin without one, so for now I keep it this way.
+#
 
-def inventory_mounts(info):
-    inventory = []
+
+def discovery_mounts(info):
     devices = []
-    for dev, mp, fstype, options, _dump, _fsck in info:
+    for dev, mountpoint, fstype, options, _dump, _fsck in info:
         if fstype == "tmpfs":
             continue
 
-        if mp in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]:
+        if mountpoint in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]:
             continue
 
         if dev not in devices:
             devices.append(dev)
             opts = sorted(options.split(","))
-            inventory.append((mp.replace("\\040(deleted)", ""), opts))
-    return inventory
+            yield mountpoint.replace("\\040(deleted)", ""), opts
+
+
+def _should_ignore_option(option):
+    for ignored_option in ["commit=", "localalloc=", "subvol=", "subvolid="]:
+        if option.startswith(ignored_option):
+            return True
+    return False
 
 
 def check_mounts(item, targetopts, info):
     # Ignore options that are allowed to change
-    def should_ignore_option(option):
-        for ignored_option in ["commit=", "localalloc=", "subvol=", "subvolid="]:
-            if option.startswith(ignored_option):
-                return True
-        return False
-
-    for _dev, mp, _fstype, options, _dump, _fsck in info:
-        if item == mp.replace("\\040(deleted)", ""):
-            if mp.endswith("\\040(deleted)"):
-                return 1, "Mount point detected as stale"
+    for _dev, mountpoint, _fstype, options, _dump, _fsck in info:
+        if item == mountpoint.replace("\\040(deleted)", ""):
+            if mountpoint.endswith("\\040(deleted)"):
+                yield 1, "Mount point detected as stale"
+                return
 
             opts = options.split(",")
             # Now compute the exact difference.
 
-            exceeding = []
-            for o in opts:
-                if o not in targetopts and not should_ignore_option(o):
-                    exceeding.append(o)
+            exceeding = [
+                opt for opt in opts if opt not in targetopts and not _should_ignore_option(opt)
+            ]
 
-            missing = []
-            for o in targetopts:
-                if o not in opts and not should_ignore_option(o):
-                    missing.append(o)
+            missing = [
+                opt for opt in targetopts if opt not in opts and not _should_ignore_option(opt)
+            ]
 
             if not missing and not exceeding:
-                return 0, "Mount options exactly as expected"
+                yield 0, "Mount options exactly as expected"
+                return
 
             infos = []
             if missing:
@@ -64,18 +69,17 @@ def check_mounts(item, targetopts, info):
                 infos.append("Exceeding: %s" % ",".join(exceeding))
             infotext = ", ".join(infos)
 
+            yield 1, infotext
             if "ro" in exceeding:
-                return 2, "Filesystem has switched to read-only and is probably corrupted(!!), %s" % infotext
+                yield 2, "Filesystem has switched to read-only and is probably corrupted"
+            return
 
-            # Just warn in other cases
-            return 1, infotext
-
-    return 3, "Filesystem not mounted"
+    yield 3, "Filesystem not mounted"
 
 
 check_info["mounts"] = {
     'check_function': check_mounts,
-    'inventory_function': inventory_mounts,
+    'inventory_function': discovery_mounts,
     'service_description': 'Mount options of %s',
     'group': 'fs_mount_options',
 }

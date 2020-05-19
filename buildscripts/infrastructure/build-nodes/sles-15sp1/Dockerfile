@@ -5,7 +5,7 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
-RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp1 sles15sp1 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \

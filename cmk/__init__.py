@@ -13,3 +13,8 @@
 #
 #    This file must not contain any code.
 #
+
+# This is a quick fix for an import error encounterd when importing enterprise stuff
+# during testing. Review this! CMK-4511
+from pkgutil import extend_path
+__path__ = extend_path(__path__, __name__)  # type: ignore[has-type] # don't worry about __path__

@@ -12,7 +12,6 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../../enterprise/cmk/cee/dcd/plugins/connectors/'))
 sys.path.insert(0, os.path.abspath('../../../cmk/base/plugins/agent_based/'))
 sys.path.insert(0, os.path.abspath('../../../'))
 

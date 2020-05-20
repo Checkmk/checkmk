@@ -34,13 +34,6 @@ apidoc:
 	    --templatedir "$(TEMPDIR)" \
 	    --output-dir "$(SOURCEDIR)/apidoc/agent_based" \
 	    "$(REPO_PATH)/cmk/base/plugins/agent_based/agent_based_api"
-ifeq ($(ENTERPRISE),yes)
-	$(SPHINXAPIDOC) \
-	    --no-toc \
-	    --templatedir "$(TEMPDIR)" \
-	    --output-dir "$(SOURCEDIR)/apidoc/dcd" \
-	    "$(REPO_PATH)/enterprise/cmk/cee/dcd/plugins/connectors/connectors_api"
-endif
 
 # TODO: Don't understand why we need this. Something calls the % target below
 # with the "$(REPO_PATH)/defines.make" target once we include this file above.

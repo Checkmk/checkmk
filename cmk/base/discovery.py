@@ -170,9 +170,16 @@ def _preprocess_hostnames(arg_host_names, config_cache):
     return host_names
 
 
-def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
-                      only_new, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, Optional[Set[CheckPluginName]], bool, str) -> None
+def _do_discovery_for(
+        hostname,  # type: str
+        ipaddress,  # type: Optional[str]
+        sources,  # type: data_sources.DataSources
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        check_plugin_names,  # type: Optional[Set[CheckPluginName]]
+        only_new,  # type: bool
+        on_error,  # type: str
+):
+    # type: (...) -> None
     if not check_plugin_names:
         # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
         # we've already discovered the right check plugin names.
@@ -285,14 +292,16 @@ def _perform_host_label_discovery(hostname, discovered_host_labels, only_new):
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
-def discover_on_host(config_cache,
-                     host_config,
-                     mode,
-                     do_snmp_scan,
-                     use_caches,
-                     on_error="ignore",
-                     service_filter=None):
-    # type: (config.ConfigCache, config.HostConfig, str, bool, bool, str, Callable) -> Tuple[Dict[str, int], Optional[str]]
+def discover_on_host(
+        config_cache,  # type: config.ConfigCache
+        host_config,  # type: config.HostConfig
+        mode,  # type: str
+        do_snmp_scan,  # type: bool
+        use_caches,  # type: bool
+        on_error="ignore",  # type: str
+        service_filter=None,  # type: Callable
+):
+    # type: (...) -> Tuple[Dict[str, int], Optional[str]]
     hostname = host_config.hostname
     counts = {
         "self_new": 0,
@@ -963,12 +972,14 @@ def _discover_services(
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(hostname,
-                               ipaddress,
-                               do_snmp_scan,
-                               on_error,
-                               for_check_discovery=False):
-    # type: (HostName, Optional[HostAddress], bool, str, bool) -> data_sources.DataSources
+def _get_sources_for_discovery(
+        hostname,  # type: HostName
+        ipaddress,  # type: Optional[HostAddress]
+        do_snmp_scan,  # type: bool
+        on_error,  # type: str
+        for_check_discovery=False,  # type: bool
+):
+    # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -996,8 +1007,14 @@ def _get_host_sections_for_discovery(sources, use_caches):
     return sources.get_host_sections(max_cachefile_age)
 
 
-def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
-    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[DiscoveredService]
+def _execute_discovery(
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        hostname,  # type: str
+        ipaddress,  # type: Optional[str]
+        check_plugin_name,  # type: str
+        on_error,  # type: str
+):
+    # type: (...) -> Iterator[DiscoveredService]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -1169,8 +1186,14 @@ def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_
 
 
 # Do the actual work for a non-cluster host or node
-def _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+def _get_node_services(
+        host_config,  # type: config.HostConfig
+        ipaddress,  # type: Optional[str]
+        sources,  # type: data_sources.DataSources
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        on_error,  # type: str
+):
+    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     hostname = host_config.hostname
     services, discovered_host_labels = _get_discovered_services(hostname, ipaddress, sources,
                                                                 multi_host_sections, on_error)
@@ -1191,8 +1214,14 @@ def _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_
 
 
 # Part of _get_node_services that deals with discovered services
-def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+def _get_discovered_services(
+        hostname,  # type: str
+        ipaddress,  # type: Optional[str]
+        sources,  # type: data_sources.DataSources
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        on_error,  # type: str
+):
+    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services = {}  # type: DiscoveredServicesTable
 
@@ -1284,8 +1313,19 @@ def _merge_manual_services(host_config, services, on_error):
     return services
 
 
-def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+def _get_cluster_services(
+        host_config,  # type: config.HostConfig
+        ipaddress,  # type: Optional[str]
+        sources,  # type: data_sources.DataSources
+        multi_host_sections,  # type: data_sources.MultiHostSections
+        on_error,  # type: str
+):
+    # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+    cluster_items = {}  # type: DiscoveredServicesTable
+    cluster_host_labels = DiscoveredHostLabels()
+    if not host_config.nodes:
+        return cluster_items, cluster_host_labels
+
     config_cache = config.get_config_cache()
 
     # Get setting from cluster SNMP data source
@@ -1293,11 +1333,6 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             do_snmp_scan = source.get_do_snmp_scan()
-
-    cluster_items = {}  # type: DiscoveredServicesTable
-    cluster_host_labels = DiscoveredHostLabels()
-    if not host_config.nodes:
-        return cluster_items, cluster_host_labels
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.

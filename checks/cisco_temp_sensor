@@ -162,7 +162,7 @@ check_info['cisco_temp_sensor'] = {
     "snmp_info"          : [
                                ( ".1.3.6.1.2.1.47.1.1.1.1", [
                                  OID_END,
-                                 2, # Description of the sensor
+                                 CACHED_OID(2),  # entPhysicalDescription
                                ]),
 
                                # Type and current state

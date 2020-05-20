@@ -32,6 +32,7 @@ from cmk.base.api.agent_based.checking_types import (
     Metric,
     Result,
     Service,
+    state,
 )
 
 ITEM_VARIABLE = "%s"
@@ -181,6 +182,19 @@ def _validate_check_ruleset(ruleset_name, default_parameters):
     return
 
 
+def unfit_for_clustering_wrapper(check_function):
+    """Return a cluster_check_function that displays a generic warning"""
+    @functools.wraps(check_function)
+    def unfit_for_clustering(*args, **kwargs):
+        yield Result(
+            state=state.UNKNOWN,
+            summary=("This service is not ready to handle clustered data. "
+                     "Please change your configuration."),
+        )
+
+    return unfit_for_clustering
+
+
 def create_check_plugin(
         #*,
         name=None,  # type: Optional[str]
@@ -211,8 +225,6 @@ def create_check_plugin(
         raise TypeError("discovery_function must not be None")
     if check_function is None:
         raise TypeError("check_function must not be None")
-    if cluster_check_function is None:
-        raise TypeError("cluster_check_function must not be None")
     if forbidden_names is None:
         raise TypeError("forbidden_names must not be None")
 
@@ -264,14 +276,19 @@ def create_check_plugin(
         check_ruleset_name is not None,
         subscribed_sections,
     )
-    _validate_function_args(
-        name,
-        "cluster check",
-        cluster_check_function,
-        requires_item,
-        check_ruleset_name is not None,
-        subscribed_sections,
-    )
+
+    if cluster_check_function is None:
+        cluster_check_function = unfit_for_clustering_wrapper(check_function)
+    else:
+        _validate_function_args(
+            name,
+            "cluster check",
+            cluster_check_function,
+            requires_item,
+            check_ruleset_name is not None,
+            subscribed_sections,
+        )
+        cluster_check_function = _filter_check(cluster_check_function)
 
     return CheckPlugin(
         plugin_name,
@@ -284,5 +301,5 @@ def create_check_plugin(
         _filter_check(check_function),
         check_default_parameters,
         None if check_ruleset_name is None else PluginName(check_ruleset_name),
-        _filter_check(cluster_check_function),
+        cluster_check_function,
     )

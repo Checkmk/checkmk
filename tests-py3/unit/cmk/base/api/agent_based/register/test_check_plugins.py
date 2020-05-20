@@ -22,7 +22,6 @@ MINIMAL_CREATION_KWARGS = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
-    "cluster_check_function": dummy_generator,
     "forbidden_names": []
 }  # type: Dict[str, Any]
 
@@ -145,5 +144,3 @@ def test_create_check_plugin():
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
     assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None
-    assert plugin.cluster_check_function.__name__ == MINIMAL_CREATION_KWARGS[
-        "cluster_check_function"].__name__

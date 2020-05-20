@@ -16,6 +16,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.base.api import PluginName
 from cmk.base.config import IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
@@ -28,9 +29,15 @@ from .abstract import CheckMKAgentDataSource
 class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
     source_type = SourceType.MANAGEMENT
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress,
+                                                            selected_raw_section_names)
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
     def id(self):

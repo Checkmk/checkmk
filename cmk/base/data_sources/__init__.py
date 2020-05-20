@@ -22,12 +22,14 @@ import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.type_defs import SourceType
 from cmk.utils.log import console
+from cmk.utils.type_defs import HostName, HostAddress
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import CheckPluginName
-from cmk.utils.type_defs import HostName, HostAddress
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource
@@ -58,8 +60,14 @@ if TYPE_CHECKING:
 
 
 class DataSources(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            # optional set: None -> no selection, empty -> select *nothing*
+        selected_raw_sections=None,  # type: Optional[Set[config.SectionPlugin]]
+    ):
+        # type: (...) -> None
         super(DataSources, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
@@ -67,14 +75,14 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(hostname)
 
-        self._initialize_data_sources()
+        self._initialize_data_sources(selected_raw_sections)
 
         # Has currently no effect. The value possibly set during execution on the single data
         # sources is kept here in this object to return it later on
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
-    def _initialize_data_sources(self):
-        # type: () -> None
+    def _initialize_data_sources(self, selected_raw_sections):
+        # type: (Optional[Set[config.SectionPlugin]]) -> None
         self._sources = {}  # type: Dict[str, DataSource]
 
         if self._host_config.is_cluster:
@@ -82,37 +90,65 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             # Instead all data is provided by the nodes
             return
 
-        self._initialize_agent_based_data_sources()
-        self._initialize_snmp_data_sources()
-        self._initialize_management_board_data_sources()
+        selected_raw_section_names_snmp = (None if selected_raw_sections is None else {
+            s.name for s in selected_raw_sections if isinstance(s, SNMPSectionPlugin)
+        })
+        selected_raw_section_names_agent = (None if selected_raw_sections is None else {
+            s.name for s in selected_raw_sections if isinstance(s, AgentSectionPlugin)
+        })
 
-    def _initialize_agent_based_data_sources(self):
-        # type: () -> None
+        self._initialize_agent_based_data_sources(selected_raw_section_names_agent)
+        self._initialize_snmp_data_sources(selected_raw_section_names_snmp)
+        self._initialize_management_board_data_sources(selected_raw_section_names_snmp)
+
+    def _initialize_agent_based_data_sources(self, selected_raw_section_names):
+        # type: (Optional[Set[PluginName]]) -> None
         if self._host_config.is_all_agents_host:
-            source = self._get_agent_data_source(ignore_special_agents=True)
+            source = self._get_agent_data_source(
+                ignore_special_agents=True,
+                selected_raw_section_names=selected_raw_section_names,
+            )
             source.set_main_agent_data_source()
             self._add_source(source)
 
-            self._add_sources(self._get_special_agent_data_sources())
+            self._add_sources(
+                self._get_special_agent_data_sources(
+                    selected_raw_section_names=selected_raw_section_names,))
 
         elif self._host_config.is_all_special_agents_host:
-            self._add_sources(self._get_special_agent_data_sources())
+            self._add_sources(
+                self._get_special_agent_data_sources(
+                    selected_raw_section_names=selected_raw_section_names,))
 
         elif self._host_config.is_tcp_host:
-            source = self._get_agent_data_source()
+            source = self._get_agent_data_source(
+                ignore_special_agents=False,
+                selected_raw_section_names=selected_raw_section_names,
+            )
             source.set_main_agent_data_source()
             self._add_source(source)
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
+            piggy_source = PiggyBackDataSource(
+                self._hostname,
+                self._ipaddress,
+                selected_raw_section_names=selected_raw_section_names,
+            )
+            self._add_source(piggy_source)
 
-    def _initialize_snmp_data_sources(self):
-        # type: () -> None
-        if self._host_config.is_snmp_host:
-            self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
+    def _initialize_snmp_data_sources(self, selected_raw_section_names):
+        # type: (Optional[Set[PluginName]]) -> None
+        if not self._host_config.is_snmp_host:
+            return
+        snmp_source = SNMPDataSource(
+            self._hostname,
+            self._ipaddress,
+            selected_raw_section_names=selected_raw_section_names,
+        )
+        self._add_source(snmp_source)
 
-    def _initialize_management_board_data_sources(self):
-        # type: () -> None
+    def _initialize_management_board_data_sources(self, selected_raw_section_names):
+        # type: (Optional[Set[PluginName]]) -> None
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
@@ -121,16 +157,21 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
         if protocol == "snmp":
             # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
             # multiple inheritance should solve the issue.
-            self._add_source(SNMPManagementBoardDataSource(self._hostname, ip_address))  # pylint: disable=abstract-class-instantiated
-            return
-
-        if protocol == "ipmi":
-            # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
-            # multiple inheritance should solve the issue.
-            self._add_source(IPMIManagementBoardDataSource(self._hostname, ip_address))  # pylint: disable=abstract-class-instantiated
-            return
-
-        raise NotImplementedError()
+            self._add_source(
+                SNMPManagementBoardDataSource(  # py lint: disable=abstract-class-instantiated
+                    self._hostname,
+                    ip_address,
+                    selected_raw_section_names=selected_raw_section_names,
+                ))
+        elif protocol == "ipmi":
+            self._add_source(
+                IPMIManagementBoardDataSource(  # py lint: disable=abstract-class-instantiated
+                    self._hostname,
+                    ip_address,
+                    selected_raw_section_names=selected_raw_section_names,
+                ))
+        else:
+            raise NotImplementedError()
 
     def _add_sources(self, sources):
         # type: (Iterable[DataSource]) -> None
@@ -154,24 +195,46 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
 
         return "No agent"
 
-    def _get_agent_data_source(self, ignore_special_agents=False):
-        # type: (bool) -> CheckMKAgentDataSource
+    def _get_agent_data_source(
+            self,
+            ignore_special_agents,  # type: bool
+            selected_raw_section_names,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> CheckMKAgentDataSource
         if not ignore_special_agents:
-            special_agents = self._get_special_agent_data_sources()
+            special_agents = self._get_special_agent_data_sources(
+                selected_raw_section_names=selected_raw_section_names,)
             if special_agents:
                 return special_agents[0]
 
         datasource_program = self._host_config.datasource_program
         if datasource_program is not None:
-            return DSProgramDataSource(self._hostname, self._ipaddress, datasource_program)
+            return DSProgramDataSource(
+                self._hostname,
+                self._ipaddress,
+                datasource_program,
+                selected_raw_section_names=selected_raw_section_names,
+            )
 
-        return TCPDataSource(self._hostname, self._ipaddress)
+        return TCPDataSource(
+            self._hostname,
+            self._ipaddress,
+            selected_raw_section_names=selected_raw_section_names,
+        )
 
-    def _get_special_agent_data_sources(self):
-        # type: () -> List[SpecialAgentDataSource]
+    def _get_special_agent_data_sources(
+            self,
+            selected_raw_section_names,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> List[SpecialAgentDataSource]
         return [
-            SpecialAgentDataSource(self._hostname, self._ipaddress, agentname, params)
-            for agentname, params in self._host_config.special_agents
+            SpecialAgentDataSource(
+                self._hostname,
+                self._ipaddress,
+                agentname,
+                params,
+                selected_raw_section_names=selected_raw_section_names,
+            ) for agentname, params in self._host_config.special_agents
         ]
 
     def enforce_check_plugin_names(self, check_plugin_names):

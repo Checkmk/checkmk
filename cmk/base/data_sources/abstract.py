@@ -41,6 +41,8 @@ from cmk.utils.type_defs import (
 )
 from cmk.utils.werks import parse_check_mk_version
 
+from cmk.base.api import PluginName
+
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.cpu_tracking as cpu_tracking
@@ -264,12 +266,26 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     _use_outdated_cache_file = False
     _use_outdated_persisted_sections = False
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        """Initialize the abstract base class
+
+        :param hostname: The name of the host this data source is associated to
+        :param ipaddress: The IP address of the host this data source is associated to
+        :param selected_raw_section_names: A set of raw sections, that we are interested in.
+            If set, we assume that these sections should be produced if possible, and any raw
+            section that is not listed here *may* be omitted.
+        """
         super(DataSource, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
         self._max_cachefile_age = None  # type: Optional[int]
+        self._selected_raw_section_names = selected_raw_section_names
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
         self._logger = logging.getLogger("cmk.base.data_source.%s" % self.id())
@@ -442,6 +458,11 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
     def _persisted_sections_dir(self):
         # type: () -> str
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
+
+    def is_relevant_raw_section(self, raw_section_name):
+        # type: (PluginName) -> bool
+        return (self._selected_raw_section_names is None or
+                raw_section_name in self._selected_raw_section_names)
 
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
@@ -645,9 +666,15 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     # pylint: disable=abstract-method
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress,
+                                                     selected_raw_section_names)
         self._is_main_agent_data_source = False
 
     # TODO: We should cleanup these old directories one day. Then we can remove this special case

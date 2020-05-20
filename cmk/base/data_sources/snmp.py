@@ -134,9 +134,14 @@ class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSecti
 class SNMPDataSource(ABCSNMPDataSource):
     source_type = SourceType.HOST
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(SNMPDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
         self._detector = CachedSNMPDetector()
         self._do_snmp_scan = False
         self._on_error = "raise"
@@ -392,9 +397,15 @@ class SNMPDataSource(ABCSNMPDataSource):
 class SNMPManagementBoardDataSource(SNMPDataSource):
     source_type = SourceType.MANAGEMENT
 
-    def __init__(self, hostname, ipaddress):
-        # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress,
+                                                            selected_raw_section_names)
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

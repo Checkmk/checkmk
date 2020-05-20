@@ -15,6 +15,7 @@ from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-
 
 import cmk.utils.paths
 
+from cmk.base.api import PluginName
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
@@ -77,9 +78,15 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
 
 class DSProgramDataSource(ProgramDataSource):
-    def __init__(self, hostname, ipaddress, command_template):
-        # type: (HostName, Optional[HostAddress], str) -> None
-        super(DSProgramDataSource, self).__init__(hostname, ipaddress)
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            command_template,  # type: str
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
+        super(DSProgramDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
         self._command_template = command_template
 
     def id(self):
@@ -125,10 +132,18 @@ class DSProgramDataSource(ProgramDataSource):
 
 
 class SpecialAgentDataSource(ProgramDataSource):
-    def __init__(self, hostname, ipaddress, special_agent_id, params):
-        # type: (HostName, Optional[HostAddress], str, Dict) -> None
+    def __init__(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            special_agent_id,  # type: str
+            params,  # type: Dict
+            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+    ):
+        # type: (...) -> None
         self._special_agent_id = special_agent_id
-        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
+        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress,
+                                                     selected_raw_section_names)
         self._params = params
 
     def id(self):

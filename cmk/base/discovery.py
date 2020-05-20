@@ -191,14 +191,13 @@ def _do_discovery_for(
         }
         sources.enforce_check_plugin_names(check_plugin_names)
 
-    section.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
-    console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
     discovered_services = _discover_services(
         hostname,
         ipaddress,
         sources,
         multi_host_sections,
         on_error=on_error,
+        check_plugin_whitelist={PluginName(n) for n in check_plugin_names},
     )
 
     # There are three ways of how to merge existing and new discovered checks:
@@ -931,15 +930,26 @@ def _discover_services(
         sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
+        check_plugin_whitelist,  # type: Optional[Set[PluginName]]
 ):
     # type: (...) -> List[DiscoveredService]
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 
+    # find out which plugins we need to discover
+    plugin_candidates = multi_host_sections.get_check_plugin_candidates()
+    if check_plugin_whitelist is not None:
+        plugin_candidates = plugin_candidates.intersection(check_plugin_whitelist)
+    section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
+    console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
+
+    # For now, we have to re-map the plugins back to the original name. Not for long!
+    plugin_candidates_str = {resolve_legacy_name(n) for n in plugin_candidates}
+
     service_table = {}  # type: cmk.base.check_utils.DiscoveredCheckTable
     try:
-        for check_plugin_name in sources.get_check_plugin_names():
+        for check_plugin_name in sorted(plugin_candidates_str):
             try:
                 for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
                                                   check_plugin_name, on_error):
@@ -1231,6 +1241,7 @@ def _get_discovered_services(
         sources,
         multi_host_sections,
         on_error,
+        check_plugin_whitelist=None,
     )
     for discovered_service in discovered_services:
         services.setdefault((discovered_service.check_plugin_name, discovered_service.item),

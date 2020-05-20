@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Type  # pylint: disable=unused-import
+
+import six
 
 from livestatus import lqencode
 import cmk.gui.sites as sites
@@ -75,7 +76,7 @@ class BarChartDataGenerator(ABCDataGenerator):
         if title_config == "hide":
             return ""
         if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], (unicode, str)):
+                title_config[1], six.string_types):
             return title_config[1]
         raise MKUserError("bar_chart_title",
                           _("Invalid bar chart title config \"%r\" given" % (title_config,)))
@@ -302,7 +303,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
     def _get_data(cls, properties, context, return_column_headers=True):
         time_range = cls._int_time_range_from_rangespec(properties["time_range"])
         # TODO KO: check typing
-        c_headers = "ColumnHeaders: on\n" if return_column_headers else ""  # type: Any
+        c_headers = "ColumnHeaders: on\n" if return_column_headers else ""
         filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
 
         query = ("GET log\n"
@@ -321,15 +322,14 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             rows = sites.live().query(query)
         except MKTimeout:
             raise
-        except Exception as _e:
+        except Exception:
             raise MKGeneralException(_("The query returned no data."))
         finally:
             sites.live().set_only_sites(None)
 
-        c_headers = ""
-        if return_column_headers:
-            c_headers = rows.pop(0)
-        return rows, c_headers
+        # TODO: hdrs has the funny type Union[str, LivestatusRow], is this really what we want?
+        hdrs = rows.pop(0) if return_column_headers else ""
+        return rows, hdrs
 
     @classmethod
     def _forge_tooltip_and_url(cls, time_frame, properties, context):
@@ -340,8 +340,9 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
         # TODO: Can this be simplified by passing a list as argument to html.render_table()?
         tooltip = html.render_table(
             html.render_tr(html.render_td(_("From:")) + html.render_td(from_time_str)) +
-            html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) + \
-            html.render_tr(html.render_td("%ss:" % properties["log_target"].capitalize()) +
+            html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) +  #
+            html.render_tr(
+                html.render_td("%ss:" % properties["log_target"].capitalize()) +
                 html.render_td(time_frame["value"])))
 
         args = []  # type: HTTPVariables

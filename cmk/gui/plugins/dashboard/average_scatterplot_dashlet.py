@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import (  # pylint: disable=unused-import
-    Dict, Text, List)
+from typing import Dict, Text  # pylint: disable=unused-import
+
+import six
+
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKTimeout, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
@@ -35,14 +37,13 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         title_config = properties["scatterplot_title"]
         if title_config == "show":
             return cls.default_scatterplot_title(properties, context)
-        elif title_config == "hide":
+        if title_config == "hide":
             return ""
-        elif isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], (unicode, str)):
+        if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
+                title_config[1], six.string_types):
             return title_config[1]
-        else:
-            raise MKUserError("scatterplot_title",
-                              _("Invalid bar chart title config \"%r\" given" % (title_config,)))
+        raise MKUserError("scatterplot_title",
+                          _("Invalid bar chart title config \"%r\" given" % (title_config,)))
 
     @classmethod
     def default_scatterplot_title(cls, properties, context):
@@ -116,7 +117,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
                 rows = sites.live().query(query)
             except MKTimeout:
                 raise
-            except Exception as _e:
+            except Exception:
                 raise MKGeneralException(_("The query returned no data."))
 
         if return_column_headers:
@@ -209,7 +210,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
                 values_per_timestamp[elem["timestamp"]][elem["label"]] = elem["value"]
             else:
                 values_per_timestamp[elem["timestamp"]] = {elem["label"]: elem["value"]}
-        for ts, value_dict in values_per_timestamp.iteritems():
+        for ts, value_dict in values_per_timestamp.items():
             median_value = cls._get_median_value(value_dict.values())
             mean_value = sum(value_dict.values()) / len(value_dict.values())
             median_elements.append({

@@ -30,7 +30,6 @@ import numbers
 import os
 import re
 import socket
-import sre_constants
 import sys
 import time
 import uuid
@@ -874,7 +873,7 @@ class RegExp(TextAscii):
         # Check if the string is a valid regex
         try:
             compiled = re.compile(value)
-        except sre_constants.error as e:
+        except re.error as e:
             raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
 
         if compiled.groups < self._mingroups:

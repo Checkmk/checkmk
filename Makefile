@@ -559,8 +559,8 @@ format-python3:
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 3)} ; \
-	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files 3; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i
 
 
 format-shell:

@@ -2,13 +2,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-SHELL    := /bin/bash -e
-PIPENV3  := ../scripts/run-pipenv 3
-PYTEST   := $(PIPENV3) run py.test -vv
-YAPF     := $(PIPENV3) run yapf
-BANDIT   := $(PIPENV3) run bandit
-MYPY     := ../scripts/run-mypy
-
+SHELL := /bin/bash -e
+SCRIPTS := ../scripts
+FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
+PIPENV2 := $(SCRIPTS)/run-pipenv 2
+PIPENV3 := $(SCRIPTS)/run-pipenv 3
+PYTEST := $(PIPENV3) run py.test -vv
+YAPF := $(PIPENV3) run yapf
+BANDIT := $(PIPENV3) run bandit
+MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 
 .PHONY: help prepare-node-modules test-docker test-pylint test-unit \
@@ -67,7 +69,7 @@ test-unit-coverage-html:
 	    -T unit unit
 
 test-mypy3:
-	../scripts/find-python-files 3 | \
+	$(FIND_PYTHON_FILES) 3 | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
@@ -81,7 +83,7 @@ test-mypy3-raw:
 	$(MAKE) test-mypy3 ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 MYPY2_FILES=$(shell \
-    ../scripts/find-python-files 2 | \
+    $(FIND_PYTHON_FILES) 2 | \
     `: filter out plugins, they are not real modules` \
     grep -v $$(realpath '../agents/plugins') | \
     grep -v $$(realpath '../checks') | \
@@ -122,7 +124,7 @@ test-format-python: ../.style.yapf
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 2)} ; \
+	@PYTHON_FILES=$${PYTHON_FILES-$$($(FIND_PYTHON_FILES) 2)} ; \
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
@@ -135,8 +137,8 @@ test-format-python3: ../.style.yapf
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 3)} ; \
-	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
+	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES) 3; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
 	exit $${PIPESTATUS[0]}
@@ -166,14 +168,14 @@ test-composition-docker:
 # the agent updater to Python 3. The composition tests currently import the agent
 # updater code for the test execution, which should not be done.
 test-composition: prepare-node-modules
-	../scripts/run-pipenv 2 run py.test -vv -T composition $(realpath ../tests/composition)
+	$(PIPENV2) run py.test -vv -T composition $(realpath ../tests/composition)
 
 test-pipenv-deps:
 	$(PIPENV3) check
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
-	  ../scripts/find-python-files 3 | tr '\n' ',' | sed 's/,$$//'; \
+	  $(FIND_PYTHON_FILES) 3 | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
 
 test-bandit: bandit.ini

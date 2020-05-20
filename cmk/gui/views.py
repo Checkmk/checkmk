@@ -1267,7 +1267,13 @@ def show_filter_form(is_open, filters):
     html.open_td()
 
     # sort filters according to title
-    s = sorted([(f.sort_index, f.title, f) for f in filters if f.available()])
+    # NOTE: We can't compare Filters themselves!
+    s = sorted(
+        (
+            (f.sort_index, f.title, f)  #
+            for f in filters
+            if f.available()),
+        key=lambda x: (x[0], x[1]))
 
     # First show filters with double height (due to better floating
     # layout)

@@ -10,7 +10,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.views
 
 if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.views.icons
+    import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
 import cmk.gui.plugins.views.icons as icons
 

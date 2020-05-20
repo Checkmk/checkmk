@@ -993,7 +993,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         }[host_name]
 
     if not cmk_version.is_raw_edition():
-        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test

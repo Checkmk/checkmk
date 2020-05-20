@@ -6,7 +6,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0p13
+Version: 1.6.0p12
 Date: 1589803376
 
 The Agent bakery now correctly joins CCMS paths to be monitored when

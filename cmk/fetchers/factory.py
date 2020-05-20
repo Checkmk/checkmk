@@ -23,7 +23,7 @@ class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
         if enforce_stored_walks or snmp_config.is_usewalk_host:
             return StoredWalkSNMPBackend()
 
-        if inline:
+        if snmp_config.is_inline_snmp_host:
             return inline.InlineSNMPBackend(record_inline_stats)
 
         return ClassicSNMPBackend()

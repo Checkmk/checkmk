@@ -1882,6 +1882,8 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
 
 
 def has_timespecific_params(entries):
+    if entries is None:
+        return False
     if isinstance(entries, dict) and "tp_default_value" in entries:
         return True
     for entry in entries:

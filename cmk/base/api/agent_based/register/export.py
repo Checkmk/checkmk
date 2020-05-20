@@ -5,15 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import List, Optional
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+)
 
 from cmk.utils.type_defs import ABCSNMPTree
 
 from cmk.base import config
+
+from cmk.base.api.agent_based.checking_types import (
+    DiscoveryFunction,
+    CheckFunction,
+    management_board as management_board_enum,
+)
+
+from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
+
 from cmk.base.api.agent_based.section_types import (
     AgentParseFunction,
     HostLabelFunction,
@@ -122,4 +137,71 @@ def snmp_section(
     config.registered_snmp_sections[section_plugin.name] = section_plugin
 
 
-__all__ = ["agent_section", "snmp_section"]
+def check_plugin(
+        #*,
+        name=None,  # type: Optional[str]
+        sections=None,  # type: Optional[List[str]]
+        service_name=None,  # type: Optional[str]
+        discovery_function=None,  # type: DiscoveryFunction
+        discovery_default_parameters=None,  # type: Optional[Dict[str, Any]]
+        discovery_ruleset_name=None,  # type: Optional[str]
+        check_function=None,  # type: CheckFunction
+        check_default_parameters=None,  # type: Optional[Dict[str, Any]]
+        check_ruleset_name=None,  # type: Optional[str]
+        management_board=None,  # type: management_board_enum
+):
+    # type: (...) -> None
+    """Register a check plugin to checkmk.
+
+    :param name: The name of the check plugin. It must be unique. And contain only the characters
+                 A-Z, a-z, 0-9 and the underscore.
+    :param sections: An optional list of section names that this plugin subscribes to. The
+                     corresponding sections are passed to the discovery and check function. The
+                     functions arguments must be called 'section_<name1>, section_<name2>' ect.
+                     Default: [<name>]
+    :param service_name: The template for the service. The check function must accept 'item' as
+                         first argument if and only if "%s" is present in the value of
+                         "service_name".
+    :param discovery_function: The discovery_function. Arguments must be 'params' (if discovery
+                               parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                               corresponding to the `sections`.
+    :param discovery_parameters: Default parameters for the discovery function. Must match the
+                                 ValueSpec of the corresponding WATO ruleset.
+    :param discovery_ruleset_name: The name of the discovery ruleset.
+    :param check_function: The check_function. Arguments must be 'item' (if the service has an item)
+                           'params' (if check parameters are defined) and 'section_<name1>,
+                           section_<name2>' ect. corresponding to the `sections`.
+    :param check_parameters: Default parameters for the check function. Must match the
+                             ValueSpec of the corresponding WATO ruleset.
+    :param check_ruleset_name: The name of the check ruleset.
+    :param management_board: Explicitly tell checkmk wether this plugins services should be
+                             discovered on a management board. Choices are
+                             `management_board.EXCLUSIVE` or `management_board.DISABLED`
+    """
+    # TODO (mo): unhack this CMK-3983
+    if (name is None or service_name is None or discovery_function is None or
+            check_function is None):
+        raise TypeError("name, service_name, discovery_function and check_function are mandatory")
+
+    plugin = create_check_plugin(
+        name=name,
+        sections=sections,
+        service_name=service_name,
+        discovery_function=discovery_function,
+        discovery_default_parameters=discovery_default_parameters,
+        discovery_ruleset_name=discovery_ruleset_name,
+        check_function=check_function,
+        check_default_parameters=check_default_parameters,
+        check_ruleset_name=check_ruleset_name,
+        management_board_option=management_board,
+        forbidden_names=list(config.registered_check_plugins),
+    )
+
+    config.registered_check_plugins[plugin.name] = plugin
+
+
+__all__ = [
+    "agent_section",
+    "check_plugin",
+    "snmp_section",
+]

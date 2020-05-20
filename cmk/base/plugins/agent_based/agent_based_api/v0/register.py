@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.base.api.agent_based.register.export import (
-    snmp_section,
     agent_section,
+    check_plugin,
+    snmp_section,
 )
 
 __all__ = [
-    'snmp_section',
     'agent_section',
+    'check_plugin',
+    'snmp_section',
 ]

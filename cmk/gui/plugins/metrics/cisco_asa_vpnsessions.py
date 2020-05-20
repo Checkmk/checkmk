@@ -77,6 +77,13 @@ metric_info['cisco_asa_vpnsessions_ipsecra_peak'] = {
     'color': '21/a',
 }
 
+metric_info['cisco_asa_vpnsessions_summary_current'] = {
+    'title': _('Active sessions summary'),
+    'help': _('number of current active summary'),
+    'unit': 'count',
+    'color': '26/a',
+}
+
 ################################################################################
 #
 # map perfdata to metric
@@ -107,6 +114,9 @@ check_metrics['check_mk-cisco_asa_vpnsessions'] = {
     },
     'clientless_peak': {
         'name': 'cisco_asa_vpnsessions_clientless_peak',
+    },
+    'summary_current': {
+        'name': 'cisco_asa_vpnsessions_summary_current'
     },
 }
 
@@ -165,6 +175,16 @@ graph_info.append({
     ],
 })
 
+graph_info.append({
+    'title': _('VPN Sessions summary'),
+    'metrics': [('cisco_asa_vpnsessions_summary_current', 'area'),],
+    'range': (0, 'cisco_asa_vpnsessions_summary_current:max'),
+    'scalars': [
+        ('cisco_asa_vpnsessions_summary_current:crit', _('crit level')),
+        ('cisco_asa_vpnsessions_summary_current:warn', _('warn level')),
+    ],
+})
+
 ################################################################################
 #
 # define perf-o-meter
@@ -198,6 +218,13 @@ perfometer_info.append({
 perfometer_info.append({
     'type': 'logarithmic',
     'metric': 'cisco_asa_vpnsessions_ipsecra_current',
+    'half_value': sysmax_vpn_half_value,
+    'exponent': 2,
+})
+
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'cisco_asa_vpnsessions_summary_current',
     'half_value': sysmax_vpn_half_value,
     'exponent': 2,
 })

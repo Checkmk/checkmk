@@ -40,7 +40,8 @@ def _parameter_valuespec_cisco_asa_vpnsessions():
 def _item_spec_cisco_asa_vpnsessions():
     return TextAscii(
         title=_('VPN session type'),
-        help=_('One of AnyConnect, Clientless, IPSec L2L or IPSec RA. '),
+        help=_(
+            'VPN session type is one of AnyConnect, Clientless, IPSec L2L, IPSec RA or Summary. '),
         allow_empty=False,
     )
 

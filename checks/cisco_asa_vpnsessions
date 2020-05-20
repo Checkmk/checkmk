@@ -59,33 +59,32 @@ factory_settings['cisco_asa_vpnsessions_defaults'] = {
 
 def parse_cisco_asa_vpnsessions(info):
 
-    IPSecNumSessions, IPSecCumulateSessions, IPSecPeakConcurrentSessions, L2LNumSessions, L2LCumulateSessions, \
-    L2LPeakConcurrentSessions, SVCNumSessions, SVCCumulateSessions, SVCPeakConcurrentSessions, WebvpnNumSessions, \
-    WebvpnCumulateSessions, WebvpnPeakConcurrentSessions, MaxSessionsSupportable = info[0]
+    IPSecNumSessions, IPSecCumulateSessions, IPSecPeakSessions, L2LNumSessions, L2LCumulateSessions, \
+    L2LPeakSessions, SVCNumSessions, SVCCumulateSessions, SVCPeakSessions, WebvpnNumSessions, \
+    WebvpnCumulateSessions, WebvpnPeakSessions, MaxSessionsSupportable = info[0]
 
     IPSecNumSessions = int(IPSecNumSessions)
     IPSecCumulateSessions = int(IPSecCumulateSessions)
-    IPSecPeakConcurrentSessions = int(IPSecPeakConcurrentSessions)
+    IPSecPeakSessions = int(IPSecPeakSessions)
     L2LNumSessions = int(L2LNumSessions)
     L2LCumulateSessions = int(L2LCumulateSessions)
-    L2LPeakConcurrentSessions = int(L2LPeakConcurrentSessions)
+    L2LPeakSessions = int(L2LPeakSessions)
     SVCNumSessions = int(SVCNumSessions)
     SVCCumulateSessions = int(SVCCumulateSessions)
-    SVCPeakConcurrentSessions = int(SVCPeakConcurrentSessions)
+    SVCPeakSessions = int(SVCPeakSessions)
     WebvpnNumSessions = int(WebvpnNumSessions)
     WebvpnCumulateSessions = int(WebvpnCumulateSessions)
-    WebvpnPeakConcurrentSessions = int(WebvpnPeakConcurrentSessions)
+    WebvpnPeakSessions = int(WebvpnPeakSessions)
     MaxSessionsSupportable = int(MaxSessionsSupportable)
+    SumNumSessions = IPSecNumSessions + L2LNumSessions + SVCNumSessions + WebvpnNumSessions
+    SumCumulateSessions = IPSecCumulateSessions + L2LCumulateSessions + SVCCumulateSessions + WebvpnCumulateSessions
 
-    parsed = {  # current,         peak,                     cumulative,          system max
-        'AnyConnect': (SVCNumSessions, SVCPeakConcurrentSessions, SVCCumulateSessions,
-                       MaxSessionsSupportable),
-        'Clientless': (WebvpnNumSessions, WebvpnPeakConcurrentSessions, WebvpnCumulateSessions,
-                       MaxSessionsSupportable),
-        'IPSec RA': (IPSecNumSessions, IPSecPeakConcurrentSessions, IPSecCumulateSessions,
-                     MaxSessionsSupportable),
-        'IPSec L2L':
-            (L2LNumSessions, L2LPeakConcurrentSessions, L2LCumulateSessions, MaxSessionsSupportable)
+    parsed = {         # current,      peak,            cumulative,          system max
+        'AnyConnect': (SVCNumSessions, SVCPeakSessions, SVCCumulateSessions, MaxSessionsSupportable),
+        'Clientless': (WebvpnNumSessions, WebvpnPeakSessions, WebvpnCumulateSessions, MaxSessionsSupportable),
+        'IPSec RA': (IPSecNumSessions, IPSecPeakSessions, IPSecCumulateSessions, MaxSessionsSupportable),
+        'IPSec L2L': (L2LNumSessions, L2LPeakSessions, L2LCumulateSessions, MaxSessionsSupportable),
+        'Summary': (SumNumSessions, 0, SumCumulateSessions, MaxSessionsSupportable),
     }
 
     return parsed
@@ -101,25 +100,32 @@ def check_cisco_asa_vpnsessions(item, params, parsed):
     state = 0
     warn, crit = params['WarnCrit']
     current, peak, cumulative, sysmax = parsed[item]
-    infotext = '%s %d/%d/%d/%d (current/peak/system max./cumulative)' % (item, current, peak,
-                                                                         sysmax, cumulative)
     longoutput = ''
-
     VPNType = str(item).lower().replace(' ', '')
 
-    perfdata = [
-        ('%s_current' % VPNType, current, warn, crit, 0, sysmax),
-        ('%s_peak' % VPNType, peak, None, None, peak + 10),
-    ]
+    if not VPNType == 'summary':
+        infotext = '%d/%d/%d/%d (current/peak/system max./cumulative)' % (current, peak, sysmax, cumulative)
+        perfdata = [
+            ('%s_current' % VPNType, current, warn, crit, 0, sysmax),
+            ('%s_peak' % VPNType, peak, None, None, peak + 10),
+        ]
+    else:
+        infotext = '%d/%d/%d (current/system max./cumulative)' % (current, sysmax, cumulative)
+        perfdata = [
+            ('%s_current' % VPNType, current, warn, crit, 0, sysmax),
+        ]
 
     if current >= crit:
-        state = 2
-        infotext += ' (current >= %d)' % crit
+        yield 2, 'current >= %d' % crit
+        # state = 2
+        # infotext += ' (current >= %d)' % crit
     elif current >= warn:
-        state = 1
-        infotext += ' (current >= %d)' % warn
+        yield 1, 'current >= %d' % warn
+        # state = 1
+        # infotext += ' (current >= %d)' % warn
 
-    return state, infotext + longoutput, perfdata
+    yield state, infotext + longoutput, perfdata
+    # return state, infotext + longoutput, perfdata
 
 
 check_info['cisco_asa_vpnsessions'] = {

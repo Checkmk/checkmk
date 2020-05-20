@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 
 # Example header of a notification script:
 
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # HTML Emails with included graphs
 # Bulk: yes
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.

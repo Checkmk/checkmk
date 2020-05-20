@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings['winperf_cpu_default_levels'] = {}  # old discovery refered to variable by name!
+winperf_cpu_default_levels = {}  # old discovery refered to variable by name!
 
 
 def inventory_winperf_util(info):

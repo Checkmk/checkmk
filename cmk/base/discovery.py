@@ -134,8 +134,8 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
 
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-            _do_discovery_for(hostname, ipaddress, sources, multi_host_sections,
-                              arg_check_plugin_names, arg_only_new, on_error)
+            _do_discovery_for(hostname, ipaddress, multi_host_sections, arg_check_plugin_names,
+                              arg_only_new, on_error)
 
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -173,31 +173,19 @@ def _preprocess_hostnames(arg_host_names, config_cache):
 def _do_discovery_for(
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
-        sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         check_plugin_names,  # type: Optional[Set[CheckPluginName]]
         only_new,  # type: bool
         on_error,  # type: str
 ):
     # type: (...) -> None
-    if not check_plugin_names:
-        # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
-        # we've already discovered the right check plugin names.
-        # _discover_services(..) would discover check plugin names again.
-        # In order to avoid a second discovery (SNMP data source would do
-        # another SNMP scan) we enforce this selection to be used.
-        check_plugin_names = {
-            resolve_legacy_name(n) for n in multi_host_sections.get_check_plugin_candidates()
-        }
-        sources.enforce_check_plugin_names(check_plugin_names)
-
     discovered_services = _discover_services(
         hostname,
         ipaddress,
-        sources,
         multi_host_sections,
         on_error=on_error,
-        check_plugin_whitelist={PluginName(n) for n in check_plugin_names},
+        check_plugin_whitelist=(None if check_plugin_names is None else
+                                {PluginName(n) for n in check_plugin_names}),
     )
 
     # There are three ways of how to merge existing and new discovered checks:
@@ -346,7 +334,6 @@ def discover_on_host(
         # Compute current state of new and existing checks
         services, discovered_host_labels = _get_host_services(host_config,
                                                               ipaddress,
-                                                              sources,
                                                               multi_host_sections,
                                                               on_error=on_error)
 
@@ -455,7 +442,6 @@ def check_discovery(hostname, ipaddress):
 
     services, discovered_host_labels = _get_host_services(host_config,
                                                           ipaddress,
-                                                          sources,
                                                           multi_host_sections,
                                                           on_error="raise")
 
@@ -927,7 +913,6 @@ def _discover_host_labels(hostname, ipaddress, multi_host_sections, on_error):
 def _discover_services(
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
-        sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
         check_plugin_whitelist,  # type: Optional[Set[PluginName]]
@@ -1176,25 +1161,24 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
+def _get_host_services(host_config, ipaddress, multi_host_sections, on_error):
+    # type: (config.HostConfig, Optional[str], data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     if host_config.is_cluster:
-        return _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error)
+        return _get_cluster_services(host_config, ipaddress, multi_host_sections, on_error)
 
-    return _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_error)
+    return _get_node_services(host_config, ipaddress, multi_host_sections, on_error)
 
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
         host_config,  # type: config.HostConfig
         ipaddress,  # type: Optional[str]
-        sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
     # type: (...) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     hostname = host_config.hostname
-    services, discovered_host_labels = _get_discovered_services(hostname, ipaddress, sources,
+    services, discovered_host_labels = _get_discovered_services(hostname, ipaddress,
                                                                 multi_host_sections, on_error)
 
     config_cache = config.get_config_cache()
@@ -1216,7 +1200,6 @@ def _get_node_services(
 def _get_discovered_services(
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
-        sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
@@ -1224,21 +1207,10 @@ def _get_discovered_services(
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services = {}  # type: DiscoveredServicesTable
 
-    # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
-    # we've already discovered the right check plugin names.
-    # _discover_services(..) would discover check plugin names again.
-    # In order to avoid a second discovery (SNMP data source would do
-    # another SNMP scan) we enforce this selection to be used.
-    check_plugin_names = {
-        resolve_legacy_name(n) for n in multi_host_sections.get_check_plugin_candidates()
-    }
-    sources.enforce_check_plugin_names(check_plugin_names)
-
     # Handle discovered services -> "new"
     discovered_services = _discover_services(
         hostname,
         ipaddress,
-        sources,
         multi_host_sections,
         on_error,
         check_plugin_whitelist=None,
@@ -1316,7 +1288,6 @@ def _merge_manual_services(host_config, services, on_error):
 def _get_cluster_services(
         host_config,  # type: config.HostConfig
         ipaddress,  # type: Optional[str]
-        sources,  # type: data_sources.DataSources
         multi_host_sections,  # type: data_sources.MultiHostSections
         on_error,  # type: str
 ):
@@ -1328,31 +1299,16 @@ def _get_cluster_services(
 
     config_cache = config.get_config_cache()
 
-    # Get setting from cluster SNMP data source
-    do_snmp_scan = False
-    for source in sources.get_data_sources():
-        if isinstance(source, data_sources.SNMPDataSource):
-            do_snmp_scan = source.get_do_snmp_scan()
-
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
-        node_ipaddress = ip_lookup.lookup_ip_address(node)
-        node_sources = _get_sources_for_discovery(
+
+        services, discovered_host_labels = _get_discovered_services(
             node,
-            node_ipaddress,
-            do_snmp_scan=do_snmp_scan,
-            on_error=on_error,
+            ip_lookup.lookup_ip_address(node),
+            multi_host_sections,
+            on_error,
         )
-
-        # enforce check plugin names in all contained sources (and disable auto detection)
-        check_plugin_names = node_sources.get_enforced_check_plugin_names()
-        if check_plugin_names:
-            node_sources.enforce_check_plugin_names(check_plugin_names)
-
-        services, discovered_host_labels = _get_discovered_services(node, node_ipaddress,
-                                                                    node_sources,
-                                                                    multi_host_sections, on_error)
         cluster_host_labels.update(discovered_host_labels)
         for check_source, discovered_service in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
@@ -1406,7 +1362,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-    services, discovered_host_labels = _get_host_services(host_config, ipaddress, sources,
+    services, discovered_host_labels = _get_host_services(host_config, ipaddress,
                                                           multi_host_sections, on_error)
 
     table = []  # type: CheckPreviewTable

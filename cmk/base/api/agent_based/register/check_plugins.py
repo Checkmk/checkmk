@@ -26,12 +26,12 @@ else:
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (
-    management_board,
     CheckPlugin,
-    Service,
-    Result,
-    Metric,
     IgnoreResults,
+    management_board,
+    Metric,
+    Result,
+    Service,
 )
 
 ITEM_VARIABLE = "%s"

@@ -5,8 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a section plugin
 """
-from typing import (  # pylint: disable=unused-import
-    Any, Generator, List, Optional, Union)
+from typing import (
+    Any,
+    Generator,
+    List,
+    Optional,
+    Union,
+)
 import functools
 import sys
 import inspect
@@ -20,10 +25,14 @@ else:
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=unused-import
+from cmk.base.discovered_labels import HostLabel
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import (  # pylint: disable=unused-import
-    AgentParseFunction, AgentSectionPlugin, HostLabelFunction, SNMPDetectSpec, SNMPParseFunction,
+from cmk.base.api.agent_based.section_types import (
+    AgentParseFunction,
+    AgentSectionPlugin,
+    HostLabelFunction,
+    SNMPDetectSpec,
+    SNMPParseFunction,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.section_types import SNMPTree

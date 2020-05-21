@@ -5,7 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Types and classes used by the API for check plugins
 """
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 import sys
 import enum
 

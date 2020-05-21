@@ -5,8 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Generator, List, Optional, Type, TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Union,
+)
 import sys
 import functools
 import inspect
@@ -18,8 +25,14 @@ else:
     from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.checking_types import (  # pylint: disable=unused-import
-    management_board, CheckPlugin, Service, Result, Metric, IgnoreResults)
+from cmk.base.api.agent_based.checking_types import (
+    management_board,
+    CheckPlugin,
+    Service,
+    Result,
+    Metric,
+    IgnoreResults,
+)
 
 ITEM_VARIABLE = "%s"
 

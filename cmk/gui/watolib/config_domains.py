@@ -119,11 +119,9 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
                 os.kill(pid, signal.SIGUSR1)
             except OSError as e:
-                # No liveproxyd running: No reload needed.
-                if e.errno != errno.ENOENT:
-                    raise
-                # PID in pidfiles does not exist: No reload needed.
-                if e.errno != errno.ESRCH:  # [Errno 3] No such process
+                # ENOENT: No liveproxyd running: No reload needed.
+                # ESRCH: PID in pidfiles does not exist: No reload needed.
+                if e.errno not in (errno.ENOENT, errno.ESRCH):
                     raise
             except ValueError:
                 # ignore empty pid file (may happen during locking in

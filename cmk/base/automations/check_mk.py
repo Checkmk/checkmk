@@ -1396,6 +1396,7 @@ class AutomationDiagHost(Automation):
             character_encoding=snmp_config.character_encoding,
             is_usewalk_host=snmp_config.is_usewalk_host,
             is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+            record_stats=config.record_inline_snmp_stats,
         )
 
         # TODO: It is unclear why mypy complains about this structure. Investigate!

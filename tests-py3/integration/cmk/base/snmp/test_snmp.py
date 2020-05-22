@@ -141,6 +141,7 @@ def snmp_config_fixture(request, snmpsim, monkeypatch):
         character_encoding=None,
         is_usewalk_host=backend_name == "stored_snmp",
         is_inline_snmp_host=backend_name == "inline_snmp",
+        record_stats=False,
     )
 
 
@@ -155,10 +156,10 @@ def test_get_single_oid_ipv6(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["is_ipv6_primary"] = True
-    cfg_dict["ipaddress"] = "::1"
-    snmp_config = SNMPHostConfig(**cfg_dict)
+    snmp_config = snmp_config.update(
+        is_ipv6_primary=True,
+        ipaddress="::1",
+    )
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -168,9 +169,12 @@ def test_get_single_oid_snmpv3(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["credentials"] = ('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser')
-    snmp_config = SNMPHostConfig(**cfg_dict)
+    snmp_config = snmp_config.update(credentials=(
+        'authNoPriv',
+        'md5',
+        'authOnlyUser',
+        'authOnlyUser',
+    ))
 
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -180,10 +184,7 @@ def test_get_single_oid_wrong_credentials(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["credentials"] = "dingdong"
-    snmp_config = SNMPHostConfig(**cfg_dict)
-
+    snmp_config = snmp_config.update(credentials="dingdong")
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result is None
 
@@ -260,10 +261,7 @@ def test_get_single_oid_not_resolvable(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["ipaddress"] = "bla.local"
-    snmp_config = SNMPHostConfig(**cfg_dict)
-
+    snmp_config = snmp_config.update(ipaddress="bla.local")
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0") is None
 
 
@@ -271,9 +269,7 @@ def test_get_simple_snmp_table_not_resolvable(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["ipaddress"] = "bla.local"
-    snmp_config = SNMPHostConfig(**cfg_dict)
+    snmp_config = snmp_config.update(ipaddress="bla.local")
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
@@ -299,9 +295,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["credentials"] = "dingdong"
-    snmp_config = SNMPHostConfig(**cfg_dict)
+    snmp_config = snmp_config.update(credentials="dingdong")
 
     # TODO: Unify different error messages
     if snmp_config.is_inline_snmp_host:
@@ -325,10 +319,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmp_config):
 
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
-    cfg_dict = snmp_config._asdict()
-    cfg_dict["is_bulkwalk_host"] = bulk
-    snmp_config = SNMPHostConfig(**cfg_dict)
-
+    snmp_config = snmp_config.update(is_bulkwalk_host=bulk)
     oid_info = (
         ".1.3.6.1.2.1.1",
         ["1.0", "2.0", "5.0"],

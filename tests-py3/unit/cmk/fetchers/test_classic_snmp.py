@@ -32,6 +32,7 @@ def test_snmp_port_spec(port, expected):
         character_encoding=None,
         is_usewalk_host=False,
         is_inline_snmp_host=False,
+        record_stats=False,
     )
     assert ClassicSNMPBackend()._snmp_port_spec(snmp_config) == expected
 
@@ -56,6 +57,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         character_encoding=None,
         is_usewalk_host=False,
         is_inline_snmp_host=False,
+        record_stats=False,
     )
     assert ClassicSNMPBackend()._snmp_proto_spec(snmp_config) == expected
 
@@ -86,6 +88,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             character_encoding=None,
             is_usewalk_host=False,
             is_inline_snmp_host=False,
+            record_stats=False,
         ),
         context_name=None,
     ), [
@@ -111,6 +114,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             character_encoding=None,
             is_usewalk_host=False,
             is_inline_snmp_host=False,
+            record_stats=False,
         ),
         context_name="blabla",
     ), [
@@ -136,6 +140,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             character_encoding=None,
             is_usewalk_host=False,
             is_inline_snmp_host=False,
+            record_stats=False,
         ),
         context_name="blabla",
     ), [
@@ -161,6 +166,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             character_encoding=None,
             is_usewalk_host=False,
             is_inline_snmp_host=False,
+            record_stats=False,
         ),
         context_name=None,
     ), [
@@ -186,6 +192,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             character_encoding=None,
             is_usewalk_host=False,
             is_inline_snmp_host=False,
+            record_stats=False,
         ),
         context_name=None,
     ), [

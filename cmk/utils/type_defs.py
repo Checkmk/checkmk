@@ -135,11 +135,19 @@ class SNMPHostConfig(
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
             ("is_inline_snmp_host", bool),
+            ("record_stats", bool),
         ])):
     @property
     def is_snmpv3_host(self):
         # type: () -> bool
         return isinstance(self.credentials, tuple)
+
+    def update(self, **kwargs):
+        # type: (Dict[str, Any]) -> SNMPHostConfig
+        """Return a new SNMPHostConfig with updated attributes."""
+        cfg = self._asdict()
+        cfg.update(**kwargs)
+        return SNMPHostConfig(**cfg)
 
 
 class OIDSpec(object):  # pylint: disable=bad-option-value, useless-object-inheritance

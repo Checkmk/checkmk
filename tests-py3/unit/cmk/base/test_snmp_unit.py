@@ -16,6 +16,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snm
 from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
 from cmk.base.check_api import BINARY, OID_END
 from cmk.base.snmp_utils import OIDBytes
+from cmk.fetchers.factory import SNMPBackendFactory
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -32,19 +33,20 @@ SNMPConfig = SNMPHostConfig(
     character_encoding="ascii",
     is_usewalk_host=False,
     is_inline_snmp_host=False,
+    record_stats=False,
 )
 
 
-class _SNMPTestFactory:
+class _SNMPTestFactory(SNMPBackendFactory):
     @staticmethod
-    def factory(*_args, **_ka):
+    def _factory(*_args, **_ka):
         return _SNMPTestBackend()
 
 
 class _SNMPTestBackend:
     @staticmethod
-    def walk(_test_config, fetchoid, **_kw):
-        return [("%s.%s" % (fetchoid, r), b"C0FEFE") for r in (1, 2, 3)]
+    def walk(_snmp_config, oid, **_kwargs):
+        return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
 TREE_2TUPLE = ('.1.3.6.1.4.1.13595.2.2.3.1', [OID_END, BINARY("16")])

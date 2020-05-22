@@ -281,11 +281,10 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_contexts:
         try:
-            snmp_backend = SNMPBackendFactory().factory(
-                snmp_config,
-                enforce_stored_walks=_enforce_stored_walks,
-                record_inline_stats=config.record_inline_snmp_stats)
-            value = snmp_backend.get(snmp_config, oid, context_name)
+            value = SNMPBackendFactory.get(snmp_config,
+                                           use_cache=_enforce_stored_walks,
+                                           oid=oid,
+                                           context_name=context_name)
 
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
@@ -311,10 +310,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
-    backend = SNMPBackendFactory.factory(snmp_config,
-                                         enforce_stored_walks=False,
-                                         record_inline_stats=False)
-    rows = backend.walk(snmp_config, oid)
+    rows = SNMPBackendFactory.walk(snmp_config, use_cache=False, oid=oid)
     return _convert_rows_for_stored_walk(rows)
 
 
@@ -432,16 +428,12 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        snmp_backend = SNMPBackendFactory().factory(
-            snmp_config,
-            enforce_stored_walks=_enforce_stored_walks,
-            record_inline_stats=config.record_inline_snmp_stats)
-
-        rows = snmp_backend.walk(snmp_config,
-                                 fetchoid,
-                                 check_plugin_name=check_plugin_name,
-                                 table_base_oid=base_oid,
-                                 context_name=context_name)
+        rows = SNMPBackendFactory.walk(snmp_config,
+                                       use_cache=_enforce_stored_walks,
+                                       oid=fetchoid,
+                                       check_plugin_name=check_plugin_name,
+                                       table_base_oid=base_oid,
+                                       context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when

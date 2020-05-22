@@ -2634,6 +2634,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             is_inline_snmp_host=self._is_inline_snmp_host(),
+            record_stats=record_inline_snmp_stats,
         )
 
     def _snmp_credentials(self):
@@ -3116,6 +3117,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
             is_inline_snmp_host=self._is_inline_snmp_host(),
+            record_stats=record_inline_snmp_stats,
         )
 
     @property

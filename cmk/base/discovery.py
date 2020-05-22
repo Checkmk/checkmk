@@ -67,6 +67,7 @@ import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
 
 from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
 from cmk.base.core_config import MonitoringCore
@@ -178,7 +179,9 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         # _discover_services(..) would discover check plugin names again.
         # In order to avoid a second discovery (SNMP data source would do
         # another SNMP scan) we enforce this selection to be used.
-        check_plugin_names = {str(n) for n in multi_host_sections.get_check_plugin_candidates()}
+        check_plugin_names = {
+            resolve_legacy_name(n) for n in multi_host_sections.get_check_plugin_candidates()
+        }
         sources.enforce_check_plugin_names(check_plugin_names)
 
     section.section_step("Executing discovery plugins (%d)" % len(check_plugin_names))
@@ -1198,7 +1201,9 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     # _discover_services(..) would discover check plugin names again.
     # In order to avoid a second discovery (SNMP data source would do
     # another SNMP scan) we enforce this selection to be used.
-    check_plugin_names = {str(n) for n in multi_host_sections.get_check_plugin_candidates()}
+    check_plugin_names = {
+        resolve_legacy_name(n) for n in multi_host_sections.get_check_plugin_candidates()
+    }
     sources.enforce_check_plugin_names(check_plugin_names)
 
     # Handle discovered services -> "new"

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
-from testlib import CheckManager, InventoryPluginManager
+from testlib import InventoryPluginManager  # , CheckManager
 from testlib.utils import get_standard_linux_agent_output
 
 import cmk.base.automations
@@ -30,13 +30,19 @@ from cmk.utils.log import logger
 # TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
 # too much time.
 
+# TODO (mo): now it's worse, we need to load all checks. remove this with CMK-4295
+#            after removing this, bring back the commented line below.
+
+import cmk.base.check_api as check_api
+
 
 # Load some common checks to have at least some for the test execution
 # Modes that have needs_checks=True set would miss the checks
 # without this fixtures
 @pytest.fixture(scope="module", autouse=True)
 def load_plugins():
-    CheckManager().load(["df", "cpu", "chrony", "lnx_if", "livestatus_status", "omd_status"])
+    #     CheckManager().load(["df", "cpu", "chrony", "lnx_if", "livestatus_status", "omd_status"])
+    config.load_all_checks(check_api.get_check_api_context)
     InventoryPluginManager().load()
 
 

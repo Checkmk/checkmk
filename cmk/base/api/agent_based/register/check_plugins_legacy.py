@@ -293,6 +293,17 @@ def maincheckify(subcheck_name):
     return subcheck_name.replace('.', '_')
 
 
+@functools.lru_cache()
+def resolve_legacy_name(plugin_name):
+    # type: (PluginName) -> str
+    """Get legacy plugin name back"""
+    # TODO (mo): remove this with CMK-4295. Function is only needed during transition
+    for legacy_name in config.check_info:
+        if str(plugin_name) == maincheckify(legacy_name):
+            return legacy_name
+    raise ValueError("can't resolve: %r" % (plugin_name,))
+
+
 PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 

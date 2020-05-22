@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -35,8 +35,11 @@
 # "$OMD_ROOT/local/lib/multisite_to_mrpe --secret dasistgeheim --url http://localhost/remote/check_mk/ <HOST>"
 #
 
-from __future__ import print_function
-import os, sys, getopt, time, urllib
+import getopt
+import os
+import sys
+from typing import NoReturn
+import urllib.parse
 import cmk.utils.cmk_subprocess as subprocess
 
 omd_site = os.getenv("OMD_SITE")
@@ -49,7 +52,8 @@ def convert_from_multisite(response):
 
 
 def bail_out(reason):
-    sys.stderr.write((reason + "\n").encode("utf-8"))
+    # type: (str) -> NoReturn
+    sys.stderr.write(reason + "\n")
     sys.exit(1)
 
 
@@ -144,11 +148,11 @@ if opt_secret:
     verbose("Secret:           " + opt_secret)
 else:
     verbose("Authentication:   HTTP BasicAuth")
-    verbose("Password:         " + opt_password)
+    verbose("Password:         " + ("" if opt_password is None else opt_password))
 
 
-def make_url(base, variables):
-    return base + "?" + urllib.urlencode(variables)
+def make_url(base, vs):
+    return base + "?" + urllib.parse.urlencode(vs)
 
 
 variables = [
@@ -190,7 +194,7 @@ try:
         bail_out("Error response from remote Multisite: %s" % answer[7:])
     try:
         parsed = eval(answer)
-    except:
+    except Exception:
         bail_out("Invalid response from Multisite: %s\n" % answer)
 
     services = convert_from_multisite(eval(answer))
@@ -211,4 +215,4 @@ for service in services:
             service["svc_plugin_output"],
             service["svc_perf_data"],
         )
-        sys.stdout.write(msg.encode("utf-8"))
+        sys.stdout.write(msg)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,11 +7,14 @@
 # Send notifications remote to mkeventd
 # Including Service Level
 
+import os
+import socket
+import time
+
 mkevent_host = ''
 mkevent_port = 514
 application = "notify"
 
-import time, socket, os
 host = os.environ['NOTIFY_HOSTNAME']
 
 #0       Emergency
@@ -28,11 +31,11 @@ def state_to_prio(state):
     state = int(state)
     if state == 0:
         return 5
-    elif state == 1:
+    if state == 1:
         return 4
-    elif state == 2:
+    if state == 2:
         return 2
-    elif state == 3:
+    if state == 3:
         return 7
 
 
@@ -50,5 +53,5 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((mkevent_host, mkevent_port))
 
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, host, application, message))
+sock.sendall(("<%s>%s %s %s: %s\n" % (prio, timestamp, host, application, message)).encode("utf-8"))
 sock.close()

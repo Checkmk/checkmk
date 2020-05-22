@@ -1,11 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-import os, pprint, sys, operator
+import operator
+import os
+import pprint
+import sys
 
 
 def usage():
@@ -210,7 +212,6 @@ def get_hosts_mk(file_vars):
             add_wato_parameter(hostname, "ipaddress", all_ipaddresses[hostname])
 
     # Alias
-    alias_info = []
     for entry in file_vars["extra_host_conf"].get("alias", []):
         for hostname in entry[1]:
             add_wato_parameter(hostname, "alias", entry[0])
@@ -326,6 +327,7 @@ def create_wato_folder(filename, file_vars):
                 tags = []
                 hosts, name, match, user = rest
             else:
+                global partial_unconverted_data
                 partial_unconverted_data += "%s: Unable to convert process rule %r" % (filename,
                                                                                        entry)
 
@@ -354,7 +356,7 @@ def create_wato_folder(filename, file_vars):
                 groups[group_name].append((tags, hosts, state, pattern))
             # Second run - create useful rules
             for group_name, values in groups.items():
-                tags, hosts, state, patterns = values[0]
+                tags, hosts, state, _patterns = values[0]
 
                 pattern_info = []
                 for value in values:
@@ -485,7 +487,7 @@ wato_host_tags += [\n\
     "wato_aux_tags": pprint.pformat(host_tags_info["wato_aux_tags"]),
     "extra_host_tags": "\n".join(extra_host_tags)
 }
-file(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
+open(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
 print("")
 
 # Write all configuration (hosts.mk/rules.mk) files

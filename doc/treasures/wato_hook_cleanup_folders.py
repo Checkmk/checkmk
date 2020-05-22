@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -20,7 +20,7 @@ def pre_activate_changes_cleanup(_unused):
     log = open('%s/tmp/hook.log' % cmk.utils.paths.omd_root, 'w')
     log.write('omd_site: %s, omd_root: %s\n' % (cmk_version.omd_site(), cmk.utils.paths.omd_root))
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.utils.paths.omd_root
-    for dirname, dirnames, filenames in os.walk(confd):
+    for _dirname, dirnames, _filenames in os.walk(confd):
         for subdirname in dirnames:
             if subdirname == cmk.utils.paths.omd_site:
                 log.write("keeping subdir: %s\n" % subdirname)

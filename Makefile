@@ -586,8 +586,8 @@ endif
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
 
-# This alias is for compatibility: The target .venv should refer to 2.7 for the moment
-.venv: .venv-2.7
+# This alias is for compatibility: The target .venv should refer to 3.7 for the moment
+.venv: .venv-3.7
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

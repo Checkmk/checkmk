@@ -21,7 +21,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     OID,
-    OIDSpec,
+    ABCSNMPTree,
     CheckPluginName,
     Column,
     Columns,
@@ -30,6 +30,7 @@ from cmk.utils.type_defs import (
     DecodedValues,
     HostName,
     OIDInfo,
+    OIDSpec,
     OIDWithColumns,
     OIDWithSubOIDsAndColumns,
     RawValue,
@@ -37,14 +38,12 @@ from cmk.utils.type_defs import (
     SNMPRowInfo,
     SNMPTable,
     SNMPValueEncoding,
-    ABCSNMPTree,
 )
 
 import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp_utils as snmp_utils
-
 from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
 
 if sys.version_info[0] >= 3:

@@ -5,18 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, List, Optional, Text, Tuple, Union,
-)
+from typing import Callable, List, Optional, Text, Tuple
 
 import six
 
-from cmk.utils.type_defs import (
-    OID,
-    OIDSpec,
-    CheckPluginName,
-    DecodedString,
-)
+from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, OIDSpec
 
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]

@@ -289,8 +289,10 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 source.enforce_check_plugin_names(None)
-                host_sections = multi_host_sections.add_or_get_host_sections(
-                    hostname, ipaddress, deflt=SNMPHostSections())
+                host_sections = multi_host_sections.setdefault_host_sections(
+                    (hostname, ipaddress),
+                    SNMPHostSections(),
+                )
                 source.set_fetched_check_plugin_names(set(host_sections.sections))
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)

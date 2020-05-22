@@ -127,9 +127,13 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         self._parsed_sections = caching.DictCache()
         self._parsed_to_raw_map = caching.DictCache()
 
-    def add_or_get_host_sections(self, hostname, ipaddress, deflt):
-        # type: (HostName, Optional[HostAddress], AbstractHostSections) -> AbstractHostSections
-        return self._multi_host_sections.setdefault((hostname, ipaddress), deflt)
+    def setdefault_host_sections(
+            self,
+            hostname_ipaddress,  # type: Tuple[HostName, Optional[HostAddress]]
+            default,  # type: AbstractHostSections
+    ):
+        # type: (...) -> AbstractHostSections
+        return self._multi_host_sections.setdefault(hostname_ipaddress, default)
 
     def get_host_sections(self):
         # type: () -> MultiHostSectionsData

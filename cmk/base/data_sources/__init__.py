@@ -258,9 +258,10 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             else:
                 these_sources.set_max_cachefile_age(this_max_cachefile_age)
 
-            host_sections =\
-                multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress,
-                        deflt=AgentHostSections())
+            host_sections = multi_host_sections.setdefault_host_sections(
+                (this_hostname, this_ipaddress),
+                AgentHostSections(),
+            )
 
             for source in these_sources.get_data_sources():
                 host_sections_from_source = source.run()

@@ -110,8 +110,10 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
     _set_up(monkeypatch, "node1", None, {})
 
     multi_host_sections = MultiHostSections()
-    multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
-                                                 AgentHostSections(sections=node_section_content))
+    multi_host_sections.setdefault_host_sections(
+        ("node1", "127.0.0.1"),
+        AgentHostSections(sections=node_section_content),
+    )
 
     content = multi_host_sections.get_parsed_section("node1", "127.0.0.1", PluginName("parsed"))
 
@@ -156,8 +158,10 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
     }
 
     multi_host_sections = MultiHostSections()
-    multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
-                                                 AgentHostSections(sections=node_section_content))
+    multi_host_sections.setdefault_host_sections(
+        ("node1", "127.0.0.1"),
+        AgentHostSections(sections=node_section_content),
+    )
 
     kwargs = multi_host_sections.get_section_kwargs("node1", "127.0.0.1",
                                                     [PluginName(n) for n in required_sections])
@@ -232,10 +236,14 @@ def test_get_section_cluster_kwargs(monkeypatch, required_sections, expected_res
     node2_section_content = {"two": NODE_2, "three": NODE_2}
 
     multi_host_sections = MultiHostSections()
-    multi_host_sections.add_or_get_host_sections("node1", "127.0.0.1",
-                                                 AgentHostSections(sections=node1_section_content))
-    multi_host_sections.add_or_get_host_sections("node2", "127.0.0.1",
-                                                 AgentHostSections(sections=node2_section_content))
+    multi_host_sections.setdefault_host_sections(
+        ("node1", "127.0.0.1"),
+        AgentHostSections(sections=node1_section_content),
+    )
+    multi_host_sections.setdefault_host_sections(
+        ("node2", "127.0.0.1"),
+        AgentHostSections(sections=node2_section_content),
+    )
 
     kwargs = multi_host_sections.get_section_cluster_kwargs(
         "cluster", [PluginName(n) for n in required_sections], "_service_description")
@@ -298,9 +306,10 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
 
     multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
-        multi_host_sections.add_or_get_host_sections(
-            nodename, "127.0.0.1",
-            AgentHostSections(sections={"check_plugin_name": node_section_content}))
+        multi_host_sections.setdefault_host_sections(
+            (nodename, "127.0.0.1"),
+            AgentHostSections(sections={"check_plugin_name": node_section_content}),
+        )
 
     section_content = multi_host_sections.get_section_content(hostname,
                                                               "127.0.0.1",

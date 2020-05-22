@@ -20,7 +20,7 @@ from cmk.base.exceptions import MKAgentError
 
 from cmk.fetchers import IPMIDataFetcher  # pylint: disable=cmk-module-layer-violation
 
-from .abstract import CheckMKAgentDataSource, management_board_ipaddress
+from .abstract import CheckMKAgentDataSource
 
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
@@ -29,8 +29,7 @@ class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
-        super(IPMIManagementBoardDataSource, self).__init__(hostname,
-                                                            management_board_ipaddress(hostname))
+        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
         self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
 
     def id(self):

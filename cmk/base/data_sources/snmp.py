@@ -36,7 +36,7 @@ from cmk.base.exceptions import MKAgentError
 
 from cmk.fetchers import SNMPDataFetcher  # pylint: disable=cmk-module-layer-violation
 
-from .abstract import DataSource, management_board_ipaddress, verify_ipaddress
+from .abstract import DataSource, verify_ipaddress
 from .host_sections import AbstractHostSections
 
 PluginNameFilterFunction = Callable[[
@@ -351,8 +351,7 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
-        super(SNMPManagementBoardDataSource, self).__init__(hostname,
-                                                            management_board_ipaddress(hostname))
+        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

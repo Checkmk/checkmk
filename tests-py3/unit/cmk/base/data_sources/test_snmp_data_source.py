@@ -17,7 +17,12 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp as snmp
 from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
-from cmk.base.data_sources.abstract import DataSource, FileCache, store
+from cmk.base.data_sources.abstract import (
+    DataSource,
+    FileCache,
+    store,
+    management_board_ipaddress,
+)
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
 from cmk.base.snmp_utils import OIDBytes
@@ -169,7 +174,10 @@ def test_snmp_ipaddress_from_mgmt_board(monkeypatch):
         },
     })
 
-    source = SNMPManagementBoardDataSource(hostname, "unused")
+    source = SNMPManagementBoardDataSource(
+        hostname,
+        management_board_ipaddress(hostname),
+    )
 
     assert source._host_config.management_address == ipaddress
     assert source._ipaddress == ipaddress
@@ -186,9 +194,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(monkeypatch):
             "management_address": "lolo"
         },
     })
-    source = SNMPManagementBoardDataSource("hostname", "ipaddress")
-
-    assert source._ipaddress is None
+    assert management_board_ipaddress("hostname") is None
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])

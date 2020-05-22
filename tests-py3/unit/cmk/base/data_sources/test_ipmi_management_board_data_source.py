@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.data_sources.abstract import management_board_ipaddress
 from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource
-
 from testlib.base import Scenario
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress):
+def test_attribute_defaults(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = IPMIManagementBoardDataSource(hostname, ipaddress)
+    source = IPMIManagementBoardDataSource(
+        hostname,
+        management_board_ipaddress(hostname),
+    )
 
     assert source._for_mgmt_board is True
     assert source._hostname == hostname
@@ -41,7 +41,10 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
             "management_address": ipaddress
         },
     })
-    source = IPMIManagementBoardDataSource(hostname, None)
+    source = IPMIManagementBoardDataSource(
+        hostname,
+        management_board_ipaddress(hostname),
+    )
 
     assert source._host_config.management_address == ipaddress
     assert source._ipaddress == ipaddress

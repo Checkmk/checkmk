@@ -34,7 +34,7 @@ from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_sections import MultiHostSections
-from .abstract import AgentHostSections
+from .abstract import AgentHostSections, management_board_ipaddress
 
 if TYPE_CHECKING:
     from .abstract import DataSource, CheckMKAgentDataSource
@@ -113,20 +113,23 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
     def _initialize_management_board_data_sources(self):
         # type: () -> None
         protocol = self._host_config.management_protocol
+        if protocol is None:
+            return
+
+        ip_address = management_board_ipaddress(self._hostname)
         if protocol == "snmp":
-            # TODO: Why not hand over management board IP address?
             # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
             # multiple inheritance should solve the issue.
-            self._add_source(SNMPManagementBoardDataSource(self._hostname, self._ipaddress))  # pylint: disable=abstract-class-instantiated
-        elif protocol == "ipmi":
-            # TODO: Why not hand over management board IP address?
+            self._add_source(SNMPManagementBoardDataSource(self._hostname, ip_address))  # pylint: disable=abstract-class-instantiated
+            return
+
+        if protocol == "ipmi":
             # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
             # multiple inheritance should solve the issue.
-            self._add_source(IPMIManagementBoardDataSource(self._hostname, self._ipaddress))  # pylint: disable=abstract-class-instantiated
-        elif protocol is None:
-            return None
-        else:
-            raise NotImplementedError()
+            self._add_source(IPMIManagementBoardDataSource(self._hostname, ip_address))  # pylint: disable=abstract-class-instantiated
+            return
+
+        raise NotImplementedError()
 
     def _add_sources(self, sources):
         # type: (Iterable[DataSource]) -> None

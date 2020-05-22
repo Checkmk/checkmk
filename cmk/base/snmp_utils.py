@@ -16,20 +16,12 @@ from cmk.utils.type_defs import (
     OIDSpec,
     CheckPluginName,
     DecodedString,
-    DecodedValues,
-    RawValue,
-    SNMPRowInfo,
-    SNMPValueEncoding,
 )
 
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
 SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
-ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
-ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
-ResultColumnsDecoded = List[List[DecodedValues]]
-SNMPContext = Optional[str]
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."

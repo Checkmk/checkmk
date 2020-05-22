@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
     Columns,
     DecodedBinary,
     DecodedString,
+    DecodedValues,
     HostName,
     OIDInfo,
     OIDWithColumns,
@@ -43,13 +44,6 @@ import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.snmp_utils import (
-    ResultColumnsDecoded,
-    ResultColumnsSanitized,
-    ResultColumnsUnsanitized,
-    SNMPContext,
-    SNMPRowInfoForStoredWalk,
-)
 
 from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
 
@@ -65,6 +59,11 @@ except ImportError:
 
 _enforce_stored_walks = False
 
+ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
+ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
+ResultColumnsDecoded = List[List[DecodedValues]]
+SNMPContext = Optional[str]
+SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
 SNMPWalkOptions = Dict[str, List[OID]]
 
 #.

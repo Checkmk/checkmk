@@ -117,6 +117,7 @@ def test_scan_function_translation(snmp_scan_functions):
                 # these are already migrated manually:
                 "ucd_mem",
                 "hr_mem",
+                "cisco_vpn_sessions",
         ):
             continue
 

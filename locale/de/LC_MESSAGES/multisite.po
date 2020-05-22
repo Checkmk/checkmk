@@ -2667,9 +2667,6 @@ msgstr "Active Directory Replikation (Windows)"
 msgid "Active ICMP Sessions"
 msgstr "Aktive ICMP-Sitzungen"
 
-msgid "Active IPsec sessions"
-msgstr "Aktive IPsec-Sitzungen"
-
 msgid "Active Power"
 msgstr "Aktive Leistung"
 
@@ -2678,9 +2675,6 @@ msgstr "Aktive SSL-Proxy-Sitzungen"
 
 msgid "Active Sessions"
 msgstr "Aktive Sitzungen"
-
-msgid "Active SVC sessions"
-msgstr "Aktive SVC-Sitzungen"
 
 msgid "Active Spot Fleet Requests"
 msgstr "Aktive Spot-Fleet-Anfragen"
@@ -2705,9 +2699,6 @@ msgstr "Aktive VPN-Benutzer"
 
 msgid "Active VPN Web Sessions"
 msgstr "Aktive VPN-Web-Sitzungen"
-
-msgid "Active WebVPN sessions"
-msgstr "Aktive WebVPN-Sitzungen"
 
 msgid "Active and Inactive Memory"
 msgstr "Aktiver und inaktiver Speicher"
@@ -8483,6 +8474,9 @@ msgstr "Cisco SSL VPN Client Sessions"
 
 msgid "Cisco Stack Switch Status"
 msgstr "Cisco Stack-Switch-Status"
+
+msgid "Cisco VPN Sessions"
+msgstr "Cisco VPN-Sitzungen"
 
 msgid "Cisco WLAN AP"
 msgstr "Cisco WLAN AP"
@@ -36909,6 +36903,9 @@ msgstr "Sitzungstimeout bei Inaktivität"
 msgid "Session timeout:"
 msgstr "Sitzungstimeout:"
 
+msgid "Session type"
+msgstr "Sitzungsart"
+
 msgid "Set IPv4 address"
 msgstr "IPv4-Adresse setzen"
 
@@ -49475,6 +49472,9 @@ msgstr "Art der Route"
 
 msgid "Type of table"
 msgstr "Typ der Tabelle"
+
+msgid "Type of the VPN connection, either 'IPsec', 'SVC' or 'WebVPN'."
+msgstr "VPN-Verbindungsart, entweder 'IPsec', 'SVC' oder 'WebVPN'."
 
 msgid "Type of the value"
 msgstr "Werttyp"

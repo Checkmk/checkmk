@@ -368,8 +368,7 @@ def test_update(request, client, version):
                     client,
                     version=old_version,
                     name=container_name,
-                    volumes=["/omd/sites"],
-                    tmpfs=["/omd/sites/cmk/tmp"])
+                    volumes=["/omd/sites"])
     assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
 

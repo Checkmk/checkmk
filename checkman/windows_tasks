@@ -6,8 +6,9 @@ distribution: check_mk
 description:
  The Windows Task Scheduler Checks controlls the last return state of windows task scripts.
  The check goes to {WARNING} state, if the task is disabled. If the Script from the Task returns
- another return code as "0", "1", "267009", "267014", "267045", "-2147216609", "-2147750687"
- the Check goes {CRITICAL}.
+ another return code than documented in https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants
+ the Check goes {CRITICAL}. Some of the return codes are defined as {WARNING}, and some as {CRITICAL}. You can
+ configure the results in WATO.
  In order to run, its needed to copy the windows_tasks.ps1 script to the plugin folder of the agent.
 
 item:

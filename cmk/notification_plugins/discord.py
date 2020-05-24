@@ -60,8 +60,8 @@ def discord_msg(context):
                 "color": color,
                 "title": title,
                 "description": text,
-                "footer": { 
-                    "text:": "Check_MK notification: {LONGDATETIME}".format(**context) 
+                "footer": {
+                    "text:": "Check_MK notification: {LONGDATETIME}".format(**context)
                 }
             }
         ]

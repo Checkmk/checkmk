@@ -139,12 +139,17 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         # type: () -> MultiHostSectionsData
         return self._multi_host_sections
 
-    def get_section_kwargs(self, host_name, ip_address, subscribed_sections):
-        # type: (HostName, Optional[HostAddress], List[PluginName]) -> Dict[str, Any]
+    def get_section_kwargs(
+            self,
+            host_name,  # type: HostName
+            ip_address,  # type: Optional[HostAddress]
+            subscribed_sections,  # type: List[PluginName]
+    ):
+        # type: (...) -> Dict[str, Any]
         """Prepares section keyword arguments for a non-cluster host
 
         It returns a dictionary containing one entry (may be None) for each
-        of the required sections, or an empty dictionary of no data was found at all.
+        of the required sections, or an empty dictionary if no data was found at all.
         """
         kwarg_keys = ["section"] if len(subscribed_sections) == 1 else [
             "section_%s" % s for s in subscribed_sections
@@ -154,14 +159,22 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             kwarg_key: self.get_parsed_section(host_name, ip_address, sec_name)
             for kwarg_key, sec_name in zip(kwarg_keys, subscribed_sections)
         }
+        # empty it, if nothing was found:
+        if all(v is None for v in kwargs.values()):
+            kwargs.clear()
 
-        return {} if all(v is None for v in kwargs.values()) else kwargs
+        return kwargs
 
-    def get_section_cluster_kwargs(self, host_name, subscribed_sections, service_description):
+    def get_section_cluster_kwargs(
+            self,
+            host_name,  # type: HostName
+            subscribed_sections,  # type: List[PluginName]
+            service_description,  # type: ServiceName
+    ):
         """Prepares section keyword arguments for a cluster host
 
         It returns a dictionary containing one optional dictionary[Host, ParsedSection]
-        for each of the required sections, or an empty dictionary of no data was found at all.
+        for each of the required sections, or an empty dictionary if no data was found at all.
         """
         # see which host entries we must use
         nodes_of_clustered_service = self._get_nodes_of_clustered_service(
@@ -171,12 +184,18 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
 
         kwargs = {}  # type: Dict[str, Dict[str, Any]]
         for node_name, node_ip in used_entries:
-            node_kwargs = self.get_section_kwargs(node_name, node_ip, subscribed_sections)
+            node_kwargs = self.get_section_kwargs(
+                node_name,
+                node_ip,
+                subscribed_sections,
+            )
             for key, sections_node_data in node_kwargs.items():
                 kwargs.setdefault(key, {})[node_name] = sections_node_data
+        # empty it, if nothing was found:
+        if all(v is None for s in kwargs.values() for v in s.values()):
+            kwargs.clear()
 
-        # return empty dict if no data is found
-        return {} if all(all(v is None for v in s.values()) for s in kwargs.values()) else kwargs
+        return kwargs
 
     def get_cache_info(self, section_names):
         # type: (List[PluginName]) -> Optional[Tuple[int, int]]

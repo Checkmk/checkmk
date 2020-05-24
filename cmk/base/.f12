@@ -13,14 +13,6 @@ echo "Update site $SITE..."
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
-    --exclude=api \
-    --exclude=cee \
-    --exclude=cee.py \
-    --exclude=cme.py \
-    --exclude=diagnostics.py \
-    -a * $ROOT/lib/python/cmk/base/
-sudo rsync \
-    --exclude="*.pyc" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
@@ -37,12 +29,6 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
     "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
 
-# Temporary fix until integration tests have been migrated to python3: remove
-# python3 only files that are installed to python 2 paths (by our packaging mechanism).
-if [ -d "$ROOT/lib/python/cmk/base/api" ]; then
-    sudo rm -rf "$ROOT/lib/python/cmk/base/api"
-fi
-
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
@@ -56,6 +42,5 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
 fi
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo $ROOT/bin/python -m compileall -qq $ROOT/lib/python/cmk/base
     sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi

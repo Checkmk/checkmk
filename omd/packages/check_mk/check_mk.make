@@ -35,9 +35,6 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CACHE_PKG_PROCESS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/lib.tar.gz -C $(DESTDIR)$(OMD_ROOT)/lib/python
-
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
 	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/werks.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
 

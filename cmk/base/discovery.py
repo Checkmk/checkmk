@@ -937,16 +937,15 @@ def _discover_services(
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 
-    discovered_services = []  # type: List[DiscoveredService]
+    service_table = {}  # type: cmk.base.check_utils.DiscoveredCheckTable
     try:
         for check_plugin_name in sources.get_check_plugin_names():
             try:
-                for entry in _execute_discovery(multi_host_sections, hostname, ipaddress,
-                                                check_plugin_name, on_error):
-                    if isinstance(entry, DiscoveredService):
-                        discovered_services.append(entry)
-                    else:
-                        raise TypeError("unexpectedly discovered %r" % type(entry))
+                for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
+                                                  check_plugin_name, on_error):
+                    if not isinstance(service, DiscoveredService):
+                        raise TypeError("unexpectedly discovered %r" % type(service))
+                    service_table[(service.check_plugin_name, service.item)] = service
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as e:
@@ -955,18 +954,8 @@ def _discover_services(
                 if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
-        check_table_formatted = {}  # type: check_table.CheckTable
-        for discovered_service in discovered_services:
-            check_table_formatted[(discovered_service.check_plugin_name,
-                                   discovered_service.item)] = discovered_service
-
-        check_table_formatted = check_table.remove_duplicate_checks(check_table_formatted)
-        for discovered_service in discovered_services[:]:
-            if (discovered_service.check_plugin_name,
-                    discovered_service.item) not in check_table_formatted:
-                discovered_services.remove(discovered_service)
-
-        return discovered_services
+        check_table_formatted = check_table.remove_duplicate_checks(service_table)
+        return list(check_table_formatted.values())
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

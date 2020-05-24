@@ -70,7 +70,7 @@ REAL_SEARCH=$(realpath $SEARCH)
 # NOTE 2: We explicitly filter out the targets of symbolic links, too, otherwise
 # we would see files twice.
 find -L \
-     $REAL_SEARCH \
+    $REAL_SEARCH \
     -name .mypy_cache -prune -o \
     -name .venv -prune -o \
     -name test_docker_parse_node_images.py -prune -o \
@@ -81,7 +81,7 @@ find -L \
     -name conftest.py -prune -o \
     $PRUNE \
     -type f -print | sort | while read F; do
-    if [[ $F =~ "$TESTS_DIR" ]] && [[ $F == *.py ]]; then
+    if [[ $F =~ "$TESTS_DIR/" ]] && [[ $F == *.py ]]; then
         echo "$F"
     elif head -n 1 "$F" | grep -q "$SHEBANG_PATTERN" >/dev/null 2>&1; then
         echo "$F"

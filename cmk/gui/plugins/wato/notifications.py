@@ -294,6 +294,64 @@ class NotificationParameterSlack(NotificationParameter):
             ],
         )
 
+@notification_parameter_registry.register
+class NotificationParameterDiscord(NotificationParameter):
+    @property
+    def ident(self):
+        return "discord"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=["url_prefix"],
+            elements=[
+                ("webhook_url",
+                 CascadingDropdown(
+                     title=_("Discord Webhook-URL"),
+                     help=
+                     _("Webhook URL. Setup Discord Webhook " +
+                       "<br />Follow the documentation"
+                       "<a href=\"https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks\" target=\"_blank\">here</a>"
+                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                      ),
+                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
+                                                                        allow_empty=False)),
+                              ("store", _("URL from password store"),
+                               DropdownChoice(
+                                   sorted=True,
+                                   choices=passwordstore_choices,
+                               ))],
+                 )),
+                ("url_prefix",
+                 Transform(CascadingDropdown(
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "discord message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
+            ],
+        )
 
 @notification_parameter_registry.register
 class NotificationParameterCiscoWebexTeams(NotificationParameter):

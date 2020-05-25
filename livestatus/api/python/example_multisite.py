@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,13 +10,14 @@ import sys
 import livestatus
 
 try:
-    omd_root = os.getenv("OMD_ROOT")
-    socket_path = "unix:" + omd_root + "/tmp/run/live"
-except:
+    omd_root = os.environ["OMD_ROOT"]
+except KeyError:
     sys.stderr.write("This example is indented to run in an OMD site\n")
     sys.stderr.write("Please change socket_path in this example, if you are\n")
     sys.stderr.write("not using OMD.\n")
     sys.exit(1)
+
+socket_path = "unix:" + omd_root + "/tmp/run/live"
 
 sites = {
     "muc": {
@@ -37,7 +38,7 @@ sites = {
     },
 }
 
-c = livestatus.MultiSiteConnection(sites)
+c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 c.set_prepend_site(True)
 print(c.query("GET hosts\nColumns: name state\n"))
 c.set_prepend_site(False)
@@ -66,7 +67,7 @@ sites = {
     },
 }
 
-c = livestatus.MultiSiteConnection(sites)
+c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 for name, state in c.query("GET hosts\nColumns: name state\n"):
     print("%-15s: %d" % (name, state))
 print("Dead sites:")

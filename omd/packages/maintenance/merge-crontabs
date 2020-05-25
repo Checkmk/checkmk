@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This script is part of OMD
 # Joerg Linge 2010
 #
 import sys
 import os
+from typing import Dict
 
-omd_config = {}
+omd_config = {}  # type: Dict[str, str]
 exec(open('%s/etc/omd/site.conf' % os.environ['OMD_ROOT']).read(), {}, omd_config)
 
 sys.stdout.write("""#

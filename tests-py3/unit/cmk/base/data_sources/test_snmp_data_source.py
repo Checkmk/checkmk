@@ -11,12 +11,10 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import OIDBytes, OIDEnd, RawSNMPData, SNMPTable
+from cmk.utils.type_defs import RawSNMPData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.snmp as snmp
-from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.data_sources.abstract import DataSource, FileCache, management_board_ipaddress, store
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
@@ -250,27 +248,3 @@ def test_describe_without_ipaddress_raises_exception(monkeypatch):
     # TODO: This does not seem to be the expected exception.
     with pytest.raises(NotImplementedError):
         source.describe()
-
-
-def test_execute_with_canned_responses(monkeypatch):
-    # Beginning of setup.
-    tree = SNMPTree(
-        base='.1.3.6.1.4.1.13595.2.2.3.1',
-        oids=[
-            OIDEnd(),
-            OIDBytes("16"),
-        ],
-    )
-    name = "acme_agent_sessions"  # Must be in config.registered_snmp_sections
-
-    # Replace I/O with canned responses.
-    monkeypatch.setattr(SNMPDataSource, "get_check_plugin_names", lambda *args, **kwargs: {name})
-    monkeypatch.setattr(snmp, "get_snmp_table_cached", lambda *args: tree)
-
-    hostname = "testhost"
-    ipaddress = "127.0.0.1"
-    Scenario().add_host(hostname).apply(monkeypatch)
-    source = SNMPDataSource(hostname, ipaddress)
-    # End of setup.
-
-    assert source._execute() == {name: [tree]}

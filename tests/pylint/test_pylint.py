@@ -11,12 +11,11 @@ import os
 import sys
 import tempfile
 import shutil
+import subprocess
 import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
 from testlib.pylint_cmk import add_file, check_files, run_pylint
-
-import cmk.utils.cmk_subprocess as subprocess
 
 
 @pytest.fixture(scope="function")
@@ -52,7 +51,6 @@ def _get_files_to_check(pylint_test_dir):
         ["%s/scripts/find-python-files" % repo_path(),
          str(sys.version_info[0])],
         stdout=subprocess.PIPE,
-        encoding="utf-8",
         shell=False,
         close_fds=True,
     )

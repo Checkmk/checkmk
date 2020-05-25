@@ -134,9 +134,12 @@ def group_needed_rrd_data_by_service(needed_rrd_data):
 def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, graph_data_range):
     start_time, end_time = graph_data_range["time_range"]
 
-    step = graph_data_range["step"]
+    step = graph_data_range["step"]  # type: Union[int,float,str]
+    # assumes str step is well formatted, colon separated step length & rrd point count
+    if not isinstance(step, str):
+        step = max(1, step)
 
-    point_range = ":".join(map(str, (start_time, end_time, max(1, step))))
+    point_range = ":".join(map(str, (start_time, end_time, step)))
     query = livestatus_query_for_rrd_data(host_name, service_description, entries,
                                           graph_recipe["consolidation_function"], point_range)
     with sites.only_sites(site):

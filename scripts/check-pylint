@@ -23,3 +23,7 @@ fi
 if [ ! -z "$PYTHON2_FILES" ]; then
     $PIPENV 2 run pylint $PYTHON2_FILES
 fi
+
+if test -z "$PYTHON2_FILES" && test -z "$PYTHON3_FILES"; then
+    $PIPENV 3 run pylint $@
+fi

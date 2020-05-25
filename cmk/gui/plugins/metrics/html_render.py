@@ -491,15 +491,17 @@ def render_ajax_graph(context):
         start_time, end_time = graph_data_range["time_range"]
         step = graph_data_range["step"]
 
+    size = graph_render_options["size"]
+
     resize_x_var = html.request.var("resize_x")
     resize_y_var = html.request.var("resize_y")
+
     if resize_x_var is not None and resize_y_var is not None:
         render_opt_x, render_opt_y = context["render_options"]["size"]
         size_x = max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x)
         size_y = max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y)
         config.user.save_file("graph_size", (size_x, size_y))
-    else:
-        size = context["render_options"]["size"]
+        size = (size_x, size_y)
 
     range_from_var = html.request.var("range_from")
     range_to_var = html.request.var("range_to")

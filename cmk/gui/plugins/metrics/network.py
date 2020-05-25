@@ -408,6 +408,12 @@ metric_info["active_sessions"] = {
     "color": "11/a",
 }
 
+metric_info["active_sessions_peak"] = {
+    "title": _("Peak value of active sessions"),
+    "unit": "count",
+    "color": "#000000",
+}
+
 metric_info["inactive_sessions"] = {
     "title": _("Inactive sessions"),
     "unit": "count",
@@ -1905,4 +1911,16 @@ graph_info["channel_utilization_5ghz"] = {
         "channel_utilization_5ghz:crit",
     ],
     "range": (0, 100),
+}
+
+graph_info["active_sessions_with_peak_value"] = {
+    "metrics": [
+        ("active_sessions", "area"),
+        ("active_sessions_peak", "line"),
+    ],
+    "range": (0, "active_sessions_peak:max"),
+    "scalars": [
+        "active_sessions:warn",
+        "active_sessions:crit",
+    ],
 }

@@ -54,5 +54,3 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_windows_tasks,
         title=lambda: _("Windows Tasks"),
     ))
-
-

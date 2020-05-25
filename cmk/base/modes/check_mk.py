@@ -15,13 +15,13 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.log as log
 import cmk.utils.debug
-import cmk.utils.snmp_table as snmp_table
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKBailOut
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
 
+import cmk.fetchers.factory as snmp_factory  # pylint: disable=cmk-module-layer-violation
 import cmk.base.data_sources as data_sources
 import cmk.base.config as config
 import cmk.base.discovery as discovery
@@ -137,7 +137,7 @@ modes.register_general_option(
 
 def option_usewalk():
     # type: () -> None
-    snmp_table.enforce_use_stored_walks()
+    snmp_factory.force_stored_walks()
     ip_lookup.enforce_localhost()
 
 

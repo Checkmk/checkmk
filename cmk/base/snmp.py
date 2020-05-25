@@ -14,7 +14,6 @@ import six
 
 import cmk.utils.debug
 import cmk.utils.snmp_cache as snmp_cache
-import cmk.utils.snmp_table as snmp_table
 import cmk.utils.tty as tty
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
@@ -97,7 +96,6 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
         try:
             value = SNMPBackendFactory.get(
                 snmp_config,
-                use_cache=snmp_table.get_enforce_stored_walks(),
                 oid=oid,
                 context_name=context_name,
             )

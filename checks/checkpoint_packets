@@ -20,7 +20,7 @@ factory_settings["checkpoint_packets_default_levels"] = {
 }
 
 
-def parse_parsepoint_packets(info):
+def parse_checkpoint_packets(info):
     parsed = {}
     for key, main_index, sub_index in [
         ("Accepted", 0, 0),
@@ -65,7 +65,7 @@ def check_checkpoint_packets(_no_item, params, parsed):
 
 
 check_info["checkpoint_packets"] = {
-    "parse_function": parse_parsepoint_packets,
+    "parse_function": parse_checkpoint_packets,
     "check_function": check_checkpoint_packets,
     "inventory_function": inventory_checkpoint_packets,
     "service_description": "Packet Statistics",

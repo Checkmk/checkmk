@@ -20,7 +20,7 @@ factory_settings["checkpoint_packets_default_levels"] = {
 }
 
 
-def _extract_checkpoint_value(info):
+def parse_parsepoint_packets(info):
     parsed = {}
     for key, main_index, sub_index in [
         ("Accepted", 0, 0),
@@ -37,35 +37,35 @@ def _extract_checkpoint_value(info):
     return parsed
 
 
-def inventory_checkpoint_packets(info):
-    if info:
+def inventory_checkpoint_packets(parsed):
+    if parsed:
         return [(None, {})]
 
 
-def check_checkpoint_packets(_no_item, params, info):
-    if info:
-        this_time = time.time()
-        for name, value in _extract_checkpoint_value(info).items():
-            key = name.lower()
-            if params.get(key) is None:
-                warn, crit = (None, None)
-            else:
-                warn, crit = params[key]
+def check_checkpoint_packets(_no_item, params, parsed):
+    this_time = time.time()
+    for name, value in parsed.items():
+        key = name.lower()
+        if params.get(key) is None:
+            warn, crit = (None, None)
+        else:
+            warn, crit = params[key]
 
-            rate = get_rate(key, this_time, value)
-            infotext = "%s: %.1f pkts/s" % (name, rate)
-            state = 0
-            if crit is not None and rate >= crit:
-                state = 2
-            elif warn is not None and rate >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s/%s pkts/s)" % (warn, crit)
+        rate = get_rate(key, this_time, value)
+        infotext = "%s: %.1f pkts/s" % (name, rate)
+        state = 0
+        if crit is not None and rate >= crit:
+            state = 2
+        elif warn is not None and rate >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s pkts/s)" % (warn, crit)
 
-            yield state, infotext, [(key, rate, warn, crit, 0)]
+        yield state, infotext, [(key, rate, warn, crit, 0)]
 
 
 check_info["checkpoint_packets"] = {
+    "parse_function": parse_parsepoint_packets,
     "check_function": check_checkpoint_packets,
     "inventory_function": inventory_checkpoint_packets,
     "service_description": "Packet Statistics",

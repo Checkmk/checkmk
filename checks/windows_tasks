@@ -69,7 +69,7 @@ def inventory_windows_tasks(parsed):
 
 def check_windows_tasks(item, params, parsed):
     if item not in parsed:
-        yield (3, "Task not found on server")
+        yield 3, "Task not found on server"
         return
 
     map_codes = {
@@ -152,7 +152,7 @@ def check_windows_tasks(item, params, parsed):
     else:
         infotext = "Task status: Got exit code %s." % last_result_hex
         state = 2
-    yield (state, infotext)
+    yield state, infotext
 
     if data['Scheduled Task State'] != 'Enabled':
         yield sched_task_state, "Task not enabled"

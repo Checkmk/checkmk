@@ -99,7 +99,7 @@ function mk_hdbsql () {
     fi
 
     if [ "$RUNAS" = "agent" ]; then
-        result="$(${hdbsql_path} -C -F\; -x -a -n localhost -i "${instance}" "${credentials}" "$query" 2>/dev/null)"
+        result="$(${hdbsql_path} -C -F\; -x -a -n localhost -i "${instance}" ${credentials} "$query" 2>/dev/null)"
     else
         result="$(su - "${instance_user}" -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${credentials} \"$query\"" 2>/dev/null)"
     fi

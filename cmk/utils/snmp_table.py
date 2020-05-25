@@ -47,19 +47,6 @@ ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[DecodedValues]]
 
-_enforce_stored_walks = False
-
-
-def enforce_use_stored_walks():
-    # type: () -> None
-    global _enforce_stored_walks
-    _enforce_stored_walks = True
-
-
-def get_enforce_stored_walks():
-    # type: () -> bool
-    return _enforce_stored_walks
-
 
 def get_snmp_table(snmp_config, check_plugin_name, oid_info):
     # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree]) -> SNMPTable
@@ -277,7 +264,6 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
 
     for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
         rows = SNMPBackendFactory.walk(snmp_config,
-                                       use_cache=_enforce_stored_walks,
                                        oid=fetchoid,
                                        check_plugin_name=check_plugin_name,
                                        table_base_oid=base_oid,

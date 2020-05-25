@@ -124,4 +124,5 @@ def verify_virtualenv():
 #
 
 add_python_paths()
-fake_version_and_paths()
+# Not needed for the remaining unit tests
+#fake_version_and_paths()

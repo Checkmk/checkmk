@@ -164,8 +164,6 @@ from cmk.gui.watolib.activate_changes import (
     confirm_all_local_changes,
     get_pending_changes_info,
     get_number_of_pending_changes,
-    activate_changes_start,
-    activate_changes_wait,
 )
 from cmk.gui.watolib.groups import (
     edit_group,
@@ -204,7 +202,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     CREHost,
     Host,
-    collect_all_hosts,
     validate_all_hosts,
     call_hook_hosts_changed,
     folder_preserving_link,

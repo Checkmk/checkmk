@@ -27,6 +27,16 @@ from bson.json_util import dumps
 MK_VARDIR = os.environ.get("MK_VARDIR")
 
 
+def get_config():
+    config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
+    config_file = config_dir + "/mk_mongodb.cfg"
+
+    config = {"hosts": None}
+    if os.path.exists(config_file):
+        exec(open(config_file).read(), config)
+    return config
+
+
 def get_database_info(client):
     if inspect.ismethod(client.list_database_names):
         db_names = client.list_database_names()
@@ -603,7 +613,10 @@ def section_logwatch(client):
 
 
 def main():
-    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY)
+    config = get_config()
+    host = config.setdefault("host", "localhost")
+
+    client = pymongo.MongoClient(host=host, read_preference=pymongo.ReadPreference.SECONDARY)
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")

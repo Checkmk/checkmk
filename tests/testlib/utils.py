@@ -14,13 +14,9 @@ import pwd
 import re
 import subprocess
 import sys
-from typing import (Optional, List)  # pylint: disable=unused-import
+from typing import Optional, List  # pylint: disable=unused-import
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
+from pathlib2 import Path
 import six
 
 logger = logging.getLogger()

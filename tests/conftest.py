@@ -17,8 +17,6 @@ pytest.register_assert_rewrite(
     "unit.checks.generictests.run")
 
 import collections
-import errno
-import shutil
 
 from pathlib2 import Path
 

@@ -21,29 +21,16 @@ from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
     get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
     is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
 )
+from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
 from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
 from testlib.importer import import_module  # noqa: F401 # pylint: disable=unused-import
 from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
+from testlib.skip import skip_unwanted_test_types  # noqa: F401 # pylint: disable=unused-import
 from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
-from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import]
-    test_type = item.get_closest_marker("type")
-    if test_type is None:
-        raise Exception("Test is not TYPE marked: %s" % item)
-
-    if not item.config.getoption("-T"):
-        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
-
-    test_type_name = test_type.args[0]
-    if test_type_name != item.config.getoption("-T"):
-        pytest.skip("Not testing type %r" % test_type_name)
 
 
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time

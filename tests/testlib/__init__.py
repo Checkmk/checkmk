@@ -16,18 +16,13 @@ import time
 from pathlib2 import Path
 import urllib3  # type: ignore[import]
 
-from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
-    get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
-    is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
+from testlib.utils import (
+    cmk_path,
+    is_running_as_site_user,
+    is_enterprise_repo,
+    is_managed_repo,
+    get_standard_linux_agent_output,
 )
-from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
-from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
-from testlib.importer import import_module  # noqa: F401 # pylint: disable=unused-import
-from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
-from testlib.skip import skip_unwanted_test_types  # noqa: F401 # pylint: disable=unused-import
-from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
-from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

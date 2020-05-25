@@ -110,6 +110,7 @@ from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unuse
 
 import cmk.gui.plugins.views.inventory
 import cmk.gui.plugins.views.availability
+from cmk.gui.plugins.views.perfometers import perfometers  # pylint: disable=unused-import
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
@@ -606,6 +607,7 @@ def load_plugins(force):
 
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins('icons', globals())
+    utils.load_web_plugins("perfometer", globals())
     clear_alarm_sound_states()
 
     transform_old_dict_based_icons()

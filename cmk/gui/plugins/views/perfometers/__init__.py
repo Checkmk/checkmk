@@ -149,9 +149,6 @@ def render_metricometer(stack):
     return h
 
 
-# Load the legacy plugins
-utils.load_web_plugins("perfometer", globals())
-
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

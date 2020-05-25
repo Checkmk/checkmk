@@ -92,13 +92,8 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
-    if check_plugin_name is not None and snmp_config.is_snmpv3_host:
-        snmp_contexts = snmp_table._snmpv3_contexts_of(snmp_config, check_plugin_name)
-    else:
-        snmp_contexts = [None]
-
     console.vverbose("       Getting OID %s: " % oid)
-    for context_name in snmp_contexts:
+    for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
         try:
             value = SNMPBackendFactory.get(
                 snmp_config,

@@ -71,6 +71,7 @@ DecodedBinary = List[int]
 DecodedValues = Union[DecodedString, DecodedBinary]
 SNMPValueEncoding = str
 SNMPTable = List[List[DecodedValues]]
+SNMPContext = Optional[str]
 
 SectionName = str
 SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
@@ -141,6 +142,15 @@ class SNMPHostConfig(
     def is_snmpv3_host(self):
         # type: () -> bool
         return isinstance(self.credentials, tuple)
+
+    def snmpv3_contexts_of(self, check_plugin_name):
+        # type: (Optional[CheckPluginName]) -> List[SNMPContext]
+        if not check_plugin_name or not self.is_snmpv3_host:
+            return [None]
+        for ty, rules in self.snmpv3_contexts:
+            if ty is None or ty == check_plugin_name:
+                return rules
+        return [None]
 
     def update(self, **kwargs):
         # type: (Dict[str, Any]) -> SNMPHostConfig

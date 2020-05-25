@@ -20,7 +20,7 @@ import collections
 
 from pathlib2 import Path
 
-from testlib import skip_unwanted_test_types
+from testlib.sjip import skip_unwanted_test_types
 from testlib.utils import add_python_paths, cmc_path, is_running_as_site_user, repo_path, virtualenv_path
 
 #TODO Hack: Exclude cee tests in cre repo

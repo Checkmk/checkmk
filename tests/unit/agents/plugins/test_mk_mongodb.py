@@ -9,7 +9,8 @@
 import os
 from bson.json_util import loads  # type: ignore[import]
 import pytest  # type: ignore[import]
-from testlib import import_module, cmk_path
+from testlib.importer import import_module  # type: ignore[import] # pylint: disable=import-error
+from testlib.utils import cmk_path
 
 
 @pytest.fixture(scope="module")

@@ -6,8 +6,8 @@
 
 import os
 import subprocess
-import pytest
-from testlib import cmk_path
+import pytest  # type: ignore[import]
+from testlib.utils import cmk_path
 
 PLUGIN = os.path.join(cmk_path(), 'agents', 'plugins', 'mk_errpt.aix')
 

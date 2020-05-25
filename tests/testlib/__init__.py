@@ -22,6 +22,7 @@ from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
     is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
 )
 from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
+from testlib.importer import import_module  # noqa: F401 # pylint: disable=unused-import
 from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
 from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
@@ -32,7 +33,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    import pytest  # type: ignore[import]
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -53,12 +54,12 @@ def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
+    import _pytest.monkeypatch  # type: ignore
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
-    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    import cmk.utils.version as cmk_version
+    import cmk.utils.paths
 
     if is_managed_repo():
         edition_short = "cme"
@@ -133,39 +134,6 @@ def fake_version_and_paths():
                         Path(cmk.utils.paths.var_dir, "site_configs"))
 
 
-def import_module(pathname):
-    """Return the module loaded from `pathname`.
-
-    `pathname` is a path relative to the top-level directory
-    of the repository.
-
-    This function loads the module at `pathname` even if it does not have
-    the ".py" extension.
-
-    See Also:
-        - `https://mail.python.org/pipermail/python-ideas/2014-December/030265.html`.
-
-    """
-    modname = os.path.splitext(os.path.basename(pathname))[0]
-    modpath = os.path.join(cmk_path(), pathname)
-
-    if sys.version_info[0] >= 3:
-        import importlib  # pylint: disable=import-outside-toplevel
-        # TODO: load_module() is deprecated, we should avoid using it.
-        # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
-        # mypy is confused about its arguments.
-        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
-
-    import imp  # pylint: disable=import-outside-toplevel
-    try:
-        return imp.load_source(modname, modpath)
-    finally:
-        try:
-            os.remove(modpath + "c")
-        except OSError:
-            pass
-
-
 def wait_until(condition, timeout=1, interval=0.1):
     start = time.time()
     while time.time() - start < timeout:
@@ -176,7 +144,7 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-class WatchLog(object):  # pylint: disable=useless-object-inheritance
+class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, log_path, default_timeout=5):
         self._site = site

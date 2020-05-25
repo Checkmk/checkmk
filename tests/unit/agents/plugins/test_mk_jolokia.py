@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import pytest  # type: ignore[import]
-from testlib import import_module
+from testlib.importer import import_module  # pylint: disable=import-error
 
 
 @pytest.fixture(scope="module")

@@ -147,7 +147,6 @@ include \
     packages/omd/omd.make \
     packages/net-snmp/net-snmp.make \
     packages/python2-net-snmp/python2-net-snmp.make \
-    packages/mod_wsgi/mod_wsgi.make \
     packages/python3-mod_wsgi/python3-mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \

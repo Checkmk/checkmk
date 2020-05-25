@@ -188,6 +188,7 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
         ("df_host", [("df", "/snap/core/9066")]),
         # old format, without TimespecificParamList
         ("df_host_1", [("df", "/snap/core/9067")]),
+        ("df_host_2", [("df", "/snap/core/9068")]),
     ])
 def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
     static_checks = {
@@ -229,29 +230,51 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
                     'trend_perfdata': True
                 })
         ],
+        "df_host_2": [Service('df', '/snap/core/9068', u'Filesystem /snap/core/9068', None)],
     }
 
     ts = Scenario().add_host(hostname, tags={"criticality": "test"})
     ts.add_host("df_host")
+    ts.add_host("df_host_1")
+    ts.add_host("df_host_2")
     ts.set_option(
         "static_checks",
         {
-            "filesystem": [(('df', '/snap/core/9066', [{
-                'tp_values': [('24X7', {
-                    'inodes_levels': None
-                })],
-                'tp_default_value': {}
-            }, {
-                'trend_range': 24,
-                'show_levels': 'onmagic',
-                'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
-                'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
-            }]), [], ["node1"]),],
+            "filesystem": [
+                (('df', '/snap/core/9066', [{
+                    'tp_values': [('24X7', {
+                        'inodes_levels': None
+                    })],
+                    'tp_default_value': {}
+                }, {
+                    'trend_range': 24,
+                    'show_levels': 'onmagic',
+                    'inodes_levels': (10.0, 5.0),
+                    'magic_normsize': 20,
+                    'show_inodes': 'onlow',
+                    'levels': (80.0, 90.0),
+                    'show_reserved': False,
+                    'levels_low': (50.0, 60.0),
+                    'trend_perfdata': True
+                }]), [], ["df_host"]),
+                (('df', '/snap/core/9067', [{
+                    'tp_values': [('24X7', {
+                        'inodes_levels': None
+                    })],
+                    'tp_default_value': {}
+                }, {
+                    'trend_range': 24,
+                    'show_levels': 'onmagic',
+                    'inodes_levels': (10.0, 5.0),
+                    'magic_normsize': 20,
+                    'show_inodes': 'onlow',
+                    'levels': (80.0, 90.0),
+                    'show_reserved': False,
+                    'levels_low': (50.0, 60.0),
+                    'trend_perfdata': True
+                }]), [], ["df_host_1"]),
+                (('df', '/snap/core/9068', None), [], ["df_host_2"]),
+            ],
         },
     )
 

@@ -7,7 +7,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 import io
 import pytest  # type: ignore[import]
-from testlib import import_module  # pylint: disable=import-error
+from testlib.importer import import_module  # pylint: disable=import-error
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 

@@ -79,6 +79,46 @@ class SNMPHostSections(AbstractHostSections[RawSNMPData, SNMPSections, Persisted
         raise NotImplementedError()
 
 
+class CachedSNMPDetector:
+    """Object to run/cache SNMP detection"""
+    def __init__(self):
+        super(CachedSNMPDetector, self).__init__()
+        # TODO (mo): With the new API we may be able to set this here.
+        #            For now, it is set later :-(
+        self._filter_function = None  # type: Optional[PluginNameFilterFunction]
+        # Optional set: None: we never tried, empty: we tried, but found nothing
+        self._cached_result = None  # type: Optional[Set[CheckPluginName]]
+
+    def set_filter_function(self, filter_function):
+        # type: (PluginNameFilterFunction) -> None
+        self._filter_function = filter_function
+
+    def __call__(
+            self,
+            snmp_config,  # type: SNMPHostConfig
+            on_error,  # type: str
+            do_snmp_scan,  # type: bool
+            for_mgmt_board,  # type: bool
+    ):
+        """Returns a list of raw sections that shall be processed by this source.
+
+        The logic is only processed once. Once processed, the answer is cached.
+        """
+        if self._filter_function is None:
+            raise MKGeneralException("The check type filter function has not been set")
+
+        if self._cached_result is not None:
+            return self._cached_result
+
+        self._cached_result = self._filter_function(
+            snmp_config,
+            on_error=on_error,
+            do_snmp_scan=do_snmp_scan,
+            for_mgmt_board=for_mgmt_board,
+        )
+        return self._cached_result
+
+
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
@@ -98,14 +138,12 @@ class SNMPDataSource(ABCSNMPDataSource):
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
         super(SNMPDataSource, self).__init__(hostname, ipaddress)
-        self._check_plugin_name_filter_func = None  # type: Optional[PluginNameFilterFunction]
-        self._check_plugin_names = {
-        }  # type: Dict[Tuple[HostName, Optional[HostAddress]], Set[CheckPluginName]]
+        self._detector = CachedSNMPDetector()
         self._do_snmp_scan = False
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_check_plugin_names = set()  # type: Set[CheckPluginName]
+        self._fetched_raw_section_names = set()  # type: Set[CheckPluginName]
 
     def id(self):
         # type: () -> str
@@ -194,9 +232,9 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def set_check_plugin_name_filter(self, filter_func):
         # type: (PluginNameFilterFunction) -> None
-        self._check_plugin_name_filter_func = filter_func
+        self._detector.set_filter_function(filter_func)
 
-    def set_fetched_check_plugin_names(self, check_plugin_names):
+    def set_fetched_raw_section_names(self, check_plugin_names):
         # type: (Set[CheckPluginName]) -> None
         """Sets a list of already fetched host sections/check plugin names.
 
@@ -205,29 +243,20 @@ class SNMPDataSource(ABCSNMPDataSource):
         which have no related check plugin the host must be contacted again
         in order to create the full tree.
         """
-        self._fetched_check_plugin_names = check_plugin_names
+        self._fetched_raw_section_names = check_plugin_names
 
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
-        """Returns a list of check types that shal be executed with this source.
+        """Returns a list of check types that shall be executed with this source.
 
-        The logic is only processed once per hostname+ipaddress combination. Once processed
-        check types are cached to answer subsequent calls to this function.
+        The logic is only processed once. Once processed, the answer is cached.
         """
-
-        if self._check_plugin_name_filter_func is None:
-            raise MKGeneralException("The check type filter function has not been set")
-
-        try:
-            return self._check_plugin_names[(self._hostname, self._ipaddress)]
-        except KeyError:
-            check_plugin_names = self._check_plugin_name_filter_func(
-                self._snmp_config,
-                on_error=self._on_error,
-                do_snmp_scan=self._do_snmp_scan,
-                for_mgmt_board=self._for_mgmt_board)
-            self._check_plugin_names[(self._hostname, self._ipaddress)] = check_plugin_names
-            return check_plugin_names
+        return self._detector(
+            self._snmp_config,
+            on_error=self._on_error,
+            do_snmp_scan=self._do_snmp_scan,
+            for_mgmt_board=self._for_mgmt_board,
+        )
 
     def _execute(self):
         # type: () -> RawSNMPData
@@ -250,7 +279,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             section_name = section_name_of(check_plugin_name)
             oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
 
-            if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
+            if not has_snmp_info and check_plugin_name in self._fetched_raw_section_names:
                 continue
 
             if oid_info is None:

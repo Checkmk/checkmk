@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 from contextlib import suppress
 
 import pytest  # type: ignore[import]
@@ -209,13 +211,13 @@ def test_attribute_defaults(monkeypatch, ipaddress):
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_get_check_plugin_names_requires_type_filter_function_and_ipaddress(monkeypatch, ipaddress):
+def test_detector_requires_type_filter_function_and_ipaddress(monkeypatch, ipaddress):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
     source = SNMPDataSource(hostname, ipaddress)
 
     with pytest.raises(Exception):
-        source.get_check_plugin_names()
+        source._get_raw_section_names_to_process()
 
     # One filter function is defined in cmk.base.inventory and another one in snmp_scan.
     def dummy_filter_func(host_config, on_error, do_snmp_scan, for_mgmt_board=False):
@@ -224,9 +226,9 @@ def test_get_check_plugin_names_requires_type_filter_function_and_ipaddress(monk
     source.set_check_plugin_name_filter(dummy_filter_func)
     if ipaddress is None:
         with pytest.raises(NotImplementedError):
-            source.get_check_plugin_names()
+            source._get_raw_section_names_to_process()
     else:
-        assert source.get_check_plugin_names() == set()
+        assert source._get_raw_section_names_to_process() == set()
 
 
 def test_describe_with_ipaddress(monkeypatch):

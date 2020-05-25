@@ -344,8 +344,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
             return false;
         }
         if (data.empty()) {
-            XLOG::l("CAP file {} looks as bad for file {}", cap_name, name);
-            return false;
+            XLOG::l.w("CAP file {} has emty file file {}", CapFileName, name);
         }
         const auto full_path = ProcessPluginPath(name);
 

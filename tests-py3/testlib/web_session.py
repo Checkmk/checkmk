@@ -763,7 +763,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
 
         logger.debug("Result: %r", result)
         assert isinstance(result, dict)
-        assert len(result["sites"]) > 0
+        assert len(result["sites"]) > 0, repr(result)
         involved_sites = list(result["sites"].keys())
 
         for site_id, status in result["sites"].items():

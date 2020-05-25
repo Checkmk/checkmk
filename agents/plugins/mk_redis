@@ -9,7 +9,7 @@
 
 # example cfg file /etc/check_mk/mk_redis.cfg
 #
-# REDIS_INSTANCES=(My_First_Redis My_Second_Redis)
+# REDIS_INSTANCES=(My_First_Redis My_Second_Redis My_Third_Redis)
 #
 # REDIS_HOST_My_First_Redis="127.0.0.1"
 # REDIS_PORT_My_First_Redis="6380"
@@ -17,6 +17,8 @@
 #
 # REDIS_HOST_My_Second_Redis="127.0.0.1"
 # REDIS_PORT_My_Second_Redis="6379"
+#
+# REDIS_SOCKET_My_Third_Redis="/path/to/redis.sock"
 
 set -e -o pipefail
 
@@ -63,12 +65,19 @@ fi
 for INSTANCE in ${REDIS_INSTANCES[*]}; do
     HOST="REDIS_HOST_$INSTANCE"
     PORT="REDIS_PORT_$INSTANCE"
+    SOCKET="REDIS_SOCKET_$INSTANCE"
     PASSWORD="REDIS_PASSWORD_$INSTANCE"
 
-    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} -a ${!PASSWORD} info"
+    if [[ "${!SOCKET}" ]]; then
+        CONNECT_PARAMS="-s ${!SOCKET}"
     else
-        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} info"
+        CONNECT_PARAMS="-h ${!HOST} -p ${!PORT}"
+    fi
+
+    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
+        REDIS_CMD="waitmax 3 redis-cli ${CONNECT_PARAMS} -a ${!PASSWORD} info"
+    else
+        REDIS_CMD="waitmax 3 redis-cli ${CONNECT_PARAMS} info"
     fi
 
     # if autodetection is used, rewrite instance name for section output

@@ -7,7 +7,7 @@
 from __future__ import print_function
 import os
 import pytest  # type: ignore[import]
-import testlib
+from testlib import SiteFactory, CMKVersion, current_branch_name
 
 
 # Disable this. We have a site_factory instead.
@@ -19,10 +19,10 @@ def site(request):
 @pytest.fixture(scope="session")
 def site_factory():
     try:
-        sf = testlib.SiteFactory(version=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
-                                 edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
-                                 branch=os.environ.get("BRANCH", testlib.current_branch_name()),
-                                 prefix="comp_")
+        sf = SiteFactory(version=os.environ.get("VERSION", CMKVersion.DAILY),
+                         edition=os.environ.get("EDITION", CMKVersion.CEE),
+                         branch=os.environ.get("BRANCH", current_branch_name()),
+                         prefix="comp_")
         yield sf
     finally:
         sf.cleanup()

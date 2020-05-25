@@ -12,14 +12,14 @@ import subprocess
 import time
 from contextlib import contextmanager
 from io import BytesIO
-from pathlib import Path
+from pathlib2 import Path
 from typing import List, Dict, Optional  # pylint: disable=unused-import
 import requests
 
 import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
 
-import testlib
+from testlib import repo_path
 from testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -262,7 +262,7 @@ def _image_build_volumes():
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
         # the current git state
-        testlib.repo_path(): {
+        repo_path(): {
             "bind": "/git-lowerdir",
             "mode": "ro",
         },
@@ -286,7 +286,7 @@ def _runtime_volumes():
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
         # the current git state
-        testlib.repo_path(): {
+        repo_path(): {
             "bind": "/git-lowerdir",
             "mode": "ro",
         },

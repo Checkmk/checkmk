@@ -19,18 +19,14 @@ pytest.register_assert_rewrite(
 import collections
 import errno
 import shutil
-import sys
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib2 import Path
 
-import testlib
+from testlib import add_python_paths, fake_version_and_paths, is_running_as_site_user, repo_path, skip_unwanted_test_types, virtualenv_path
+from testlib.utils import cmc_path
 
 #TODO Hack: Exclude cee tests in cre repo
-if not Path(testlib.utils.cmc_path()).exists():
+if not Path(cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]
 
 #
@@ -87,7 +83,7 @@ def pytest_collection_modifyitems(items):
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
         file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(testlib.repo_path())
+        repo_rel_path = file_path.relative_to(repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
@@ -96,7 +92,7 @@ def pytest_collection_modifyitems(items):
 
 def pytest_runtest_setup(item):
     """Skip tests of unwanted types"""
-    testlib.skip_unwanted_test_types(item)
+    skip_unwanted_test_types(item)
 
 
 # Cleanup temporary directory created above
@@ -104,7 +100,7 @@ def pytest_runtest_setup(item):
 def cleanup_cmk():
     yield
 
-    if testlib.is_running_as_site_user():
+    if is_running_as_site_user():
         return
 
     import cmk.utils.paths
@@ -131,14 +127,14 @@ def pytest_cmdline_main(config):
         return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
-    if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
+    if context == EXECUTE_IN_SITE and not is_running_as_site_user():
         raise Exception()
     else:
         verify_virtualenv()
 
 
 def verify_virtualenv():
-    if not testlib.virtualenv_path():
+    if not virtualenv_path():
         raise SystemExit("ERROR: Please load virtual environment first "
                          "(Use \"pipenv shell\" or configure direnv)")
 
@@ -147,5 +143,5 @@ def verify_virtualenv():
 # MAIN
 #
 
-testlib.add_python_paths()
-testlib.fake_version_and_paths()
+add_python_paths()
+fake_version_and_paths()

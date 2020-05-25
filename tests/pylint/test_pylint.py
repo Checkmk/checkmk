@@ -14,7 +14,8 @@ import shutil
 import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
-import testlib.pylint_cmk as pylint_cmk
+from testlib.pylint_cmk import add_file, check_files, run_pylint
+
 import cmk.utils.cmk_subprocess as subprocess
 
 
@@ -42,7 +43,7 @@ def pylint_test_dir():
 
 
 def test_pylint(pylint_test_dir):
-    exit_code = pylint_cmk.run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
+    exit_code = run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
     assert exit_code == 0, "PyLint found an error"
 
 
@@ -139,16 +140,16 @@ def inv_tree(path, default_value=None):
         f.write(
             "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position,redefined-outer-name\n"
         )
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
+        add_file(f, repo_path() + "/cmk/base/check_api.py")
+        add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
 
         # Now add the checks
-        for path in pylint_cmk.check_files(repo_path() + "/checks"):
-            pylint_cmk.add_file(f, path)
+        for path in check_files(repo_path() + "/checks"):
+            add_file(f, path)
 
         # Now add the inventory plugins
-        for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(f, path)
+        for path in check_files(repo_path() + "/inventory"):
+            add_file(f, path)
 
 
 def _compile_bakery_plugins(pylint_test_dir):
@@ -156,11 +157,11 @@ def _compile_bakery_plugins(pylint_test_dir):
         # This pylint warning is incompatible with our "concatenation technology".
         f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
-        pylint_cmk.add_file(
+        add_file(
             f,
             os.path.realpath(
                 os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
 
         # Also add bakery plugins
-        for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):
-            pylint_cmk.add_file(f, path)
+        for path in check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):
+            add_file(f, path)

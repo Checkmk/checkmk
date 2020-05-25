@@ -23,6 +23,7 @@ import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.snmp_table as snmp_table
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKGeneralException
@@ -1400,7 +1401,7 @@ class AutomationDiagHost(Automation):
         )
 
         # TODO: It is unclear why mypy complains about this structure. Investigate!
-        data = snmp.get_snmp_table_cached(
+        data = snmp_table.get_snmp_table_cached(
             snmp_config,
             "",
             ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]

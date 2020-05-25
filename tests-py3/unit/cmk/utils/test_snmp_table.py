@@ -8,10 +8,10 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+import cmk.utils.snmp_table as snmp_table
 from cmk.utils.type_defs import OID_END, OIDBytes, OIDEnd, SNMPHostConfig
 
 import cmk.base.config as config
-import cmk.base.snmp as snmp
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_api import BINARY
@@ -72,9 +72,9 @@ DATA_3TUPLE = [
 ]
 
 
-@pytest.mark.parametrize("column", snmp.SPECIAL_COLUMNS)
+@pytest.mark.parametrize("column", snmp_table.SPECIAL_COLUMNS)
 def test_value_encoding(column):
-    assert snmp._value_encoding(column) == "string"
+    assert snmp_table._value_encoding(column) == "string"
 
 
 @pytest.mark.parametrize("snmp_info, expected_values", [
@@ -93,12 +93,12 @@ def test_value_encoding(column):
     ([TREE_2TUPLE, TREE_3TUPLE], [DATA_2TUPLE, DATA_3TUPLE]),
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
-    monkeypatch.setattr(snmp, "SNMPBackendFactory", _SNMPTestFactory)
+    monkeypatch.setattr(snmp_table, "SNMPBackendFactory", _SNMPTestFactory)
 
     def get_all_snmp_tables(info):
         if not isinstance(info, list):
-            return snmp.get_snmp_table(SNMPConfig, "unit-test", info)
-        return [snmp.get_snmp_table(SNMPConfig, "unit-test", i) for i in info]
+            return snmp_table.get_snmp_table(SNMPConfig, "unit-test", info)
+        return [snmp_table.get_snmp_table(SNMPConfig, "unit-test", i) for i in info]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 
@@ -139,7 +139,7 @@ def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
     config_cache = ts.apply(monkeypatch)
 
     snmp_config = config_cache.get_host_config("localhost").snmp_config("")
-    assert snmp._sanitize_snmp_encoding(snmp_config, columns) == expected
+    assert snmp_table._sanitize_snmp_encoding(snmp_config, columns) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch):

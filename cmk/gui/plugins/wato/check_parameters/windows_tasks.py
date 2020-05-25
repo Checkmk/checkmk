@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Author
 # Antoine Scheffold
@@ -11,7 +11,6 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
@@ -43,7 +42,6 @@ def _parameter_valuespec_windows_tasks():
          ),
          MonitoringState(title = _("State if task not enabled: "),),
     ])
-
 
 
 rulespec_registry.register(

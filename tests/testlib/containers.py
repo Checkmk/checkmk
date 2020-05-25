@@ -12,15 +12,15 @@ import subprocess
 import time
 from contextlib import contextmanager
 from io import BytesIO
-from pathlib2 import Path
 from typing import List, Dict, Optional  # pylint: disable=unused-import
-import requests
 
 import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
+from pathlib2 import Path
+import requests
 
-from testlib import repo_path
-from testlib.version import CMKVersion
+from testlib.utils import repo_path
+from testlib.version import CMKVersion  # pylint: disable=unused-import
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY

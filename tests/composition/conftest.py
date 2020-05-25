@@ -7,7 +7,9 @@
 from __future__ import print_function
 import os
 import pytest  # type: ignore[import]
-from testlib import SiteFactory, CMKVersion, current_branch_name
+from testlib.site import SiteFactory
+from testlib.utils import current_branch_name
+from testlib.version import CMKVersion
 
 
 # Disable this. We have a site_factory instead.

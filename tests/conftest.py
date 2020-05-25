@@ -20,8 +20,8 @@ import collections
 
 from pathlib2 import Path
 
-from testlib import add_python_paths, fake_version_and_paths, is_running_as_site_user, repo_path, skip_unwanted_test_types, virtualenv_path
-from testlib.utils import cmc_path
+from testlib import skip_unwanted_test_types
+from testlib.utils import add_python_paths, cmc_path, is_running_as_site_user, repo_path, virtualenv_path
 
 #TODO Hack: Exclude cee tests in cre repo
 if not Path(cmc_path()).exists():
@@ -122,5 +122,3 @@ def verify_virtualenv():
 #
 
 add_python_paths()
-# Not needed for the remaining unit tests
-#fake_version_and_paths()

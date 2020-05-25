@@ -12,7 +12,7 @@ for further information.
 import os
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
-from testlib import cmk_path
+from testlib.utils import cmk_path
 
 
 def register(linter):

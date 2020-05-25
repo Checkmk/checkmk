@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import pytest  # type: ignore[import]
 
-from testlib import repo_path, is_enterprise_repo
+from testlib.utils import repo_path, is_enterprise_repo
 from testlib.pylint_cmk import add_file, check_files, run_pylint
 
 

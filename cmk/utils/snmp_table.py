@@ -46,7 +46,6 @@ from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-modul
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[DecodedValues]]
-SNMPContext = Optional[str]
 
 _enforce_stored_walks = False
 
@@ -255,14 +254,6 @@ def _key_oid_pairs(pair1):
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
-def _snmpv3_contexts_of(snmp_config, check_plugin_name):
-    # type: (SNMPHostConfig, CheckPluginName) -> List[SNMPContext]
-    for ty, rules in snmp_config.snmpv3_contexts:
-        if ty is None or ty == check_plugin_name:
-            return rules
-    return [None]
-
-
 def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
     # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool) -> SNMPRowInfo
     if column in SPECIAL_COLUMNS:
@@ -283,12 +274,8 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
     # type: (SNMPHostConfig, CheckPluginName, OID, OID) -> SNMPRowInfo
     added_oids = set([])  # type: Set[OID]
     rowinfo = []  # type: SNMPRowInfo
-    if snmp_config.is_snmpv3_host:
-        snmp_contexts = _snmpv3_contexts_of(snmp_config, check_plugin_name)
-    else:
-        snmp_contexts = [None]
 
-    for context_name in snmp_contexts:
+    for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
         rows = SNMPBackendFactory.walk(snmp_config,
                                        use_cache=_enforce_stored_walks,
                                        oid=fetchoid,

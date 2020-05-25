@@ -4,18 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import os
-import time
-import shutil
-import traceback
-import tarfile
-import io
-import glob
 import errno
+import glob
 from hashlib import sha256
+import io
+import os
 from pathlib import Path
+import shutil
 import subprocess
+import tarfile
+import time
+import traceback
 from typing import Any, List, Dict, Text, Optional, Union
 
 import six

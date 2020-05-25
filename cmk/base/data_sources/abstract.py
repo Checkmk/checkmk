@@ -443,12 +443,6 @@ class DataSource(
         # type: () -> str
         return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
-    def get_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        if self._enforced_check_plugin_names is not None:
-            return self._enforced_check_plugin_names
-        return self._gather_check_plugin_names()
-
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]

@@ -272,7 +272,8 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _make_oid_infos(self):
         # type: () -> Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
         oid_infos = {}  # Dict[CheckPluginName, Union[OIDInfo, List[ABCSNMPTree]]]
-        for check_plugin_name in self._sort_check_plugin_names(self.get_check_plugin_names()):
+        raw_sections_to_process = self._get_raw_section_names_to_process()
+        for check_plugin_name in self._sort_check_plugin_names(raw_sections_to_process):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
@@ -312,6 +313,20 @@ class SNMPDataSource(ABCSNMPDataSource):
         else:
             oid_info = None
         return oid_info, has_snmp_info
+
+    def _get_raw_section_names_to_process(self):
+        # type: () -> Set[CheckPluginName]
+        """Return a set of raw section names that shall be processed"""
+        # TODO (mo): At this point, this is an exact copy of the super classes
+        #            former get_check_plugin_names method. Obviously this will change...
+        if self._enforced_check_plugin_names is not None:
+            return self._enforced_check_plugin_names
+        return self._detector(
+            self._snmp_config,
+            on_error=self._on_error,
+            do_snmp_scan=self._do_snmp_scan,
+            for_mgmt_board=self._for_mgmt_board,
+        )
 
     @staticmethod
     def _sort_check_plugin_names(check_plugin_names):

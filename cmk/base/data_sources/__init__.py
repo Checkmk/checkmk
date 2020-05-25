@@ -173,21 +173,6 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             for agentname, params in self._host_config.special_agents
         ]
 
-    def get_check_plugin_names(self):
-        # type: () -> Set[CheckPluginName]
-        """Returns the collection of check types the caller may execute on the sections produced
-        by these sources.
-
-        Either returns a set of enforced check types (if set before) or ask each individual
-        data source for it's supported check types and return a list of these types.
-        """
-        check_plugin_names = set()
-
-        for source in self._sources.values():
-            check_plugin_names.update(source.get_check_plugin_names())
-
-        return check_plugin_names
-
     def enforce_check_plugin_names(self, check_plugin_names):
         # type: (Set[CheckPluginName]) -> None
         self._enforced_check_plugin_names = check_plugin_names

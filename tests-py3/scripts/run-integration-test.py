@@ -112,9 +112,12 @@ def _execute_as_site_user(site, args):
     cmd_parts = [
         "python3",
         site.path("local/bin/pytest"),
-        "-p", "no:cov",
-        "--junitxml", site.path("junit.xml"),
-        "-T", "integration",
+        "-p",
+        "no:cov",
+        "--junitxml",
+        site.path("junit.xml"),
+        "-T",
+        "integration",
     ] + args
 
     cmd = "cd %s && " % pipes.quote(cmk_path())

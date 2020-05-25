@@ -53,8 +53,7 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
 def test_describe_with_ipaddress(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
-    source = IPMIManagementBoardDataSource(hostname, None)
-    source._ipaddress = "127.0.0.1"  # The API is lying.
+    source = IPMIManagementBoardDataSource(hostname, "127.0.0.1")
 
     assert source.describe() == "Management board - IPMI (Address: 127.0.0.1)"
 
@@ -72,7 +71,6 @@ def test_describe_with_ipaddress_and_credentials(monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
     source = IPMIManagementBoardDataSource(hostname, "127.0.0.1")
-    source._ipaddress = "127.0.0.1"  # The API is lying.
     source._credentials = {"username": "Bobby"}
 
     assert source.describe() == "Management board - IPMI (Address: 127.0.0.1, User: Bobby)"

@@ -12,18 +12,18 @@ info = [[['1', '15574'], ['2', '16266'], ['3', '15913'], ['4', '16266']], []]
 
 discovery = {
     '': [
-        ('Processor 1', 'f5_bigip_fans_default_levels'),
-        ('Processor 2', 'f5_bigip_fans_default_levels'),
-        ('Processor 3', 'f5_bigip_fans_default_levels'),
-        ('Processor 4', 'f5_bigip_fans_default_levels')
+        ('Chassis 1', 'f5_bigip_fans_default_levels'),
+        ('Chassis 2', 'f5_bigip_fans_default_levels'),
+        ('Chassis 3', 'f5_bigip_fans_default_levels'),
+        ('Chassis 4', 'f5_bigip_fans_default_levels')
     ]
 }
 
 checks = {
     '': [
-        ('Processor 1', (2000, 500), [(0, 'speed is 15574 rpm', [])]),
-        ('Processor 2', (2000, 500), [(0, 'speed is 16266 rpm', [])]),
-        ('Processor 3', (2000, 500), [(0, 'speed is 15913 rpm', [])]),
-        ('Processor 4', (2000, 500), [(0, 'speed is 16266 rpm', [])])
+        ('Chassis 1', (2000, 500), [(0, 'Speed: 15574 RPM', [])]),
+        ('Chassis 2', (2000, 500), [(0, 'Speed: 16266 RPM', [])]),
+        ('Chassis 3', (2000, 500), [(0, 'Speed: 15913 RPM', [])]),
+        ('Chassis 4', (2000, 500), [(0, 'Speed: 16266 RPM', [])])
     ]
 }

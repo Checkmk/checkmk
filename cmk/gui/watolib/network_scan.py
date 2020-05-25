@@ -7,14 +7,12 @@
 
 import os
 import re
-import threading
 import socket
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, List, Tuple,
-)
+import subprocess
+import threading
+from typing import NamedTuple, List, Tuple
 
-import cmk.utils.cmk_subprocess as subprocess
-from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _

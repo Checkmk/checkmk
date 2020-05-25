@@ -10,18 +10,17 @@ and similar things."""
 import ast
 import os
 import re
+import subprocess
 import time
 import uuid
-from typing import (  # pylint: disable=unused-import
-    Tuple, Dict, Any, Optional, NamedTuple, Text, Union, Sequence,
-)
+from typing import Tuple, Dict, Any, Optional, NamedTuple, Text, Union, Sequence
+
 import urllib3  # type: ignore[import]
 import requests
 import six
 
-from livestatus import SiteId, SiteConfiguration  # pylint: disable=unused-import
+from livestatus import SiteId, SiteConfiguration
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -34,13 +33,9 @@ from cmk.gui.log import logger
 import cmk.gui.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
-from cmk.gui.background_job import BackgroundProcessInterface  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKUserError,
-)
-
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 

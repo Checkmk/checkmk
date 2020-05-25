@@ -11,11 +11,11 @@ import os
 import abc
 import json
 import re
-from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
+import subprocess
+from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple
 
 import six
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.plugin_registry
 
 import cmk.gui.mkeventd

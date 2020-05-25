@@ -4,22 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
-
 import glob
-import sys
-import os
-import pwd
-import subprocess
-import pipes
-import time
-import shutil
 import logging
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+import os
+from pathlib import Path
+import pipes
+import pwd
+import shutil
+import subprocess
+import sys
+import time
 
 import six
 
@@ -245,8 +239,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
-        # Needed during py2/py3 migration
-        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
@@ -257,9 +249,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 pipes.quote(" ".join(pipes.quote(p) for p in cmd))
             ]))
         sys.stdout.write("Executing: %s\n" % cmd_txt)
-        # TODO: Kick out our own Popen after the Python 3 migration, it's a
-        # valley of tears typing-wise...
-        return Popen(cmd_txt, shell=True, *args, **kwargs)  # type: ignore[call-overload] # nosec
+        kwargs["shell"] = True
+        return subprocess.Popen(cmd_txt, *args, **kwargs)
 
     def omd(self, mode, *args):
         # type: (str, str) -> int

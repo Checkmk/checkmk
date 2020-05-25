@@ -7,9 +7,10 @@
 import os
 import sys
 import socket
+import subprocess
 import time
 import pprint
-from typing import Union, Tuple, Optional, Set, Dict, List  # pylint: disable=unused-import
+from typing import Union, Tuple, Optional, Set, Dict, List
 
 import six
 
@@ -17,14 +18,13 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.cmk_subprocess as subprocess
 from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
                       int, str]]

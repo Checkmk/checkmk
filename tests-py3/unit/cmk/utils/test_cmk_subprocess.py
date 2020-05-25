@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
+
 import pytest  # type: ignore[import]
 import six
-import cmk.utils.cmk_subprocess as subprocess
 
 
 def _check_type_of_stdout_and_stderr(p_communicate, encoding):

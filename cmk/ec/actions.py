@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger
 import os
+import subprocess
 import time
-from logging import Logger  # pylint: disable=unused-import
-from typing import Any, Dict, Set  # pylint: disable=unused-import
+from typing import Any, Dict, Set
 
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-import cmk.utils.cmk_subprocess as subprocess
 import livestatus
 
-from .settings import Settings  # pylint: disable=unused-import
+from .settings import Settings
 
 #.
 #   .--Actions-------------------------------------------------------------.

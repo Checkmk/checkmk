@@ -6,16 +6,16 @@
 
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
 import os
+import subprocess
 import sys
 import tempfile
 import shutil
+
 import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
 import testlib.pylint_cmk as pylint_cmk
-import cmk.utils.cmk_subprocess as subprocess
 
 
 @pytest.fixture(scope="function")

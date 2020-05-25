@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
+
 import cmk.base.obsolete_output as out
 import cmk.utils.paths
 import cmk.utils.tty as tty
-import cmk.utils.cmk_subprocess as subprocess
 from cmk.utils.log import console
 
 

@@ -20,13 +20,13 @@ import logging
 import os
 import re
 import signal
+import subprocess
 import sys
 import time
-from typing import (  # pylint: disable=unused-import
-    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast,
-)
+from typing import Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast
 import traceback
 import uuid
+
 import six
 
 import livestatus
@@ -47,7 +47,6 @@ from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
 )
-import cmk.utils.cmk_subprocess as subprocess
 from cmk.utils.log import console
 from cmk.utils.type_defs import EventRule  # pylint: disable=unused-import
 
@@ -2027,8 +2026,7 @@ def call_bulk_notification_script(plugin_name, context_lines):
     if exitcode:
         logger.info("ERROR: script %s --bulk returned with exit code %s", path, exitcode)
 
-    # TODO remove cast when cmk_subprocess is typed
-    output_lines = cast(List[Text], (stdout + stderr).splitlines())
+    output_lines = (stdout + stderr).splitlines()
     for line in output_lines:
         logger.info("%s: %s", plugin_name, line.rstrip())
 

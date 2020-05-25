@@ -11,7 +11,9 @@ structured monitoring data of Check_MK.
 import gzip
 import re
 import pprint
-from typing import AnyStr, Dict, List, Optional, Set  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    AnyStr, Dict, List, Optional,
+)
 
 import six
 

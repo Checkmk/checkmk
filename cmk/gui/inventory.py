@@ -301,9 +301,11 @@ def _load_inventory_tree(hostname):
 
 
 def _create_tree_from_raw_tree(raw_tree):
+    # type: (bytes) -> Optional[StructuredDataTree]
     if raw_tree:
-        return StructuredDataTree().create_tree_from_raw_tree(ast.literal_eval(raw_tree))
-    return
+        return StructuredDataTree().create_tree_from_raw_tree(
+            ast.literal_eval(raw_tree.decode("utf-8")))
+    return None
 
 
 def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):

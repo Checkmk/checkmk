@@ -10,26 +10,20 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
-import sys
 import abc
 import errno
 import glob
 import os
+from pathlib import Path
 import shutil
 import signal
 import socket
 import time
 import json
-from typing import Any, List, Optional, Text, Tuple  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Any, List, Optional, Text, Tuple
 
 import six
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.render as render
 import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time

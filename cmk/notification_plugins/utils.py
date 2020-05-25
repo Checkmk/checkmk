@@ -10,6 +10,7 @@ import os
 from quopri import encodestring
 import re
 import socket
+import subprocess
 import sys
 from typing import Dict, List, Text, Tuple
 
@@ -19,7 +20,6 @@ import six
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
 import cmk.utils.password_store
-import cmk.utils.cmk_subprocess as subprocess
 
 
 def collect_context():

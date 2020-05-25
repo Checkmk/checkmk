@@ -37,10 +37,11 @@
 
 import getopt
 import os
+import subprocess
 import sys
 from typing import NoReturn
+
 import urllib.parse
-import cmk.utils.cmk_subprocess as subprocess
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")

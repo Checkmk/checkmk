@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import errno
-import sys
 import getopt
-from typing import Dict, List, Tuple  # pylint: disable=unused-import
+import os
+import subprocess
+import sys
+from typing import Dict, List, Tuple
+
 import six
-import cmk.utils.cmk_subprocess as subprocess
 
 
 def agent_ipmi_sensors_usage():

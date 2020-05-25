@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Preparing the site configuration in distributed setups for synchronization"""
 
-import sys
 import ast
 import errno
 import hashlib
@@ -17,18 +16,10 @@ import io
 import traceback
 import itertools
 import multiprocessing
-from types import TracebackType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    Any, Optional, Type, Tuple, Dict, Text, List, NamedTuple,
-)
+from pathlib import Path
+from types import TracebackType
+from typing import Any, Optional, Type, Tuple, Dict, Text, List, NamedTuple
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
-
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.store as store
 import cmk.utils.paths
 

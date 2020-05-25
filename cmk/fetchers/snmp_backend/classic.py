@@ -6,11 +6,11 @@
 
 import os
 import signal
+import subprocess
 from typing import List, Optional
 
 import six
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console

@@ -7,20 +7,16 @@
 from __future__ import print_function
 
 import glob
-import sys
-import os
-import pwd
-import subprocess
-import pipes
-import time
-import shutil
 import logging
+import os
+import pipes
+import pwd
+import shutil
+import subprocess
+import sys
+import time
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
-
+from pathlib2 import Path
 import six
 
 from testlib.utils import (
@@ -37,7 +33,96 @@ from testlib.version import CMKVersion
 logger = logging.getLogger(__name__)
 
 
-class Site(object):  # pylint: disable=useless-object-inheritance
+class Popen(subprocess.Popen):
+    def __init__(
+        self,
+        args,
+        bufsize=0,
+        executable=None,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        preexec_fn=None,
+        close_fds=False,
+        shell=False,
+        cwd=None,
+        env=None,
+        universal_newlines=False,
+        startupinfo=None,
+        creationflags=0,
+        encoding=None,
+    ):
+        # NOTE: We need the pragma below because of a typeshed bug!
+        super(Popen, self).__init__(  # type: ignore[call-arg]
+            args,
+            bufsize=bufsize,
+            executable=executable,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            preexec_fn=preexec_fn,
+            close_fds=close_fds,
+            shell=shell,
+            cwd=cwd,
+            env=env,
+            universal_newlines=universal_newlines,
+            startupinfo=startupinfo,
+            creationflags=creationflags,
+        )
+
+        # Cannot decode streams from args as Python 3 subprocess module does:
+        #   py2 subprocess uses os.fdopen
+        #   py3 subprocess uses io.open
+
+        if universal_newlines:
+            # We don't need this arg on Checkmk servers:
+            #   Lines may be terminated by any of '\n', the Unix end-of-line
+            #   convention, '\r', the old Macintosh convention or '\r\n', the
+            #   Windows convention. All of these external representations are
+            #   seen as '\n' by the Python program.
+            raise AttributeError("Do not use 'universal_newlines'")
+
+        self.encoding = encoding
+
+    def communicate(self, input=None):  # pylint: disable=redefined-builtin
+        # Python 2:
+        # The optional input argument should be a
+        # string to be sent to the child process, or None, if no data
+        # should be sent to the child.
+
+        # Python 3:
+        # The optional "input" argument should be data to be sent to the
+        # child process (if self.universal_newlines is True, this should
+        # be a string; if it is False, "input" should be bytes), or
+        # None, if no data should be sent to the child.
+        # By default, all communication is in bytes, and therefore any
+        # "input" should be bytes, and the (stdout, stderr) will be bytes.
+        # If in text mode (indicated by self.text_mode), any "input" should
+        # be a string, and (stdout, stderr) will be strings decoded
+        # according to locale encoding, or by "encoding" if set. Text mode
+        # is triggered by setting any of text, encoding, errors or
+        # universal_newlines.
+
+        if input is not None:
+            if self.encoding:
+                if not isinstance(input, unicode):
+                    # As Python 3 subprocess does:
+                    raise AttributeError("'bytes' object has no attribute 'encode'")
+                input = input.encode(self.encoding)
+            else:
+                if not isinstance(input, str):
+                    # As Python 3 subprocess does:
+                    raise TypeError("a bytes-like object is required, not 'str'")
+
+        stdout, stderr = super(Popen, self).communicate(input=input)
+
+        if self.encoding:
+            return (None if stdout is None else stdout.decode(self.encoding),
+                    None if stderr is None else stderr.decode(self.encoding))
+        return (stdout, stderr)
+
+
+class Site(object):
     def __init__(self,
                  site_id,
                  reuse=True,
@@ -82,7 +167,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def live(self):
-        import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
+        import livestatus
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
@@ -108,7 +193,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
+            import livestatus
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
@@ -246,7 +331,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     def execute(self, cmd, *args, **kwargs):
         # Needed during py2/py3 migration
-        from cmk.utils.cmk_subprocess import Popen  # pylint: disable=import-outside-toplevel
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
@@ -257,9 +341,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 pipes.quote(" ".join(pipes.quote(p) for p in cmd))
             ]))
         sys.stdout.write("Executing: %s\n" % cmd_txt)
-        # TODO: Kick out our own Popen after the Python 3 migration, it's a
-        # valley of tears typing-wise...
-        return Popen(cmd_txt, shell=True, *args, **kwargs)  # type: ignore[call-overload] # nosec
+        return Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
 
     def omd(self, mode, *args):
         # type: (str, str) -> int
@@ -719,7 +801,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return port
 
 
-class SiteFactory(object):  # pylint: disable=useless-object-inheritance
+class SiteFactory(object):
     def __init__(self,
                  version,
                  edition,

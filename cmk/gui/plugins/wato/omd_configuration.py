@@ -4,22 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import os
+from pathlib import Path
+import subprocess
 import traceback
-from typing import (  # pylint: disable=unused-import
-    Dict, Any,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Any
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _

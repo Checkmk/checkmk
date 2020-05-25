@@ -13,6 +13,7 @@ __version__ = "1.7.0i1"
 import errno
 import os
 from pathlib import Path
+import subprocess
 import sys
 import time
 from typing import Any, Dict, Text
@@ -23,7 +24,6 @@ import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-import cmk.utils.cmk_subprocess as subprocess
 
 
 def omd_version():

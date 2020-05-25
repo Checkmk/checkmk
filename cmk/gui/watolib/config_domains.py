@@ -4,25 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import errno
 import logging
 import os
 import re
+from pathlib import Path
 import signal
+import subprocess
 import traceback
-from typing import Any, Dict, List, Tuple, Set  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from typing import Any, Dict, List, Tuple, Set
 
 import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.paths
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

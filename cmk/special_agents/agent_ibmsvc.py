@@ -10,10 +10,8 @@
 import cProfile
 import getopt
 import os
+import subprocess
 import sys
-
-import cmk.utils.cmk_subprocess as subprocess
-
 
 def usage():
     sys.stderr.write("""Check_MK SVC / V7000 Agent

@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import subprocess
 import time
-from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple
+
 import six
 
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.pages
 import cmk.gui.utils as utils

@@ -11,13 +11,13 @@ import glob
 import io
 import os
 import shutil
+import subprocess
 import sys
 import time
 from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
 
 import six
 
-import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages

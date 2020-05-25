@@ -20,6 +20,7 @@ import re
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 import syslog
 from tarfile import TarFile, ReadError
@@ -42,8 +43,6 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTerminate, MKGeneralException
-
-import cmk.utils.cmk_subprocess as subprocess
 
 VERSION = "1.4.0i1"
 

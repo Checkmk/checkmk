@@ -14,19 +14,15 @@ import io
 import glob
 import errno
 from hashlib import sha256
-from typing import (  # pylint: disable=unused-import
-    Any, List, Dict, Text, Optional, Union,
-)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
+import subprocess
+from typing import Any, List, Dict, Text, Optional, Union
+
 import six
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.config as config
 from cmk.gui.log import logger

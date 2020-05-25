@@ -7,16 +7,12 @@
 import errno
 import glob
 import os
-import sys
+from pathlib import Path
+import subprocess
+
 import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 import cmk.utils
-import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.config as config
 from cmk.gui.globals import g

@@ -32,7 +32,7 @@ PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
     ('reason_status', int),
 ])
 
-PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
+PiggybackRawDataInfo = NamedTuple('PiggybackRawDataInfo', [
     ('source_hostname', str),
     ('file_path', str),
     ('successfully_processed', bool),

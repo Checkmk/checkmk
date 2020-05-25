@@ -258,14 +258,7 @@ def _create_cmk_image(client, base_image_name, docker_tag, version):
 
 
 def _image_build_volumes():
-    return {
-        # To get access to the test scripts and for updating the version from
-        # the current git checkout. Will also be used for updating the image with
-        # the current git state
-        testlib.repo_path(): {
-            "bind": "/git-lowerdir",
-            "mode": "ro",
-        },
+    volumes = {
         # Used to gather the Checkmk package from. In case it is not available
         # the package will be downloaded from the download server
         "/bauwelt/download": {
@@ -279,17 +272,40 @@ def _image_build_volumes():
             "mode": "ro",
         }
     }
+    volumes.update(_git_repos())
+    return volumes
 
 
-def _runtime_volumes():
-    return {
+def _git_repos():
+    # This ensures that we can also work with git-worktrees. For this, the original git repository
+    # needs to be mapped into the container as well.
+    repo_path = testlib.repo_path()
+    git_entry = os.path.join(repo_path, '.git')
+    repos = {
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
         # the current git state
-        testlib.repo_path(): {
+        repo_path: {
             "bind": "/git-lowerdir",
             "mode": "ro",
         },
+    }
+    if os.path.isfile(git_entry):  # if not, it's a directory
+        with open(git_entry, "r") as f:
+            real_path = f.read()
+            real_path = real_path[8:]  # skip "gitdir: "
+            real_path = real_path.split("/.git")[0]  # cut off .git/...
+
+        repos[real_path] = {
+            "bind": real_path,
+            "mode": "ro",
+        }
+
+    return repos
+
+
+def _runtime_volumes():
+    volumes = {
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
@@ -298,6 +314,8 @@ def _runtime_volumes():
             "mode": "ro",
         }
     }
+    volumes.update(_git_repos())
+    return volumes
 
 
 def _container_env(version):

@@ -95,26 +95,6 @@ def pytest_runtest_setup(item):
     skip_unwanted_test_types(item)
 
 
-# Cleanup temporary directory created above
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_cmk():
-    yield
-
-    if is_running_as_site_user():
-        return
-
-    import cmk.utils.paths
-
-    if "pytest_cmk_" not in cmk.utils.paths.tmp_dir:
-        return
-
-    try:
-        shutil.rmtree(cmk.utils.paths.tmp_dir)
-    except OSError as exc:
-        if exc.errno != errno.ENOENT:
-            raise  # re-raise exception
-
-
 def pytest_cmdline_main(config):
     """There are 2 environments for testing:
 

@@ -8,14 +8,13 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import SNMPHostConfig
+from cmk.utils.type_defs import OID_END, OIDBytes, OIDEnd, SNMPHostConfig
 
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
-from cmk.base.check_api import BINARY, OID_END
-from cmk.base.snmp_utils import OIDBytes
+from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.check_api import BINARY
 from cmk.fetchers.factory import SNMPBackendFactory
 
 SNMPConfig = SNMPHostConfig(

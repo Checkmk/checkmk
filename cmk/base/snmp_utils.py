@@ -9,26 +9,12 @@ from typing import Callable, List, Optional, Text, Tuple
 
 import six
 
-from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, OIDSpec
+from cmk.utils.type_defs import OID, CheckPluginName, DecodedString
 
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
 SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
-
-OID_END = 0  # Suffix-part of OID that was not specified
-OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
-OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
-OID_END_BIN = -3  # Same, but just the end part
-OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
-
-
-class OIDCached(OIDSpec):
-    pass
-
-
-class OIDBytes(OIDSpec):
-    pass
 
 
 def binstring_to_int(binstring):

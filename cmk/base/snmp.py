@@ -21,6 +21,13 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     OID,
+    OID_BIN,
+    OID_END,
+    OID_END_BIN,
+    OID_END_OCTET_STRING,
+    OID_STRING,
+    OIDCached,
+    OIDBytes,
     ABCSNMPTree,
     CheckPluginName,
     Column,
@@ -43,7 +50,6 @@ from cmk.utils.type_defs import (
 import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.snmp_utils as snmp_utils
 from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
 
 if sys.version_info[0] >= 3:
@@ -102,11 +108,11 @@ def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
 
 
 SPECIAL_COLUMNS = [
-    snmp_utils.OID_END,
-    snmp_utils.OID_STRING,
-    snmp_utils.OID_BIN,
-    snmp_utils.OID_END_BIN,
-    snmp_utils.OID_END_OCTET_STRING,
+    OID_END,
+    OID_STRING,
+    OID_BIN,
+    OID_END_BIN,
+    OID_END_OCTET_STRING,
 ]
 
 
@@ -174,7 +180,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
 
 def _value_encoding(column):
     # type: (Column) -> SNMPValueEncoding
-    return "binary" if isinstance(column, snmp_utils.OIDBytes) else "string"
+    return "binary" if isinstance(column, OIDBytes) else "string"
 
 
 def _make_target_columns(oid_info):
@@ -219,15 +225,15 @@ def _make_index_rows(max_column, index_format, fetchoid):
     # type: (SNMPRowInfo, Optional[Column], OID) -> SNMPRowInfo
     index_rows = []
     for o, _unused_value in max_column:
-        if index_format == snmp_utils.OID_END:
+        if index_format == OID_END:
             val = six.ensure_binary(_extract_end_oid(fetchoid, o))
-        elif index_format == snmp_utils.OID_STRING:
+        elif index_format == OID_STRING:
             val = six.ensure_binary(o)
-        elif index_format == snmp_utils.OID_BIN:
+        elif index_format == OID_BIN:
             val = _oid_to_bin(o)
-        elif index_format == snmp_utils.OID_END_BIN:
+        elif index_format == OID_END_BIN:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))
-        elif index_format == snmp_utils.OID_END_OCTET_STRING:
+        elif index_format == OID_END_OCTET_STRING:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
         else:
             raise MKGeneralException("Invalid index format %r" % (index_format,))
@@ -405,7 +411,7 @@ def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snm
     if column in SPECIAL_COLUMNS:
         return []
 
-    save_to_cache = isinstance(column, snmp_utils.OIDCached)
+    save_to_cache = isinstance(column, OIDCached)
     get_from_cache = save_to_cache and use_snmpwalk_cache
     cached = _get_cached_snmpwalk(snmp_config.hostname, fetchoid) if get_from_cache else None
     if cached is not None:

@@ -129,20 +129,20 @@ from cmk.utils.type_defs import (
     ServiceState,
     ServiceDetails,
     ServiceCheckResult,
+    OID_END,
+    OID_STRING,
+    OID_BIN,
+    OID_END_BIN,
+    OID_END_OCTET_STRING,
+    OIDBytes,
+    OIDCached,
 )
 
 import cmk.base.config as _config
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
-from cmk.base.snmp_utils import (
-    OID_END,
-    OID_STRING,
-    OID_BIN,
-    OID_END_BIN,
-    OID_END_OCTET_STRING,
-    binstring_to_int,
-)
+from cmk.base.snmp_utils import binstring_to_int
 from cmk.base.check_api_utils import (
     # Symbolic representations of states in plugin output
     state_markers,
@@ -184,8 +184,8 @@ def get_check_api_context():
 core_state_names = _defines.short_service_state_names()
 
 # backwards compatibility: allow to pass integer.
-BINARY = lambda x: _snmp_utils.OIDBytes(str(x))
-CACHED_OID = lambda x: _snmp_utils.OIDCached(str(x))
+BINARY = lambda x: OIDBytes(str(x))
+CACHED_OID = lambda x: OIDCached(str(x))
 
 from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,

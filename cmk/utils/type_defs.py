@@ -150,6 +150,13 @@ class SNMPHostConfig(
         return SNMPHostConfig(**cfg)
 
 
+OID_END = 0  # Suffix-part of OID that was not specified
+OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
+OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
+OID_END_BIN = -3  # Same, but just the end part
+OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
+
+
 class OIDSpec:
     """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
     """
@@ -204,9 +211,33 @@ class OIDSpec:
         return "%s(%r)" % (self.__class__.__name__, self._value)
 
 
+class OIDCached(OIDSpec):
+    pass
+
+
+class OIDBytes(OIDSpec):
+    pass
+
+
 # The old API defines OID_END = 0.  Once we can drop the old API,
 # replace every occurence of this with OIDEnd.
 CompatibleOIDEnd = int
+
+
+# We inherit from CompatibleOIDEnd = int because we must be compatible with the
+# old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
+class OIDEnd(CompatibleOIDEnd):
+    """OID specification to get the end of the OID string
+
+    When specifying an OID in an SNMPTree object, the parse function
+    will be handed the corresponding value of that OID. If you use OIDEnd()
+    instead, the parse function will be given the tailing portion of the
+    OID (the part that you not already know).
+    """
+
+    # NOTE: The default constructor already does the right thing for our "glorified 0".
+    def __repr__(self):
+        return "OIDEnd()"
 
 
 class ABCSNMPTree(six.with_metaclass(abc.ABCMeta)):

@@ -13,9 +13,10 @@ import pytest  # type: ignore[import]
 import six
 from testlib import wait_until
 
+from cmk.utils.type_defs import OID_END, OID_END_BIN, OID_STRING, OID_BIN
+
 import cmk.base.snmp as snmp
 from cmk.base.exceptions import MKSNMPError
-from cmk.base.snmp_utils import OID_END, OID_END_BIN, OID_STRING, OID_BIN
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log

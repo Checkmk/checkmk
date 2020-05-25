@@ -488,7 +488,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         for file_name in os.listdir(str(packages_dir)):
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
-                if os.path.exists("%s/lib/python3/%s" % (self.root, file_name)) \
+                if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
                    or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
                     continue
 

@@ -85,6 +85,9 @@ from cmk.utils.type_defs import (
     SNMPHostConfig,
     SNMPTiming,
 )
+from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
+    OIDBytes, OIDCached  # these are required in the modules' namespace to load the configuration!
+)
 from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache
@@ -94,9 +97,6 @@ import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
-    OIDBytes, OIDCached  # these are required in the modules' namespace to load the configuration!
-)
 from cmk.base.check_utils import (
     SectionName,
     CheckParameters,

@@ -6,9 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import OIDSpec
-
-from cmk.base.snmp_utils import OIDBytes
+from cmk.utils.type_defs import OIDBytes, OIDSpec
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])

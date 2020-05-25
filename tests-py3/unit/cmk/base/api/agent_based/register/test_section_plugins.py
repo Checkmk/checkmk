@@ -10,7 +10,7 @@ from typing import List
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import ABCSNMPTree
+from cmk.utils.type_defs import ABCSNMPTree, OIDEnd
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.section_types as section_types
@@ -114,7 +114,7 @@ def test_create_snmp_section_plugin():
     trees = [
         section_types.SNMPTree(
             base='.1.2.3',
-            oids=[section_types.OIDEnd(), '2.3'],
+            oids=[OIDEnd(), '2.3'],
         ),
     ]  # type: List[ABCSNMPTree]
 

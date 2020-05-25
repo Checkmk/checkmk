@@ -11,21 +11,15 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import RawSNMPData, SNMPTable
+from cmk.utils.type_defs import OIDBytes, OIDEnd, RawSNMPData, SNMPTable
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.snmp as snmp
-from cmk.base.api.agent_based.section_types import OIDEnd, SNMPTree
-from cmk.base.data_sources.abstract import (
-    DataSource,
-    FileCache,
-    store,
-    management_board_ipaddress,
-)
+from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.data_sources.abstract import DataSource, FileCache, management_board_ipaddress, store
 from cmk.base.data_sources.snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from cmk.base.exceptions import MKIPAddressLookupError
-from cmk.base.snmp_utils import OIDBytes
 
 
 @pytest.fixture(autouse=True)

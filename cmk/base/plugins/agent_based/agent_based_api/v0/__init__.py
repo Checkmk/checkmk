@@ -16,6 +16,8 @@ Version 0
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
+from cmk.utils.type_defs import OIDCached, OIDBytes, OIDEnd
+
 from cmk.base.api.agent_based.utils import (
     parse_string_table,
     all_of,
@@ -50,9 +52,8 @@ from cmk.base.api.agent_based.checking_types import (
     Service,
     ServiceLabel,
 )
-from cmk.base.api.agent_based.section_types import SNMPTree, OIDEnd
+from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.snmp_utils import OIDCached, OIDBytes
 
 from . import register, render, state
 

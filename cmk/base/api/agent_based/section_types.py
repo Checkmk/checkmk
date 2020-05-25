@@ -9,7 +9,7 @@ import collections
 
 from typing import Any, Callable, Generator, List, NamedTuple, Tuple, Union
 
-from cmk.utils.type_defs import OIDSpec, SNMPTable, CompatibleOIDEnd, ABCSNMPTree
+from cmk.utils.type_defs import OIDEnd, OIDSpec, SNMPTable, CompatibleOIDEnd, ABCSNMPTree
 
 from cmk.base.api import PluginName
 from cmk.base.check_utils import AgentSectionContent
@@ -23,22 +23,6 @@ SNMPParseFunction = Callable[[List[SNMPTable]], Any]
 
 SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 SNMPDetectSpec = List[List[SNMPDetectAtom]]
-
-
-# We inherit from CompatibleOIDEnd = int because we must be compatible with the
-# old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-class OIDEnd(CompatibleOIDEnd):
-    """OID specification to get the end of the OID string
-
-    When specifying an OID in an SNMPTree object, the parse function
-    will be handed the corresponding value of that OID. If you use OIDEnd()
-    instead, the parse function will be given the tailing portion of the
-    OID (the part that you not already know).
-    """
-
-    # NOTE: The default constructor already does the right thing for our "glorified 0".
-    def __repr__(self):
-        return "OIDEnd()"
 
 
 class SNMPTree(ABCSNMPTree):

@@ -13,23 +13,24 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.type_defs import OIDBytes, OIDCached
+
 from cmk.base import check_api
 import cmk.base.config as config
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.snmp_utils as snmp_utils
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
 def test_oid_spec_binary(value_eight):
     oid_bin = check_api.BINARY(value_eight)
-    assert isinstance(oid_bin, snmp_utils.OIDBytes)
+    assert isinstance(oid_bin, OIDBytes)
     assert str(oid_bin) == "8"
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
 def test_oid_spec_cached(value_eight):
     oid_cached = check_api.CACHED_OID(value_eight)
-    assert isinstance(oid_cached, snmp_utils.OIDCached)
+    assert isinstance(oid_cached, OIDCached)
     assert str(oid_cached) == "8"
 
 

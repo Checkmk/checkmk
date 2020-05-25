@@ -15,6 +15,7 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.log as log
 import cmk.utils.debug
+import cmk.utils.snmp_table as snmp_table
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKBailOut
 import cmk.utils.piggyback as piggyback
@@ -136,7 +137,7 @@ modes.register_general_option(
 
 def option_usewalk():
     # type: () -> None
-    snmp.enforce_use_stored_walks()
+    snmp_table.enforce_use_stored_walks()
     ip_lookup.enforce_localhost()
 
 

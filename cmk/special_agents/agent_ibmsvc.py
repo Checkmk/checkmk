@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 
+
 def usage():
     sys.stderr.write("""Check_MK SVC / V7000 Agent
 

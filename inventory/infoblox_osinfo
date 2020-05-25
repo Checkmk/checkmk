@@ -9,7 +9,7 @@
 
 
 def inv_infoblox_osinfo(info):
-    os = info[0][0].split("=")
+    os = info[0][0][0].split("=")
     for line in os:
         node = inv_tree("software.os.")
         if "linux" in line.lower():
@@ -22,11 +22,4 @@ def inv_infoblox_osinfo(info):
 
 inv_info['infoblox_osinfo'] = {
     'inv_function': inv_infoblox_osinfo,
-    'snmp_info': (
-        ".1.3.6.1.4.1.2021.100",
-        [
-            '6.0'  # versionConfigureOptions
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.4.1.2021.4.1.*") and "infoblox" in oid(
-        ".1.3.6.1.2.1.1.1.0").lower(),
 }

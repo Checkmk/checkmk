@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,20 +6,12 @@
 
 import sys
 import logging
-from typing import AnyStr, Text, Union, IO  # pylint: disable=unused-import
+from pathlib import Path
+from typing import Text, Union, IO
 
 from ._level import VERBOSE
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
-
-if sys.version_info[0] >= 3:
-    IOLog = IO[Text]
-else:
-    IOLog = IO[AnyStr]
+IOLog = IO[Text]
 
 logger = logging.getLogger("cmk")
 
@@ -65,10 +57,7 @@ def open_log(log_file_path):
         log_file_path = Path(log_file_path)
 
     try:
-        if sys.version_info[0] >= 3:
-            logfile = log_file_path.open("a", encoding="utf-8")  # type: IOLog
-        else:
-            logfile = log_file_path.open("ab")  # type: IOLog
+        logfile = log_file_path.open("a", encoding="utf-8")  # type: IOLog
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)

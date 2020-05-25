@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,16 +6,9 @@
 """This module serves the path structure of the Check_MK environment
 to all components of Check_MK."""
 
-import sys
 import os
-
-from typing import Union  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+from pathlib import Path
+from typing import Union
 
 
 # One bright day, when every path is really a Path, this can die... :-)

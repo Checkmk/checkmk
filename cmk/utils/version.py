@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,13 +10,13 @@ does not offer stable APIs. The code may change at any time."""
 
 __version__ = "1.7.0i1"
 
-import os
-import sys
 import errno
+import os
+from pathlib import Path
+import sys
 import time
-from typing import (  # pylint: disable=unused-import
-    Text, Dict, Any,
-)
+from typing import Any, Dict, Text
+
 import six
 
 import cmk.utils.paths
@@ -24,12 +24,6 @@ from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 import cmk.utils.cmk_subprocess as subprocess
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 
 def omd_version():

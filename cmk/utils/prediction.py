@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Text, Callable, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Dict, Text, Callable, List, Optional, Tuple
 
 import six
 
@@ -17,7 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
-from cmk.utils.type_defs import Timestamp, Seconds, MetricName, ServiceName, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import Timestamp, Seconds, MetricName, ServiceName, HostName
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -76,7 +76,7 @@ def aggregation_functions(series, aggr):
     raise ValueError("Invalid Aggregation function %s, only max, min, average allowed" % aggr)
 
 
-class TimeSeries(object):
+class TimeSeries:
     """Describes the returned time series returned by livestatus
 
     - Timestamped values are valid for the measurement interval:

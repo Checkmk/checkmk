@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,22 +8,14 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import os
+from contextlib import contextmanager
+from inspect import getfullargspec as _getargspec
 import itertools
+import os
+from pathlib import Path
 import sys
 import time
-from contextlib import contextmanager
-from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-if sys.version_info[0] >= 3:
-    from inspect import getfullargspec as _getargspec  # pylint: disable=no-name-in-module
-else:
-    from inspect import getargspec as _getargspec  # pylint: disable=no-name-in-module
+from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException
 

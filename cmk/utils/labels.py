@@ -1,30 +1,23 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
-import sys
 import abc
-from typing import Callable, List, Dict  # pylint: disable=unused-import
-import six
+from pathlib import Path
+from typing import Callable, List, Dict
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject  # pylint: disable=unused-import
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName, Labels, LabelSources,
-)
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
+from cmk.utils.type_defs import HostName, ServiceName, Labels, LabelSources
 
 
-class LabelManager(object):
+class LabelManager:
     """Helper class to manage access to the host and service labels"""
     def __init__(self, explicit_host_labels, host_label_rules, service_label_rules,
                  discovered_labels_of_service):

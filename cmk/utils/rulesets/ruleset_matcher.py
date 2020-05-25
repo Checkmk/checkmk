@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Text, Tuple  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Text, Tuple
 
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -16,12 +16,10 @@ from cmk.utils.rulesets.tuple_rulesets import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue,
-)
+from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue
 
 if TYPE_CHECKING:
-    from cmk.utils.labels import LabelManager  # pylint: disable=unused-import
+    from cmk.utils.labels import LabelManager
 
 LabelConditions = Dict  # TODO: Optimize this
 PreprocessedHostRuleset = Dict[HostName, List[RuleValue]]
@@ -706,7 +704,7 @@ def parse_negated_condition_list(entries):
     return negate, entries
 
 
-class RulesetToDictTransformer(object):
+class RulesetToDictTransformer:
     """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
     This is done in place to keep the references to the ruleset working.
     """

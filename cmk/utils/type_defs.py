@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -150,7 +150,7 @@ class SNMPHostConfig(
         return SNMPHostConfig(**cfg)
 
 
-class OIDSpec(object):  # pylint: disable=bad-option-value, useless-object-inheritance
+class OIDSpec:
     """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
     """
     VALID_CHARACTERS = '.' + string.digits

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,25 +6,19 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
-import sys
+
 import ast
 from contextlib import contextmanager
 import errno
 import fcntl
 import logging
 import os
+from pathlib import Path
 import pprint
 import tempfile
-from typing import (  # pylint: disable=unused-import
-    Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast,
-)
-import six
+from typing import Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
+import six
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
@@ -419,9 +413,8 @@ def aquire_lock(path, blocking=True):
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break
-        else:
-            os.close(fd)
-            fd = fd_new
+        os.close(fd)
+        fd = fd_new
 
     _acquired_locks[str(path)] = fd
     logger.debug("Got lock on %s", path)

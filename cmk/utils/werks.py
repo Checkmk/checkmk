@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,17 +6,11 @@
 """Code for processing Check_MK werks. This is needed by several components,
 so it's best place is in the central library."""
 
-import sys
 import itertools
 import json
+from pathlib import Path
 import re
-from typing import Any, Dict  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+from typing import Any, Dict
 
 import six
 
@@ -28,7 +22,7 @@ from cmk.utils.i18n import _
 
 # This class is used to avoid repeated construction of dictionaries, including
 # *all* translation values.
-class WerkTranslator(object):
+class WerkTranslator:
     def __init__(self):
         super(WerkTranslator, self).__init__()
         self._classes = {

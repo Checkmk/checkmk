@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import math
-from typing import List, Optional  # pylint: disable=unused-import
+from typing import List, Optional
 
 import cmk.utils.debug
-from cmk.utils.type_defs import RawAgentData  # pylint: disable=unused-import
+from cmk.utils.type_defs import RawAgentData
 
 
 def our_uptime():

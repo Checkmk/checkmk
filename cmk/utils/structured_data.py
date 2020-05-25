@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,9 +11,7 @@ structured monitoring data of Check_MK.
 import gzip
 import re
 import pprint
-from typing import (  # pylint: disable=unused-import
-    AnyStr, Dict, List, Optional,
-)
+from typing import AnyStr, Dict, List, Optional
 
 import six
 
@@ -56,7 +54,7 @@ from cmk.utils.exceptions import MKGeneralException
 #   '----------------------------------------------------------------------'
 
 
-class StructuredDataTree(object):
+class StructuredDataTree:
     """Interface for structured data tree"""
     def __init__(self):
         super(StructuredDataTree, self).__init__()
@@ -274,7 +272,7 @@ class StructuredDataTree(object):
 #   '----------------------------------------------------------------------'
 
 
-class NodeAttribute(object):
+class NodeAttribute:
     """Interface for all node attributes"""
     def is_empty(self):
         raise NotImplementedError()
@@ -894,7 +892,7 @@ class Attributes(Leaf):
 #   '----------------------------------------------------------------------'
 
 
-class Node(object):
+class Node:
     """Node contains max. one node attribute per type."""
 
     CHILDREN_NAMES = [Container, Numeration, Attributes]

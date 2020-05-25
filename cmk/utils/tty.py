@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,7 +14,7 @@ import struct
 import sys
 import termios
 
-from typing import Dict, Iterable, List, Tuple  # pylint: disable=unused-import
+from typing import Dict, Iterable, List, Tuple
 
 # TODO: Implementing the colors below as simple global variables is a bad idea,
 # because their actual values depend on sys.stdout at *import* time! sys.stdout

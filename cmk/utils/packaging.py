@@ -1,27 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import ast
+from io import BytesIO
+import json
 import logging
+import os
+from pathlib import Path
 import pprint
+import subprocess
 import tarfile
 import time
-import subprocess
-import json
-from io import BytesIO
-import sys
-from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Text  # pylint: disable=unused-import
+from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Text
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
-
-import six  # pylint: disable=unused-import
+import six
 
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE

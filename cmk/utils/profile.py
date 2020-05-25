@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,21 +8,15 @@ is to provide a contextmanager that can be added to existing code with
 minimal changes."""
 
 import cProfile
-import sys
+from pathlib import Path
 import time
-from types import TracebackType  # pylint: disable=unused-import
-from typing import Callable, Type, Union, Any, Optional  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from types import TracebackType
+from typing import Callable, Type, Union, Any, Optional
 
 import cmk.utils.log
 
 
-class Profile(object):
+class Profile:
     def __init__(self, enabled=True, profile_file=None, **kwargs):
         # type: (bool, Union[Path, str], **Any) -> None
 

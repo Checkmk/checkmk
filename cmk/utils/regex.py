@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Any, AnyStr, Dict, Pattern, Tuple  # pylint:disable=unused-import
+from typing import Any, AnyStr, Dict, Pattern, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _

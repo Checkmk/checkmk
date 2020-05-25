@@ -12,7 +12,7 @@
 # TODO: The refactoring is mandatory.
 
 import os
-from pathlib import Path  # pylint: disable=import-error
+from pathlib import Path
 import re
 import shutil
 import sys

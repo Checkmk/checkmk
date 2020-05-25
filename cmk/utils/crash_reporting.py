@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,20 +11,14 @@ import abc
 import base64
 import contextlib
 import inspect
+from itertools import islice
+import json
+from pathlib import Path
 import pprint
 import sys
 import traceback
-import json
+from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type
 import uuid
-from itertools import islice
-from typing import (  # pylint: disable=unused-import
-    Any, Dict, Iterator, Optional, Text, Tuple, Type,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
 
@@ -53,7 +47,7 @@ class RobustJSONEncoder(json.JSONEncoder):
         return "%s" % o
 
 
-class CrashReportStore(object):
+class CrashReportStore:
     _keep_num_crashes = 20
     """Caring about the persistance of crash reports in the local site"""
     def save(self, crash):

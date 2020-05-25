@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,14 +7,13 @@
 text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
-from __future__ import division
 
 # THIS IS STILL EXPERIMENTAL
 
 import time
 import math
 from datetime import timedelta
-from typing import Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Optional, Text, Tuple, Union
 
 from cmk.utils.i18n import _
 
@@ -56,7 +55,7 @@ def time_since(timestamp):
     return timespan(time.time() - timestamp)
 
 
-class Age(object):
+class Age:
     """Format time difference seconds into approximated human readable text"""
     def __init__(self, secs):
         # type: (float) -> None
@@ -70,13 +69,13 @@ class Age(object):
 
         if secs < 0:
             return "-" + approx_age(-secs)
-        elif secs > 0 and secs < 1:  # ms
+        if 0 < secs < 1:  # ms
             return physical_precision(secs, 3, _("s"))
-        elif secs < 10:
+        if secs < 10:
             return "%.2f %s" % (secs, _("s"))
-        elif secs < 60:
+        if secs < 60:
             return "%.1f %s" % (secs, _("s"))
-        elif secs < 240:
+        if secs < 240:
             return "%d %s" % (secs, _("s"))
 
         mins = int(secs / 60.0)
@@ -91,14 +90,13 @@ class Age(object):
         if days < 6:
             d = ("%.1f" % days).rstrip("0").rstrip(".")
             return "%s %s" % (d, _("d"))
-        elif days < 999:
+        if days < 999:
             return "%.0f %s" % (days, _("d"))
-        else:
-            years = days / 365.0
-            if years < 10:
-                return "%.1f %s" % (years, _("y"))
+        years = days / 365.0
+        if years < 10:
+            return "%.1f %s" % (years, _("y"))
 
-            return "%.0f %s" % (years, _("y"))
+        return "%.0f %s" % (years, _("y"))
 
     def __float__(self):
         # type: () -> float
@@ -176,9 +174,9 @@ def filesize(size):
     dec_sep = ","
     if size < 10000:
         return str(size)
-    elif size < 1000000:
+    if size < 1000000:
         return str(size)[:-3] + dec_sep + str(size)[-3:]
-    elif size < 1000000000:
+    if size < 1000000000:
         return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
 
     return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(
@@ -260,12 +258,12 @@ def scientific(v, precision=3):
     """Renders a given number in scientific notation (E-notation)"""
     if v == 0:
         return "0"
-    elif v < 0:
+    if v < 0:
         return "-" + scientific(v * -1, precision)
 
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
-    if exponent >= -3 and exponent <= 4:
+    if -3 <= exponent <= 4:
         return "%%.%df" % max(0, precision - exponent) % v
 
     return "%%.%dfe%%d" % precision % (mantissa, exponent)

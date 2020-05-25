@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 
 import re
 import abc
-from typing import Any, Dict, List, Optional, Set, Text  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text
 import six
 
 from cmk.utils.i18n import _
@@ -119,7 +119,7 @@ class AuxTag(ABCTag):
         return response
 
 
-class AuxTagList(object):
+class AuxTagList:
     def __init__(self):
         self._tags = []
 
@@ -220,7 +220,7 @@ class GroupedTag(ABCTag):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
 
-class TagGroup(object):
+class TagGroup:
     def __init__(self, data=None):
         super(TagGroup, self).__init__()
         self._initialize()
@@ -313,7 +313,7 @@ class TagGroup(object):
         return tag_groups
 
 
-class TagConfig(object):
+class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
     def __init__(self):

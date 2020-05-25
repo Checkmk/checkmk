@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,24 +7,17 @@
 main change is that all strings get a prefix. Basically a dumbed-down version
 of Python's own pprint module plus the prefix change."""
 
+from io import StringIO as StrIO
 import sys
-from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple  # pylint: disable=unused-import
+from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
+
 import six
 
-if sys.version_info[0] >= 3:
-    from io import StringIO as StrIO
-    _bytes = bytes
-    _str = str
-    _long = int
-    _bytes_prefix_to_add = ''
-    _str_prefix_to_add = 'u'
-else:
-    from io import BytesIO as StrIO
-    _bytes = str
-    _str = unicode
-    _long = long
-    _bytes_prefix_to_add = 'b'
-    _str_prefix_to_add = 'u'
+_bytes = bytes
+_str = str
+_long = int
+_bytes_prefix_to_add = ''
+_str_prefix_to_add = 'u'
 
 
 def pprint(obj, stream=None):
@@ -35,7 +28,7 @@ def pformat(obj):
     return PythonPrinter().pformat(obj)
 
 
-class PythonPrinter(object):
+class PythonPrinter:
     def __init__(self, stream=None):
         # type: (Optional[IO[str]]) -> None
         self._stream = sys.stdout if stream is None else stream
@@ -175,7 +168,7 @@ _dispatch = {
 
 
 # Python 3 is a bit picky about comparing objects of different types.
-class _safe_key(object):
+class _safe_key:
     __slots__ = ['obj']
 
     def __init__(self, obj):

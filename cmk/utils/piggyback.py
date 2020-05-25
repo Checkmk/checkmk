@@ -1,22 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import errno
-import os
-import tempfile
-from typing import (  # pylint: disable=unused-import
-    Optional, Dict, Iterator, List, Tuple, NamedTuple, Text,
-)
 import logging
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import os
+from pathlib import Path
+import tempfile
+from typing import Optional, Dict, Iterator, List, Tuple, NamedTuple, Text
 
 import cmk.utils
 import cmk.utils.paths

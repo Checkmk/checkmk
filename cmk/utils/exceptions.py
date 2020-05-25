@@ -1,57 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import six
-
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
 class MKException(Exception):
-    # TODO: Remove this method after Python 3 migration.
-    # NOTE: In Python 2 the return type is WRONG, we should return str.
-    def __str__(self):
-        # not-yet-a-type: () -> six.text_type
-        """
-        Python 3:
-        - No args:
-          >>> str(Exception())
-          ''
-
-        - Bytes input:
-          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f"))
-          "b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f'"
-
-        - Unicode input:
-          >>> str(Exception("hé ßß"))
-          'hé ßß'
-
-        - Multiple args:
-          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f", 123, "hé ßß"))
-          "(b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f', 123, 'hé ßß')"
-        """
-
-        if sys.version_info[0] >= 3:
-            return super(MKException, self).__str__()
-
-        if not self.args:
-            return six.text_type("")
-
-        if len(self.args) == 1:
-            arg = self.args[0]
-            if isinstance(arg, six.binary_type):
-                # Python 3 immediately returns repr of bytestr but we try to decode first.
-                # We always return a unicode str.
-                try:
-                    return arg.decode("utf-8")
-                except UnicodeDecodeError:
-                    return u"b%s" % repr(arg)
-            return six.text_type(arg)
-
-        return six.text_type(self.args)
+    pass
 
 
 class MKGeneralException(MKException):

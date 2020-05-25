@@ -7,7 +7,7 @@
 import logging
 import sys
 from contextlib import contextmanager
-from typing import Any, Generator, IO, Optional  # pylint: disable=unused-import
+from typing import Any, Generator, IO, Optional
 
 import cmk.utils.tty as tty
 from ._level import VERBOSE
@@ -44,8 +44,7 @@ else:
 
 
 _handler = logging.StreamHandler()
-if sys.version_info > (3, 2):
-    _handler.terminator = ""  # TODO: let the handler add '\n'
+_handler.terminator = ""  # TODO: let the handler add '\n'
 _console = logging.getLogger("cmk.base.console")
 _console.propagate = False
 

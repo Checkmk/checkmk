@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any  # pylint: disable=unused-import
+from typing import Type, Union, Callable, Tuple, Dict, Set, Any
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -60,7 +60,7 @@ class _HashedSeq(list):
 
 
 # TODO: This may be replaced by @functools.lru_cache() in Python 3
-class MemoizeCache(object):
+class MemoizeCache:
     """Simple unbound in memory cache
 
 This decorator can be used to remember the results of single functions. These

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,22 +9,16 @@ used as base for the list of supported checks and catalogs of checks.
 
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
-from __future__ import division, print_function, unicode_literals
 
+from io import StringIO
 import os
 import re
 import sys
-from io import StringIO
+from pathlib import Path
 import subprocess
-from typing import Text, Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Tuple
 
-import six  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+import six
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -577,7 +571,7 @@ def load_man_page(name):
     return man_page
 
 
-class ManPageRenderer(object):
+class ManPageRenderer:
     def __init__(self, name):
         self.name = name
         man_page = load_man_page(name)

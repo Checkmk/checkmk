@@ -20,6 +20,23 @@ factory_settings["checkpoint_packets_default_levels"] = {
 }
 
 
+def _extract_checkpoint_value(info):
+    parsed = {}
+    for key, main_index, sub_index in [
+        ("Accepted", 0, 0),
+        ("Rejected", 0, 1),
+        ("Dropped", 0, 2),
+        ("Logged", 0, 3),
+        ("EspEncrypted", 1, 0),
+        ("EspDecrypted", 1, 1),
+    ]:
+        try:
+            parsed[key] = int(info[main_index][0][sub_index])
+        except (IndexError, ValueError):
+            pass
+    return parsed
+
+
 def inventory_checkpoint_packets(info):
     if info:
         return [(None, {})]
@@ -27,22 +44,15 @@ def inventory_checkpoint_packets(info):
 
 def check_checkpoint_packets(_no_item, params, info):
     if info:
-        value = {}
-        value["Accepted"] = int(info[0][0][0])
-        value["Rejected"] = int(info[0][0][1])
-        value["Dropped"] = int(info[0][0][2])
-        value["Logged"] = int(info[0][0][3])
-        value["EspEncrypted"] = int(info[1][0][0])
-        value["EspDecrypted"] = int(info[1][0][1])
         this_time = time.time()
-        for name in value:
+        for name, value in _extract_checkpoint_value(info).items():
             key = name.lower()
             if params.get(key) is None:
                 warn, crit = (None, None)
             else:
                 warn, crit = params[key]
 
-            rate = get_rate(key, this_time, value[name])
+            rate = get_rate(key, this_time, value)
             infotext = "%s: %.1f pkts/s" % (name, rate)
             state = 0
             if crit is not None and rate >= crit:

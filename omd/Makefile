@@ -27,7 +27,6 @@ PACKAGES := \
     Python3 \
     freetds \
     re2 \
-    python-modules \
     python3-modules \
     rrdtool \
     msitools \

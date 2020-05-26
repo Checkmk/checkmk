@@ -142,7 +142,6 @@ include \
     packages/pnp4nagios/pnp4nagios.make \
     packages/Python/Python.make \
     packages/Python3/Python3.make \
-    packages/python-modules/python-modules.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/net-snmp/net-snmp.make \

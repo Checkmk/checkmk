@@ -18,8 +18,6 @@ from pathlib import Path
 os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
 from OpenSSL import crypto  # type: ignore[import]
 
-import six
-
 import cmk.utils.render
 import cmk.utils.store as store
 
@@ -63,7 +61,7 @@ class KeypairStore(object):
         choices = []
         for key in self.load().values():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            digest = cert.digest("md5")
+            digest = cert.digest("md5").decode("ascii")
             choices.append((digest, key["alias"]))
 
         return sorted(choices, key=lambda x: x[1])
@@ -71,7 +69,7 @@ class KeypairStore(object):
     def get_key_by_digest(self, digest):
         for key_id, key in self.load().items():
             other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            other_digest = other_cert.digest("md5")
+            other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == digest:
                 return key_id, key
         raise KeyError()
@@ -164,7 +162,7 @@ class PageKeyManagement(object):
                 table.cell(_("Description"), html.render_text(key["alias"]))
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
                 table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
+                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
 
 
 class PageEditKey(object):
@@ -209,9 +207,9 @@ class PageEditKey(object):
 
         cert = create_self_signed_cert(pkey)
         return {
-            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
+            "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
             "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
-                                                  six.ensure_binary(passphrase)),
+                                                  passphrase.encode("utf-8")).decode("ascii"),
             "alias": alias,
             "owner": config.user.id,
             "date": time.time(),
@@ -287,7 +285,7 @@ class PageUploadKey(object):
     def _get_uploaded(self, cert_spec, key):
         if key in cert_spec:
             if cert_spec[key][0] == "upload":
-                return cert_spec[key][1][2]
+                return cert_spec[key][1][2].decode("ascii")
             return cert_spec[key][1]
 
     def _upload_key(self, key_file, value):
@@ -299,10 +297,10 @@ class PageUploadKey(object):
 
         certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file)
 
-        this_digest = certificate.digest("md5")
+        this_digest = certificate.digest("md5").decode("ascii")
         for key_id, key in keys.items():
             other_cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-            other_digest = other_cert.digest("md5")
+            other_digest = other_cert.digest("md5").decode("ascii")
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
@@ -313,7 +311,8 @@ class PageUploadKey(object):
         def parse_asn1_generalized_time(timestr):
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
-        created = time.mktime(parse_asn1_generalized_time(certificate.get_notBefore()))
+        created = time.mktime(
+            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii")))
 
         # Check for valid passphrase
         decrypt_private_key(key_file, value["passphrase"])
@@ -415,15 +414,14 @@ class PageDownloadKey(object):
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key)
         html.response.headers["Content-type"] = "application/x-pem-file"
-        html.write(key["private_key"])
-        html.write(key["certificate"])
+        html.write_text(key["private_key"])
+        html.write_text(key["certificate"])
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()
 
     def page(self):
-        html.write(
-            "<p>%s</p>" %
+        html.p(
             _("To be able to download the key, you need to unlock the key by entering the "
               "passphrase. This is only done to verify that you are allowed to download the key. "
               "The key will be downloaded in encrypted form."))
@@ -467,6 +465,7 @@ def create_self_signed_cert(pkey):
 
 def decrypt_private_key(encrypted_private_key, passphrase):
     try:
-        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key, passphrase)
+        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key,
+                                      passphrase.encode("utf-8"))
     except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

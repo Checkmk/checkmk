@@ -11,19 +11,19 @@ import cmk.gui.key_mgmt as key_mgmt
 
 
 def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
-    monkeypatch.setattr(config.user, "id", u"dingdöng")
+    monkeypatch.setattr(config.user, "id", "dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 
-    key_dict = key_mgmt.PageEditKey()._generate_key(u"älias", "passphra$e")
+    key_dict = key_mgmt.PageEditKey()._generate_key("älias", "passphra$e")
     assert isinstance(key_dict, dict)
     assert sorted(key_dict.keys()) == ["alias", "certificate", "date", "owner", "private_key"]
     assert isinstance(key_dict["alias"], str)
-    assert key_dict["alias"] == u"älias"
+    assert key_dict["alias"] == "älias"
 
     assert key_dict["date"] == 123
 
     assert isinstance(key_dict["owner"], str)
-    assert key_dict["owner"] == u"dingdöng"
+    assert key_dict["owner"] == "dingdöng"
 
-    assert key_dict["certificate"].startswith(b"-----BEGIN CERTIFICATE---")
-    assert key_dict["private_key"].startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY---")
+    assert key_dict["certificate"].startswith("-----BEGIN CERTIFICATE---")
+    assert key_dict["private_key"].startswith("-----BEGIN ENCRYPTED PRIVATE KEY---")

@@ -36,21 +36,8 @@ import re
 import shutil
 import sys
 import time
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-from typing import (
-    Optional,
-    IO,
-    Union,
-    Dict,
-    List,
-    Set,
-    Text,
-)
+from pathlib import Path
+from typing import Optional, IO, Union, Dict, List, Set
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -156,8 +143,8 @@ class MKLDAPException(MKGeneralException):
     pass
 
 
-DistinguishedName = Text
-GroupMemberships = Dict[DistinguishedName, Dict[str, Union[Text, List[Text]]]]
+DistinguishedName = str
+GroupMemberships = Dict[DistinguishedName, Dict[str, Union[str, List[str]]]]
 
 #.
 #   .--UserConnector-------------------------------------------------------.
@@ -541,9 +528,9 @@ class LDAPUserConnector(UserConnector):
             LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
     def needed_attributes(self):
-        # type: () -> List[Text]
+        # type: () -> List[str]
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
-        attrs = set()  # type: Set[Text]
+        attrs = set()  # type: Set[str]
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.needed_attributes(self, params or {}))
@@ -866,7 +853,7 @@ class LDAPUserConnector(UserConnector):
         return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(self, filters, filt_attr='cn', nested=False):
-        # type: (List[Text], str, bool) -> GroupMemberships
+        # type: (List[str], str, bool) -> GroupMemberships
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_search_cache:
             return self._group_search_cache[cache_key]
@@ -888,7 +875,7 @@ class LDAPUserConnector(UserConnector):
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
     def _get_direct_group_memberships(self, filters, filt_attr):
-        # type: (List[Text], str) -> GroupMemberships
+        # type: (List[str], str) -> GroupMemberships
         groups = {}  # type: GroupMemberships
         filt = self.ldap_filter('groups')
         member_attr = self._member_attr().lower()
@@ -929,7 +916,7 @@ class LDAPUserConnector(UserConnector):
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
     def _get_nested_group_memberships(self, filters, filt_attr):
-        # type: (List[Text], str) -> GroupMemberships
+        # type: (List[str], str) -> GroupMemberships
         groups = {}  # type: GroupMemberships
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
@@ -1928,12 +1915,12 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -1943,7 +1930,7 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def lock_attributes(self, params):
-        # type: (Dict) -> List[Text]
+        # type: (Dict) -> List[str]
         """List of user attributes to lock
 
         Normally the attributes that are modified by the sync_func()"""
@@ -1951,14 +1938,14 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def needed_attributes(self, connection, params):
-        # type: (LDAPUserConnector, Dict) -> List[Text]
+        # type: (LDAPUserConnector, Dict) -> List[str]
         """Gathers the LDAP user attributes that are needed by this plugin"""
         raise NotImplementedError()
 
     # TODO: plugin is not needed anymore?
     @abc.abstractmethod
     def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
-        # type: (LDAPUserConnector, dict, dict, Text, dict, dict) -> dict
+        # type: (LDAPUserConnector, dict, dict, str, dict, dict) -> dict
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
 
@@ -2688,7 +2675,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return ldap_groups
 
     def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch = {}  # type: Dict[str, List[Text]]
+        groups_to_fetch = {}  # type: Dict[str, List[str]]
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:

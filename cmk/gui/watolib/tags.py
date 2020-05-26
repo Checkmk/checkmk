@@ -5,14 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
 
-import sys
 import errno
-import six
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store

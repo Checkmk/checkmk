@@ -8,14 +8,10 @@ import functools
 import logging
 import sys
 import traceback
+from pathlib import Path
 
 import flask
 import werkzeug
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore[import]
 from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore[import]

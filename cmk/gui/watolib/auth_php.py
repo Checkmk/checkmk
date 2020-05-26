@@ -36,12 +36,7 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import six
 

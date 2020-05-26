@@ -14,15 +14,9 @@ from enum import Enum
 import logging
 import os
 import pprint
-import sys
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Optional, Union
+from pathlib import Path
+
 try:
     # Python has a totally braindead history of changes in this area:
     #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
@@ -35,11 +29,6 @@ try:
     from collections.abc import MutableMapping  # type: ignore[import]
 except ImportError:
     from collections import MutableMapping
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
 

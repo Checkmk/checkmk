@@ -4,18 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
-import sys
 import ast
 import re
 import socket
 import time
 from typing import Dict, List, Optional, Tuple
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import six
 
@@ -222,7 +216,7 @@ def query_ec_directly(query):
                 break
 
         return ast.literal_eval(six.ensure_str(response_text))
-    except SyntaxError as e:
+    except SyntaxError:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
               "<pre>%s</pre>") % response_text)

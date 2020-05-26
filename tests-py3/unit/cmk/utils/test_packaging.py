@@ -4,17 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import shutil
 import tarfile
 import ast
 import json
 from io import BytesIO
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 import six

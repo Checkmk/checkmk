@@ -16,31 +16,9 @@ import struct
 import sys
 import itertools
 import contextlib
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Set,
-    Text,
-    Tuple,
-    Union,
-    cast,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-if sys.version_info[0] >= 3:
-    from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER  # pylint: disable=no-name-in-module,import-error
-else:
-    from py_compile import MAGIC as _MAGIC_NUMBER  # type: ignore[attr-defined] # pylint: disable=no-name-in-module,ungrouped-imports
+from typing import Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple, Union, cast
+from pathlib import Path
+from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 
 import six
 
@@ -131,9 +109,9 @@ host_service_levels = []
 AllHosts = List[str]
 ShadowHosts = Dict[str, Dict]
 AllClusters = Dict[str, List[HostName]]
-ExitSpecSection = Tuple[Text, int]
+ExitSpecSection = Tuple[str, int]
 ExitSpec = Dict[str, Union[int, List[ExitSpecSection]]]
-AgentTargetVersion = Union[None, Text, Tuple[str, str], Tuple[str, Dict[str, str]]]
+AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
 InventoryContext = Dict[str, Any]
@@ -154,7 +132,7 @@ SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddr
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
-GroupDefinitions = Dict[str, Text]
+GroupDefinitions = Dict[str, str]
 RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
@@ -1341,7 +1319,7 @@ hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
 def in_extraconf_servicelist(service_patterns, service):
-    # type: (List[Text], Text) -> bool
+    # type: (List[str], str) -> bool
     optimized_pattern = tuple_rulesets.convert_pattern_list(service_patterns)
     if not optimized_pattern:
         return False
@@ -2582,7 +2560,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def alias(self):
-        # type: () -> Text
+        # type: () -> str
 
         # Alias by explicit matching
         alias = self._explicit_host_attributes.get("alias")
@@ -2927,7 +2905,7 @@ class HostConfig(object):  # pylint: disable=useless-object-inheritance
         }
 
     def add_service_discovery_check(self, params, service_discovery_name):
-        # type: (Optional[Dict[Text, Any]], Text) -> bool
+        # type: (Optional[Dict[str, Any]], str) -> bool
         if not params:
             return False
 
@@ -3800,7 +3778,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
-        # type: (HostName, Text, Optional[List[str]]) -> str
+        # type: (HostName, str, Optional[List[str]]) -> str
         """Return hostname to assign the service to
         Determine weather a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,

@@ -7,14 +7,9 @@
 import os
 import time
 import traceback
-import sys
 from hashlib import md5
 from typing import List, Union, Optional, Tuple
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import six
 from werkzeug.local import LocalProxy

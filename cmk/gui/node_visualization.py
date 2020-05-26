@@ -4,24 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import json
 import time
-from typing import (
-    List,
-    Optional,
-    Text,
-    Tuple,
-    Dict,
-    Any,
-    Union,
-    Set,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import List, Optional, Tuple, Dict, Any, Union, Set
+from pathlib import Path
 
 import livestatus
 import cmk.utils.store as store
@@ -595,7 +581,7 @@ class Topology(object):
         self._current_iteration = 0
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     def get_info_for_host(self, hostname, mesh):
@@ -883,7 +869,7 @@ class ParentChildNetworkTopology(Topology):
         return "parent_child"
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Parent / Child topology")
 
     def _fetch_data_for_hosts(self, hostnames):

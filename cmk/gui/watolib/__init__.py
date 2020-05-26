@@ -35,15 +35,11 @@ import threading
 import time
 import traceback
 from typing import NamedTuple, List
+from pathlib import Path
 
 import requests
 import urllib3  # type: ignore[import]
 import six
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon

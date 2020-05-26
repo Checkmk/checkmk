@@ -6,15 +6,10 @@
 
 import abc
 import os
-import sys
+from pathlib import Path
 from typing import Dict, Optional, Set
 
 import six
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-violation
 

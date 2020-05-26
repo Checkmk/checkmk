@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
-import sys
 import ast
 import errno
 import os
 import time
 from typing import Dict
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import six
 

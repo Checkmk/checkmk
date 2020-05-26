@@ -5,12 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-import pytest  # type: ignore[import]
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+import pytest  # type: ignore[import]
 
 from testlib.utils import cmk_path
 

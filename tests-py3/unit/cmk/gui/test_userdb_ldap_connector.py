@@ -6,13 +6,8 @@
 
 # pylint: disable=redefined-outer-name
 
-import sys
 from typing import Dict, List, Union
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 from mockldap import MockLdap, LDAPObject  # type: ignore[import]

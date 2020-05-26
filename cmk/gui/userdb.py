@@ -6,18 +6,14 @@
 
 # TODO: Rework connection management and multiplexing
 
-import sys
 from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple
 import time
 import os
 import traceback
 import copy
-import six
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths

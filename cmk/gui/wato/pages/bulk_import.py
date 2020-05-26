@@ -9,19 +9,8 @@ by pasting the contents of a CSV file into a textbox."""
 
 import csv
 import time
-import sys
-from typing import (
-    Dict,
-    Text,
-    Type,
-    List,
-    Optional,
-    Any,
-)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Type, List, Optional, Any
+from pathlib import Path
 
 from difflib import SequenceMatcher
 import six
@@ -83,7 +72,7 @@ class ModeBulkImport(WatoMode):
         return Path(cmk.utils.paths.tmp_dir) / "host-import"
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Bulk host import")
 
     def buttons(self):
@@ -234,7 +223,7 @@ class ModeBulkImport(WatoMode):
 
     def _get_host_info_from_row(self, row):
         host_name = None
-        attributes = {}  # type: Dict[str, Text]
+        attributes = {}  # type: Dict[str, str]
         for col_num, value in enumerate(row):
             attribute = html.request.var("attribute_%d" % col_num)
             if attribute == "host_name":

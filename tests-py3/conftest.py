@@ -7,8 +7,6 @@
 # This file initializes the py.test environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
-from __future__ import print_function
-
 import pytest  # type: ignore[import]
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
@@ -19,13 +17,7 @@ pytest.register_assert_rewrite(
 import collections
 import errno
 import shutil
-import sys
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import testlib
 

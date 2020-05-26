@@ -7,16 +7,9 @@
 import os
 import re
 import time
-import sys
-from typing import (
-    NamedTuple,
-    Type,
-)
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import NamedTuple, Type
+from pathlib import Path
+
 import six
 
 import cmk.utils.version as cmk_version

@@ -241,8 +241,8 @@ def _valuespec_generic_metrics_prometheus():
     return Dictionary(
         elements=[
             ("port", Integer(
-                title=_('TCP Port number'),
-                default_value=443,
+                title=_('Prometheus web port'),
+                default_value=9090,
             )),
             ("exporter",
              ListOf(
@@ -250,38 +250,53 @@ def _valuespec_generic_metrics_prometheus():
                      ("node_exporter", _("Node Exporter"),
                       Dictionary(
                           elements=[
+                              ("host_mapping",
+                               Hostname(
+                                   title=_('Explicitly map Node Exporter host'),
+                                   allow_empty=True,
+                                   help=
+                                   _("Per default, Checkmk tries to map the underlying Checkmk host "
+                                     "to the Node Exporter host which contains either the Checkmk "
+                                     "hostname, host address or \"localhost\" in its endpoint address. "
+                                     "The created services of the mapped Node Exporter will "
+                                     "be assigned to the Checkmk host. A piggyback host for each "
+                                     "Node Exporter host will be created if none of the options are "
+                                     "valid."
+                                     "This option allows you to explicitly map one of your Node "
+                                     "Exporter hosts to the underlying Checkmk host. This can be "
+                                     "used if the default options do not apply to your setup."),
+                               )),
                               (
                                   "entities",
-                                  ListChoice(choices=[
-                                      ("df", _("Filesystems")),
-                                      ("diskstat", _("Disk IO")),
-                                      ("mem", _("Memory")),
-                                      ("kernel", _("CPU utilization & Kernel performance")),
-                                  ],
-                                             default_value=["df", "diskstat", "mem", "kernel"],
-                                             allow_empty=False,
-                                             title=_("Retrieve information about..."),
-                                             help=
-                                             _("For your respective kernel select the hardware or OS entity "
-                                               "you would like to retrieve information about.")),
+                                  ListChoice(
+                                      choices=[
+                                          ("df", _("Filesystems")),
+                                          ("diskstat", _("Disk IO")),
+                                          ("mem", _("Memory")),
+                                          ("kernel", _("CPU utilization & Kernel performance")),
+                                      ],
+                                      default_value=["df", "diskstat", "mem", "kernel"],
+                                      allow_empty=False,
+                                      title=_("Retrieve information about..."),
+                                      help=
+                                      _("For your respective kernel select the hardware or OS entity "
+                                        "you would like to retrieve information about.")),
                               ),
                           ],
-                          title=_(
-                              "Node Exporter metrics"),
-                          optional_keys=[],
+                          title=_("Node Exporter metrics"),
+                          optional_keys=["host_mapping"],
                       )),
                      ("kube_state", _("Kube-state-metrics"),
                       Dictionary(
                           elements=[
                               ("cluster_name",
                                Hostname(
-                                   title=_(
-                                       'Cluster name'),
+                                   title=_('Cluster name'),
                                    allow_empty=False,
-                                   help
-                                   =_("You must specify a name for your Kubernetes cluster. The provided name"
-                                      " will be used to create a piggyback host for the cluster related services."
-                                     ),
+                                   help=
+                                   _("You must specify a name for your Kubernetes cluster. The provided name"
+                                     " will be used to create a piggyback host for the cluster related services."
+                                    ),
                                )),
                               ("entities",
                                ListChoice(

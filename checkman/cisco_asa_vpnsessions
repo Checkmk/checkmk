@@ -1,0 +1,21 @@
+title: Monitor Cisco ASA/FirePower VPN sessions (Remota Access and Lan2Lan)
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: https://thl-cmk.hopto.org
+description:
+ This check monitors the number of VPN sessions of a Cisco ASA/FirePower appliance.
+ The check creates the service  VPN Sessions with the session type as item. Each
+ service shows the active/peak/system max. and cumulative numer of VPN sessions.
+ It goes critical/warning if the number of active sessions is equal or above the
+ configured leveles.
+
+perfdata:
+ Number of current active sessions and number of peak sessions since restart of the device.
+
+inventory:
+ The inventory checks for a Cisco ASA/FirePower Appliance in sysDesc. If found
+ it will create the service VPN Sessions.
+
+item:
+ the VPN session type. One of: AnyConnect, Clientless, IPSec RA, IPSec L2L or Summary.

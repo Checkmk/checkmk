@@ -6,7 +6,7 @@
 
 import os
 import sys
-from typing import Dict, Text
+from typing import Dict
 import six
 
 if sys.version_info[0] >= 3:
@@ -43,7 +43,7 @@ class Htpasswd(object):
         self._path = path
 
     def load(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> Dict[str, str]
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
         entries = {}
 
@@ -58,12 +58,12 @@ class Htpasswd(object):
         return entries
 
     def exists(self, user_id):
-        # type: (Text) -> bool
+        # type: (str) -> bool
         """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
     def save(self, entries):
-        # type: (Dict[Text, Text]) -> None
+        # type: (Dict[str, str]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
         output = u"\n".join(u"%s:%s" % (six.ensure_text(e[0]), six.ensure_text(e[1]))
                             for e in sorted(entries.items())) + u"\n"

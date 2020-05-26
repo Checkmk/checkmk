@@ -8,7 +8,7 @@
 import abc
 import traceback
 import json
-from typing import Optional, Text, Any, Dict, List, Tuple, Type
+from typing import Optional, Any, Dict, List, Tuple, Type
 import six
 
 import cmk.utils.plugin_registry
@@ -48,7 +48,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Sidebar snapins")
 
     @property
@@ -69,13 +69,13 @@ class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -315,7 +315,7 @@ def nagioscgilink(text, target):
 
 
 def snapin_site_choice(ident, choices):
-    # type: (SiteId, List[Tuple[SiteId, Text]]) -> Optional[List[SiteId]]
+    # type: (SiteId, List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]
     sites = config.user.load_file("sidebar_sites", {})
     site = sites.get(ident, "")
     if site == "":

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, Tuple, Any
+from typing import Dict, Tuple, Any
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -26,12 +26,12 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("BI Aggregation Groups")
 
     @classmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("A direct link to all groups of BI aggregations")
 
     def show(self):
@@ -51,12 +51,12 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("BI Aggregation Groups Tree")
 
     @classmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("A direct link to all groups of BI aggregations organized as tree")
 
     def show(self):

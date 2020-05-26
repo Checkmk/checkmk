@@ -13,7 +13,7 @@ import re
 import uuid
 import marshal
 import itertools
-from typing import Text, Optional, Union, Any, List, Dict, Tuple
+from typing import Optional, Union, Any, List, Dict, Tuple
 import six
 
 if sys.version_info[0] >= 3:
@@ -29,13 +29,13 @@ from cmk.gui.exceptions import MKUserError
 
 
 def num_split(s):
-    # type: (Union[str, Text]) -> Tuple[Union[int, str, Text], ...]
+    # type: (str) -> Tuple[Union[int, str], ...]
     """Splits a word into sequences of numbers and non-numbers.
 
     Creates a tuple from these where the number are converted into int datatype.
     That way a naturual sort can be implemented.
     """
-    parts = []  # type: List[Union[int, str, Text]]
+    parts = []  # type: List[Union[int, str]]
     for part in re.split(r'(\d+)', s):
         try:
             parts.append(int(part))
@@ -52,7 +52,7 @@ def cmp_num_split(a, b):
 
 
 def key_num_split(a):
-    # type: (Union[str, Text]) -> Tuple[Union[int, str, Text], ...]
+    # type: (str) -> Tuple[Union[int, str], ...]
     """Return a key from a string, separate numbers and non-numbers from before."""
     return num_split(a)
 

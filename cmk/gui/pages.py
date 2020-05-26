@@ -7,7 +7,7 @@
 import abc
 import json
 import inspect
-from typing import Any, Callable, Dict, Mapping, Optional, Text, Type
+from typing import Any, Callable, Dict, Mapping, Optional, Type
 import six
 
 import cmk.utils.plugin_registry
@@ -52,7 +52,7 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
         given HTTP variables."""
 
     def webapi_request(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> Dict[str, str]
         return html.get_request()
 
     @abc.abstractmethod

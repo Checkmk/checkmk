@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as _Tuple, Text
+from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato import (
 def _vs_cisco_dom(which_levels):
     # type: (str) -> _Tuple[str, Alternative]
     def _button_text_warn(which_levels):
-        # type: (str) -> Text
+        # type: (str) -> str
         if which_levels == "upper":
             text = _("Warning at")
         elif which_levels == "lower":
@@ -38,7 +38,7 @@ def _vs_cisco_dom(which_levels):
         return text
 
     def _button_text_crit(which_levels):
-        # type: (str) -> Text
+        # type: (str) -> str
         if which_levels == "upper":
             text = _("Critical at")
         elif which_levels == "lower":

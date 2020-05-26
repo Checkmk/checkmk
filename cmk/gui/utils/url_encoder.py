@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Text, Union
+from typing import Optional
 import six
 
 from cmk.gui.type_defs import HTTPVariables
@@ -41,7 +41,7 @@ class URLEncoder(object):
         return six.moves.urllib.parse.urlencode(pairs)
 
     def urlencode(self, value):
-        # type: (Union[None, str, Text]) -> str
+        # type: (Optional[str]) -> str
         """Replace special characters in string using the %xx escape.
         This function returns a str object in py2 and py3
         """

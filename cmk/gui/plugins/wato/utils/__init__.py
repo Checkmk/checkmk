@@ -12,7 +12,7 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Optional as _Optional, Text, Tuple as _Tuple
+from typing import Callable, List, Optional as _Optional, Tuple as _Tuple
 
 import six
 
@@ -149,7 +149,7 @@ def monitoring_macro_help():
 
 
 def UserIconOrAction(title, help):  # pylint: disable=redefined-builtin
-    # type: (Text, Text) -> DropdownChoice
+    # type: (str, str) -> DropdownChoice
     empty_text = _("In order to be able to choose actions here, you need to "
                    "<a href=\"%s\">define your own actions</a>.") % \
                       "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
@@ -176,10 +176,10 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
+        title=None,  # type: _Optional[str]
         help=None,  # type: _Optional[ValueSpecHelp]
         only_v3=False,  # type: bool
-        default_value="public",  # type: _Optional[Text]
+        default_value="public",  # type: _Optional[str]
         allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):
@@ -523,7 +523,7 @@ def passwordstore_choices():
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
+        title=None,  # type: _Optional[str]
         help=None,  # type: _Optional[ValueSpecHelp]
         allow_empty=True,  # type: bool
         size=25,  # type: int
@@ -552,7 +552,7 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-        title=None,  # type: _Optional[Text]
+        title=None,  # type: _Optional[str]
         help=None,  # type: _Optional[ValueSpecHelp]
         allow_empty=True,  # type: bool
         size=25,  # type: int
@@ -1446,7 +1446,7 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + Text(
+                        inherited_from = _("Inherited from ") + str(
                             html.render_a(container.title(), href=url))
 
                         inherited_value = container.attributes()[attrname]

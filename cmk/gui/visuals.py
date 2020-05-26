@@ -10,7 +10,7 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -1314,7 +1314,7 @@ class VisualFilterList(ListOfMultiple):
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore = kwargs.pop("ignore", set())  # type: Set[Text]
+        ignore = kwargs.pop("ignore", set())  # type: Set[str]
         self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))
@@ -1461,7 +1461,7 @@ def verify_single_infos(visual, context):
 
 
 def visual_title(what, visual):
-    # type: (VisualTypeName, Visual) -> Text
+    # type: (VisualTypeName, Visual) -> str
     title = _u(visual["title"])
 
     if visual["add_context_to_title"]:
@@ -1480,7 +1480,7 @@ def visual_title(what, visual):
 
 
 def _add_context_title(visual, title):
-    # type: (Visual, Text) -> Text
+    # type: (Visual, str) -> str
     extra_titles = list(
         get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
 
@@ -1535,17 +1535,17 @@ def get_single_info_keys(single_infos):
 
 
 def get_singlecontext_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
+    # type: (VisualContext, SingleInfos) -> Dict[str, str]
     return {
         key: val  #
         for key in get_single_info_keys(single_infos)
         for val in [context.get(key)]
-        if isinstance(val, (str, Text))
+        if isinstance(val, str)
     }
 
 
 def get_singlecontext_html_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
+    # type: (VisualContext, SingleInfos) -> Dict[str, str]
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
         val = html.request.get_unicode_input(key)

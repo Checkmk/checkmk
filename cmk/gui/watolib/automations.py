@@ -13,7 +13,7 @@ import re
 import subprocess
 import time
 import uuid
-from typing import Tuple, Dict, Any, Optional, NamedTuple, Text, Union, Sequence
+from typing import Tuple, Dict, Any, Optional, NamedTuple, Union, Sequence
 
 import urllib3  # type: ignore[import]
 import requests
@@ -58,7 +58,7 @@ def check_mk_automation(siteid,
                         timeout=None,
                         sync=True,
                         non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
+    # type: (SiteId, str, Optional[Sequence[str]], Any, Optional[str], Optional[int], bool, bool) -> Any
     if args is None:
         args = []
 
@@ -78,7 +78,7 @@ def check_mk_automation(siteid,
 
 
 def check_mk_local_automation(command, args=None, indata="", stdin_data=None, timeout=None):
-    # type: (str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int]) -> Any
+    # type: (str, Optional[Sequence[str]], Any, Optional[str], Optional[int]) -> Any
     if args is None:
         args = []
     new_args = [six.ensure_str(a) for a in args]
@@ -169,7 +169,7 @@ def check_mk_remote_automation(site_id,
                                timeout=None,
                                sync=True,
                                non_blocking_http=False):
-    # type: (SiteId, str, Optional[Sequence[Union[str, Text]]], Any, Optional[str], Optional[int], bool, bool) -> Any
+    # type: (SiteId, str, Optional[Sequence[str]], Any, Optional[str], Optional[int], bool, bool) -> Any
     site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(
@@ -371,7 +371,7 @@ def do_site_login(site_id, name, password):
 
 CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("command", str),
-    ("args", Optional[Sequence[Union[str, Text]]]),
+    ("args", Optional[Sequence[str]]),
     ("indata", Any),
     ("stdin_data", Optional[str]),
     ("timeout", Optional[int]),
@@ -476,7 +476,7 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Checkmk automation")
 
     def __init__(self, job_id=None, request=None):

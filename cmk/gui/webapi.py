@@ -8,7 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Callable, Dict, Text, Tuple, Union
+from typing import Any, Callable, Dict, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -90,7 +90,7 @@ class PermissionWATOAllowedAPI(Permission):
         return config.builtin_role_ids
 
 
-Formatter = Callable[[Dict[str, Any]], Text]
+Formatter = Callable[[Dict[str, Any]], str]
 
 _FORMATTERS = {
     "json":

@@ -6,7 +6,7 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List, Optional as _Optional, Text, Tuple as _Tuple
+from typing import Any, Dict, List, Optional as _Optional, Tuple as _Tuple
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
@@ -47,7 +47,7 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
-TimeperiodUsage = _Tuple[Text, str]
+TimeperiodUsage = _Tuple[str, str]
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling

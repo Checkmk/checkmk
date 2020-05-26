@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Union, Callable, Text, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
+from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
 import six
 
 import cmk.gui.escaping as escaping
@@ -42,9 +42,9 @@ def edit_dictionaries(
         focus=None,  # type: Optional[str]
         hover_help=True,  # type: bool
         validate=None,  # type: Optional[Callable[[Any], None]]
-        buttontext=None,  # type: Optional[Text]
-        title=None,  # type: Optional[Text]
-        buttons=None,  # type: List[Tuple[str, Text, str]]
+        buttontext=None,  # type: Optional[str]
+        title=None,  # type: Optional[str]
+        buttons=None,  # type: List[Tuple[str, str, str]]
         method="GET",  # type: str
         preview=False,  # type: bool
         varprefix="",  # type: str
@@ -56,7 +56,7 @@ def edit_dictionaries(
         if not preview and consume_transid:
             html.check_transaction()
 
-        messages = []  # type: List[Text]
+        messages = []  # type: List[str]
         new_value = {}  # type: Dict[str, Dict[str, Any]]
         for keyname, vs_dict in dictionaries:
             dict_varprefix = varprefix + keyname
@@ -112,7 +112,7 @@ def edit_dictionaries(
 def edit_valuespec(
         vs,  # type: Dictionary
         value,  # type: Dict[str, Any]
-        buttontext=None,  # type: Optional[Text]
+        buttontext=None,  # type: Optional[str]
         method="GET",  # type: str
         varprefix="",  # type: str
         validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
@@ -168,7 +168,7 @@ def edit_valuespec(
 
 
 def header(title, isopen=True, table_id="", narrow=False, css=None):
-    # type: (Text, bool, str, bool, Optional[str]) -> None
+    # type: (str, bool, str, bool, Optional[str]) -> None
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -210,7 +210,7 @@ def section(title=None,
             hide=False,
             legend=True,
             css=None):
-    # type: (Union[None, HTML, Text], Union[None, HTML, str, Text, Tuple[str, bool, str]], Optional[str], bool, bool, bool, Optional[str]) -> None
+    # type: (Union[None, HTML, str], Union[None, HTML, str, Tuple[str, bool, str]], Optional[str], bool, bool, bool, Optional[str]) -> None
     global g_section_open
     if g_section_open:
         html.close_td()

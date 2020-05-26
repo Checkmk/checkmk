@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, Union
+from typing import Dict, Union
 import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -42,7 +42,7 @@ class PainterHostFilename(Painter):
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
 def get_wato_folder(row, how, with_links=True):
-    # type: (Dict, Text, bool) -> Union[Text, HTML]
+    # type: (Dict, str, bool) -> Union[str, HTML]
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
@@ -154,11 +154,11 @@ def cmp_wato_folder(r1, r2, how):
             (_get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)))
 
 
-# NOTE: The funny Text() call is only necessary because of the broken typing of
+# NOTE: The funny str() call is only necessary because of the broken typing of
 # get_wato_folder().
 def _get_wato_folder_text(r, how):
-    # type: (Row, str) -> Text
-    return Text(get_wato_folder(r, how, False))
+    # type: (Row, str) -> str
+    return str(get_wato_folder(r, how, False))
 
 
 @sorter_registry.register

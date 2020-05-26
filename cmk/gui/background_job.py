@@ -17,7 +17,7 @@ import traceback
 from types import FrameType
 import io
 
-from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any
+from typing import Tuple, Callable, Type, List, Optional, Union, Dict, Any
 import psutil  # type: ignore[import]
 
 if sys.version_info[0] >= 3:
@@ -82,7 +82,7 @@ class BackgroundProcessInterface(object):
         return self._job_parameters["logger"]
 
     def send_progress_update(self, info, with_timestamp=False):
-        # type: (Union[Text, str], bool) -> None
+        # type: (str, bool) -> None
         """ The progress update is written to stdout and will be catched by the threads counterpart """
         message = six.ensure_str(info)
         if with_timestamp:
@@ -90,7 +90,7 @@ class BackgroundProcessInterface(object):
         sys.stdout.write(message + "\n")
 
     def send_result_message(self, info):
-        # type: (Union[Text, str]) -> None
+        # type: (str) -> None
         """ The result message is written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
         encoded_info = "%s\n" % six.ensure_str(info)
@@ -102,7 +102,7 @@ class BackgroundProcessInterface(object):
             f.write(six.ensure_binary(encoded_info))
 
     def send_exception(self, info):
-        # type: (Union[Text, str]) -> None
+        # type: (str) -> None
         """ Exceptions are written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
@@ -321,7 +321,7 @@ class BackgroundJob(object):
         return self._job_id
 
     def get_title(self):
-        # type: () -> Text
+        # type: () -> str
         return self._jobstatus.get_status_from_file().get("title", _("Background job"))
 
     def get_work_dir(self):

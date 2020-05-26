@@ -9,7 +9,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
-from typing import Dict, NamedTuple, List, Optional, Text
+from typing import Dict, NamedTuple, List, Optional
 import six
 
 import cmk.gui.config as config
@@ -438,7 +438,7 @@ class ModeAjaxStartActivation(AjaxPage):
         else:
             affected_sites = affected_sites_request.split(",")
 
-        comment = request.get("comment", "").strip()  # type: Optional[Text]
+        comment = request.get("comment", "").strip()  # type: Optional[str]
         if comment == "":
             comment = None
 

@@ -16,7 +16,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
-from typing import Text, Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import six
 from livestatus import SiteId, LivestatusRow
@@ -55,8 +55,8 @@ BIHostSpec = Tuple[SiteId, HostName]
 BIStatusInfoRow = LivestatusRow  # TODO: Improve this type
 BIStatusInfo = Dict[BIHostSpec, BIStatusInfoRow]
 BINeededHosts = Set[BIHostSpec]
-BIAggregationGroupTitle = Text
-BIAggregationTitle = Text
+BIAggregationGroupTitle = str
+BIAggregationTitle = str
 BITreeState = Any  # TODO: Improve this type
 
 

@@ -7,7 +7,7 @@ import collections
 import hashlib
 import json
 import sys
-from typing import Any, Callable, Dict, List, Optional, Text, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Literal
@@ -24,7 +24,7 @@ DomainObject = Dict[str, str]
 LocationType = Optional[Union[Literal['path'], Literal['query'], Literal['header'],
                               Literal['cookie']]]
 ResultType = Literal["object", "list", "scalar", "void"]
-LinkType = Dict[str, Text]
+LinkType = Dict[str, str]
 RestfulLinkRel = Literal[
     ".../action",
     ".../action-param",
@@ -79,11 +79,11 @@ DOMAIN_OBJECT_LINK_REGISTRY = collections.defaultdict(list)  # type: Dict[str, L
 
 def link_rel(
         rel,  # type: Union[RestfulLinkRel, str]   # TODO: make more stringent
-        href,  # type: Text
+        href,  # type: str
         method='GET',  # type: HTTPMethod
         content_type='application/json',  # type: str
         profile=None,  # type: Optional[str]
-        title=None,  # type: Optional[Text]
+        title=None,  # type: Optional[str]
         parameters=None,  # type: Optional[Dict[str, str]]
 ):
     # type: (...) -> LinkType
@@ -309,7 +309,7 @@ def action_result(
 
 
 def object_property(name, value, prop_format, base, title=None, linkable=True):
-    # type: (str, Any, PropertyFormat, Text, Optional[Text], bool) -> Dict[str, Any]
+    # type: (str, Any, PropertyFormat, str, Optional[str], bool) -> Dict[str, Any]
     """Render an object-property
 
     Args:
@@ -379,7 +379,7 @@ def domain_object(domain_type, identifier, title, members, extensions, deletable
 
 
 def collection_object(collection_type, domain_type, obj):
-    # type: (str, str, Any) -> Dict[str, Text]
+    # type: (str, str, Any) -> Dict[str, str]
     """A collection object as specified in C-115 (Page 121)
 
     Notes:

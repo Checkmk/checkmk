@@ -9,7 +9,7 @@ import re
 import pprint
 import base64
 import pickle
-from typing import Any, Text, Union
+from typing import Any, Union
 
 import six
 
@@ -116,7 +116,7 @@ def mk_repr(x):
 
 # TODO: Deprecate this legacy format with 1.4.0 or later?!
 def mk_eval(s):
-    # type: (Union[bytes, Text]) -> Any
+    # type: (Union[bytes, str]) -> Any
     try:
         d = base64.b64decode(s)
         return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(six.ensure_text(d))

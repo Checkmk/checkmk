@@ -16,7 +16,7 @@ try:
 except ImportError:
     from collections import Mapping
 
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import six
 from livestatus import SiteId
@@ -404,7 +404,7 @@ class BaseFolder(object):
         raise NotImplementedError()
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     def subfolders(self, only_visible=False):
@@ -483,7 +483,7 @@ def deep_update(original, update, overwrite=True):
 
 def update_metadata(
         attributes,  # type: Dict[str, Any]
-        created_by=None,  # type: Optional[Text]
+        created_by=None,  # type: Optional[str]
 ):  # type: (...) -> Dict[str, Any]
     """Update meta_data timestamps and set created_by if provided.
 
@@ -1230,11 +1230,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return subfolders
 
     def subfolder(self, name):
-        # type: (Text) -> CREFolder
+        # type: (str) -> CREFolder
         """Find a Folder by its name-part.
 
         Args:
-            name (Text): The basename of this Folder, not its path.
+            name (str): The basename of this Folder, not its path.
 
         Returns:
             The found Folder-instance or raises a KeyError.
@@ -1242,11 +1242,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self._subfolders[name]
 
     def subfolder_by_title(self, title):
-        # type: (Text) -> Optional[CREFolder]
+        # type: (str) -> Optional[CREFolder]
         """Find a Folder by its title.
 
         Args:
-            title (Text): The `title()` of the folder to retrieve.
+            title (str): The `title()` of the folder to retrieve.
 
         Returns:
             The found Folder-instance or None.
@@ -1255,7 +1255,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return first([f for f in self.subfolders() if f.title() == title])
 
     def has_subfolder(self, name):
-        # type: (Text) -> bool
+        # type: (str) -> bool
         return name in self._subfolders
 
     def has_subfolders(self):
@@ -1367,7 +1367,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # TODO: Horrible typing depending on optional parameter, which poisons all
     # call sites. Split this method!
     def title_path(self, withlinks=False):
-        # type: (bool) -> List[Union[HTML, Text]]
+        # type: (bool) -> List[Union[HTML, str]]
         if withlinks:
             # In this case, we return a List[HTML]
             return [
@@ -1377,12 +1377,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                                             filename="wato.py"))
                 for folder in self.parent_folder_chain() + [self]
             ]
-        # In this case, we return a List[Text]
+        # In this case, we return a List[str]
         return [folder.title() for folder in self.parent_folder_chain() + [self]]
 
-    # TODO: Actually, we return a List[Text], but title_path()'s typing is broken.
+    # TODO: Actually, we return a List[str], but title_path()'s typing is broken.
     def title_path_without_root(self):
-        # type: () -> List[Union[HTML, Text]]
+        # type: () -> List[Union[HTML, str]]
         if self.is_root():
             return [self.title()]
         return self.title_path()[1:]
@@ -1552,15 +1552,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         ])
 
     def locked(self):
-        # type: () -> Union[bool, Text]
+        # type: () -> Union[bool, str]
         return self._locked
 
     def locked_subfolders(self):
-        # type: () -> Union[bool, Text]
+        # type: () -> Union[bool, str]
         return self._locked_subfolders
 
     def locked_hosts(self):
-        # type: () -> Union[bool, Text]
+        # type: () -> Union[bool, str]
         self._load_hosts_on_demand()
         return self._locked_hosts
 
@@ -1975,14 +1975,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def show_locking_information(self):
         self._load_hosts_on_demand()
-        lock_messages = []  # type: List[Text]
+        lock_messages = []  # type: List[str]
 
         # Locked hosts
         if self._locked_hosts is True:
             lock_messages.append(
                 _("Host attributes are locked "
                   "(You cannot create, edit or delete hosts in this folder)"))
-        elif isinstance(self._locked_hosts, Text) and self._locked_hosts:
+        elif isinstance(self._locked_hosts, str) and self._locked_hosts:
             lock_messages.append(self._locked_hosts)
 
         # Locked folder attributes
@@ -1990,7 +1990,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Folder attributes are locked "
                   "(You cannot edit the attributes of this folder)"))
-        elif isinstance(self._locked, Text) and self._locked:
+        elif isinstance(self._locked, str) and self._locked:
             lock_messages.append(self._locked)
 
         # Also subfolders are locked
@@ -1998,7 +1998,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             lock_messages.append(
                 _("Subfolders are locked "
                   "(You cannot create or remove folders in this folder)"))
-        elif isinstance(self._locked_subfolders, Text) and self._locked_subfolders:
+        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
             lock_messages.append(self._locked_subfolders)
 
         if lock_messages:

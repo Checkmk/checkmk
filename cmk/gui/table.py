@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Text, Any, Iterator
+from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Any, Iterator
 import six
 
 import cmk.gui.utils as utils
@@ -20,14 +20,14 @@ from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes
 TableHeader = NamedTuple(
     "TableHeader",
     [
-        ("title", Union[int, HTML, str, Text]),  # basically HTMLContent without None
+        ("title", Union[int, HTML, str]),  # basically HTMLContent without None
         ("css", CSSSpec),
-        ("help_txt", Optional[Text]),
+        ("help_txt", Optional[str]),
         ("sortable", bool),
     ])
 
 CellSpec = NamedTuple("CellSpec", [
-    ("content", Text),
+    ("content", str),
     ("css", CSSSpec),
     ("colspan", Optional[int]),
 ])
@@ -41,7 +41,7 @@ TableRow = NamedTuple("TableRow", [
 ])
 
 GroupHeader = NamedTuple("GroupHeader", [
-    ("title", Text),
+    ("title", str),
     ("fixed", bool),
     ("row_attributes", HTMLTagAttributes),
 ])
@@ -61,8 +61,8 @@ def table_element(
         omit_if_empty=False,  # type: bool
         omit_empty_columns=False,  # type: bool
         omit_headers=False,  # type: bool
-        empty_text=None,  # type: Optional[Text]
-        help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
+        empty_text=None,  # type: Optional[str]
+        help=None,  # type: Optional[str] # pylint: disable=redefined-builtin
         css=None,  # type: Optional[str]
 ):
     # type: (...) -> Iterator[Table]
@@ -119,13 +119,13 @@ class Table(object):
             omit_if_empty=False,  # type: bool
             omit_empty_columns=False,  # type: bool
             omit_headers=False,  # type: bool
-            empty_text=None,  # type: Optional[Text]
-            help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
+            empty_text=None,  # type: Optional[str]
+            help=None,  # type: Optional[str] # pylint: disable=redefined-builtin
             css=None,  # type: Optional[str]
     ):
         super(Table, self).__init__()
         self.next_func = lambda: None
-        self.next_header = None  # type: Optional[Text]
+        self.next_header = None  # type: Optional[str]
 
         # Use our pagename as table id if none is specified
         table_id = table_id if table_id is not None else html.myfile
@@ -167,7 +167,7 @@ class Table(object):
             title="",  # type: HTMLContent
             text="",  # type: HTMLContent
             css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
+            help_txt=None,  # type: Optional[str]
             colspan=None,  # type: Optional[int]
             sortable=True,  # type: bool
     ):
@@ -183,7 +183,7 @@ class Table(object):
             title="",  # type: HTMLContent
             text="",  # type: HTMLContent
             css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
+            help_txt=None,  # type: Optional[str]
             colspan=None,  # type: Optional[int]
             sortable=True,  # type: bool
             escape_text=False,  # type: bool
@@ -221,7 +221,7 @@ class Table(object):
             title="",  # type: HTMLContent
             text="",  # type: HTMLContent
             css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
+            help_txt=None,  # type: Optional[str]
             colspan=None,  # type: Optional[int]
             sortable=True,  # type: bool
             escape_text=False,  # type: bool
@@ -236,7 +236,7 @@ class Table(object):
             else:
                 cell_text = text
 
-        htmlcode = cell_text + html.drain()  # type: Text
+        htmlcode = cell_text + html.drain()  # type: str
 
         if title is None:
             title = ""
@@ -254,7 +254,7 @@ class Table(object):
         current_row.cells.append(CellSpec(htmlcode, css, colspan))
 
     def groupheader(self, title):
-        # type: (Text) -> None
+        # type: (str) -> None
         """Intermediate title, shown as soon as there is a following row.
         We store the group headers in the list of rows, with css None and state set to "header"
         """
@@ -333,7 +333,7 @@ class Table(object):
         return False
 
     def _evaluate_user_opts(self):
-        # type: () -> Tuple[TableRows, bool, Optional[Text]]
+        # type: () -> Tuple[TableRows, bool, Optional[str]]
         assert self.id is not None
         table_id = six.ensure_str(self.id)
         rows = self.rows
@@ -391,7 +391,7 @@ class Table(object):
         return html.request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
-        # type: (TableRows, bool, bool, Optional[Text]) -> None
+        # type: (TableRows, bool, bool, Optional[str]) -> None
         headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
@@ -546,7 +546,7 @@ class Table(object):
 
             if header.help_txt:
                 header_title = html.render_span(
-                    header.title, title=header.help_txt)  # type: Union[int, HTML, Text]
+                    header.title, title=header.help_txt)  # type: Union[int, HTML, str]
             else:
                 header_title = header.title
 
@@ -609,7 +609,7 @@ class Table(object):
 
 
 def _filter_rows(rows, search_term):
-    # type: (TableRows, Text) -> TableRows
+    # type: (TableRows, str) -> TableRows
     filtered_rows = []  # type: TableRows
     match_regex = re.compile(search_term, re.IGNORECASE)
 

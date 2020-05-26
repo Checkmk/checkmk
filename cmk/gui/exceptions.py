@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Text
+from typing import Optional
 import six
 from werkzeug.http import HTTP_STATUS_CODES
 
@@ -51,9 +51,9 @@ class MKConfigError(MKException):
 
 class MKUserError(MKException):
     def __init__(self, varname, message):
-        # type: (Optional[str], Text) -> None
+        # type: (Optional[str], str) -> None
         self.varname = varname  # type: Optional[str]
-        self.message = message  # type: Text
+        self.message = message  # type: str
         super(MKUserError, self).__init__(varname, message)
 
     def __str__(self):

@@ -8,7 +8,7 @@ import abc
 import ast
 import os
 import sys
-from typing import Dict, Text
+from typing import Dict
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
@@ -26,7 +26,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
-from cmk.gui.exceptions import (MKGeneralException, HTTPRedirect, MKUserError)
+from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -244,7 +244,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Fetch agent output")
 
     def __init__(self, request):

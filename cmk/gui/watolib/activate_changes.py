@@ -35,7 +35,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from typing import (Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple)
+from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple
 import psutil  # type: ignore[import]
 import six
 
@@ -137,7 +137,7 @@ _replication_paths = []  # type: List[ReplicationPath]
 
 ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
 ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
-ConfigWarnings = Dict[ConfigDomainName, List[Text]]
+ConfigWarnings = Dict[ConfigDomainName, List[str]]
 
 
 def add_replication_paths(paths):
@@ -1240,7 +1240,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._phase = None
         self._state = None
         self._status_text = None
-        self._status_details = None  # type: Optional[Text]
+        self._status_details = None  # type: Optional[str]
         self._pid = None  # type: Optional[int]
         self._expected_duration = 10.0
         self._logger = logger.getChild("site[%s]" % self._site_id)
@@ -1359,7 +1359,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
     def _render_warnings(self, configuration_warnings):
-        # type: (ConfigWarnings) -> Text
+        # type: (ConfigWarnings) -> str
         html_code = u"<div class=warning>"
         html_code += "<b>%s</b>" % _("Warnings:")
         html_code += "<ul>"
@@ -1498,7 +1498,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._logger.debug("Finished config sync")
 
     def _set_sync_state(self, status_details=None):
-        # type: (Optional[Text]) -> None
+        # type: (Optional[str]) -> None
         self._set_result(PHASE_SYNC, _("Synchronizing"), status_details=status_details)
 
     def _get_config_sync_state(self, replication_paths):

@@ -6,7 +6,7 @@
 
 import sys
 import re
-from typing import Text, Union
+from typing import Union
 import six
 
 if sys.version_info[0] >= 3:
@@ -31,7 +31,7 @@ from cmk.gui.utils.html import HTML
 
 # TODO: Figure out if this should actually be HTMLTagValue or HTMLContent or...
 # All the HTML-related types are slightly chaotic...
-EscapableEntity = Union[None, int, HTML, str, Text]
+EscapableEntity = Union[None, int, HTML, str]
 
 _UNESCAPER_TEXT = re.compile(
     r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
@@ -41,7 +41,7 @@ _A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
 # TODO: Cleanup the accepted types!
 def escape_attribute(value):
-    # type: (EscapableEntity) -> Text
+    # type: (EscapableEntity) -> str
     """Escape HTML attributes.
 
     For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -79,7 +79,7 @@ def escape_attribute(value):
 
 
 def unescape_attributes(value):
-    # type: (Union[str, Text]) -> Text
+    # type: (str) -> str
     # In python3 use html.unescape
     return ensure_unicode(value  #
                           .replace("&amp;", "&")  #
@@ -89,7 +89,7 @@ def unescape_attributes(value):
 
 
 def escape_text(text):
-    # type: (EscapableEntity) -> Text
+    # type: (EscapableEntity) -> str
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -124,7 +124,7 @@ def escape_text(text):
 
 
 def strip_scripts(ht):
-    # type: (Text) -> Text
+    # type: (str) -> str
     """Strip script tags from text.
 
     This function does not handle all the possible edge cases. Beware.
@@ -163,7 +163,7 @@ def strip_scripts(ht):
 
 
 def strip_tags(ht):
-    # type: (EscapableEntity) -> Text
+    # type: (EscapableEntity) -> str
     """Strip all HTML tags from a text.
 
     Args:

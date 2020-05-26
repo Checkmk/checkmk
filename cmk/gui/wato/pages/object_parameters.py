@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple, Optional, Text
+from typing import List, Tuple, Optional
 
 import six
 
@@ -18,7 +18,7 @@ import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.rulesets import (Ruleset, Rule)
+from cmk.gui.watolib.rulesets import Ruleset, Rule
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
@@ -281,7 +281,7 @@ class ModeObjectParameters(WatoMode):
                           serviceinfo.get("label_sources", {}))
 
     def _get_custom_check_origin_rule(self, ruleset, hostname, svc_desc):
-        # type: (Ruleset, str, Text) -> Optional[Tuple[CREFolder, int, Rule]]
+        # type: (Ruleset, str, str) -> Optional[Tuple[CREFolder, int, Rule]]
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(self._hostname,

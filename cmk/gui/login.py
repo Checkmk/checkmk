@@ -9,7 +9,7 @@ import time
 import traceback
 import sys
 from hashlib import md5
-from typing import List, Union, Optional, Text, Tuple
+from typing import List, Union, Optional, Tuple
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -86,7 +86,7 @@ def site_cookie_suffix():
 
 
 def _load_secret():
-    # type: () -> Text
+    # type: () -> str
     """Reads the sites auth secret from a file
 
     Creates the files if it does not exist. Having access to the secret means that one can issue
@@ -115,7 +115,7 @@ def _load_secret():
 
 
 def _generate_secret():
-    # type: () -> Text
+    # type: () -> str
     return ensure_unicode(utils.get_random_string(256))
 
 

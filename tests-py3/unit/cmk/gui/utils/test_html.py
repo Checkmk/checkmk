@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Text
 import json
 import json.encoder  # type: ignore[import]
 import pytest  # type: ignore[import]
@@ -19,7 +18,7 @@ from cmk.gui.utils.html import HTML
 #
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
-    # type: (json.JSONEncoder, object) -> Text
+    # type: (json.JSONEncoder, object) -> str
     # ignore attr-defined: See hack below
     return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 

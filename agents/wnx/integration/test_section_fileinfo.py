@@ -8,7 +8,7 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, make_yaml_config, local_test, wait_agent, write_config, user_dir)
+from local import actual_output, make_yaml_config, local_test, wait_agent, write_config, user_dir
 import shutil
 
 

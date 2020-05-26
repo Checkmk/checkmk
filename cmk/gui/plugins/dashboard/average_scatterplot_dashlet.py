@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Text
+from typing import Dict
 
 import six
 
@@ -204,7 +204,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
     def _create_average_elements(cls, elements):
         median_elements = []
         mean_elements = []
-        values_per_timestamp = {}  # type: Dict[Text, Dict]
+        values_per_timestamp = {}  # type: Dict[str, Dict]
         for elem in elements:
             if elem["timestamp"] in values_per_timestamp:
                 values_per_timestamp[elem["timestamp"]][elem["label"]] = elem["value"]

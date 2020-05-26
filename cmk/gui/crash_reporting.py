@@ -12,7 +12,7 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Mapping, Optional, Text
+from typing import Dict, Mapping, Optional
 
 import six
 
@@ -134,7 +134,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
         return row
 
     def _get_crash_report_row(self, crash_id, site_id):
-        # type: (Text, Text) -> Optional[Dict[Text, Text]]
+        # type: (str, str) -> Optional[Dict[str, str]]
         rows = CrashReportsRowTable().get_crash_report_rows(
             only_sites=[config.SiteId(six.ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
@@ -373,7 +373,7 @@ class ABCReportRenderer(six.with_metaclass(abc.ABCMeta, object)):
     #@abc.abstractclassmethod
     @classmethod
     def type(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod

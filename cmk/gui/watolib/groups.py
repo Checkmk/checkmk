@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Text, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -314,8 +314,8 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
 
 
 def _find_usages_of_contact_group_in_notification_rules(name):
-    # type: (Text) -> List[Tuple[Text, Text]]
-    used_in = []  # type: List[Tuple[Text, Text]]
+    # type: (str) -> List[Tuple[str, str]]
+    used_in = []  # type: List[Tuple[str, str]]
     for rule in load_notification_rules():
         if _used_in_notification_rule(name, rule):
             title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
@@ -332,7 +332,7 @@ def _find_usages_of_contact_group_in_notification_rules(name):
 
 
 def _used_in_notification_rule(name, rule):
-    # type: (Text, Dict) -> bool
+    # type: (str, Dict) -> bool
     return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
@@ -422,7 +422,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts = []  # type: List[Text]
+        texts = []  # type: List[str]
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -432,7 +432,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
                              (name, display_name))
-        result = ", ".join(texts)  # type: Union[Text, HTML]
+        result = ", ".join(texts)  # type: Union[str, HTML]
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),

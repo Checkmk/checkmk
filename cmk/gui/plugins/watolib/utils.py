@@ -8,7 +8,7 @@ import abc
 import os
 import pprint
 import sys
-from typing import Any, Dict, List, Optional, Text, Type
+from typing import Any, Dict, List, Optional, Type
 import six
 
 if sys.version_info[0] >= 3:
@@ -204,12 +204,12 @@ class ConfigVariableGroup(object):
     # internal IDs in case it is sure that we can change it without bad side
     # effects.
     def ident(self):
-        # type: () -> Text
+        # type: () -> str
         """Unique internal key of this group"""
         return self.title()
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Human readable title of this group"""
         raise NotImplementedError()
 
@@ -242,7 +242,7 @@ class ConfigVariable(object):
         raise NotImplementedError()
 
     def ident(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the internal identifier of this configuration variable"""
         raise NotImplementedError()
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 from typing import Dict
 
 import six

@@ -7,7 +7,7 @@
 
 import abc
 import string
-from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Text, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
 
 import six
 

@@ -387,26 +387,32 @@ class Ingress(Metadata):
             for rule in spec.rules if spec.rules else ():
                 if rule.http:
                     for path in rule.http.paths:
-                        path_ = {
-                            (True, True): rule.host + path.path,
-                            (True, False): rule.host,
-                            (False, True): path.path,
-                            (False, False): "/"
-                        }[(rule.host is not None, path.path is not None)]
-                        self._backends.append(
-                            (path_, path.backend.service_name, path.backend.service_port))
+                        self._backends.append((
+                            self._path(rule.host, path.path),
+                            path.backend.service_name,
+                            path.backend.service_port,
+                        ))
             for tls in spec.tls if spec.tls else ():
                 self._hosts[tls.secret_name if tls.secret_name else ""].extend(
                     tls.hosts if tls.hosts else ())
 
         status = ingress.status
         if status:
-            with suppress(AttributeError):
+            with suppress(AttributeError, TypeError):
                 # Anything along the path to status..ingress is optional (aka may be None).
                 self._load_balancers.extend([{
                     "hostname": _.hostname if _.hostname else "",
                     "ip": _.ip if _.ip else "",
                 } for _ in status.load_balancer.ingress])
+
+    def _path(self, host, path):
+        if host and path:
+            return host + path
+        if host:
+            return host
+        if path:
+            return path
+        return "/"
 
     @property
     def info(self):

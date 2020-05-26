@@ -7,15 +7,16 @@
 from typing import Optional
 
 from cmk.utils.type_defs import (
-    OID,
+    ABCSNMPBackend,
     CheckPluginName,
     ContextName,
+    OID,
     RawValue,
     SNMPHostConfig,
     SNMPRowInfo,
 )
 
-from .snmp_backend import ABCSNMPBackend, ClassicSNMPBackend, StoredWalkSNMPBackend
+from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
     from .cee.snmp_backend import inline

@@ -12,7 +12,7 @@ import re
 import socket
 import subprocess
 import sys
-from typing import Dict, List, Text, Tuple
+from typing import Dict, List, Tuple
 
 import requests
 import six
@@ -23,7 +23,7 @@ import cmk.utils.password_store
 
 
 def collect_context():
-    # type: () -> Dict[str, Text]
+    # type: () -> Dict[str, str]
     return {
         var[7:]: six.ensure_text(value)
         for (var, value) in os.environ.items()
@@ -37,7 +37,7 @@ def format_link(template, url, text):
 
 
 def format_address(display_name, email_address):
-    # type: (Text, Text) -> Text
+    # type: (str, str) -> str
     """
     Returns an email address with an optional display name suitable for an email header like From or Reply-To.
     The function handles the following cases:
@@ -212,8 +212,6 @@ def _sendmail_path():
     raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
-# TODO: Why do we return Dict[str, str] below while collect_context() returns a
-# Dict[str, Text]???
 def read_bulk_contexts():
     # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}

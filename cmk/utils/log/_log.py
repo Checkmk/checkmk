@@ -7,11 +7,11 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Text, Union, IO
+from typing import Union, IO
 
 from ._level import VERBOSE
 
-IOLog = IO[Text]
+IOLog = IO[str]
 
 logger = logging.getLogger("cmk")
 

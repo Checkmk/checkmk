@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Optional, Text
+from typing import Optional
 
 import six
 from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
@@ -22,7 +22,7 @@ from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 def main():
     context = utils.collect_context()
-    priority = u'P3'  # type: Optional[Text]
+    priority = u'P3'  # type: Optional[str]
     teams_list = []
     tags_list = None
     action_list = None

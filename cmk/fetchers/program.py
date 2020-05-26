@@ -9,7 +9,7 @@ import os
 import signal
 import subprocess
 from types import TracebackType
-from typing import Optional, Text, Type, Union
+from typing import Optional, Type, Union
 
 import six
 
@@ -23,7 +23,7 @@ from ._base import AbstractDataFetcher, MKFetcherError
 class ProgramDataFetcher(AbstractDataFetcher):
     def __init__(
             self,
-            cmdline,  # type: Union[bytes, Text]
+            cmdline,  # type: Union[bytes, str]
             stdin,  # type: Optional[str]
             is_cmc,  # type: bool
     ):

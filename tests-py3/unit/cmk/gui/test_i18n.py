@@ -9,10 +9,7 @@
 import gettext
 import subprocess
 import sys
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 import six

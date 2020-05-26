@@ -9,11 +9,7 @@ import os
 import sys
 import traceback
 from typing import Dict, Optional
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import cmk.utils.debug
 import cmk.utils.paths

@@ -9,11 +9,7 @@ import os
 import subprocess
 import sys
 from typing import Optional, List
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import six
 

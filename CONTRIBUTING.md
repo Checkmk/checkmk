@@ -343,12 +343,7 @@ names are really available and needed in the current namespace.
 
 ### Paths and files
 
-* Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
-
-  ```python
-  from pathlib2 import Path
-  ```
-
+* Use `pathlib`.
 * Use context-managers (the `with` keyword) to open files.
 * You are welcome to refactor old style file IO to pathlib (with tests :-))
 

@@ -7,14 +7,10 @@
 import abc
 import os
 import pprint
-import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
-import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 import cmk.utils.store as store
 import cmk.utils.plugin_registry

@@ -5,32 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import sys
 import ast
 import contextlib
 import json
 import threading
-
+from pathlib import Path
 from typing import NamedTuple, Any
-
-if sys.version_info[0] >= 3:
-    from http.cookiejar import CookieJar  # pylint: disable=import-error
-else:
-    from cookielib import CookieJar  # pylint: disable=import-error
+from http.cookiejar import CookieJar
 import shutil
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 from mock import MagicMock
 import webtest  # type: ignore[import]
-
 import pytest  # type: ignore[import]
 import six
-from six.moves.urllib.parse import urlencode  # pylint: disable=relative-import
+from six.moves.urllib.parse import urlencode
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -312,10 +300,9 @@ class WebTestAppForCMK(webtest.TestApp):
 
         if output_format == 'python':
             return ast.literal_eval(_resp.body)
-        elif output_format == 'json':
+        if output_format == 'json':
             return json.loads(_resp.body)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
+        raise NotImplementedError("Format %s not implemented" % output_format)
 
 
 @pytest.fixture(scope='function')

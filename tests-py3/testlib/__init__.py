@@ -6,8 +6,6 @@
 
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
-
 import os
 import time
 import sys
@@ -15,14 +13,9 @@ import abc
 import tempfile
 import datetime
 from contextlib import contextmanager
+from pathlib import Path
+
 import six
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
 

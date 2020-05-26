@@ -10,14 +10,9 @@ import tarfile
 import shutil
 from io import IOBase
 from typing import Dict, List
+from pathlib import Path
+
 import six
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 import pytest  # type: ignore[import]
 import responses  # type: ignore[import]
 

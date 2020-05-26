@@ -5,12 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 

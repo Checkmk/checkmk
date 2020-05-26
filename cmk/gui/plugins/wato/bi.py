@@ -5,22 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import sys
 import json
 import pprint
-from typing import (
-    Dict,
-    Any,
-    List,
-    Tuple as _Tuple,
-    Optional as _Optional,
-    Union,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union
+from pathlib import Path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store

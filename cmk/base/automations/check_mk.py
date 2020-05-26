@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+from pathlib import Path
 
 import six
 
@@ -57,12 +58,6 @@ from cmk.base.automations import Automation, MKAutomationError, automations
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]

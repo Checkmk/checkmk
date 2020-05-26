@@ -25,17 +25,11 @@ import abc
 import multiprocessing
 import traceback
 import subprocess
-import sys
 import hashlib
 from logging import Logger
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
+from pathlib import Path
 from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple
+
 import psutil  # type: ignore[import]
 import six
 

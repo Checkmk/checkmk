@@ -5,14 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
+from pathlib import Path  # pylint: disable=import-error,unused-import
 from typing import Dict
-import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+import six
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.

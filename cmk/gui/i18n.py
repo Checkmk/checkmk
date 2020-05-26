@@ -6,20 +6,10 @@
 
 import sys
 import gettext as gettext_module
-from typing import (
-    Dict,
-    NamedTuple,
-    Optional,
-    List,
-    Tuple,
-    Text,
-)
-import six
+from typing import Dict, NamedTuple, Optional, List, Tuple
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+import six
 
 import cmk.utils.paths
 
@@ -46,7 +36,7 @@ _translation = None  # type: Optional[Translation]
 
 
 def _(message):
-    # type: (str) -> Text
+    # type: (str) -> str
     if _translation:
         if sys.version_info[0] >= 3:
             return _translation.translation.gettext(message)
@@ -55,7 +45,7 @@ def _(message):
 
 
 def ungettext(singular, plural, n):
-    # type: (str, str, int) -> Text
+    # type: (str, str, int) -> str
     if _translation:
         if sys.version_info[0] >= 3:
             return _translation.translation.ngettext(singular, plural, n)
@@ -97,7 +87,7 @@ def _get_package_language_dirs():
 
 
 def get_language_alias(lang):
-    # type: (Optional[str]) -> Text
+    # type: (Optional[str]) -> str
     if lang is None:
         return _("English")
 
@@ -112,7 +102,7 @@ def get_language_alias(lang):
 
 
 def get_languages():
-    # type: () -> List[Tuple[str, Text]]
+    # type: () -> List[Tuple[str, str]]
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
@@ -197,12 +187,12 @@ def initialize():
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations = {}  # type: Dict[Text, Dict[str, Text]]
+_user_localizations = {}  # type: Dict[str, Dict[str, str]]
 
 
 # Localization of user supplied texts
 def _u(text):
-    # type: (Text) -> Text
+    # type: (str) -> str
     ldict = _user_localizations.get(text)
     if ldict:
         current_language = get_current_language()
@@ -213,7 +203,7 @@ def _u(text):
 
 
 def set_user_localizations(localizations):
-    # type: (Dict[Text, Dict[str, Text]]) -> None
+    # type: (Dict[str, Dict[str, str]]) -> None
     _user_localizations.clear()
     _user_localizations.update(localizations)
 

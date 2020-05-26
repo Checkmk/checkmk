@@ -7,34 +7,15 @@
 
 # TODO: More feature related splitting up would be better
 
-import sys
 import abc
 import time
 import re
 import hashlib
+from pathlib import Path  # pylint: disable=import-error
 import traceback
-from typing import (
-    Callable,
-    NamedTuple,
-    Hashable,
-    TYPE_CHECKING,
-    Any,
-    Set,
-    Tuple,
-    List,
-    Optional,
-    Union,
-    Text,
-    Dict,
-    Type,
-    cast,
-)
-import six
+from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text, Dict, Type, cast
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 import livestatus
 from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites

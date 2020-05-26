@@ -9,6 +9,7 @@ import subprocess
 import sys
 from contextlib import suppress
 from typing import Dict, Iterable, List, Optional, Tuple
+from pathlib import Path
 
 import six
 
@@ -31,11 +32,6 @@ import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 try:
     from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation, ungrouped-imports

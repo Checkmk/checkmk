@@ -8,18 +8,14 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import sys
 import re
 import uuid
 import marshal
 import itertools
+from pathlib import Path
 from typing import Optional, Union, Any, List, Dict, Tuple
-import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 import cmk.utils.paths
 

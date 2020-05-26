@@ -12,12 +12,7 @@ import logging
 import subprocess
 import abc
 from typing import List, Optional, Dict
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import requests
 

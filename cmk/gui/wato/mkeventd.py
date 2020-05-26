@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import abc
 import logging
 import os
@@ -13,11 +12,7 @@ import io
 import time
 import zipfile
 from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
 from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]

@@ -17,11 +17,7 @@
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 import sys
 from typing import List, NamedTuple, Optional, Union
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 # a filesystem path with a user-presentable description
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])

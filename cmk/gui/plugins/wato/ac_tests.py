@@ -5,22 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import sys
+from pathlib import Path  # pylint: disable=import-error
 import subprocess
-from typing import (
-    Type,
-    Iterator,
-    Text,
-)
+from typing import Type, Iterator
 
 import requests
 import urllib3  # type: ignore[import]
 import six
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 from livestatus import LocalConnection
 
@@ -61,11 +52,11 @@ class ACTestPersistentConnections(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Persistent connections")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "Persistent connections may be a configuration to improve the performance of the GUI, "
             "but be aware that you really need to tune your system to make it work properly. "
@@ -117,11 +108,11 @@ class ACTestLiveproxyd(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Use Livestatus Proxy Daemon")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
             "and improves the management of the inter site connections using livestatus. Using "
@@ -160,11 +151,11 @@ class ACTestLivestatusUsage(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Livestatus usage")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("<p>Livestatus is used by several components, for example the GUI, to gather "
                  "information about the monitored objects from the monitoring core. It is "
                  "very important for the overall performance of the monitoring system that "
@@ -219,11 +210,11 @@ class ACTestTmpfs(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Temporary filesystem mounted")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("<p>By default each Check_MK site has it's own temporary filesystem "
                  "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
                  "possible Check_MK starts without this temporary filesystem.</p>"
@@ -267,11 +258,11 @@ class ACTestLDAPSecured(ACTest):
         return ACTestCategories.security
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Secure LDAP")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("When using the regular LDAP protocol all data transfered between the Check_MK "
                  "and LDAP servers is sent over the network in plain text (unencrypted). This also "
                  "includes the passwords users enter to authenticate with the LDAP Server. It is "
@@ -306,11 +297,11 @@ class ACTestLivestatusSecured(ACTest):
         return ACTestCategories.security
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Livestatus encryption")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "<p>In distributed setups Livestatus is used to transport the status information "
             "gathered in one site to the central site. Since Check_MK 1.6 it is natively "
@@ -343,11 +334,11 @@ class ACTestNumberOfUsers(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Number of users")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("<p>Having a large number of users configured in Check_MK may decrease the "
                  "performance of the Web GUI.</p>"
                  "<p>It may be possible that you are using the LDAP sync to create the users. "
@@ -379,11 +370,11 @@ class ACTestHTTPSecured(ACTest):
         return ACTestCategories.security
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Secure GUI (HTTP)")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return \
             _("When using the regular HTTP protocol all data transfered between the Check_MK "
               "and the clients using the GUI is sent over the network in plain text (unencrypted). "
@@ -413,11 +404,11 @@ class ACTestOldDefaultCredentials(ACTest):
         return ACTestCategories.security
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Default credentials")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("In versions prior to version 1.4.0 the first administrative user of the "
                  "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
                  "This test warns you in case the site uses these standard credentials. "
@@ -445,11 +436,11 @@ class ACTestBackupConfigured(ACTest):
         return ACTestCategories.reliability
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Backup configured")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "<p>You should have a backup configured for being able to restore your "
             "monitoring environment in case of a data loss.<br>"
@@ -481,11 +472,11 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return ACTestCategories.security
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Encrypt backups")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Please check whether or not your backups are stored securely. In "
                  "case you are storing your backup on a storage system the storage may "
                  "already be secure enough without extra backup encryption. But in "
@@ -549,11 +540,11 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Apache number of processes")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "<p>The apache has a number maximum processes it can start in case of high "
             "load situations. These apache processes may use a decent amount of memory, so "
@@ -636,11 +627,11 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Apache process usage")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("The apache has a number maximum processes it can start in case of high "
                  "load situations. The usage of these processes should not be too high "
                  "in normal situations. Otherwise, if all processes are in use, the "
@@ -679,11 +670,11 @@ class ACTestCheckMKHelperUsage(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Check_MK helper usage")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "<p>The Check_MK Microcore uses Check_MK helper processes to execute "
             "the Check_MK and Check_MK Discovery services of the hosts monitored "
@@ -745,11 +736,11 @@ class ACTestAlertHandlerEventTypes(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Alert handler: Don't handle all check executions")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "In general it will result in a significantly increased load when alert handlers are "
             "configured to handle all check executions. It is highly recommended to "
@@ -775,11 +766,11 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Check helper usage")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "<p>The Check_MK Microcore uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
@@ -831,11 +822,11 @@ class ACTestSizeOfExtensions(ACTest):
         return ACTestCategories.performance
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Size of extensions")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("<p>In distributed WATO setups it is possible to synchronize the "
                  "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
                  "These files are synchronized on every replication with a slave site and "
@@ -880,11 +871,11 @@ class ACTestBrokenGUIExtension(ACTest):
         return ACTestCategories.deprecations
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Broken GUI extensions")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "Since 1.6.0i1 broken GUI extensions don't block the whole GUI initialization anymore. "
             "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
@@ -911,11 +902,11 @@ class ACTestESXDatasources(ACTest):
         return ACTestCategories.deprecations
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("The Check_MK agent is queried via the ESX datasource program")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("The Check_MK agent is queried via the datasource program for ESX systems. "
                  "This is option will be deleted in a future release. Please configure the "
                  "host to contact the Check_MK agent and the configured datasource programs "
@@ -953,11 +944,11 @@ class ACTestRulebasedNotifications(ACTest):
         return ACTestCategories.deprecations
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Flexible and plain email notifications")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             "Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
             " will be removed in Check_MK version 1.6.0. Please consider to switch to rulebased "
@@ -988,11 +979,11 @@ class ACTestConnectivity(ACTest):
         return ACTestCategories.connectivity
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Site connectivity")
 
     def help(self):
-        # type: () -> Text
+        # type: () -> str
         return _("This check returns CRIT if the connection to the remote site failed.")
 
     def is_relevant(self):

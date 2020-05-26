@@ -10,25 +10,11 @@ import os
 import copy
 import json
 from types import ModuleType
-from typing import (
-    Set,
-    Any,
-    AnyStr,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from pathlib import Path
 import time
-import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+import six
 
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
     SiteId, SiteConfiguration, SiteConfigurations,
@@ -483,7 +469,7 @@ def _confdir_for_user_id(user_id):
 # TODO: Cleanup accesses to module global vars and functions
 class LoggedInUser(object):
     def __init__(self, user_id):
-        # type: (Optional[Text]) -> None
+        # type: (Optional[str]) -> None
         self.id = UserId(user_id) if user_id else None
 
         self.confdir = _confdir_for_user_id(self.id)
@@ -1212,13 +1198,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
+    # type: () -> List[Tuple[SiteId, str]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, Text]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1234,13 +1220,13 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
+    # type: () -> List[Tuple[SiteId, str]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 
 
 def get_wato_site_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
+    # type: () -> List[Tuple[SiteId, str]]
     return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
         "replication") is not None)
 
@@ -1299,7 +1285,7 @@ def theme_choices():
 
 
 def get_page_heading():
-    # type: () -> Text
+    # type: () -> str
     if "%s" in page_heading:
         return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
     return ensure_unicode(page_heading)

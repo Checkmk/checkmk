@@ -8,6 +8,7 @@ import errno
 import logging
 import multiprocessing
 import os
+from pathlib import Path
 import pprint
 import shutil
 import signal
@@ -16,15 +17,9 @@ import time
 import traceback
 from types import FrameType
 import io
+from typing import Tuple, Callable, Type, List, Optional, Dict, Any
 
-from typing import Tuple, Callable, Type, List, Optional, Union, Dict, Any
 import psutil  # type: ignore[import]
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
 import six
 
 import cmk.utils.log

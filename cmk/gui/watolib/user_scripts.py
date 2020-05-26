@@ -19,12 +19,7 @@
 
 import os
 import re
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode

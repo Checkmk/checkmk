@@ -7,14 +7,9 @@
 # pylint: disable=redefined-outer-name
 
 import os
-import sys
 import subprocess
 from collections import defaultdict
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 import six

@@ -4,18 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-from typing import (
-    Text,
-    List,
-    Optional,
-)
+from pathlib import Path
+from typing import Text, List, Optional
 #TODO included in typing since Python >= 3.8
 from typing_extensions import TypedDict
 

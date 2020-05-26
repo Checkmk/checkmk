@@ -11,7 +11,7 @@ import sys
 import py_compile
 import tempfile
 import errno
-from typing import Tuple, Text, Any, IO, Optional, List, Set, Dict
+from typing import Tuple, Any, IO, Optional, List, Set, Dict
 
 import six
 
@@ -115,7 +115,7 @@ class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
         self.checknames_to_define = set()  # type: Set[CheckPluginName]
         self.active_checks_to_define = set()  # type: Set[CheckPluginName]
         self.custom_commands_to_define = set()  # type: Set[CoreCommandName]
-        self.hostcheck_commands_to_define = []  # type: List[Tuple[CoreCommand, Text]]
+        self.hostcheck_commands_to_define = []  # type: List[Tuple[CoreCommand, str]]
 
     def write(self, x):
         # type: (str) -> None

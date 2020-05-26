@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Callable, List, Optional, Text, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import six
 
@@ -14,7 +14,7 @@ from cmk.utils.type_defs import OID, CheckPluginName, DecodedString
 OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
                        Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
-SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
+SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 
 
 def binstring_to_int(binstring):

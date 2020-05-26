@@ -9,7 +9,7 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import Dict, List, Optional, Set, Text, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -116,8 +116,8 @@ def do_inv_check(hostname, options):
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     status = 0
-    infotexts = []  # type: List[Text]
-    long_infotexts = []  # type: List[Text]
+    infotexts = []  # type: List[str]
+    long_infotexts = []  # type: List[str]
     perfdata = []  # type: List[Tuple]
 
     sources = data_sources.DataSources(hostname, ipaddress)

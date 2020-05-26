@@ -23,7 +23,6 @@ PACKAGES := \
     libgsf \
     postgresql \
     perl-modules \
-    Python \
     Python3 \
     freetds \
     re2 \

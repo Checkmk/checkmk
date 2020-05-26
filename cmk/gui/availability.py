@@ -8,7 +8,7 @@ from __future__ import division
 import time
 import os
 
-from typing import Callable, Set, Dict, Any, Union, List, Tuple as _Tuple, Optional as _Optional
+from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
 from six import ensure_str
 
 from livestatus import SiteId
@@ -989,48 +989,63 @@ def reclassify_by_annotations(what, av_rawdata):
         return av_rawdata
 
     reclassified_rawdata = {}  # type: AVRawData
-    for (site, host_name), service_entries in av_rawdata.items():
+    for (site, host_name), history_entries in av_rawdata.items():
         new_entries = {}  # type: AVRawServices
         reclassified_rawdata[(site, host_name)] = new_entries
-        for service_description, service_history in service_entries.items():
-            cycles = []  # type: List[_Tuple[AVAnnotationKey, str]]
-            cycles.append(((site, host_name, service_description or None), "in_downtime"))
+        for service_description, history in history_entries.items():
+            cycles = []  # type: List[AVAnnotationKey]
+            cycles.append((site, host_name, service_description or None))
             if what == "service":
-                cycles.insert(0, ((site, host_name, None), "in_host_downtime"))
+                cycles.insert(0, (site, host_name, None))
 
-            for anno_key, key_to_change in cycles:
+            for anno_key in cycles:
                 if anno_key in annotations:
                     new_entries[service_description] = \
-                          reclassify_service_history_by_annotations(service_history, annotations[anno_key], key_to_change)
-                    service_history = new_entries[service_description]
+                          reclassify_history_by_annotations(history, annotations[anno_key])
+                    history = new_entries[service_description]
                 else:
-                    new_entries[service_description] = service_history
+                    new_entries[service_description] = history
 
     return reclassified_rawdata
 
 
-def reclassify_service_history_by_annotations(service_history, annotation_entries, key_to_change):
-    # type: (List[AVSpan], List[AVAnnotationEntry], str) -> List[AVSpan]
-    new_history = service_history
+ReclassifyConfig = NamedTuple("ReclassifyConfig", [
+    ("downtime", _Optional[Any]),
+    ("host_state", _Optional[Any]),
+    ("service_state", _Optional[Any]),
+])
+
+
+def reclassify_history_by_annotations(history, annotation_entries):
+    # type: (List[AVSpan], List[AVAnnotationEntry]) -> List[AVSpan]
+    new_history = history
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
-        if downtime is None:
+        host_state = annotation.get("host_state")
+        service_state = annotation.get("service_state")
+        if downtime is None and host_state is None and service_state is None:
             continue
-        new_history = reclassify_service_history_by_annotation(new_history, annotation,
-                                                               key_to_change)
+
+        new_config = ReclassifyConfig(
+            downtime=downtime,
+            host_state=host_state,
+            service_state=service_state,
+        )
+
+        new_history = reclassify_history_by_annotation(new_history, annotation, new_config)
     return new_history
 
 
-def reclassify_service_history_by_annotation(service_history, annotation, key_to_change):
-    # type: (List[AVSpan], AVAnnotationEntry, str) -> List[AVSpan]
+def reclassify_history_by_annotation(history, annotation, new_config):
+    # type: (List[AVSpan], AVAnnotationEntry, ReclassifyConfig) -> List[AVSpan]
     new_history = []  # type: List[AVSpan]
-    for history_entry in service_history:
-        new_history += reclassify_service_by_annotation(history_entry, annotation, key_to_change)
+    for history_entry in history:
+        new_history += reclassify_times_by_annotation(history_entry, annotation, new_config)
 
     return new_history
 
 
-def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
+def reclassify_times_by_annotation(history_entry, annotation, new_config):
     new_history = []
     if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
         for is_in, p_from, p_until in [
@@ -1045,20 +1060,34 @@ def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
                 new_entry["until"] = p_until
                 new_entry["duration"] = p_until - p_from
                 if is_in:
-                    new_entry[key_to_change] = 1 if annotation['downtime'] else 0
-                    # If the annotation removes a downtime from the services, but
-                    # the actual reason for the service being in downtime is a host
-                    # downtime, then we must cancel the host downtime (also), or else
-                    # that would override the unset service downtime.
-                    if key_to_change == "in_downtime" \
-                        and history_entry.get("in_host_downtime") \
-                        and annotation["downtime"] is False:
-                        new_entry["in_host_downtime"] = 0
+                    reclassify_config_by_annotation(history_entry, annotation, new_entry,
+                                                    new_config)
+
                 new_history.append(new_entry)
     else:
         new_history.append(history_entry)
 
     return new_history
+
+
+def reclassify_config_by_annotation(history_entry, annotation, new_entry, new_config):
+    if new_config.downtime:
+        new_entry["in_downtime"] = 1 if annotation['downtime'] else 0
+        # If the annotation removes a downtime from the services, but
+        # the actual reason for the service being in downtime is a host
+        # downtime, then we must cancel the host downtime (also), or else
+        # that would override the unset service downtime.
+        if history_entry.get("in_host_downtime") \
+            and annotation["downtime"] is False:
+            new_entry["in_host_downtime"] = 0
+    if new_config.host_state:
+        new_host_state = annotation.get('host_state', history_entry.get("host_state"))
+        new_entry["state"] = new_host_state
+        new_entry["host_down"] = 1 if new_host_state else 0
+    if new_config.service_state:
+        new_entry["state"] = annotation.get('service_state', history_entry.get("state"))
+
+    return new_entry
 
 
 def pass_availability_filter(row, avoptions):
@@ -1188,12 +1217,13 @@ def melt_short_intervals(entries, duration, dont_merge):
 #   ( "mysite", "foohost", "myservice" ) : # service might be None
 #       [
 #         {
-#            "from"       : 1238288548,
-#            "until"      : 1238292845,
-#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
-#            "date"       : 12348854885, # Time of entry
-#            "author"     : "mk",
-#            "downtime"   : True, # Can also be False or None or missing. None is like missing
+#            "service_state"  : 1,
+#            "from"           : 1238288548,
+#            "until"          : 1238292845,
+#            "text"           : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
+#            "date"           : 12348854885, # Time of entry
+#            "author"         : "mk",
+#            "downtime"       : True, # Can also be False or None or missing. None is like missing
 #         },
 #         # ... further entries
 #      ]
@@ -1230,8 +1260,8 @@ def update_annotations(site_host_svc, annotation, replace_existing):
     save_annotations(annotations)
 
 
-def find_annotation(annotations, site_host_svc, fromtime, untiltime):
-    # type: (AVAnnotations, AVAnnotationKey, AVTimeStamp, AVTimeStamp) -> _Optional[AVAnnotationEntry]
+def find_annotation(annotations, site_host_svc, host_state, service_state, fromtime, untiltime):
+    # type: (AVAnnotations, AVAnnotationKey, _Optional[str], _Optional[str], AVTimeStamp, AVTimeStamp) -> _Optional[AVAnnotationEntry]
     entries = annotations.get(site_host_svc)
     if not entries:
         return None
@@ -1241,8 +1271,8 @@ def find_annotation(annotations, site_host_svc, fromtime, untiltime):
     return None
 
 
-def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
-    # type: (AVAnnotations, AVAnnotationKey, AVTimeStamp, AVTimeStamp) -> None
+def delete_annotation(annotations, site_host_svc, host_state, service_state, fromtime, untiltime):
+    # type: (AVAnnotations, AVAnnotationKey, _Optional[str], _Optional[str], AVTimeStamp, AVTimeStamp) -> None
     entries = annotations.get(site_host_svc)
     if not entries:
         return
@@ -2048,8 +2078,7 @@ def reclassify_bi_rows(rows):
         service_description = row["service_description"]
         anno_key = (site, host_name, service_description or None)
         if anno_key in annotations:
-            new_rows += reclassify_service_history_by_annotations([row], annotations[anno_key],
-                                                                  "in_downtime")
+            new_rows += reclassify_history_by_annotations([row], annotations[anno_key])
         else:
             new_rows.append(row)
     return new_rows

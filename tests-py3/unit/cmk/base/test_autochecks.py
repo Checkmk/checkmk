@@ -129,7 +129,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     assert test_config.get_autochecks_of("host") == result
 
     # Check that there are no str items (None, int, ...)
-    assert all(not isinstance(s.item, six.binary_type) for s in result)
+    assert all(not isinstance(s.item, bytes) for s in result)
     # All desriptions need to be of type text
     assert all(isinstance(s.description, six.text_type) for s in result)
 

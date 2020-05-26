@@ -267,7 +267,7 @@ def _split_perf_data(perf_data_string):
     # type: (AnyStr) -> List[AnyStr]
     "Split the perf data string into parts. Preserve quoted strings!"
     parts = shlex.split(six.ensure_str(perf_data_string))
-    if isinstance(perf_data_string, six.binary_type):
+    if isinstance(perf_data_string, bytes):
         return [six.ensure_binary(s) for s in parts]
     return [six.ensure_text(s) for s in parts]
 

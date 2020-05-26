@@ -275,7 +275,7 @@ def save_text_to_file(path, content, mode=0o660):
 
 def save_bytes_to_file(path, content, mode=0o660):
     # type: (Union[Path, str], bytes, int) -> None
-    if not isinstance(content, six.binary_type):
+    if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
     _save_data_to_file(path, content, mode)
 

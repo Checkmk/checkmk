@@ -682,7 +682,7 @@ def _delete_distributed_wato_file():
 
 PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
     ("site_id", str),
-    ("tar_content", six.binary_type),
+    ("tar_content", bytes),
 ])
 
 

@@ -651,7 +651,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if isinstance(infotext, six.binary_type):
+    if isinstance(infotext, bytes):
         return infotext.decode('utf-8')
 
     return infotext

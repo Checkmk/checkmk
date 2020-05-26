@@ -241,7 +241,7 @@ def _get_generic_crash_info(type_name, details):
     # Remove this after migration...
     if exc_value is None or not exc_value.args:
         exc_txt = six.text_type("")
-    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], six.binary_type):
+    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
         except UnicodeDecodeError:

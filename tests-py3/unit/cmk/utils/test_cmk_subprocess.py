@@ -16,12 +16,12 @@ def _check_type_of_stdout_and_stderr(p_communicate, encoding):
         if encoding:
             assert isinstance(stdout, six.text_type)
         else:
-            assert isinstance(stdout, six.binary_type)
+            assert isinstance(stdout, bytes)
     if stderr:
         if encoding:
             assert isinstance(stdout, six.text_type)
         else:
-            assert isinstance(stdout, six.binary_type)
+            assert isinstance(stdout, bytes)
 
 
 @pytest.mark.parametrize("command, encoding", [

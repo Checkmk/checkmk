@@ -176,7 +176,7 @@ def create_mkp_file(package, file_object=None):
         return info
 
     def add_file(filename, data):
-        # type: (str, six.binary_type) -> None
+        # type: (str, bytes) -> None
         info_file = BytesIO(data)
         info = create_tar_info(filename, len(info_file.getvalue()))
         tar.addfile(info, info_file)

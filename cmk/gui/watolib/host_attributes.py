@@ -666,7 +666,7 @@ def _validate_is_ascii(value, varprefix):
             value.encode("ascii")
         except UnicodeEncodeError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-    elif isinstance(value, six.binary_type):
+    elif isinstance(value, bytes):
         try:
             value.decode("ascii")
         except UnicodeDecodeError:

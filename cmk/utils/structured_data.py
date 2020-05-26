@@ -78,8 +78,8 @@ class StructuredDataTree:
         # type: (AnyStr) -> None
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if six.binary_type/ensure_unicode is necessary.
-        if not isinstance(tree_path, (six.binary_type, six.text_type)):
+        # TODO: Check if bytes/ensure_unicode is necessary.
+        if not isinstance(tree_path, (bytes, six.text_type)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
         tp = ensure_unicode(tree_path)
         if not tp.endswith((":", ".")):

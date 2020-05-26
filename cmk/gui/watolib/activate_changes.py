@@ -52,7 +52,7 @@ from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.type_defs import ConfigDomainName  # pylint: disable=unused-import
+from cmk.gui.type_defs import ConfigDomainName
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 from cmk.gui.sites import (  # pylint: disable=unused-import

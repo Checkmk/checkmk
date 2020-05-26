@@ -7,7 +7,7 @@
 from typing import Dict
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec  # pylint: disable=unused-import
+from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _

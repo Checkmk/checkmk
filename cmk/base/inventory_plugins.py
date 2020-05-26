@@ -20,7 +20,7 @@ from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,)
 
-from cmk.utils.type_defs import CheckPluginName, InventoryPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import CheckPluginName, InventoryPluginName
 InventoryInfo = Dict[str, Any]
 
 # Inventory plugins have dependencies to check plugins and the inventory

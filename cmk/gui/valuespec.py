@@ -81,7 +81,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
 from cmk.utils.encoding import ensure_unicode
-from cmk.utils.type_defs import Seconds  # pylint: disable=unused-import
+from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils

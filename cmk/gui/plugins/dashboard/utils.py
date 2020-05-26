@@ -13,8 +13,8 @@ from typing import (Optional, Any, Dict, Union, Tuple, Text, List, Callable, cas
 import six
 
 import cmk.utils.plugin_registry
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
-from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
+from cmk.gui.type_defs import VisualContext
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _

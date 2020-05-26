@@ -31,7 +31,7 @@ import six
 
 import cmk.utils.store as store
 from cmk.utils.encoding import ensure_unicode
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 
 from cmk.gui.exceptions import (
     MKUserError,

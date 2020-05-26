@@ -43,8 +43,13 @@ import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
 from cmk.utils.encoding import ensure_unicode
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    Timestamp, TimeRange, HostName, TagGroups, LabelSources, ServiceName,
+from cmk.utils.type_defs import (
+    Timestamp,
+    TimeRange,
+    HostName,
+    TagGroups,
+    LabelSources,
+    ServiceName,
 )
 
 import cmk.gui.config as config
@@ -68,9 +73,21 @@ from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
     CellSpec, CSSClass, CellContent, render_tag_groups, render_labels, get_labels,
 )
 
-from cmk.gui.type_defs import (  # pylint: disable=unused-import
-    ColumnName, ViewName, LivestatusQuery, SorterName, HTTPVariables, ViewSpec, PainterSpec,
-    PainterName, Row, Rows, SorterFunction, AllViewSpecs, PermittedViewSpecs, VisualContext,
+from cmk.gui.type_defs import (
+    ColumnName,
+    ViewName,
+    LivestatusQuery,
+    SorterName,
+    HTTPVariables,
+    ViewSpec,
+    PainterSpec,
+    PainterName,
+    Row,
+    Rows,
+    SorterFunction,
+    AllViewSpecs,
+    PermittedViewSpecs,
+    VisualContext,
     PainterParameters,
 )
 

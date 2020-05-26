@@ -27,7 +27,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
-from cmk.gui.type_defs import (  # pylint: disable=unused-import
+from cmk.gui.type_defs import (
     Rows,)
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     Cell, DataSource,

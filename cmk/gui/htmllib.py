@@ -133,7 +133,7 @@ from cmk.gui.http import Response
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request  # pylint: disable=unused-import
-    from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
+    from cmk.gui.type_defs import VisualContext, HTTPVariables
     from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
     from cmk.gui.utils.output_funnel import OutputFunnelInput  # pylint: disable=unused-import
 

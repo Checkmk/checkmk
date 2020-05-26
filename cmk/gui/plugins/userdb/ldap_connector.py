@@ -104,7 +104,7 @@ from cmk.gui.plugins.userdb.utils import (
     release_users_lock,
 )
 
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

@@ -46,8 +46,10 @@ from cmk.gui.plugins.views import (
 )
 
 if TYPE_CHECKING:
-    from cmk.gui.type_defs import (  # pylint: disable=unused-import
-        FilterHeaders, Rows, HTTPVariables,
+    from cmk.gui.type_defs import (
+        FilterHeaders,
+        Rows,
+        HTTPVariables,
     )
     from cmk.gui.views import View  # pylint: disable=unused-import
 

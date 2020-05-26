@@ -17,7 +17,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |

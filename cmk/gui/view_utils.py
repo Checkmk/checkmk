@@ -20,7 +20,7 @@ import six
 
 from livestatus import SiteId  # pylint: disable=unused-import
 
-from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue  # pylint: disable=unused-import
+from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue
 from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.escaping as escaping
@@ -37,7 +37,7 @@ CellContent = Union[Text, str, HTML, Dict[str, Any]]
 CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
-    from cmk.gui.type_defs import Row  # pylint: disable=unused-import
+    from cmk.gui.type_defs import Row
     from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 
 

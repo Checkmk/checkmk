@@ -17,7 +17,7 @@ import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.type_defs import TimeperiodName  # pylint: disable=unused-import
+from cmk.utils.type_defs import TimeperiodName
 
 import cmk.base.obsolete_output as out
 import cmk.base.config as config

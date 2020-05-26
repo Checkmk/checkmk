@@ -29,7 +29,7 @@ from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
 )
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.base.cleanup
 

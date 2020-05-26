@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional as _Optional, Text, Tuple as _Tuple
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
-from cmk.utils.type_defs import EventRule, UserId, timeperiod_spec_alias  # pylint: disable=unused-import
+from cmk.utils.type_defs import EventRule, UserId, timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

@@ -23,7 +23,7 @@ import cmk.utils.plugin_registry
 from cmk.gui.globals import g
 from cmk.gui.i18n import _
 import cmk.gui.config as config
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type

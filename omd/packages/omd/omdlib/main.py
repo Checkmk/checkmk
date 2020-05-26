@@ -78,7 +78,7 @@ from omdlib.dialog import (  # pylint: disable=unused-import
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext  # pylint: disable=unused-import
-from omdlib.type_defs import Config, CommandOptions, Replacements  # pylint: disable=unused-import
+from omdlib.type_defs import Config, CommandOptions, Replacements
 from omdlib.skel_permissions import (  # pylint: disable=unused-import
     Permissions, read_skel_permissions, skel_permissions_file_path,
 )

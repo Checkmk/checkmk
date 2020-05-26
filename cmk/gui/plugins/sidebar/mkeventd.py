@@ -8,7 +8,7 @@ from __future__ import division
 
 from typing import Optional, Text, List, Tuple
 
-from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.htmllib import HTMLContent  # pylint: disable=unused-import

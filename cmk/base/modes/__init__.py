@@ -9,7 +9,7 @@ from typing import Union, Tuple, Callable, Optional, Dict, List
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 

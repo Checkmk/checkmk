@@ -22,7 +22,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import ColumnName, HTTPVariables
 from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 
 

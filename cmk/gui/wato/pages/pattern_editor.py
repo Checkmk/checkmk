@@ -9,7 +9,7 @@ import re
 
 import six
 
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item  # pylint: disable=unused-import
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element

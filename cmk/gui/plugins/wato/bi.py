@@ -67,7 +67,7 @@ from cmk.gui.plugins.wato import (
 )
 
 import cmk.gui.node_visualization
-from cmk.utils.type_defs import ContactgroupName  # pylint: disable=unused-import
+from cmk.utils.type_defs import ContactgroupName
 
 BIPack = Dict[str, Any]
 BIAggrOptions = Dict[str, Any]

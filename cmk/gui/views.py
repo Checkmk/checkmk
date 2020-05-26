@@ -120,7 +120,7 @@ from cmk.gui.type_defs import PainterSpec
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-    from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName  # pylint: disable=unused-import
+    from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False  # type: Union[bool, None, str]

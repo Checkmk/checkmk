@@ -33,7 +33,7 @@ from cmk.gui.plugins.visuals import (
     VisualInfo,
     visual_info_registry,
 )
-from cmk.gui.type_defs import (  # pylint: disable=unused-import
+from cmk.gui.type_defs import (
     Rows,)
 
 

@@ -27,7 +27,7 @@ import cmk.utils.store as store
 from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, MetricName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName, MetricName
 from cmk.utils.prediction import (  # pylint: disable=unused-import
     Timestamp, Timegroup, TimeSeriesValues, Seconds, TimeWindow, RRDColumnFunction, PredictionInfo,
     ConsolidationFunctionName, EstimatedLevels,

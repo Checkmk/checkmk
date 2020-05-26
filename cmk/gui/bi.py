@@ -23,7 +23,7 @@ from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
 
 from cmk.utils.defines import host_state_name
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.gui.valuespec import DropdownChoiceEntry  # pylint: disable=unused-import
 import cmk.gui.config as config

@@ -23,7 +23,7 @@ except ImportError:
 import six
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Labels, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import Labels, CheckPluginName
 
 HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
 DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]

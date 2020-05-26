@@ -22,8 +22,14 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
-from cmk.gui.type_defs import (  # pylint: disable=unused-import
-    FilterHTTPVariables, FilterName, HTTPVariables, InfoName, SingleInfos, Visual, VisualContext,
+from cmk.gui.type_defs import (
+    FilterHTTPVariables,
+    FilterName,
+    HTTPVariables,
+    InfoName,
+    SingleInfos,
+    Visual,
+    VisualContext,
     VisualTypeName,
 )
 from cmk.gui.valuespec import (

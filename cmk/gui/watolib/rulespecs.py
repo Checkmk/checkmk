@@ -22,7 +22,7 @@ import six
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.globals import html
 from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import

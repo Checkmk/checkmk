@@ -16,7 +16,7 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
 )
-from cmk.gui.type_defs import Row  # pylint: disable=unused-import
+from cmk.gui.type_defs import Row
 
 
 @painter_registry.register

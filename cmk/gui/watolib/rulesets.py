@@ -16,8 +16,12 @@ from typing import (
 )
 import six
 
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    Labels, Tags, HostNameConditions, ServiceNameConditions, RuleSpec,
+from cmk.utils.type_defs import (
+    Labels,
+    Tags,
+    HostNameConditions,
+    ServiceNameConditions,
+    RuleSpec,
 )
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher

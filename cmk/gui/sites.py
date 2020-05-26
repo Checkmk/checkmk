@@ -18,18 +18,22 @@ from typing import (
     Union,
 )
 
-from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
-    MultiSiteConnection, MKLivestatusQueryError, SiteId, SiteConfiguration, SiteConfigurations,
+from livestatus import (
+    MultiSiteConnection,
+    MKLivestatusQueryError,
+    SiteId,
+    SiteConfiguration,
+    SiteConfigurations,
 )
 
 from cmk.utils.version import is_managed_edition
 
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
 from cmk.gui.globals import g, request
-from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

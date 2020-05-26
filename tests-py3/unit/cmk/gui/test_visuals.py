@@ -17,7 +17,7 @@ import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 import cmk.gui.plugins.visuals.filters
-from cmk.gui.type_defs import Visual  # pylint: disable=unused-import
+from cmk.gui.type_defs import Visual
 
 
 def test_get_filter():

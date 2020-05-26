@@ -32,7 +32,7 @@ import tarfile
 import fnmatch
 from typing import cast, List, Tuple, BinaryIO
 
-from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
+from omdlib.type_defs import CommandOptions
 from omdlib.contexts import SiteContext
 
 

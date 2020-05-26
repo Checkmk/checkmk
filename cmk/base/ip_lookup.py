@@ -24,8 +24,7 @@ from cmk.utils.log import console
 
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, HostAddress)
+from cmk.utils.type_defs import (HostName, HostAddress)
 from cmk.base.exceptions import MKIPAddressLookupError
 
 IPLookupCacheId = Tuple[HostName, int]

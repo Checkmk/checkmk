@@ -20,7 +20,7 @@ import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
-from cmk.gui.type_defs import RoleName, PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import RoleName, PermissionName
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,

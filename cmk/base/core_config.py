@@ -19,8 +19,13 @@ import cmk.utils.tty as tty
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    LabelSources, Labels, HostName, HostAddress, ServiceName, CheckPluginName,
+from cmk.utils.type_defs import (
+    LabelSources,
+    Labels,
+    HostName,
+    HostAddress,
+    ServiceName,
+    CheckPluginName,
 )
 
 import cmk.base.obsolete_output as out

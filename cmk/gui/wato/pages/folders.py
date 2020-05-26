@@ -16,7 +16,7 @@ from typing import (
 )
 import six
 
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

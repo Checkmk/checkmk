@@ -4,14 +4,153 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+import os
+import subprocess
+from pathlib import Path
+
 import pytest  # type: ignore[import]
 import six
 
-from cmk.utils.exceptions import MKSNMPError
+from testlib import wait_until
+
+import cmk.utils.debug as debug
+import cmk.utils.log as log
+import cmk.utils.paths
+import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.snmp_table as snmp_table
-from cmk.utils.type_defs import OID_BIN, OID_END, OID_END_BIN, OID_STRING, OIDWithColumns
+from cmk.utils.exceptions import MKSNMPError
+from cmk.utils.type_defs import (
+    OID_BIN,
+    OID_END,
+    OID_END_BIN,
+    OID_STRING,
+    OIDWithColumns,
+    SNMPHostConfig,
+)
 
 import cmk.base.snmp as snmp
+
+logger = logging.getLogger(__name__)
+
+
+# Found no other way to achieve this
+# https://github.com/pytest-dev/pytest/issues/363
+@pytest.fixture(scope="module")
+def monkeymodule(request):
+    from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    mpatch = MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
+
+
+@pytest.fixture(name="snmpsim", scope="module", autouse=True)
+def snmpsim_fixture(site, request, tmp_path_factory):
+    tmp_path = tmp_path_factory.getbasetemp()
+    source_data_dir = Path(request.fspath.dirname) / "snmp_data"
+
+    log.logger.setLevel(logging.DEBUG)
+    debug.enable()
+    cmd = [
+        "snmpsimd.py",
+        #"--log-level=error",
+        "--cache-dir",
+        str(tmp_path / "snmpsim"),
+        "--data-dir",
+        str(source_data_dir),
+        # TODO: Fix port allocation to prevent problems with parallel tests
+        #"--agent-unix-endpoint="
+        "--agent-udpv4-endpoint=127.0.0.1:1337",
+        "--agent-udpv6-endpoint=[::1]:1337",
+        "--v3-user=authOnlyUser",
+        "--v3-auth-key=authOnlyUser",
+        "--v3-auth-proto=MD5",
+    ]
+
+    p = subprocess.Popen(
+        cmd,
+        close_fds=True,
+        # Silence the very noisy output. May be useful to enable this for debugging tests
+        #stdout=open(os.devnull, "w"),
+        #stderr=subprocess.STDOUT,
+    )
+
+    # Ensure that snmpsim is ready for clients before starting with the tests
+    def is_listening():
+        if p.poll() is not None:
+            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
+
+        num_sockets = 0
+        try:
+            for e in os.listdir("/proc/%d/fd" % p.pid):
+                try:
+                    if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                        num_sockets += 1
+                except OSError:
+                    pass
+        except OSError:
+            if p.poll() is None:
+                raise
+            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
+
+        if num_sockets < 2:
+            return False
+
+        # Correct module is only available in the site
+        import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+        var = netsnmp.Varbind("sysDescr.0")
+        result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
+        if result is None or result[0] is None:
+            return False
+        return True
+
+    wait_until(is_listening, timeout=20)
+
+    yield
+
+    log.logger.setLevel(logging.INFO)
+    debug.disable()
+
+    logger.debug("Stopping snmpsimd...")
+    p.terminate()
+    p.wait()
+    logger.debug("Stopped snmpsimd.")
+
+
+# Execute all tests for all SNMP backends
+@pytest.fixture(name="snmp_config", params=["inline_snmp", "classic_snmp", "stored_snmp"])
+def snmp_config_fixture(request, snmpsim, monkeypatch):
+    backend_name = request.param
+
+    if backend_name == "stored_snmp":
+        source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
+        monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
+
+    return SNMPHostConfig(
+        is_ipv6_primary=False,
+        ipaddress="127.0.0.1",
+        hostname="localhost",
+        credentials="public",
+        port=1337,
+        # TODO: Use SNMPv2 over v1 for the moment
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=True,
+        bulk_walk_size_of=10,
+        timing={},
+        oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
+        is_usewalk_host=backend_name == "stored_snmp",
+        is_inline_snmp_host=backend_name == "inline_snmp",
+        record_stats=False,
+    )
+
+
+@pytest.fixture(autouse=True)
+def clear_cache(monkeypatch):
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_hostname", None)
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_ipaddress", None)
+    monkeypatch.setattr(snmp_cache, "_g_single_oid_cache", {})
 
 
 # Missing in currently used dump:

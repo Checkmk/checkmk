@@ -14,7 +14,7 @@ def build(Map args) {
                 bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
                 ARTIFACTS = 'python-3.8.zip'
             } else if (args.TARGET == "cached") {
-                bat 'cd agents\\modules\\windows && call build_the_module.cmd cached' + args.CREDS + ' ' + args.CACHE_URL
+                bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
                 ARTIFACTS = 'python-3.8.zip'
             } else if (args.TARGET == "agent") {
                 bat 'cd agents\\wnx && call build_release.cmd'

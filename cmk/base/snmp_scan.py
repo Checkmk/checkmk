@@ -21,8 +21,8 @@ from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
 
 
-def _evaluate_snmp_detection(oid_function, detect_spec):
-    # type: (Callable, SNMPDetectSpec) -> bool
+def _evaluate_snmp_detection(oid_function, detect_spec, section_plugin_name):
+    # type: (Callable, SNMPDetectSpec, str) -> bool
     """This is a compatibility wrapper for the new SNMP detection.
     """
     # TODO: Once this is the only used method, we can consolidate
@@ -120,15 +120,17 @@ def _snmp_scan(host_config,
 
         try:
 
-            # This function will disappear shortly. Don't know why the supression was not needed
-            # before.
-            # pylint: disable=cell-var-from-loop
-            def oid_function(oid, cp_name=str(section_plugin.name)):
+            # This function will disappear shortly.
+            def oid_function(oid, cp_name):
                 # type: (OID, Optional[CheckPluginName]) -> Optional[DecodedString]
                 value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
                 return value
 
-            result = _evaluate_snmp_detection(oid_function, section_plugin.detect_spec)
+            result = _evaluate_snmp_detection(
+                oid_function,
+                section_plugin.detect_spec,
+                str(section_plugin.name),
+            )
 
             if result is not None and not isinstance(result, (str, bool)):
                 if on_error == "warn":

@@ -4,14 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
-
 import pytest  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.snmp_scan as snmp_scan
-import cmk.base.snmp_utils as snmp_utils
 
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)
@@ -127,14 +124,17 @@ SNMP_SCAN_FUNCTIONS = config.snmp_scan_functions.copy()
         ),
     ])
 def test_snmp_can_functions(name, oids_data, expected_result):
-    def oid_function(oid, default=None, _name=None):
-        # type: (snmp_utils.OID, Optional[snmp_utils.DecodedString], Optional[snmp_utils.CheckPluginName]) -> Optional[snmp_utils.DecodedString]
-        return oids_data.get(oid, default)
+    def oid_function(oid, _default=None, _name=None):
+        return oids_data.get(oid)
 
     scan_function = SNMP_SCAN_FUNCTIONS[name]
 
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])
-    actual_result = snmp_scan._evaluate_snmp_detection(oid_function, converted_detect_spec)
+    actual_result = snmp_scan._evaluate_snmp_detection(
+        oid_function,
+        converted_detect_spec,
+        name,
+    )
     assert actual_result is expected_result

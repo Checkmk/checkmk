@@ -32,7 +32,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 import cmk.gui.crash_reporting as crash_reporting
-from cmk.gui.type_defs import InfoName  # pylint: disable=unused-import
+from cmk.gui.type_defs import InfoName
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,

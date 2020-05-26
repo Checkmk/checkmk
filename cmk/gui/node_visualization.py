@@ -43,8 +43,8 @@ import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-from cmk.gui.type_defs import FilterHeaders  # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.gui.type_defs import FilterHeaders
+from cmk.utils.type_defs import HostName
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]

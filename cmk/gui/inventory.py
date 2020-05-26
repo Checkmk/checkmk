@@ -29,7 +29,7 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config

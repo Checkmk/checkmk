@@ -19,8 +19,11 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, CheckPluginName, Item, ServiceName,
+from cmk.utils.type_defs import (
+    HostName,
+    CheckPluginName,
+    Item,
+    ServiceName,
 )
 
 import cmk.base.check_utils

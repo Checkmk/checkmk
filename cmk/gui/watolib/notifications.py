@@ -7,7 +7,7 @@
 
 from typing import Dict, List
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, EventRule  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId, EventRule
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb

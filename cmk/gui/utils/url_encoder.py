@@ -7,7 +7,7 @@
 from typing import Text, Union
 import six
 
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed

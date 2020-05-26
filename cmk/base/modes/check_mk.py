@@ -19,7 +19,7 @@ import cmk.utils.snmp_table as snmp_table
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKBailOut
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import TagValue, HostgroupName  # pylint: disable=unused-import
+from cmk.utils.type_defs import TagValue, HostgroupName
 from cmk.utils.log import console
 
 import cmk.base.data_sources as data_sources
@@ -41,7 +41,7 @@ import cmk.base.packaging
 import cmk.base.localize
 import cmk.base.diagnostics
 import cmk.base.obsolete_output as out
-from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress
 
 from cmk.base.modes import (
     modes,

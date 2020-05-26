@@ -10,7 +10,7 @@ import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 
 NewMode = Union[None, bool, str]

@@ -20,8 +20,14 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    ServiceName, HostName, Item, HostAddress, HostgroupName, ServicegroupName, ContactgroupName,
+from cmk.utils.type_defs import (
+    ServiceName,
+    HostName,
+    Item,
+    HostAddress,
+    HostgroupName,
+    ServicegroupName,
+    ContactgroupName,
 )
 
 import cmk.base.utils

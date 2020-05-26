@@ -24,7 +24,7 @@ else:
 
 from livestatus import LocalConnection
 
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils
 import cmk.gui.userdb as userdb

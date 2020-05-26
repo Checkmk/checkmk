@@ -10,7 +10,7 @@ from typing import List, Tuple, Dict
 
 import random
 
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms

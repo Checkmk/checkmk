@@ -24,11 +24,14 @@ import six
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostNameConditions, ServiceNameConditions, HostName, ServiceName,
+from cmk.utils.type_defs import (
+    HostNameConditions,
+    ServiceNameConditions,
+    HostName,
+    ServiceName,
 )
 
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

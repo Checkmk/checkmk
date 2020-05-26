@@ -11,7 +11,7 @@ from typing import Optional
 
 from connexion import problem  # type: ignore[import]
 
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.config import clear_user_login, set_user_by_id
@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
 from cmk.gui.login import verify_automation_secret, set_auth_type
 
 from cmk.gui.wsgi.wrappers import ParameterDict
-from cmk.gui.wsgi.type_defs import RFC7662  # pylint: disable=unused-import
+from cmk.gui.wsgi.type_defs import RFC7662
 
 MK_STATUS = {
     MKUserError: 400,

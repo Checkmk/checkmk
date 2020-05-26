@@ -33,7 +33,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.valuespec import Choices  # pylint: disable=unused-import
 from cmk.gui.watolib.utils import (
     wato_root_dir,

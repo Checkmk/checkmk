@@ -21,7 +21,7 @@ import six
 
 import cmk.utils.paths
 import cmk.utils
-from cmk.utils.type_defs import MetricName, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import MetricName, HostName
 
 RRDServiceName = str
 

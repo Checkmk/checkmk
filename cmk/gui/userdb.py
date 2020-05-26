@@ -22,7 +22,7 @@ else:
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, ContactgroupName  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId, ContactgroupName
 from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages

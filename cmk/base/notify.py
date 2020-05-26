@@ -48,7 +48,7 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import EventRule  # pylint: disable=unused-import
+from cmk.utils.type_defs import EventRule
 
 import cmk.base.utils
 import cmk.base.config as config
@@ -62,7 +62,7 @@ try:
 except ImportError:
     keepalive = None  # type: ignore[assignment]
 
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName
 
 logger = logging.getLogger('cmk.base.notify')
 logger.addHandler(logging.NullHandler())

@@ -35,8 +35,9 @@ from cmk.utils.type_defs import EventRule
 import cmk.base.config as config
 import cmk.base.core
 
-from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    HostName, ServiceName,
+from cmk.utils.type_defs import (
+    HostName,
+    ServiceName,
 )
 
 ContactList = List  # TODO Improve this

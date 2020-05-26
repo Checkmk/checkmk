@@ -11,7 +11,6 @@ import socket
 import ssl
 from contextlib import closing
 
-import six
 import pytest  # type: ignore[import]
 
 import omdlib.certs as certs
@@ -51,7 +50,7 @@ def test_lqencode(query_part):
 ])
 def test_quote_dict(inp, expected_result):
     result = livestatus.quote_dict(inp)
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == expected_result
 
 

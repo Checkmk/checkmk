@@ -3180,7 +3180,7 @@ class html(ABCHTMLGenerator):
             for k, v in self.page_context.items():
                 if v is None:
                     v = ''
-                elif isinstance(v, six.text_type):
+                elif isinstance(v, str):
                     v = six.ensure_str(v)
                 encoded_vars[k] = v
 

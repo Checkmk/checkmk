@@ -4,14 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    List,
-    Text,
-    Union,
-    Tuple,
-)
-import six
+from typing import Dict, List, Union, Tuple
 
 import livestatus
 import cmk.gui.sites as sites
@@ -273,7 +266,7 @@ class SingleMetricDashlet(Dashlet):
             "above": [],
             "below": [],
             "tooltip": [],
-        }  # type: Dict[str, List[Union[Text, Tuple[Text, int]]]]
+        }  # type: Dict[str, List[Union[str, Tuple[str, int]]]]
 
         for opt in ["site", "host", "service", "metric"]:
             opt_id = "show_%s" % opt
@@ -282,10 +275,9 @@ class SingleMetricDashlet(Dashlet):
                 if isinstance(tmp_opt, tuple):  # position != tooltip
                     position, font_size = tmp_opt
                     titles[position].append(
-                        (six.text_type(links[opt] if opt in links else metric_spec[opt]),
-                         font_size))
+                        (str(links[opt] if opt in links else metric_spec[opt]), font_size))
                 elif tmp_opt == "tooltip":
-                    titles[tmp_opt].append(six.text_type(metric_spec[opt]))
+                    titles[tmp_opt].append(str(metric_spec[opt]))
         return titles
 
     def _get_rendered_metric_value(self, metric, render_options, tooltip_titles, service_url):

@@ -124,11 +124,11 @@ class ABCLabel(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name, value):
         # type: (str, str) -> None
 
-        if not isinstance(name, six.text_type):
+        if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
         self._name = name
 
-        if not isinstance(value, six.text_type):
+        if not isinstance(value, str):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
         self._value = value
 
@@ -178,7 +178,7 @@ class HostLabel(ABCLabel):
     def from_dict(cls, name, dict_label):
         # type: (str, HostLabelValueDict) -> HostLabel
         value = dict_label["value"]
-        assert isinstance(value, six.text_type)
+        assert isinstance(value, str)
 
         plugin_name = dict_label["plugin_name"]
         assert isinstance(plugin_name, str) or plugin_name is None

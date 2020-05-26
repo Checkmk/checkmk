@@ -7,7 +7,6 @@
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
 from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
@@ -42,7 +41,7 @@ def test_htpasswd_exists(htpasswd_file):
 def test_htpasswd_load(htpasswd_file):
     credentials = htpasswd.Htpasswd(htpasswd_file).load()
     assert credentials[u"cmkadmin"] == "NEr3kqi287FQc"
-    assert isinstance(credentials[u"cmkadmin"], six.text_type)
+    assert isinstance(credentials[u"cmkadmin"], str)
     assert credentials[u"bärnd"] == "$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/"
 
 

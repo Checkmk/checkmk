@@ -349,7 +349,7 @@ class TagConfig:
         return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
-        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
+        by_topic = {}  # type: Dict[str, List[str]]
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
@@ -386,7 +386,7 @@ class TagConfig:
         return aux_tag_map
 
     def get_aux_tags_by_topic(self):
-        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
+        by_topic = {}  # type: Dict[str, List[str]]
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
@@ -394,7 +394,7 @@ class TagConfig:
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response = set()  # type: Set[six.text_type]
+        response = set()  # type: Set[str]
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
@@ -467,7 +467,7 @@ class TagConfig:
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()  # type: Set[six.text_type]
+        seen_ids = set()  # type: Set[str]
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)

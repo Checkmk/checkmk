@@ -125,7 +125,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = 0.0
             elif isinstance(row[key], str):
                 row[key] = ""
-            elif isinstance(row[key], six.text_type):
+            elif isinstance(row[key], str):
                 row[key] = u""
 
 

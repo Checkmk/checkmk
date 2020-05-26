@@ -417,7 +417,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
     def _add_node_column(self, section_content, nodename):
         # type: (AbstractSectionContent, Optional[HostName]) -> AbstractSectionContent
         new_section_content = []
-        node_text = six.text_type(nodename) if isinstance(nodename, str) else nodename
+        node_text = str(nodename) if isinstance(nodename, str) else nodename
         for line in section_content:
             if len(line) > 0 and isinstance(line[0], list):
                 new_entry = []

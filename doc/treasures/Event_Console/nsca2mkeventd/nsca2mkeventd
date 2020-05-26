@@ -41,7 +41,7 @@ def open_logfile():
 
 
 def log(text):
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
         text = text.encode("utf-8")
     try:
         g_logfile.write('[%.6f] %s\n' % (time.time(), text))

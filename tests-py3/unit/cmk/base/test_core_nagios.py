@@ -8,8 +8,8 @@
 import io
 import itertools
 
-import six
 import pytest  # type: ignore[import]
+
 from testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
@@ -25,7 +25,7 @@ def test_format_nagios_object():
         u"_HÄÄÄÄ": "XXXXXX_YYYY",
     }
     cfg = core_nagios._format_nagios_object("service", spec)
-    assert isinstance(cfg, six.text_type)
+    assert isinstance(cfg, str)
     assert cfg == """define service {
   %-29s %s
   %-29s %s

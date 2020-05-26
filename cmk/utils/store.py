@@ -18,8 +18,6 @@ import pprint
 import tempfile
 from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
-import six
-
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
@@ -268,7 +266,7 @@ def save_object_to_file(path, data, pretty=False):
 
 def save_text_to_file(path, content, mode=0o660):
     # type: (Union[Path, str], str, int) -> None
-    if not isinstance(content, six.text_type):
+    if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
     _save_data_to_file(path, content.encode("utf-8"), mode)
 

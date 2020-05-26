@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-import six
+
 from testlib import CheckManager
 from testlib.base import Scenario
 
@@ -115,5 +115,5 @@ def test_get_tag_attributes(tag_groups, result):
     attributes = core_config._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result
     for k, v in attributes.items():
-        assert isinstance(k, six.text_type)
-        assert isinstance(v, six.text_type)
+        assert isinstance(k, str)
+        assert isinstance(v, str)

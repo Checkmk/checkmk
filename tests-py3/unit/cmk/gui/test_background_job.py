@@ -9,7 +9,6 @@ import time
 import multiprocessing
 import sys
 
-import six
 import pytest  # type: ignore[import]
 
 import testlib
@@ -59,7 +58,7 @@ def test_registered_background_jobs():
 def test_registered_background_jobs_attributes():
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
-        assert isinstance(job_class.gui_title(), six.text_type)
+        assert isinstance(job_class.gui_title(), str)
 
 
 @pytest.fixture(autouse=True)

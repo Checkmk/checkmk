@@ -2227,7 +2227,7 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         # in the following code.
         # TODO: This should be strictly validated by the check API in 1.7.
         if item is not None and not isinstance(item, str):
-            item = six.text_type(item)
+            item = str(item)
 
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(

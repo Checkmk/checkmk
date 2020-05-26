@@ -309,7 +309,7 @@ class FixedValue(ValueSpec):
         # type: (Any) -> Text
         if self._totext is not None:
             return self._totext
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             return value
         return ensure_unicode(value)
 
@@ -5612,16 +5612,14 @@ class Labels(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         for k, v in value.items():
-            if not isinstance(k, six.text_type):
+            if not isinstance(k, str):
                 raise MKUserError(
                     varprefix,
-                    _("The label ID %r is of type %s, but should be %s") %
-                    (k, type(k), six.text_type))
-            if not isinstance(v, six.text_type):
+                    _("The label ID %r is of type %s, but should be %s") % (k, type(k), str))
+            if not isinstance(v, str):
                 raise MKUserError(
                     varprefix,
-                    _("The label value %r is of type %s, but should be %s") %
-                    (k, type(v), six.text_type))
+                    _("The label value %r is of type %s, but should be %s") % (k, type(v), str))
 
     def value_to_text(self, value):
         label_sources = {k: self._label_source.value for k in value.keys()

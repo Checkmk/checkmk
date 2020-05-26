@@ -167,7 +167,7 @@ def test_get_ascii_input_mandatory_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_type():
     assert html.request.get_unicode_input("xyz") == "x"
-    assert isinstance(html.request.get_unicode_input("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -184,7 +184,7 @@ def test_get_unicode_input_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_input_type():
     assert html.request.get_unicode_input_mandatory("xyz") == u"x"
-    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")

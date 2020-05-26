@@ -661,7 +661,7 @@ def declare_custom_host_attrs():
 
 
 def _validate_is_ascii(value, varprefix):
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         try:
             value.encode("ascii")
         except UnicodeEncodeError:

@@ -188,7 +188,7 @@ def manage_logfiles(request):
     if platform.system() == 'Windows':
         for log in [Globals.testlog1, Globals.testlog2]:
             with io.open(log, 'w', encoding=request.param) as logfile:
-                for entry in [six.text_type(Globals.testentry1), six.text_type(Globals.testentry2)]:
+                for entry in [str(Globals.testentry1), str(Globals.testentry2)]:
                     logfile.write('%s\r\n' % entry)
     yield
     if platform.system() == 'Windows':

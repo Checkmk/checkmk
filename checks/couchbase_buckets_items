@@ -15,7 +15,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "items_count",
             params.get('curr_items_tot'),
             infoname="Total items in vBuckets",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     write_queue = data.get("disk_write_queue")
@@ -25,7 +25,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "disk_write_ql",
             params.get("disk_write_ql"),
             infoname="Items in disk write queue",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     fetched = data.get("ep_bg_fetched")
@@ -35,7 +35,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "fetched_items",
             params.get("fetched_items"),
             infoname="Items fetched from disk",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     queue_fill = data.get("ep_diskqueue_fill")

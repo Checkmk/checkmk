@@ -57,7 +57,6 @@ import time
 import traceback
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import six
 from psutil._common import sdiskusage  # type: ignore[import]
 from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
 import psutil  # type: ignore[import]
@@ -912,7 +911,7 @@ class Measurement:
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, six.text_type):
+                            if isinstance(value, str):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values

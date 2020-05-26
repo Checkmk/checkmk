@@ -10,7 +10,6 @@ import subprocess
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
 
 from testlib import wait_until
 
@@ -169,7 +168,7 @@ def clear_cache(monkeypatch):
 def test_get_data_types(snmp_config, type_name, oid, expected_response):
     response = snmp.get_single_oid(snmp_config, oid)
     assert response == expected_response
-    assert isinstance(response, six.text_type)
+    assert isinstance(response, str)
 
     oid_start, oid_end = oid.rsplit(".", 1)
     table = snmp_table.get_snmp_table(
@@ -179,7 +178,7 @@ def test_get_data_types(snmp_config, type_name, oid, expected_response):
     )
 
     assert table[0][0] == expected_response
-    assert isinstance(table[0][0], six.text_type)
+    assert isinstance(table[0][0], str)
 
 
 def test_get_simple_snmp_table_not_resolvable(snmp_config):
@@ -254,7 +253,7 @@ def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
             u'new system name',
         ],
     ]
-    assert isinstance(table[0][0], six.text_type)
+    assert isinstance(table[0][0], str)
 
 
 def test_get_simple_snmp_table(snmp_config):
@@ -275,7 +274,7 @@ def test_get_simple_snmp_table(snmp_config):
             u'new system name',
         ],
     ]
-    assert isinstance(table[0][0], six.text_type)
+    assert isinstance(table[0][0], str)
 
 
 def test_get_simple_snmp_table_oid_end(snmp_config):

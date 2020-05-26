@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-import six
+
 import pytest  # type: ignore[import]
 from cmk.utils.exceptions import MKException
 
@@ -29,5 +29,5 @@ def test_mkexception(sources, expected_py2, expected_py3):
     expected = expected_py3 if sys.version_info[0] >= 3 else expected_py2
 
     exc = MKException(*sources)
-    assert six.text_type(exc) == expected
-    assert six.text_type(MKException(exc)) == expected
+    assert str(exc) == expected
+    assert str(MKException(exc)) == expected

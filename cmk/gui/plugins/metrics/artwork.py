@@ -6,18 +6,9 @@
 
 import math
 import time
-from typing import (
-    List,
-    Tuple,
-    Union,
-    Optional,
-    Callable,
-    Iterable,
-    Text,
-)
+from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
 
-import six
 from six.moves import zip_longest
 
 import cmk.utils.render
@@ -753,16 +744,16 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     label_shift = 0  # shift seconds to future in order to center it
     label_distance_at_least = 0
     if start_date == end_date:
-        title_label = six.text_type(cmk.utils.render.date(start_time))
+        title_label = str(cmk.utils.render.date(start_time))
     else:
         title_label = u"%s \u2014 %s" % (
-            six.text_type(cmk.utils.render.date(start_time)),
-            six.text_type(cmk.utils.render.date(end_time)),
+            str(cmk.utils.render.date(start_time)),
+            str(cmk.utils.render.date(end_time)),
         )
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling = "%H:%M"  # type: Union[str, Text, Callable]
+        labelling = "%H:%M"  # type: Union[str, Callable]
         label_size = 5  # type: Union[int, float]
 
     # Less than one week

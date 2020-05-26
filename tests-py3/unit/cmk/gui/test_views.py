@@ -10,7 +10,6 @@ import copy
 from typing import Any, Dict
 
 import pytest  # type: ignore[import]
-import six
 
 import cmk.gui.config as config
 import cmk.utils.version as cmk_version
@@ -166,7 +165,7 @@ def test_layout_properties():
 
     for ident, spec in expected.items():
         plugin = cmk.gui.plugins.views.layout_registry[ident]()
-        assert isinstance(plugin.title, six.text_type)
+        assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
         assert spec["hide"] == plugin.is_hidden

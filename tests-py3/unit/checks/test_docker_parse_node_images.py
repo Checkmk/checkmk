@@ -21,21 +21,21 @@ regex = re.compile
 exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 REQUIRED_IMAGE_KEYS = (
-    ("Id", (str, six.text_type)),
+    ("Id", (str, str)),
     ("RepoTags", list),
-    ("Created", (str, six.text_type)),
+    ("Created", (str, str)),
     ("VirtualSize", int),
     ("Labels", dict),
     ("amount_containers", int),
 )
 
 REQUIRED_CONTAINER_KEYS = (
-    ("Id", (str, six.text_type)),
-    ("Image", (str, six.text_type)),
-    ("Created", (str, six.text_type)),
+    ("Id", (str, str)),
+    ("Image", (str, str)),
+    ("Created", (str, str)),
     ("Labels", dict),
-    ("Name", (str, six.text_type)),
-    ("Status", (str, six.text_type)),
+    ("Name", (str, str)),
+    ("Status", (str, str)),
 )
 
 SUBSECTIONS1 = {

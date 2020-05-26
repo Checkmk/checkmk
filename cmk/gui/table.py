@@ -231,7 +231,7 @@ class Table(object):
         else:
             if isinstance(text, HTML):
                 cell_text = "%s" % text
-            elif not isinstance(text, six.text_type):
+            elif not isinstance(text, str):
                 cell_text = str(text)
             else:
                 cell_text = text

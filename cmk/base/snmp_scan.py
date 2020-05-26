@@ -103,7 +103,7 @@ def _snmp_scan(host_config,
 
     # TODO (mo): Assumption here is that inventory plugins are significantly fewer
     #            than check plugins. We should pass an explicit list along, instead
-    #            of this flag.
+    #            of this flag. That way we would also get rid of the import above.
     if for_inv:
         section_names = [PluginName(n) for n in inventory_plugins.inv_info]
         these_sections = [
@@ -123,10 +123,10 @@ def _snmp_scan(host_config,
             # This function will disappear shortly. Don't know why the supression was not needed
             # before.
             # pylint: disable=cell-var-from-loop
-            def oid_function(oid, default_value=None, cp_name=str(section_plugin.name)):
-                # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
+            def oid_function(oid, cp_name=str(section_plugin.name)):
+                # type: (OID, Optional[CheckPluginName]) -> Optional[DecodedString]
                 value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
-                return default_value if value is None else value
+                return value
 
             result = _evaluate_snmp_detection(oid_function, section_plugin.detect_spec)
 

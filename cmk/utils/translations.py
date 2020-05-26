@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text
+from typing import Dict
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
@@ -13,7 +13,7 @@ TranslationOptions = Dict  # TODO: Improve this type
 
 
 def translate_hostname(translation, hostname):
-    # type: (TranslationOptions, Text) -> Text
+    # type: (TranslationOptions, str) -> str
     return _translate(translation, hostname)
 
 
@@ -28,7 +28,7 @@ def translate_service_description(translation, service_description):
 
 
 def _translate(translation, name):
-    # type: (TranslationOptions, Text) -> Text
+    # type: (TranslationOptions, str) -> str
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":

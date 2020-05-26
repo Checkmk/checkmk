@@ -16,7 +16,7 @@ import re
 import sys
 from pathlib import Path
 import subprocess
-from typing import Text, Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import six
 
@@ -315,7 +315,7 @@ def print_man_page_table():
 
 
 def get_title_from_man_page(path):
-    # type: (Path) -> Text
+    # type: (Path) -> str
     with path.open(encoding=six.ensure_str("utf-8")) as fp:
         for line in fp:
             if line.startswith("title:"):

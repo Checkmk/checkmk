@@ -6,7 +6,7 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
-from typing import Dict, List, Text, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from cmk.utils.i18n import _
 
@@ -17,7 +17,7 @@ from cmk.utils.i18n import _
 
 # TODO: Rename to service_state_names()
 def core_state_names():
-    # type: () -> Dict[int, Text]
+    # type: () -> Dict[int, str]
     return {
         -1: _("NODATA"),
         0: _("OK"),
@@ -28,12 +28,12 @@ def core_state_names():
 
 
 def service_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+    # type: (int, str) -> str
     return core_state_names().get(state_num, deflt)
 
 
 def short_service_state_names():
-    # type: () -> Dict[int, Text]
+    # type: () -> Dict[int, str]
     return {
         -1: _("PEND"),
         0: _("OK"),
@@ -44,12 +44,12 @@ def short_service_state_names():
 
 
 def short_service_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+    # type: (int, str) -> str
     return short_service_state_names().get(state_num, deflt)
 
 
 def host_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+    # type: (int, str) -> str
     states = {
         0: _("UP"),
         1: _("DOWN"),
@@ -59,13 +59,13 @@ def host_state_name(state_num, deflt=u""):
 
 
 def short_host_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+    # type: (int, str) -> str
     states = {0: _("UP"), 1: _("DOWN"), 2: _("UNREACH")}
     return states.get(state_num, deflt)
 
 
 def weekday_name(day_num):
-    # type: (int) -> Text
+    # type: (int) -> str
     """Returns the human readable day name of a given weekday number (starting with 0 at Monday)"""
     return weekdays()[day_num]
 
@@ -77,7 +77,7 @@ def weekday_ids():
 
 
 def weekdays():
-    # type: () -> Dict[int, Text]
+    # type: () -> Dict[int, str]
     """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
         0: _("Monday"),
@@ -91,7 +91,7 @@ def weekdays():
 
 
 def weekdays_by_name():
-    # type: () -> List[Tuple[str, Text]]
+    # type: () -> List[Tuple[str, str]]
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
         ("monday", _("Monday")),
@@ -105,7 +105,7 @@ def weekdays_by_name():
 
 
 def month_name(month_num):
-    # type: (int) -> Text
+    # type: (int) -> str
     """Returns the human readable month name of a given month number
     (starting with 0 = January)"""
     return [
@@ -125,14 +125,14 @@ def month_name(month_num):
 
 
 def interface_oper_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+    # type: (int, str) -> str
     return interface_oper_states().get(state_num, deflt)
 
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
 def interface_oper_states():
-    # type: () -> Dict[Union[Text, str, int], Text]
+    # type: () -> Dict[Union[str, int], str]
     return {
         1: _("up"),
         2: _("down"),
@@ -149,7 +149,7 @@ def interface_oper_states():
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
 def interface_port_types():
-    # type: () -> Dict[Union[Text, str, int], Text]
+    # type: () -> Dict[Union[str, int], str]
     return {
         1: u"other",
         2: u"regular1822",

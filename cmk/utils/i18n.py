@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Stub for future i18n code on cmk main module level"""
 
-from typing import AnyStr, Text
+from typing import AnyStr
 
 from cmk.utils.encoding import ensure_unicode
 
@@ -15,5 +15,5 @@ from cmk.utils.encoding import ensure_unicode
 # need the path to the locale files here.
 # Fake i18n when not available
 def _(string):
-    # type: (AnyStr) -> Text
+    # type: (AnyStr) -> str
     return ensure_unicode(string)

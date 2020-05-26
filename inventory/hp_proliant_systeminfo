@@ -10,11 +10,9 @@
 def inv_hp_proliant_systeminfo(info):
     node = inv_tree("hardware.system.")
     if not node.get("serial"):
-        node["serial"] = info[0][0]
+        node["serial"] = info[0][0][0]
 
 
 inv_info['hp_proliant_systeminfo'] = {
     'inv_function': inv_hp_proliant_systeminfo,
-    'snmp_info': (".1.3.6.1.4.1.232.2.2.2.1", [""]),
-    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

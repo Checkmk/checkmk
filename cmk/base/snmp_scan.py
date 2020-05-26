@@ -129,21 +129,14 @@ def _snmp_scan(host_config,
 
         try:
 
-            result = _evaluate_snmp_detection(
-                section_plugin.detect_spec,
-                host_config,
-                str(section_plugin.name),
-                do_snmp_scan,
-            )
-
-            if result is not None and not isinstance(result, (str, bool)):
-                if on_error == "warn":
-                    console.warning("   SNMP scan function of %s returns invalid type %s." %
-                                    (section_plugin.name, type(result)))
-                elif on_error == "raise":
-                    raise MKGeneralException("SNMP Scan aborted.")
-            elif result:
+            if _evaluate_snmp_detection(
+                    section_plugin.detect_spec,
+                    host_config,
+                    str(section_plugin.name),
+                    do_snmp_scan,
+            ):
                 found_plugins.add(str(section_plugin.name))
+
         except MKGeneralException:
             # some error messages which we explicitly want to show to the user
             # should be raised through this

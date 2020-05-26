@@ -9,7 +9,7 @@ import time
 import traceback
 import sys
 from hashlib import md5
-from typing import List, Union, Optional, Text, Tuple  # pylint: disable=unused-import
+from typing import List, Union, Optional, Text, Tuple
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

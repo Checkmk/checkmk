@@ -7,8 +7,12 @@
 import os
 import re
 import pprint
-from typing import (  # pylint: disable=unused-import
-    Tuple, Optional, Dict, List, Any,
+from typing import (
+    Tuple,
+    Optional,
+    Dict,
+    List,
+    Any,
 )
 import six
 

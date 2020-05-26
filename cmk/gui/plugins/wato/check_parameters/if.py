@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import Any, List, Tuple as _Tuple, Union
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (  # pylint: disable=unused-import

@@ -8,7 +8,7 @@ import copy
 import traceback
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union
 
 import six
 

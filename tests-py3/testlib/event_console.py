@@ -6,7 +6,7 @@
 
 import socket
 import time
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from testlib.web_session import CMKWebSession
 

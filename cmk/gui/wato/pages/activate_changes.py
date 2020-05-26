@@ -9,7 +9,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
-from typing import Dict, NamedTuple, List, Optional, Text  # pylint: disable=unused-import
+from typing import Dict, NamedTuple, List, Optional, Text
 import six
 
 import cmk.gui.config as config

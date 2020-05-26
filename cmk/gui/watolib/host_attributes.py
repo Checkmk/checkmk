@@ -9,7 +9,7 @@ hosts. Examples are the IP address and the host tags."""
 import abc
 import functools
 import re
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type
 import six
 
 import cmk.utils.plugin_registry

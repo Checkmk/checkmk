@@ -16,7 +16,7 @@ try:
 except ImportError:
     from collections import Mapping
 
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union
 
 import six
 from livestatus import SiteId  # pylint: disable=unused-import

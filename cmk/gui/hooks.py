@@ -6,7 +6,7 @@
 
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, NamedTuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 import cmk.gui.config as config
 import cmk.gui.i18n

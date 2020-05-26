@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterator, Any, Union, Optional, Text, List, Dict  # pylint: disable=unused-import
+from typing import Iterator, Any, Union, Optional, Text, List, Dict
 
 try:
     # Python has a totally braindead history of changes in this area:

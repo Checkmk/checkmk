@@ -12,8 +12,13 @@ import socket
 import contextlib
 import binascii
 
-from typing import (  # pylint: disable=unused-import
-    Dict, List, NamedTuple, Text, Union, Tuple as _Tuple,
+from typing import (
+    Dict,
+    List,
+    NamedTuple,
+    Text,
+    Union,
+    Tuple as _Tuple,
 )
 
 import six

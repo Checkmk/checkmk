@@ -15,7 +15,7 @@ import re
 import socket
 import sys
 import time
-from typing import Any, Counter, Dict, Iterable, List, Set  # pylint: disable=unused-import
+from typing import Any, Counter, Dict, Iterable, List, Set
 from xml.dom import minidom  # type: ignore[import]
 
 import requests

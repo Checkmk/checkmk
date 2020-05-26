@@ -8,7 +8,7 @@ import abc
 import os
 import pprint
 import sys
-from typing import Any, Dict, List, Optional, Text, Type  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Text, Type
 import six
 
 if sys.version_info[0] >= 3:

@@ -6,7 +6,7 @@
 
 import os
 import abc
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 import six
 

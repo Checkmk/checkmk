@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import List, Tuple as _Tuple
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (  # pylint: disable=unused-import

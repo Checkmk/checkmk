@@ -15,7 +15,7 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import Any, Tuple, Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
+from typing import Any, Tuple, Dict, NamedTuple, Text, List, Optional
 
 import six
 

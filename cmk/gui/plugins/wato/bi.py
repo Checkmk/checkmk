@@ -8,8 +8,13 @@
 import sys
 import json
 import pprint
-from typing import (  # pylint: disable=unused-import
-    Dict, Any, List, Tuple as _Tuple, Optional as _Optional, Union,
+from typing import (
+    Dict,
+    Any,
+    List,
+    Tuple as _Tuple,
+    Optional as _Optional,
+    Union,
 )
 
 if sys.version_info[0] >= 3:

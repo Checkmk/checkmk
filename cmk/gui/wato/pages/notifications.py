@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import List, NamedTuple, Text, Tuple as _Tuple, Union
 
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode

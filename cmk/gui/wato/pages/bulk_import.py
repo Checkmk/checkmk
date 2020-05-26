@@ -10,8 +10,13 @@ by pasting the contents of a CSV file into a textbox."""
 import csv
 import time
 import sys
-from typing import (  # pylint: disable=unused-import
-    Dict, Text, Type, List, Optional, Any,
+from typing import (
+    Dict,
+    Text,
+    Type,
+    List,
+    Optional,
+    Any,
 )
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Dict, Set, Iterator, Tuple, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, Set, Iterator, Tuple, Optional
 
 import cmk.utils.paths
 import cmk.utils.debug

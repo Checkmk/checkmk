@@ -8,8 +8,8 @@ from __future__ import division
 import time
 import os
 
-from typing import (  # pylint: disable=unused-import
-    Callable, Set, Dict, Any, Text, Union, List, Tuple as _Tuple, Optional as _Optional)
+from typing import (Callable, Set, Dict, Any, Text, Union, List, Tuple as _Tuple, Optional as
+                    _Optional)
 import six
 
 from livestatus import SiteId  # pylint: disable=unused-import

@@ -6,8 +6,12 @@
 
 import abc
 import os
-from typing import (  # pylint: disable=unused-import
-    List, Optional, Dict, Any, Tuple,
+from typing import (
+    List,
+    Optional,
+    Dict,
+    Any,
+    Tuple,
 )
 import six
 

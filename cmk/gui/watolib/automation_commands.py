@@ -6,8 +6,12 @@
 """Managing the available automation calls"""
 
 import abc
-from typing import (  # pylint: disable=unused-import
-    Dict, Type, Any, Text, Union,
+from typing import (
+    Dict,
+    Type,
+    Any,
+    Text,
+    Union,
 )
 import six
 

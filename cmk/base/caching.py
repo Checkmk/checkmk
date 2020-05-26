@@ -6,7 +6,7 @@
 """Managing in-memory caches through the execution time of cmk"""
 
 import abc
-from typing import cast, Type, Dict  # pylint: disable=unused-import
+from typing import cast, Type, Dict
 import six
 
 from cmk.utils.exceptions import MKGeneralException

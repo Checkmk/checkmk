@@ -6,7 +6,7 @@
 
 import abc
 import re
-from typing import Optional, Text  # pylint: disable=unused-import
+from typing import Optional, Text
 import six
 
 import cmk.gui.config as config

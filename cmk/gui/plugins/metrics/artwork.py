@@ -6,8 +6,14 @@
 
 import math
 import time
-from typing import (  # pylint: disable=unused-import
-    List, Tuple, Union, Optional, Callable, Iterable, Text,
+from typing import (
+    List,
+    Tuple,
+    Union,
+    Optional,
+    Callable,
+    Iterable,
+    Text,
 )
 from functools import partial
 

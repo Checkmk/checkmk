@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Dict, Text
 
 import six
 

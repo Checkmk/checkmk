@@ -7,8 +7,12 @@
 import abc
 import re
 import time
-from typing import (  # pylint: disable=unused-import
-    Text, List, Optional, Tuple, Callable,
+from typing import (
+    Text,
+    List,
+    Optional,
+    Tuple,
+    Callable,
 )
 import six
 

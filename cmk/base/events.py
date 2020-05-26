@@ -20,8 +20,7 @@ if sys.version_info[0] >= 3:
 else:
     from urllib import quote  # pylint: disable=unused-import,no-name-in-module
 
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Iterable, List, Optional, Text, Union)
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Text, Union)
 
 import six
 

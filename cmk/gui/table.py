@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Text, Any, Iterator  # pylint: disable=unused-import
+from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Text, Any, Iterator
 import six
 
 import cmk.gui.utils as utils

@@ -6,7 +6,7 @@
 
 # Basic functions for cmk_figures
 
-from typing import Type  # pylint: disable=unused-import
+from typing import Type
 import abc
 import json
 import six

@@ -6,7 +6,7 @@
 """Wrapper layer between WSGI and GUI application code"""
 
 import sys
-from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple
 import six
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json

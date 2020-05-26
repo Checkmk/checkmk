@@ -21,7 +21,7 @@ structures like log files or stuff.
 
 import os
 import traceback
-from typing import AnyStr, Union, List, Optional, Dict, Any, Tuple  # pylint: disable=unused-import
+from typing import AnyStr, Union, List, Optional, Dict, Any, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store

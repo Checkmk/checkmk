@@ -10,8 +10,13 @@ import itertools
 import pprint
 import re
 import json
-from typing import (  # pylint: disable=unused-import
-    Dict, Generator, List, Optional, Text, Union,
+from typing import (
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Text,
+    Union,
 )
 
 import six

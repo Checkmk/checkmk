@@ -7,8 +7,16 @@
 import time
 import copy
 import json
-from typing import (  # pylint: disable=unused-import
-    Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union, Callable,
+from typing import (
+    Dict,
+    Optional,
+    NamedTuple,
+    Tuple,
+    Text,
+    Type,
+    List,
+    Union,
+    Callable,
 )
 import six
 

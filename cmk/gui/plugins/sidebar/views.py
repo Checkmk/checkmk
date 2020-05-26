@@ -6,7 +6,7 @@
 
 import re
 from collections import OrderedDict
-from typing import NamedTuple, Dict, List, Tuple, Text  # pylint: disable=unused-import
+from typing import NamedTuple, Dict, List, Tuple, Text
 import six
 
 import cmk.gui.config as config

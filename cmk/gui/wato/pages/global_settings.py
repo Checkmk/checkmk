@@ -7,8 +7,10 @@
 settings"""
 
 import abc
-from typing import (  # pylint: disable=unused-import
-    Optional, Text, Union,
+from typing import (
+    Optional,
+    Text,
+    Union,
 )
 
 import cmk.utils.version as cmk_version

@@ -17,7 +17,7 @@ import traceback
 from types import FrameType  # pylint: disable=unused-import
 import io
 
-from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any  # pylint: disable=unused-import
+from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any
 import psutil  # type: ignore[import]
 
 if sys.version_info[0] >= 3:

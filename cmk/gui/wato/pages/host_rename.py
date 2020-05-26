@@ -7,8 +7,10 @@
 
 import os
 import socket
-from typing import (  # pylint: disable=unused-import
-    List, Dict, Tuple as _Tuple,
+from typing import (
+    List,
+    Dict,
+    Tuple as _Tuple,
 )
 
 from livestatus import SiteId  # pylint: disable=unused-import

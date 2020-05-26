@@ -9,7 +9,7 @@
 import copy
 from functools import partial
 import os
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import six
 

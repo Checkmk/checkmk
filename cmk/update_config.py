@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 import subprocess
 import errno
-from typing import List  # pylint: disable=unused-import
+from typing import List
 import argparse
 import logging
 

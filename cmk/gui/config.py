@@ -10,8 +10,17 @@ import os
 import copy
 import json
 from types import ModuleType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
+from typing import (
+    Set,
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Text,
+    Tuple,
+    Union,
 )
 import time
 import six

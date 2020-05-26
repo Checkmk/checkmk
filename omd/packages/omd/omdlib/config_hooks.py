@@ -38,8 +38,7 @@ import re
 import sys
 import logging
 import subprocess
-from typing import (  # pylint: disable=unused-import
-    Tuple, Pattern, Union, Dict, TYPE_CHECKING, List, Iterable)
+from typing import (Tuple, Pattern, Union, Dict, TYPE_CHECKING, List, Iterable)
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate

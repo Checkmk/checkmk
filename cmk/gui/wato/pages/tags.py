@@ -6,7 +6,7 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union
 import abc
 from enum import Enum
 import six

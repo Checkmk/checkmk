@@ -8,7 +8,7 @@ import os
 import pprint
 import time
 import sys
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

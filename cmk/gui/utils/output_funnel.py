@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Iterator, Union, List, Text  # pylint: disable=unused-import
+from typing import Iterator, Union, List, Text
 import six
 
 from cmk.gui.http import Response  # pylint: disable=unused-import

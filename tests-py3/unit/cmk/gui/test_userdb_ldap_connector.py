@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import sys
-from typing import Dict, List, Union  # pylint: disable=unused-import
+from typing import Dict, List, Union
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import

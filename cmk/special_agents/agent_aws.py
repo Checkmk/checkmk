@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 import sys
 import time
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable  # pylint: disable=unused-import
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]

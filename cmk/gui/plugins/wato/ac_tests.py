@@ -7,8 +7,10 @@
 import abc
 import sys
 import subprocess
-from typing import (  # pylint: disable=unused-import
-    Type, Iterator, Text,
+from typing import (
+    Type,
+    Iterator,
+    Text,
 )
 
 import requests

@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (  # pylint: disable=unused-import
-    Dict as _Dict, List as _List, Optional as _Optional, Text as _Text,
+from typing import (
+    Dict as _Dict,
+    List as _List,
+    Optional as _Optional,
+    Text as _Text,
 )
 
 # This file contains the defaults settings for almost all configuration

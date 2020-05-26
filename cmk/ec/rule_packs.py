@@ -15,8 +15,13 @@ import logging
 import os
 import pprint
 import sys
-from typing import (  # pylint: disable=unused-import
-    Any, Dict, Iterable, List, Optional, Union,
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Union,
 )
 try:
     # Python has a totally braindead history of changes in this area:

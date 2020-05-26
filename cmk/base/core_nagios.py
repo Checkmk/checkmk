@@ -11,7 +11,7 @@ import sys
 import py_compile
 import tempfile
 import errno
-from typing import Tuple, Text, Any, IO, Optional, List, Set, Dict  # pylint: disable=unused-import
+from typing import Tuple, Text, Any, IO, Optional, List, Set, Dict
 
 import six
 

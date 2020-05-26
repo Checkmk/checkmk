@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import cmk.gui.config as config
 from cmk.gui.log import logger

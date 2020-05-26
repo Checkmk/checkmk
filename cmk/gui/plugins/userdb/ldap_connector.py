@@ -42,8 +42,14 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from typing import (  # pylint: disable=unused-import
-    Optional, IO, Union, Dict, List, Set, Text,
+from typing import (
+    Optional,
+    IO,
+    Union,
+    Dict,
+    List,
+    Set,
+    Text,
 )
 
 # docs: http://www.python-ldap.org/doc/html/index.html

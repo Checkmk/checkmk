@@ -6,7 +6,7 @@
 
 import os
 import sys
-from typing import Optional, Dict, List  # pylint: disable=unused-import
+from typing import Optional, Dict, List
 
 import six
 

@@ -8,8 +8,9 @@
 import os
 import glob
 
-from typing import (  # pylint: disable=unused-import
-    List, Text,
+from typing import (
+    List,
+    Text,
 )
 
 import cmk.utils.paths

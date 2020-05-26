@@ -6,7 +6,7 @@
 
 import signal
 from types import FrameType  # pylint: disable=unused-import
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 

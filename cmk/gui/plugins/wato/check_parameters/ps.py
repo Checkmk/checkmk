@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

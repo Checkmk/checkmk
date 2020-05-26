@@ -12,7 +12,7 @@ import re
 import io
 import time
 import zipfile
-from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union  # pylint: disable=unused-import
+from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import

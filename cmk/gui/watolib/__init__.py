@@ -34,7 +34,7 @@ import tarfile
 import threading
 import time
 import traceback
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, List
 
 import requests
 import urllib3  # type: ignore[import]

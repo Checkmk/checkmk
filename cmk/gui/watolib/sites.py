@@ -8,8 +8,9 @@ import os
 import re
 import time
 import sys
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, Type,
+from typing import (
+    NamedTuple,
+    Type,
 )
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:

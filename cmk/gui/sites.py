@@ -5,8 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import (  # pylint: disable=unused-import
-    Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
+from typing import (
+    Any,
+    cast,
+    Dict,
+    Iterator,
+    List,
+    NewType,
+    Optional,
+    Text,
+    Tuple,
+    Union,
 )
 
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import

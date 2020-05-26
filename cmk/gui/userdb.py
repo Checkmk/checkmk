@@ -7,7 +7,7 @@
 # TODO: Rework connection management and multiplexing
 
 import sys
-from typing import cast, Text, Union, Any, Callable, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import cast, Text, Union, Any, Callable, Dict, List, Optional, Tuple
 import time
 import os
 import traceback

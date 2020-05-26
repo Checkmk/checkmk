@@ -10,8 +10,18 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import (  # pylint: disable=unused-import
-    Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union,
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Text,
+    Tuple,
+    Union,
 )
 
 import six

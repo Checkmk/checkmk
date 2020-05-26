@@ -9,7 +9,7 @@ import time
 import tarfile
 import shutil
 from io import IOBase
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Dict, List
 import six
 
 # Explicitly check for Python 3 (which is understood by mypy)

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 

@@ -12,7 +12,7 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Mapping, Optional, Text  # pylint: disable=unused-import
+from typing import Dict, Mapping, Optional, Text
 
 import six
 

@@ -30,7 +30,7 @@ import errno
 import socket
 import tarfile
 import fnmatch
-from typing import cast, List, Tuple, BinaryIO  # pylint: disable=unused-import
+from typing import cast, List, Tuple, BinaryIO
 
 from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
 from omdlib.contexts import SiteContext

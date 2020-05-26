@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any  # pylint: disable=unused-import
+from typing import Dict, Any
 
 import cmk.utils.render
 from cmk.gui.i18n import _

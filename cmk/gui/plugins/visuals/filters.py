@@ -7,7 +7,7 @@
 import abc
 import re
 import json
-from typing import Any, Dict, List, Optional as _Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional as _Optional
 
 import six
 

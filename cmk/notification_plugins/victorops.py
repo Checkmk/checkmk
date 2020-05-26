@@ -11,7 +11,7 @@ Create a JSON message to be sent to VictorOPS REST API
 """
 from __future__ import unicode_literals
 
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context
 

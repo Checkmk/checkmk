@@ -12,8 +12,19 @@ import os
 import ast
 import ssl
 import sys
-from typing import (  # pylint: disable=unused-import
-    NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
+from typing import (
+    NewType,
+    AnyStr,
+    Any,
+    Type,
+    List,
+    Text,
+    cast,
+    Tuple,
+    Union,
+    Dict,
+    Pattern,
+    Optional,
 )
 import six
 

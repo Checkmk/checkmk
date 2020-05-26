@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Text, Tuple, Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store

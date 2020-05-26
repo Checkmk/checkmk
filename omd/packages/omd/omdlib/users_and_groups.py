@@ -27,7 +27,7 @@ import pwd
 import grp
 import os
 import subprocess
-from typing import Union, List, Tuple, Optional, TYPE_CHECKING  # pylint: disable=unused-import
+from typing import Union, List, Tuple, Optional, TYPE_CHECKING
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:

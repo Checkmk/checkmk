@@ -12,7 +12,7 @@ import shutil
 import tarfile
 import time
 import io
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import List, Tuple
 
 import cmk.utils.paths
 import cmk.utils.render as render

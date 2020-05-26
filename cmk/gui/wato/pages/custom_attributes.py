@@ -9,8 +9,10 @@ import abc
 import os
 import pprint
 import re
-from typing import (  # pylint: disable=unused-import
-    Text, Dict, Any,
+from typing import (
+    Text,
+    Dict,
+    Any,
 )
 import six
 

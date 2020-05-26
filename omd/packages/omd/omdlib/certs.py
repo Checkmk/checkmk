@@ -25,7 +25,7 @@
 """Management of the site local CA and certificates issued by it"""
 
 import sys
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import List, Tuple
 import random
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:

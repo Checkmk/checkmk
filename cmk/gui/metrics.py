@@ -18,8 +18,15 @@ import abc
 import math
 import string
 import json
-from typing import (  # pylint: disable=unused-import
-    Any, List, Tuple, Union, Dict, Set, Optional, Text,
+from typing import (
+    Any,
+    List,
+    Tuple,
+    Union,
+    Dict,
+    Set,
+    Optional,
+    Text,
 )
 
 import six

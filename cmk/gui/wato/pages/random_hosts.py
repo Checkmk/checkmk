@@ -6,7 +6,7 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
-from typing import List, Tuple, Dict  # pylint: disable=unused-import
+from typing import List, Tuple, Dict
 
 import random
 

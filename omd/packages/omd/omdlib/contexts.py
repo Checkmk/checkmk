@@ -26,7 +26,7 @@
 import abc
 import os
 import sys
-from typing import cast, Optional  # pylint: disable=unused-import
+from typing import cast, Optional
 import six
 
 from cmk.utils.exceptions import MKTerminate

@@ -5,8 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import xml.etree.ElementTree as ET
-from typing import (  # pylint: disable=unused-import
-    Iterator, Optional, Tuple, Dict, List, Union, AnyStr,
+from typing import (
+    Iterator,
+    Optional,
+    Tuple,
+    Dict,
+    List,
+    Union,
+    AnyStr,
 )
 
 from pathlib import Path

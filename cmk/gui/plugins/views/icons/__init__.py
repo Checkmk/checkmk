@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from typing import Any as _Any, Dict as _Dict  # pylint: disable=unused-import
+from typing import Any as _Any, Dict as _Dict
 
 import six
 

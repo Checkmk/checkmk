@@ -12,7 +12,7 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Dict as _Dict  # pylint: disable=unused-import
+from typing import Dict as _Dict
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics

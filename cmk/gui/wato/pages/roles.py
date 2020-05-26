@@ -20,7 +20,7 @@ configuration of all roles.
 """
 
 import re
-from typing import (  # pylint: disable=unused-import
+from typing import (
     Optional,)
 
 import cmk.utils.store as store

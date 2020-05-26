@@ -6,7 +6,7 @@
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 from cmk.utils.i18n import _
 

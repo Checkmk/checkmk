@@ -7,7 +7,7 @@ import collections
 import hashlib
 import json
 import sys
-from typing import Any, Callable, Dict, List, Optional, Text, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Text, Union
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Literal

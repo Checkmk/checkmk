@@ -9,7 +9,7 @@ import re
 import pprint
 import base64
 import pickle
-from typing import Any, Text, Union  # pylint: disable=unused-import
+from typing import Any, Text, Union
 
 import six
 

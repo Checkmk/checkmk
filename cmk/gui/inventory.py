@@ -11,7 +11,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 import dicttoxml  # type: ignore[import]
 

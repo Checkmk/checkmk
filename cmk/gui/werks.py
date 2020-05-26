@@ -11,7 +11,7 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Union
 
 import six
 

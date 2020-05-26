@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import (  # pylint: disable=unused-import
-    Set, List, Dict, Any,
+from typing import (
+    Set,
+    List,
+    Dict,
+    Any,
 )
 
 import six

@@ -305,11 +305,11 @@ def register_configvar(group,
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
-    if isinstance(domain, six.string_types):
+    if isinstance(domain, str):
         domain = ABCConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
-    if isinstance(group, six.string_types):
+    if isinstance(group, str):
         group = config_variable_group_registry[six.ensure_str(group)]
 
     cls = type(

@@ -6,8 +6,6 @@
 
 import time
 
-import six
-
 from livestatus import lqencode
 import cmk.gui.sites as sites
 from cmk.gui.utils.url_encoder import HTTPVariables
@@ -76,7 +74,7 @@ class BarChartDataGenerator(ABCDataGenerator):
         if title_config == "hide":
             return ""
         if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], six.string_types):
+                title_config[1], str):
             return title_config[1]
         raise MKUserError("bar_chart_title",
                           _("Invalid bar chart title config \"%r\" given" % (title_config,)))

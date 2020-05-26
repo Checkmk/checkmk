@@ -827,7 +827,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
-            if isinstance(labelling, six.string_types):
+            if isinstance(labelling, str):
                 label = time.strftime(str(labelling), time.localtime(pos))  # type: Optional[str]
             else:
                 label = labelling(pos)

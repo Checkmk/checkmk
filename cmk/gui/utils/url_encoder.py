@@ -23,7 +23,7 @@ class URLEncoder(object):
         assert isinstance(vars_, list)
         pairs = []
         for varname, value in sorted(vars_):
-            assert isinstance(varname, six.string_types)
+            assert isinstance(varname, str)
 
             if isinstance(value, int):
                 value = str(value)

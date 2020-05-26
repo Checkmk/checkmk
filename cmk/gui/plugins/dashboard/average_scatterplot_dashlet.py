@@ -7,8 +7,6 @@
 import json
 from typing import Dict
 
-import six
-
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKTimeout, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
@@ -40,7 +38,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         if title_config == "hide":
             return ""
         if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], six.string_types):
+                title_config[1], str):
             return title_config[1]
         raise MKUserError("scatterplot_title",
                           _("Invalid bar chart title config \"%r\" given" % (title_config,)))

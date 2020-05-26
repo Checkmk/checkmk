@@ -27,7 +27,7 @@ def register(linter):
 
 
 def is_constant_string(first):
-    return isinstance(first, astroid.Const) and isinstance(first.value, six.string_types)
+    return isinstance(first, astroid.Const) and isinstance(first.value, str)
 
 
 def parent_is_HTML(node):

@@ -1785,7 +1785,7 @@ class NodeRenderer(object):
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
-        elif isinstance(value, six.string_types):
+        elif isinstance(value, str):
             html.write_text(six.ensure_text(value))
         elif isinstance(value, int):
             html.write(str(value))

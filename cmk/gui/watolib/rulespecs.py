@@ -1056,7 +1056,7 @@ def register_rule(
     base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
     class_kwargs = {
         "name": varname,
-        "group": get_rulegroup(group).__class__ if isinstance(group, six.string_types) else group,
+        "group": get_rulegroup(group).__class__ if isinstance(group, str) else group,
         "match_type": match,
         "factory_default": kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT),
         "is_optional": optional,

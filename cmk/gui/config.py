@@ -996,7 +996,7 @@ def _migrate_pre_16_socket_config(site_cfg):
         site_cfg['socket'] = ("local", None)
         return
 
-    if isinstance(socket, six.string_types):
+    if isinstance(socket, str):
         site_cfg["socket"] = _migrate_string_encoded_socket(socket)
 
 

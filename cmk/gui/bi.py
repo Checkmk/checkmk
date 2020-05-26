@@ -306,7 +306,7 @@ def aggregation_group_choices():
 
 def log(*args):
     for idx, arg in enumerate(args):
-        if isinstance(arg, six.string_types):
+        if isinstance(arg, str):
             arg = pprint.pformat(arg)
         compile_logger.debug('BI: %s%s' % (idx > 5 and "\n" or "", arg))
 
@@ -1671,7 +1671,7 @@ def find_matching_services(aggr_type, what, calllist):
                 if mo in regex_svc_miss_cache:
                     continue
 
-                if not isinstance(service_re, six.string_types):
+                if not isinstance(service_re, str):
                     raise Exception("funny service_re %r in find_matching_services" % service_re)
                 m = regex(service_re).match(service)
                 if mo not in regex_svc_hit_cache:
@@ -1898,7 +1898,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
                 # 2: (['waage'], '(.*)')
                 calllist = []
                 for n in node[1:-2]:
-                    if isinstance(n, six.string_types + (list, tuple)):
+                    if isinstance(n, (str, list, tuple)):
                         n = subst_vars(n, arginfo)
                     calllist.append(n)
 
@@ -2010,7 +2010,7 @@ def subst_vars(pattern, arginfo):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
     for name, value in arginfo.items():
-        if isinstance(pattern, six.string_types):
+        if isinstance(pattern, str):
             pattern = pattern.replace('$' + name + '$', value)
     return pattern
 

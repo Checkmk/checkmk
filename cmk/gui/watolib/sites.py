@@ -429,7 +429,7 @@ class CEESiteManagement(SiteManagement):
     @classmethod
     def _transform_old_socket_spec(cls, sock_spec):
         """Transforms pre 1.6 socket configs"""
-        if isinstance(sock_spec, six.string_types):
+        if isinstance(sock_spec, str):
             return "unix", {
                 "path": sock_spec,
             }

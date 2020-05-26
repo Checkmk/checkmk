@@ -8,7 +8,6 @@ import re
 
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
 import pytest  # type: ignore[import]
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
@@ -17,7 +16,7 @@ from tools import compare_html  # type: ignore[import]
 
 
 def read_out_simple_table(text):
-    assert isinstance(text, six.string_types)
+    assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
     for row in bs(text, 'lxml').findAll('tr'):

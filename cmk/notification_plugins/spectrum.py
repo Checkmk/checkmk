@@ -6,7 +6,7 @@
 
 import subprocess
 import sys
-import six
+
 from cmk.notification_plugins import utils
 
 # Note: This script contains an example configuration
@@ -22,7 +22,7 @@ def send_trap(oids, target, community):
         # Feel free to add more types. Currently only Integer and Strings are supported
         if isinstance(value, int):
             oid_id = 'i'
-        elif isinstance(value, six.string_types):
+        elif isinstance(value, str):
             oid_id = 's'
             value = "\"%s\"" % value.replace("\"", " ")
         cmd += [oid, oid_id, "%s" % value]

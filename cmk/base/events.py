@@ -826,7 +826,7 @@ def add_to_event_context(plugin_context, prefix, param):
 
 def plugin_param_to_string(value):
     # type: (Any) -> str
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         return value
     if isinstance(value, (int, float)):
         return str(value)

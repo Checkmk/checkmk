@@ -81,7 +81,7 @@ import math  # noqa: F401 # pylint: disable=unused-import
 import os
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
-import sys
+import sys  # noqa: F401 # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
@@ -718,8 +718,7 @@ def discover(selector=None, default_params=None):
         @functools.wraps(filter_function)
         def discoverer(parsed):
             # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
-            params = default_params if isinstance(default_params, six.string_types +
-                                                  (dict,)) else {}
+            params = default_params if isinstance(default_params, (str, dict)) else {}
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)
                 for key, value in parsed.items():
@@ -748,7 +747,7 @@ def discover(selector=None, default_params=None):
 
 def _get_discovery_iter(name, get_name):
     # type: (Any, Callable[[], str]) -> Iterable[str]
-    if isinstance(name, six.string_types):
+    if isinstance(name, str):
         return iter((six.ensure_str(name),))
     if name is True:
         return iter((get_name(),))

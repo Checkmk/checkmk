@@ -81,7 +81,6 @@ import time  # todo(Python3): not needed any more
 from contextlib import contextmanager
 from typing import Any, List, Dict, Union, Optional, Tuple, Sequence, Generator
 
-import six  # todo(Python3): not needed any more
 import requests
 from requests.packages import urllib3
 
@@ -163,7 +162,7 @@ class BackupTask:
             line  #
             for elem in lines_with_numbers  #
             for line in (elem["t"],)  #
-            if isinstance(line, six.string_types) and line.strip())
+            if isinstance(line, str) and line.strip())
 
     def __str__(self):
         # type: () -> str

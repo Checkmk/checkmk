@@ -25,7 +25,7 @@ import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 from connexion import problem  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
-import six
+
 from werkzeug.utils import import_string
 
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -156,7 +156,7 @@ def endpoint_schema(
 
     global_param_names = SPEC.components.to_dict().get('parameters', {}).keys()
     for param in parameters:
-        if isinstance(param, six.string_types) and param not in global_param_names:
+        if isinstance(param, str) and param not in global_param_names:
             raise ValueError("Param %r, which is required, was specified nowhere." % (param,))
 
     def _add_api_spec(func):

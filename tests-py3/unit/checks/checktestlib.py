@@ -52,7 +52,7 @@ class PerfValue(Tuploid):
         # TODO: This is very basic. There is more way more magic involved
         #       in what kind of values are allowed as metric names.
         #       I'm not too sure unicode should be allowed, either.
-        assert isinstance(key, six.string_types),\
+        assert isinstance(key, str),\
                "PerfValue: key %r must be of type str or unicode" % key
         #       Whitespace leads to serious errors
         assert len(key.split()) == 1, \
@@ -118,7 +118,7 @@ class BasicCheckResult(Tuploid):
         assert status in [0, 1, 2, 3], \
                "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % (status,)
 
-        assert isinstance(infotext, six.string_types), \
+        assert isinstance(infotext, str), \
                 "BasicCheckResult: infotext %r must be of type str or unicode - not %r" % \
                 (infotext, type(infotext))
         if "\n" in infotext:
@@ -274,7 +274,7 @@ class DiscoveryEntry(Tuploid):
         else:
             self.item, self.default_params = entry
         ti = type(self.item)
-        assert self.item is None or isinstance(self.item, six.string_types), \
+        assert self.item is None or isinstance(self.item, str), \
                "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
                % (self.item, type(ti))
 

@@ -2638,7 +2638,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                 group_specs = [group_specs]  # be compatible to old single group configs
 
             for group_spec in group_specs:
-                if isinstance(group_spec, six.string_types):
+                if isinstance(group_spec, str):
                     dn = group_spec  # be compatible to old config without connection spec
                 elif not isinstance(group_spec, tuple):
                     continue  # skip non configured ones (old valuespecs allowed None)
@@ -2691,7 +2691,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                         groups_to_fetch.setdefault(this_conn_id, [])
                         groups_to_fetch[this_conn_id].append(group_spec.lower())
 
-            elif isinstance(group_specs, six.string_types):
+            elif isinstance(group_specs, str):
                 # Need to be compatible to old config formats
                 this_conn_id = connection.id()
                 groups_to_fetch.setdefault(this_conn_id, [])

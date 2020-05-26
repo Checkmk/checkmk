@@ -659,7 +659,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         # type: (str, Any) -> bool
         """Checks whether or not a variable can be written to the config.mk
         and read again from it."""
-        if isinstance(val, six.string_types + (int, bool)) or not val:
+        if isinstance(val, (str, int, bool)) or not val:
             return True
 
         try:
@@ -997,7 +997,7 @@ def service_description(hostname, check_plugin_name, item):
     # One check defines "Pages %s" as a description, but the item
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
-    if add_item and isinstance(item, six.string_types + (numbers.Integral,)):
+    if add_item and isinstance(item, (str, numbers.Integral)):
         if "%s" not in descr_format:
             descr_format += " %s"
         descr = descr_format % (item,)
@@ -1198,7 +1198,7 @@ def prepare_check_command(command_spec, hostname, description):
     will be completed by the executed program later to get the password from
     the password store.
     """
-    if isinstance(command_spec, six.string_types):
+    if isinstance(command_spec, str):
         return command_spec
 
     if not isinstance(command_spec, list):
@@ -2226,7 +2226,7 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         # integers or something else here. Convert them to unicode for easier handling
         # in the following code.
         # TODO: This should be strictly validated by the check API in 1.7.
-        if item is not None and not isinstance(item, six.string_types):
+        if item is not None and not isinstance(item, str):
             item = six.text_type(item)
 
         # checks with an item need service-specific rules

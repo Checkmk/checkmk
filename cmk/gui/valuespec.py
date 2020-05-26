@@ -176,7 +176,7 @@ class ValueSpec(object):
         if self._help is None:
             return None
 
-        assert isinstance(self._help, six.string_types)
+        assert isinstance(self._help, str)
         return ensure_unicode(self._help)
 
     def render_input(self, varprefix, value):
@@ -729,7 +729,7 @@ class TextUnicode(TextAscii):
 
     def validate_datatype(self, value, varprefix):
         # type: (Text, str) -> None
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str or unicode, but it has type %s") %

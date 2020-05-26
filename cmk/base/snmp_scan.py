@@ -53,22 +53,21 @@ def gather_available_raw_section_names(host_config,
                                        for_inventory=False,
                                        for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
-    check_plugin_names = set()  # type: Set[CheckPluginName]
-
     try:
-        check_plugin_names.update(
-            _snmp_scan(host_config,
-                       on_error=on_error,
-                       do_snmp_scan=do_snmp_scan,
-                       for_inv=for_inventory,
-                       for_mgmt_board=for_mgmt_board))
+        return _snmp_scan(
+            host_config,
+            on_error=on_error,
+            do_snmp_scan=do_snmp_scan,
+            for_inv=for_inventory,
+            for_mgmt_board=for_mgmt_board,
+        )
     except Exception as e:
         if on_error == "raise":
             raise
         if on_error == "warn":
             console.error("SNMP scan failed: %s\n" % e)
 
-    return check_plugin_names
+    return set()
 
 
 def _snmp_scan(host_config,

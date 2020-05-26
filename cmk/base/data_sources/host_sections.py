@@ -10,7 +10,7 @@ from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional,
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName, SourceType
 
 import cmk.base.config as config
 import cmk.base.caching as caching
@@ -23,6 +23,11 @@ from cmk.base.api.agent_based.section_types import (
     AgentSectionPlugin,
     SNMPParseFunction,
     SNMPSectionPlugin,
+)
+from cmk.base.check_api_utils import (
+    MGMT_ONLY as LEGACY_MGMT_ONLY,
+    HOST_ONLY as LEGACY_HOST_ONLY,
+    HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
 )
 from cmk.base.check_utils import (
     CheckPluginName,
@@ -40,7 +45,7 @@ from cmk.base.check_utils import (
 
 from cmk.base.exceptions import MKParseFunctionError
 
-HostKey = Tuple[HostName, Optional[HostAddress]]
+HostKey = Tuple[HostName, Optional[HostAddress], SourceType]
 
 MultiHostSectionsData = Dict[HostKey, "AbstractHostSections"]
 
@@ -156,6 +161,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
     def get_section_cluster_kwargs(
             self,
             host_name,  # type: HostName
+            source_type,  # type: SourceType
             subscribed_sections,  # type: List[PluginName]
             service_description,  # type: ServiceName
     ):
@@ -173,7 +179,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         kwargs = {}  # type: Dict[str, Dict[str, Any]]
         for node_name, node_ip in used_entries:
             node_kwargs = self.get_section_kwargs(
-                (node_name, node_ip),
+                (node_name, node_ip, source_type),
                 subscribed_sections,
             )
             for key, sections_node_data in node_kwargs.items():
@@ -259,6 +265,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
+            management_board_info,  # type: str
             check_plugin_name,  # type: CheckPluginName
             for_discovery,  # type: bool
             service_description=None  # type: Optional[ServiceName]
@@ -287,17 +294,42 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         section_name = section_name_of(check_plugin_name)
         nodes_of_clustered_service = self._get_nodes_of_clustered_service(
             hostname, service_description)
-        cache_key = (hostname, ipaddress, section_name, for_discovery,
+        cache_key = (hostname, ipaddress, management_board_info, section_name, for_discovery,
                      bool(nodes_of_clustered_service))
+
+        source_type = (SourceType.MANAGEMENT
+                       if management_board_info == LEGACY_MGMT_ONLY else SourceType.HOST)
 
         try:
             return self._section_content_cache[cache_key]
         except KeyError:
-            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name,
-                                                        section_name, for_discovery,
-                                                        nodes_of_clustered_service)
-            self._section_content_cache[cache_key] = section_content
-            return section_content
+            pass
+
+        section_content = self._get_section_content(
+            hostname,
+            ipaddress,
+            source_type,
+            check_plugin_name,
+            section_name,
+            for_discovery,
+            nodes_of_clustered_service,
+        )
+
+        # If we found nothing, see if we must check the management board:
+        if (section_content is None and source_type is SourceType.HOST and
+                management_board_info == LEGACY_HOST_PRECEDENCE):
+            section_content = self._get_section_content(
+                hostname,
+                ipaddress,
+                SourceType.MANAGEMENT,
+                check_plugin_name,
+                section_name,
+                for_discovery,
+                nodes_of_clustered_service,
+            )
+
+        self._section_content_cache[cache_key] = section_content
+        return section_content
 
     def _get_nodes_of_clustered_service(self, hostname, service_description):
         # type: (HostName, Optional[ServiceName]) -> Optional[List[HostName]]
@@ -332,6 +364,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
+            source_type,  # type: SourceType
             check_plugin_name,  # type: CheckPluginName
             section_name,  # type: SectionName
             for_discovery,  # type: bool
@@ -349,7 +382,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             if nodes_of_clustered_service and node_name not in nodes_of_clustered_service:
                 continue
 
-            host_key = (node_name, node_ip_address)
+            host_key = (node_name, node_ip_address, source_type)
             try:
                 host_section_content = self._multi_host_sections[host_key].sections[section_name]
             except KeyError:
@@ -370,8 +403,14 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         assert isinstance(section_content, list)
 
         section_content = self._update_with_parse_function(section_content, section_name)
-        section_contents = self._update_with_extra_sections(section_content, hostname, ipaddress,
-                                                            section_name, for_discovery)
+        section_contents = self._update_with_extra_sections(
+            section_content,
+            hostname,
+            ipaddress,
+            LEGACY_MGMT_ONLY if source_type is SourceType.MANAGEMENT else LEGACY_HOST_ONLY,
+            section_name,
+            for_discovery,
+        )
         return section_contents
 
     def _get_host_entries(self, hostname, ipaddress):
@@ -429,6 +468,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
             section_content,  # type: ParsedSectionContent
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
+            management_board_info,  # type: str
             section_name,  # type: SectionName
             for_discovery,  # type: bool
     ):
@@ -450,6 +490,7 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
                 self.get_section_content(
                     hostname,
                     ipaddress,
+                    management_board_info,
                     extra_section_name,
                     for_discovery,
                 ),)

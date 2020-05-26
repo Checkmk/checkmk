@@ -37,13 +37,13 @@ def reset_mutable_global_state():
     delete(SNMPDataSource, "_no_cache")
     delete(SNMPDataSource, "_use_outdated_persisted_sections")
 
-    reset(DataSource, "_source_type", SourceType.HOST)
+    reset(DataSource, "source_type", SourceType.HOST)
     reset(DataSource, "_no_cache", False)
     reset(DataSource, "_may_use_cache_file", False)
     reset(DataSource, "_use_outdated_cache_file", False)
     reset(DataSource, "_use_outdated_persisted_sections", False)
 
-    reset(SNMPDataSource, "_source_type", SourceType.HOST)
+    reset(SNMPDataSource, "source_type", SourceType.HOST)
 
 
 def test_data_source_cache_default(monkeypatch):

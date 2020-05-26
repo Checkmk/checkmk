@@ -132,7 +132,7 @@ class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSecti
 
 
 class SNMPDataSource(ABCSNMPDataSource):
-    _source_type = SourceType.HOST
+    source_type = SourceType.HOST
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
@@ -254,7 +254,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._source_type is SourceType.MANAGEMENT,
+            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
         )
 
     def _execute(self):
@@ -324,7 +324,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._source_type is SourceType.MANAGEMENT,
+            for_mgmt_board=self.source_type is SourceType.MANAGEMENT,
         )
 
     @staticmethod
@@ -390,7 +390,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
-    _source_type = SourceType.MANAGEMENT
+    source_type = SourceType.MANAGEMENT
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None

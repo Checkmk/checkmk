@@ -197,18 +197,16 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         os.setsid()
         daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
         sys.stdin.close()
-        sys.stdout.close()
-        # Caused trouble with Python 3:
-        # ---
-        # mod_wsgi (pid=121215): Exception occurred within exit functions.
-        # Traceback (most recent call last):
-        #   File "/omd/sites/heute/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
-        #     self.run()
-        #   File "/omd/sites/heute/lib/python3/cmk/gui/background_job.py", line 166, in run
-        #     sys.stderr.close()
-        # RuntimeError: log object has expired
-        # ---
-        # Disabling this for the moment and check whether or not it is OK to skip this.
+        # NOTE
+        # When forking off from an mod_wsgi process, these handles are not the standard stdout and
+        # stderr handles but rather proxies to internal data-structures of mod_wsgi. If these are
+        # closed then mod_wsgi will trigger a "RuntimeError: log object has expired" if you want to
+        # use them again, as this is considered a programming error. The logging framework
+        # installs an "atexit" callback which flushes the logs upon the process exiting. This
+        # tries to write to the now closed fake stdout/err handles and triggers the RuntimeError.
+        # This will happen even if sys.stdout and sys.stderr are reset to their originals because
+        # the logging.StreamHandler will still hold a reference to the mod_wsgi stdout/err handles.
+        # sys.stdout.close()
         # sys.stderr.close()
         daemon.closefrom(0)
 

@@ -12,8 +12,6 @@ import time
 import pprint
 from typing import Union, Tuple, Optional, Set, Dict, List
 
-import six
-
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
@@ -172,7 +170,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
     gateways = []  # type: Gateways
     for host, ip, proc_or_error in procs:
-        if isinstance(proc_or_error, six.string_types):
+        if isinstance(proc_or_error, str):
             lines = [proc_or_error]
             exitstatus = 1
         else:

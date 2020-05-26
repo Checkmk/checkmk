@@ -1719,7 +1719,7 @@ def extract_painter_name(painter_spec):
         return painter_spec[0][0]
     if isinstance(painter_spec, tuple):
         return painter_spec[0]
-    if isinstance(painter_spec, six.string_types):
+    if isinstance(painter_spec, str):
         return painter_spec
 
 

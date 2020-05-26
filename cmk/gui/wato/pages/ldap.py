@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
 
-import six
-
 import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
@@ -379,7 +377,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 group_specs = [group_specs]
 
             for group_spec in group_specs:
-                if isinstance(group_spec, six.string_types):
+                if isinstance(group_spec, str):
                     dn = group_spec  # be compatible to old config without connection spec
                 elif not isinstance(group_spec, tuple):
                     continue  # skip non configured ones (old valuespecs allowed None)

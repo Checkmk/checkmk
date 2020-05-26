@@ -481,7 +481,7 @@ def declare_host_attribute(a,
         attrs["_depends_on_roles"] = depends_on_roles
         attrs["depends_on_roles"] = lambda self: self._depends_on_roles
 
-    if topic is None or isinstance(topic, six.string_types):
+    if topic is None or isinstance(topic, str):
         ident = str(topic).replace(" ", "_").lower() if topic else None
         attrs["_topic"] = _declare_host_attribute_topic(ident, topic)
     elif issubclass(topic, HostAttributeTopic):

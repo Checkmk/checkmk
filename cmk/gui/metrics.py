@@ -215,7 +215,7 @@ def _required_trivial_metric_names(required_expressions):
     allowed_chars = string.ascii_letters + string.digits + "_"
 
     for entry in required_expressions:
-        if isinstance(entry, six.string_types):
+        if isinstance(entry, str):
             if any(char not in allowed_chars for char in entry):
                 # Found a non trivial metric expression. Totally skip this mechanism
                 return None

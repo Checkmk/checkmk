@@ -41,7 +41,7 @@ class LegacyVarsMixin(object):
 
     def set_var(self, varname, value):
         # type: (str, str) -> None
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
         # Py2: All items in self._vars are encoded at the moment. This should be changed one day,

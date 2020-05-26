@@ -116,7 +116,7 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
         return
 
     title, url = None, None
-    if isinstance(result, six.string_types + (HTML,)):
+    if isinstance(result, (str, HTML)):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.
         # LM: There are icons that still use this API

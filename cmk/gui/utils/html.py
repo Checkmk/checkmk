@@ -33,7 +33,7 @@ class HTML(object):
         # type: (HTMLInput) -> str
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             value = six.text_type(value)
         return ensure_unicode(value)
 

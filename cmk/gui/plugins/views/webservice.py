@@ -73,7 +73,7 @@ class LayoutPython(Layout):
                 # The aggr_treestate painters are returning a dictionary data structure (see
                 # paint_aggregated_tree_state()) in case the output_format is not HTML. Only
                 # remove the HTML tags from the top level strings produced by painters.
-                if isinstance(content, (HTML, six.string_types)):
+                if isinstance(content, (HTML, str)):
                     content = escaping.strip_tags(content)
 
                 html.write(repr(content))

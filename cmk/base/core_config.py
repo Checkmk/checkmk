@@ -166,7 +166,7 @@ def host_check_command(config_cache, host_config, ip, is_clust, default_host_che
         return "check-mk-host-tcp!" + str(value[1])
 
     if isinstance(value, tuple) and value[0] == "custom":
-        if not isinstance(value[1], six.string_types):
+        if not isinstance(value[1], str):
             raise TypeError()
         return host_check_via_custom_check("check-mk-custom",
                                            "check-mk-custom!" + autodetect_plugin(value[1]))

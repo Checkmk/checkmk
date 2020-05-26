@@ -15,7 +15,6 @@ import xml.etree.ElementTree as ET
 
 import requests
 from requests.structures import CaseInsensitiveDict
-import six
 import urllib3  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
@@ -153,7 +152,7 @@ class HPMSAConnection:
         if response_element is None:
             raise Exception("no response element")
         session_key = response_element.text
-        if not isinstance(session_key, six.string_types):
+        if not isinstance(session_key, str):
             raise Exception("invalid response element")
         if session_key.lower() == "authentication unsuccessful":
             raise AuthError("Connecting to %s failed. Please verify host address & login details" %

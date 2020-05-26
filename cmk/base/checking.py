@@ -668,7 +668,7 @@ def _convert_perf_value(x):
     # type: (UncleanPerfValue) -> str
     if x is None:
         return ""
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return x
     if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
@@ -717,7 +717,7 @@ def _submit_check_result(host, servicedesc, result, cache_info):
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
         # template. Currently this is used only by mrpe.
-        if len(perfdata) > 0 and isinstance(perfdata[-1], six.string_types):
+        if len(perfdata) > 0 and isinstance(perfdata[-1], str):
             check_command = perfdata[-1]
             del perfdata[-1]
         else:

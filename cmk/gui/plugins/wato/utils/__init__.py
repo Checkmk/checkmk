@@ -192,7 +192,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
             if len(x) == 6:
                 return 2  # authPriv
         else:
-            if x is None or isinstance(x, six.string_types):
+            if x is None or isinstance(x, str):
                 return 0  # community only
             if len(x) == 1 or len(x) == 2:
                 return 1  # noAuthNoPriv
@@ -637,7 +637,7 @@ def register_check_parameters(subgroup,
 
     # Added during 1.6 development for easier transition. Convert all legacy subgroup
     # parameters (which are either str/unicode to group classes
-    if isinstance(subgroup, six.string_types):
+    if isinstance(subgroup, str):
         subgroup = get_rulegroup("checkparams/" + subgroup).__class__
 
     # Register rule for discovered checks
@@ -944,7 +944,7 @@ def Levels(**kwargs):
 
     help_txt = kwargs.get("help")
     unit = kwargs.get("unit", "")
-    if not isinstance(unit, six.string_types):
+    if not isinstance(unit, str):
         raise Exception("illegal unit for Levels: %r" % (unit,))
     title = kwargs.get("title")
     default_levels = kwargs.get("default_levels", (0.0, 0.0))

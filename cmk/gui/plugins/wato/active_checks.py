@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import six
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -495,7 +494,7 @@ def _valuespec_active_checks_dns():
                                        "with a dot. Multiple IP addresses within one answer must "
                                        "be separated by comma."),
                             ),
-                            forth=lambda old: isinstance(old, six.string_types) and [old] or old,
+                            forth=lambda old: isinstance(old, str) and [old] or old,
                         ),
                     ),
                     ("expected_authority",

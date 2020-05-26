@@ -948,7 +948,7 @@ class CheckMKAgentDataSource(
             if agent_version in ['(unknown)', 'None']:
                 return False
 
-            if isinstance(expected_version, six.string_types) and expected_version != agent_version:
+            if isinstance(expected_version, str) and expected_version != agent_version:
                 return False
 
             if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':

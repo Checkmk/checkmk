@@ -44,7 +44,7 @@ class OutputFunnel(object):
         elif isinstance(text, int):
             text = str(text)
 
-        if not isinstance(text, six.string_types):
+        if not isinstance(text, str):
             raise MKGeneralException(
                 _('Type Error: html.write accepts str and unicode input objects only!'))
 

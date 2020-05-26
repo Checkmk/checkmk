@@ -1084,7 +1084,7 @@ def hook_login(username, password):
         # False       -> failed
         if result not in [False, None]:
             username = result
-            if not isinstance(username, six.string_types):
+            if not isinstance(username, str):
                 raise MKInternalError(
                     _("The username returned by the %s "
                       "connector is not of type string (%r).") % (connection_id, username))

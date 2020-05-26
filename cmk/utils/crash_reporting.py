@@ -306,7 +306,7 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
         val = new_val
 
     # Check and limit size
-    if isinstance(val, six.string_types):
+    if isinstance(val, str):
         size = len(val)
         if size > maxsize:
             val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)

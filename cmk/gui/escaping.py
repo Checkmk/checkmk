@@ -185,7 +185,7 @@ def strip_tags(ht):
     if isinstance(ht, HTML):
         ht = ht.__html__()
 
-    if not isinstance(ht, six.string_types):
+    if not isinstance(ht, str):
         return u"%s" % ht
 
     ht = ensure_unicode(ht)

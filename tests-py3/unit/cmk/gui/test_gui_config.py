@@ -610,8 +610,8 @@ def test_registered_permissions():
 
     for perm_class in permission_registry.values():
         perm = perm_class()
-        assert isinstance(perm.description, six.string_types)
-        assert isinstance(perm.title, six.string_types)
+        assert isinstance(perm.description, str)
+        assert isinstance(perm.title, str)
         assert isinstance(perm.defaults, list)
 
 

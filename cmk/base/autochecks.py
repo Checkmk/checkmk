@@ -138,7 +138,7 @@ class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
             if isinstance(item, str):
                 item = convert_to_unicode(item)
 
-            if not isinstance(entry["check_plugin_name"], six.string_types):
+            if not isinstance(entry["check_plugin_name"], str):
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                          "The check type must be a string." % (entry, hostname))
 

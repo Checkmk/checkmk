@@ -2039,7 +2039,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
             for name, value in self._rule.items():
-                if name.startswith("set_") and isinstance(value, six.string_types):
+                if name.startswith("set_") and isinstance(value, str):
                     if repl in value:
                         raise MKUserError(
                             "rule_p_" + name,

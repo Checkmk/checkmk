@@ -15,15 +15,15 @@ import cmk.utils.snmp_cache as snmp_cache
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    OID,
+    ABCSNMPBackend,
     CheckPluginName,
     ContextName,
+    OID,
     RawValue,
     SNMPHostConfig,
     SNMPRowInfo,
 )
 
-from ._base import ABCSNMPBackend
 from ._utils import strip_snmp_value
 
 __all__ = ["StoredWalkSNMPBackend"]

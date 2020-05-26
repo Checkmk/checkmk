@@ -7,7 +7,7 @@
 
 import abc
 import string
-from typing import Union, NamedTuple, NewType, Any, Optional, Dict, Set, List, Tuple
+from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Text, Tuple, Union
 
 import six
 
@@ -158,6 +158,28 @@ class SNMPHostConfig(
         cfg = self._asdict()
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
+
+
+class ABCSNMPBackend(six.with_metaclass(abc.ABCMeta, object)):
+    @abc.abstractmethod
+    def get(self, snmp_config, oid, context_name=None):
+        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
+        """Fetch a single OID from the given host in the given SNMP context
+
+        The OID may end with .* to perform a GETNEXT request. Otherwise a GET
+        request is sent to the given host.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def walk(self,
+             snmp_config,
+             oid,
+             check_plugin_name=None,
+             table_base_oid=None,
+             context_name=None):
+        # type: (SNMPHostConfig, OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
+        return []
 
 
 OID_END = 0  # Suffix-part of OID that was not specified

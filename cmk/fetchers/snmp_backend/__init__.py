@@ -5,6 +5,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Home of our open source SNMP backends."""
 
-from ._base import *
 from .classic import *
 from .stored_walk import *

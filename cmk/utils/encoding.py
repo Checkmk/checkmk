@@ -46,6 +46,6 @@ def ensure_unicode(value):
 
 def ensure_bytestr(value):
     # type: (AnyStr) -> bytes
-    if isinstance(value, six.binary_type):
+    if isinstance(value, bytes):
         return value
     return value.encode("utf-8")

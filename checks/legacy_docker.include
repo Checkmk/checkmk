@@ -384,9 +384,7 @@ def parse_legacy_docker_node_images(subsections):
                 image["amount_containers"] += 1
 
         labels = cont.get("Labels")
-        if isinstance(
-                labels,
-            (six.binary_type, six.text_type)):  # TODO: Check if six.binary_type is necessary
+        if isinstance(labels, (bytes, six.text_type)):  # TODO: Check if bytes is necessary
             cont["Labels"] = parse_legacy_docker_messed_up_labels(labels)
 
     return DeprecatedDict((("images", images), ("containers", containers)))

@@ -72,7 +72,7 @@ def escape_attribute(value):
         return value.__html__()  # This is HTML code which must not be escaped
     if isinstance(attr_type, six.text_type):
         return html_escape(value, quote=True)
-    if isinstance(attr_type, six.binary_type):  # TODO: Not in the signature!
+    if isinstance(attr_type, bytes):  # TODO: Not in the signature!
         return html_escape(six.ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
     return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!

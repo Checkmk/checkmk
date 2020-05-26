@@ -11,6 +11,8 @@ node ('windows') {
             windows = load 'buildscripts/scripts/lib/windows.groovy'
     }
     windows.build(
-        TARGET: 'module'
+        TARGET: 'cached'
+        CREDS: ''     // 'user:password'
+        CACHE_URL: '' // 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
     )
 }

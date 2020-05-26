@@ -6,20 +6,13 @@
 """Managing the available automation calls"""
 
 import abc
-from typing import (
-    Dict,
-    Type,
-    Any,
-    Text,
-    Union,
-)
-import six
+from typing import Dict, Type, Any
 
 import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
 
 
-class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
+class AutomationCommand(metaclass=abc.ABCMeta):
     """Abstract base class for all automation commands"""
     @abc.abstractmethod
     def command_name(self):
@@ -65,7 +58,7 @@ class AutomationPing(AutomationCommand):
         return None
 
     def execute(self, _unused_request):
-        # type: (None) -> Dict[str, Union[str, Text]]
+        # type: (None) -> Dict[str, str]
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition_short(),

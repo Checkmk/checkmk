@@ -9,8 +9,6 @@ import abc
 from pathlib import Path
 from typing import Callable, List, Dict
 
-import six
-
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
@@ -105,7 +103,7 @@ class LabelManager:
                                                                self._service_label_rules)
 
 
-class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
+class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
     """Managing persistance of discovered labels"""
     @abc.abstractproperty
     def file_path(self):

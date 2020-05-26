@@ -18,18 +18,7 @@ import abc
 import math
 import string
 import json
-from typing import (
-    Any,
-    List,
-    Tuple,
-    Union,
-    Dict,
-    Set,
-    Optional,
-    Text,
-)
-
-import six
+from typing import Any, List, Tuple, Union, Dict, Set, Optional
 
 import cmk.utils
 import cmk.utils.version as cmk_version
@@ -240,7 +229,7 @@ def _required_trivial_metric_names(required_expressions):
 
 
 def metric_to_text(metric, value=None):
-    # type: (Dict[str, Any], Optional[Union[int, float]]) -> Text
+    # type: (Dict[str, Any], Optional[Union[int, float]]) -> str
     if value is None:
         value = metric["value"]
     return metric["unit"]["render"](value)
@@ -359,7 +348,7 @@ class Perfometers(object):
 MetricRendererStack = List[List[Tuple[Union[int, float], str]]]
 
 
-class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
+class MetricometerRenderer(metaclass=abc.ABCMeta):
     """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls):
@@ -383,7 +372,7 @@ class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def get_label(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the label to be shown on top of the rendered stack
 
         When the perfometer type definition has a "label" element, this will be used.
@@ -405,7 +394,7 @@ class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def _get_type_label(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the label for this perfometer type"""
         raise NotImplementedError()
 
@@ -456,7 +445,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         ]
 
     def _get_type_label(self):
-        # type: () -> Text
+        # type: () -> str
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return unit["render"](value)
 
@@ -519,7 +508,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return [entry]
 
     def _get_type_label(self):
-        # type: () -> Text
+        # type: () -> str
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
@@ -558,7 +547,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
         return stack
 
     def _get_type_label(self):
-        # type: () -> Text
+        # type: () -> str
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -614,7 +603,7 @@ class MetricometerRendererDual(MetricometerRenderer):
         return [content]
 
     def _get_type_label(self):
-        # type: () -> Text
+        # type: () -> str
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
@@ -707,7 +696,7 @@ def page_graph_dashlet():
 
 
 def render_metrics_table(translated_metrics, host_name, service_description):
-    # type: (TranslatedMetrics, str, Text) -> str
+    # type: (TranslatedMetrics, str, str) -> str
     # TODO: Don't paste together strings by hand, use our HTML utilities.
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):

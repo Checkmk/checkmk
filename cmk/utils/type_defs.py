@@ -160,7 +160,7 @@ class SNMPHostConfig(
         return SNMPHostConfig(**cfg)
 
 
-class ABCSNMPBackend(six.with_metaclass(abc.ABCMeta, object)):
+class ABCSNMPBackend(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get(self, snmp_config, oid, context_name=None):
         # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]

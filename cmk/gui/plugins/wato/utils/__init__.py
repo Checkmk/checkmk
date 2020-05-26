@@ -1665,7 +1665,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(six.with_metaclass(abc.ABCMeta, object)):
+class NotificationParameter(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

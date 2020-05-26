@@ -131,7 +131,7 @@ class CrashReportStore:
         return serialized
 
 
-class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
+class ABCCrashReport(metaclass=abc.ABCMeta):
     """Base class for the component specific crash report types"""
 
     # TODO: Can not use this with python 2

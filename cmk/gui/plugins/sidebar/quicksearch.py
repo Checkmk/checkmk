@@ -9,8 +9,6 @@ import re
 import traceback
 from typing import Any, Dict, List, Set, Tuple
 
-import six
-
 import livestatus
 
 import cmk.utils.plugin_registry
@@ -535,7 +533,7 @@ def generate_search_results(query):
 
 # TODO: Simplify code by making static things like _filter_shortname class members
 # and it's getters class methods
-class QuicksearchMatchPlugin(six.with_metaclass(abc.ABCMeta, object)):
+class QuicksearchMatchPlugin(metaclass=abc.ABCMeta):
     def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
         self._filter_shortname = filter_shortname
         self._supported_livestatus_tables = supported_livestatus_tables

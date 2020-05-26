@@ -23,7 +23,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
-from __future__ import division
 
 import os
 import re
@@ -44,21 +43,8 @@ import signal
 import io
 import logging
 from pathlib import Path
-from typing import (
-    NoReturn,
-    IO,
-    cast,
-    Iterable,
-    Union,
-    Pattern,
-    Tuple,
-    Optional,
-    Callable,
-    List,
-    NamedTuple,
-    Dict,
-)
-import six
+from typing import NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional, Callable, List, NamedTuple, Dict
+
 from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
 
@@ -3369,7 +3355,7 @@ def _cleanup_global_files(version_info):
         groupdel("omd")
 
 
-class PackageManager(six.with_metaclass(abc.ABCMeta, object)):
+class PackageManager(metaclass=abc.ABCMeta):
     @classmethod
     def factory(cls, version_info):
         # type: (VersionInfo) -> Optional[PackageManager]

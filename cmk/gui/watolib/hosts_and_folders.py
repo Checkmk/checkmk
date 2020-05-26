@@ -99,7 +99,7 @@ class WithPermissions(object):
         raise NotImplementedError()
 
 
-class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
+class WithUniqueIdentifier(metaclass=abc.ABCMeta):
     """Provides methods for giving Hosts and Folders unique identifiers.
 
     """

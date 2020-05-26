@@ -21,7 +21,7 @@ PageResult = Any
 AjaxPageResult = Dict[str, Any]
 
 
-class Page(six.with_metaclass(abc.ABCMeta, object)):
+class Page(metaclass=abc.ABCMeta):
     #TODO: Use when we are using python3 abc.abstractmethod
     @classmethod
     def ident(cls):

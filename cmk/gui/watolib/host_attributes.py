@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.utils import host_attribute_matches
 
 
-class HostAttributeTopic(six.with_metaclass(abc.ABCMeta, object)):
+class HostAttributeTopic(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -184,7 +184,7 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
         return 60
 
 
-class ABCHostAttribute(six.with_metaclass(abc.ABCMeta, object)):
+class ABCHostAttribute(metaclass=abc.ABCMeta):
     """Base class for all registered host attributes"""
     @classmethod
     def sort_index(cls):

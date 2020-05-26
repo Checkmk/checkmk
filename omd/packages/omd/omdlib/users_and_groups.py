@@ -27,7 +27,7 @@ import pwd
 import grp
 import os
 import subprocess
-from typing import Union, List, Tuple, Optional, TYPE_CHECKING
+from typing import Union, List, Optional, TYPE_CHECKING
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:

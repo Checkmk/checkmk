@@ -25,7 +25,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
 
 
-class APICallCollection(six.with_metaclass(abc.ABCMeta, object)):
+class APICallCollection(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")

@@ -7,12 +7,10 @@
 import abc
 from pathlib import Path
 
-import six
-
 import cmk.utils.store as store
 
 
-class WatoSimpleConfigFile(six.with_metaclass(abc.ABCMeta, object)):
+class WatoSimpleConfigFile(metaclass=abc.ABCMeta):
     """Manage simple .mk config file containing a single dict variable
 
     The file handling logic is inherited from cmk.utils.store.load_from_mk_file()

@@ -311,7 +311,7 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
+class BaseCheck(metaclass=abc.ABCMeta):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
         import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel

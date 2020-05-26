@@ -149,7 +149,7 @@ FoldingIndent = Union[str, None, bool]
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
+class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.

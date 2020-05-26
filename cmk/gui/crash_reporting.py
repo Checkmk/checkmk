@@ -366,7 +366,7 @@ class PageCrash(ABCCrashReportPage):
         return report_renderer_registry.get(crash_type, report_renderer_registry["generic"])()
 
 
-class ABCReportRenderer(six.with_metaclass(abc.ABCMeta, object)):
+class ABCReportRenderer(metaclass=abc.ABCMeta):
     """Render crash type individual GUI elements"""
 
     # TODO: Can not use this with python 2

@@ -53,7 +53,7 @@ GROW = 0
 MAX = -1
 
 
-class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
+class Dashlet(metaclass=abc.ABCMeta):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units

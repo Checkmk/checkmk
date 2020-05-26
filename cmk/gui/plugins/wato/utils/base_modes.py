@@ -6,7 +6,6 @@
 
 import abc
 from typing import Union, Tuple, List
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -17,7 +16,7 @@ NewMode = Union[None, bool, str]
 ActionResult = Union[NewMode, Tuple[NewMode, str]]
 
 
-class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
+class WatoMode(metaclass=abc.ABCMeta):
     def __init__(self):
         # type: () -> None
         super(WatoMode, self).__init__()

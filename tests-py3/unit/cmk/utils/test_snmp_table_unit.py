@@ -9,13 +9,12 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.utils.snmp_table as snmp_table
-from cmk.utils.type_defs import OID_END, OIDBytes, OIDEnd, SNMPHostConfig
+from cmk.utils.type_defs import ABCSNMPBackend, OID_END, OIDBytes, OIDEnd, SNMPHostConfig
 
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.section_types import SNMPTree
 from cmk.base.check_api import BINARY
-from cmk.fetchers.factory import SNMPBackendFactory
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -36,15 +35,16 @@ SNMPConfig = SNMPHostConfig(
 )
 
 
-class _SNMPTestFactory(SNMPBackendFactory):
-    @staticmethod
-    def _factory(*_args, **_ka):
-        return _SNMPTestBackend()
+class SNMPTestBackend(ABCSNMPBackend):
+    def get(self, snmp_config, oid, context_name=None):
+        pass
 
-
-class _SNMPTestBackend:
-    @staticmethod
-    def walk(_snmp_config, oid, **_kwargs):
+    def walk(self,
+             snmp_config,
+             oid,
+             check_plugin_name=None,
+             table_base_oid=None,
+             context_name=None):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 
@@ -93,12 +93,13 @@ def test_value_encoding(column):
     ([TREE_2TUPLE, TREE_3TUPLE], [DATA_2TUPLE, DATA_3TUPLE]),
 ])
 def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
-    monkeypatch.setattr(snmp_table, "SNMPBackendFactory", _SNMPTestFactory)
-
     def get_all_snmp_tables(info):
+        backend = SNMPTestBackend()
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table(SNMPConfig, "unit-test", info)
-        return [snmp_table.get_snmp_table(SNMPConfig, "unit-test", i) for i in info]
+            return snmp_table.get_snmp_table(SNMPConfig, "unit-test", info, backend=backend)
+        return [
+            snmp_table.get_snmp_table(SNMPConfig, "unit-test", i, backend=backend) for i in info
+        ]
 
     assert get_all_snmp_tables(snmp_info) == expected_values
 

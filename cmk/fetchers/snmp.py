@@ -5,12 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from functools import partial
 from types import TracebackType
 from typing import Dict, List, Optional, Type, Union
 
 import cmk.utils.snmp_table as snmp_table
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import ABCSNMPTree, OIDInfo, RawSNMPData, SNMPHostConfig, SNMPTable
+
+from . import factory
 
 
 class SNMPDataFetcher:
@@ -50,7 +53,9 @@ class SNMPDataFetcher:
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
-            get_snmp = snmp_table.get_snmp_table_cached if self._use_snmpwalk_cache else snmp_table.get_snmp_table
+            get_snmp = partial(snmp_table.get_snmp_table_cached
+                               if self._use_snmpwalk_cache else snmp_table.get_snmp_table,
+                               backend=factory.backend(self._snmp_config))
             if isinstance(oid_info, list):
                 # branch: List[ABCSNMPTree]
                 check_info = []  # type: List[SNMPTable]

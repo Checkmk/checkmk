@@ -7,7 +7,7 @@
 # TODO: Rework connection management and multiplexing
 
 import sys
-from typing import cast, Text, Union, Any, Callable, Dict, List, Optional, Tuple
+from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple
 import time
 import os
 import traceback
@@ -322,9 +322,9 @@ class UserSelection(DropdownChoice):
                                for (name, us) in users.items()
                                if (not only_contacts or us.get("contactgroups")) and
                                (not only_automation or us.get("automation_secret"))
-                              ])  # type: List[Tuple[Optional[UserId], Text]]
+                              ])  # type: List[Tuple[Optional[UserId], str]]
             if nv is not None:
-                empty = [(None, none_value)]  # type: List[Tuple[Optional[UserId], Text]]
+                empty = [(None, none_value)]  # type: List[Tuple[Optional[UserId], str]]
                 elements = empty + elements
             return elements
 
@@ -1116,7 +1116,7 @@ def hook_login(username, password):
 
 
 def show_exception(connection_id, title, e, debug=True):
-    # type: (str, Text, Exception, bool) -> None
+    # type: (str, str, Exception, bool) -> None
     html.show_error("<b>" + connection_id + ' - ' + title + "</b>"
                     "<pre>%s</pre>" % (debug and traceback.format_exc() or e))
 
@@ -1209,7 +1209,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("User synchronization")
 
     def __init__(self):

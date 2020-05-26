@@ -9,7 +9,7 @@ hosts. Examples are the IP address and the host tags."""
 import abc
 import functools
 import re
-from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type
 import six
 
 import cmk.utils.plugin_registry
@@ -35,7 +35,7 @@ class HostAttributeTopic(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Used as title for the attribute topics on the host edit page"""
         raise NotImplementedError()
 
@@ -198,7 +198,7 @@ class ABCHostAttribute(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Return the title to be displayed to the user"""
         raise NotImplementedError()
 
@@ -227,7 +227,7 @@ class ABCHostAttribute(six.with_metaclass(abc.ABCMeta, object)):
         return None
 
     def help(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         """Return an optional help text"""
         return None
 
@@ -423,7 +423,7 @@ host_attribute_registry = HostAttributeRegistry()
 
 
 def get_sorted_host_attribute_topics(for_what, new):
-    # type: (str, bool) -> List[Tuple[str, Text]]
+    # type: (str, bool) -> List[Tuple[str, str]]
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics = set()  # type: Set[Type[HostAttributeTopic]]

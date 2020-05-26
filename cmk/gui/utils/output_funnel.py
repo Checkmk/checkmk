@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Iterator, Union, List, Text
+from typing import Iterator, Union, List
 import six
 
 from cmk.gui.http import Response
@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.html import HTML
 
 # TODO: Almost HTMLContent, only None is missing, but that would be OK, too...
-OutputFunnelInput = Union[int, "HTML", str, Text]
+OutputFunnelInput = Union[int, "HTML", str]
 
 
 class OutputFunnel(object):
@@ -32,7 +32,7 @@ class OutputFunnel(object):
         # type: (Response) -> None
         super(OutputFunnel, self).__init__()
         self._response = response
-        self.plug_text = []  # type: List[List[Text]]
+        self.plug_text = []  # type: List[List[str]]
 
     def write(self, text):
         # type: (OutputFunnelInput) -> None
@@ -78,7 +78,7 @@ class OutputFunnel(object):
         return bool(self.plug_text)
 
     def drain(self):
-        # type: () -> Text
+        # type: () -> str
         """Get the sink content in order to do something with it."""
         if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
             return ''

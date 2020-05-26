@@ -6,7 +6,7 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Any, Dict, List, Set, Text, Tuple as _Tuple, Union
+from typing import Any, Dict, List, Set, Tuple as _Tuple, Union
 import abc
 from enum import Enum
 import six
@@ -134,7 +134,7 @@ class ModeTags(ABCTagMode):
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
                 del_id):
             message = _("Transformed the user tag group \"%s\" to builtin."
-                       ) % del_id  # type: Union[bool, Text]
+                       ) % del_id  # type: Union[bool, str]
         else:
             message = _rename_tags_after_confirmation(OperationRemoveTagGroup(del_id))
             if message is True:  # no confirmation yet
@@ -421,7 +421,7 @@ class ModeTagUsage(ABCTagMode):
         return ["hosttags"]
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Tag usage")
 
     def buttons(self):
@@ -798,7 +798,7 @@ class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
     """Base for all tag cleanup operations"""
     @abc.abstractmethod
     def confirm_title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
 
@@ -837,7 +837,7 @@ class OperationReplaceGroupedTags(ABCOperation):
 
 
 def _rename_tags_after_confirmation(operation):
-    # type: (ABCOperation) -> Union[bool, Text]
+    # type: (ABCOperation) -> Union[bool, str]
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according

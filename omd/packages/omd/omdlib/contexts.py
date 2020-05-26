@@ -36,7 +36,7 @@ from omdlib.init_scripts import check_status
 from omdlib.config_hooks import call_hook, sort_hooks
 from omdlib.utils import is_dockerized
 from omdlib.type_defs import Config, Replacements
-from omdlib.skel_permissions import (load_skel_permissions, load_skel_permissions_from, Permissions)
+from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
 
 
 class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):

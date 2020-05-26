@@ -10,7 +10,7 @@ import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Text, Tuple
+from typing import Dict, List, Optional, Tuple
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -50,7 +50,7 @@ def mib_upload_dir():
 
 
 def mib_dirs():
-    # type: () -> List[Tuple[Path, Text]]
+    # type: () -> List[Tuple[Path, str]]
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
         (mib_upload_dir(), _('Custom MIBs')),

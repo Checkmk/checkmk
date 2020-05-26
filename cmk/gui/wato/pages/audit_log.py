@@ -7,7 +7,7 @@
 
 import re
 import time
-from typing import List, Text, Tuple
+from typing import List, Tuple
 
 import cmk.utils.render as render
 
@@ -366,7 +366,7 @@ class ModeAuditLog(WatoMode):
         return False
 
     def _parse_audit_log(self):
-        # type: () -> List[Tuple[int, Text, Text, Text, Text]]
+        # type: () -> List[Tuple[int, str, str, str, str]]
         if not self.log_path.exists():
             return []
 

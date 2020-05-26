@@ -6,7 +6,7 @@
 
 import re
 from collections import OrderedDict
-from typing import NamedTuple, Dict, List, Tuple, Text
+from typing import NamedTuple, Dict, List, Tuple
 import six
 
 import cmk.gui.config as config
@@ -24,7 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 ViewMenuItem = NamedTuple("ViewMenuItem", [
-    ("title", Text),
+    ("title", str),
     ("name", str),
     ("is_view", bool),
     ("url", str),
@@ -58,7 +58,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
     def _render_topic(self, topic, entries):
-        # type: (Text, List[ViewMenuItem]) -> None
+        # type: (str, List[ViewMenuItem]) -> None
         container_id = six.ensure_str(re.sub('[^a-zA-Z]', '', topic))
         html.begin_foldable_container(treename="views",
                                       id_=container_id,
@@ -101,9 +101,9 @@ def view_menu_url(name, is_view):
 
 # TODO: Move this to some more generic place
 def get_view_menu_items():
-    # type: () -> Dict[Text, List[ViewMenuItem]]
+    # type: () -> Dict[str, List[ViewMenuItem]]
     # TODO: One bright day drop this whole visuals stuff and only use page_types
-    page_type_topics = {}  # type: Dict[Text, List[Tuple[Text, Text, str, bool]]]
+    page_type_topics = {}  # type: Dict[str, List[Tuple[str, str, str, bool]]]
     for page_type in pagetypes.all_page_types().values():
         if issubclass(page_type, pagetypes.PageRenderer):
             for t, title, url in page_type.sidebar_links():
@@ -122,7 +122,7 @@ def get_view_menu_items():
     all_topics_with_entries += page_type_topics.items()
 
     # Filter hidden / not permitted entries
-    by_topic = OrderedDict()  # type: Dict[Text, List[ViewMenuItem]]
+    by_topic = OrderedDict()  # type: Dict[str, List[ViewMenuItem]]
     for topic, entries in all_topics_with_entries:
         for t, title, name, is_view in entries:
             if is_view and config.visible_views and name not in config.visible_views:

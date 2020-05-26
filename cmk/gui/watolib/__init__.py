@@ -231,7 +231,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 from cmk.gui.watolib.snapshots import backup_domains
-from cmk.gui.watolib.automation_commands import (AutomationCommand, automation_command_registry)
+from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     save_site_global_settings,

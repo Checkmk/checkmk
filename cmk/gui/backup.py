@@ -21,7 +21,7 @@ import signal
 import socket
 import subprocess
 import time
-from typing import Any, List, Optional, Text, Tuple
+from typing import Any, List, Optional, Tuple
 
 import six
 
@@ -1234,7 +1234,7 @@ class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def choices(cls):
-        # type: (Any) -> List[Tuple[Text, Text, ValueSpec]]
+        # type: (Any) -> List[Tuple[str, str, ValueSpec]]
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)

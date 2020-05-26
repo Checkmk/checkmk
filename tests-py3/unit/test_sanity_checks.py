@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
 import pytest  # type: ignore[import]
-from testlib import (cmk_path, utils)
+from testlib import cmk_path, utils
 
 # Use this list in order to allow the deletion of specific check plugins
 CHECKS_ALLOWED_TO_VANISH = ["a_very_bad_check_plugin"]

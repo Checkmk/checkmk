@@ -19,7 +19,7 @@ import tarfile
 import time
 import traceback
 from types import TracebackType
-from typing import Any, Optional, Type, Tuple, Dict, Text, List, NamedTuple
+from typing import Any, Optional, Type, Tuple, Dict, List, NamedTuple
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -72,7 +72,7 @@ class SnapshotCreationBase(object):
         self._available_snapshots = {}  # type: Dict[Tuple[str, ...], str]
 
         # Debugging stuff
-        self._statistics_rsync = []  # type: List[Text]
+        self._statistics_rsync = []  # type: List[str]
         self._statistics_tar = {}  # type: Dict[str, List[str]]
 
     def output_statistics(self):

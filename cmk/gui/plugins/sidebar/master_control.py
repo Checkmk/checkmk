@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, List, Tuple
+from typing import Dict, List, Tuple
 
 import time
 
@@ -31,12 +31,12 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Master Control")
 
     @classmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Buttons for switching globally states such as enabling "
                  "checks and notifications")
 
@@ -69,7 +69,7 @@ class MasterControlSnapin(SidebarSnapin):
                     html.end_foldable_container()
 
     def _core_toggles(self):
-        # type: () -> List[Tuple[str, Text]]
+        # type: () -> List[Tuple[str, str]]
         return [
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
@@ -81,7 +81,7 @@ class MasterControlSnapin(SidebarSnapin):
         ]
 
     def _show_master_control_site(self, site_id, site_status_info, items):
-        # type: (sites.SiteId, Dict[sites.SiteId, List], List[Tuple[str, Text]]) -> None
+        # type: (sites.SiteId, Dict[sites.SiteId, List], List[Tuple[str, str]]) -> None
         site_state = sites.states().get(site_id)
 
         if not site_state:

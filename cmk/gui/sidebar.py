@@ -8,7 +8,7 @@ import copy
 import traceback
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import six
 
@@ -322,7 +322,7 @@ class UserSidebarSnapin(object):
 
 class SidebarRenderer(object):
     def show(self, title=None, content=None):
-        # type: (Optional[Text], Optional[HTML]) -> None
+        # type: (Optional[str], Optional[HTML]) -> None
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideallly we should
         # split this up. Possible solutions might be:
@@ -600,7 +600,7 @@ def ajax_snapin():
     snapin_ids = [snapin_id] if snapin_id else html.request.get_str_input_mandatory("names",
                                                                                     "").split(",")
 
-    snapin_code = []  # type: List[Text]
+    snapin_code = []  # type: List[str]
     for snapin_id in snapin_ids:
         try:
             snapin_instance = user_config.get_snapin(snapin_id).snapin_type()

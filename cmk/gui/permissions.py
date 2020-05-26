@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Text, Type, List
+from typing import Type, List
 import six
 
 import cmk.utils.plugin_registry
@@ -21,7 +21,7 @@ class PermissionSection(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Display name representing the section"""
         raise NotImplementedError()
 
@@ -70,13 +70,13 @@ class Permission(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Display name representing the permission"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def description(self):
-        # type: () -> Text
+        # type: () -> str
         """Text to explain the purpose of this permission"""
         raise NotImplementedError()
 

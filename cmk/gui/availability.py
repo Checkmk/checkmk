@@ -8,8 +8,7 @@ from __future__ import division
 import time
 import os
 
-from typing import (Callable, Set, Dict, Any, Text, Union, List, Tuple as _Tuple, Optional as
-                    _Optional)
+from typing import Callable, Set, Dict, Any, Union, List, Tuple as _Tuple, Optional as _Optional
 import six
 
 from livestatus import SiteId
@@ -43,23 +42,23 @@ from cmk.gui.globals import html
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
 AVOptions = Dict[str, Any]  # TODO: Improve this type
-AVObjectSpec = Union[None, _Tuple[None, None, Text], _Tuple[str, str, Text]]
+AVObjectSpec = Union[None, _Tuple[None, None, str], _Tuple[str, str, str]]
 AVSpan = Dict[str, Any]  # TODO: Improve this type
 SiteHost = _Tuple[SiteId, HostName]
 AVRawServices = Dict[ServiceName, List[AVSpan]]
 AVRawData = Dict[SiteHost, AVRawServices]
 AVEntry = Any
 AVData = List[AVEntry]
-AVTimelineSpan = _Tuple[_Optional[int], Text, float, CSSClass]
-AVObjectCells = List[_Tuple[Text, str]]
-AVRowCells = List[_Tuple[Text, CSSClass]]
-AVGroups = List[_Tuple[_Optional[Text], AVData]]
+AVTimelineSpan = _Tuple[_Optional[int], str, float, CSSClass]
+AVObjectCells = List[_Tuple[str, str]]
+AVRowCells = List[_Tuple[str, CSSClass]]
+AVGroups = List[_Tuple[_Optional[str], AVData]]
 HostOrServiceGroupName = str
 AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
 AVGroupIds = Union[None, List[SiteHost], Set[HostOrServiceGroupName]]
 AVTimeStamp = float
 AVTimeRange = _Tuple[AVTimeStamp, AVTimeStamp]
-AVTimeFormats = List[_Tuple[str, Callable[[AVTimeStamp, int], Text]]]
+AVTimeFormats = List[_Tuple[str, Callable[[AVTimeStamp, int], str]]]
 
 AVTimelineStateName = str
 AVTimelineRows = List[_Tuple[AVSpan, AVTimelineStateName]]
@@ -93,7 +92,7 @@ AVLayoutTableRow = Dict[str, Any]  # TODO: Improve this type
 
 AVBIPhaseData = Dict[_Tuple[HostName, ServiceName], Row]
 AVBIPhases = List[_Tuple[int, AVBIPhaseData]]
-AVBITimelineState = _Tuple[int, Text, bool, bool]
+AVBITimelineState = _Tuple[int, str, bool, bool]
 AVBITimelineStates = Dict[_Tuple[SiteId, HostName, ServiceName], AVBITimelineState]
 
 #   .--Declarations--------------------------------------------------------.
@@ -545,7 +544,7 @@ def get_av_computation_options():
 # Creates a function for rendering time values according to
 # the avoptions of the report.
 def render_number_function(timeformat):
-    # type: (str) -> Callable[[AVTimeStamp, int], Text]
+    # type: (str) -> Callable[[AVTimeStamp, int], str]
     if timeformat.startswith("percentage_"):
 
         def render_number(n, d):
@@ -1107,7 +1106,7 @@ def compute_availability_groups(what, av_data, avoptions):
     if grouping != "host":
         group_titles = dict(sites.all_groups(grouping[:-7]))
 
-    titled_groups = []  # type: List[_Tuple[Text, AVGroupKey]]
+    titled_groups = []  # type: List[_Tuple[str, AVGroupKey]]
     for group_id in all_group_ids:
         if grouping == "host":
             assert isinstance(group_id, tuple)
@@ -1287,7 +1286,7 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 #    "object" : ( "Host123", "Foobar" ),
 # }
 def layout_availability_table(what, group_title, availability_table, avoptions):
-    # type: (AVObjectType, _Optional[Text], AVData, AVOptions) -> AVLayoutTable
+    # type: (AVObjectType, _Optional[str], AVData, AVOptions) -> AVLayoutTable
     time_range, _range_title = avoptions["range"]
     from_time, until_time = time_range
     total_duration = until_time - from_time
@@ -1572,7 +1571,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
     chaos_width = 0
 
     def apply_render_number_functions(n, d):
-        # type: (AVTimeStamp, int) -> Text
+        # type: (AVTimeStamp, int) -> str
         texts = []
         for _timeformat, render_number in timeformats:
             texts.append(render_number(n, d))

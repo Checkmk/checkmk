@@ -14,7 +14,7 @@ import pwd
 import re
 import subprocess
 import sys
-from typing import (Optional, List)
+from typing import Optional, List
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

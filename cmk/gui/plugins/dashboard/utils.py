@@ -8,7 +8,7 @@
 import abc
 import json
 import copy
-from typing import (Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
+from typing import Optional, Any, Dict, Union, Tuple, List, Callable, cast
 
 import six
 
@@ -68,13 +68,13 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
@@ -230,7 +230,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return self._dashboard_name
 
     def display_title(self):
-        # type: () -> Text
+        # type: () -> str
         return self._dashlet_spec.get("title", self.title())
 
     def show_title(self):

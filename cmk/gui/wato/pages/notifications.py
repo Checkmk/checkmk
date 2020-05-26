@@ -7,7 +7,7 @@
 
 import abc
 import time
-from typing import List, NamedTuple, Text, Tuple as _Tuple, Union
+from typing import List, NamedTuple, Tuple as _Tuple, Union
 
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode
@@ -610,7 +610,7 @@ class ModeNotifications(NotificationsMode):
                 if "MICROTIME" in context:
                     date = time.strftime("%Y-%m-%d %H:%M:%S",
                                          time.localtime(int(context["MICROTIME"]) /
-                                                        1000000.0))  # type: Text
+                                                        1000000.0))  # type: str
                 else:
                     date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
                             context.get("DATE") or _("Unknown date"))
@@ -905,7 +905,7 @@ class EditNotificationRuleMode(NotificationsMode):
     def _vs_notification_rule(self, userid=None):
         if userid:
             contact_headers = [
-            ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+            ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
             section_contacts = []
             section_override = []  # type: List[DictionaryEntry]
         else:
@@ -1093,7 +1093,7 @@ class EditNotificationRuleMode(NotificationsMode):
             (_("Rule Properties"),
              ["description", "comment", "disabled", "docu_url", "allow_disable"]),
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
 
         headers_part2 = [
             (_("Conditions"), [
@@ -1105,7 +1105,7 @@ class EditNotificationRuleMode(NotificationsMode):
                 "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
                 "match_service_event", "match_ec", "match_notification_comment"
             ]),
-        ]  # type: List[Union[_Tuple[Text, List[str]], _Tuple[Text, str, List[str]]]]
+        ]  # type: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]
 
         return Dictionary(
             title=_("Rule Properties"),

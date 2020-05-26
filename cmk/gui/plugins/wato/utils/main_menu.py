@@ -6,7 +6,7 @@
 
 import abc
 import re
-from typing import Optional, Text
+from typing import Optional
 import six
 
 import cmk.gui.config as config
@@ -119,7 +119,7 @@ class MainModule(six.with_metaclass(abc.ABCMeta, MenuItem)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -134,7 +134,7 @@ class MainModule(six.with_metaclass(abc.ABCMeta, MenuItem)):
 
     @abc.abstractproperty
     def description(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty

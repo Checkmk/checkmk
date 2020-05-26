@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Optional, Text, Tuple
+from typing import Any, Optional, Tuple
 
 import livestatus
 
@@ -1013,7 +1013,7 @@ class CommandScheduleDowntimes(Command):
         rangebtns = (varname for varname, _value in html.request.itervars(prefix="_downrange"))
 
         def resolve_end(name):
-            # type: (str) -> Tuple[float, Text]
+            # type: (str) -> Tuple[float, str]
             now = time.localtime(down_from)
             if name == "next_day":
                 return (time.mktime(

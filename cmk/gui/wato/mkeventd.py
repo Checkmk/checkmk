@@ -12,7 +12,7 @@ import re
 import io
 import time
 import zipfile
-from typing import Callable, Dict, List, Optional as _Optional, Text, TypeVar, Union
+from typing import Callable, Dict, List, Optional as _Optional, TypeVar, Union
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -2576,7 +2576,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             self._show_mib_table(path, title)
 
     def _show_mib_table(self, path, title):
-        # type: (Path, Text) -> None
+        # type: (Path, str) -> None
         is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:

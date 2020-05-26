@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Text, Type, Optional, List
+from typing import Type, Optional, List
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     ValueSpec,
@@ -161,7 +161,7 @@ def _vs_limits(resource,
         )
 
     if resource:
-        title = _("Set limit and levels for %s" % resource)  # type: Optional[Text]
+        title = _("Set limit and levels for %s" % resource)  # type: Optional[str]
     else:
         title = None
 

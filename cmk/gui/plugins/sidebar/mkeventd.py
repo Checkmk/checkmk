@@ -6,7 +6,7 @@
 
 from __future__ import division
 
-from typing import Optional, Text, List, Tuple
+from typing import Optional, List, Tuple
 
 from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
@@ -32,12 +32,12 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Event Console Performance")
 
     @classmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Monitor the performance of the Event Console")
 
     @classmethod

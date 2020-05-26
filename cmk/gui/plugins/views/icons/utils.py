@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Text, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import List, Optional, Tuple, TYPE_CHECKING, Union
 import six
 
 import cmk.gui.config as config
@@ -63,7 +63,7 @@ class Icon(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def render(self, what, row, tags, custom_vars):
-        # type: (str, dict, list, dict) -> Union[None, HTML, Tuple, str, Text]
+        # type: (str, dict, list, dict) -> Union[None, HTML, Tuple, str]
         raise NotImplementedError()
 
     def columns(self):

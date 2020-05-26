@@ -6,7 +6,7 @@
 """Wrapper layer between WSGI and GUI application code"""
 
 import sys
-from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple
+from typing import List, Optional, Any, Iterator, Union, Dict, Tuple
 import six
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json
@@ -40,7 +40,7 @@ class LegacyVarsMixin(object):
         self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
     def set_var(self, varname, value):
-        # type: (str, Union[Text, str]) -> None
+        # type: (str, str) -> None
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
@@ -53,7 +53,7 @@ class LegacyVarsMixin(object):
         self.legacy_vars[varname] = value
 
     def del_var(self, varname):
-        # type: (Union[str, Text]) -> None
+        # type: (str) -> None
         varname = six.ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
@@ -83,7 +83,7 @@ class LegacyVarsMixin(object):
             yield name, val
 
     def has_var(self, varname):
-        # type: (Union[str, Text]) -> bool
+        # type: (str) -> bool
         varname = six.ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
@@ -320,7 +320,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         return value
 
     def get_unicode_input(self, varname, deflt=None):
-        # type: (str, Optional[Text]) -> Optional[Text]
+        # type: (str, Optional[str]) -> Optional[str]
         try:
             val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
             if val is None:
@@ -333,7 +333,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
                   "You need to provide a UTF-8 encoded text."))
 
     def get_unicode_input_mandatory(self, varname, deflt=None):
-        # type: (str, Optional[Text]) -> Text
+        # type: (str, Optional[str]) -> str
         value = self.get_unicode_input(varname, deflt)
         if value is None:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)

@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List, Tuple, Text, Any, Optional, Callable, NamedTuple
+from typing import Dict, Union, List, Tuple, Any, Optional, Callable, NamedTuple
 from cmk.utils.type_defs import UserId
 
-HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
-LivestatusQuery = Union[Text, str]
+HTTPVariables = List[Tuple[str, Union[None, int, str]]]
+LivestatusQuery = str
 PermissionName = str
 RoleName = str
 
@@ -29,7 +29,7 @@ class PainterSpec(
             ('link_view', Optional[ViewName]),
             ('tooltip', Optional[ColumnName]),
             ('join_index', Optional[ColumnName]),
-            ('column_title', Optional[Text]),
+            ('column_title', Optional[str]),
         ])):
     def __new__(cls, *value):
         value = value + (None,) * (5 - len(value))
@@ -47,10 +47,10 @@ FilterHeaders = str
 
 # Visual specific
 FilterName = str
-FilterHTTPVariables = Dict[str, Union[Text, str]]
+FilterHTTPVariables = Dict[str, str]
 Visual = Dict[str, Any]
 VisualTypeName = str
-VisualContext = Dict[FilterName, Union[Text, str, FilterHTTPVariables]]
+VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
 InfoName = str
 SingleInfos = List[InfoName]
 

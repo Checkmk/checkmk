@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Any, Iterable, Text
+from typing import Union, Any, Iterable
 import six
 
 from cmk.utils.encoding import ensure_unicode
 
-HTMLInput = Union["HTML", int, float, None, str, Text]
+HTMLInput = Union["HTML", int, float, None, str]
 
 
 class HTML(object):
@@ -30,7 +30,7 @@ class HTML(object):
         self.value = self._ensure_unicode(value)
 
     def _ensure_unicode(self, value):
-        # type: (HTMLInput) -> Text
+        # type: (HTMLInput) -> str
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
         if not isinstance(value, six.string_types):
@@ -38,13 +38,13 @@ class HTML(object):
         return ensure_unicode(value)
 
     def __html__(self):
-        # type: () -> Text
+        # type: () -> str
         return six.ensure_text("%s" % self)
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
     def __str__(self):  # type: ignore[override]
-        # type: () -> Text
+        # type: () -> str
         # Against the sense of the __str__() method, we need to return the value
         # as unicode here. Why? There are many cases where something like
         # "%s" % HTML(...) is done in the GUI code. This calls the __str__ function
@@ -69,7 +69,7 @@ class HTML(object):
         return six.ensure_str(repr_val)
 
     def to_json(self):
-        # type: () -> Text
+        # type: () -> str
         return self.value
 
     def __add__(self, other):

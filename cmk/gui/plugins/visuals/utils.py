@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Text, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 import six
 
 from cmk.gui.exceptions import MKGeneralException
@@ -36,13 +36,13 @@ class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def title_plural(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title for multiple items"""
         raise NotImplementedError()
 
@@ -107,7 +107,7 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """The human readable GUI title"""
         raise NotImplementedError()
 
@@ -143,7 +143,7 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def popup_add_handler(self, add_type):
-        # type: (str) -> List[Tuple[str, Text]]
+        # type: (str) -> List[Tuple[str, str]]
         """List of visual choices another visual of the given type can be added to"""
         raise NotImplementedError()
 
@@ -234,7 +234,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Used as display string for the filter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -266,7 +266,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def description(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         return None
 
     def available(self):
@@ -324,7 +324,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         return self.info[:-1] + "_"
 
     def heading_info(self):
-        # type: () -> Optional[Text]
+        # type: () -> Optional[str]
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 

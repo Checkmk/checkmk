@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Union, Tuple, List, Text
+from typing import Union, Tuple, List
 import six
 
 from cmk.gui.i18n import _
@@ -14,7 +14,7 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 
 NewMode = Union[None, bool, str]
-ActionResult = Union[NewMode, Tuple[NewMode, Text]]
+ActionResult = Union[NewMode, Tuple[NewMode, str]]
 
 
 class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
@@ -46,7 +46,7 @@ class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
         given HTTP variables."""
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("(Untitled module)")
 
     def buttons(self):

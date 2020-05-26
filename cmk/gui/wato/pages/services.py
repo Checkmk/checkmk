@@ -15,7 +15,7 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import Any, Tuple, Dict, NamedTuple, Text, List, Optional
+from typing import Any, Tuple, Dict, NamedTuple, List, Optional
 
 import six
 
@@ -58,7 +58,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.utils.context_buttons import changelog_button
 
-AjaxDiscoveryRequest = Dict[Text, Any]
+AjaxDiscoveryRequest = Dict[str, Any]
 CheckTableEntry = Tuple  # TODO: Improve this type
 CheckTable = List[CheckTableEntry]  # TODO: Improve this type
 DiscoveryResult = NamedTuple("DiscoveryResult", [
@@ -142,8 +142,8 @@ StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
 TableGroupEntry = NamedTuple("TableGroupEntry", [
     ("table_group", str),
     ("show_bulk_actions", bool),
-    ("title", Text),
-    ("help_text", Text),
+    ("title", str),
+    ("help_text", str),
 ])
 
 
@@ -571,7 +571,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         }
 
     def _get_status_message(self, discovery_result, performed_action):
-        # type: (DiscoveryResult, str) -> Optional[Text]
+        # type: (DiscoveryResult, str) -> Optional[str]
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -971,7 +971,7 @@ class DiscoveryPageRenderer(object):
         self._options = options
 
     def render(self, discovery_result, request):
-        # type: (DiscoveryResult, dict) -> Text
+        # type: (DiscoveryResult, dict) -> str
         with html.plugged():
             self._show_action_buttons(discovery_result)
             self._show_discovered_host_labels(discovery_result)
@@ -983,7 +983,7 @@ class DiscoveryPageRenderer(object):
         if not discovery_result.host_labels:
             return
 
-        host_labels_by_plugin = {}  # type: Dict[str, Dict[Text, Text]]
+        host_labels_by_plugin = {}  # type: Dict[str, Dict[str, str]]
         for label_id, label in discovery_result.host_labels.items():
             host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
 

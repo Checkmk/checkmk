@@ -7,7 +7,7 @@
 import abc
 import re
 import json
-from typing import Any, Dict, List, Optional, Tuple, Text
+from typing import Any, Dict, List, Optional, Tuple
 
 import six
 
@@ -135,7 +135,7 @@ class GroupedBoxesLayout(Layout):
             this_group = group_value(row, group_cells)
             if this_group != last_group:
                 last_group = this_group
-                current_group = []  # type: List[Tuple[Text, Any]]
+                current_group = []  # type: List[Tuple[str, Any]]
                 groups.append((this_group, current_group))
             current_group.append((row_id(view, row), row))
 

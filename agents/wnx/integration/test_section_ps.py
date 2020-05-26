@@ -9,7 +9,7 @@ import yaml
 import os
 import pytest
 import re
-from local import (actual_output, make_yaml_config, local_test, wait_agent, write_config)
+from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
 
 
 class Globals(object):

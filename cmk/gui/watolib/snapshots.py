@@ -15,7 +15,7 @@ import subprocess
 import tarfile
 import time
 import traceback
-from typing import Any, List, Dict, Text, Optional, Union
+from typing import Any, List, Dict, Optional, Union
 
 import six
 
@@ -447,7 +447,7 @@ def extract_snapshot(tar, domains):
         os.makedirs(restore_dir)
 
     def check_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
+        # type: (DomainSpec, tarfile.TarInfo) -> List[str]
         errors = []
 
         prefix = domain["prefix"]
@@ -492,7 +492,7 @@ def extract_snapshot(tar, domains):
         return errors
 
     def cleanup_domain(domain):
-        # type: (DomainSpec) -> List[Text]
+        # type: (DomainSpec) -> List[str]
         # Some domains, e.g. authorization, do not get a cleanup
         if domain.get("cleanup") is False:
             return []
@@ -522,7 +522,7 @@ def extract_snapshot(tar, domains):
         return []
 
     def extract_domain(domain, tar_member):
-        # type: (DomainSpec, tarfile.TarInfo) -> List[Text]
+        # type: (DomainSpec, tarfile.TarInfo) -> List[str]
         try:
             target_dir = domain.get("prefix")
             if not target_dir:
@@ -547,7 +547,7 @@ def extract_snapshot(tar, domains):
         return []
 
     def execute_restore(domain, is_pre_restore=True):
-        # type: (DomainSpec, bool) -> List[Text]
+        # type: (DomainSpec, bool) -> List[str]
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
@@ -568,7 +568,7 @@ def extract_snapshot(tar, domains):
         ("Post-Restore", False,
          lambda domain, tar_member: execute_restore(domain, is_pre_restore=False))
     ]:
-        errors = []  # type: List[Text]
+        errors = []  # type: List[str]
         for name, tar_member in tar_domains.items():
             if name in domains:
                 try:

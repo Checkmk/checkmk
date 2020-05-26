@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Text, Optional, List
+from typing import Dict, Optional, List
 import six
 
 import livestatus
@@ -92,7 +92,7 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(self, only_sites, filter_headers):
-        # type: (Optional[List[config.SiteId]], Text) -> List[Dict[Text, Text]]
+        # type: (Optional[List[config.SiteId]], str) -> List[Dict[str, str]]
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -133,7 +133,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(self, only_sites, filter_headers=None):
-        # type: (Optional[List[config.SiteId]], Optional[Text]) -> List[Dict[Text, Text]]
+        # type: (Optional[List[config.SiteId]], Optional[str]) -> List[Dict[str, str]]
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)

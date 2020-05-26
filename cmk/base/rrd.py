@@ -5,17 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import xml.etree.ElementTree as ET
-from typing import (
-    Iterator,
-    Optional,
-    Tuple,
-    Dict,
-    List,
-    Union,
-)
+from typing import Optional, Tuple
 
 from pathlib import Path
-
 import six
 
 import cmk.utils.paths

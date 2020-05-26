@@ -329,8 +329,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
             plugin.sections,
             service.description,
         ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
-            host_config.hostname,
-            ipaddress,
+            (host_config.hostname, ipaddress),
             plugin.sections,
         )
 

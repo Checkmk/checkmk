@@ -115,7 +115,7 @@ def test_get_parsed_section(monkeypatch, node_section_content, expected_result):
         AgentHostSections(sections=node_section_content),
     )
 
-    content = multi_host_sections.get_parsed_section("node1", "127.0.0.1", PluginName("parsed"))
+    content = multi_host_sections.get_parsed_section(("node1", "127.0.0.1"), PluginName("parsed"))
 
     assert expected_result == content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, content)
@@ -163,7 +163,7 @@ def test_get_section_kwargs(monkeypatch, required_sections, expected_result):
         AgentHostSections(sections=node_section_content),
     )
 
-    kwargs = multi_host_sections.get_section_kwargs("node1", "127.0.0.1",
+    kwargs = multi_host_sections.get_section_kwargs(("node1", "127.0.0.1"),
                                                     [PluginName(n) for n in required_sections])
 
     assert expected_result == kwargs,\

@@ -8,7 +8,7 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Optional, List, Text
+from typing import Optional, List
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -108,7 +108,7 @@ def do_localize(args):
     if not lang:
         raise LocalizeException('No language given')
 
-    alias = None  # type: Optional[Text]
+    alias = None  # type: Optional[str]
     if len(args) > 2:
         alias = six.ensure_text(args[2])
 
@@ -136,7 +136,7 @@ def do_localize(args):
 
 
 def _write_alias(lang, alias):
-    # type: (LanguageName, Optional[Text]) -> None
+    # type: (LanguageName, Optional[str]) -> None
     if not alias:
         return
 

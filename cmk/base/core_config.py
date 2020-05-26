@@ -8,7 +8,7 @@ import abc
 import numbers
 import os
 import sys
-from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 import six
 
@@ -176,7 +176,7 @@ def host_check_command(config_cache, host_config, ip, is_clust, default_host_che
 
 
 def autodetect_plugin(command_line):
-    # type: (Text)-> Text
+    # type: (str)-> str
     plugin_name = command_line.split()[0]
     if command_line[0] in ['$', '/']:
         return command_line
@@ -648,7 +648,7 @@ def get_host_macros_from_attributes(hostname, attrs):
 
 
 def replace_macros(s, macros):
-    # type: (Text, ObjectMacros) -> Text
+    # type: (str, ObjectMacros) -> str
     for key, value in macros.items():
         if isinstance(value, (numbers.Integral, float)):
             value = str(value)  # e.g. in _EC_SL (service level)

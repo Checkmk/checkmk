@@ -12,7 +12,7 @@ import socket
 import sys
 import time
 from pathlib import Path
-from typing import AnyStr, Dict, Generic, List, Optional, Set, Text, Tuple, TypeVar, Union, cast
+from typing import AnyStr, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union, cast
 
 import six
 
@@ -864,11 +864,11 @@ class CheckMKAgentDataSource(
         return status, ", ".join(output), perfdata
 
     def _get_agent_info(self, cmk_section):
-        # type: (Optional[AgentSectionContent]) -> Dict[str, Optional[Text]]
+        # type: (Optional[AgentSectionContent]) -> Dict[str, Optional[str]]
         agent_info = {
             "version": u"unknown",
             "agentos": u"unknown",
-        }  # type: Dict[str, Optional[Text]]
+        }  # type: Dict[str, Optional[str]]
 
         if self._host_sections is None or not cmk_section:
             return agent_info
@@ -879,7 +879,7 @@ class CheckMKAgentDataSource(
         return agent_info
 
     def _sub_result_version(self, agent_info):
-        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
+        # type: (Dict[str, Optional[str]]) -> Optional[ServiceCheckResult]
         agent_version = str(agent_info["version"])
         expected_version = self._host_config.agent_target_version
 
@@ -914,7 +914,7 @@ class CheckMKAgentDataSource(
         return None
 
     def _sub_result_only_from(self, agent_info):
-        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
+        # type: (Dict[str, Optional[str]]) -> Optional[ServiceCheckResult]
         agent_only_from = agent_info.get("onlyfrom")
         if agent_only_from is None:
             return None
@@ -1030,7 +1030,7 @@ def _is_ipaddress(address):
 
 
 def _normalize_ip_addresses(ip_addresses):
-    # type: (Union[AnyStr, List[AnyStr]]) -> List[Text]
+    # type: (Union[AnyStr, List[AnyStr]]) -> List[str]
     '''factorize 10.0.0.{1,2,3}'''
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()

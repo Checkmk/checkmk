@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import sys
 import time
-from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import six
 
@@ -628,7 +628,7 @@ class AutomationAnalyseServices(Automation):
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(self, config_cache, host_config, servicedesc):
-        # type: (config.ConfigCache, config.HostConfig, Text) -> Dict
+        # type: (config.ConfigCache, config.HostConfig, str) -> Dict
         hostname = host_config.hostname
         check_api_utils.set_hostname(hostname)
 
@@ -1048,7 +1048,7 @@ class AutomationGetRealTimeChecks(Automation):
     needs_checks = True
 
     def execute(self, args):
-        # type: (List[str]) -> List[Tuple[CheckPluginName, Text]]
+        # type: (List[str]) -> List[Tuple[CheckPluginName, str]]
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
@@ -1161,7 +1161,7 @@ class AutomationDiagHost(Automation):
     needs_checks = True
 
     def execute(self, args):
-        # type: (List[str]) -> Tuple[int, Text]
+        # type: (List[str]) -> Tuple[int, str]
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
@@ -1493,7 +1493,7 @@ class AutomationActiveCheck(Automation):
         return commandline
 
     def _execute_check_plugin(self, commandline):
-        # type: (Text) -> Tuple[ServiceState, ServiceDetails]
+        # type: (str) -> Tuple[ServiceState, ServiceDetails]
         try:
             p = os.popen(commandline + " 2>&1")  # nosec
             output = p.read().strip()
@@ -1654,7 +1654,7 @@ class AutomationGetServiceConfigurations(Automation):
         return result
 
     def _get_config_for_host(self, host_config):
-        # type: (config.HostConfig) -> Dict[str, List[Tuple[str, Text, Any]]]
+        # type: (config.HostConfig) -> Dict[str, List[Tuple[str, str, Any]]]
         return {
             "checks": [(s.check_plugin_name, s.description, s.parameters)
                        for s in check_table.get_check_table(host_config.hostname,
@@ -1663,7 +1663,7 @@ class AutomationGetServiceConfigurations(Automation):
         }
 
     def _get_active_checks(self, host_config):
-        # type: (config.HostConfig) -> List[Tuple[str, Text, Any]]
+        # type: (config.HostConfig) -> List[Tuple[str, str, Any]]
         actchecks = []
         for plugin_name, entries in host_config.active_checks:
             for params in entries:
@@ -1736,13 +1736,13 @@ class AutomationGetRuleMismatchReason(Automation):
     needs_checks = False
 
     def execute(self, args):
-        # type: (List[str]) -> Optional[Text]
+        # type: (List[str]) -> Optional[str]
         parsed_args = ast.literal_eval(args[0])  # type: List[Any]
         return self.get_mismatch_reason(*parsed_args)
 
     def get_mismatch_reason(self, hostname, svc_desc_or_item, svc_desc, only_host_conditions,
                             match_service_conditions, rule_dict, item_type, is_binary_ruleset):
-        # type: (HostName, ServiceName, ServiceName, bool, bool, Dict, str, bool) -> Optional[Text]
+        # type: (HostName, ServiceName, ServiceName, bool, bool, Dict, str, bool) -> Optional[str]
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
 
         config_cache = config.get_config_cache()
@@ -1776,7 +1776,7 @@ class AutomationGetRuleMismatchReason(Automation):
     def _get_mismatch_reason_of_match_object(self, config_cache, match_object,
                                              match_service_conditions, rule_dict,
                                              is_binary_ruleset):
-        # type: (config.ConfigCache, ruleset_matcher.RulesetMatchObject, bool, Dict, bool) -> Optional[Text]
+        # type: (config.ConfigCache, ruleset_matcher.RulesetMatchObject, bool, Dict, bool) -> Optional[str]
         matcher = config_cache.ruleset_matcher
 
         if match_service_conditions:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, NoReturn, Text, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NoReturn, Tuple, TypeVar, Union
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
@@ -28,7 +28,7 @@ RulesetName = str
 
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
-AgentSectionContent = List[List[Text]]
+AgentSectionContent = List[List[str]]
 PersistedAgentSection = Tuple[int, int, AgentSectionContent]
 PersistedAgentSections = Dict[SectionName, PersistedAgentSection]
 AgentSections = Dict[SectionName, AgentSectionContent]
@@ -54,7 +54,7 @@ class Service(object):  # pylint: disable=useless-object-inheritance
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
-        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
+        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
@@ -73,7 +73,7 @@ class Service(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def description(self):
-        # type: () -> Text
+        # type: () -> str
         return self._description
 
     @property
@@ -119,7 +119,7 @@ class DiscoveredService(Service):
                  description,
                  parameters_unresolved,
                  service_labels=None):
-        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
+        # type: (CheckPluginName, Item, str, CheckParameters, DiscoveredServiceLabels) -> None
         super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
                                                 item=item,
                                                 description=description,

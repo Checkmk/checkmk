@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from contextlib import suppress
-from typing import Dict, Iterable, List, Optional, Text, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import six
 
@@ -43,7 +43,7 @@ try:
 except ImportError:
     inline = None  # type: ignore[assignment]
 
-SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
+SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
 
 #.
@@ -153,7 +153,7 @@ def _convert_rows_for_stored_walk(rows):
         return False
 
     def hex_encode_value(v):
-        # type: (RawValue) -> Text
+        # type: (RawValue) -> str
         encoded = ""
         for c in bytearray(v):
             encoded += "%02X " % c

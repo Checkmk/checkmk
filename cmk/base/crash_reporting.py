@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Dict, Optional, Text
+from typing import Dict, Optional
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -52,7 +52,7 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
                             info):
-    # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent) -> Text
+    # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent) -> str
     """Create a crash dump from an exception occured during check execution
 
     The crash dump is put into a tarball, base64 encoded and appended to the long output
@@ -90,7 +90,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def from_exception_and_context(cls, hostname, check_plugin_name, item, is_manual_check, params,
                                    description, info, text):
-        # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent, Text) -> crash_reporting.ABCCrashReport
+        # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent, str) -> crash_reporting.ABCCrashReport
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 

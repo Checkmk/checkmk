@@ -23,7 +23,7 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast
+from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast
 import traceback
 import uuid
 
@@ -1468,7 +1468,7 @@ def call_notification_script(plugin_name, plugin_context):
                              NotificationContext(plugin_context)))
 
     def plugin_log(s):
-        # type: (Text) -> None
+        # type: (str) -> None
         logger.info("     %s", s)
 
     # The "Pseudo"-Plugin None means builtin plain email
@@ -1991,7 +1991,7 @@ def notify_bulk(dirname, uuids):
 
 
 def call_bulk_notification_script(plugin_name, context_lines):
-    # type: (PluginName, List[str]) -> Tuple[int, List[Text]]
+    # type: (PluginName, List[str]) -> Tuple[int, List[str]]
     path = path_to_notification_script(plugin_name)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin_name)
@@ -2104,7 +2104,7 @@ def raw_context_from_env():
 
 
 def substitute_context(template, context):
-    # type: (Text, PluginContext) -> Text
+    # type: (str, PluginContext) -> str
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace('$' + varname + '$', value)
@@ -2160,13 +2160,13 @@ def fresh_uuid():
 
 # TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk/base/notify.py
 def _log_to_history(message):
-    # type: (Text) -> None
+    # type: (str) -> None
     _livestatus_cmd("LOG;%s" % message)
 
 
 # TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk/base/notify.py
 def _livestatus_cmd(command):
-    # type: (Text) -> None
+    # type: (str) -> None
     try:
         livestatus.LocalConnection().command("[%d] %s" % (time.time(), command))
     except Exception as e:

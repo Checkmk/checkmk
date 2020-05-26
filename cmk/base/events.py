@@ -20,7 +20,7 @@ if sys.version_info[0] >= 3:
 else:
     from urllib import quote  # pylint: disable=unused-import,no-name-in-module
 
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Text, Union)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import six
 
@@ -825,7 +825,7 @@ def add_to_event_context(plugin_context, prefix, param):
 
 
 def plugin_param_to_string(value):
-    # type: (Any) -> Union[Text, str]
+    # type: (Any) -> str
     if isinstance(value, six.string_types):
         return value
     if isinstance(value, (int, float)):

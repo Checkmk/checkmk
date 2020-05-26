@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterator, Any, Union, Optional, Text, List, Dict
+from typing import Iterator, Any, Union, Optional, List, Dict
 
 try:
     # Python has a totally braindead history of changes in this area:
@@ -25,15 +25,15 @@ import six
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Labels, CheckPluginName
 
-HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
-DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]
+HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginName]]]
+DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
 class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object)):
     def __init__(self, *args):
         # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()
-        self._labels = {}  # type: Dict[Text, Any]
+        self._labels = {}  # type: Dict[str, Any]
         for entry in args:
             self.add_label(entry)
 
@@ -47,15 +47,15 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object
         return not self._labels
 
     def __getitem__(self, key):
-        # type: (Text) -> Any
+        # type: (str) -> Any
         return self._labels[key]
 
     def __setitem__(self, key, value):
-        # type: (Text, Any) -> None
+        # type: (str, Any) -> None
         self._labels[key] = value
 
     def __delitem__(self, key):
-        # type: (Text) -> None
+        # type: (str) -> None
         del self._labels[key]
 
     def __iter__(self):
@@ -83,7 +83,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
 
     def __init__(self, *args):
         # type: (HostLabel) -> None
-        self._labels = {}  # type: Dict[Text, HostLabel]
+        self._labels = {}  # type: Dict[str, HostLabel]
         super(DiscoveredHostLabels, self).__init__(*args)
 
     def add_label(self, label):
@@ -122,7 +122,7 @@ class ABCLabel(object):  # pylint: disable=useless-object-inheritance
     __slots__ = ["_name", "_value"]
 
     def __init__(self, name, value):
-        # type: (Text, Text) -> None
+        # type: (str, str) -> None
 
         if not isinstance(name, six.text_type):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
@@ -134,17 +134,17 @@ class ABCLabel(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def name(self):
-        # type: () -> Text
+        # type: () -> str
         return self._name
 
     @property
     def value(self):
-        # type: () -> Text
+        # type: () -> str
         return self._value
 
     @property
     def label(self):
-        # type: () -> Text
+        # type: () -> str
         return "%s:%s" % (self._name, self._value)
 
     def __repr__(self):
@@ -176,7 +176,7 @@ class HostLabel(ABCLabel):
 
     @classmethod
     def from_dict(cls, name, dict_label):
-        # type: (Text, HostLabelValueDict) -> HostLabel
+        # type: (str, HostLabelValueDict) -> HostLabel
         value = dict_label["value"]
         assert isinstance(value, six.text_type)
 
@@ -186,7 +186,7 @@ class HostLabel(ABCLabel):
         return cls(name, value, plugin_name)
 
     def __init__(self, name, value, plugin_name=None):
-        # type: (Text, Text, Optional[CheckPluginName]) -> None
+        # type: (str, str, Optional[CheckPluginName]) -> None
         super(HostLabel, self).__init__(name, value)
         self._plugin_name = plugin_name
 

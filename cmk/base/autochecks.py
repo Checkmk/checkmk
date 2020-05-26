@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Any, Callable, Dict, List, Optional, Set, Text, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 import sys
 import ast
 
@@ -32,7 +32,7 @@ ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, CheckParamet
                                   Optional[CheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-HostOfClusteredService = Callable[[HostName, Text], str]
+HostOfClusteredService = Callable[[HostName, str], str]
 
 
 class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
@@ -46,7 +46,7 @@ class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
         self._autochecks = {}  # type: Dict[HostName, List[Service]]
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
+        self._discovered_labels_of = {}  # type: Dict[HostName, Dict[str, DiscoveredServiceLabels]]
         self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
 
     def get_autochecks_of(self, hostname, compute_check_parameters, service_description,

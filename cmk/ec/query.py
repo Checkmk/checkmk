@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger  # pylint: disable=unused-import
-from typing import Any, Callable, List, Optional, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex

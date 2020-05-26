@@ -8,7 +8,7 @@ import getopt
 import json
 import socket
 import sys
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 from base64 import b64encode
 
 if sys.version_info[0] >= 3:

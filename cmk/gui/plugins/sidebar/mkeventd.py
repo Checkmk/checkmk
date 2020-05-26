@@ -6,7 +6,7 @@
 
 from __future__ import division
 
-from typing import Optional, Text, List, Tuple  # pylint: disable=unused-import
+from typing import Optional, Text, List, Tuple
 
 from cmk.gui.type_defs import PermissionName  # pylint: disable=unused-import
 import cmk.gui.mkeventd as mkeventd

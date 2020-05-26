@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from typing import Union, Tuple, Callable, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Union, Tuple, Callable, Optional, Dict, List
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException

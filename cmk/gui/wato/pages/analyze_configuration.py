@@ -12,7 +12,7 @@ import time
 import multiprocessing
 import traceback
 import ast
-from typing import Any, Dict, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, Tuple
 
 import six
 

@@ -7,7 +7,7 @@
 import abc
 import json
 import inspect
-from typing import Any, Callable, Dict, Mapping, Optional, Text, Type  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Mapping, Optional, Text, Type
 import six
 
 import cmk.utils.plugin_registry

@@ -29,7 +29,7 @@ import sys
 import subprocess
 import termios
 from tty import setraw
-from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate

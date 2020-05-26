@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-from typing import Dict, List, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 import pytest  # type: ignore[import]
 from testlib.base import Scenario

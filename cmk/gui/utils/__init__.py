@@ -13,7 +13,7 @@ import re
 import uuid
 import marshal
 import itertools
-from typing import Text, Optional, Union, Any, List, Dict, Tuple  # pylint: disable=unused-import
+from typing import Text, Optional, Union, Any, List, Dict, Tuple
 import six
 
 if sys.version_info[0] >= 3:

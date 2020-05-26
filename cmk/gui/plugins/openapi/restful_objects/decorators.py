@@ -14,7 +14,7 @@ connexion is disabled.
 """
 import functools
 import sys
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Literal

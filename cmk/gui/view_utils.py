@@ -6,8 +6,15 @@
 
 import re
 import json
-from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Optional, Tuple, Union, Text, List, Any, Dict,
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    Tuple,
+    Union,
+    Text,
+    List,
+    Any,
+    Dict,
 )
 import six
 

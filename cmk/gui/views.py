@@ -12,8 +12,18 @@ import pprint
 import traceback
 import json
 import functools
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Text, Tuple as _Tuple, Union,
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TYPE_CHECKING,
+    Text,
+    Tuple as _Tuple,
+    Union,
 )
 import six
 

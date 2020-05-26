@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Tuple, List  # pylint: disable=unused-import
+from typing import Tuple, List
 import six
 
 from livestatus import MKLivestatusNotFoundError

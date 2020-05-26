@@ -7,7 +7,7 @@
 import sys
 import getopt
 import socket
-from typing import NoReturn  # pylint: disable=unused-import
+from typing import NoReturn
 
 import requests
 import six

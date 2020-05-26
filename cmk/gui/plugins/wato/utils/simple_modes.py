@@ -14,8 +14,14 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import (  # pylint: disable=unused-import
-    Optional, List, Type, Union, Text, Tuple, Dict,
+from typing import (
+    Optional,
+    List,
+    Type,
+    Union,
+    Text,
+    Tuple,
+    Dict,
 )
 import six
 

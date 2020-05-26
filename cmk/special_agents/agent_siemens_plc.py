@@ -8,7 +8,7 @@ import sys
 import getopt
 import socket
 import traceback
-from typing import Any, Dict, Optional, List, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Optional, List, Tuple, Union
 
 import snap7  # type: ignore[import]
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]

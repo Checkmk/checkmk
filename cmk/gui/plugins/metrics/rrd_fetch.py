@@ -7,7 +7,7 @@
 
 import time
 import collections
-from typing import Any, Callable, Dict, List, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Set, Tuple, Union
 
 import livestatus
 

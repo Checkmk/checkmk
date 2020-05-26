@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import sys
-from typing import Any, Dict, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Union
 
 if sys.version_info[:2] >= (3, 0) and sys.version_info[:2] <= (3, 7):
     from typing_extensions import Literal

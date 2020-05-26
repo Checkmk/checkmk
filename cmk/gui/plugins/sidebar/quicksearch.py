@@ -7,7 +7,7 @@
 import abc
 import re
 import traceback
-from typing import Any, Dict, List, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set, Tuple
 
 import six
 

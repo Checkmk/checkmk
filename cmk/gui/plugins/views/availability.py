@@ -6,8 +6,12 @@
 
 import time
 import itertools
-from typing import (  # pylint: disable=unused-import
-    List, Text, TYPE_CHECKING, Set, Tuple,
+from typing import (
+    List,
+    Text,
+    TYPE_CHECKING,
+    Set,
+    Tuple,
 )
 import six
 

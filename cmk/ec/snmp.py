@@ -7,7 +7,7 @@
 import traceback
 from logging import Logger  # pylint: disable=unused-import
 from pathlib import Path  # pylint: disable=unused-import
-from typing import Any, Callable, Dict, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Optional, Tuple
 
 # Needed for receiving traps
 import pysnmp.debug  # type: ignore[import]

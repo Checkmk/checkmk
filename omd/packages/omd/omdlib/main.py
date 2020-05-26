@@ -44,8 +44,19 @@ import signal
 import io
 import logging
 from pathlib import Path
-from typing import (  # pylint: disable=unused-import
-    NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional, Callable, List, NamedTuple, Dict,
+from typing import (
+    NoReturn,
+    IO,
+    cast,
+    Iterable,
+    Union,
+    Pattern,
+    Tuple,
+    Optional,
+    Callable,
+    List,
+    NamedTuple,
+    Dict,
 )
 import six
 from passlib.hash import sha256_crypt  # type: ignore[import]

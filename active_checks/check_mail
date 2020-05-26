@@ -16,7 +16,7 @@ import re
 import socket
 import sys
 import time
-from typing import Dict, Optional, Pattern, Tuple, Union  # pylint: disable=unused-import
+from typing import Dict, Optional, Pattern, Tuple, Union
 
 import cmk.utils.password_store
 

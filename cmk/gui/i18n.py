@@ -6,8 +6,13 @@
 
 import sys
 import gettext as gettext_module
-from typing import (  # pylint: disable=unused-import
-    Dict, NamedTuple, Optional, List, Tuple, Text,
+from typing import (
+    Dict,
+    NamedTuple,
+    Optional,
+    List,
+    Tuple,
+    Text,
 )
 import six
 

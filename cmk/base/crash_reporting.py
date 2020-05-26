@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Dict, Optional, Text  # pylint: disable=unused-import
+from typing import Dict, Optional, Text
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple, Optional, Text  # pylint: disable=unused-import
+from typing import List, Tuple, Optional, Text
 
 import six
 

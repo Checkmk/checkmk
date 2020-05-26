@@ -7,8 +7,14 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import (  # pylint: disable=unused-import
-    Dict, Type, Iterator, Text, Optional, List, Any,
+from typing import (
+    Dict,
+    Type,
+    Iterator,
+    Text,
+    Optional,
+    List,
+    Any,
 )
 
 from livestatus import LocalConnection

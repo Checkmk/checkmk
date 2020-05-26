@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple, Union
 import six
 
 from cmk.gui.exceptions import MKGeneralException

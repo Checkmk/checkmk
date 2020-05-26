@@ -10,7 +10,7 @@ import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Text, Tuple  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Text, Tuple
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

@@ -8,7 +8,7 @@ import abc
 import ast
 import os
 import sys
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Dict, Text
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:

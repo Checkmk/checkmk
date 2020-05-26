@@ -8,7 +8,7 @@ Check_MK modules and/or cmk.base modules code."""
 
 import signal
 from types import FrameType  # pylint: disable=unused-import
-from typing import NoReturn, Optional  # pylint: disable=unused-import
+from typing import NoReturn, Optional
 
 from cmk.utils.exceptions import MKTerminate
 

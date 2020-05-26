@@ -9,7 +9,7 @@ of Check_MK. The GUI is e.g. accessing this module for gathering things
 from the configuration.
 """
 
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Dict, Text
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject  # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, Item, CheckPluginName, ServiceName  # pylint: disable=unused-import

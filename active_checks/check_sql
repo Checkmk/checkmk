@@ -9,7 +9,7 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import List, Optional, Tuple, NoReturn  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, NoReturn
 import argparse
 import logging
 import os

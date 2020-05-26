@@ -8,8 +8,11 @@
 import abc
 import json
 import operator
-from typing import (  # pylint: disable=unused-import
-    List, Tuple, Text, Dict,
+from typing import (
+    List,
+    Tuple,
+    Text,
+    Dict,
 )
 import six
 

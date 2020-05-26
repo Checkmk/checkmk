@@ -13,9 +13,21 @@ import time
 import re
 import hashlib
 import traceback
-from typing import (  # pylint: disable=unused-import
-    Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text,
-    Dict, Type, cast,
+from typing import (
+    Callable,
+    NamedTuple,
+    Hashable,
+    TYPE_CHECKING,
+    Any,
+    Set,
+    Tuple,
+    List,
+    Optional,
+    Union,
+    Text,
+    Dict,
+    Type,
+    cast,
 )
 import six
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for managing the new rule based notifications"""
 
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Dict, List
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, EventRule  # pylint: disable=unused-import
 

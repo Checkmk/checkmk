@@ -7,7 +7,7 @@
 import functools
 import os
 import time
-from typing import Any, Callable, Dict, List, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Tuple
 
 from cmk.utils.log import console
 

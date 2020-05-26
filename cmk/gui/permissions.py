@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Text, Type, List  # pylint: disable=unused-import
+from typing import Text, Type, List
 import six
 
 import cmk.utils.plugin_registry

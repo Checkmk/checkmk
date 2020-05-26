@@ -6,7 +6,7 @@
 
 import os
 from pathlib import Path
-from typing import Callable, List, Tuple  # pylint: disable=unused-import
+from typing import Callable, List, Tuple
 
 from testlib import cmk_path
 

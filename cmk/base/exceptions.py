@@ -6,7 +6,7 @@
 
 import traceback
 from types import TracebackType  # pylint: disable=unused-import
-from typing import Tuple, Type  # pylint: disable=unused-import
+from typing import Tuple, Type
 
 from cmk.utils.exceptions import (  # pylint: disable=unused-import
     MKException, MKGeneralException, MKSNMPError,

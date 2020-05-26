@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Union, Callable, Text, Dict, Optional, Tuple, List, Any, TYPE_CHECKING  # pylint: disable=unused-import
+from typing import Union, Callable, Text, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
 import six
 
 import cmk.gui.escaping as escaping

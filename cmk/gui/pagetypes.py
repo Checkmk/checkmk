@@ -19,8 +19,13 @@
 
 import os
 import json
-from typing import (  # pylint: disable=unused-import
-    Dict, Any, Text, List, Tuple, Optional as _Optional,
+from typing import (
+    Dict,
+    Any,
+    Text,
+    List,
+    Tuple,
+    Optional as _Optional,
 )
 import six
 

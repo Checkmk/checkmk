@@ -6,7 +6,7 @@
 
 import os
 import sys
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Dict, Text
 import six
 
 if sys.version_info[0] >= 3:

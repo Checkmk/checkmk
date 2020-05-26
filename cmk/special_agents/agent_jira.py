@@ -8,7 +8,7 @@ import argparse
 import json
 import logging
 import sys
-from typing import Any, Dict, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Union
 
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]

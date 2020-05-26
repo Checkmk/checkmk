@@ -25,7 +25,7 @@
 
 import os
 import contextlib
-from typing import Iterator  # pylint: disable=unused-import
+from typing import Iterator
 
 
 def is_dockerized():

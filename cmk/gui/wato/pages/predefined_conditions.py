@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import List  # pylint: disable=unused-import
+from typing import List
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb

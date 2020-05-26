@@ -7,8 +7,15 @@
 import sys
 import json
 import time
-from typing import (  # pylint: disable=unused-import
-    List, Optional, Text, Tuple, Dict, Any, Union, Set,
+from typing import (
+    List,
+    Optional,
+    Text,
+    Tuple,
+    Dict,
+    Any,
+    Union,
+    Set,
 )
 
 if sys.version_info[0] >= 3:

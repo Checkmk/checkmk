@@ -6,7 +6,7 @@
 
 import time
 import sys
-from typing import Union  # pylint: disable=unused-import
+from typing import Union
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

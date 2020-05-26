@@ -8,8 +8,7 @@
 import abc
 import json
 import copy
-from typing import (  # pylint: disable=unused-import
-    Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
+from typing import (Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
 
 import six
 

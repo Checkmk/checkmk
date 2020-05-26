@@ -10,7 +10,7 @@ import os
 import subprocess
 import sys
 import errno
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional
 
 import cmk.utils.paths
 import cmk.utils.debug

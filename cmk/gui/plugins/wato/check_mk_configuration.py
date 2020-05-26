@@ -6,8 +6,9 @@
 
 import re
 import logging
-from typing import (  # pylint: disable=unused-import
-    Dict, List,
+from typing import (
+    Dict,
+    List,
 )
 
 import cmk.utils.version as cmk_version

@@ -19,7 +19,7 @@ import socket
 import ssl
 import sys
 import time
-from typing import Union  # pylint: disable=unused-import
+from typing import Union
 
 import cmk.utils.password_store
 

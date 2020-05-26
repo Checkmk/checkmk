@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.plugins.watolib.utils import (

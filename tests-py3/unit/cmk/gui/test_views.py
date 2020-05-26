@@ -7,7 +7,7 @@
 # yapf: disable
 
 import copy
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 import six

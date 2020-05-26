@@ -6,8 +6,10 @@
 
 import errno
 import abc
-from typing import (  # pylint: disable=unused-import
-    List, Optional, Text,
+from typing import (
+    List,
+    Optional,
+    Text,
 )
 import uuid
 import tarfile

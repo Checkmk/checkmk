@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Text, Tuple, Any  # pylint: disable=unused-import
+from typing import Dict, Text, Tuple, Any
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

@@ -8,7 +8,7 @@ from __future__ import division
 import os
 import time
 import json
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import livestatus
 import cmk.utils.paths

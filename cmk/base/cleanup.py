@@ -6,7 +6,7 @@
 """Hacky module to avoid cyclic imports, using a naive observer pattern.
 This should die..."""
 
-from typing import Callable  # pylint: disable=unused-import
+from typing import Callable
 
 cleanup_functions = set()
 

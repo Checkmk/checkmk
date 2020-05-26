@@ -6,8 +6,9 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import (  # pylint: disable=unused-import
-    List, Text,
+from typing import (
+    List,
+    Text,
 )
 import six
 

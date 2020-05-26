@@ -11,7 +11,7 @@ Use a Cisco Webex Teams webhook to send notification messages
 """
 from __future__ import unicode_literals
 
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 import six
 

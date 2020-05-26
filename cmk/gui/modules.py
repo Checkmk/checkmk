@@ -29,7 +29,7 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Optional, Iterator, Any, Dict, List  # pylint: disable=unused-import
+from typing import Optional, Iterator, Any, Dict, List
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths

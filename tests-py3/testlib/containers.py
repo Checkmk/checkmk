@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Optional  # pylint: disable=unused-import
+from typing import List, Dict, Optional
 import requests
 
 import dockerpty  # type: ignore[import]

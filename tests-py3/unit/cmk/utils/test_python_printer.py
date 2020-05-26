@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import List  # pylint: disable=unused-import
+from typing import List
 import pytest  # type: ignore[import]
 from cmk.utils.python_printer import pformat
 

@@ -7,8 +7,9 @@
 from __future__ import division
 import time
 import abc
-from typing import (  # pylint: disable=unused-import
-    Dict, Tuple,
+from typing import (
+    Dict,
+    Tuple,
 )
 import six
 

@@ -6,7 +6,7 @@
 
 import sys
 import re
-from typing import Text, Union  # pylint: disable=unused-import
+from typing import Text, Union
 import six
 
 if sys.version_info[0] >= 3:

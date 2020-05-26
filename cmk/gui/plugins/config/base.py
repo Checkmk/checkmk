@@ -5,8 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
 
-from typing import (  # pylint: disable=unused-import
-    Any as _Any, Dict as _Dict, List as _List, Tuple as _Tuple, Union as _Union,
+from typing import (
+    Any as _Any,
+    Dict as _Dict,
+    List as _List,
+    Tuple as _Tuple,
+    Union as _Union,
 )
 
 #.

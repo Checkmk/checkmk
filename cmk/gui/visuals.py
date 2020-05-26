@@ -10,7 +10,7 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store

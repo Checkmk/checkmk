@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 import omdlib
 
 

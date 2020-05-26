@@ -8,8 +8,13 @@ import copy
 import time
 import json
 import traceback
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, Optional, Tuple, List, Text, Union,
+from typing import (
+    NamedTuple,
+    Optional,
+    Tuple,
+    List,
+    Text,
+    Union,
 )
 
 import livestatus

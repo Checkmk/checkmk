@@ -11,7 +11,7 @@ import threading
 import time
 from logging import Logger  # pylint: disable=unused-import
 from pathlib import Path  # pylint: disable=unused-import
-from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time

@@ -8,7 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Callable, Dict, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Text, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 

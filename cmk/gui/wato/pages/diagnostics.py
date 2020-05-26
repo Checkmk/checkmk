@@ -11,8 +11,10 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from typing import (  # pylint: disable=unused-import
-    Text, List, Optional,
+from typing import (
+    Text,
+    List,
+    Optional,
 )
 #TODO included in typing since Python >= 3.8
 from typing_extensions import TypedDict

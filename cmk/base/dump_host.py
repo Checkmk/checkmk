@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional
 
 import six
 

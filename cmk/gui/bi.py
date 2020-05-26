@@ -16,7 +16,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
-from typing import Text, Any, Dict, List, Optional, Set, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import six
 from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import

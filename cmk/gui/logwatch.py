@@ -6,7 +6,7 @@
 
 import time
 import datetime
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 import livestatus
 

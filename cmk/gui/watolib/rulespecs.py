@@ -7,8 +7,16 @@
 
 import abc
 import re
-from typing import (  # pylint: disable=unused-import
-    Union, Text, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple,
+from typing import (
+    Union,
+    Text,
+    Dict,
+    List,
+    Type,
+    Optional,
+    Any,
+    Callable,
+    Tuple as _Tuple,
 )
 import six
 

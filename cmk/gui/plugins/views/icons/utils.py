@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Text, List, Optional, Tuple, TYPE_CHECKING, Union  # pylint: disable=unused-import
+from typing import Text, List, Optional, Tuple, TYPE_CHECKING, Union
 import six
 
 import cmk.gui.config as config

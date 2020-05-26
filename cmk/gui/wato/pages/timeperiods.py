@@ -6,7 +6,7 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional as _Optional, Text, Tuple as _Tuple
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines

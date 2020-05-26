@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Any, Callable, Dict, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Set, Text, Tuple, Union
 import sys
 import ast
 

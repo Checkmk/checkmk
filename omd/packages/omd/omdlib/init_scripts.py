@@ -28,7 +28,7 @@ import sys
 import os
 import subprocess
 import logging
-from typing import TYPE_CHECKING, Optional, Tuple, List  # pylint: disable=unused-import
+from typing import TYPE_CHECKING, Optional, Tuple, List
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty

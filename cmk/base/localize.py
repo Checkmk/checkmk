@@ -8,7 +8,7 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Optional, List, Text  # pylint: disable=unused-import
+from typing import Optional, List, Text
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

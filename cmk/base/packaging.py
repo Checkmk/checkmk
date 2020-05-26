@@ -8,7 +8,7 @@ import os
 import logging
 import sys
 import tarfile
-from typing import BinaryIO, cast, List  # pylint: disable=unused-import
+from typing import BinaryIO, cast, List
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

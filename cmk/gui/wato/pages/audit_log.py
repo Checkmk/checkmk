@@ -7,7 +7,7 @@
 
 import re
 import time
-from typing import List, Text, Tuple  # pylint: disable=unused-import
+from typing import List, Text, Tuple
 
 import cmk.utils.render as render
 

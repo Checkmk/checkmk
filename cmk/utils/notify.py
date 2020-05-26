@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NewType, Text, Dict, List
+from typing import NewType, Dict, List
 
 import cmk.utils.defines
 
@@ -12,17 +12,17 @@ import cmk.utils.defines
 # 1 -> temporary issue
 # 2 -> permanent issue
 NotificationResultCode = NewType("NotificationResultCode", int)
-NotificationPluginName = NewType("NotificationPluginName", Text)
+NotificationPluginName = NewType("NotificationPluginName", str)
 NotificationContext = NewType("NotificationContext", Dict)
 
 
 def _state_for(exit_code):
-    # type: (NotificationResultCode) -> Text
+    # type: (NotificationResultCode) -> str
     return cmk.utils.defines.service_state_name(exit_code, u"UNKNOWN")
 
 
 def find_wato_folder(context):
-    # type: (NotificationContext) -> Text
+    # type: (NotificationContext) -> str
     for tag in context.get("HOSTTAGS", "").split():
         if tag.startswith("/wato/"):
             return tag[6:].rstrip("/")
@@ -30,7 +30,7 @@ def find_wato_folder(context):
 
 
 def notification_message(plugin, context):
-    # type: (NotificationPluginName, NotificationContext) -> Text
+    # type: (NotificationPluginName, NotificationContext) -> str
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -48,7 +48,7 @@ def notification_message(plugin, context):
 
 
 def notification_progress_message(plugin, context, exit_code, output):
-    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, Text) -> Text
+    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, str) -> str
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -63,7 +63,7 @@ def notification_progress_message(plugin, context, exit_code, output):
 
 
 def notification_result_message(plugin, context, exit_code, output):
-    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, List[Text]) -> Text
+    # type: (NotificationPluginName, NotificationContext, NotificationResultCode, List[str]) -> str
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")

@@ -7,14 +7,14 @@
 
 import abc
 import string
-from typing import Union, NamedTuple, NewType, Any, Text, Optional, Dict, Set, List, Tuple
+from typing import Union, NamedTuple, NewType, Any, Optional, Dict, Set, List, Tuple
 
 import six
 
 HostName = str
 HostAddress = str
 HostgroupName = str
-ServiceName = Text
+ServiceName = str
 ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
@@ -27,10 +27,10 @@ MetricName = str
 CheckPluginName = str
 InventoryPluginName = str
 ActiveCheckPluginName = str
-Item = Optional[Text]
+Item = Optional[str]
 TagValue = str
-Labels = Dict[Text, Text]
-LabelSources = Dict[Text, str]
+Labels = Dict[str, str]
+LabelSources = Dict[str, str]
 TagID = str
 TaggroupID = str
 Tags = Dict[TagID, TagValue]
@@ -38,8 +38,8 @@ TagList = Set[TagValue]
 TagGroups = Dict[TagID, TaggroupID]
 HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
                            List[Union[Dict[str, str], str]]]
-ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, Text], Text]]],
-                              List[Union[Dict[str, Text], Text]]]
+ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
+                              List[Union[Dict[str, str], str]]]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int
@@ -47,13 +47,13 @@ TimeRange = Tuple[int, int]
 
 ServiceState = int
 HostState = int
-ServiceDetails = Text
-ServiceAdditionalDetails = Text
+ServiceDetails = str
+ServiceAdditionalDetails = str
 # TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
 Metric = List
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
 
-UserId = NewType("UserId", Text)
+UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
 
 AgentHash = NewType("AgentHash", str)
@@ -63,10 +63,10 @@ BakeryHostName = Union[bool, None, HostName]
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
-TimeperiodSpec = Dict[str, Union[Text, List[Tuple[str, str]]]]
+TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 
 ContextName = str
-DecodedString = Text
+DecodedString = str
 DecodedBinary = List[int]
 DecodedValues = Union[DecodedString, DecodedBinary]
 SNMPValueEncoding = str
@@ -269,8 +269,8 @@ class ABCSNMPTree(six.with_metaclass(abc.ABCMeta)):
 # TODO: We should really parse our configuration file and use a
 # class/NamedTuple, see above.
 def timeperiod_spec_alias(timeperiod_spec, default=u""):
-    # type: (TimeperiodSpec, Text) -> Text
+    # type: (TimeperiodSpec, str) -> str
     alias = timeperiod_spec.get("alias", default)
-    if isinstance(alias, Text):
+    if isinstance(alias, str):
         return alias
     raise Exception("invalid timeperiod alias %r" % (alias,))

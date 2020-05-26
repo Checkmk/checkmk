@@ -16,7 +16,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
-from typing import Any, Dict, Text
+from typing import Any, Dict
 
 import six
 
@@ -27,7 +27,7 @@ from cmk.utils.i18n import _
 
 
 def omd_version():
-    # type: () -> Text
+    # type: () -> str
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
     return ensure_unicode(version_link.resolve().name)
 
@@ -43,7 +43,7 @@ def omd_site():
 
 
 def edition_short():
-    # type: () -> Text
+    # type: () -> str
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")
     if parts[-1] == "demo":
@@ -100,7 +100,7 @@ def get_general_version_infos():
 
 
 def _get_os_info():
-    # type: () -> Text
+    # type: () -> str
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
@@ -126,7 +126,7 @@ def _get_os_info():
 
 
 def _current_monitoring_core():
-    # type: () -> Text
+    # type: () -> str
     try:
         p = subprocess.Popen(
             ["omd", "config", "show", "CORE"],

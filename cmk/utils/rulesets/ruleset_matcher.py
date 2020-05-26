@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Text, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Tuple
 
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 LabelConditions = Dict  # TODO: Optimize this
 PreprocessedHostRuleset = Dict[HostName, List[RuleValue]]
-PreprocessedPattern = Tuple[bool, Pattern[Text]]
+PreprocessedPattern = Tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset = List[Tuple[RuleValue, Set[HostName], LabelConditions, Tuple,
                                         PreprocessedPattern]]
 
@@ -33,7 +33,7 @@ class RulesetMatchObject(object):
     __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
     def __init__(self, host_name=None, service_description=None, service_labels=None):
-        # type: (Optional[HostName], Optional[ServiceName], Optional[Dict[Text, Text]]) -> None
+        # type: (Optional[HostName], Optional[ServiceName], Optional[Dict[str, str]]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
         self.service_description = service_description
@@ -42,7 +42,7 @@ class RulesetMatchObject(object):
                                  if self.service_labels else None)
 
     def _generate_hash(self, service_labels):
-        # type: (Optional[Dict[Text, Text]]) -> int
+        # type: (Optional[Dict[str, str]]) -> int
         return hash(None if service_labels is None else frozenset(service_labels))
 
     def to_dict(self):
@@ -186,7 +186,7 @@ class RulesetMatcher(object):
 
     def _matches_service_conditions(self, service_description_condition, service_labels_condition,
                                     match_object):
-        # type: (Tuple[bool, Pattern[Text]], Dict[Text, Text], RulesetMatchObject) -> bool
+        # type: (Tuple[bool, Pattern[str]], Dict[str, str], RulesetMatchObject) -> bool
         if not self._matches_service_description_condition(service_description_condition,
                                                            match_object):
             return False
@@ -198,7 +198,7 @@ class RulesetMatcher(object):
         return True
 
     def _matches_service_description_condition(self, service_description_condition, match_object):
-        # type: (Tuple[bool, Pattern[Text]], RulesetMatchObject) -> bool
+        # type: (Tuple[bool, Pattern[str]], RulesetMatchObject) -> bool
         negate, pattern = service_description_condition
 
         if match_object.service_description is not None \
@@ -400,7 +400,7 @@ class RulesetOptimizer(object):
         return new_rules
 
     def _convert_pattern_list(self, patterns):
-        # type: (List[Text]) -> PreprocessedPattern
+        # type: (List[str]) -> PreprocessedPattern
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.

@@ -17,7 +17,7 @@ from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
 
 import six
@@ -139,7 +139,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     #@abc.abstractclassmethod
     @classmethod
     def type(cls):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @classmethod
@@ -188,12 +188,12 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         self.crash_info = crash_info
 
     def ident(self):
-        # type: () -> Tuple[Text, ...]
+        # type: () -> Tuple[str, ...]
         """Return the identity in form of a tuple of a single crash report"""
         return (self.crash_info["id"],)
 
     def ident_to_text(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the textual representation of the identity
 
         The parts are separated with "@" signs. The "@" signs found in the parts are
@@ -202,21 +202,21 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         return "@".join([p.replace("@", "~") for p in self.ident()])
 
     def crash_dir(self, ident_text=None):
-        # type: (Optional[Text]) -> Path
+        # type: (Optional[str]) -> Path
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
         return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
 
     def local_crash_report_url(self):
-        # type: () -> Text
+        # type: () -> str
         """Returns the site local URL to the current crash report"""
         return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
                                                                  ("ident", self.ident_to_text())])
 
 
 def _get_generic_crash_info(type_name, details):
-    # type: (Text, Dict) -> Dict
+    # type: (str, Dict) -> Dict
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need
@@ -266,7 +266,7 @@ def _get_generic_crash_info(type_name, details):
 
 
 def _get_local_vars_of_last_exception():
-    # type: () -> Text
+    # type: () -> str
     local_vars = {}
     try:
         for key, val in inspect.trace()[-1][0].f_locals.items():

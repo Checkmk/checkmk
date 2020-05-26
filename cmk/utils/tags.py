@@ -7,7 +7,7 @@
 
 import re
 import abc
-from typing import Any, Dict, List, Optional, Set, Text
+from typing import Any, Dict, List, Optional, Set
 import six
 
 from cmk.utils.i18n import _
@@ -52,8 +52,8 @@ class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
         # NOTE: All the Optionals below are probably just plain wrong and just
         # an artifact of our broken 2-stage initialization.
         self.id = None  # type: Optional[str]
-        self.title = None  # type: Optional[Text]
-        self.topic = None  # type: Optional[Text]
+        self.title = None  # type: Optional[str]
+        self.topic = None  # type: Optional[str]
 
     # TODO: We *really* have to nuke these _initialize methods everywhere, they
     # either effectively blocking sane typing or lead to code duplication. The

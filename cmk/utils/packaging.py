@@ -14,7 +14,7 @@ import pprint
 import subprocess
 import tarfile
 import time
-from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Text
+from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional
 
 import six
 
@@ -85,7 +85,7 @@ PartPath = str
 
 PackagePart = NamedTuple("PackagePart", [
     ("ident", PartName),
-    ("title", Text),
+    ("title", str),
     ("path", PartPath),
 ])
 
@@ -301,7 +301,7 @@ def install_package(file_object):
     keep_files = {}
     for part in get_package_parts() + get_config_parts():
         packaged = _packaged_files_in_dir(part.ident)
-        keep = []  # type: List[Text]
+        keep = []  # type: List[str]
         keep_files[part.ident] = keep
 
         if update and old_package is not None:
@@ -499,7 +499,7 @@ def get_all_package_infos():
 
 
 def get_optional_package_infos():
-    # type: () -> Dict[Text, PackageInfo]
+    # type: () -> Dict[str, PackageInfo]
     optional = {}
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:

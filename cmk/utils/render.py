@@ -13,7 +13,7 @@ are just for optical output purposes."""
 import time
 import math
 from datetime import timedelta
-from typing import Optional, Text, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from cmk.utils.i18n import _
 
@@ -62,9 +62,8 @@ class Age:
         super(Age, self).__init__()
         self.__secs = secs
 
-    # NOTE: In Python 2 the return type is WRONG, we should return str.
     def __str__(self):
-        # not-yet-a-type: () -> Text
+        # type: () -> str
         secs = self.__secs
 
         if secs < 0:
@@ -281,7 +280,7 @@ def scientific(v, precision=3):
 # Note if the type of v is integer, then the precision cut
 # down to the precision of the actual number
 def physical_precision(v, precision, unit_symbol):
-    # type: (float, int, Text) -> Text
+    # type: (float, int, str) -> str
     if v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
 
@@ -292,7 +291,7 @@ def physical_precision(v, precision, unit_symbol):
 
 
 def calculate_physical_precision(v, precision):
-    # type: (float, int) -> Tuple[Text, int, int]
+    # type: (float, int) -> Tuple[str, int, int]
     if v == 0:
         return "", precision - 1, 1
 

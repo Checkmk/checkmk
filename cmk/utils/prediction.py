@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Text, Callable, List, Optional, Tuple
+from typing import Dict, Callable, List, Optional, Tuple
 
 import six
 
@@ -187,7 +187,7 @@ class TimeSeries:
 
 
 def lq_logic(filter_condition, values, join):
-    # type: (Text, List[Text], Text) -> Text
+    # type: (str, List[str], str) -> str
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
     conditions = u"".join(u"%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
     connective = u"%s: %d\n" % (join, len(values)) if len(values) > 1 else u""
@@ -195,7 +195,7 @@ def lq_logic(filter_condition, values, join):
 
 
 def livestatus_lql(host_names, columns, service_description=None):
-    # type: (List[HostName], List[Text], Optional[ServiceName]) -> Text
+    # type: (List[HostName], List[str], Optional[ServiceName]) -> str
     query_filter = u"Columns: %s\n" % u" ".join(columns)
     query_filter += lq_logic(u"Filter: host_name =", [six.ensure_text(n) for n in host_names],
                              u"Or")
@@ -274,7 +274,7 @@ def predictions_dir(hostname, service_description, dsname):
 
 
 def clean_prediction_files(pred_file, force=False):
-    # type: (Text, bool) -> None
+    # type: (str, bool) -> None
     # In previous versions it could happen that the files were created with 0 bytes of size
     # which was never handled correctly so that the prediction could never be used again until
     # manual removal of the files. Clean this up.
@@ -288,7 +288,7 @@ def clean_prediction_files(pred_file, force=False):
 # is a blatant lie!
 # (mo) And, in fact, this function returns at least 2 different types of dataset.
 def retrieve_data_for_prediction(info_file, timegroup):
-    # type: (Text, Timegroup) -> Optional[PredictionInfo]
+    # type: (str, Timegroup) -> Optional[PredictionInfo]
     try:
         return json.loads(open(info_file).read())
     except IOError:

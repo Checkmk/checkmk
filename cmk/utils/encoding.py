@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides some bytes-unicode encoding functions"""
 
-from typing import AnyStr, Text, Optional
+from typing import AnyStr, Optional
 
 import six
 
@@ -17,7 +17,7 @@ def convert_to_unicode(
     fallback_encoding="latin-1",
     on_error=None,
 ):
-    # type: (AnyStr, Optional[str], str, str, Optional[Text]) -> Text
+    # type: (AnyStr, Optional[str], str, str, Optional[str]) -> str
     if isinstance(value, six.text_type):
         return value
 
@@ -38,7 +38,7 @@ def convert_to_unicode(
 
 
 def ensure_unicode(value):
-    # type: (AnyStr) -> Text
+    # type: (AnyStr) -> str
     if isinstance(value, six.text_type):
         return value
     return value.decode("utf-8")

@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 import pprint
 import tempfile
-from typing import Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast
+from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
 import six
 
@@ -192,15 +192,15 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
-    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return ast.literal_eval(content)
 
 
 def load_text_from_file(path, default=u"", lock=False):
-    # type: (Union[Path, str], Text, bool) -> Text
-    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    # type: (Union[Path, str], str, bool) -> str
+    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return content
@@ -219,7 +219,7 @@ def load_bytes_from_file(path, default=b"", lock=False):
 # ast.literal_eval. As a workaround, we use casts, but this isn't a real
 # solution....
 def _load_data_from_file(path, lock=False, encoding=None):
-    # type: (Union[Path, str], bool, Optional[str]) -> Union[None, Text, bytes]
+    # type: (Union[Path, str], bool, Optional[str]) -> Union[None, str, bytes]
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -267,7 +267,7 @@ def save_object_to_file(path, data, pretty=False):
 
 
 def save_text_to_file(path, content, mode=0o660):
-    # type: (Union[Path, str], Text, int) -> None
+    # type: (Union[Path, str], str, int) -> None
     if not isinstance(content, six.text_type):
         raise TypeError("content argument must be Text, not bytes")
     _save_data_to_file(path, content.encode("utf-8"), mode)

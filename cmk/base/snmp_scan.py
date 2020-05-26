@@ -5,14 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Callable, Dict, Iterable, Optional, Set, Union
+from typing import Iterable, Set
 
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, SNMPHostConfig
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    SNMPHostConfig,
+)
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
@@ -21,22 +24,28 @@ from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
 
 
-def _evaluate_snmp_detection(oid_function, detect_spec, section_plugin_name):
-    # type: (Callable, SNMPDetectSpec, str) -> bool
-    """This is a compatibility wrapper for the new SNMP detection.
+def _evaluate_snmp_detection(detect_spec, host_config, cp_name, do_snmp_scan):
+    # type: (SNMPDetectSpec, SNMPHostConfig, str, bool) -> bool
+    """Evaluate a SNMP detection specification
+
+    Return True if and and only if at least all conditions in one "line" are True
     """
-    # TODO: Once this is the only used method, we can consolidate
-    #       this into the code below and simplify.
     return any(
-        all(_evaluate_snmp_detection_atom(oid_function, atom)
+        all(
+            _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan)
             for atom in alternative)
         for alternative in detect_spec)
 
 
-def _evaluate_snmp_detection_atom(oid_function, atom):
-    # type: (Callable, SNMPDetectAtom) -> bool
+def _evaluate_snmp_detection_atom(atom, host_config, cp_name, do_snmp_scan):
+    # type: (SNMPDetectAtom, SNMPHostConfig, str, bool) -> bool
     oid, pattern, flag = atom
-    value = oid_function(oid)
+    value = snmp.get_single_oid(
+        host_config,
+        oid,
+        cp_name,
+        do_snmp_scan=do_snmp_scan,
+    )
     if value is None:
         # check for "not_exists"
         return pattern == '.*' and not flag
@@ -120,16 +129,11 @@ def _snmp_scan(host_config,
 
         try:
 
-            # This function will disappear shortly.
-            def oid_function(oid, cp_name):
-                # type: (OID, Optional[CheckPluginName]) -> Optional[DecodedString]
-                value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
-                return value
-
             result = _evaluate_snmp_detection(
-                oid_function,
                 section_plugin.detect_spec,
+                host_config,
                 str(section_plugin.name),
+                do_snmp_scan,
             )
 
             if result is not None and not isinstance(result, (str, bool)):

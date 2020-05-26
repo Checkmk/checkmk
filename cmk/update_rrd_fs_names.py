@@ -16,13 +16,11 @@ Migrate RRDs metadata which are based on mountpoint names to static name 'fs_use
 WARN: DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
 """
 
-from __future__ import division, absolute_import, print_function
-
 import os
 import logging
 import xml.etree.ElementTree as ET
 
-from pathlib import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation

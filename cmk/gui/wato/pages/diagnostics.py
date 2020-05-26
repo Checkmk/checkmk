@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Text, List, Optional
+from typing import List, Optional
 #TODO included in typing since Python >= 3.8
 from typing_extensions import TypedDict
 
@@ -71,7 +71,7 @@ class ModeDiagnostics(WatoMode):
         return None
 
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Diagnostics")
 
     def buttons(self):
@@ -135,7 +135,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        # type: () -> Text
+        # type: () -> str
         return _("Diagnostics dump")
 
     def __init__(self):

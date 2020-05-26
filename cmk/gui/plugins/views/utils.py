@@ -11,9 +11,9 @@ import abc
 import time
 import re
 import hashlib
-from pathlib import Path  # pylint: disable=import-error
+from pathlib import Path
 import traceback
-from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text, Dict, Type, cast
+from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
 
 import six
 
@@ -76,7 +76,7 @@ if TYPE_CHECKING:
     from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
 
-PDFCellContent = Union[Text, str, HTML, Tuple[str, str]]
+PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
 
 
@@ -280,7 +280,7 @@ class PainterOptions(object):
 
 
 def row_id(view_spec, row):
-    # type: (Dict[str, Any], LivestatusRow) -> Text
+    # type: (Dict[str, Any], LivestatusRow) -> str
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''
@@ -353,7 +353,7 @@ class Layout(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Short human readable title of the layout"""
         raise NotImplementedError()
 
@@ -402,7 +402,7 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return plugin_class().ident
 
     def get_choices(self):
-        # type: () -> List[Tuple[str, Text]]
+        # type: () -> List[Tuple[str, str]]
         choices = []
         for plugin_class in self.values():
             layout = plugin_class()
@@ -426,7 +426,7 @@ class CommandGroup(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -450,7 +450,7 @@ command_group_registry = CommandGroupRegistry()
 
 # TODO: Kept for pre 1.6 compatibility
 def register_command_group(ident, title, sort_index):
-    # type: (str, Text, int) -> None
+    # type: (str, str, int) -> None
     cls = type(
         "LegacyCommandGroup%s" % ident.title(), (CommandGroup,), {
             "_ident": ident,
@@ -472,7 +472,7 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -492,7 +492,7 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def action(self, cmdtag, spec, row, row_index, num_rows):
-        # type: (str, str, dict, int, int) -> Optional[Tuple[List[str], Text]]
+        # type: (str, str, dict, int, int) -> Optional[Tuple[List[str], str]]
         raise NotImplementedError()
 
     @property
@@ -557,7 +557,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Used as display-string for the datasource in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -696,7 +696,7 @@ class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
     # TODO: Sort the datasources by (assumed) common usage
     def data_source_choices(self):
-        # type: () -> List[Tuple[str, Text]]
+        # type: () -> List[Tuple[str, str]]
         datasources = []
         for ident, ds_class in self.items():
             datasources.append((ident, ds_class().title))
@@ -858,7 +858,7 @@ class Painter(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def title(self, cell):
-        # type: (Cell) -> Text
+        # type: (Cell) -> str
         """Used as display string for the painter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -916,7 +916,7 @@ class Painter(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def short_title(self, cell):
-        # type: (Cell) -> Text
+        # type: (Cell) -> str
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
         return self.title(cell)
@@ -1009,7 +1009,7 @@ class Sorter(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         """Used as display string for the sorter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -1089,7 +1089,7 @@ view_is_enabled = {}  # type: Dict
 
 
 def view_title(view_spec):
-    # type: (ViewSpec) -> Text
+    # type: (ViewSpec) -> str
     return visuals.visual_title('view', view_spec)
 
 
@@ -1119,7 +1119,7 @@ def paint_host_list(site, hosts):
 
 
 def format_plugin_output(output, row):
-    # type: (CellContent, Row) -> Text
+    # type: (CellContent, Row) -> str
     return cmk.gui.view_utils.format_plugin_output(output,
                                                    row,
                                                    shall_escape=config.escape_plugin_output)
@@ -1272,7 +1272,7 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
 
 
 def declare_simple_sorter(name, title, column, func):
-    # type: (str, Text, ColumnName, SorterFunction) -> None
+    # type: (str, str, ColumnName, SorterFunction) -> None
     register_sorter(name, {
         "title": title,
         "columns": [column],
@@ -1366,7 +1366,7 @@ def cmp_ip_address(column, r1, r2):
 
 
 def get_custom_var(row, key):
-    # type: (Row, str) -> Text
+    # type: (Row, str) -> str
     return row["custom_variables"].get(key, "")
 
 
@@ -1473,7 +1473,7 @@ def replace_action_url_macros(url, what, row):
 
 
 def render_cache_info(what, row):
-    # type: (str, Row) -> Text
+    # type: (str, Row) -> str
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
     cache_age = time.time() - cached_at
@@ -1738,7 +1738,7 @@ class Cell(object):
         self._painter_params = None  # type: Optional[PainterParameters]
         self._link_view_name = None  # type: Optional[ViewName]
         self._tooltip_painter_name = None  # type: Optional[PainterName]
-        self._custom_title = None  # type: Optional[Text]
+        self._custom_title = None  # type: Optional[str]
 
         if painter_spec:
             self._from_view(painter_spec)
@@ -1810,7 +1810,7 @@ class Cell(object):
         return self._painter_name
 
     def export_title(self):
-        # type: () -> Text
+        # type: () -> str
         return ensure_unicode(self.painter_name())
 
     def painter_options(self):
@@ -1832,7 +1832,7 @@ class Cell(object):
         return self._painter_params
 
     def title(self, use_short=True):
-        # type: (bool) -> Text
+        # type: (bool) -> str
         if self._custom_title:
             return self._custom_title
 
@@ -1842,11 +1842,11 @@ class Cell(object):
         return self._get_long_title(painter)
 
     def _get_short_title(self, painter):
-        # type: (Painter) -> Text
+        # type: (Painter) -> str
         return painter.short_title(self)
 
     def _get_long_title(self, painter):
-        # type: (Painter) -> Text
+        # type: (Painter) -> str
         return painter.title(self)
 
     # Can either be:
@@ -1902,7 +1902,7 @@ class Cell(object):
         html.close_th()
 
     def _sort_url(self):
-        # type: () -> Text
+        # type: () -> str
         """
         The following sorters need to be handled in this order:
 
@@ -2048,7 +2048,7 @@ class Cell(object):
         if isinstance(rendered_txt, dict):
             return rendered_txt
 
-        txt = rendered_txt.strip()  # type: Text
+        txt = rendered_txt.strip()  # type: str
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
@@ -2096,7 +2096,7 @@ class Cell(object):
 SorterSpec = NamedTuple("SorterSpec", [
     ("sorter", SorterName),
     ("negate", bool),
-    ("join_key", Optional[Text]),
+    ("join_key", Optional[str]),
 ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
@@ -2104,14 +2104,14 @@ SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ign
 SorterEntry = NamedTuple("SorterEntry", [
     ("sorter", Sorter),
     ("negate", bool),
-    ("join_key", Optional[Text]),
+    ("join_key", Optional[str]),
 ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
 def _encode_sorter_url(sorters):
-    # type: (List[SorterSpec]) -> Text
+    # type: (List[SorterSpec]) -> str
     p = []
     for s in sorters:
         url = (u'-' if s.negate else u'') + s.sorter
@@ -2172,11 +2172,11 @@ class JoinCell(Cell):
             (livestatus.lqencode(join_column_name), livestatus.lqencode(self.join_service()))
 
     def title(self, use_short=True):
-        # type: (bool) -> Text
+        # type: (bool) -> str
         return self._custom_title or self.join_service()
 
     def export_title(self):
-        # type: () -> Text
+        # type: () -> str
         return "%s.%s" % (self._painter_name, self.join_service())
 
 

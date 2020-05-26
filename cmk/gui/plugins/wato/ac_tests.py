@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from pathlib import Path  # pylint: disable=import-error
+from pathlib import Path
 import subprocess
 from typing import Type, Iterator
 

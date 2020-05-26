@@ -2468,7 +2468,7 @@ class html(ABCHTMLGenerator):
                         autocomplete=autocomplete)
 
     def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
-        # type: (str, Union[str, str], int, int, bool, **HTMLTagAttributeValue) -> None
+        # type: (str, str, int, int, bool, **HTMLTagAttributeValue) -> None
 
         value = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)

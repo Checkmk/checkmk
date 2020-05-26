@@ -27,7 +27,6 @@ import abc
 import os
 import sys
 from typing import cast, Optional
-import six
 
 from cmk.utils.exceptions import MKTerminate
 
@@ -39,7 +38,7 @@ from omdlib.type_defs import Config, Replacements
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
 
 
-class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
+class AbstractSiteContext(metaclass=abc.ABCMeta):
     """Object wrapping site specific information"""
     def __init__(self, sitename):
         # type: (Optional[str]) -> None

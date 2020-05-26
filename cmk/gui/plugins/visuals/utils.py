@@ -10,7 +10,6 @@
 import abc
 import time
 from typing import Dict, List, Optional, Tuple, Union
-import six
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
@@ -26,7 +25,7 @@ from cmk.gui.type_defs import ColumnName, HTTPVariables
 from cmk.gui.htmllib import Choices
 
 
-class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
+class VisualInfo(metaclass=abc.ABCMeta):
     """Base class for all visual info classes"""
     @abc.abstractproperty
     def ident(self):
@@ -97,7 +96,7 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
 visual_info_registry = VisualInfoRegistry()
 
 
-class VisualType(six.with_metaclass(abc.ABCMeta, object)):
+class VisualType(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
     def ident(self):
@@ -223,7 +222,7 @@ class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 visual_type_registry = VisualTypeRegistry()
 
 
-class Filter(six.with_metaclass(abc.ABCMeta, object)):
+class Filter(metaclass=abc.ABCMeta):
     """Base class for all filters"""
     @abc.abstractproperty
     def ident(self):

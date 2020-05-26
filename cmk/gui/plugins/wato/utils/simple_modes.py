@@ -47,7 +47,7 @@ from cmk.gui.valuespec import (
 )
 
 
-class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
+class SimpleModeType(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def type_name(self):
         # type: () -> str

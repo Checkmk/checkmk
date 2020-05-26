@@ -8,8 +8,6 @@ import abc
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
 
-import six
-
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import RawAgentData
 
@@ -18,7 +16,7 @@ class MKFetcherError(MKException):
     """An exception common to the fetchers."""
 
 
-class AbstractDataFetcher(six.with_metaclass(abc.ABCMeta, object)):
+class AbstractDataFetcher(metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     @classmethod
     def from_json(cls, serialized):

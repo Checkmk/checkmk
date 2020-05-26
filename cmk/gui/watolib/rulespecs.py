@@ -42,7 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 
-class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
+class RulespecBaseGroup(metaclass=abc.ABCMeta):
     """Base class for all rulespec group types"""
     @abc.abstractproperty
     def name(self):
@@ -392,7 +392,7 @@ def _validate_function_args(arg_infos, hint):
                 _("Invalid expected callable for %s at idx %d: %r") % (hint, idx, arg))
 
 
-class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
+class Rulespec(metaclass=abc.ABCMeta):
     NO_FACTORY_DEFAULT = []  # type: list
     # means this ruleset is not used if no rule is entered
     FACTORY_DEFAULT_UNUSED = []  # type: list

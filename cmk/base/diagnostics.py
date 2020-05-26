@@ -6,17 +6,11 @@
 
 import errno
 import abc
-from typing import (
-    List,
-    Optional,
-    Text,
-)
+from typing import List, Optional
 import uuid
 import tarfile
 import json
 from pathlib import Path
-
-import six
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -162,7 +156,7 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------'
 
 
-class ABCDiagnosticsElement(six.with_metaclass(abc.ABCMeta, object)):
+class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -170,7 +164,7 @@ class ABCDiagnosticsElement(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def description(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -187,7 +181,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElement):
 
     @property
     def description(self):
-        # type: () -> Text
+        # type: () -> str
         return "General: OS, Checkmk version and edition, Time, Core, Python version and paths"
 
     def add_or_get_file(self, tmp_dump_folder):

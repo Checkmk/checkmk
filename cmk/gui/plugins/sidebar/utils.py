@@ -58,7 +58,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
 
 # TODO: Transform methods to class methods
-class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
+class SidebarSnapin(metaclass=abc.ABCMeta):
     """Abstract base class for all sidebar snapins"""
     @classmethod
     @abc.abstractmethod

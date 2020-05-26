@@ -23,8 +23,6 @@ import subprocess
 import time
 from typing import Any, List, Optional, Tuple
 
-import six
-
 import cmk.utils.render as render
 import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time
@@ -1227,7 +1225,7 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
+class ABCBackupTargetType(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         raise NotImplementedError()

@@ -318,7 +318,7 @@ def _create_dict_key(value):
     return value
 
 
-class PainterOption(six.with_metaclass(abc.ABCMeta, object)):
+class PainterOption(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -344,7 +344,7 @@ class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 painter_option_registry = ViewPainterOptionRegistry()
 
 
-class Layout(six.with_metaclass(abc.ABCMeta, object)):
+class Layout(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -417,7 +417,7 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
 layout_registry = ViewLayoutRegistry()
 
 
-class CommandGroup(six.with_metaclass(abc.ABCMeta, object)):
+class CommandGroup(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -463,7 +463,7 @@ def register_command_group(ident, title, sort_index):
     command_group_registry.register(cls)
 
 
-class Command(six.with_metaclass(abc.ABCMeta, object)):
+class Command(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -547,7 +547,7 @@ def register_legacy_command(spec):
     command_registry.register(cls)
 
 
-class DataSource(six.with_metaclass(abc.ABCMeta, object)):
+class DataSource(metaclass=abc.ABCMeta):
     """Provider of rows for the views (basically tables of data) in the GUI"""
     @abc.abstractproperty
     def ident(self):
@@ -706,7 +706,7 @@ class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
 data_source_registry = DataSourceRegistry()
 
 
-class RowTable(six.with_metaclass(abc.ABCMeta, object)):
+class RowTable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         # type: (View, List[ColumnName], str, OnlySites, Optional[int], List[Filter]) -> Rows
@@ -841,7 +841,7 @@ def query_livestatus(query, only_sites, limit, auth_domain):
 # HTML and PDF.
 # TODO: A lot of painter classes simply display plain livestatus column values. These
 # could be replaced with some simpler generic definition.
-class Painter(six.with_metaclass(abc.ABCMeta, object)):
+class Painter(metaclass=abc.ABCMeta):
     """A painter computes HTML code based on information from a data row and
     creates a CSS class for one display column.
 
@@ -998,7 +998,7 @@ def register_painter(ident, spec):
     painter_registry.register(cls)
 
 
-class Sorter(six.with_metaclass(abc.ABCMeta, object)):
+class Sorter(metaclass=abc.ABCMeta):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
     @abc.abstractproperty

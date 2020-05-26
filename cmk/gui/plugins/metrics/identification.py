@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -54,7 +53,7 @@ class GraphIdentificationTypes(object):
 graph_identification_types = GraphIdentificationTypes()
 
 
-class GraphIdentification(six.with_metaclass(abc.ABCMeta, object)):
+class GraphIdentification(metaclass=abc.ABCMeta):
     """Abstract base class for all graph identification classes"""
     @classmethod
     def ident(cls):

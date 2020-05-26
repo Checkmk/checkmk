@@ -794,7 +794,7 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
+class ABCOperation(metaclass=abc.ABCMeta):
     """Base for all tag cleanup operations"""
     @abc.abstractmethod
     def confirm_title(self):

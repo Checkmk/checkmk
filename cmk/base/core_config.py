@@ -10,8 +10,6 @@ import os
 import sys
 from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
-import six
-
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
@@ -46,7 +44,7 @@ CoreCommandName = str
 CoreCommand = str
 
 
-class MonitoringCore(six.with_metaclass(abc.ABCMeta, object)):
+class MonitoringCore(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_config(self):
         # type: () -> None

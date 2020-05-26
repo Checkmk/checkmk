@@ -24,7 +24,7 @@ def create_figures_response(data, context=None):
     return response
 
 
-class ABCDataGenerator(six.with_metaclass(abc.ABCMeta, object)):
+class ABCDataGenerator(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def vs_parameters(cls):

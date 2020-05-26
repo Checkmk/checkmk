@@ -26,7 +26,7 @@ def wato_fileheader():
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
+class ABCConfigDomain(metaclass=abc.ABCMeta):
     needs_sync = True
     needs_activation = True
     always_activate = False
@@ -141,7 +141,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(six.with_metaclass(abc.ABCMeta, object)):
+class SampleConfigGenerator(metaclass=abc.ABCMeta):
     @classmethod
     def ident(cls):
         # type: () -> str

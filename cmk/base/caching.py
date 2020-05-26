@@ -7,7 +7,6 @@
 
 import abc
 from typing import cast, Type, Dict
-import six
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.misc
@@ -62,7 +61,7 @@ class CacheManager(object):  # pylint: disable=useless-object-inheritance
         return sizes
 
 
-class Cache(six.with_metaclass(abc.ABCMeta, object)):
+class Cache(metaclass=abc.ABCMeta):
     _populated = False
 
     def is_empty(self):

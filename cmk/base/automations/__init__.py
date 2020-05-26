@@ -97,7 +97,7 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
         raise MKTimeout("Action timed out.")
 
 
-class Automation(six.with_metaclass(abc.ABCMeta, object)):
+class Automation(metaclass=abc.ABCMeta):
     cmd = None  # type: Optional[str]
     needs_checks = False
     needs_config = False

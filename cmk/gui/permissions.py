@@ -11,7 +11,7 @@ import six
 import cmk.utils.plugin_registry
 
 
-class PermissionSection(six.with_metaclass(abc.ABCMeta, object)):
+class PermissionSection(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def name(self):
         # type: () -> str
@@ -53,7 +53,7 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 permission_section_registry = PermissionSectionRegistry()
 
 
-class Permission(six.with_metaclass(abc.ABCMeta, object)):
+class Permission(metaclass=abc.ABCMeta):
     _sort_index = 0
 
     @abc.abstractproperty

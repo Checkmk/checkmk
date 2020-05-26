@@ -428,7 +428,7 @@ class View(object):
         self._user_sorters = user_sorters
 
 
-class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
+class ViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view):
         # type: (View) -> None
         super(ViewRenderer, self).__init__()

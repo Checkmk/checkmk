@@ -6,14 +6,7 @@
 
 import abc
 import os
-from typing import (
-    List,
-    Optional,
-    Dict,
-    Any,
-    Tuple,
-)
-import six
+from typing import List, Optional, Dict, Any, Tuple
 
 from livestatus import SiteId
 
@@ -311,7 +304,7 @@ def _get_builtin_roles():
 #   '----------------------------------------------------------------------'
 
 
-class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
+class UserConnector(metaclass=abc.ABCMeta):
     def __init__(self, cfg):
         super(UserConnector, self).__init__()
         self._config = cfg
@@ -402,7 +395,7 @@ class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
 #   '----------------------------------------------------------------------'
 
 
-class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
+class UserAttribute(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def name(cls):

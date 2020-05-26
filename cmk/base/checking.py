@@ -48,6 +48,7 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceName,
     ServiceState,
+    SourceType,
 )
 
 import cmk.base.check_api_utils as check_api_utils
@@ -322,14 +323,17 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
         return _execute_check_legacy_mode(multi_host_sections, host_config.hostname, ipaddress,
                                           service)
 
+    source_type = (SourceType.MANAGEMENT
+                   if service.check_plugin_name.startswith('mgmt_') else SourceType.HOST)
     kwargs = None
     try:
         kwargs = multi_host_sections.get_section_cluster_kwargs(
             host_config.hostname,
+            source_type,
             plugin.sections,
             service.description,
         ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
-            (host_config.hostname, ipaddress),
+            (host_config.hostname, ipaddress, source_type),
             plugin.sections,
         )
 
@@ -390,6 +394,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
             section_content = multi_host_sections.get_section_content(
                 hostname,
                 ipaddress,
+                config.get_management_board_precedence(section_name, config.check_info),
                 section_name,
                 for_discovery=False,
                 service_description=service.description)

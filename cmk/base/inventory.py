@@ -291,7 +291,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 # sections for inventory plugins which were not fetched yet.
                 source.enforce_check_plugin_names(None)
                 host_sections = multi_host_sections.setdefault_host_sections(
-                    (hostname, ipaddress),
+                    (hostname, ipaddress, source.source_type),
                     SNMPHostSections(),
                 )
                 source.set_fetched_raw_section_names(
@@ -306,10 +306,13 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
-        section_content = multi_host_sections.get_section_content(hostname,
-                                                                  ipaddress,
-                                                                  section_name,
-                                                                  for_discovery=False)
+        section_content = multi_host_sections.get_section_content(
+            hostname,
+            ipaddress,
+            check_api_utils.HOST_PRECEDENCE,
+            section_name,
+            for_discovery=False,
+        )
         if not section_content:  # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue

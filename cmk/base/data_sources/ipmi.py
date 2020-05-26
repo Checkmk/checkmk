@@ -26,7 +26,7 @@ from .abstract import CheckMKAgentDataSource
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
-    _source_type = SourceType.MANAGEMENT
+    source_type = SourceType.MANAGEMENT
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None

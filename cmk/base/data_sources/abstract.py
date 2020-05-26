@@ -245,7 +245,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
                  metaclass=abc.ABCMeta):
     """Abstract base class for all data source classes"""
 
-    _source_type = SourceType.HOST
+    source_type = SourceType.HOST
 
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single DataSources() object during processing first. Then we
@@ -464,7 +464,7 @@ class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
         """
         if check_plugin_names is not None:
             self._enforced_check_plugin_names = config.filter_by_management_board(
-                self._hostname, check_plugin_names, self._source_type is SourceType.MANAGEMENT)
+                self._hostname, check_plugin_names, self.source_type is SourceType.MANAGEMENT)
         else:
             self._enforced_check_plugin_names = check_plugin_names
 

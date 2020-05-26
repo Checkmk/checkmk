@@ -47,6 +47,7 @@ from cmk.utils.type_defs import (
     Metric,
     RulesetName,
     ServiceState,
+    SourceType,
 )
 
 import cmk.base.autochecks as autochecks
@@ -224,7 +225,12 @@ def _do_discovery_for(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        (hostname, ipaddress),
+        (hostname, ipaddress, SourceType.HOST),
+        multi_host_sections,
+        on_error=on_error,
+    )
+    discovered_host_labels += _discover_host_labels(
+        (hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error=on_error,
     )
@@ -1012,6 +1018,7 @@ def _execute_discovery(
             section_content = multi_host_sections.get_section_content(
                 hostname,
                 ipaddress,
+                config.get_management_board_precedence(check_plugin_name, config.check_info),
                 check_plugin_name,
                 for_discovery=True,
             )
@@ -1231,7 +1238,12 @@ def _get_discovered_services(
 
     section.section_step("Executing host label discovery")
     discovered_host_labels = _discover_host_labels(
-        (hostname, ipaddress),
+        (hostname, ipaddress, SourceType.HOST),
+        multi_host_sections,
+        on_error,
+    )
+    discovered_host_labels += _discover_host_labels(
+        (hostname, ipaddress, SourceType.MANAGEMENT),
         multi_host_sections,
         on_error,
     )
@@ -1394,6 +1406,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     section_content = multi_host_sections.get_section_content(
                         hostname,
                         ipaddress,
+                        config.get_management_board_precedence(section_name, config.check_info),
                         section_name,
                         for_discovery=True,
                     )

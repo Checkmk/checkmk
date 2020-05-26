@@ -21,7 +21,7 @@ def test_attribute_defaults(monkeypatch):
         management_board_ipaddress(hostname),
     )
 
-    assert source._source_type is SourceType.MANAGEMENT
+    assert source.source_type is SourceType.MANAGEMENT
     assert source._hostname == hostname
     # Address comes from management board.
     assert source._ipaddress is None

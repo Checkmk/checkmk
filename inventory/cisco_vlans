@@ -75,7 +75,7 @@ def inv_cisco_vlans(info, inventory_tree):
         '3': 'multi-VLAN',
     }
 
-    for if_id, vlan_type, vlan_single, vlan_multi in info:
+    for if_id, vlan_type, vlan_single, vlan_multi in info[0]:
         vlan_readable = map_vlans.get(vlan_type, "")
         vlans = None
         if vlan_single != '0' and vlan_type in ['1', '2']:
@@ -94,13 +94,4 @@ def inv_cisco_vlans(info, inventory_tree):
 inv_info['inv_cisco_vlans'] = {
     'depends_on': ['inv_if'],
     "inv_function": inv_cisco_vlans,
-    'snmp_info': (
-        ".1.3.6.1.4.1.9.9.68.1.2.2.1",
-        [
-            OID_END,
-            "1",  # vmVlanType
-            "2",  # vmVlan
-            "4",  # vmVlans
-        ]),
-    'snmp_scan_function': lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

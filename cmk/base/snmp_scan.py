@@ -119,8 +119,6 @@ def _snmp_scan(host_config,
     found_plugins = set()  # type: Set[CheckPluginName]
 
     for check_plugin_name in these_plugin_names:
-        if config.service_ignored(host_config.hostname, check_plugin_name, None):
-            continue
 
         detection_spec = _get_detection_spec_from_plugin_name(check_plugin_name,
                                                               inventory_plugins.inv_info)

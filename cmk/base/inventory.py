@@ -30,6 +30,7 @@ from cmk.utils.type_defs import (
     SNMPHostConfig,
 )
 
+from cmk.base.api import PluginName
 import cmk.base.check_api as check_api
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
@@ -293,7 +294,8 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                     (hostname, ipaddress),
                     SNMPHostSections(),
                 )
-                source.set_fetched_raw_section_names(set(host_sections.sections))
+                source.set_fetched_raw_section_names(
+                    {PluginName(s) for s in host_sections.sections})
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 

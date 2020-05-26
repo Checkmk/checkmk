@@ -34,7 +34,7 @@ class HTML(object):
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
         if not isinstance(value, str):
-            value = six.text_type(value)
+            value = str(value)
         return ensure_unicode(value)
 
     def __html__(self):

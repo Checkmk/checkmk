@@ -6,17 +6,7 @@
 
 import re
 import json
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    Tuple,
-    Union,
-    Text,
-    List,
-    Any,
-    Dict,
-)
-import six
+from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
 
 from livestatus import SiteId
 
@@ -33,7 +23,7 @@ CSSClass = str
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
 # paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have
 # separated the data from rendering of the data, we can hopefully clean this up
-CellContent = Union[Text, str, HTML, Dict[str, Any]]
+CellContent = Union[str, HTML, Dict[str, Any]]
 CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
@@ -45,7 +35,7 @@ if TYPE_CHECKING:
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output, row=None, shall_escape=True):
-    # type: (CellContent, Optional[Row], bool) -> Text
+    # type: (CellContent, Optional[Row], bool) -> str
     assert not isinstance(output, dict)
     ok_marker = '<b class="stmark state0">OK</b>'
     warn_marker = '<b class="stmark state1">WARN</b>'
@@ -95,7 +85,7 @@ def format_plugin_output(output, row=None, shall_escape=True):
 
 
 def get_host_list_links(site, hosts):
-    # type: (SiteId, List[Union[Text, str]]) -> List[Text]
+    # type: (SiteId, List[Union[str]]) -> List[str]
     entries = []
     for host in hosts:
         args = [
@@ -108,7 +98,7 @@ def get_host_list_links(site, hosts):
             args.append(("display_options", html.request.var("display_options")))
 
         url = html.makeuri_contextless(args, filename="view.py")
-        link = six.text_type(html.render_a(host, href=url))
+        link = str(html.render_a(host, href=url))
         entries.append(link)
     return entries
 
@@ -179,7 +169,7 @@ def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, l
 
 
 def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_source):
-    # type: (Union[TagID, Text], Union[TagValue, Text], str, bool, str, str) -> HTML
+    # type: (Union[TagID, str], Union[TagValue, str], str, bool, str, str) -> HTML
     span = html.render_tag(html.render_div(
         html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
                            class_=["tagify--noAnim", label_source])

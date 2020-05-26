@@ -328,7 +328,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack['id']), six.text_type(output))
+    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack['id']), str(output))
 
 
 def add_rule_pack_proxies(file_names):

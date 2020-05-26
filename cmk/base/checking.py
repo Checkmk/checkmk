@@ -701,7 +701,7 @@ def _submit_check_result(host, servicedesc, result, cache_info):
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar"
-    if isinstance(infotext, six.text_type):
+    if isinstance(infotext, str):
         # regular check results are unicode...
         infotext = infotext.replace(u"|", u"\u2758")
     else:

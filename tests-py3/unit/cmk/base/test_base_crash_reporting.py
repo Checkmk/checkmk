@@ -6,8 +6,6 @@
 
 from pathlib import Path
 
-import six
-
 import cmk.utils.crash_reporting
 import cmk.base.crash_reporting as crash_reporting
 import cmk.base.check_api as check_api
@@ -33,9 +31,9 @@ def _check_generic_crash_info(crash):
             "python_version": str,
             "python_paths": list,
             "exc_type": str,
-            "exc_value": six.text_type,
+            "exc_value": str,
             "exc_traceback": list,
-            "local_vars": six.text_type,
+            "local_vars": str,
     }.items():
         assert key in crash.crash_info
         assert isinstance(crash.crash_info[key], ty), \
@@ -94,10 +92,10 @@ def test_check_crash_report_from_exception(monkeypatch):
     assert crash.crash_info["exc_value"] == "DING"
 
     for key, (ty, value) in {
-            "check_output": (six.text_type, "Output"),
+            "check_output": (str, "Output"),
             "host": (str, "testhost"),
             "is_cluster": (bool, False),
-            "description": (six.text_type, "Uptime"),
+            "description": (str, "Uptime"),
             "check_type": (str, "uptime"),
             "item": (type(None), None),
             "params": (type(None), None),

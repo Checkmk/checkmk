@@ -67,10 +67,10 @@ def escape_attribute(value):
     if value is None:
         return u''
     if attr_type == int:
-        return six.text_type(value)
+        return str(value)
     if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    if isinstance(attr_type, six.text_type):
+    if isinstance(attr_type, str):
         return html_escape(value, quote=True)
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
         return html_escape(six.ensure_str(value), quote=True)

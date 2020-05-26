@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 import traceback
-import six
 
 from cmk.gui.globals import html
 from tools import compare_html  # type: ignore[import]
@@ -50,9 +48,9 @@ def test_ABCHTMLGenerator(register_builtin_html):
             html.render_a(u"test", href=u"www.test.case")
             try:
                 assert html.render_a(u"test",
-                                     href=six.text_type("www.test.case"),
-                                     id_=six.text_type("something"),
-                                     class_=six.text_type("test_%s") % a)
+                                     href=str("www.test.case"),
+                                     id_=str("something"),
+                                     class_=str("test_%s") % a)
             except Exception as e:
                 traceback.print_exc()
                 print(e)

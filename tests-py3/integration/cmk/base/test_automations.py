@@ -12,7 +12,6 @@ import os
 import ast
 import subprocess
 import pytest  # type: ignore[import]
-import six
 
 from testlib.fixtures import web  # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output
@@ -216,7 +215,7 @@ def test_automation_try_discovery_host(test_cfg, site):
 
     data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
     assert isinstance(data, dict)
-    assert isinstance(data["output"], six.text_type)
+    assert isinstance(data["output"], str)
     assert isinstance(data["check_table"], list)
 
 
@@ -303,7 +302,7 @@ def test_automation_get_check_information(test_cfg, site):
     assert len(data) > 1000
 
     for _check_type, info in data.items():
-        assert isinstance(info["title"], six.text_type)
+        assert isinstance(info["title"], str)
         assert "service_description" in info
         assert "snmp" in info
 
@@ -314,8 +313,8 @@ def test_automation_get_real_time_checks(test_cfg, site):
     assert len(data) > 5
 
     for check_type, title in data:
-        assert isinstance(check_type, six.text_type)
-        assert isinstance(title, six.text_type)
+        assert isinstance(check_type, str)
+        assert isinstance(title, str)
 
 
 def test_automation_get_check_manpage(test_cfg, site):

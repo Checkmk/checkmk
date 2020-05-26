@@ -9,8 +9,6 @@ import gettext as gettext_module
 from typing import Dict, NamedTuple, Optional, List, Tuple
 from pathlib import Path
 
-import six
-
 import cmk.utils.paths
 
 #.
@@ -41,7 +39,7 @@ def _(message):
         if sys.version_info[0] >= 3:
             return _translation.translation.gettext(message)
         return _translation.translation.ugettext(message)
-    return six.text_type(message)
+    return str(message)
 
 
 def ungettext(singular, plural, n):
@@ -51,8 +49,8 @@ def ungettext(singular, plural, n):
             return _translation.translation.ngettext(singular, plural, n)
         return _translation.translation.ungettext(singular, plural, n)
     if n == 1:
-        return six.text_type(singular)
-    return six.text_type(plural)
+        return str(singular)
+    return str(plural)
 
 
 def get_current_language():

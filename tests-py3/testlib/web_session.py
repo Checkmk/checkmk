@@ -11,7 +11,6 @@ import ast
 import re
 import logging
 
-import six
 from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 
@@ -669,7 +668,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, six.text_type)
+        assert isinstance(result, str)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):

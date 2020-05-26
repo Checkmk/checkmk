@@ -320,7 +320,7 @@ class FilterInvtableInterfaceType(six.with_metaclass(abc.ABCMeta, Filter)):
     def valuespec(self):
         # type: () -> ValueSpec
         sorted_choices = [
-            (six.text_type(k), six.text_type(v))
+            (str(k), str(v))
             for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
         ]
         return DualListChoice(
@@ -675,7 +675,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     def find_package(self, packages, name, from_version, to_version):
         for package in packages:
-            if isinstance(name, six.text_type):
+            if isinstance(name, str):
                 if package["name"] != name:
                     continue
             else:

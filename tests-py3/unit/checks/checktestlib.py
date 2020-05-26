@@ -10,7 +10,6 @@ import types
 from typing import List
 
 import mock
-import six
 import pytest  # type: ignore[import]
 
 from cmk.base.item_state import MKCounterWrapped
@@ -322,9 +321,8 @@ class DiscoveryResult(object):  # pylint: disable=useless-object-inheritance
     def __repr__(self):
         # type: () -> str
         entries = [o for o in self.entries if isinstance(o, object)]  # type: List[object]
-        host_labels = [
-            HostLabel(six.text_type(k), six.text_type(self.labels[k])) for k in self.labels
-        ]  # type: List[object]
+        host_labels = [HostLabel(str(k), str(self.labels[k])) for k in self.labels
+                      ]  # type: List[object]
         return "DiscoveryResult(%r)" % (entries + host_labels,)
 
     # TODO: Very obscure and inconsistent __str__ conversion...

@@ -40,7 +40,7 @@ json.JSONEncoder.default = _default  # type: ignore[assignment]
     "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
 ])
 def test_class_HTML_value(value):
-    assert isinstance(HTML(value).value, six.text_type)
+    assert isinstance(HTML(value).value, str)
     assert HTML(HTML(value)) == HTML(value)
 
 
@@ -49,7 +49,7 @@ def test_class_HTML():
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"
-    d = six.text_type('u')
+    d = str('u')
 
     A = HTML(a)
     B = HTML(b)
@@ -59,12 +59,12 @@ def test_class_HTML():
     assert HTML() == HTML('')
     assert HTML(HTML()) == HTML()
     # One day we will fix this!
-    assert six.text_type(A) == six.ensure_text(a), six.text_type(A)
+    assert str(A) == six.ensure_text(a), str(A)
     assert "%s" % A == six.ensure_text(a), "%s" % A
     assert json.loads(json.dumps(A)) == A
     assert repr(A) == 'HTML(\"%s\")' % six.ensure_str(A.value)
     assert len(B) == len(b)
-    assert six.text_type(B) == six.text_type(b)
+    assert str(B) == str(b)
 
     # TODO: Investigate
     assert "1" + B + "2" + C == "1" + b + "2" + c  # type: ignore[type-var]
@@ -74,14 +74,14 @@ def test_class_HTML():
     assert HTML().join([a, b]) == a + b
     assert HTML("jo").join([A, B]) == A + "jo" + B
     assert HTML("jo").join([a, b]) == a + "jo" + b
-    assert ''.join(map(six.text_type, [A, B])) == A + B
+    assert ''.join(map(str, [A, B])) == A + B
 
     assert isinstance(A, HTML), type(A)
-    #    assert isinstance(A, six.text_type), type(A)
+    #    assert isinstance(A, str), type(A)
     assert not isinstance(A, str), type(A)
-    assert isinstance(u"%s" % A, six.text_type), u"%s" % A
+    assert isinstance(u"%s" % A, str), u"%s" % A
     # One day we will fix this!
-    assert isinstance(u"%s" % A, six.text_type), u"%s" % A
+    assert isinstance(u"%s" % A, str), u"%s" % A
     assert isinstance(A + B, HTML), type(A + B)
     assert isinstance(HTML('').join([A, B]), HTML)
     assert isinstance(HTML().join([A, B]), HTML)
@@ -125,7 +125,7 @@ def test_class_HTML():
     assert A != B
 
     assert isinstance(HTML(HTML(A)), HTML)
-    assert isinstance("%s" % HTML(HTML(A)), six.text_type)
+    assert isinstance("%s" % HTML(HTML(A)), str)
 
     assert isinstance(A, HTML)
     A += (" JO PICASSO! ")
@@ -133,14 +133,14 @@ def test_class_HTML():
 
     assert isinstance(A + "TEST", HTML)
 
-    assert isinstance("TEST%s" % A, six.text_type)
+    assert isinstance("TEST%s" % A, str)
 
     assert "test" + C == "test" + c  # type: ignore[type-var]
 
     assert D == d
     assert "%s" % D == "%s" % d
-    assert isinstance(u"%s" % D, six.text_type)
-    assert isinstance("%s" % D, six.text_type)
+    assert isinstance(u"%s" % D, str)
+    assert isinstance("%s" % D, str)
 
     E = A + B
     e = "%s" % E

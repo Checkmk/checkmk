@@ -10,7 +10,6 @@ import subprocess
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
 
 from testlib import wait_until
 
@@ -191,7 +190,7 @@ def test_get_single_oid_wrong_credentials(snmp_config):
 def test_get_single_oid(snmp_config):
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
 
 
 def test_get_single_oid_cache(snmp_config):
@@ -202,7 +201,7 @@ def test_get_single_oid_cache(snmp_config):
     assert snmp_cache.is_in_single_oid_cache(oid)
     cached_oid = snmp_cache.get_oid_from_single_oid_cache(oid)
     assert cached_oid == expected_value
-    assert isinstance(cached_oid, six.text_type)
+    assert isinstance(cached_oid, str)
 
 
 def test_get_single_non_prefixed_oid(snmp_config):

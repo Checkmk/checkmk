@@ -1927,7 +1927,7 @@ class RuleConditionRenderer(object):
         if not rulespec.item_type or conditions.service_description is None:
             return
 
-        condition = six.text_type()
+        condition = str()
         if rulespec.item_type == "service":
             condition = _("Service name")
         elif rulespec.item_type == "item":

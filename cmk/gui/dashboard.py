@@ -7,18 +7,7 @@
 import time
 import copy
 import json
-from typing import (
-    Dict,
-    Optional,
-    NamedTuple,
-    Tuple,
-    Text,
-    Type,
-    List,
-    Union,
-    Callable,
-)
-import six
+from typing import Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
 
 import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
@@ -275,12 +264,12 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 
     @classmethod
     def title(cls):
-        # type: () -> Text
+        # type: () -> str
         return cls._spec["title"]
 
     @classmethod
     def description(cls):
-        # type: () -> Text
+        # type: () -> str
         return cls._spec["description"]
 
     @classmethod
@@ -362,7 +351,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         return self._spec.get("infos", [])
 
     def display_title(self):
-        # type: () -> Text
+        # type: () -> str
         title_func = self._spec.get("title_func")
         if title_func:
             return title_func(self._dashlet_spec)
@@ -589,7 +578,7 @@ def dashlet_container_end():
 
 
 def render_dashlet_title_html(dashlet_instance):
-    # type: (Dashlet) -> Text
+    # type: (Dashlet) -> str
     title = dashlet_instance.display_title()
     if title is not None and dashlet_instance.show_title():
         url = dashlet_instance.title_url()
@@ -601,7 +590,7 @@ def render_dashlet_title_html(dashlet_instance):
 
 
 def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
-    # type: (DashboardConfig, Dashlet, bool, int) -> Text
+    # type: (DashboardConfig, Dashlet, bool, int) -> str
 
     # All outer variables are completely reset for the dashlets to have a clean, well known state.
     # The context that has been built based on the relevant HTTP variables is applied again.
@@ -618,7 +607,7 @@ def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
 
 
 def _update_or_show(board, dashlet_instance, is_update, mtime):
-    # type: (DashboardConfig, Dashlet, bool, int) -> Text
+    # type: (DashboardConfig, Dashlet, bool, int) -> str
     with html.plugged():
         if is_update:
             dashlet_instance.update()
@@ -637,7 +626,7 @@ def _update_or_show(board, dashlet_instance, is_update, mtime):
 
 
 def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
-    # type: (DashletConfig, int, Exception) -> Text
+    # type: (DashletConfig, int, Exception) -> str
     logger.exception("Problem while rendering dashlet %d of type %s", dashlet_id,
                      dashlet_spec["type"])
 
@@ -645,7 +634,7 @@ def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
         if isinstance(e, MKException):
             # Unify different string types from exception messages to a unicode string
             try:
-                exc_txt = six.text_type(e)
+                exc_txt = str(e)
             except UnicodeDecodeError:
                 exc_txt = ensure_unicode(str(e))
 
@@ -764,9 +753,9 @@ def dashboard_edit_controls(name, board):
 
 
 MenuEntry = NamedTuple("MenuEntry", [
-    ("title", six.text_type),
-    ("url", six.text_type),
-    ("icon_name", six.text_type),
+    ("title", str),
+    ("url", str),
+    ("icon_name", str),
 ])
 
 
@@ -866,7 +855,7 @@ def get_dashlet(board, ident):
 
 
 def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
-    # type: (Dashlet, Text, Text) -> None
+    # type: (Dashlet, str, str) -> None
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -1129,7 +1118,7 @@ def page_create_view_dashlet_infos():
 
 
 def choose_view(name, title, create_dashlet_spec_func):
-    # type: (DashboardName, Text, Callable) -> None
+    # type: (DashboardName, str, Callable) -> None
     import cmk.gui.views as views
     vs_view = DropdownChoice(
         title=_('View name'),

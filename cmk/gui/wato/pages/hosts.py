@@ -134,7 +134,7 @@ class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
-            elif isinstance(locked_hosts, six.text_type):
+            elif isinstance(locked_hosts, str):
                 lock_message = locked_hosts
         if lock_message:
             html.div(lock_message, class_="info")

@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import json
-import six
+
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
@@ -857,7 +857,7 @@ def my_theme(theme_dirs):
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Määh Theme :-)"})))
+        str(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
 
@@ -875,7 +875,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
+        str(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Määh Theme :-)"),
@@ -888,8 +888,8 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Fixed theme"})))
+    (my_dir / "theme.json").open(mode="w",
+                                 encoding="utf-8").write(str(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Fixed theme"),
@@ -897,8 +897,8 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 
 def test_theme_broken_meta(my_theme):
-    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type("{\"titlewrong\": xyz\"bla\"}"))
+    (my_theme / "theme.json").open(mode="w",
+                                   encoding="utf-8").write(str("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"my_theme"),
@@ -1122,13 +1122,13 @@ def monitoring_user(tmp_path, mocker):
     config_dir = tmp_path / 'config_dir'
     user_dir = config_dir / 'test'
     user_dir.mkdir(parents=True)
-    user_dir.joinpath('cached_profile.mk').write_text(six.text_type(MONITORING_USER_CACHED_PROFILE))
+    user_dir.joinpath('cached_profile.mk').write_text(str(MONITORING_USER_CACHED_PROFILE))
     # SITE STATUS snapin settings:
-    user_dir.joinpath('siteconfig.mk').write_text(six.text_type(MONITORING_USER_SITECONFIG))
+    user_dir.joinpath('siteconfig.mk').write_text(str(MONITORING_USER_SITECONFIG))
     # Ordering of the buttons:
-    user_dir.joinpath('buttoncounts.mk').write_text(six.text_type(MONITORING_USER_BUTTONCOUNTS))
+    user_dir.joinpath('buttoncounts.mk').write_text(str(MONITORING_USER_BUTTONCOUNTS))
     # Favorites set in the commands menu:
-    user_dir.joinpath('favorites.mk').write_text(six.text_type(MONITORING_USER_FAVORITES))
+    user_dir.joinpath('favorites.mk').write_text(str(MONITORING_USER_FAVORITES))
 
     mocker.patch.object(config, 'config_dir', str(config_dir))
     mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])

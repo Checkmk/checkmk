@@ -485,8 +485,7 @@ class LoggedInUser(object):
         self._button_counts = {}  # type: Dict[str, float]
         self._stars = set()  # type: Set[str]
         self._tree_states = {}  # type: Dict
-        self._bi_assumptions = {
-        }  # type: Dict[Union[Tuple[six.text_type, six.text_type], Tuple[six.text_type, six.text_type, six.text_type]], int]
+        self._bi_assumptions = {}  # type: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int]
         self._tableoptions = {}  # type: Dict[str, Dict[str, Any]]
 
     def _gather_roles(self, user_id):

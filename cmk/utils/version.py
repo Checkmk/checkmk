@@ -18,8 +18,6 @@ import sys
 import time
 from typing import Any, Dict
 
-import six
-
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
@@ -47,9 +45,9 @@ def edition_short():
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")
     if parts[-1] == "demo":
-        return six.text_type(parts[-2])
+        return str(parts[-2])
 
-    return six.text_type(parts[-1])
+    return str(parts[-1])
 
 
 def is_enterprise_edition():

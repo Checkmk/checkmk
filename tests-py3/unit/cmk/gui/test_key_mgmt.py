@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-import six
 
 import cmk.gui.config as config
 import cmk.gui.key_mgmt as key_mgmt
@@ -18,12 +17,12 @@ def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
     key_dict = key_mgmt.PageEditKey()._generate_key(u"älias", "passphra$e")
     assert isinstance(key_dict, dict)
     assert sorted(key_dict.keys()) == ["alias", "certificate", "date", "owner", "private_key"]
-    assert isinstance(key_dict["alias"], six.text_type)
+    assert isinstance(key_dict["alias"], str)
     assert key_dict["alias"] == u"älias"
 
     assert key_dict["date"] == 123
 
-    assert isinstance(key_dict["owner"], six.text_type)
+    assert isinstance(key_dict["owner"], str)
     assert key_dict["owner"] == u"dingdöng"
 
     assert key_dict["certificate"].startswith(b"-----BEGIN CERTIFICATE---")

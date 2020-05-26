@@ -17,7 +17,6 @@ import sys
 import time
 from typing import Any, Dict, List
 
-import six
 import pytest  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 
@@ -437,8 +436,8 @@ def test_write_host_labels(web, site):
         }
 
         for label_id, label_value in cfg["host_labels"]["test-host-lan"].items():
-            assert isinstance(label_id, six.text_type)
-            assert isinstance(label_value, six.text_type)
+            assert isinstance(label_id, str)
+            assert isinstance(label_value, str)
 
     finally:
         web.delete_hosts(["test-host-lan"])

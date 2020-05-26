@@ -1208,8 +1208,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 CertificateDetails(
                     issued_to=get_name(crypto_cert.subject),
                     issued_by=get_name(crypto_cert.issuer),
-                    valid_from=six.text_type(crypto_cert.not_valid_before),
-                    valid_till=six.text_type(crypto_cert.not_valid_after),
+                    valid_from=str(crypto_cert.not_valid_before),
+                    valid_till=str(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
                     digest_sha256=six.ensure_str(
                         binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))),

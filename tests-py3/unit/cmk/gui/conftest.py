@@ -110,7 +110,7 @@ def _create_and_destroy_user(automation=False):
 
     profile_path = Path(paths.omd_root, "var", "check_mk", "web", username)
     profile_path.joinpath('cached_profile.mk').write_text(
-        six.text_type(
+        str(
             repr({
                 'alias': u'Test user',
                 'contactgroups': ['all'],

@@ -314,7 +314,7 @@ def _check_auth(request):
     if user_id is None:
         user_id = _check_auth_by_cookie()
 
-    if (user_id is not None and not isinstance(user_id, six.text_type)) or user_id == u'':
+    if (user_id is not None and not isinstance(user_id, str)) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
 
     if user_id and not userdb.is_customer_user_allowed_to_login(user_id):
@@ -467,7 +467,7 @@ class LoginPage(Page):
             # False       -> failed
             result = userdb.hook_login(username, password)
             if result:
-                assert isinstance(result, six.text_type)
+                assert isinstance(result, str)
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.

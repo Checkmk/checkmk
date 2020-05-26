@@ -27,7 +27,7 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-ManPage = Dict[six.text_type, Any]
+ManPage = Dict[str, Any]
 ManPageCatalogPath = Tuple[str, ...]
 
 catalog_titles = {
@@ -559,7 +559,7 @@ def load_man_page(name):
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header = {}  # type: Dict[six.text_type, Any]
+    header = {}  # type: Dict[str, Any]
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]

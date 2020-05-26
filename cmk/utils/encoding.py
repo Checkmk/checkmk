@@ -7,8 +7,6 @@
 
 from typing import AnyStr, Optional
 
-import six
-
 
 def convert_to_unicode(
     value,
@@ -18,7 +16,7 @@ def convert_to_unicode(
     on_error=None,
 ):
     # type: (AnyStr, Optional[str], str, str, Optional[str]) -> str
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         return value
 
     if encoding:
@@ -39,7 +37,7 @@ def convert_to_unicode(
 
 def ensure_unicode(value):
     # type: (AnyStr) -> str
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         return value
     return value.decode("utf-8")
 

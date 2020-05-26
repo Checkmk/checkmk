@@ -12,25 +12,11 @@ import os
 import ast
 import ssl
 import sys
-from typing import (
-    NewType,
-    AnyStr,
-    Any,
-    Type,
-    List,
-    Text,
-    cast,
-    Tuple,
-    Union,
-    Dict,
-    Pattern,
-    Optional,
-)
-import six
+from typing import NewType, AnyStr, Any, Type, List, cast, Tuple, Union, Dict, Pattern, Optional
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
-UserId = six.text_type  # NewType("UserId", Text)
+UserId = str  # NewType("UserId", str)
 SiteId = str  # NewType("SiteId", str)
 SiteConfiguration = Dict[str, Any]  # NewType("SiteConfiguration", Dict[str, Any])
 SiteConfigurations = Dict[
@@ -60,8 +46,8 @@ remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
 def _ensure_unicode(value):
-    # type: (Union[Text, bytes]) -> Text
-    if isinstance(value, Text):
+    # type: (Union[str, bytes]) -> str
+    if isinstance(value, str):
         return value
     return value.decode("utf-8")
 
@@ -102,7 +88,7 @@ NO_DEFAULT = lambda: None
 # use them in livestatus queries. Prevent injections of livestatus
 # protocol related chars or strings
 def lqencode(s):
-    # type: (AnyStr) -> Text
+    # type: (AnyStr) -> str
     # It is not enough to strip off \n\n, because one might submit "\n \n",
     # which is also interpreted as termination of the last query and beginning
     # of the next query.
@@ -110,7 +96,7 @@ def lqencode(s):
 
 
 def quote_dict(s):
-    # type: (Text) -> Text
+    # type: (str) -> str
     """Apply the quoting used for dict-valued columns (See #6972)"""
     return "'%s'" % s.replace(u"'", u"''")
 
@@ -163,7 +149,7 @@ def create_client_socket(family, tls, verify, ca_file_path):
 
 class Helpers(object):  # pylint: disable=useless-object-inheritance
     def query(self, query, add_headers=u""):
-        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
+        # type: (QueryTypes, Union[str, bytes]) -> LivestatusResponse
         raise NotImplementedError()
 
     def query_value(self, query, deflt=NO_DEFAULT):
@@ -195,7 +181,7 @@ class Helpers(object):  # pylint: disable=useless-object-inheritance
                                             normalized_query)
 
     def query_row_assoc(self, query):
-        # type: (QueryTypes) -> Dict[Text, Any]
+        # type: (QueryTypes) -> Dict[str, Any]
         """Issues a query that returns one line of data and returns the elements
            of that line as a dictionary from column names to values"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -232,7 +218,7 @@ class Helpers(object):  # pylint: disable=useless-object-inheritance
         return self.query(normalized_query, "ColumnHeaders: off\n")
 
     def query_table_assoc(self, query):
-        # type: (QueryTypes) -> List[Dict[Text, Any]]
+        # type: (QueryTypes) -> List[Dict[str, Any]]
         """Issues a query that may return multiple lines and columns and returns
            a dictionary from column names to values for each line. This can be
            very ineffective for large response sets."""
@@ -246,7 +232,7 @@ class Helpers(object):  # pylint: disable=useless-object-inheritance
         return result
 
     def query_summed_stats(self, query, add_headers=u""):
-        # type: (QueryTypes, Union[Text, bytes]) -> List[int]
+        # type: (QueryTypes, Union[str, bytes]) -> List[int]
         """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
         normalized_query = Query(query) if not isinstance(query, Query) else query
@@ -274,7 +260,7 @@ class Query(object):  # pylint: disable=useless-object-inheritance
     default_suppressed_exceptions = [MKLivestatusTableNotFoundError]  # type: List[Type[Exception]]
 
     def __init__(self, query, suppress_exceptions=None):
-        # type: (Union[Text, bytes], Optional[List[Type[Exception]]]) -> None
+        # type: (Union[str, bytes], Optional[List[Type[Exception]]]) -> None
         super(Query, self).__init__()
 
         self._query = _ensure_unicode(query)
@@ -285,7 +271,7 @@ class Query(object):  # pylint: disable=useless-object-inheritance
             self.suppress_exceptions = suppress_exceptions
 
     def __unicode__(self):
-        # type: () -> Text
+        # type: () -> str
         return self._query
 
     def __str__(self):
@@ -295,7 +281,7 @@ class Query(object):  # pylint: disable=useless-object-inheritance
         return self._query.encode("utf-8")
 
 
-QueryTypes = Union[Text, bytes, Query]
+QueryTypes = Union[str, bytes, Query]
 OnlySites = Optional[List[SiteId]]
 DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 
@@ -356,7 +342,7 @@ class SingleSiteConnection(Helpers):
         return self.successful_persistence
 
     def add_header(self, header):
-        # type: (Text) -> None
+        # type: (str) -> None
         self.add_headers += header + "\n"
 
     def set_timeout(self, timeout):
@@ -469,14 +455,14 @@ class SingleSiteConnection(Helpers):
             result += packet
         return result
 
-    # TODO: change all call sites to hand over Query + Text
+    # TODO: change all call sites to hand over Query + str
     def do_query(self, query, add_headers=u""):
-        # type: (Query, Text) -> LivestatusResponse
+        # type: (Query, str) -> LivestatusResponse
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
     def send_query(self, query_obj, add_headers=u"", do_reconnect=True):
-        # type: (Query, Text, bool) -> None
+        # type: (Query, str, bool) -> None
         orig_query = query_obj
 
         query = u"%s" % query_obj
@@ -525,7 +511,7 @@ class SingleSiteConnection(Helpers):
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query=None, add_headers="", timeout_at=None):
-        # type: (Query, Text, Optional[float]) -> LivestatusResponse
+        # type: (Query, str, Optional[float]) -> LivestatusResponse
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
@@ -597,7 +583,7 @@ class SingleSiteConnection(Helpers):
         self.limit = limit
 
     def query(self, query, add_headers=u""):
-        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
+        # type: (QueryTypes, Union[str, bytes]) -> LivestatusResponse
 
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
@@ -613,7 +599,7 @@ class SingleSiteConnection(Helpers):
                 row.insert(0, b"")
         return response
 
-    # TODO: Cleanup all call sites to hand over Text types
+    # TODO: Cleanup all call sites to hand over str types
     def command(self, command, site=None):
         # type: (AnyStr, Optional[SiteId]) -> None
         self.do_command(command)
@@ -755,7 +741,7 @@ class MultiSiteConnection(Helpers):
             # Fetch all the states of status hosts of this local site in one query
             query = u"GET hosts\nColumns: name state has_been_checked last_time_up\n"
             for host in hosts:
-                query += u"Filter: name = %s\n" % Text(host)
+                query += u"Filter: name = %s\n" % str(host)
             query += u"Or: %d\n" % len(hosts)
             self.set_only_sites([sitename])  # only connect one site
             try:
@@ -841,7 +827,7 @@ class MultiSiteConnection(Helpers):
             i += 1
 
     def add_header(self, header):
-        # type: (Text) -> None
+        # type: (str) -> None
         for _sitename, _site, connection in self.connections:
             connection.add_header(header)
 
@@ -889,7 +875,7 @@ class MultiSiteConnection(Helpers):
             connection.set_auth_domain(domain)
 
     def query(self, query, add_headers=u""):
-        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
+        # type: (QueryTypes, Union[str, bytes]) -> LivestatusResponse
 
         # Normalize argument types
         normalized_add_headers = _ensure_unicode(add_headers)
@@ -900,7 +886,7 @@ class MultiSiteConnection(Helpers):
         return self.query_non_parallel(normalized_query, normalized_add_headers)
 
     def query_non_parallel(self, query, add_headers=u""):
-        # type: (Query, Text) -> LivestatusResponse
+        # type: (Query, str) -> LivestatusResponse
         result = LivestatusResponse([])
         stillalive = []
         limit = self.limit
@@ -934,7 +920,7 @@ class MultiSiteConnection(Helpers):
     # of Limit: since all sites are queried in parallel, the Limit: is simply
     # applied to all sites - resulting in possibly more results then Limit requests.
     def query_parallel(self, query, add_headers=u""):
-        # type: (Query, Text) -> LivestatusResponse
+        # type: (Query, str) -> LivestatusResponse
         stillalive = []
         if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]

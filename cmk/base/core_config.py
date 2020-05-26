@@ -184,7 +184,7 @@ def autodetect_plugin(command_line):
     for directory in ["/local", ""]:
         path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
         if os.path.exists(path + plugin_name):
-            command_line = six.text_type(path + command_line)
+            command_line = str(path + command_line)
             break
 
     return command_line
@@ -496,7 +496,7 @@ def get_host_attributes(hostname, config_cache):
 
 def _get_tag_attributes(collection, prefix):
     # type: (Union[Tags, Labels, LabelSources], str) -> ObjectAttributes
-    return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.items()}
+    return {u"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
 
 
 def get_cluster_attributes(config_cache, host_config, nodes):

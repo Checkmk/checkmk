@@ -7,14 +7,7 @@
 import os
 import re
 import pprint
-from typing import (
-    Tuple,
-    Optional,
-    Dict,
-    List,
-    Any,
-)
-import six
+from typing import Tuple, Optional, Dict, List, Any
 
 from cmk.utils.type_defs import (
     Labels,
@@ -96,15 +89,11 @@ class RuleConditions(object):
             return host_conditions
 
         if isinstance(host_conditions, list):
-            return [str(h) if isinstance(h, six.text_type) else h for h in host_conditions]
+            return [str(h) if isinstance(h, str) else h for h in host_conditions]
 
         if isinstance(host_conditions, dict) and "$nor" in host_conditions:
             assert len(host_conditions) == 1
-            return {
-                "$nor": [
-                    str(h) if isinstance(h, six.text_type) else h for h in host_conditions["$nor"]
-                ]
-            }
+            return {"$nor": [str(h) if isinstance(h, str) else h for h in host_conditions["$nor"]]}
 
         raise NotImplementedError()
 

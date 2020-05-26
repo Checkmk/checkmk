@@ -62,9 +62,8 @@ class CrashReportStore:
                 continue
 
             if fname == "crash.info":
-                store.save_text_to_file(
-                    crash.crash_dir() / fname,
-                    six.text_type(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
+                store.save_text_to_file(crash.crash_dir() / fname,
+                                        str(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
             else:
                 store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
@@ -240,16 +239,16 @@ def _get_generic_crash_info(type_name, details):
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
     # Remove this after migration...
     if exc_value is None or not exc_value.args:
-        exc_txt = six.text_type("")
+        exc_txt = str("")
     elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
         except UnicodeDecodeError:
             exc_txt = u"b%s" % repr(exc_value.args[0])
     elif len(exc_value.args) == 1:
-        exc_txt = six.text_type(exc_value.args[0])
+        exc_txt = str(exc_value.args[0])
     else:
-        exc_txt = six.text_type(exc_value.args)
+        exc_txt = str(exc_value.args)
 
     infos = cmk_version.get_general_version_infos()
     infos.update({

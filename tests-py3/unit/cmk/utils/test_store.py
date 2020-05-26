@@ -109,7 +109,7 @@ def test_load_data_from_file_dict(tmp_path, path_type):
     data = store.load_object_from_file(path_type(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
-    assert isinstance(data["ä"], six.text_type)
+    assert isinstance(data["ä"], str)
     assert data["ä"] == u"ß"
 
 

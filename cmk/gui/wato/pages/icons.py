@@ -6,7 +6,7 @@
 
 import os
 import io
-import six
+
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
 import cmk.utils.paths
@@ -119,7 +119,7 @@ class ModeIcons(WatoMode):
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.items():
-            if isinstance(v, (bytes, six.text_type)):
+            if isinstance(v, (bytes, str)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image

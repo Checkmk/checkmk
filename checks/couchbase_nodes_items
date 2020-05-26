@@ -14,7 +14,7 @@ def check_couchbase_nodes_items(_item, params, data):
             active,
             'items_active',
             params.get('curr_items'),
-            human_readable_func=six.text_type,
+            human_readable_func=str,
             infoname="Items in active vBuckets",
         )
 
@@ -24,7 +24,7 @@ def check_couchbase_nodes_items(_item, params, data):
             non_res,
             'items_non_res',
             params.get('non_residents'),
-            human_readable_func=six.text_type,
+            human_readable_func=str,
             infoname='Non-resident items',
         )
 
@@ -34,7 +34,7 @@ def check_couchbase_nodes_items(_item, params, data):
             total,
             'items',
             params.get('curr_items_tot'),
-            human_readable_func=six.text_type,
+            human_readable_func=str,
             infoname='Total items in vBuckets',
         )
 

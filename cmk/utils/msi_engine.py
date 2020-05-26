@@ -19,8 +19,6 @@ import sys
 import tempfile
 import uuid
 
-import six
-
 from cmk.utils import msi_patch
 
 opt_verbose = True
@@ -109,7 +107,7 @@ def patch_msi_files(dir_name, version_build):
                     if work_file.exists():
                         file_stats = work_file.stat()
                         new_size = file_stats.st_size
-                        words[3] = six.text_type(new_size)
+                        words[3] = str(new_size)
                     else:
                         verbose("'{}' doesn't exist".format(work_file))
                     break  # always leaving internal loop

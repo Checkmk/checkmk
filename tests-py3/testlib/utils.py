@@ -100,7 +100,7 @@ def current_base_branch_name():
         #
         #heads = subprocess.check_output(
         #    ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
-        #if not isinstance(heads, six.text_type):
+        #if not isinstance(heads, str):
         #    heads = heads.decode("utf-8")
 
         #for head in heads.strip().split("\n"):

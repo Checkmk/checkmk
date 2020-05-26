@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 from mockldap import MockLdap, LDAPObject  # type: ignore[import]
-import six
 
 # userdb is needed to make the module register the post-config-load-hooks
 import cmk.gui.userdb
@@ -232,7 +231,7 @@ def encode_to_byte_strings(inp):
         return [encode_to_byte_strings(element) for element in inp]
     if isinstance(inp, tuple):
         return tuple([encode_to_byte_strings(element) for element in inp])
-    if isinstance(inp, six.text_type):
+    if isinstance(inp, str):
         return inp.encode("utf-8")
     return inp
 
@@ -304,10 +303,10 @@ def mocked_ldap(monkeypatch):
         # encoding. The latter want's to have byte encoded strings and MockLdap
         # wants unicode strings :-/. Prepare the data we normally send to
         # python-ldap for MockLdap here.
-        if not isinstance(base, six.text_type):
+        if not isinstance(base, str):
             base = base.decode("utf-8")
 
-        if not isinstance(filterstr, six.text_type):
+        if not isinstance(filterstr, str):
             filterstr = filterstr.decode("utf-8")
 
         return self.search(base, scope, filterstr, attrlist, attrsonly)
@@ -329,11 +328,11 @@ def _check_restored_bind_user(mocked_ldap):
 
 def test_check_credentials_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
 
     result = mocked_ldap.check_credentials(u"admin", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 
@@ -350,7 +349,7 @@ def test_check_credentials_not_existing(mocked_ldap):
 
 def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 

@@ -379,8 +379,8 @@ class ModeAjaxDiagHost(AjaxPage):
             args[7] = snmpv3_use
             if snmpv3_use != u"noAuthNoPriv":
                 snmpv3_auth_proto = {
-                    six.text_type(DropdownChoice.option_id("md5")): u"md5",
-                    six.text_type(DropdownChoice.option_id("sha")): u"sha"
+                    str(DropdownChoice.option_id("md5")): u"md5",
+                    str(DropdownChoice.option_id("sha")): u"sha"
                 }.get(request.get("snmpv3_auth_proto", u""), u"")
 
                 args[8] = snmpv3_auth_proto
@@ -389,8 +389,8 @@ class ModeAjaxDiagHost(AjaxPage):
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
-                        six.text_type(DropdownChoice.option_id("DES")): u"DES",
-                        six.text_type(DropdownChoice.option_id("AES")): u"AES"
+                        str(DropdownChoice.option_id("DES")): u"DES",
+                        str(DropdownChoice.option_id("AES")): u"AES"
                     }.get(request.get("snmpv3_privacy_proto", u""), u"")
 
                     args[11] = snmpv3_privacy_proto

@@ -55,7 +55,7 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.events as events
 import cmk.base.obsolete_output as out
-from cmk.base.events import EventContext  # pylint: disable=unused-import
+from cmk.base.events import EventContext
 
 try:
     import cmk.base.cee.keepalive as keepalive

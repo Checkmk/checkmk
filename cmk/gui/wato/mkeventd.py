@@ -53,7 +53,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
     TextUnicode,
     DropdownChoice,
@@ -84,7 +84,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,

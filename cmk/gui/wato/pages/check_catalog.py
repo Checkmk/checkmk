@@ -15,7 +15,7 @@ from typing import (
 import six
 
 import cmk.utils.man_pages as man_pages
-from cmk.utils.man_pages import ManPageCatalogPath  # pylint: disable=unused-import
+from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.watolib as watolib

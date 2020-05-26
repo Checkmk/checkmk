@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from typing import Iterator, Union, List, Text
 import six
 
-from cmk.gui.http import Response  # pylint: disable=unused-import
+from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.html import HTML

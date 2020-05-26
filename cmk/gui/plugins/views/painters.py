@@ -23,11 +23,18 @@ import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    DateFormat, Dictionary, DictionaryElements, DropdownChoice, Integer, ListChoice,
-    ListChoiceChoices, TextAscii, Timerange,
+from cmk.gui.valuespec import (
+    DateFormat,
+    Dictionary,
+    DictionaryElements,
+    DropdownChoice,
+    Integer,
+    ListChoice,
+    ListChoiceChoices,
+    TextAscii,
+    Timerange,
 )
-from cmk.gui.view_utils import CellContent  # pylint: disable=unused-import
+from cmk.gui.view_utils import CellContent
 
 from cmk.gui.plugins.views.icons import (
     get_icons,

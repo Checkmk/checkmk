@@ -36,7 +36,7 @@ import cmk.utils.tty as tty
 from omdlib.utils import chdir
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
 
 logger = logging.getLogger("cmk.omd")
 

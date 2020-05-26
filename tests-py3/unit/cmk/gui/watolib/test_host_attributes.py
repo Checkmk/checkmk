@@ -8,7 +8,7 @@
 import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato
 import cmk.gui.watolib.host_attributes as attrs
 
 expected_attributes = {

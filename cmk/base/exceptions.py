@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from types import TracebackType  # pylint: disable=unused-import
+from types import TracebackType
 from typing import Tuple, Type
 
-from cmk.utils.exceptions import (  # pylint: disable=unused-import
-    MKException, MKGeneralException, MKSNMPError,
-)
+from cmk.utils.exceptions import MKException, MKGeneralException
 
 
 class MKAgentError(MKException):

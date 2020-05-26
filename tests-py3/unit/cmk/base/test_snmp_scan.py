@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.snmp_scan as snmp_scan
-import cmk.base.snmp_utils as snmp_utils  # pylint: disable=unused-import
+import cmk.base.snmp_utils as snmp_utils
 
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,)

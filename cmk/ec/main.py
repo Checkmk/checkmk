@@ -27,7 +27,7 @@ import sys
 import threading
 import time
 import traceback
-from types import FrameType  # pylint: disable=unused-import
+from types import FrameType
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 import six

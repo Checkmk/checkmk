@@ -13,13 +13,13 @@ import six
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.sites import SiteId  # pylint: disable=unused-import
+from cmk.gui.sites import SiteId
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 from cmk.gui.type_defs import RoleName, PermissionName
 from cmk.gui.permissions import (
     permission_section_registry,

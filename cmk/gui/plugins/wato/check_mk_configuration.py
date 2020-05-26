@@ -13,7 +13,7 @@ from typing import (
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.tags import TagGroup  # pylint: disable=unused-import
+from cmk.utils.tags import TagGroup
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -23,11 +23,36 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Dictionary, TextAscii, TextUnicode, HTTPUrl, DropdownChoice, Tuple, ListOf, Integer, Float,
-    Transform, ListOfStrings, IPNetwork, CascadingDropdown, MonitoringState, RegExpUnicode,
-    IconSelector, PasswordSpec, ListOfTimeRanges, Age, FixedValue, Optional, Alternative,
-    ListChoice, Checkbox, ID, ListOfCAs, LogLevelChoice, Labels, CascadingDropdownChoice,
+from cmk.gui.valuespec import (
+    Dictionary,
+    TextAscii,
+    TextUnicode,
+    HTTPUrl,
+    DropdownChoice,
+    Tuple,
+    ListOf,
+    Integer,
+    Float,
+    Transform,
+    ListOfStrings,
+    IPNetwork,
+    CascadingDropdown,
+    MonitoringState,
+    RegExpUnicode,
+    IconSelector,
+    PasswordSpec,
+    ListOfTimeRanges,
+    Age,
+    FixedValue,
+    Optional,
+    Alternative,
+    ListChoice,
+    Checkbox,
+    ID,
+    ListOfCAs,
+    LogLevelChoice,
+    Labels,
+    CascadingDropdownChoice,
 )
 
 from cmk.gui.plugins.wato import (

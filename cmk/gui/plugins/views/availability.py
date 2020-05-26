@@ -21,11 +21,19 @@ import cmk.utils.render
 import cmk.gui.config as config
 
 import cmk.gui.availability as availability
-from cmk.gui.availability import (  # pylint: disable=unused-import
-    AVObjectType, AVOptions, AVObjectSpec, AVSpan, AVMode, AVRowCells, AVObjectCells, AVData,
-    AVRawData, AVEntry,
+from cmk.gui.availability import (
+    AVObjectType,
+    AVOptions,
+    AVObjectSpec,
+    AVSpan,
+    AVMode,
+    AVRowCells,
+    AVObjectCells,
+    AVData,
+    AVRawData,
+    AVEntry,
 )
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
@@ -34,9 +42,16 @@ from cmk.gui.htmllib import HTML
 
 from cmk.gui.exceptions import MKUserError
 
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    ValueSpec, Checkbox, TextAreaUnicode, TextAscii, Dictionary, TextUnicode, Optional,
-    AbsoluteDate, DropdownChoice,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    Checkbox,
+    TextAreaUnicode,
+    TextAscii,
+    Dictionary,
+    TextUnicode,
+    Optional,
+    AbsoluteDate,
+    DropdownChoice,
 )
 
 from cmk.gui.plugins.views import (
@@ -51,7 +66,7 @@ if TYPE_CHECKING:
         Rows,
         HTTPVariables,
     )
-    from cmk.gui.views import View  # pylint: disable=unused-import
+    from cmk.gui.views import View
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)

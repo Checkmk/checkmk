@@ -17,7 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (response_schemas, constructors,
                                                      endpoint_schema, request_schemas)
-from cmk.gui.watolib import CREFolder  # pylint: disable=unused-import
+from cmk.gui.watolib import CREFolder
 from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one

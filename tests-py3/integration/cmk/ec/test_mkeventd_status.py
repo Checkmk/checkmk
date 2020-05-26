@@ -4,13 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 import time
 
 import pytest  # type: ignore[import]
 # flake8: noqa
 
-from testlib import ec  # pylint: disable=unused-import
+from testlib.fixtures import ec  # pylint: disable=unused-import
 
 # pylint: disable=redefined-outer-name
 

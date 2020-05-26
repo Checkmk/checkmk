@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Set, Union
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import OID, CheckPluginName, DecodedString, SNMPHostConfig
@@ -20,7 +20,6 @@ import cmk.base.config as config
 import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
-from cmk.base.exceptions import MKSNMPError
 from cmk.base.snmp_utils import ScanFunction
 
 

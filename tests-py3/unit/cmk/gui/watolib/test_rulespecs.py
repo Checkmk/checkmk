@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.version as cmk_version
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException

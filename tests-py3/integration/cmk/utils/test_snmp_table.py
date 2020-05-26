@@ -7,11 +7,11 @@
 import pytest  # type: ignore[import]
 import six
 
+from cmk.utils.exceptions import MKSNMPError
 import cmk.utils.snmp_table as snmp_table
 from cmk.utils.type_defs import OID_BIN, OID_END, OID_END_BIN, OID_STRING, OIDWithColumns
 
 import cmk.base.snmp as snmp
-from cmk.base.exceptions import MKSNMPError
 
 
 # Missing in currently used dump:

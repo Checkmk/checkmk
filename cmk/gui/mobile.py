@@ -18,8 +18,11 @@ import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.utils
 import cmk.gui.view_utils
-from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    PainterOptions, command_registry, data_source_registry, Layout,
+from cmk.gui.plugins.views.utils import (
+    PainterOptions,
+    command_registry,
+    data_source_registry,
+    Layout,
 )
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -29,10 +32,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 from cmk.gui.type_defs import (
     Rows,)
-from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    Cell, DataSource,
+from cmk.gui.plugins.views.utils import (
+    Cell,
+    DataSource,
 )
-from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
+from cmk.gui.plugins.visuals.utils import Filter
 
 HeaderButton = Union[Tuple[str, Text, str], Tuple[str, Text, str, str]]
 Items = List[Tuple[str, str, str]]

@@ -92,7 +92,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.view_utils import render_labels
 

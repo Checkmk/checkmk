@@ -12,7 +12,7 @@ from typing import (Callable, Set, Dict, Any, Text, Union, List, Tuple as _Tuple
                     _Optional)
 import six
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
@@ -23,7 +23,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
-from cmk.gui.view_utils import CSSClass  # pylint: disable=unused-import
+from cmk.gui.view_utils import CSSClass
 from cmk.gui.type_defs import Rows, Row
 from cmk.gui.valuespec import (
     Integer,

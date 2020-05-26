@@ -14,7 +14,7 @@ import signal
 import sys
 import time
 import traceback
-from types import FrameType  # pylint: disable=unused-import
+from types import FrameType
 import io
 
 from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any

@@ -13,7 +13,7 @@ import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (
     MKUserError,
@@ -38,8 +38,8 @@ from cmk.gui.valuespec import (
 
 import cmk.utils.tags
 from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.rulesets import Ruleset  # pylint: disable=unused-import
-from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder  # pylint: disable=unused-import
+from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,

@@ -20,7 +20,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (

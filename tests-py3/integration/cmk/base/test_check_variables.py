@@ -6,12 +6,11 @@
 
 # flake8: noqa
 
-from __future__ import print_function
 # pylint: disable=redefined-outer-name
 import subprocess
 import pytest  # type: ignore[import]
 
-from testlib import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # pylint: disable=unused-import
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks

@@ -11,7 +11,7 @@ from the configuration.
 
 from typing import Dict, Text
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject  # pylint: disable=unused-import
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.type_defs import HostName, Item, CheckPluginName, ServiceName
 
 import cmk.base.config as config

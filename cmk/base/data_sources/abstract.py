@@ -25,7 +25,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.encoding import convert_to_unicode, ensure_bytestr
-from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -55,7 +55,7 @@ from cmk.base.check_utils import (
     PiggybackRawData,
     SectionCacheInfo,
 )
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError, MKSNMPError
+from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKIPAddressLookupError
 
 from .host_sections import AbstractHostSections
 

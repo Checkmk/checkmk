@@ -35,7 +35,7 @@ from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
 
 DialogResult = Tuple[bool, str]
 

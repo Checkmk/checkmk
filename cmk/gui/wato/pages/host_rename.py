@@ -13,7 +13,7 @@ from typing import (
     Tuple as _Tuple,
 )
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 from cmk.utils.regex import regex
 import cmk.utils.store as store

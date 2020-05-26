@@ -14,7 +14,7 @@ from typing import (
 import uuid
 import tarfile
 import json
-from pathlib import Path  # pylint: disable=unused-import
+from pathlib import Path
 
 import six
 

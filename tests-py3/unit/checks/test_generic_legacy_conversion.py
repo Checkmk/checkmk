@@ -14,10 +14,7 @@ from cmk.utils.check_utils import section_name_of
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 from cmk.base.api import PluginName
-from cmk.base.api.agent_based.register.section_plugins_legacy import (  # pylint: disable=unused-import
-    _create_snmp_trees, create_agent_section_plugin_from_legacy,
-    create_snmp_section_plugin_from_legacy,
-)
+from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     _explicit_conversions,
     create_detect_spec,

@@ -25,7 +25,7 @@ from typing import (
 )
 import six
 
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html
@@ -34,7 +34,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile  # pylint: disable=unused-import
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
     ID,
     FixedValue,

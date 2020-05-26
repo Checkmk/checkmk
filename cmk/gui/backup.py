@@ -32,9 +32,21 @@ from cmk.utils.schedule import next_scheduled_time
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Password, Dictionary, TextUnicode, DropdownChoice, Checkbox, Alternative, FixedValue,
-    CascadingDropdown, ID, AbsoluteDirname, SchedulePeriod, ListOf, Timeofday, ValueSpec,
+from cmk.gui.valuespec import (
+    Password,
+    Dictionary,
+    TextUnicode,
+    DropdownChoice,
+    Checkbox,
+    Alternative,
+    FixedValue,
+    CascadingDropdown,
+    ID,
+    AbsoluteDirname,
+    SchedulePeriod,
+    ListOf,
+    Timeofday,
+    ValueSpec,
 )
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _

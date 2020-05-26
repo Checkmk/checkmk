@@ -33,7 +33,7 @@ from cryptography.hazmat.primitives import hashes
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 
-from cmk.gui.sites import SiteStatus  # pylint: disable=unused-import
+from cmk.gui.sites import SiteStatus
 import cmk.gui.sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

@@ -31,8 +31,8 @@ from typing import Union, List, Tuple, Optional, TYPE_CHECKING
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
-    from omdlib.version_info import VersionInfo  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
+    from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKTerminate

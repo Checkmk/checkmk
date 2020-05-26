@@ -25,11 +25,16 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     HTTPRedirect,)
 import cmk.gui.config as config
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Dictionary, DropdownChoice, Filename, FixedValue, ListChoice, ValueSpec,
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    Filename,
+    FixedValue,
+    ListChoice,
+    ValueSpec,
 )
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.watolib import (
     AutomationCommand,
     automation_command_registry,

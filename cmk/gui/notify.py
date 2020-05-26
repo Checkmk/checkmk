@@ -27,9 +27,15 @@ from cmk.gui.permissions import (
     permission_registry,
 )
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    AbsoluteDate, CascadingDropdown, CascadingDropdownChoice, Dictionary, DualListChoice,
-    ListChoice, Optional, TextAreaUnicode,
+from cmk.gui.valuespec import (
+    AbsoluteDate,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Dictionary,
+    DualListChoice,
+    ListChoice,
+    Optional,
+    TextAreaUnicode,
 )
 
 

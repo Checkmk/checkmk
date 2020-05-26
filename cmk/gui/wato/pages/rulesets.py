@@ -57,9 +57,11 @@ from cmk.gui.valuespec import (
     rule_option_elements,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import RuleConditions  # pylint: disable=unused-import
-from cmk.gui.watolib.rulespecs import (  # pylint: disable=unused-import
-    rulespec_group_registry, rulespec_registry, Rulespec,
+from cmk.gui.watolib.rulesets import RuleConditions
+from cmk.gui.watolib.rulespecs import (
+    rulespec_group_registry,
+    rulespec_registry,
+    Rulespec,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (

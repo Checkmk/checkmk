@@ -37,9 +37,16 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.sites import SiteManagementFactory
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 
-from cmk.gui.plugins.wato import (  # pylint: disable=unused-import
-    ACTestCategories, ACTest, ac_test_registry, ACResult, ACResultCRIT, ACResultWARN, ACResultOK,
-    ConfigDomainOMD, SiteBackupJobs,
+from cmk.gui.plugins.wato import (
+    ACTestCategories,
+    ACTest,
+    ac_test_registry,
+    ACResult,
+    ACResultCRIT,
+    ACResultWARN,
+    ACResultOK,
+    ConfigDomainOMD,
+    SiteBackupJobs,
 )
 
 # Disable python warnings in background job output or logs like "Unverified

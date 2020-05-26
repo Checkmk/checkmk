@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation

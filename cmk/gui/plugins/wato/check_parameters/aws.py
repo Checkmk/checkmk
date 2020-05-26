@@ -6,9 +6,22 @@
 
 from typing import Text, Type, Optional, List
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    ValueSpec, DictionaryEntry, Alternative, Dictionary, Integer, Tuple, Float, Percentage, Age,
-    FixedValue, TextAscii, Filesize, ListOf, CascadingDropdown, Transform,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    DictionaryEntry,
+    Alternative,
+    Dictionary,
+    Integer,
+    Tuple,
+    Float,
+    Percentage,
+    Age,
+    FixedValue,
+    TextAscii,
+    Filesize,
+    ListOf,
+    CascadingDropdown,
+    Transform,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,

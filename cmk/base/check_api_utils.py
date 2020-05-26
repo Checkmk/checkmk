@@ -11,8 +11,8 @@
 
 from typing import Optional
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels  # pylint: disable=unused-import
-from cmk.base.check_utils import CheckParameters, CheckPluginName, Item  # pylint: disable=unused-import
+from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
+from cmk.base.check_utils import CheckParameters, CheckPluginName, Item
 from cmk.utils.type_defs import HostName, ServiceName
 
 # Symbolic representations of states in plugin output

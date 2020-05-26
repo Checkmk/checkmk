@@ -31,7 +31,7 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (

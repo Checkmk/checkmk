@@ -26,7 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers  # pylint: disable=unused-import
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 
 
 @snapin_registry.register

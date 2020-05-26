@@ -44,7 +44,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
 
 if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext  # pylint: disable=unused-import
+    from omdlib.contexts import SiteContext
 
 logger = logging.getLogger("cmk.omd")
 

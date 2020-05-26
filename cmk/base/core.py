@@ -25,7 +25,7 @@ import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.cleanup
-from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
+from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
 import livestatus

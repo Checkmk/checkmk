@@ -20,7 +20,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.mkeventd
 import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
@@ -28,7 +28,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
-from cmk.gui.htmllib import Choices, HTML  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices, HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,

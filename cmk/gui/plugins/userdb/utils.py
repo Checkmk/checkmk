@@ -15,7 +15,7 @@ from typing import (
 )
 import six
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.utils.store as store
 import cmk.utils.plugin_registry

@@ -19,7 +19,7 @@ import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 # Loads all GUI modules
-import cmk.gui.modules  # pylint: disable=unused-import
+import cmk.gui.modules
 
 import cmk.gui.log
 

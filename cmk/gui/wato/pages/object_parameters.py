@@ -18,8 +18,8 @@ import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.rulesets import (Ruleset, Rule)  # pylint: disable=unused-import
-from cmk.gui.watolib.hosts_and_folders import CREFolder  # pylint: disable=unused-import
+from cmk.gui.watolib.rulesets import (Ruleset, Rule)
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,

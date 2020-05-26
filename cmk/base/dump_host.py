@@ -20,7 +20,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 import cmk.base.checking as checking
 from cmk.utils.type_defs import HostName
-from cmk.base.check_utils import CheckParameters  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckParameters
 
 
 def dump_host(hostname):

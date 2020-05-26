@@ -16,7 +16,7 @@ from typing import Any, Dict, Tuple
 
 import six
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store

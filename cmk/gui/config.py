@@ -9,7 +9,7 @@ import errno
 import os
 import copy
 import json
-from types import ModuleType  # pylint: disable=unused-import
+from types import ModuleType
 from typing import (
     Set,
     Any,

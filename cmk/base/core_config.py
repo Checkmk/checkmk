@@ -31,10 +31,14 @@ from cmk.utils.type_defs import (
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.config import (  # pylint: disable=unused-import
-    HostConfig, ConfigCache, HostCheckCommand, Tags, ObjectAttributes,
+from cmk.base.config import (
+    HostConfig,
+    ConfigCache,
+    HostCheckCommand,
+    Tags,
+    ObjectAttributes,
 )
-from cmk.base.check_utils import Service, CheckParameters  # pylint: disable=unused-import
+from cmk.base.check_utils import Service, CheckParameters
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]

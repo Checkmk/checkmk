@@ -140,7 +140,6 @@ include \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/Python/Python.make \
     packages/Python3/Python3.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \

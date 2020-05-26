@@ -42,7 +42,11 @@ $(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-di
 $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
-	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    if [ "$$PACKAGE_NAME" = "Python" ]; then \
+		PACKAGE_NAME="Python3" ; \
+	    fi ; \
+	    PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME"; \
 	    if [ ! -d "$$PACKAGE_PATH" ]; then \
 		echo "ERROR: Package directory does not exist" ; \
 		exit 1; \
@@ -57,6 +61,9 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
+	if [ "$$DIR" = "Python" ]; then \
+	    DIR="Python3" ; \
+	fi ; \
 	if [ ! -d "$(PACKAGE_DIR)/$$DIR" ]; then \
 	    echo "ERROR: Package directory does not exist" ; \
 	    exit 1; \

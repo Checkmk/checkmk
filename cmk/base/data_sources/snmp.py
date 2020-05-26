@@ -142,7 +142,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_raw_section_names = set()  # type: Set[CheckPluginName]
+        self._fetched_raw_section_names = set()  # type: Set[PluginName]
 
     def id(self):
         # type: () -> str
@@ -233,8 +233,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         # type: (PluginNameFilterFunction) -> None
         self._detector.set_filter_function(filter_func)
 
-    def set_fetched_raw_section_names(self, check_plugin_names):
-        # type: (Set[CheckPluginName]) -> None
+    def set_fetched_raw_section_names(self, raw_section_names):
+        # type: (Set[PluginName]) -> None
         """Sets a list of already fetched host sections/check plugin names.
 
         Especially for SNMP data sources there are already fetched
@@ -242,7 +242,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         which have no related check plugin the host must be contacted again
         in order to create the full tree.
         """
-        self._fetched_raw_section_names = check_plugin_names
+        self._fetched_raw_section_names = raw_section_names
 
     def _gather_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
@@ -279,7 +279,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             section_name = section_name_of(check_plugin_name)
             oid_info, has_snmp_info = self._oid_info_from_section_name(section_name)
 
-            if not has_snmp_info and check_plugin_name in self._fetched_raw_section_names:
+            if not has_snmp_info and PluginName(section_name) in self._fetched_raw_section_names:
                 continue
 
             if oid_info is None:

@@ -21,6 +21,7 @@ from cmk.utils.type_defs import (
     OID_END_BIN,
     OID_END_OCTET_STRING,
     OID_STRING,
+    ABCSNMPBackend,
     ABCSNMPTree,
     CheckPluginName,
     Column,
@@ -41,21 +42,19 @@ from cmk.utils.type_defs import (
     SNMPValueEncoding,
 )
 
-from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
-
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[DecodedValues]]
 
 
-def get_snmp_table(snmp_config, check_plugin_name, oid_info):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree]) -> SNMPTable
-    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False)
+def get_snmp_table(snmp_config, check_plugin_name, oid_info, *, backend):
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, False, backend=backend)
 
 
-def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree]) -> SNMPTable
-    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True)
+def get_snmp_table_cached(snmp_config, check_plugin_name, oid_info, *, backend):
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], ABCSNMPBackend) -> SNMPTable
+    return _get_snmp_table(snmp_config, check_plugin_name, oid_info, True, backend=backend)
 
 
 SPECIAL_COLUMNS = [
@@ -68,8 +67,8 @@ SPECIAL_COLUMNS = [
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
-    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool) -> SNMPTable
+def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache, *, backend):
+    # type: (SNMPHostConfig, CheckPluginName, Union[OIDInfo, ABCSNMPTree], bool, ABCSNMPBackend) -> SNMPTable
     oid, suboids, targetcolumns = _make_target_columns(oid_info)
 
     index_column = -1
@@ -97,8 +96,13 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING."
                 )
 
-            rowinfo = _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column,
-                                    use_snmpwalk_cache)
+            rowinfo = _get_snmpwalk(snmp_config,
+                                    check_plugin_name,
+                                    oid,
+                                    fetchoid,
+                                    column,
+                                    use_snmpwalk_cache,
+                                    backend=backend)
 
             if column in SPECIAL_COLUMNS:
                 index_column = len(columns)
@@ -241,8 +245,9 @@ def _key_oid_pairs(pair1):
     return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
-def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
-    # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool) -> SNMPRowInfo
+def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache, *,
+                  backend):
+    # type: (SNMPHostConfig, CheckPluginName, OID, OID, Column, bool, ABCSNMPBackend) -> SNMPRowInfo
     if column in SPECIAL_COLUMNS:
         return []
 
@@ -251,23 +256,23 @@ def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snm
     cached = _get_cached_snmpwalk(snmp_config.hostname, fetchoid) if get_from_cache else None
     if cached is not None:
         return cached
-    rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid)
+    rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, backend=backend)
     if save_to_cache:
         _save_snmpwalk_cache(snmp_config.hostname, fetchoid, rowinfo)
     return rowinfo
 
 
-def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
-    # type: (SNMPHostConfig, CheckPluginName, OID, OID) -> SNMPRowInfo
+def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid, *, backend):
+    # type: (SNMPHostConfig, CheckPluginName, OID, OID, ABCSNMPBackend) -> SNMPRowInfo
     added_oids = set([])  # type: Set[OID]
     rowinfo = []  # type: SNMPRowInfo
 
     for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
-        rows = SNMPBackendFactory.walk(snmp_config,
-                                       oid=fetchoid,
-                                       check_plugin_name=check_plugin_name,
-                                       table_base_oid=base_oid,
-                                       context_name=context_name)
+        rows = backend.walk(snmp_config,
+                            oid=fetchoid,
+                            check_plugin_name=check_plugin_name,
+                            table_base_oid=base_oid,
+                            context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when

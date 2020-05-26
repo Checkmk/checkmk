@@ -20,10 +20,11 @@ from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    OID,
-    HostName,
-    RawValue,
+    ABCSNMPBackend,
     DecodedString,
+    HostName,
+    OID,
+    RawValue,
     SNMPHostConfig,
     SNMPRowInfo,
 )
@@ -31,7 +32,9 @@ from cmk.utils.type_defs import (
 import cmk.base.cleanup
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.fetchers.factory import SNMPBackendFactory  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers import factory  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.snmp_backend import (StoredWalkSNMPBackend  # pylint: disable=cmk-module-layer-violation,
+                                      )
 
 try:
     from cmk.fetchers.cee.snmp_backend import inline  # pylint: disable=cmk-module-layer-violation, ungrouped-imports
@@ -68,8 +71,8 @@ def create_snmp_host_config(hostname):
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
-    # type: (SNMPHostConfig, str, Optional[str], bool) -> Optional[DecodedString]
+def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True, *, backend):
+    # type: (SNMPHostConfig, str, Optional[str], bool, ABCSNMPBackend) -> Optional[DecodedString]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -90,7 +93,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_config.snmpv3_contexts_of(check_plugin_name):
         try:
-            value = SNMPBackendFactory.get(
+            value = backend.get(
                 snmp_config,
                 oid=oid,
                 context_name=context_name,
@@ -120,7 +123,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
 def walk_for_export(snmp_config, oid):
     # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
-    rows = SNMPBackendFactory.walk(snmp_config, use_cache=False, oid=oid)
+    rows = StoredWalkSNMPBackend().walk(snmp_config, oid=oid)
     return _convert_rows_for_stored_walk(rows)
 
 
@@ -320,9 +323,10 @@ def do_snmpget(oid, hostnames):
     for hostname in hostnames:
         #TODO what about SNMP management boards?
         snmp_config = create_snmp_host_config(hostname)
+        backend = factory.backend(snmp_config)
         snmp_cache.initialize_single_oid_cache(snmp_config)
 
-        value = get_single_oid(snmp_config, oid)
+        value = get_single_oid(snmp_config, oid, backend=backend)
         sys.stdout.write("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
         cmk.base.cleanup.cleanup_globals()
 

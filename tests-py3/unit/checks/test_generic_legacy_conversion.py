@@ -72,6 +72,38 @@ def _get_migrated_checks(_load_all_checks):
     return config.registered_check_plugins.copy()
 
 
+def test_management_board_interface_prefix(check_info):
+    mgmt_criteria = (
+        ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
+        ("Description must start with 'Management Interface: '",
+         lambda k, c: c["service_description"].startswith("Management Interface: ")),
+        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == check_api.MGMT_ONLY),
+    )
+
+    managemtent_checks = [(key, check)
+                          for key, check in check_info.items()
+                          if (check["service_description"] is not None and any(
+                              test(key, check) for _, test in mgmt_criteria))]
+
+    for key, check in managemtent_checks:
+
+        for requirement, test in mgmt_criteria:
+            assert test(key,
+                        check), ("%s: Inconsistent management propertiers: %s" % (key, requirement))
+
+        host_check = check_info.get(key[5:])
+        if host_check is None:
+            continue
+
+        requirement = "The corresponding non-mgmt check must have the matching description"
+        assert host_check["service_description"] == check["service_description"][22:], (
+            "%s: Inconsistent management propertiers: %s" % (key, requirement))
+
+        requirement = "The corresponding non-mgmt check must have HOST_ONLY set"
+        assert host_check["management_board"] == check_api.HOST_ONLY, (
+            "%s: Inconsistent management propertiers: %s" % (key, requirement))
+
+
 def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent_sections,
                                            migrated_snmp_sections):
     for name, check_info_dict in check_info.items():

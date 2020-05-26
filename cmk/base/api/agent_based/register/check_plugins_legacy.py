@@ -158,7 +158,11 @@ def _create_new_result(
         else:
             is_details = "\n" in legacy_text
             summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
-        yield Result(state=result_state, summary=summary, details=details)
+        yield Result(
+            state=result_state,
+            summary=summary or None,
+            details=details or None,
+        )
 
     for metric in legacy_metrics:
         # fill up with None:

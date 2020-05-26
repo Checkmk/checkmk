@@ -11,8 +11,8 @@ from typing import Optional, Text, List, Tuple
 from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
-from cmk.gui.htmllib import HTMLContent  # pylint: disable=unused-import
-from cmk.gui.sites import SiteId  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTMLContent
+from cmk.gui.sites import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 

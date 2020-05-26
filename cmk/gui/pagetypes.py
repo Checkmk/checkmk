@@ -49,7 +49,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     Optional,
 )
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.type_defs import HTTPVariables

@@ -11,7 +11,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec, DictionaryEntry
 from cmk.gui.valuespec import (
     FixedValue,
     PasswordSpec,

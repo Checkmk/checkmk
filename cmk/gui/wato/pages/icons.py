@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
     Dictionary,
 )
 
-from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,

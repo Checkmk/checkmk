@@ -7,7 +7,7 @@
 import abc
 import signal
 import sys
-from types import FrameType  # pylint: disable=unused-import
+from types import FrameType
 from typing import NoReturn, Dict, Any, List, Optional
 
 import six

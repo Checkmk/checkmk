@@ -25,7 +25,7 @@ from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
-from cmk.gui.config import SiteId, SiteConfiguration  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException

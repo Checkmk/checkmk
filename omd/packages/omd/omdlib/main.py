@@ -73,18 +73,25 @@ import omdlib.certs
 import omdlib.backup
 from omdlib.utils import chdir, is_dockerized
 from omdlib.version_info import VersionInfo
-from omdlib.dialog import (  # pylint: disable=unused-import
-    dialog_menu, dialog_regex, dialog_yesno, dialog_message, user_confirms, ask_user_choices,
+from omdlib.dialog import (
+    dialog_menu,
+    dialog_regex,
+    dialog_yesno,
+    dialog_message,
+    user_confirms,
+    ask_user_choices,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext  # pylint: disable=unused-import
+from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext
 from omdlib.type_defs import Config, CommandOptions, Replacements
-from omdlib.skel_permissions import (  # pylint: disable=unused-import
-    Permissions, read_skel_permissions, skel_permissions_file_path,
+from omdlib.skel_permissions import (
+    Permissions,
+    read_skel_permissions,
+    skel_permissions_file_path,
 )
-from omdlib.config_hooks import (  # pylint: disable=unused-import
-    create_config_environment, save_site_conf, load_config_hooks, load_hook_dependencies,
-    sort_hooks, hook_exists, call_hook, ConfigHook, ConfigHooks)
+from omdlib.config_hooks import (create_config_environment, save_site_conf, load_config_hooks,
+                                 load_hook_dependencies, sort_hooks, hook_exists, call_hook,
+                                 ConfigHook, ConfigHooks)
 from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, userdel, user_id,
                                      user_exists, group_exists, group_id, user_logged_in,
                                      switch_to_site_user, user_verify)

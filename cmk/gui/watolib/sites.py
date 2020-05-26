@@ -23,7 +23,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
-from cmk.gui.sites import SiteConfigurations  # pylint: disable=unused-import
+from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks

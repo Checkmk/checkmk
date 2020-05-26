@@ -45,8 +45,10 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    TextUnicode, TextAscii, ValueSpec,
+from cmk.gui.valuespec import (
+    TextUnicode,
+    TextAscii,
+    ValueSpec,
 )
 
 

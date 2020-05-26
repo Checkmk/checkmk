@@ -14,7 +14,7 @@ import tarfile
 import fnmatch
 import pytest  # type: ignore[import]
 
-from testlib import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # pylint: disable=unused-import
 
 from cmk.utils.python_printer import pformat
 

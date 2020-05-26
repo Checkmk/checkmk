@@ -23,9 +23,20 @@ from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    ValueSpec, FixedValue, Dictionary, Optional, Integer, FileUpload, TextAscii, TextUnicode,
-    ListOf, Tuple, ListChoice, CascadingDropdown, ListOfTimeRanges,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    FixedValue,
+    Dictionary,
+    Optional,
+    Integer,
+    FileUpload,
+    TextAscii,
+    TextUnicode,
+    ListOf,
+    Tuple,
+    ListChoice,
+    CascadingDropdown,
+    ListOfTimeRanges,
 )
 
 from cmk.gui.plugins.wato import (

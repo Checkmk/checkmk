@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Text, Tuple, Union
 import six
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 import cmk.utils.plugin_registry
 
@@ -23,7 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import ColumnName, HTTPVariables
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):

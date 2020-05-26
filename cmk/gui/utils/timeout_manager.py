@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import signal
-from types import FrameType  # pylint: disable=unused-import
+from types import FrameType
 from typing import Optional
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _

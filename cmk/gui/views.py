@@ -28,7 +28,7 @@ from typing import (
 import six
 
 import livestatus
-from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
+from livestatus import SiteId, LivestatusRow
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -45,10 +45,23 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Alternative, CascadingDropdown, CascadingDropdownChoice, Dictionary, DropdownChoice,
-    DropdownChoiceEntry, FixedValue, Hostname, IconSelector, Integer, ListChoice, ListOf,
-    TextUnicode, Transform, Tuple, ValueSpec,
+from cmk.gui.valuespec import (
+    Alternative,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Dictionary,
+    DropdownChoice,
+    DropdownChoiceEntry,
+    FixedValue,
+    Hostname,
+    IconSelector,
+    Integer,
+    ListChoice,
+    ListOf,
+    TextUnicode,
+    Transform,
+    Tuple,
+    ValueSpec,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
@@ -118,8 +131,8 @@ if cmk_version.is_managed_edition():
 
 from cmk.gui.type_defs import PainterSpec
 if TYPE_CHECKING:
-    from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
-    from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
+    from cmk.gui.plugins.views.utils import Sorter, SorterSpec
+    from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.type_defs import FilterHeaders, Row, Rows, ColumnName
 
 # Datastructures and functions needed before plugins can be loaded

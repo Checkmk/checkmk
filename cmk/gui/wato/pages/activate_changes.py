@@ -31,7 +31,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
-from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import DictionaryEntry
 
 
 @mode_registry.register

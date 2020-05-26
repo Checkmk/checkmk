@@ -9,8 +9,8 @@ import struct
 import subprocess
 import threading
 import time
-from logging import Logger  # pylint: disable=unused-import
-from pathlib import Path  # pylint: disable=unused-import
+from logging import Logger
+from pathlib import Path
 from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union
 
 from cmk.utils.log import VERBOSE
@@ -18,7 +18,7 @@ from cmk.utils.render import date_and_time
 
 from .actions import quote_shell_string
 from .query import QueryGET
-from .settings import Settings  # pylint: disable=unused-import
+from .settings import Settings
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 

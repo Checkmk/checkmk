@@ -41,7 +41,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     FixedValue,
 )
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger

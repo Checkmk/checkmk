@@ -19,7 +19,7 @@ import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -33,7 +33,7 @@ import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
-from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -50,7 +50,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     end_footnote_links, write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint: disable=unused-import
+from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin
 
 quicksearch_match_plugins = []  # type: List[Type[QuicksearchMatchPlugin]]
 

@@ -9,7 +9,7 @@ import random
 from typing import List, Optional
 
 import cmk.gui.config as config
-from cmk.gui.http import Request  # pylint: disable=unused-import
+from cmk.gui.http import Request
 
 
 class TransactionManager(object):

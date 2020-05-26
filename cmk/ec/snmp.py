@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from logging import Logger  # pylint: disable=unused-import
-from pathlib import Path  # pylint: disable=unused-import
+from logging import Logger
+from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
 # Needed for receiving traps
@@ -27,7 +27,7 @@ import pyasn1.error  # type: ignore[import]
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
-from .settings import Settings  # pylint: disable=unused-import
+from .settings import Settings
 
 
 class SNMPTrapEngine:

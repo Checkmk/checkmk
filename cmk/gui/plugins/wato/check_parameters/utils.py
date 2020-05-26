@@ -8,9 +8,22 @@
 from typing import List, Tuple as _Tuple
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Alternative, CascadingDropdown, Checkbox, Dictionary, DropdownChoice, Filesize, FixedValue,
-    Float, Integer, ListOf, Optional, Percentage, Transform, Tuple, ValueSpec,
+from cmk.gui.valuespec import (
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Filesize,
+    FixedValue,
+    Float,
+    Integer,
+    ListOf,
+    Optional,
+    Percentage,
+    Transform,
+    Tuple,
+    ValueSpec,
 )
 from cmk.gui.plugins.wato import PredictiveLevels
 

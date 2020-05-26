@@ -34,7 +34,7 @@ from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML, Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML, Choices
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,

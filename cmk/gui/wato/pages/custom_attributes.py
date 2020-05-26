@@ -16,7 +16,7 @@ from typing import (
 )
 import six
 
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element

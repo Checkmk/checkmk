@@ -22,13 +22,13 @@ from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
     transform_painter_spec,
 )
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]

@@ -41,10 +41,28 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Text, ValueSpec, Tuple, Transform, Percentage, Integer, Alternative, FixedValue, TextAscii,
-    Dictionary, MonitoringState, IconSelector, ListOf, CascadingDropdown, ListOfStrings, Checkbox,
-    TextUnicode, TextAreaUnicode, Optional, ID, DropdownChoice,
+from cmk.gui.valuespec import (
+    Text,
+    ValueSpec,
+    Tuple,
+    Transform,
+    Percentage,
+    Integer,
+    Alternative,
+    FixedValue,
+    TextAscii,
+    Dictionary,
+    MonitoringState,
+    IconSelector,
+    ListOf,
+    CascadingDropdown,
+    ListOfStrings,
+    Checkbox,
+    TextUnicode,
+    TextAreaUnicode,
+    Optional,
+    ID,
+    DropdownChoice,
 )
 
 from cmk.gui.i18n import _

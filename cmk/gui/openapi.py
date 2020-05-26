@@ -14,7 +14,7 @@ from openapi_spec_validator import validate_spec  # type: ignore
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.utils import version
 
-# noinspection PyUnresolvedReferences
+# TODO: Magic import?
 import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 
 if not version.is_raw_edition():

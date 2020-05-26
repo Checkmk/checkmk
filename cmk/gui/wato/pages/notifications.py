@@ -23,10 +23,28 @@ import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Age, Alternative, CascadingDropdown, Checkbox, Dictionary, DictionaryEntry, DropdownChoice,
-    EmailAddress, FixedValue, ID, Integer, ListChoice, ListOf, ListOfStrings, RegExp, RegExpUnicode,
-    TextAscii, TextUnicode, Transform, Tuple, rule_option_elements,
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    EmailAddress,
+    FixedValue,
+    ID,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    RegExpUnicode,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    Tuple,
+    rule_option_elements,
 )
 
 from cmk.gui.plugins.wato import (

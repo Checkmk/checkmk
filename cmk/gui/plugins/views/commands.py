@@ -16,9 +16,9 @@ import cmk.gui.sites as sites
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
+from cmk.gui.htmllib import Choices
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age, AbsoluteDate, Seconds  # pylint: disable=unused-import
+from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
 
 from cmk.gui.permissions import (
     permission_section_registry,

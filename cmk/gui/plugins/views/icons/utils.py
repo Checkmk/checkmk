@@ -18,7 +18,7 @@ from cmk.gui.permissions import (
 )
 
 if TYPE_CHECKING:
-    from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
+    from cmk.gui.htmllib import HTML
 
 
 @permission_section_registry.register

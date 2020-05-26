@@ -11,8 +11,8 @@ import shutil
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
-import cmk.gui.config as config  # pylint: disable=unused-import
-import cmk.gui.watolib as watolib  # pylint: disable=unused-import
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.htmllib as htmllib
 

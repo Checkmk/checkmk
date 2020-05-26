@@ -37,12 +37,14 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
 import cmk.base.check_api_utils as check_api_utils
-from cmk.base.check_utils import (  # pylint: disable=unused-import
+from cmk.base.check_utils import (
     CheckPluginName,)
-from cmk.base.config import (  # pylint: disable=unused-import
-    ConfigCache, HostConfig, ObjectAttributes,
+from cmk.base.config import (
+    ConfigCache,
+    HostConfig,
+    ObjectAttributes,
 )
-from cmk.base.core_config import CoreCommand, CoreCommandName  # pylint: disable=unused-import
+from cmk.base.core_config import CoreCommand, CoreCommandName
 
 ObjectSpec = Dict[str, Any]
 

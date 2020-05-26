@@ -49,8 +49,10 @@ from cmk.gui.valuespec import (
     UploadOrPasteTextFile,
 )
 
-from cmk.gui.plugins.wato import (  # pylint: disable=unused-import
-    WatoMode, ActionResult, mode_registry,
+from cmk.gui.plugins.wato import (
+    WatoMode,
+    ActionResult,
+    mode_registry,
 )
 
 # Was not able to get determine the type of csv._reader / _csv.reader

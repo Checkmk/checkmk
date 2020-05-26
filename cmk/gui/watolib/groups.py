@@ -24,7 +24,7 @@ import cmk.gui.hooks as hooks
 from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
+from cmk.gui.utils.html import HTML
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change

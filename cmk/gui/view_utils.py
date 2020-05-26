@@ -18,7 +18,7 @@ from typing import (
 )
 import six
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue
 from cmk.utils.encoding import ensure_unicode
@@ -27,7 +27,7 @@ import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 
 CSSClass = str
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
@@ -38,7 +38,7 @@ CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
-    from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
+    from cmk.gui.config import LoggedInUser
 
 
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check

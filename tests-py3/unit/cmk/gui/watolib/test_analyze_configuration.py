@@ -6,7 +6,7 @@
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.utils.version as cmk_version
-import cmk.gui.wato  # pylint: disable=unused-import
+import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 
 

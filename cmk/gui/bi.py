@@ -19,13 +19,13 @@ import traceback
 from typing import Text, Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import six
-from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
+from livestatus import SiteId, LivestatusRow
 
 from cmk.utils.defines import host_state_name
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.gui.valuespec import DropdownChoiceEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import DropdownChoiceEntry
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.pages
@@ -35,7 +35,7 @@ import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.htmllib import HTML, HTMLContent  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
 from cmk.gui.permissions import (

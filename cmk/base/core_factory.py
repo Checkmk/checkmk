@@ -7,11 +7,11 @@
 from typing import Optional, Dict
 
 import cmk.base.config
-import cmk.base.core_config as core_config  # pylint: disable=unused-import
+from cmk.base.core_config import MonitoringCore
 
 
 def create_core(options=None):
-    # type: (Optional[Dict]) -> core_config.MonitoringCore
+    # type: (Optional[Dict]) -> MonitoringCore
     if cmk.base.config.monitoring_core == "cmc":
         from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module,import-outside-toplevel
         return CMC(options)

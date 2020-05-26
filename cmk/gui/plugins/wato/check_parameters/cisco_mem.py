@@ -7,8 +7,15 @@
 from typing import List
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Alternative, Dictionary, DictionaryEntry, Integer, Percentage, TextAscii, Transform, Tuple,
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    DictionaryEntry,
+    Integer,
+    Percentage,
+    TextAscii,
+    Transform,
+    Tuple,
 )
 
 from cmk.gui.plugins.wato import (

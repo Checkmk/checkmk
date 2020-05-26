@@ -9,10 +9,27 @@ from typing import Any, Dict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Age, Alternative, CascadingDropdown, Checkbox, Dictionary, DropdownChoice, DropdownChoices,
-    Filesize, FixedValue, Integer, Labels, ListChoice, ListOf, MonitoringState, Percentage, RegExp,
-    TextAscii, TextUnicode, Transform, Tuple,
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    DropdownChoices,
+    Filesize,
+    FixedValue,
+    Integer,
+    Labels,
+    ListChoice,
+    ListOf,
+    MonitoringState,
+    Percentage,
+    RegExp,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    Tuple,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,

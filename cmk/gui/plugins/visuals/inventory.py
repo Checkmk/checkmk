@@ -19,8 +19,10 @@ import six
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 import cmk.utils.defines as defines
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Age, DualListChoice, ValueSpec,
+from cmk.gui.valuespec import (
+    Age,
+    DualListChoice,
+    ValueSpec,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

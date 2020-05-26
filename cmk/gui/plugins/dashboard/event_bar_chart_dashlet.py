@@ -16,7 +16,7 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
 from cmk.gui.figures import ABCFigureDashlet
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 

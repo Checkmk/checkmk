@@ -81,7 +81,7 @@ import math  # noqa: F401 # pylint: disable=unused-import
 import os
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
-import sys  # pylint: disable=unused-import
+import sys
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
@@ -196,7 +196,7 @@ network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
 # The class 'as_float' has been moved to the cmk.base.api domain.
 # import it here under the old name
-from cmk.base.api.agent_based.checking_types import MetricFloat as as_float  # pylint: disable=unused-import
+from cmk.base.api.agent_based.checking_types import MetricFloat as as_float
 
 
 def saveint(i):

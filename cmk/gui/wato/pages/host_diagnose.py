@@ -22,7 +22,7 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 from cmk.gui.pages import page_registry, AjaxPage
 
-from cmk.gui.valuespec import DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
@@ -34,7 +34,7 @@ from cmk.gui.valuespec import (
     FixedValue,
 )
 
-from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,

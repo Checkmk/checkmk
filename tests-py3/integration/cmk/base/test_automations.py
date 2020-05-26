@@ -14,7 +14,7 @@ import subprocess
 import pytest  # type: ignore[import]
 import six
 
-from testlib import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths

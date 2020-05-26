@@ -37,7 +37,7 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
-from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites  # pylint: disable=unused-import
+from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
@@ -60,8 +60,8 @@ import cmk.gui.forms as forms
 import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.valuespec as valuespec
-from cmk.gui.permissions import Permission  # pylint: disable=unused-import
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.permissions import Permission
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -92,8 +92,8 @@ from cmk.gui.type_defs import (
 )
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View  # pylint: disable=unused-import
-    from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
+    from cmk.gui.views import View
+    from cmk.gui.plugins.visuals.utils import Filter
 
 PDFCellContent = Union[Text, str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]

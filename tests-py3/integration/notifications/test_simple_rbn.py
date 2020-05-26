@@ -11,7 +11,8 @@ import time
 import os
 import pytest  # type: ignore[import]
 
-from testlib import web, WatchLog  # pylint: disable=unused-import
+from testlib import WatchLog
+from testlib.fixtures import web  # pylint: disable=unused-import
 
 
 @pytest.fixture()

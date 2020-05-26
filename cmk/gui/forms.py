@@ -15,7 +15,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 if TYPE_CHECKING:
-    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform  # pylint: disable=unused-import
+    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform
 
 g_header_open = False
 g_section_open = False

@@ -28,8 +28,8 @@ from cmk.utils.type_defs import (
 
 import cmk.base.check_utils
 import cmk.base.config as config
-from cmk.base.data_sources.host_sections import FinalSectionContent  # pylint: disable=unused-import
-from cmk.base.check_utils import CheckParameters, RawAgentData  # pylint: disable=unused-import
+from cmk.base.data_sources.host_sections import FinalSectionContent
+from cmk.base.check_utils import CheckParameters, RawAgentData
 
 CrashReportStore = crash_reporting.CrashReportStore
 

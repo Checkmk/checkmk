@@ -40,7 +40,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MenuItem,
 )
 
-from cmk.gui.plugins.wato import ActionResult  # pylint: disable=unused-import
+from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,

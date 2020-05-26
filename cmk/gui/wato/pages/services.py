@@ -23,12 +23,12 @@ import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
-from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
-from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.gui_background_job import job_registry
 from cmk.gui.view_utils import render_labels, format_plugin_output
 

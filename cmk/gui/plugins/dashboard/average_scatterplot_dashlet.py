@@ -26,7 +26,7 @@ from cmk.gui.plugins.metrics.stats import percentile
 from cmk.utils.render import date_and_time
 from cmk.gui.visuals import get_filter_headers
 
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
 

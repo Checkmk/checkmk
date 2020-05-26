@@ -20,7 +20,7 @@ else:
 import six
 
 import livestatus
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -36,7 +36,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.valuespec import DropdownChoices  # pylint: disable=unused-import
+from cmk.gui.valuespec import DropdownChoices
 
 
 def _socket_path():

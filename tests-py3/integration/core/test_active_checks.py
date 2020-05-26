@@ -13,7 +13,7 @@ import collections
 import pytest  # type: ignore[import]
 
 from testlib.utils import api_str_type
-from testlib import web  # pylint: disable=unused-import
+from testlib.fixtures import web  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 

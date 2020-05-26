@@ -22,7 +22,7 @@ import cmk.utils.plugin_registry
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 
 def wato_fileheader():

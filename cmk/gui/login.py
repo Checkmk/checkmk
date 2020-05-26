@@ -30,7 +30,7 @@ import cmk.gui.utils as utils
 from cmk.gui.log import logger
 import cmk.gui.i18n
 import cmk.gui.mobile
-from cmk.gui.http import Request  # pylint: disable=unused-import
+from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, local

@@ -10,14 +10,14 @@ import six
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.defines as defines
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError
 from cmk.utils.log import console
 
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
-from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
-from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
+from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
+from cmk.base.check_utils import CheckPluginName
 from cmk.utils.type_defs import HostName, ServiceName
 
 if not cmk_version.is_raw_edition():

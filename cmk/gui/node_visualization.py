@@ -31,8 +31,12 @@ from cmk.gui.i18n import _
 import cmk.gui.watolib as watolib
 import cmk.gui.bi as bi
 import cmk.gui.config as config
-from cmk.gui.pages import (  # pylint: disable=unused-import
-    page_registry, Page, PageResult, AjaxPage, AjaxPageResult,
+from cmk.gui.pages import (
+    page_registry,
+    Page,
+    PageResult,
+    AjaxPage,
+    AjaxPageResult,
 )
 
 from cmk.gui.plugins.views.utils import (
@@ -42,7 +46,7 @@ from cmk.gui.views import View
 import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
+from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
 from cmk.utils.type_defs import HostName
 

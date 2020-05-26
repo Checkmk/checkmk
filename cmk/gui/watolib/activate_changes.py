@@ -27,7 +27,7 @@ import traceback
 import subprocess
 import sys
 import hashlib
-import logging  # pylint: disable=unused-import
+from logging import Logger
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -39,8 +39,9 @@ from typing import (Text, Dict, Set, List, Optional, Tuple, Union, NamedTuple)
 import psutil  # type: ignore[import]
 import six
 
-from livestatus import (  # pylint: disable=unused-import
-    SiteId, SiteConfiguration,
+from livestatus import (
+    SiteId,
+    SiteConfiguration,
 )
 
 import cmk.utils
@@ -55,8 +56,10 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import ConfigDomainName
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
-from cmk.gui.sites import (  # pylint: disable=unused-import
-    SiteStatus, states as sites_states, disconnect as sites_disconnect,
+from cmk.gui.sites import (
+    SiteStatus,
+    states as sites_states,
+    disconnect as sites_disconnect,
 )
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -1942,7 +1945,7 @@ def _add_pre_17_sitespecific_excludes(paths):
 
 
 def _get_file_names_to_sync(site_logger, central_file_infos, remote_file_infos):
-    # type: (logging.Logger, Dict[str, ConfigSyncFileInfo], Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]
+    # type: (Logger, Dict[str, ConfigSyncFileInfo], Dict[str, ConfigSyncFileInfo]) -> Tuple[List[str], List[str], List[str]]
     """Compare the response with the site_config directory of the site
 
     Comparing both file lists and returning all files for synchronization that

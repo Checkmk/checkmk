@@ -13,7 +13,7 @@ from typing import Any, Text, Union
 
 import six
 
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets

@@ -19,7 +19,7 @@ from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 import six
 
 # userdb is needed to make the module register the post-config-load-hooks
-import cmk.gui.userdb  # pylint: disable=unused-import
+import cmk.gui.userdb
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as userdb_utils
 

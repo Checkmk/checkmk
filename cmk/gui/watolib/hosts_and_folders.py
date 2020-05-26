@@ -19,7 +19,7 @@ except ImportError:
 from typing import Any, Dict, List, Optional, Set, Text, Tuple, Type, Union
 
 import six
-from livestatus import SiteId  # pylint: disable=unused-import
+from livestatus import SiteId
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -34,7 +34,7 @@ from cmk.gui.exceptions import (
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.valuespec import Choices  # pylint: disable=unused-import
+from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
     wato_root_dir,
     rename_host_in_list,

@@ -12,7 +12,6 @@ from typing import (
     Dict,
     List,
     Union,
-    AnyStr,
 )
 
 from pathlib import Path

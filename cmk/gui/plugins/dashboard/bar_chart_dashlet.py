@@ -10,7 +10,7 @@ import six
 
 from livestatus import lqencode
 import cmk.gui.sites as sites
-from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import HTTPVariables
 
 from cmk.utils.render import date_and_time
 from cmk.gui.exceptions import MKTimeout, MKGeneralException, MKUserError

@@ -41,6 +41,12 @@ goto exit
 :cached
 powershell Write-Host 'Delivering cached python...' -foreground Cyan
 if not exist "%artefact_dir%" powershell Write-Host 'Creating directory...' -foreground Cyan && mkdir "%artefact_dir%"
+@if "%2"=="" ( 
+  powershell Write-Host 'Falling back to delivering cached python...' -foreground yellow
+  copy backup\python-3.8.zip "%artefact_dir%"
+  goto exit
+)
+
 @if NOT "%3"=="" ( 
   call build_the_cached.cmd "%artefact_dir%" %2 %3 
   goto exit

@@ -332,6 +332,9 @@ def parse_check_mk_version(v):
     major, minor, rest = parts
     _, sub, rest = _extract_rest(rest)
 
+    if rest.startswith("-sandbox"):
+        return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, 0))
+
     # Only add the base once, else we could do it in the loop.
     var_type, num, rest = _extract_rest(rest)
     base, multiply = var_map[var_type]

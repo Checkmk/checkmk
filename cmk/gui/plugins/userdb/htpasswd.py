@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
-import six
+from six import ensure_str, ensure_text
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
@@ -61,7 +61,7 @@ class Htpasswd(object):
     def save(self, entries):
         # type: (Dict[str, str]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = u"\n".join(u"%s:%s" % (six.ensure_text(e[0]), six.ensure_text(e[1]))
+        output = u"\n".join(u"%s:%s" % (ensure_text(e[0]), ensure_text(e[1]))
                             for e in sorted(entries.items())) + u"\n"
         store.save_text_to_file("%s" % self._path, output)
 
@@ -122,7 +122,7 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function

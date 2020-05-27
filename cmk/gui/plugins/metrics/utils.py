@@ -24,7 +24,7 @@ from typing import (
     Union,
 )
 
-import six
+from six import ensure_binary, ensure_str, ensure_text
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
@@ -266,10 +266,10 @@ def _float_or_int(val):
 def _split_perf_data(perf_data_string):
     # type: (AnyStr) -> List[AnyStr]
     "Split the perf data string into parts. Preserve quoted strings!"
-    parts = shlex.split(six.ensure_str(perf_data_string))
+    parts = shlex.split(ensure_str(perf_data_string))
     if isinstance(perf_data_string, bytes):
-        return [six.ensure_binary(s) for s in parts]
-    return [six.ensure_text(s) for s in parts]
+        return [ensure_binary(s) for s in parts]
+    return [ensure_text(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):

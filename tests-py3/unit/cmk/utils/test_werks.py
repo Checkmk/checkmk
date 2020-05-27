@@ -30,7 +30,7 @@ import cmk.utils.memoize
     ("2.0.0i1", 2000010100),
     ("1.6.0-2020.05.26", 1060090000),
     ("2020.05.26", 2020052650000),
-    ("2020.05.26-sandbox-lm-1.7-drop-py2", "2020052600000"),
+    ("2020.05.26-sandbox-lm-1.7-drop-py2", 2020052600000),
 ])
 def test_parse_check_mk_version(version_str, expected):
     assert cmk.utils.werks.parse_check_mk_version(version_str) == expected

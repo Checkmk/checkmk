@@ -120,6 +120,7 @@ marshmallow = "==2.20.5"
 marshmallow-oneofschema = "==1.0.6"
 apispec = "==2.0.2"
 apispec-oneofschema = "==2.1.1"
+snmpsim = "==0.4.7"  # needed by SNMP integration tests
 
 [requires]
 python_version = "3.7"

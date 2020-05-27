@@ -13,11 +13,11 @@ import re
 import subprocess
 import time
 import uuid
-from typing import Tuple, Dict, Any, Optional, NamedTuple, Union, Sequence
+from typing import Tuple, Dict, Any, Optional, NamedTuple, Sequence
 
 import urllib3  # type: ignore[import]
 import requests
-import six
+from six import ensure_str
 
 from livestatus import SiteId, SiteConfiguration
 
@@ -81,7 +81,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     # type: (str, Optional[Sequence[str]], Any, Optional[str], Optional[int]) -> Any
     if args is None:
         args = []
-    new_args = [six.ensure_str(a) for a in args]
+    new_args = [ensure_str(a) for a in args]
 
     if stdin_data is None:
         stdin_data = repr(indata)
@@ -93,7 +93,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 
-    cmd = [six.ensure_str(a) for a in cmd]
+    cmd = [ensure_str(a) for a in cmd]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output

@@ -25,7 +25,8 @@ from typing import (
     Tuple as _Tuple,
     Union,
 )
-import six
+
+from six import ensure_str
 
 import livestatus
 from livestatus import SiteId, LivestatusRow
@@ -1153,7 +1154,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         value = ast.literal_eval(request["encoded_value"])
 
         with html.plugged():
-            vs.show_sub_valuespec(six.ensure_str(request["varprefix"]), sub_vs, value)
+            vs.show_sub_valuespec(ensure_str(request["varprefix"]), sub_vs, value)
             return {"html_code": html.drain()}
 
     def _get_sub_vs(self, vs, choice_id):

@@ -5,9 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Union, Any, Iterable
-import six
 
-from six import ensure_text
+from six import ensure_str, ensure_text
 
 HTMLInput = Union["HTML", int, float, None, str]
 
@@ -39,7 +38,7 @@ class HTML(object):
 
     def __html__(self):
         # type: () -> str
-        return six.ensure_text("%s" % self)
+        return ensure_text("%s" % self)
 
     # TODO: This is broken! Cleanup once we are using Python 3.
     # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
@@ -66,7 +65,7 @@ class HTML(object):
     def __repr__(self):
         # type: () -> str
         repr_val = "HTML(\"%s\")" % self.value
-        return six.ensure_str(repr_val)
+        return ensure_str(repr_val)
 
     def to_json(self):
         # type: () -> str

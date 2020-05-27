@@ -2148,7 +2148,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
                     "title": "%s - %s" % (hostname, service)
                 })
 
-    found.sort()
+    found.sort(key=lambda item: item.get("title"))
 
     for entry in found:
         if "service" in entry:

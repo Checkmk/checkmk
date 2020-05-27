@@ -188,12 +188,16 @@ def send_event(event):
 
 def get_local_ec_status():
     response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    if len(response) == 1:
+        return None  # In case the EC is not running, there may be some
     return dict(zip(response[0], response[1]))
 
 
 def replication_mode():
     try:
         status = get_local_ec_status()
+        if not status:
+            return "stopped"
         return status["status_replication_slavemode"]
     except livestatus.MKLivestatusSocketError:
         return "stopped"

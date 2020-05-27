@@ -38,14 +38,13 @@ from cmk.base.api.agent_based.section_types import (
 
 
 def agent_section(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[AgentParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type: Optional[List[str]]
-):
-    # type: (...) -> None
+    *,
+    name: str,
+    parsed_section_name: Optional[str] = None,
+    parse_function: AgentParseFunction,
+    host_label_function: Optional[HostLabelFunction] = None,
+    supersedes: Optional[List[str]] = None,
+) -> None:
     """Register an agent section to checkmk
 
     The section marked by '<<<name>>>' in the raw agent output will be processed
@@ -64,10 +63,6 @@ def agent_section(
         parse function. It is expected to yield objects of type 'HostLabel'.
     :params supersedes: not yet implemented.
     """
-    # TODO (mo): unhack this CMK-3983
-    if name is None or parse_function is None:
-        raise TypeError()
-
     forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
 
     section_plugin = create_agent_section_plugin(
@@ -83,16 +78,15 @@ def agent_section(
 
 
 def snmp_section(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[SNMPParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        detect=None,  # type: Optional[SNMPDetectSpec]
-        trees=None,  # type: Optional[List[ABCSNMPTree]]
-        supersedes=None,  # type: Optional[List[str]]
-):
-    # type: (...) -> None
+    *,
+    name: str,
+    parsed_section_name: Optional[str] = None,
+    parse_function: SNMPParseFunction,
+    host_label_function: Optional[HostLabelFunction] = None,
+    detect: SNMPDetectSpec,
+    trees: List[ABCSNMPTree],
+    supersedes: Optional[List[str]] = None,
+) -> None:
     """Register an snmp section to checkmk
 
     The snmp information will be gathered and parsed according to the functions and
@@ -117,10 +111,6 @@ def snmp_section(
         one SNMP table per specified Tree, where an SNMP tree is a list of lists of strings.
     :params supersedes: not yet implemented.
     """
-    # TODO (mo): unhack this CMK-3983
-    if name is None or parse_function is None or detect is None or trees is None:
-        raise TypeError("missing argument: name, parse_function, detect or trees")
-
     forbidden_names = list(config.registered_agent_sections) + list(config.registered_snmp_sections)
 
     section_plugin = create_snmp_section_plugin(
@@ -138,19 +128,18 @@ def snmp_section(
 
 
 def check_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        sections=None,  # type: Optional[List[str]]
-        service_name=None,  # type: Optional[str]
-        discovery_function=None,  # type: DiscoveryFunction
-        discovery_default_parameters=None,  # type: Optional[Dict[str, Any]]
-        discovery_ruleset_name=None,  # type: Optional[str]
-        check_function=None,  # type: CheckFunction
-        check_default_parameters=None,  # type: Optional[Dict[str, Any]]
-        check_ruleset_name=None,  # type: Optional[str]
-        management_board=None,  # type: management_board_enum
-):
-    # type: (...) -> None
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    service_name: str,
+    discovery_function: DiscoveryFunction,
+    discovery_default_parameters: Optional[Dict[str, Any]] = None,
+    discovery_ruleset_name: Optional[str] = None,
+    check_function: CheckFunction,
+    check_default_parameters: Optional[Dict[str, Any]] = None,
+    check_ruleset_name: Optional[str] = None,
+    management_board: Optional[management_board_enum] = None,
+) -> None:
     """Register a check plugin to checkmk.
 
     :param name: The name of the check plugin. It must be unique. And contain only the characters
@@ -178,11 +167,6 @@ def check_plugin(
                              discovered on a management board. Choices are
                              `management_board.EXCLUSIVE` or `management_board.DISABLED`
     """
-    # TODO (mo): unhack this CMK-3983
-    if (name is None or service_name is None or discovery_function is None or
-            check_function is None):
-        raise TypeError("name, service_name, discovery_function and check_function are mandatory")
-
     plugin = create_check_plugin(
         name=name,
         sections=sections,

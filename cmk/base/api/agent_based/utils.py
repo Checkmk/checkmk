@@ -160,12 +160,9 @@ def _levelsinfo_ty(preposition, levels, render_func):
     return " (warn/crit %s %s/%s)" % (preposition, warn_str, crit_str)
 
 
-_SENTINEL = object()  # remove with CMK-3983
-
-
 def check_levels(
         value,  # type: float
-        _sentinel=_SENTINEL,  # type: Any # enforce keyword usage, remove with CMK-3983 # *,
+        *,
         levels_upper=None,  # tpye: Optional[Tuple[float, float]]
         levels_lower=None,  # tpye: Optional[Tuple[float, float]]
         metric_name=None,  # type: str
@@ -189,10 +186,6 @@ def check_levels(
     :param label:        Label to prepend to the output.
     :param boundaries:   Minimum and maximum to add to the metric.
     """
-    # TODO (mo): unhack this CMK-3983
-    if _sentinel is not _SENTINEL:
-        raise TypeError("check_levels only accepts one positional argument")
-
     if render_func is None:
         render_func = "%.2f".format
 
@@ -209,9 +202,9 @@ def check_levels(
 
 def check_levels_predictive(
         value,  # type: float
-        _sentinel=_SENTINEL,  # type: Any # enforce keyword usage, remove with CMK-3983 # *,
-        levels=None,  # tpye: Optional[Dict[str, Any]] # will be mandatory CMK-3983
-        metric_name=None,  # type: Optional[str] # will be mandatory CMK-3983
+        *,
+        levels,  # tpye: Dict[str, Any]
+        metric_name,  # type: str
         render_func=None,  # type: Optional[Callable[[float], str]]
         label=None,  # type: Optional[str]
         boundaries=None,  # type: Optional[Tuple[Optional[float], Optional[float]]]
@@ -233,14 +226,6 @@ def check_levels_predictive(
     :param label:        Label to prepend to the output.
     :param boundaries:   Minimum and maximum to add to the metric.
     """
-    # TODO (mo): unhack this CMK-3983
-    if _sentinel is not _SENTINEL:
-        raise TypeError("check_levels_predictive only accepts one positional argument")
-    if levels is None:
-        raise TypeError("'levels' must not be None")
-    if metric_name is None:
-        raise TypeError("'metric_name' must not be None")
-
     if render_func is None:
         render_func = "%.2f".format
 
@@ -302,10 +287,8 @@ class GetRateError(IgnoreResultsError):
     pass
 
 
-def get_rate(value_store, key, time, value, raise_overflow=False):
+def get_rate(value_store, key, time, value, *, raise_overflow=False):
     # type: (MutableMapping[str, Any], str, float, float, bool) -> float
-    # TODO (mo): unhack this CMK-3983
-    # raise overflow is kwarg only
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 

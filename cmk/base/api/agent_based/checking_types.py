@@ -53,10 +53,8 @@ class Service:
         labels=[ServiceLabel(...)],
     )
     """
-    def __init__(self, item=None, parameters=None, labels=None):
+    def __init__(self, *, item=None, parameters=None, labels=None):
         # type: (Optional[str], Optional[Dict], Optional[List[ServiceLabel]]) -> None
-        # TODO (mo): unhack this CMK-3983
-        # all arguments should be kwarg-only
         self._item = item
         self._parameters = parameters or {}  # type: Dict[str, Any]
         self._labels = labels or []
@@ -193,15 +191,11 @@ class Metric:
             self,
             name,  # type: str
             value,  # type: float
-            # *args,  # type: str  # *, # type shoud be "nothing"
-        levels=None,  # type: _OptionalPair
+            *,
+            levels=None,  # type: _OptionalPair
             boundaries=None,  # type: _OptionalPair
     ):
         # type: (...) -> None
-        # if args:
-        #    # TODO (mo): unhack this CMK-3983
-        #    raise TypeError()
-
         self.validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -258,17 +252,13 @@ class Result(NamedTuple("ResultTuple", [
 
     def __new__(  # pylint: disable=redefined-outer-name
             cls,
+            *,
+            state,  # type: state
             summary=None,  # type: Optional[str]
             notice=None,  # type: Optional[str]
             details=None,  # type: Optional[str]
-            state=None,  # type: Optional[state]
     ):
         # type: (...) -> Result
-        # TODO (mo): unhack this CMK-3983
-        # all arguments should be kwarg-only
-        if state is None:
-            raise TypeError("'state' is a mandatory keyword argument")
-
         if not isinstance(state, cls._state_class):
             raise TypeError("'state' must be a checkmk state constant, got %r" % (state,))
 

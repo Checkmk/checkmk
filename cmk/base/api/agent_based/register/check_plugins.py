@@ -196,19 +196,19 @@ def unfit_for_clustering_wrapper(check_function):
 
 
 def create_check_plugin(
-        #*,
-        name=None,  # type: Optional[str]
+        *,
+        name,  # type: str
         sections=None,  # type: Optional[List[str]]
-        service_name=None,  # type: Optional[str]
+        service_name,  # type: str
         management_board_option=None,  # type: Optional[management_board]
-        discovery_function=None,  # type: Callable
+        discovery_function,  # type: Callable
         discovery_default_parameters=None,  # type: Optional[Dict]
         discovery_ruleset_name=None,  # type: Optional[str]
-        check_function=None,  # type: Callable
+        check_function,  # type: Callable
         check_default_parameters=None,  # type: Optional[Dict]
         check_ruleset_name=None,  # type: Optional[str]
         cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
+        forbidden_names,  # type: List[PluginName]
 ):
     # type: (...) -> CheckPlugin
     """Return an CheckPlugin object after validating and converting the arguments one by one
@@ -216,18 +216,6 @@ def create_check_plugin(
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): unhack this CMK-3983
-    if name is None:
-        raise TypeError("name must not be None")
-    if service_name is None:
-        raise TypeError("service_name must not be None")
-    if discovery_function is None:
-        raise TypeError("discovery_function must not be None")
-    if check_function is None:
-        raise TypeError("check_function must not be None")
-    if forbidden_names is None:
-        raise TypeError("forbidden_names must not be None")
-
     plugin_name = PluginName(name, forbidden_names)
 
     subscribed_sections = _create_sections(sections, plugin_name)

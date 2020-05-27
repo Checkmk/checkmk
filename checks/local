@@ -124,6 +124,7 @@ def _parse_perftxt(string):
 
 
 def parse_local(info):
+    import six
     LocalResult = collections.namedtuple("LocalResult",
                                          ("node", "cached", "item", "state", "text", "perfdata"))
 

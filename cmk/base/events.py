@@ -22,7 +22,7 @@ else:
 
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-import six
+from six import ensure_str
 
 import livestatus
 import cmk.utils.version as cmk_version
@@ -193,7 +193,7 @@ def raw_context_from_string(data):
     context = {}  # type: EventContext
     try:
         for line in data.split(b'\n'):
-            varname, value = six.ensure_str(line.strip()).split("=", 1)
+            varname, value = ensure_str(line.strip()).split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():

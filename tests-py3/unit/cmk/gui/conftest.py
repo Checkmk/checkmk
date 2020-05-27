@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import NamedTuple, Any
 from http.cookiejar import CookieJar
 import shutil
+import urllib.parse
 
 from mock import MagicMock
 import webtest  # type: ignore[import]
 import pytest  # type: ignore[import]
 import six
-from six.moves.urllib.parse import urlencode
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -274,7 +274,7 @@ class WebTestAppForCMK(webtest.TestApp):
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
             raise RuntimeError("Not logged in.")
-        qs = urlencode([
+        qs = urllub.urlparse.urlencode([
             ('_username', self.username),
             ('_secret', self.password),
             ('request_format', output_format),

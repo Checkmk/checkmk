@@ -19,6 +19,7 @@ import sys
 import traceback
 from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
+import urllib.parse
 
 import six
 
@@ -210,8 +211,8 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
     def local_crash_report_url(self):
         # type: () -> str
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
-                                                                 ("ident", self.ident_to_text())])
+        return "crash.py?%s" % urllib.parse.urlencode([("component", self.type()),
+                                                       ("ident", self.ident_to_text())])
 
 
 def _get_generic_crash_info(type_name, details):

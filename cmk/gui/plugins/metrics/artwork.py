@@ -8,8 +8,7 @@ import math
 import time
 from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
-
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import cmk.utils.render
 

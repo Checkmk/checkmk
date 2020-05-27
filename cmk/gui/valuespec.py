@@ -15,7 +15,6 @@
 #   the file
 # - Refactor "orientation" argument to use some Enum, similar to Labels.World
 
-from __future__ import division
 import abc
 import base64
 from enum import Enum
@@ -33,6 +32,7 @@ import socket
 import sys
 import time
 import uuid
+import urllib.parse
 from typing import (
     Any,
     Callable,
@@ -1434,7 +1434,7 @@ class Url(TextAscii):
         if self._allow_empty and value == "":
             return
 
-        parts = six.moves.urllib.parse.urlparse(value)
+        parts = urllib.parse.urlparse(value)
         if not parts.scheme or not parts.netloc:
             raise MKUserError(varprefix, _("Invalid URL given"))
 
@@ -1456,7 +1456,7 @@ class Url(TextAscii):
             value = self._default_scheme + "://" + value
 
         try:
-            parts = six.moves.urllib.parse.urlparse(value)
+            parts = urllib.parse.urlparse(value)
             if parts.path in ['', '/']:
                 text = parts.netloc
             else:

@@ -8,10 +8,11 @@ import re
 import json
 from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
 
+from six import ensure_text
+
 from livestatus import SiteId
 
 from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _

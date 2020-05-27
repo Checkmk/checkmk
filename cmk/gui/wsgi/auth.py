@@ -6,13 +6,12 @@
 
 import contextlib
 import time
-
 from typing import Optional
 
 from connexion import problem  # type: ignore[import]
+from six import ensure_text
 
 from cmk.utils.type_defs import UserId
-from cmk.utils.encoding import ensure_text
 
 from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError

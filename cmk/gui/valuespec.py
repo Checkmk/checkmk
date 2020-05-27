@@ -60,14 +60,13 @@ else:
     from typing import Protocol  # pylint: disable=no-name-in-module
 
 from PIL import Image  # type: ignore[import]
-import six
+from six import ensure_binary, ensure_str, ensure_text
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
-from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
@@ -684,7 +683,7 @@ class TextAscii(ValueSpec):
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
-            if not self._regex.match(six.ensure_text(value)):
+            if not self._regex.match(ensure_text(value)):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:
@@ -2292,8 +2291,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
         request = html.get_request()
         vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
         with html.plugged():
-            vs.show_choice_row(six.ensure_str(request["varprefix"]),
-                               six.ensure_str(request["ident"]), {})
+            vs.show_choice_row(ensure_str(request["varprefix"]), ensure_str(request["ident"]), {})
             return {"html_code": html.drain()}
 
 
@@ -2644,7 +2642,7 @@ class DropdownChoice(ValueSpec):
     @staticmethod
     def option_id(val):
         # type: () -> str
-        return "%s" % hashlib.sha256(six.ensure_binary(repr(val))).hexdigest()
+        return "%s" % hashlib.sha256(ensure_binary(repr(val))).hexdigest()
 
     def _validate_value(self, value, varprefix):
         # type: (DropdownChoiceValue, str) -> None
@@ -2959,7 +2957,7 @@ class CascadingDropdown(ValueSpec):
             if self._render == CascadingDropdown.Render.foldable:
                 with html.plugged():
                     html.begin_foldable_container("foldable_cascading_dropdown",
-                                                  id_=hashlib.sha256(six.ensure_binary(
+                                                  id_=hashlib.sha256(ensure_binary(
                                                       repr(value))).hexdigest(),
                                                   isopen=False,
                                                   title=title,
@@ -3911,8 +3909,8 @@ class TimeofdayRange(ValueSpec):
         if value is None:
             return u""
 
-        return six.ensure_text(self._bounds[0].value_to_text(value[0]) + "-" +
-                               self._bounds[1].value_to_text(value[1]))
+        return ensure_text(self._bounds[0].value_to_text(value[0]) + "-" +
+                           self._bounds[1].value_to_text(value[1]))
 
     def from_html_vars(self, varprefix):
         # type: (str) -> _Optional[TimeofdayRangeValue]
@@ -4469,7 +4467,7 @@ class Alternative(ValueSpec):
                 html.nbsp()
 
             html.radiobutton(varprefix + "_use", str(nr), checked,
-                             None if title is None else six.ensure_str(title))
+                             None if title is None else ensure_str(title))
             if title:
                 html.open_ul()
             if vs == mvs:
@@ -4835,8 +4833,8 @@ class Dictionary(ValueSpec):
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        headers = self._headers if self._headers else [(six.ensure_text(self.title() or
-                                                                        _("Properties")), [])]
+        headers = self._headers if self._headers else [(ensure_text(self.title() or
+                                                                    _("Properties")), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
             self.render_input_form_header(varprefix,
                                           value,
@@ -5405,7 +5403,7 @@ class ImageUpload(FileUpload):
             html.td(_("Current image:"))
             html.td(
                 html.render_img("data:image/png;base64,%s" %
-                                six.ensure_str(base64.b64encode(six.ensure_binary(value)))))
+                                ensure_str(base64.b64encode(ensure_binary(value)))))
             html.close_tr()
             html.open_tr()
             html.td(_("Upload new:"))

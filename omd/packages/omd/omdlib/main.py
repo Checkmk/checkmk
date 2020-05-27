@@ -47,12 +47,12 @@ from typing import NoReturn, IO, cast, Iterable, Union, Pattern, Tuple, Optional
 
 from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
+from six import ensure_text
 
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.encoding import ensure_text
 
 import omdlib
 import omdlib.certs

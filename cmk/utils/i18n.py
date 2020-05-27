@@ -7,7 +7,7 @@
 
 from typing import AnyStr
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 
 
 # TODO: Clean this up one day by using the way recommended by gettext.

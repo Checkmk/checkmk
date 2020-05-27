@@ -21,7 +21,7 @@ from typing import (
 
 import six
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import (

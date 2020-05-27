@@ -21,13 +21,12 @@ from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
 import urllib.parse
 
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-from cmk.utils.encoding import ensure_text
 
 
 @contextlib.contextmanager
@@ -206,7 +205,7 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
+        return cmk.utils.paths.crash_dir / ensure_str(self.type()) / ensure_str(ident_text)
 
     def local_crash_report_url(self):
         # type: () -> str

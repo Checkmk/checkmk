@@ -12,11 +12,10 @@ import time
 from typing import Dict
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_str, ensure_text
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -174,7 +173,7 @@ class SiteChanges(object):
             with path.open("rb") as f:
                 for entry in f.read().split(b"\0"):
                     if entry:
-                        changes.append(ast.literal_eval(six.ensure_str(entry)))
+                        changes.append(ast.literal_eval(ensure_str(entry)))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -201,7 +200,7 @@ class SiteChanges(object):
             store.aquire_lock(path)
 
             with path.open("ab+") as f:
-                f.write(six.ensure_binary(repr(change_spec)) + b"\0")
+                f.write(ensure_binary(repr(change_spec)) + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 

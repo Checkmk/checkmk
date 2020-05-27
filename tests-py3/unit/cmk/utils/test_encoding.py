@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.encoding import ensure_text, ensure_binary
+from six import ensure_text, ensure_binary
 
 
 @pytest.mark.parametrize("source, utf8str", [

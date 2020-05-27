@@ -16,7 +16,7 @@ import tarfile
 import time
 from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional
 
-import six
+from six import ensure_binary, ensure_str, ensure_text
 
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
@@ -27,7 +27,6 @@ import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_text, ensure_binary
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -416,7 +415,7 @@ def _get_package_info_from_package(file_object):
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")
-    return parse_package_info(six.ensure_str(package_info_file.read()))
+    return parse_package_info(ensure_str(package_info_file.read()))
 
 
 def _validate_package_files(pacname, files):

@@ -13,13 +13,12 @@ import traceback
 import copy
 from pathlib import Path
 
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, ContactgroupName
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -185,7 +184,7 @@ def user_exists(username):
 
 def _user_exists_according_to_profile(username):
     # type: (UserId) -> bool
-    base_path = config.config_dir + "/" + six.ensure_str(username) + "/"
+    base_path = config.config_dir + "/" + ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
 
@@ -678,7 +677,7 @@ def load_users(lock=False):
             try:
                 user_secret_path = Path(directory) / d / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret = six.ensure_str(f.read().strip())  # type: Optional[str]
+                    secret = ensure_str(f.read().strip())  # type: Optional[str]
             except IOError:
                 secret = None
 
@@ -699,7 +698,7 @@ def load_users(lock=False):
 
 def custom_attr_path(userid, key):
     # type: (UserId, str) -> str
-    return cmk.utils.paths.var_dir + "/web/" + six.ensure_str(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + ensure_str(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -707,7 +706,7 @@ def load_custom_attr(userid, key, conv_func, default=None):
     path = Path(custom_attr_path(userid, key))
     try:
         with path.open(encoding="utf-8") as f:
-            return conv_func(six.ensure_str(f.read().strip()))
+            return conv_func(ensure_str(f.read().strip()))
     except IOError:
         return default
 
@@ -792,7 +791,7 @@ def _save_user_profiles(updated_profiles):
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id)
+        user_dir = cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id)
         store.mkdir(user_dir)
 
         # authentication secret for local processes

@@ -27,10 +27,9 @@ from typing import (
     Tuple,
     Optional as _Optional,
 )
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
@@ -786,8 +785,7 @@ class Overridable(Base):
         for user_dir in os.listdir(config.config_dir):
             user = UserId(ensure_text(user_dir))
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
-                                              cls.type_name())
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user), cls.type_name())
                 if not os.path.exists(path):
                     continue
 

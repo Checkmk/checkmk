@@ -15,7 +15,7 @@ from typing import AnyStr, Dict, List, Optional
 
 import six
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 

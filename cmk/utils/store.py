@@ -18,10 +18,11 @@ import pprint
 import tempfile
 from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
 
+from six import ensure_binary
+
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
-from cmk.utils.encoding import ensure_binary
 
 logger = logging.getLogger("cmk.store")
 

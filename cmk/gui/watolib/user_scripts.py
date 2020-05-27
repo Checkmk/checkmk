@@ -21,9 +21,9 @@ import os
 import re
 from pathlib import Path
 
-import cmk.utils.paths
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 
+import cmk.utils.paths
 from cmk.gui.i18n import _u
 
 

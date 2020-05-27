@@ -33,17 +33,3 @@ def convert_to_unicode(
         if on_error is None:
             raise
         return on_error
-
-
-def ensure_text(value):
-    # type: (AnyStr) -> str
-    if isinstance(value, str):
-        return value
-    return value.decode("utf-8")
-
-
-def ensure_binary(value):
-    # type: (AnyStr) -> bytes
-    if isinstance(value, bytes):
-        return value
-    return value.encode("utf-8")

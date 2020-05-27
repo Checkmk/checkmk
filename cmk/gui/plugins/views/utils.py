@@ -15,7 +15,7 @@ from pathlib import Path
 import traceback
 from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
 
-import six
+from six import ensure_str, ensure_text
 
 import livestatus
 from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
@@ -23,7 +23,6 @@ from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
-from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import (
     Timestamp,
     TimeRange,
@@ -2192,7 +2191,7 @@ def output_csv_headers(view):
     # type: (ViewSpec) -> None
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
         filename)
 
 

@@ -43,12 +43,11 @@ from typing import Optional, IO, Union, Dict, List, Set
 import ldap  # type: ignore[import]
 import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -380,7 +379,7 @@ class LDAPUserConnector(UserConnector):
     def _get_nearest_dc_from_cache(self):
         # type: () -> Optional[str]
         try:
-            return six.ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
+            return ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
         except IOError:
             pass
         return None
@@ -444,7 +443,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(six.ensure_str(user_dn), password)
+            conn.simple_bind_s(ensure_str(user_dn), password)
             self._logger.info('  SUCCESS')
         except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -557,8 +556,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        base = six.ensure_str(base)
-        filt = six.ensure_str(filt)
+        base = ensure_str(base)
+        filt = ensure_str(filt)
 
         results = []
         while True:

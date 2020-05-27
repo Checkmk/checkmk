@@ -14,7 +14,7 @@ if sys.version_info[0] >= 3:
 else:
     from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 from cmk.gui.utils.html import HTML
 
 #.

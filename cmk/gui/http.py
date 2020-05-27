@@ -12,7 +12,7 @@ import werkzeug.wrappers
 import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 
 from cmk.gui.globals import request
 from cmk.gui.i18n import _

@@ -43,6 +43,7 @@ PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
+PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
 PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
@@ -145,6 +146,11 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
+# Cleanup some unwanted files (example scripts)
+	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(DESTDIR)$(OMD_ROOT)/share/snmpsim/data
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))

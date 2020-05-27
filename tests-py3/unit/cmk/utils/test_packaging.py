@@ -12,7 +12,7 @@ from io import BytesIO
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
+from six import ensure_str
 
 from cmk.utils.i18n import _
 import cmk.utils.paths
@@ -275,7 +275,7 @@ def test_create_mkp_file():
 
     info_file = tar.extractfile("info")
     assert info_file is not None
-    info = ast.literal_eval(six.ensure_str(info_file.read()))
+    info = ast.literal_eval(ensure_str(info_file.read()))
     assert info["name"] == "aaa"
 
     info_json_file = tar.extractfile("info.json")

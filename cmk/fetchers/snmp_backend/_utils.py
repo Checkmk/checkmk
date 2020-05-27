@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helpers for the backends."""
 
-import six
+from six import ensure_binary
 
 from cmk.utils.type_defs import RawValue
 
@@ -23,8 +23,8 @@ def strip_snmp_value(value):
         # netsnmp command line tools. An example:
         # Checking windows systems via SNMP with hr_fs: disk names like c:\
         # are reported as c:\\, fix this to single \
-        return six.ensure_binary(v.strip().replace('\\\\', '\\'))
-    return six.ensure_binary(v)
+        return ensure_binary(v.strip().replace('\\\\', '\\'))
+    return ensure_binary(v)
 
 
 def _is_hex_string(value):

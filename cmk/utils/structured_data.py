@@ -13,9 +13,8 @@ import re
 import pprint
 from typing import AnyStr, Dict, List, Optional
 
-import six
+from six import ensure_binary, ensure_text
 
-from six import ensure_text
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
@@ -113,7 +112,7 @@ class StructuredDataTree:
         store.save_object_to_file(filepath, output, pretty=pretty)
         # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
         with gzip.open(filepath + ".gz", "wb") as f:
-            f.write(six.ensure_binary(repr(output) + "\n"))
+            f.write(ensure_binary(repr(output) + "\n"))
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")
 

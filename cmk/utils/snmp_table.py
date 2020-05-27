@@ -7,7 +7,7 @@
 import os
 from typing import Any, List, Optional, Set, Tuple, Union, cast
 
-import six
+from six import ensure_binary
 
 import cmk.utils.debug
 import cmk.utils.store as store
@@ -121,7 +121,7 @@ def _get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache
             fetchoid, first_column, value_encoding = columns[0]
             new_first_column = []
             for o, col_val in first_column:
-                new_first_column.append((o, six.ensure_binary(suboid) + b"." + col_val))
+                new_first_column.append((o, ensure_binary(suboid) + b"." + col_val))
             columns[0] = fetchoid, new_first_column, value_encoding
 
         info += _make_table(columns, snmp_config)
@@ -177,9 +177,9 @@ def _make_index_rows(max_column, index_format, fetchoid):
     index_rows = []
     for o, _unused_value in max_column:
         if index_format == OID_END:
-            val = six.ensure_binary(_extract_end_oid(fetchoid, o))
+            val = ensure_binary(_extract_end_oid(fetchoid, o))
         elif index_format == OID_STRING:
-            val = six.ensure_binary(o)
+            val = ensure_binary(o)
         elif index_format == OID_BIN:
             val = _oid_to_bin(o)
         elif index_format == OID_END_BIN:
@@ -210,7 +210,7 @@ def _make_table(columns, snmp_config):
 
 def _oid_to_bin(oid):
     # type: (OID) -> RawValue
-    return six.ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
+    return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
 
 
 def _extract_end_oid(prefix, complete):

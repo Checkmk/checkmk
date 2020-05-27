@@ -30,7 +30,7 @@ import traceback
 from types import FrameType
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
-import six
+from six import ensure_binary
 
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon
@@ -1742,7 +1742,7 @@ class EventServer(ECServerThread):
             with get_logfile(self._config, self.settings.paths.messages_dir.value,
                              self._message_period).open(mode='ab') as f:
                 f.write(
-                    six.ensure_binary("%s %s %s%s: %s\n" % (
+                    ensure_binary("%s %s %s%s: %s\n" % (
                         time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
                         event["host"],
                         event["application"],

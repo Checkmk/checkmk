@@ -10,16 +10,9 @@ import itertools
 import pprint
 import re
 import json
-from typing import (
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Text,
-    Union,
-)
+from typing import Dict, Generator, List, Optional, Text, Union
 
-import six
+from six import ensure_str
 
 from six import ensure_text
 from cmk.utils.regex import escape_regex_chars
@@ -768,8 +761,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", six.ensure_str(watolib.mk_repr(self._item))),
-            ("service", six.ensure_str(watolib.mk_repr(self._service))),
+            ("item", ensure_str(watolib.mk_repr(self._item))),
+            ("service", ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -780,8 +773,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rulenr", rulenr),
             ("host", self._hostname),
-            ("item", six.ensure_str(watolib.mk_repr(self._item))),
-            ("service", six.ensure_str(watolib.mk_repr(self._service))),
+            ("item", ensure_str(watolib.mk_repr(self._item))),
+            ("service", ensure_str(watolib.mk_repr(self._service))),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -910,8 +903,8 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", six.ensure_str(watolib.mk_repr(self._item)))
-            html.hidden_field("service", six.ensure_str(watolib.mk_repr(self._service)))
+            html.hidden_field("item", ensure_str(watolib.mk_repr(self._item)))
+            html.hidden_field("service", ensure_str(watolib.mk_repr(self._service)))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)

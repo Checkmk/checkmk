@@ -14,7 +14,7 @@ import ssl
 import sys
 from urllib.request import HTTPSHandler, Request, build_opener
 
-import six
+from six import ensure_binary, ensure_str
 
 field_separator = "\t"
 # set once parameters have been parsed
@@ -91,8 +91,8 @@ def flatten(d, separator="."):
 
 
 def gen_headers(username, password):
-    auth = base64.encodebytes(six.ensure_binary("%s:%s" % (username, password))).strip()
-    return {'Authorization': "Basic " + six.ensure_str(auth)}
+    auth = base64.encodebytes(ensure_binary("%s:%s" % (username, password))).strip()
+    return {'Authorization': "Basic " + ensure_str(auth)}
 
 
 def gen_csv_writer():

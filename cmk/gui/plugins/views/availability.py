@@ -13,7 +13,7 @@ from typing import (
     Set,
     Tuple,
 )
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render
@@ -1146,5 +1146,5 @@ def _av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
         filename)

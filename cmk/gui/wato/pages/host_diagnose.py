@@ -6,11 +6,9 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import (
-    List,
-    Text,
-)
-import six
+from typing import List, Text
+
+from six import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -403,5 +401,5 @@ class ModeAjaxDiagHost(AjaxPage):
         return {
             "next_transid": html.transaction_manager.fresh_transid(),
             "status_code": result[0],
-            "output": six.ensure_text(result[1], errors="replace"),
+            "output": ensure_text(result[1], errors="replace"),
         }

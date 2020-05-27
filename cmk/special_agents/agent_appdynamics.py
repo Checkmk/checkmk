@@ -16,7 +16,7 @@ if sys.version_info[0] >= 3:
 else:
     from httplib import HTTPConnection  # pylint: disable=import-error
 
-import six
+from six import ensure_binary, ensure_str
 
 
 def usage():
@@ -125,8 +125,8 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 sys.stdout.write('Connecting to %s:%s...\n' % (arg_host, opt_port))
             connection.connect()
 
-            auth = b64encode(six.ensure_binary('%s:%s' % (opt_username, opt_password)))
-            headers = {'Authorization': 'Basic ' + six.ensure_str(auth)}
+            auth = b64encode(ensure_binary('%s:%s' % (opt_username, opt_password)))
+            headers = {'Authorization': 'Basic ' + ensure_str(auth)}
             for obj in ['Agent', '*|*']:
                 connection.request('GET',
                                    url % {

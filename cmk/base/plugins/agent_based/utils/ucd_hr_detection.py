@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List, Tuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from ..agent_based_api.v0 import (
     all_of,
     any_of,
     exists,

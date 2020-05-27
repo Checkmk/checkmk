@@ -206,6 +206,8 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
         ("1762:0:0:0:0:B03:1:AF18", False, "/path/to/config/logwatch.state.another_cluster"),
         ("", True, "/path/to/config/logwatch.state.local"),
         ("", False, "/path/to/config/logwatch.state"),
+        ("::ffff:192.168.1.2", False,
+         "/path/to/config/logwatch.state.my_cluster"),  # tty doesnt matter
     ])
 def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatch, mocker):
     """

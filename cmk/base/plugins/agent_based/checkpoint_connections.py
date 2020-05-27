@@ -7,8 +7,8 @@
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
 # .1.3.6.1.4.1.2620.1.1.25.3.0 19190
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import register, SNMPTree
-from cmk.base.plugins.agent_based.utils import checkpoint
+from .agent_based_api.v0 import register, SNMPTree
+from .utils import checkpoint
 
 
 def parse_checkpoint_connections(string_table):

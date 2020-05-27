@@ -18,7 +18,8 @@ def check_proxmox_disk_usage(item, params, parsed):
     warn, crit = params.get("levels", (0., 0.))
 
     if total_bytes == 0:
-        return (1, "Size of filesystem is 0 MB", [])
+        yield (1, "Size of filesystem is 0 MB", [])
+        return
 
     yield check_levels(
         used_bytes,

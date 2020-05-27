@@ -6,6 +6,7 @@
 """Checkmk wide type definitions"""
 
 import abc
+import enum
 import string
 from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
 
@@ -115,6 +116,12 @@ SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 
 # TODO: Cleanup to named tuple
 SNMPTiming = Dict
+
+
+class SourceType(enum.Enum):
+    """Classification of management sources vs regular hosts"""
+    HOST = "HOST"
+    MANAGEMENT = "MANAGEMENT"
 
 
 # Wraps the configuration of a host into a single object for the SNMP code

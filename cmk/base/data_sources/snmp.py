@@ -26,6 +26,7 @@ from cmk.utils.type_defs import (
     SNMPHostConfig,
     SNMPSectionContent,
     SNMPSections,
+    SourceType,
 )
 
 import cmk.base.config as config
@@ -131,7 +132,7 @@ class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSecti
 
 
 class SNMPDataSource(ABCSNMPDataSource):
-    _for_mgmt_board = False
+    _source_type = SourceType.HOST
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
@@ -253,7 +254,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._for_mgmt_board,
+            for_mgmt_board=self._source_type is SourceType.MANAGEMENT,
         )
 
     def _execute(self):
@@ -323,7 +324,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             self._snmp_config,
             on_error=self._on_error,
             do_snmp_scan=self._do_snmp_scan,
-            for_mgmt_board=self._for_mgmt_board,
+            for_mgmt_board=self._source_type is SourceType.MANAGEMENT,
         )
 
     @staticmethod
@@ -389,7 +390,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
-    _for_mgmt_board = True
+    _source_type = SourceType.MANAGEMENT
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None

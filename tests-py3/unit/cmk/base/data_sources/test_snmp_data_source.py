@@ -13,7 +13,7 @@ from pyfakefs.fake_filesystem_unittest import patchfs  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import RawSNMPData, SNMPTable
+from cmk.utils.type_defs import RawSNMPData, SNMPTable, SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -37,13 +37,13 @@ def reset_mutable_global_state():
     delete(SNMPDataSource, "_no_cache")
     delete(SNMPDataSource, "_use_outdated_persisted_sections")
 
-    reset(DataSource, "_for_mgmt_board", False)
+    reset(DataSource, "_source_type", SourceType.HOST)
     reset(DataSource, "_no_cache", False)
     reset(DataSource, "_may_use_cache_file", False)
     reset(DataSource, "_use_outdated_cache_file", False)
     reset(DataSource, "_use_outdated_persisted_sections", False)
 
-    reset(SNMPDataSource, "_for_mgmt_board", False)
+    reset(SNMPDataSource, "_source_type", SourceType.HOST)
 
 
 def test_data_source_cache_default(monkeypatch):

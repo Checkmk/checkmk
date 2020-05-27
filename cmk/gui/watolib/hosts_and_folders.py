@@ -4,18 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+from collections.abc import Mapping
 import operator
 import os
 import time
 import re
 import shutil
 import uuid
-
-try:
-    from collections.abc import Mapping  # type: ignore[import]
-except ImportError:
-    from collections import Mapping
-
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import six

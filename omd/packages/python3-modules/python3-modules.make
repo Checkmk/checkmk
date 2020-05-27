@@ -151,6 +151,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 # These files break the integration tests on the CI server. Don't know exactly
 # why this happens only there, but should be a working fix.
 	$(RM) -r $(DESTDIR)$(OMD_ROOT)/share/snmpsim/data
+# Fix python interpreter for kept scripts
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))

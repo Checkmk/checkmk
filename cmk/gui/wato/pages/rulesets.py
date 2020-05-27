@@ -21,7 +21,7 @@ from typing import (
 
 import six
 
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import (
@@ -1969,10 +1969,10 @@ class RuleConditionRenderer(object):
                 text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
 
         if len(text_list) == 1:
-            condition += ensure_unicode(render_html(text_list[0]))
+            condition += ensure_text(render_html(text_list[0]))
         else:
             condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += ensure_unicode(render_html(_(" or ") + text_list[-1]))
+            condition += ensure_text(render_html(_(" or ") + text_list[-1]))
 
         if condition:
             yield condition

@@ -48,7 +48,7 @@ import six
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -618,8 +618,8 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[ensure_unicode(key).lower()] = [ensure_unicode(i) for i in val]
-                        result.append((ensure_unicode(dn).lower(), new_obj))
+                            new_obj[ensure_text(key).lower()] = [ensure_text(i) for i in val]
+                        result.append((ensure_text(dn).lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(

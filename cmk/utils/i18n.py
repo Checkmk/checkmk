@@ -7,7 +7,7 @@
 
 from typing import AnyStr
 
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 
 # TODO: Clean this up one day by using the way recommended by gettext.
@@ -16,4 +16,4 @@ from cmk.utils.encoding import ensure_unicode
 # Fake i18n when not available
 def _(string):
     # type: (AnyStr) -> str
-    return ensure_unicode(string)
+    return ensure_text(string)

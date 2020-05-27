@@ -5,10 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-from cmk.utils.encoding import (
-    ensure_unicode,
-    ensure_bytestr,
-)
+
+from cmk.utils.encoding import ensure_text, ensure_bytestr
 
 
 @pytest.mark.parametrize("source, utf8str", [
@@ -16,8 +14,8 @@ from cmk.utils.encoding import (
     ("há li", u"há li"),
     (u"hé ßß", u"hé ßß"),
 ])
-def test_ensure_unicode(source, utf8str):
-    assert ensure_unicode(source) == utf8str
+def test_ensure_text(source, utf8str):
+    assert ensure_text(source) == utf8str
 
 
 @pytest.mark.parametrize("source, bytestr", [

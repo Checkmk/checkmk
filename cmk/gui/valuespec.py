@@ -67,7 +67,7 @@ from OpenSSL import crypto  # type: ignore[import]
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
@@ -164,7 +164,7 @@ class ValueSpec(object):
             return None
 
         assert isinstance(self._help, str)
-        return ensure_unicode(self._help)
+        return ensure_text(self._help)
 
     def render_input(self, varprefix, value):
         # type: (str, Any) -> None
@@ -298,7 +298,7 @@ class FixedValue(ValueSpec):
             return self._totext
         if isinstance(value, str):
             return value
-        return ensure_unicode(value)
+        return ensure_text(value)
 
     def from_html_vars(self, varprefix):
         # type: (str) -> Any
@@ -648,7 +648,7 @@ class TextAscii(ValueSpec):
 
         if self._attrencode:
             return escaping.escape_attribute(value)
-        return ensure_unicode(value)
+        return ensure_text(value)
 
     def from_html_vars(self, varprefix):
         # type: (str) -> str
@@ -1001,7 +1001,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
         this_ip_class = ipaddress.IPv4Address if ip_class is None else ip_class
         try:
-            this_ip_class(ensure_unicode(value))
+            this_ip_class(ensure_text(value))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
@@ -5619,7 +5619,7 @@ class Labels(ValueSpec):
         # see: https://github.com/yairEO/tagify/pull/275
         labels = _encode_labels_for_tagify(value.items())
         html.text_input(varprefix,
-                        default_value=ensure_unicode(json.dumps(labels)) if labels else "",
+                        default_value=ensure_text(json.dumps(labels)) if labels else "",
                         cssclass="labels",
                         placeholder=_("Add some label"),
                         data_world=self._world.value,

@@ -97,7 +97,7 @@ _patch_json(json)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
@@ -1423,7 +1423,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = ensure_unicode(val) if isinstance(val, bytes) else val
+                request[key] = ensure_text(val) if isinstance(val, bytes) else val
 
         return request
 
@@ -2303,7 +2303,7 @@ class html(ABCHTMLGenerator):
         if isinstance(msg_or_exc, Exception):
             message = u"%s" % msg_or_exc  # type: str
         else:
-            message = ensure_unicode(msg_or_exc)
+            message = ensure_text(msg_or_exc)
 
         # TODO: Find the multiple varname call sites and clean this up
         if isinstance(varname, list):

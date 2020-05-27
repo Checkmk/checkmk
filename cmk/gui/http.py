@@ -12,7 +12,7 @@ import werkzeug.wrappers
 import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
 
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
@@ -325,7 +325,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
             if val is None:
                 return None
-            return ensure_unicode(val)
+            return ensure_text(val)
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,

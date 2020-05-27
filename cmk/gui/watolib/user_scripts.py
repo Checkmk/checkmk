@@ -22,7 +22,7 @@ import re
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 from cmk.gui.i18n import _u
 
@@ -51,7 +51,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_unicode(entry)
+            entry = ensure_text(entry)
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

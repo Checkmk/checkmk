@@ -35,7 +35,7 @@ def convert_to_unicode(
         return on_error
 
 
-def ensure_unicode(value):
+def ensure_text(value):
     # type: (AnyStr) -> str
     if isinstance(value, str):
         return value

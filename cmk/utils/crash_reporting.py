@@ -27,7 +27,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 
 @contextlib.contextmanager
@@ -278,7 +278,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return ensure_unicode(
+    return ensure_text(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

@@ -21,9 +21,9 @@ from cmk.gui.plugins.wato import (
 def _item_spec_cisco_vpn_sessions():
     return TextAscii(
         title=_("Session type"),
-        help=_("Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'SVC', 'WebVPN' or "
-               "'Summary'. The last item refers to the overall number of sessions (summed over all "
-               "session types)."),
+        help=_("Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', "
+               "'WebVPN' or 'Summary'. The last item refers to the overall number of sessions "
+               "(summed over all session types)."),
         allow_empty=False,
     )
 

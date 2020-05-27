@@ -1382,6 +1382,7 @@ def test_rulespec_get_all_groups():
         'agent/snmp',
         'agent/check_mk_agent',
         'agents/generic_options',
+        'checkparams/hardware',
         'checkparams/networking',
         'static/networking',
         'checkparams/applications',

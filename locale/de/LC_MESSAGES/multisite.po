@@ -11803,6 +11803,14 @@ msgstr ""
 "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
 msgid ""
+"Define a translation of the possible LED colors to monitoring states, i.e. to the "
+"result of the check. This overwrites the default mapping used by the check."
+msgstr ""
+"Definiere eine Übersetzung der möglichen LED-Farben in Monitoring-Status, sprich in "
+"das Ergebnis des Checks. Dies überschreibt die ursprünglich vom Checks verwendete "
+"Zuordnung."
+
+msgid ""
 "Define a translation of the possible states of the MTree to monitoring states, "
 "i.e. to the result of the check. This overwrites the default mapping used by the "
 "check."
@@ -38760,6 +38768,9 @@ msgstr "Bestimmen Sie die Kontaktgruppen eines automatisch erzeugten Benutzers."
 
 msgid "Specify the initial roles of an automatically created user."
 msgstr "Bestimmen Sie die Rollen für einen automatisch erzeugten Benutzer."
+
+msgid "Specify the LED, for example 'Rack Unit 1 0'."
+msgstr "Geben Sie die LED an, z.B. 'Rack Unit 1 0'."
 
 msgid ""
 "Specify the limit value against which the average consumption is compared to "

@@ -96,6 +96,7 @@ B_SERIES_ENTITIES = [
         ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
     ]),
 ]
+B_SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst"]
 
 # Cisco UCS C-Series Rack Servers
 C_SERIES_ENTITIES = [
@@ -175,7 +176,25 @@ C_SERIES_ENTITIES = [
             "ioUtilization",
         ]),
     ]),
+    ("ucs_c_rack_server_led", [
+        ("equipmentIndicatorLed", [
+            "dn",
+            "name",
+            "color",
+            "operState",
+        ]),
+    ]),
+    ("ucs_c_rack_server_faultinst", [
+        ("faultInst", [
+            "severity",
+            "cause",
+            "code",
+            "descr",
+            "affectedDN",
+        ]),
+    ]),
 ]
+C_SERIES_NECESSARY_SECTIONS = ["ucs_c_rack_server_faultinst"]
 
 #.
 #   .--connection----------------------------------------------------------.
@@ -411,9 +430,11 @@ def main(args=None):
     if "ucsc-c" in model_info.lower():
         logging.debug("Using UCS C-Series Rack Server entities")
         entities = C_SERIES_ENTITIES
+        necessary_sections = C_SERIES_NECESSARY_SECTIONS
     else:
         logging.debug("Using UCS B-Series Blade Server entities")
         entities = B_SERIES_ENTITIES
+        necessary_sections = B_SERIES_NECESSARY_SECTIONS
 
     try:
         data = handle.get_data_from_entities(entities)
@@ -426,11 +447,10 @@ def main(args=None):
         handle.logout()
         return 1
 
-    # "ucs_bladecenter_faultinst" should always be in agent output, even no
-    # data is present
-    section_needed = "ucs_bladecenter_faultinst"
-    if entities == B_SERIES_ENTITIES and section_needed not in data:
-        sys.stdout.write("<<<%s:sep(9)>>>\n" % section_needed)
+    # some sections should always be in agent output, even if there is no data from the server
+    for section in necessary_sections:
+        if section not in data:
+            sys.stdout.write("<<<%s:sep(9)>>>\n" % section)
 
     for header, class_data in data.items():
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)

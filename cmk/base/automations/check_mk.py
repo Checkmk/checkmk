@@ -17,7 +17,7 @@ import time
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_text
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -1015,7 +1015,7 @@ class AutomationGetCheckInformation(Automation):
                 if manfile:
                     title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 else:
-                    title = six.ensure_text(check_plugin_name)
+                    title = ensure_text(check_plugin_name)
 
                 check_infos[check_plugin_name] = {"title": title}
 
@@ -1049,7 +1049,7 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                title = six.ensure_text(check_plugin_name)
+                title = ensure_text(check_plugin_name)
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
@@ -1059,7 +1059,7 @@ class AutomationGetRealTimeChecks(Automation):
                         raise
 
                 rt_checks.append(
-                    (check_plugin_name, u"%s - %s" % (six.ensure_text(check_plugin_name), title)))
+                    (check_plugin_name, u"%s - %s" % (ensure_text(check_plugin_name), title)))
 
         return rt_checks
 
@@ -1570,7 +1570,7 @@ class AutomationGetAgentOutput(Automation):
                     try:
                         for oid, value in snmp.walk_for_export(host_config, walk_oid):
                             raw_oid_value = "%s %s\n" % (oid, value)
-                            lines.append(six.ensure_binary(raw_oid_value))
+                            lines.append(ensure_binary(raw_oid_value))
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise

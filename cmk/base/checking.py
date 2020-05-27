@@ -26,7 +26,7 @@ from typing import (
     cast,
 )
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
 import cmk.utils.defines as defines
@@ -112,7 +112,7 @@ CHECK_NOT_IMPLEMENTED = (3, 'Check not implemented', [])  # type: ServiceCheckRe
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n", six.ensure_str(cmk_version.__version__))
+    console.verbose("Check_MK version %s\n", ensure_str(cmk_version.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -298,11 +298,11 @@ def service_outside_check_period(config_cache, hostname, description):
 
     if cmk.base.core.check_timeperiod(period):
         console.vverbose("Service %s: timeperiod %s is currently active.\n",
-                         six.ensure_str(description), period)
+                         ensure_str(description), period)
         return False
 
     console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
-                    six.ensure_str(description), period)
+                    ensure_str(description), period)
     return True
 
 
@@ -347,7 +347,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     except (item_state.MKCounterWrapped, checking_types.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
         # Do not submit any check result in this case.
-        console.verbose("%-20s PEND - %s\n", six.ensure_str(service.description), msg)
+        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), msg)
         return True
 
     except MKTimeout:
@@ -419,7 +419,7 @@ def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
         console.verbose("%-20s PEND - Cannot compute check result: %s\n",
-                        six.ensure_str(service.description), e)
+                        ensure_str(service.description), e)
         # Don't submit to core - we're done.
         return True
 
@@ -745,9 +745,9 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", six.ensure_str(servicedesc), tty.bold,
-                    tty.states[state], six.ensure_str(infotext.split('\n')[0]), tty.normal,
-                    six.ensure_str(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", ensure_str(servicedesc),
+                    tty.bold, tty.states[state], ensure_str(infotext.split('\n')[0]), tty.normal,
+                    ensure_str(p))
 
 
 def _do_submit_to_core(
@@ -784,7 +784,7 @@ def _submit_via_check_result_file(host, service, state, output):
         now = time.time()
         os.write(
             _checkresult_file_fd,
-            six.ensure_binary("""host_name=%s
+            ensure_binary("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -795,7 +795,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (six.ensure_str(host), six.ensure_str(service), now, now, state, six.ensure_str(output))))
+""" % (ensure_str(host), ensure_str(service), now, now, state, ensure_str(output))))
 
 
 def _open_checkresult_file():
@@ -897,7 +897,7 @@ def _submit_via_command_pipe(host, service, state, output):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
                                                                    state, output)
-        _nagios_command_pipe.write(six.ensure_binary(msg))
+        _nagios_command_pipe.write(ensure_binary(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()

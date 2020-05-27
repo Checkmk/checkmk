@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Op
 from pathlib import Path
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -992,7 +992,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    descr_format = six.ensure_text(descr_format)
+    descr_format = ensure_text(descr_format)
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -1154,8 +1154,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # We assume the incoming name is correctly encoded in UTF-8
     decoded_backedhost = convert_to_unicode(backedhost,
                                             fallback_encoding=fallback_agent_output_encoding)
-    return six.ensure_str(cmk.utils.translations.translate_hostname(translation,
-                                                                    decoded_backedhost))
+    return ensure_str(cmk.utils.translations.translate_hostname(translation, decoded_backedhost))
 
 
 def _get_piggyback_translations(hostname):
@@ -1227,8 +1226,8 @@ def prepare_check_command(command_spec, hostname, description):
                     descr = ""
 
                 console.warning(
-                    six.ensure_str("The stored password \"%s\"%s does not exist (anymore)." %
-                                   (pw_ident, descr)))
+                    ensure_str("The stored password \"%s\"%s does not exist (anymore)." %
+                               (pw_ident, descr)))
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))

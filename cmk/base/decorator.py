@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import cast, Any, Callable
-import six
+
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -75,9 +76,9 @@ def handle_check_mk_check_result(check_plugin_name, description):
 
             if _in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
-                console.verbose(six.ensure_str(output_txt))
+                console.verbose(ensure_str(output_txt))
             else:
-                out.output(six.ensure_str(output_txt))
+                out.output(ensure_str(output_txt))
 
             return status
 

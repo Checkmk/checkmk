@@ -536,6 +536,7 @@ class LogwatchBlockCollector(object):
 
 
 def check_logwatch_generic(item, params, loglines, found):
+    import six
     import hashlib
     logmsg_dir = pathlib_.Path(logwatch_dir, host_name())
 

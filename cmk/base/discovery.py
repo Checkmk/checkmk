@@ -24,7 +24,7 @@ from typing import (
     Union,
 )
 
-import six
+from six import ensure_binary
 
 import livestatus
 
@@ -829,7 +829,7 @@ def schedule_discovery_check(hostname):
         if config.monitoring_core == "cmc":
             command += ";TRY"
 
-        s.send(six.ensure_binary("COMMAND [%d] %s\n" % (now, command)))
+        s.send(ensure_binary("COMMAND [%d] %s\n" % (now, command)))
     except Exception:
         if cmk.utils.debug.enabled():
             raise

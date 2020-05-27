@@ -14,8 +14,7 @@ import time
 from pathlib import Path
 from typing import AnyStr, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union, cast
 
-import six
-from six import ensure_binary
+from six import ensure_binary, ensure_str, ensure_text
 
 import cmk.utils
 import cmk.utils.agent_simulator as agent_simulator
@@ -783,7 +782,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
                     line = stripped_line
 
                 if encoding:
-                    decoded_line = convert_to_unicode(line, std_encoding=six.ensure_str(encoding))
+                    decoded_line = convert_to_unicode(line, std_encoding=ensure_str(encoding))
                 else:
                     decoded_line = convert_to_unicode(line)
 
@@ -795,7 +794,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
     @staticmethod
     def _parse_section_header(headerline):
         # type: (bytes) -> Tuple[str, Dict[str, Optional[str]]]
-        headerparts = six.ensure_str(headerline).split(":")
+        headerparts = ensure_str(headerline).split(":")
         section_name = headerparts[0]
         section_options = {}  # type: Dict[str, Optional[str]]
         for option in headerparts[1:]:
@@ -808,7 +807,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
         # type: (bytes) -> Optional[HostName]
-        piggybacked_hostname = six.ensure_str(orig_piggyback_header[4:-4])
+        piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 
@@ -828,8 +827,8 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
         return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
-                                            six.ensure_binary("%d" % cached_at),
-                                            six.ensure_binary("%d" % cache_age))
+                                            ensure_binary(
+                                                "%d" % cached_at), ensure_binary("%d" % cache_age))
 
     # TODO: refactor
     def _summary_result(self, for_checking):
@@ -1034,7 +1033,7 @@ def _normalize_ip_addresses(ip_addresses):
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()
 
-    decoded_ip_addresses = [six.ensure_text(word) for word in ip_addresses]
+    decoded_ip_addresses = [ensure_text(word) for word in ip_addresses]
     expanded = [word for word in decoded_ip_addresses if '{' not in word]
     for word in decoded_ip_addresses:
         if word in expanded:

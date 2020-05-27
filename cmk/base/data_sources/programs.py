@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, Set
 
-import six
+from six import ensure_str
 
 from cmk.fetchers import ProgramDataFetcher  # pylint: disable=cmk-module-layer-violation
 
@@ -121,7 +121,7 @@ class DSProgramDataSource(ProgramDataSource):
                                                    parents_list))
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
-        return six.ensure_str(core_config.replace_macros(cmd, macros))
+        return ensure_str(core_config.replace_macros(cmd, macros))
 
 
 class SpecialAgentDataSource(ProgramDataSource):

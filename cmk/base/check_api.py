@@ -100,7 +100,7 @@ from typing import (
     Union,
 )
 
-import six
+from six import ensure_str
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
@@ -748,7 +748,7 @@ def discover(selector=None, default_params=None):
 def _get_discovery_iter(name, get_name):
     # type: (Any, Callable[[], str]) -> Iterable[str]
     if isinstance(name, str):
-        return iter((six.ensure_str(name),))
+        return iter((ensure_str(name),))
     if name is True:
         return iter((get_name(),))
     try:

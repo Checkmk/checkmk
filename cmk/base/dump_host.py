@@ -7,7 +7,7 @@
 import time
 from typing import Optional
 
-import six
+from six import ensure_str
 
 import cmk.utils.tty as tty
 import cmk.utils.render
@@ -113,9 +113,9 @@ def dump_host(hostname):
                           key=lambda s: s.description):
         table_data.append([
             service.check_plugin_name,
-            six.ensure_str("None" if service.item is None else service.item),
+            ensure_str("None" if service.item is None else service.item),
             _evaluate_params(service.parameters),
-            six.ensure_str(service.description),
+            ensure_str(service.description),
             ",".join(config_cache.servicegroups_of_service(hostname, service.description))
         ])
 

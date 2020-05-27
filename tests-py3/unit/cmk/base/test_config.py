@@ -7,7 +7,7 @@
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
+from six import ensure_text
 
 from testlib import CheckManager
 from testlib.base import Scenario
@@ -1351,11 +1351,10 @@ def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
     host_file = (tmp_path / "test-host").with_suffix(".mk")
     with host_file.open(mode="w", encoding="utf-8") as f:
         f.write(
-            six.ensure_text(
-                repr({u"äzzzz": {
-                    "value": u"eeeeez",
-                    "plugin_name": "ding123"
-                }}) + "\n"))
+            ensure_text(repr({u"äzzzz": {
+                "value": u"eeeeez",
+                "plugin_name": "ding123"
+            }}) + "\n"))
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config("test-host").labels == {u"äzzzz": u"eeeeez"}

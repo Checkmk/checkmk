@@ -2376,7 +2376,10 @@ def execute_rule_node(node, status_info, aggregation_options):
     state["in_downtime"] = isinstance(dt_state, (int, float)) and dt_state >= dt_threshold
 
     # Compute acknowledgedment state
-    if state["state"] > 0:  # Non-OK-State -> compute acknowledgedment
+    state_to_compute = state.get("state")
+    if state_to_compute is None:
+        state["acknowledged"] = False
+    elif state_to_compute > 0:  # Non-OK-State -> compute acknowledgedment
         ack_state = func(*([ack_states] + funcargs))
         state["acknowledged"] = ack_state["state"] == 0  # would be OK if acked problems would be OK
     else:

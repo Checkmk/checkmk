@@ -14,13 +14,12 @@ import time
 import traceback
 from typing import Dict, Mapping, Optional
 
-import six
+from six import ensure_str, ensure_text
 
 import livestatus
 
 import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -136,7 +135,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def _get_crash_report_row(self, crash_id, site_id):
         # type: (str, str) -> Optional[Dict[str, str]]
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(six.ensure_str(site_id))],
+            only_sites=[config.SiteId(ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -552,7 +551,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write(six.ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
+        html.write(ensure_str(_pack_crash_report(self._get_serialized_crash_report())))
 
 
 def _pack_crash_report(serialized_crash_report):

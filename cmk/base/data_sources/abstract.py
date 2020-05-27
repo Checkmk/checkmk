@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import AnyStr, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union, cast
 
 import six
+from six import ensure_binary
 
 import cmk.utils
 import cmk.utils.agent_simulator as agent_simulator
@@ -24,7 +25,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode, ensure_binary
+from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (

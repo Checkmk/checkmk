@@ -7,7 +7,7 @@
 from typing import Union, Any, Iterable
 import six
 
-from cmk.utils.encoding import ensure_text
+from six import ensure_text
 
 HTMLInput = Union["HTML", int, float, None, str]
 

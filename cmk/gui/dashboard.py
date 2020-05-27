@@ -9,10 +9,11 @@ import copy
 import json
 from typing import Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
 
+from six import ensure_text
+
 import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.notify as notify

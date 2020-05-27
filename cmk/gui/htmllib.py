@@ -51,7 +51,7 @@ from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapp
 from pathlib import Path
 import urllib.parse
 
-import six
+from six import ensure_str, ensure_text
 
 Value = TypeVar('Value')
 
@@ -97,7 +97,6 @@ _patch_json(json)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_text
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
@@ -3182,7 +3181,7 @@ class html(ABCHTMLGenerator):
                 if v is None:
                     v = ''
                 elif isinstance(v, str):
-                    v = six.ensure_str(v)
+                    v = ensure_str(v)
                 encoded_vars[k] = v
 
             self.popup_trigger(

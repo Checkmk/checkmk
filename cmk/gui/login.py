@@ -12,12 +12,11 @@ from hashlib import md5
 from typing import List, Union, Optional, Tuple
 from pathlib import Path
 
-import six
+from six import ensure_binary, ensure_str, ensure_text
 from werkzeug.local import LocalProxy
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
@@ -129,7 +128,7 @@ def _load_serial(username):
 
 def _generate_auth_hash(username, now):
     # type: (UserId, float) -> str
-    return _generate_hash(username, six.ensure_str(username) + str(now))
+    return _generate_hash(username, ensure_str(username) + str(now))
 
 
 def _generate_hash(username, value):
@@ -137,7 +136,7 @@ def _generate_hash(username, value):
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return md5(six.ensure_binary(value + str(serial) + secret)).hexdigest()
+    return md5(ensure_binary(value + str(serial) + secret)).hexdigest()
 
 
 def del_auth_cookie():
@@ -155,7 +154,7 @@ def del_auth_cookie():
 def _auth_cookie_value(username):
     # type: (UserId) -> str
     now = time.time()
-    return ":".join([six.ensure_str(username), str(now), _generate_auth_hash(username, now)])
+    return ":".join([ensure_str(username), str(now), _generate_auth_hash(username, now)])
 
 
 def _invalidate_auth_session():
@@ -202,7 +201,7 @@ def _session_cookie_name():
 
 def _session_cookie_value(username, session_id):
     # type: (UserId, str) -> str
-    value = six.ensure_str(username) + ":" + session_id
+    value = ensure_str(username) + ":" + session_id
     return value + ":" + _generate_hash(username, value)
 
 
@@ -271,7 +270,7 @@ def _parse_auth_cookie(cookie_name):
 
     raw_value = ensure_text(raw_cookie)
     username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return UserId(username), float(issue_time) if issue_time else 0.0, six.ensure_str(cookie_hash)
+    return UserId(username), float(issue_time) if issue_time else 0.0, ensure_str(cookie_hash)
 
 
 def _check_parsed_auth_cookie(username, issue_time, cookie_hash):
@@ -330,12 +329,12 @@ def _check_auth(request):
 def verify_automation_secret(user_id, secret):
     # type: (UserId, str) -> bool
     if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / six.ensure_str(user_id) / "automation.secret"
+        path = Path(cmk.utils.paths.var_dir) / "web" / ensure_str(user_id) / "automation.secret"
         if not path.is_file():
             return False
 
         with path.open(encoding="utf-8") as f:
-            return six.ensure_str(f.read()).strip() == secret
+            return ensure_str(f.read()).strip() == secret
 
     return False
 

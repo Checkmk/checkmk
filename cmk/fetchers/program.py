@@ -12,8 +12,8 @@ from types import TracebackType
 from typing import Optional, Type, Union
 
 import six
+from six import ensure_binary
 
-from cmk.utils.encoding import ensure_binary
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import RawAgentData
 

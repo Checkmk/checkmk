@@ -18,8 +18,9 @@ import sys
 import time
 from typing import Any, Dict
 
+from six import ensure_text
+
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_text
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 

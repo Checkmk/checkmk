@@ -10,6 +10,7 @@ from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional,
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName
 
 import cmk.base.config as config
 import cmk.base.caching as caching
@@ -23,7 +24,6 @@ from cmk.base.api.agent_based.section_types import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName
 from cmk.base.check_utils import (
     CheckPluginName,
     SectionCacheInfo,
@@ -328,9 +328,16 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
                 nodename, service_description)
         ]
 
-    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name,
-                             for_discovery, nodes_of_clustered_service):
-        # type: (HostName, Optional[HostAddress], CheckPluginName, SectionName, bool, Optional[List[HostName]]) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]
+    def _get_section_content(
+            self,
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            check_plugin_name,  # type: CheckPluginName
+            section_name,  # type: SectionName
+            for_discovery,  # type: bool
+            nodes_of_clustered_service,  # type:  Optional[List[HostName]]
+    ):
+        # type: (...) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]
 
         # First abstract cluster / non cluster hosts
         host_entries = self._get_host_entries(hostname, ipaddress)
@@ -338,17 +345,18 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
         section_content = None  # type: Optional[AbstractSectionContent]
-        for host_entry in host_entries:
-            if nodes_of_clustered_service and host_entry[0] not in nodes_of_clustered_service:
+        for node_name, node_ip_address in host_entries:
+            if nodes_of_clustered_service and node_name not in nodes_of_clustered_service:
                 continue
 
+            host_key = (node_name, node_ip_address)
             try:
-                host_section_content = self._multi_host_sections[host_entry].sections[section_name]
+                host_section_content = self._multi_host_sections[host_key].sections[section_name]
             except KeyError:
                 continue
 
             host_section_content = self._update_with_node_column(host_section_content,
-                                                                 check_plugin_name, host_entry[0],
+                                                                 check_plugin_name, node_name,
                                                                  for_discovery)
 
             if section_content is None:
@@ -416,9 +424,15 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
                 new_section_content.append([node_text] + line)  # type: ignore[arg-type,operator]
         return new_section_content  # type: ignore[return-value]
 
-    def _update_with_extra_sections(self, section_content, hostname, ipaddress, section_name,
-                                    for_discovery):
-        # type: (ParsedSectionContent, HostName, Optional[HostAddress], SectionName, bool) -> Union[ParsedSectionContent, List[ParsedSectionContent]]
+    def _update_with_extra_sections(
+            self,
+            section_content,  # type: ParsedSectionContent
+            hostname,  # type: HostName
+            ipaddress,  # type: Optional[HostAddress]
+            section_name,  # type: SectionName
+            for_discovery,  # type: bool
+    ):
+        # type: (...) -> Union[ParsedSectionContent, List[ParsedSectionContent]]
         """Adds additional agent sections to the section_content the check receives.
 
         Please note that this is not a check/subcheck individual setting. This option is related
@@ -433,7 +447,12 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         section_contents = [section_content]
         for extra_section_name in config.check_info[section_name]["extra_sections"]:
             section_contents.append(
-                self.get_section_content(hostname, ipaddress, extra_section_name, for_discovery))
+                self.get_section_content(
+                    hostname,
+                    ipaddress,
+                    extra_section_name,
+                    for_discovery,
+                ),)
 
         return section_contents
 

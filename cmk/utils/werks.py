@@ -258,6 +258,7 @@ VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
 
 # Parses versions of Check_MK and converts them into comparable integers.
 def parse_check_mk_version(v):
+    # type: (str) -> int
     """Figure out how to compare versions semantically.
 
     Parses versions of Check_MK and converts them into comparable integers.

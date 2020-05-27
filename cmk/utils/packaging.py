@@ -27,7 +27,7 @@ import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_unicode, ensure_bytestr
+from cmk.utils.encoding import ensure_text, ensure_bytestr
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -504,7 +504,7 @@ def get_optional_package_infos():
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
             package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
-            optional[ensure_unicode(pkg_path.name)] = package_info
+            optional[ensure_text(pkg_path.name)] = package_info
 
     return optional
 
@@ -621,7 +621,7 @@ def write_package_info(package):
     # type: (PackageInfo) -> None
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
-        f.write(ensure_unicode(pprint.pformat(package) + "\n"))
+        f.write(ensure_text(pprint.pformat(package) + "\n"))
 
 
 def _remove_package_info(pacname):

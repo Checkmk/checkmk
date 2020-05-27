@@ -12,7 +12,7 @@ from typing import Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callabl
 import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -636,7 +636,7 @@ def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
             try:
                 exc_txt = str(e)
             except UnicodeDecodeError:
-                exc_txt = ensure_unicode(str(e))
+                exc_txt = ensure_text(str(e))
 
             html.show_error(
                 _("Problem while rendering dashlet %d of type %s: %s. Have a look at "

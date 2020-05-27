@@ -15,7 +15,7 @@ from typing import AnyStr, Dict, List, Optional
 
 import six
 
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
@@ -78,10 +78,10 @@ class StructuredDataTree:
         # type: (AnyStr) -> None
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if bytes/ensure_unicode is necessary.
+        # TODO: Check if bytes/ensure_text is necessary.
         if not isinstance(tree_path, (bytes, str)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        tp = ensure_unicode(tree_path)
+        tp = ensure_text(tree_path)
         if not tp.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):

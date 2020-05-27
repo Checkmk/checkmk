@@ -14,7 +14,7 @@ if sys.version_info[0] >= 3:
 else:
     from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
 
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.gui.utils.html import HTML
 
 #.
@@ -81,11 +81,11 @@ def escape_attribute(value):
 def unescape_attributes(value):
     # type: (str) -> str
     # In python3 use html.unescape
-    return ensure_unicode(value  #
-                          .replace("&amp;", "&")  #
-                          .replace("&quot;", "\"")  #
-                          .replace("&lt;", "<")  #
-                          .replace("&gt;", ">"))
+    return ensure_text(value  #
+                       .replace("&amp;", "&")  #
+                       .replace("&quot;", "\"")  #
+                       .replace("&lt;", "<")  #
+                       .replace("&gt;", ">"))
 
 
 def escape_text(text):
@@ -188,7 +188,7 @@ def strip_tags(ht):
     if not isinstance(ht, str):
         return u"%s" % ht
 
-    ht = ensure_unicode(ht)
+    ht = ensure_text(ht)
 
     while True:
         x = ht.find('<')

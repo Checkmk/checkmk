@@ -52,7 +52,7 @@ import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 import omdlib
 import omdlib.certs
@@ -136,7 +136,7 @@ class Log(io.StringIO):
     # TODO: Ensure we get Text here
     def write(self, data):
         # type: (str) -> int
-        text = ensure_unicode(data)
+        text = ensure_text(data)
         self.orig.write(text)
         self.log.write(self.color_replace.sub('', text))
         return len(text)

@@ -16,7 +16,7 @@ import six
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -52,7 +52,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    write_tokens = (ensure_unicode(t) for t in write_tokens_tuple)
+    write_tokens = (ensure_text(t) for t in write_tokens_tuple)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:

@@ -24,7 +24,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import UserId
 
 # TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
@@ -1286,5 +1286,5 @@ def theme_choices():
 def get_page_heading():
     # type: () -> str
     if "%s" in page_heading:
-        return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
-    return ensure_unicode(page_heading)
+        return ensure_text(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_text(page_heading)

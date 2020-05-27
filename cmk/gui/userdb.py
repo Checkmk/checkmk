@@ -19,7 +19,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, ContactgroupName
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -580,7 +580,7 @@ def load_users(lock=False):
     result = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_unicode(uid)
+        uid = ensure_text(uid)
 
         profile = contacts.get(uid, {})
         profile.update(user)
@@ -588,14 +588,14 @@ def load_users(lock=False):
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_unicode(profile["email"])
+            profile["email"] = ensure_text(profile["email"])
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_unicode(uid)
+        uid = ensure_text(uid)
 
         if uid not in result:
             result[uid] = contact
@@ -622,7 +622,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]
-            uid = ensure_unicode(uid)
+            uid = ensure_text(uid)
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -649,7 +649,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             user_id, serial = line.split(':')[:2]
-            user_id = ensure_unicode(user_id)
+            user_id = ensure_text(user_id)
             if user_id in result:
                 result[user_id]['serial'] = utils.saveint(serial)
 
@@ -657,7 +657,7 @@ def load_users(lock=False):
     directory = cmk.utils.paths.var_dir + "/web/"
     for d in os.listdir(directory):
         if d[0] != '.':
-            uid = ensure_unicode(d)
+            uid = ensure_text(d)
 
             # read special values from own files
             if uid in result:
@@ -839,7 +839,7 @@ def _cleanup_old_user_profiles(updated_profiles):
     ]
     directory = cmk.utils.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in ['.', '..'] and ensure_unicode(user_dir) not in updated_profiles:
+        if user_dir not in ['.', '..'] and ensure_text(user_dir) not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue

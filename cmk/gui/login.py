@@ -17,7 +17,7 @@ from werkzeug.local import LocalProxy
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_text
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
@@ -112,7 +112,7 @@ def _load_secret():
 
 def _generate_secret():
     # type: () -> str
-    return ensure_unicode(utils.get_random_string(256))
+    return ensure_text(utils.get_random_string(256))
 
 
 def _load_serial(username):
@@ -212,7 +212,7 @@ def _get_session_id_from_cookie(username):
     assert raw_value is not None
     cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
-    if ensure_unicode(cookie_username) != username \
+    if ensure_text(cookie_username) != username \
        or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
         auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
         return ""
@@ -269,7 +269,7 @@ def _parse_auth_cookie(cookie_name):
     raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
-    raw_value = ensure_unicode(raw_cookie)
+    raw_value = ensure_text(raw_cookie)
     username, issue_time, cookie_hash = raw_value.split(':', 2)
     return UserId(username), float(issue_time) if issue_time else 0.0, six.ensure_str(cookie_hash)
 
@@ -366,7 +366,7 @@ def _check_auth_http_header():
     if not user_id:
         return None
 
-    user_id = UserId(ensure_unicode(user_id))
+    user_id = UserId(ensure_text(user_id))
     set_auth_type("http_header")
     _renew_cookie(auth_cookie_name(), user_id)
     return user_id
@@ -382,7 +382,7 @@ def check_auth_web_server(request):
     user = request.remote_user
     if user is not None:
         set_auth_type("web_server")
-        return UserId(ensure_unicode(user))
+        return UserId(ensure_text(user))
 
 
 def _check_auth_by_cookie():

@@ -21,6 +21,21 @@ import cmk.utils.werks
 import cmk.utils.memoize
 
 
+@pytest.mark.parametrize("version_str,expected", [
+    ("1.2.0", 1020050000),
+    ("1.2.0i1", 1020010100),
+    ("1.2.0b1", 1020020100),
+    ("1.2.0b10", 1020021000),
+    ("1.2.0p10", 1020050010),
+    ("2.0.0i1", 2000010100),
+    ("1.6.0-2020.05.26", 1060090000),
+    ("2020.05.26", 2020052650000),
+    ("2020.05.26-sandbox-lm-1.7-drop-py2", "2020052600000"),
+])
+def test_parse_check_mk_version(version_str, expected):
+    assert cmk.utils.werks.parse_check_mk_version(version_str) == expected
+
+
 @pytest.fixture(scope="function")
 def precompiled_werks(tmp_path, monkeypatch):
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")

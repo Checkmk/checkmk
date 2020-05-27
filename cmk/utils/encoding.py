@@ -42,7 +42,7 @@ def ensure_text(value):
     return value.decode("utf-8")
 
 
-def ensure_bytestr(value):
+def ensure_binary(value):
     # type: (AnyStr) -> bytes
     if isinstance(value, bytes):
         return value

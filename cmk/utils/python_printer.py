@@ -11,7 +11,7 @@ from io import StringIO as StrIO
 import sys
 from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
 
-import six
+from six import ensure_str
 
 _bytes = bytes
 _str = str
@@ -96,7 +96,7 @@ def _format_unicode_string(printer, obj):
         else:
             chars.append(repr(str(c))[1:-1])
 
-    printer._write(six.ensure_str("".join([closure, "".join(chars), closure])))
+    printer._write(ensure_str("".join([closure, "".join(chars), closure])))
 
 
 def _format_tuple(printer, obj):

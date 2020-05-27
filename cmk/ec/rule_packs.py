@@ -18,7 +18,7 @@ import pprint
 from typing import Any, Dict, Iterable, List, Optional, Union
 from pathlib import Path
 
-import six
+from six import ensure_text
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -282,7 +282,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / "rules.mk", six.ensure_text(output))
+    store.save_text_to_file(dir_ / "rules.mk", ensure_text(output))
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*

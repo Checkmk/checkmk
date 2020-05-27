@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 from typing import Any, Dict
 
-import six
+from six import ensure_str, ensure_text
 
 import cmk.utils.paths
 
@@ -186,7 +186,7 @@ def _load_werk(path):
 
 def write_precompiled_werks(path, werks):
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(six.ensure_text(json.dumps(werks, check_circular=False)))
+        fp.write(ensure_text(json.dumps(werks, check_circular=False)))
 
 
 def write_as_text(werks, f, write_version=True):
@@ -199,10 +199,10 @@ def write_as_text(werks, f, write_version=True):
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
         # write_version=False is used by the announcement mails
         if write_version:
-            f.write("%s:\n" % six.ensure_str(version))
+            f.write("%s:\n" % ensure_str(version))
         for component, component_group in itertools.groupby(version_group,
                                                             key=translator.component_of):
-            f.write("    %s:\n" % six.ensure_str(component))
+            f.write("    %s:\n" % ensure_str(component))
             for werk in component_group:
                 write_werk_as_text(f, werk)
             f.write("\n")
@@ -221,7 +221,7 @@ def write_werk_as_text(f, werk):
     else:
         omit = ""
 
-    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, six.ensure_str(werk["title"]), omit))
+    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, ensure_str(werk["title"]), omit))
 
     if werk["compatible"] == "incomp":
         f.write("            NOTE: Please refer to the migration notes!\n")

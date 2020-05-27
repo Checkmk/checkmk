@@ -12,7 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import pytest  # type: ignore[import]
-import six
+from six import ensure_binary, ensure_str
 
 import testlib
 
@@ -118,11 +118,11 @@ _werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 @cmk.utils.memoize.MemoizeCache
 def _werks_in_git_tag(tag):
-    werks_in_tag = six.ensure_str(
+    werks_in_tag = ensure_str(
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only",
-             six.ensure_binary(tag), b".werks"],
-            cwd=six.ensure_binary(testlib.cmk_path()))).split("\n")
+             ensure_binary(tag), b".werks"],
+            cwd=ensure_binary(testlib.cmk_path()))).split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

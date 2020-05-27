@@ -16,19 +16,19 @@ def test_01_python_interpreter_exists(site):
 
 
 def test_02_python_interpreter_path(site):
-    p = site.execute(["which", "python"], stdout=subprocess.PIPE)
+    p = site.execute(["which", "python3"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip()
     assert path == "/omd/sites/%s/bin/python3" % site.id
 
 
 def test_03_python_interpreter_version(site):
-    p = site.execute(["python", "-V"], stderr=subprocess.PIPE)
-    version = p.stderr.read()
+    p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
+    version = p.stdout.read()
     assert version.startswith("Python 3.7.4")
 
 
 def test_03_python_path(site):
-    p = site.execute(["python", "-c", "import sys ; print(sys.path)"], stdout=subprocess.PIPE)
+    p = site.execute(["python3", "-c", "import sys ; print(sys.path)"], stdout=subprocess.PIPE)
     sys_path = eval(p.stdout.read())
     assert sys_path[0] == ""
     assert site.root + "/local/lib/python3" in sys_path
@@ -47,11 +47,11 @@ def test_01_pip_exists(site):
 def test_02_pip_path(site):
     p = site.execute(["which", "pip3"], stdout=subprocess.PIPE)
     path = p.stdout.read().strip()
-    assert path == "/omd/sites/%s/bin/pip" % site.id
+    assert path == "/omd/sites/%s/bin/pip3" % site.id
 
 
 def test_03_pip_interpreter_version(site):
-    p = site.execute(["pip", "-V"], stdout=subprocess.PIPE)
+    p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
     assert version.startswith("pip 19.0.3")
 

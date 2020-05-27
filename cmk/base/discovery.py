@@ -1009,10 +1009,12 @@ def _execute_discovery(
     try:
         # TODO: There is duplicate code with checking.execute_check(). Find a common place!
         try:
-            section_content = multi_host_sections.get_section_content(hostname,
-                                                                      ipaddress,
-                                                                      check_plugin_name,
-                                                                      for_discovery=True)
+            section_content = multi_host_sections.get_section_content(
+                hostname,
+                ipaddress,
+                check_plugin_name,
+                for_discovery=True,
+            )
         except MKParseFunctionError as e:
             if cmk.utils.debug.enabled() or on_error == "raise":
                 x = e.exc_info()
@@ -1389,10 +1391,12 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             try:
                 try:
-                    section_content = multi_host_sections.get_section_content(hostname,
-                                                                              ipaddress,
-                                                                              section_name,
-                                                                              for_discovery=True)
+                    section_content = multi_host_sections.get_section_content(
+                        hostname,
+                        ipaddress,
+                        section_name,
+                        for_discovery=True,
+                    )
                 except MKParseFunctionError as e:
                     if cmk.utils.debug.enabled() or on_error == "raise":
                         x = e.exc_info()

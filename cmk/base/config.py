@@ -2364,7 +2364,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             # we need to add this one: If we don't find the section, we just look at the first
             # matching subcheck.
             # The 'is_snmp_*' functions convert to section_name anyway, so this only affects
-            # '_get_management_board_precedence'.
+            # 'get_management_board_precedence'.
             for name in plugins_info:
                 if section_name_of(name) == check_plugin_name:
                     lookup_plugin_name = name
@@ -2378,7 +2378,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             continue
 
         is_snmp_check_ = is_snmp_check_f(lookup_plugin_name)
-        mgmt_board = _get_management_board_precedence(lookup_plugin_name, plugins_info)
+        mgmt_board = get_management_board_precedence(lookup_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:
             if is_snmp_check_:
                 host_precedence_snmp.add(check_plugin_name)
@@ -2398,7 +2398,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
            host_precedence_tcp, host_only_tcp
 
 
-def _get_management_board_precedence(check_plugin_name, plugins_info):
+def get_management_board_precedence(check_plugin_name, plugins_info):
     # type: (CheckPluginName, CheckInfo) -> str
     mgmt_board = plugins_info[check_plugin_name].get("management_board")
     if mgmt_board is None:

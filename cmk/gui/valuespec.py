@@ -17,6 +17,7 @@
 
 import abc
 import base64
+from collections.abc import MutableMapping
 from enum import Enum
 import datetime
 import hashlib
@@ -59,20 +60,6 @@ else:
     from typing import Protocol  # pylint: disable=no-name-in-module
 
 from PIL import Image  # type: ignore[import]
-
-try:
-    # Python has a totally braindead history of changes in this area:
-    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
-    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
-    #   * Python 2.3: Actually, DictMixin might often be a better idea.
-    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
-    #   * Python 3.0: UserDict is gone...
-    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
-    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
-    from collections.abc import MutableMapping  # type: ignore[import]
-except ImportError:
-    from collections import MutableMapping
-
 import six
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto  # type: ignore[import]

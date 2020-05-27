@@ -146,13 +146,6 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
-# Cleanup some unwanted files (example scripts)
-	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
-# These files break the integration tests on the CI server. Don't know exactly
-# why this happens only there, but should be a working fix.
-	$(RM) -r $(DESTDIR)$(OMD_ROOT)/share/snmpsim/data
-# Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))
@@ -171,6 +164,13 @@ $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
+# Cleanup some unwanted files (example scripts)
+	find $(PYTHON3_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/share/snmpsim/data
+# Fix python interpreter for kept scripts
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
 # Ensure all native modules have the correct rpath set
 	set -e ; for F in $$(find $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) -name \*.so); do \
 	    echo -n "Test rpath of $$F..." ; \

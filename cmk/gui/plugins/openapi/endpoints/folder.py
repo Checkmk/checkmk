@@ -4,11 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Folders"""
-import sys
-if sys.version_info[0] >= 3:
-    import http.client as http_client
-else:
-    import httplib as http_client  # pylint: disable=import-error
+import http.client
 
 from connexion import ProblemException  # type: ignore
 
@@ -194,4 +190,4 @@ def load_folder(ident, status=404, message=None):
     except MKUserError as exc:
         if message is None:
             message = str(exc)
-        raise ProblemException(status, http_client.responses[status], message)
+        raise ProblemException(status, http.client.responses[status], message)

@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import http.client
 from typing import Optional
-import six
+
 from werkzeug.http import HTTP_STATUS_CODES
 
 from cmk.utils.exceptions import (
@@ -33,7 +34,7 @@ class HTTPRedirect(FinalizeRequest):
     and making the client request another page after receiving the response."""
     def __init__(self, url):
         # type: (str) -> None
-        super(HTTPRedirect, self).__init__(six.moves.http_client.FOUND)
+        super(HTTPRedirect, self).__init__(http.client.FOUND)
         self.url = url  # type: str
 
 

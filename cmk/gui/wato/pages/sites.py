@@ -11,15 +11,8 @@ import multiprocessing
 import socket
 import contextlib
 import binascii
-
-from typing import (
-    Dict,
-    List,
-    NamedTuple,
-    Text,
-    Union,
-    Tuple as _Tuple,
-)
+import queue
+from typing import Dict, List, NamedTuple, Text, Union, Tuple as _Tuple
 
 import six
 from OpenSSL import crypto  # type: ignore[import]
@@ -849,7 +842,7 @@ class ReplicationStatusFetcher(object):
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
 
-            except six.moves.queue.Empty:
+            except queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:

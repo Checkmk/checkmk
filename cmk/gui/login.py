@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import http.client
 import os
 import time
 import traceback
@@ -598,7 +599,7 @@ class LogoutPage(Page):
             html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
                                                          config.omd_site())
             html.response.set_http_cookie('logout', '1')
-            raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
+            raise FinalizeRequest(http.client.UNAUTHORIZED)
 
         html.response.delete_cookie('logout')
         raise HTTPRedirect(config.url_prefix() + 'check_mk/')

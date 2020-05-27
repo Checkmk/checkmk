@@ -14,6 +14,7 @@ import marshal
 import itertools
 from pathlib import Path
 from typing import Optional, Union, Any, List, Dict, Tuple
+import urllib.parse
 
 import six
 
@@ -57,7 +58,7 @@ def is_allowed_url(url):
     # type: (str) -> bool
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = six.moves.urllib.parse.urlparse(url)
+    parsed = urllib.parse.urlparse(url)
 
     # Don't allow the user to set a URL scheme
     if parsed.scheme != "":

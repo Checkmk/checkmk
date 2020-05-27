@@ -49,6 +49,7 @@ import pprint
 from contextlib import contextmanager
 from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar
 from pathlib import Path
+import urllib.parse
 
 import six
 
@@ -1341,7 +1342,7 @@ class html(ABCHTMLGenerator):
         decoded_qs = [
             (key, value) for key, value in self.request.args.items(multi=True) if key != varname
         ]
-        self.request.environ['QUERY_STRING'] = six.moves.urllib.parse.urlencode(decoded_qs)
+        self.request.environ['QUERY_STRING'] = urllib.parse.urlencode(decoded_qs)
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
         dict.pop(self.request.form, varname, None)

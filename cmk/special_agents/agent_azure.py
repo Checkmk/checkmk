@@ -158,9 +158,7 @@ class ApiErrorMissingData(ApiError):
     pass
 
 
-class BaseApiClient:
-    __METACLASS__ = abc.ABCMeta
-
+class BaseApiClient(metaclass=abc.ABCMeta):
     AUTHORITY = 'https://login.microsoftonline.com'
 
     def __init__(self, base_url):

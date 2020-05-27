@@ -9,8 +9,6 @@ import abc
 import string
 from typing import Any, Dict, List, NamedTuple, NewType, Optional, Set, Tuple, Union
 
-import six
-
 HostName = str
 HostAddress = str
 HostgroupName = str
@@ -272,7 +270,7 @@ class OIDEnd(CompatibleOIDEnd):
         return "OIDEnd()"
 
 
-class ABCSNMPTree(six.with_metaclass(abc.ABCMeta)):
+class ABCSNMPTree(metaclass=abc.ABCMeta):
     # pylint: disable=no-init
 
     @property

@@ -8,8 +8,6 @@ import os
 import abc
 from typing import Dict
 
-import six
-
 import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
@@ -49,7 +47,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def type_name(self):
         # type: () -> str
@@ -131,7 +129,7 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
                 self._show_row_cells(table, name, group)
 
 
-class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def type_name(self):
         # type: () -> str

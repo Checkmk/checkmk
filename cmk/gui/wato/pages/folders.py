@@ -8,13 +8,7 @@
 import abc
 import json
 import operator
-from typing import (
-    List,
-    Tuple,
-    Text,
-    Dict,
-)
-import six
+from typing import List, Tuple, Dict
 
 from cmk.utils.type_defs import HostName
 
@@ -837,7 +831,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return choices
 
 
-class FolderMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class FolderMode(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
         super(FolderMode, self).__init__()
         self._folder = self._init_folder()
@@ -890,7 +884,7 @@ class FolderMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         # title
         basic_attributes = [
             ("title", TextUnicode(title=_("Title")), self._folder.title()),
-        ]  # type: List[Tuple[str, ValueSpec, Text]]
+        ]  # type: List[Tuple[str, ValueSpec, str]]
         html.set_focus("title")
 
         # folder name (omit this for root folder)

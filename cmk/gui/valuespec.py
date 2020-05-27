@@ -2294,7 +2294,7 @@ class ListOfMultiple(ValueSpec):
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
 
 
-class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
+class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _get_choices(self, request):
         # type: (Dict[Text, Text]) -> List[_Tuple[str, ValueSpec]]
@@ -5481,7 +5481,7 @@ class UploadOrPasteTextFile(Alternative):
         return value
 
 
-class ABCTextOrRegExp(six.with_metaclass(abc.ABCMeta, Alternative)):
+class ABCTextOrRegExp(Alternative, metaclass=abc.ABCMeta):
     #@classmethod
     @abc.abstractmethod
     def _text_valuespec_class(self):

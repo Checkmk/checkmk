@@ -9,7 +9,6 @@ import ast
 import time
 from typing import Callable, Dict, List, Optional, Set, Tuple, Union, cast
 
-import six
 from mypy_extensions import NamedArg
 
 from cmk.utils.check_utils import section_name_of
@@ -122,10 +121,9 @@ class CachedSNMPDetector:
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(
-        six.with_metaclass(
-            abc.ABCMeta, DataSource[RawSNMPData, SNMPSections, PersistedSNMPSections,
-                                    SNMPHostSections])):
+class ABCSNMPDataSource(DataSource[RawSNMPData, SNMPSections, PersistedSNMPSections,
+                                   SNMPHostSections],
+                        metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _snmp_config(self):
         # type: () -> SNMPHostConfig

@@ -6,7 +6,6 @@
 
 import abc
 from typing import Tuple, List
-import six
 
 from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
@@ -21,7 +20,7 @@ from cmk.gui.plugins.dashboard import (
 )
 
 
-class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
+class DashletStats(Dashlet, metaclass=abc.ABCMeta):
     @classmethod
     def is_resizable(cls):
         return False

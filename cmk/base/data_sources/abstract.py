@@ -239,10 +239,9 @@ BoundedAbstractHostSections = TypeVar("BoundedAbstractHostSections", bound=Abstr
 # def _cpu_tracking_id(self):
 # def id(self):
 # def describe(self):
-class DataSource(
-        six.with_metaclass(
-            abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                                 BoundedAbstractPersistedSections, BoundedAbstractHostSections])):
+class DataSource(Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                         BoundedAbstractPersistedSections, BoundedAbstractHostSections],
+                 metaclass=abc.ABCMeta):
     """Abstract base class for all data source classes"""
 
     _for_mgmt_board = False
@@ -634,10 +633,9 @@ class DataSource(
 # def _execute(self):
 # def id(self):
 # def describe(self):
-class CheckMKAgentDataSource(
-        six.with_metaclass(
-            abc.ABCMeta, DataSource[RawAgentData, AgentSections, PersistedAgentSections,
-                                    AgentHostSections])):
+class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAgentSections,
+                                        AgentHostSections],
+                             metaclass=abc.ABCMeta):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see

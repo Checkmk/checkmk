@@ -9,7 +9,6 @@ from fnmatch import fnmatch
 import os
 import time
 import io
-import six
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -1605,7 +1604,7 @@ class PainterServiceCustomVariables(Painter):
         return paint_custom_vars('service', row)
 
 
-class ABCPainterCustomVariable(six.with_metaclass(abc.ABCMeta, Painter)):
+class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
     def title(self, cell):
         return self._dynamic_title
 
@@ -4703,7 +4702,7 @@ class PainterHostTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
 
 
-class ABCPainterTagsWithTitles(six.with_metaclass(abc.ABCMeta, Painter)):
+class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()

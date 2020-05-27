@@ -9,12 +9,7 @@ import abc
 import os
 import pprint
 import re
-from typing import (
-    Text,
-    Dict,
-    Any,
-)
-import six
+from typing import Dict, Any
 
 from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
@@ -80,7 +75,7 @@ def custom_attr_types():
 
 
 # TODO: Refactor to be valuespec based
-class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
@@ -119,12 +114,12 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
     @abc.abstractproperty
     def _macro_help(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractproperty
     def _macro_label(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -134,7 +129,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
     @abc.abstractmethod
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         raise NotImplementedError()
 
     def _add_extra_attrs_from_html_vars(self):
@@ -294,7 +289,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     @property
     def _macro_help(self):
-        # type: () -> Text
+        # type: () -> str
         return _(
             'The attribute can be added to the contact definiton in order to use it for notifications.'
         )
@@ -375,7 +370,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
                             "back")
 
 
-class ModeCustomAttrs(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
         super(ModeCustomAttrs, self).__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about

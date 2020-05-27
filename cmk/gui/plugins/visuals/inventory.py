@@ -7,14 +7,7 @@
 import abc
 import re
 import time
-from typing import (
-    Text,
-    List,
-    Optional,
-    Tuple,
-    Callable,
-)
-import six
+from typing import List, Optional, Tuple, Callable
 
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
@@ -39,7 +32,7 @@ from cmk.gui.type_defs import (
     Rows,)
 
 
-class FilterInvtableText(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -83,7 +76,7 @@ class FilterInvtableText(six.with_metaclass(abc.ABCMeta, Filter)):
         return newrows
 
 
-class FilterInvtableTimestampAsAge(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -152,7 +145,7 @@ class FilterInvtableTimestampAsAge(six.with_metaclass(abc.ABCMeta, Filter)):
 
 
 # Filter for choosing a range in which a certain integer lies
-class FilterInvtableIDRange(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -191,7 +184,7 @@ class FilterInvtableIDRange(six.with_metaclass(abc.ABCMeta, Filter)):
         return newrows
 
 
-class FilterInvtableOperStatus(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -239,7 +232,7 @@ class FilterInvtableOperStatus(six.with_metaclass(abc.ABCMeta, Filter)):
         return new_rows
 
 
-class FilterInvtableAdminStatus(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -270,7 +263,7 @@ class FilterInvtableAdminStatus(six.with_metaclass(abc.ABCMeta, Filter)):
         return new_rows
 
 
-class FilterInvtableAvailable(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -303,7 +296,7 @@ class FilterInvtableAvailable(six.with_metaclass(abc.ABCMeta, Filter)):
         return new_rows
 
 
-class FilterInvtableInterfaceType(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -358,7 +351,7 @@ class FilterInvtableInterfaceType(six.with_metaclass(abc.ABCMeta, Filter)):
         return new_rows
 
 
-class FilterInvtableVersion(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invinfo(self):
         # type: () -> str
@@ -396,7 +389,7 @@ class FilterInvtableVersion(six.with_metaclass(abc.ABCMeta, Filter)):
         return new_rows
 
 
-class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvText(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
@@ -446,7 +439,7 @@ class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
         return newrows
 
 
-class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
+class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
@@ -511,7 +504,7 @@ class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
         return newrows
 
 
-class FilterInvBool(six.with_metaclass(abc.ABCMeta, FilterTristate)):
+class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
@@ -551,7 +544,7 @@ class FilterHasInv(FilterTristate):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Has Inventory Data")
 
     @property
@@ -590,7 +583,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Host has software package")
 
     @property
@@ -710,12 +703,12 @@ class VisualInfoHost(VisualInfo):
 
     @property
     def title(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Inventory History")
 
     @property
     def title_plural(self):
-        # type: () -> Text
+        # type: () -> str
         return _("Inventory Historys")
 
     @property

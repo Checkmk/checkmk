@@ -13,6 +13,7 @@ from cmk.utils.type_defs import (
     RawAgentData,
     ServiceCheckResult,
     ServiceDetails,
+    SourceType,
 )
 
 from cmk.base.config import IPMICredentials
@@ -25,7 +26,7 @@ from .abstract import CheckMKAgentDataSource
 
 # NOTE: This class is *not* abstract, even if pylint is too dumb to see that!
 class IPMIManagementBoardDataSource(CheckMKAgentDataSource):
-    _for_mgmt_board = True
+    _source_type = SourceType.MANAGEMENT
 
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None

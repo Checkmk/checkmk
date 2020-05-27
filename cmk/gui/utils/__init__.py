@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Optional, Union, Any, List, Dict, Tuple
 import urllib.parse
 
-import six
+from six import ensure_str, PY3
 
 import cmk.utils.paths
 
@@ -133,7 +133,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
         while len(secret) < size:
             c = urandom.read(1)
             if ord(c) >= from_ascii and ord(c) <= to_ascii:
-                secret += six.ensure_str(c)
+                secret += ensure_str(c)
     return secret
 
 
@@ -142,7 +142,7 @@ def gen_id():
     """Generates a unique id"""
     try:
         with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
-            return six.ensure_str(f.read().strip())
+            return ensure_str(f.read().strip())
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
@@ -187,7 +187,7 @@ def load_web_plugins(forwhat, globalvars):
 
 def _drop_comments(content):
     # type: (str) -> str
-    if six.PY3:
+    if PY3:
         return content
 
     # Files opened with Pathlib handler are by default unicode encoded,

@@ -18,7 +18,7 @@ from contextlib import contextmanager
 import traceback
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
-import six
+from six import ensure_binary
 from livestatus import SiteId, LivestatusRow
 
 from cmk.utils.defines import host_state_name
@@ -464,7 +464,7 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
+            return hashlib.md5(ensure_binary(repr(entry))).hexdigest()
 
         for group in set(groups):  # Flattened groups
             new_entries_hash = list(map(get_hash, new_entries))

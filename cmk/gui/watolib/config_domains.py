@@ -14,7 +14,7 @@ import subprocess
 import traceback
 from typing import Any, Dict, List, Tuple, Set
 
-import six
+from six import ensure_binary, ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -248,7 +248,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += [six.ensure_binary(e) for e in current_config["trusted_cas"]]
+        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
 
         store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors
@@ -388,7 +388,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
-                    line = six.ensure_str(line.strip())
+                    line = ensure_str(line.strip())
 
                     if line == "" or line.startswith("#"):
                         continue

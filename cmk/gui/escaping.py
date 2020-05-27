@@ -7,14 +7,13 @@
 import sys
 import re
 from typing import Union
-import six
+from six import ensure_str, ensure_text
 
 if sys.version_info[0] >= 3:
     from html import escape as html_escape  # type: ignore[attr-defined]
 else:
     from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
 
-from six import ensure_text
 from cmk.gui.utils.html import HTML
 
 #.
@@ -73,7 +72,7 @@ def escape_attribute(value):
     if isinstance(attr_type, str):
         return html_escape(value, quote=True)
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
-        return html_escape(six.ensure_str(value), quote=True)
+        return html_escape(ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
     return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 

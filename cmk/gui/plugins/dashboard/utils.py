@@ -381,7 +381,7 @@ class Dashlet(metaclass=abc.ABCMeta):
         return globals()[urlfunc]()
 
 
-class IFrameDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
+class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
     """Base class for all dashlet using an iframe"""
     @classmethod
     def is_iframe_dashlet(cls):

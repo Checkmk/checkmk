@@ -24,7 +24,6 @@ from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
 from pysmi.reader.callback import CallbackReader  # type: ignore[import]
 from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
 from pysmi.error import PySmiError  # type: ignore[import]
-import six
 
 import cmk.utils.version as cmk_version
 import cmk.utils.log
@@ -1036,7 +1035,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 #   '----------------------------------------------------------------------'
 
 
-class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.

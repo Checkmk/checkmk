@@ -9,7 +9,6 @@ import abc
 import traceback
 import json
 from typing import Optional, Any, Dict, List, Tuple, Type
-import six
 
 import cmk.utils.plugin_registry
 
@@ -118,7 +117,7 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
         return {}
 
 
-class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class CustomizableSidebarSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     """Parent for all user configurable sidebar snapins
 
     Subclass this class in case you want to implement a sidebar snapin type that can

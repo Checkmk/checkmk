@@ -6,19 +6,7 @@
 
 import abc
 import sys
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Union,
-    Tuple,
-    Dict,
-    Set,
-    List,
-    Optional,
-    Generic,
-)
-import six
+from typing import Any, Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
@@ -55,10 +43,9 @@ from cmk.base.exceptions import MKParseFunctionError
 MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], "AbstractHostSections"]
 
 
-class AbstractHostSections(
-        six.with_metaclass(
-            abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
-                                 BoundedAbstractPersistedSections, BoundedAbstractSectionContent])):
+class AbstractHostSections(Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                                   BoundedAbstractPersistedSections, BoundedAbstractSectionContent],
+                           metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:

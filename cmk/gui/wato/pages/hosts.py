@@ -6,7 +6,6 @@
 """Modes for creating and editing hosts"""
 
 import abc
-import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -31,7 +30,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.folders import delete_host_after_confirm
 
 
-class HostMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class HostMode(WatoMode, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _init_host(self):
         raise NotImplementedError()

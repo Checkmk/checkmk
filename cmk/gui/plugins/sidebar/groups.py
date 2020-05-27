@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
 import cmk.gui.sites as sites
 from cmk.gui.plugins.sidebar import (
@@ -17,7 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 
-class GroupSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()

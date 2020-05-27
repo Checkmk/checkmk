@@ -10,8 +10,6 @@ import os
 from typing import Dict
 from pathlib import Path
 
-import six
-
 import cmk.utils.store as store
 
 import cmk.gui.config as config
@@ -76,7 +74,7 @@ class FetchAgentOutputRequest(object):
 
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
+class AgentOutputPage(Page, metaclass=abc.ABCMeta):
     def __init__(self):
         # type: () -> None
         super(AgentOutputPage, self).__init__()
@@ -181,7 +179,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                                             ])
 
 
-class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCommand)):
+class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.

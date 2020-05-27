@@ -6,7 +6,6 @@
 
 import abc
 import time
-import six
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -142,7 +141,7 @@ class SorterSitealias(Sorter):
             r1["site"])["alias"] < config.site(r2["site"])["alias"])
 
 
-class ABCTagSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -191,7 +190,7 @@ class SorterServiceTags(ABCTagSorter):
         return ["service_tags"]
 
 
-class ABCLabelSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()

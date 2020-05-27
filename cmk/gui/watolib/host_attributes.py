@@ -10,7 +10,6 @@ import abc
 import functools
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Type
-import six
 
 import cmk.utils.plugin_registry
 
@@ -743,7 +742,7 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     return host
 
 
-class ABCHostAttributeText(six.with_metaclass(abc.ABCMeta, ABCHostAttribute)):
+class ABCHostAttributeText(ABCHostAttribute, metaclass=abc.ABCMeta):
     """A simple text attribute. It is stored in a Python unicode string"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -833,7 +832,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         self.valuespec().validate_value(value, varprefix + self.name())
 
 
-class ABCHostAttributeFixedText(six.with_metaclass(abc.ABCMeta, ABCHostAttributeText)):
+class ABCHostAttributeFixedText(ABCHostAttributeText, metaclass=abc.ABCMeta):
     """A simple text attribute that is not editable by the user.
 
     It can be used to store context information from other
@@ -887,7 +886,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
         return html.request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
-class ABCHostAttributeTag(six.with_metaclass(abc.ABCMeta, ABCHostAttributeValueSpec)):
+class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def is_checkbox_tag(self):
         # type: () -> bool
@@ -909,7 +908,7 @@ class ABCHostAttributeTag(six.with_metaclass(abc.ABCMeta, ABCHostAttributeValueS
         return self._tag_group.get_tag_group_config(value)
 
 
-class ABCHostAttributeHostTagList(six.with_metaclass(abc.ABCMeta, ABCHostAttributeTag)):
+class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
     """A selection dropdown for a host tag"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -937,7 +936,7 @@ class ABCHostAttributeHostTagList(six.with_metaclass(abc.ABCMeta, ABCHostAttribu
         return True
 
 
-class ABCHostAttributeHostTagCheckbox(six.with_metaclass(abc.ABCMeta, ABCHostAttributeTag)):
+class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, metaclass=abc.ABCMeta):
     """A checkbox for a host tag group"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see

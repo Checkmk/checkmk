@@ -8,7 +8,6 @@ import abc
 import json
 import inspect
 from typing import Any, Callable, Dict, Mapping, Optional, Type
-import six
 
 import cmk.utils.plugin_registry
 from cmk.gui.globals import html
@@ -40,7 +39,7 @@ class Page(metaclass=abc.ABCMeta):
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
+class AjaxPage(Page, metaclass=abc.ABCMeta):
     """Generic page handler that wraps page() calls into AJAX respones"""
     def __init__(self):
         super(AjaxPage, self).__init__()

@@ -9,7 +9,6 @@ to hosts and that is the basis of the rules."""
 from typing import Any, Dict, List, Set, Tuple as _Tuple, Union
 import abc
 from enum import Enum
-import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -59,7 +58,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -351,7 +350,7 @@ class ModeTags(ABCTagMode):
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
 
-class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
+class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
@@ -802,7 +801,7 @@ class ABCOperation(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(six.with_metaclass(abc.ABCMeta, ABCOperation)):
+class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.

@@ -11,7 +11,6 @@ from typing import Type, Iterator
 
 import requests
 import urllib3  # type: ignore[import]
-import six
 
 from livestatus import LocalConnection
 
@@ -496,7 +495,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
-class ABCACApacheTest(six.with_metaclass(abc.ABCMeta, ACTest)):
+class ABCACApacheTest(ACTest, metaclass=abc.ABCMeta):
     """Abstract base class for apache related tests"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see

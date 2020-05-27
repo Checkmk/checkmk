@@ -1035,7 +1035,7 @@ class ConfigHostname(TextAsciiAutocomplete):
         return match_list
 
 
-class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class EventsMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):

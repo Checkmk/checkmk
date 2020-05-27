@@ -9,8 +9,6 @@ import re
 import json
 from typing import Any, Dict, List, Optional as _Optional
 
-import six
-
 import livestatus
 
 import cmk.utils.version as cmk_version
@@ -2483,7 +2481,7 @@ class FilterDowntimeId(FilterText):
         FilterText.__init__(self, "downtime", "downtime_id", "downtime_id", "=")
 
 
-class ABCTagFilter(six.with_metaclass(abc.ABCMeta, Filter)):
+class ABCTagFilter(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -2685,7 +2683,7 @@ class FilterHostAuxTags(Filter):
         return True
 
 
-class ABCLabelFilter(six.with_metaclass(abc.ABCMeta, Filter)):
+class ABCLabelFilter(Filter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -2780,7 +2778,7 @@ class FilterServiceLabels(ABCLabelFilter):
         return True
 
 
-class ABCFilterCustomAttribute(six.with_metaclass(abc.ABCMeta, Filter)):
+class ABCFilterCustomAttribute(Filter, metaclass=abc.ABCMeta):
     @property
     def sort_index(self):
         return 103

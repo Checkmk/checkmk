@@ -20,8 +20,6 @@ try:
 except ImportError:
     from collections import MutableMapping
 
-import six
-
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Labels, CheckPluginName
 
@@ -29,7 +27,7 @@ HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginName]]]
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, MutableMapping, object)):
+class ABCDiscoveredLabels(MutableMapping, object, metaclass=abc.ABCMeta):
     def __init__(self, *args):
         # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()

@@ -115,7 +115,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
         },)
 
 
-class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
+class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
         self._crash_id = html.request.get_unicode_input_mandatory("crash_id")

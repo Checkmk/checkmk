@@ -9,7 +9,7 @@
 from typing import Type
 import abc
 import json
-import six
+
 from cmk.gui.plugins.dashboard import Dashlet
 from cmk.gui.globals import html
 
@@ -44,7 +44,7 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         return create_figures_response(response_data)
 
 
-class ABCFigureDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
+class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     """ Base class for cmk_figures based graphs
         Only contains the dashlet spec, the data generation is handled in the
         DataGenerator classes, to split visualization and data

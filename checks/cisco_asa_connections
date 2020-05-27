@@ -4,10 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# changes by thl-cmk[at]outlook[dot]com
+# 2020-05-07:
+# - changed service name to "Firewall connections" to better distinguish from "Connection" (interface check cisco_asa_con)
+# - changed snmp_info to more correctly match ip connections OID values,
+#   according to the MIB there are more protocols posible i.e. protoTCP/protoUDP but not in use at the moment
+# - renamed overall_used_conns to peak_used_conns and added to perfdata
+# - changed output from return function to yield
+# - added Cisco FirePower support to scan function
+# - added warn/crit lower
+
+# snmpwalk -v2c -c public simulant .1.3.6.1.4.1.9.9.147.1.2.2.2.1.5 -m CISCO-FIREWALL-MIB
+# CISCO-FIREWALL-MIB::cfwConnectionStatValue.protoIp.currentInUse = Gauge32: 1093
+# CISCO-FIREWALL-MIB::cfwConnectionStatValue.protoIp.high = Gauge32: 1256
+
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.3.40.6  "number of connections currently in use by the entire firewall"
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.3.40.7  "highest number of connections in use at any one time since system startup"
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.5.40.6  1045
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.5.40.7  2816
+
+#
+# sample info [['1093'], ['1256']]
+#
+#
 
 
 def inventory_cisco_asa_connections(info):
@@ -16,35 +35,43 @@ def inventory_cisco_asa_connections(info):
 
 def check_cisco_asa_connections(_no_item, params, info):
     used_conns = int(info[0][0])
-    overall_used_conns = info[1][0]
-    infotext = "Currently used: %s" % used_conns
-    state = 0
+    peak_used_conns = int(info[1][0])
+    infotext = "Currently used: %s, Max. since system startup: %s" % (used_conns, peak_used_conns)
+
+    warn_upper = None
+    crit_upper = None
 
     if params.get("connections"):
-        warn, crit = params["connections"]
-        perfdata = [("fw_connections_active", used_conns, warn, crit)]
-        if used_conns >= crit:
-            state = 2
-        elif used_conns >= warn:
-            state = 1
-        if state > 0:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
-    else:
-        perfdata = [("fw_connections_active", used_conns)]
+        warn_upper, crit_upper = params["connections"]
+        if used_conns >= crit_upper:
+            yield 2, 'Used connections >= %s' % crit_upper
+        elif used_conns >= warn_upper:
+            yield 1, 'Used connections >= %s' % warn_upper
 
-    return state, "%s, Max. since system startup: %s" % (infotext, overall_used_conns), perfdata
+    if params.get("connections_lower"):
+        warn_lower, crit_lower = params["connections_lower"]
+        if used_conns <= crit_lower:
+            yield 2, 'Used connections <= %s' % crit_lower
+        elif used_conns <= warn_lower:
+            yield 1, 'Used connections <= %s' % warn_lower
+
+    perfdata = [("fw_connections_active", used_conns, warn_upper, crit_upper),
+                ("fw_connections_peak", peak_used_conns)]
+
+    yield 0, infotext, perfdata
 
 
 check_info['cisco_asa_connections'] = {
     'inventory_function'    : inventory_cisco_asa_connections,
     'check_function'        : check_cisco_asa_connections,
-    'service_description'   : 'Connections',
-    'snmp_info'             : ('.1.3.6.1.4.1.9.9.147.1.2.2.2.1', [
-                                '5', # CISCO-FIREWALL-MIB::cfwConnectionStatValue
+    'service_description'   : 'Firewall connections',
+    'snmp_info'             : ('.1.3.6.1.4.1.9.9.147.1.2.2.2.1.5', [ # CISCO-FIREWALL-MIB::cfwConnectionStatValue
+                                '40', # protoIp
                               ]),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
-                                          or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services") \
-                                          or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+                                       or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services") \
+                                       or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firepower threat defense") \
+                                       or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group"                 : "cisco_fw_connections",
     "has_perfdata"          : True,
 }

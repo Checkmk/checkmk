@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -22,9 +22,19 @@ def _parameter_valuespec_cisco_fw_connections():
     return Dictionary(elements=[
         ("connections",
          Tuple(
-             help=_("This rule sets limits to the current number of connections through "
-                    "a Cisco ASA firewall."),
+             help=_("This rule sets upper limits to the current number of connections through "
+                    "a Cisco PIX/ASA/FirePower firewall."),
              title=_("Maximum number of firewall connections"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+        ("connections_lower",
+         Tuple(
+             help=_("This rule sets lower limits to the current number of connections through "
+                    "a Cisco PIX/ASA/FirePower firewall."),
+             title=_("Minimum number of firewall connections"),
              elements=[
                  Integer(title=_("Warning at")),
                  Integer(title=_("Critical at")),
@@ -39,5 +49,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_fw_connections,
-        title=lambda: _("Cisco ASA Firewall Connections"),
+        title=lambda: _("Cisco Firewall Connections"),
     ))

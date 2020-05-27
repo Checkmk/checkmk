@@ -588,6 +588,12 @@ metric_info["tcp_idle"] = {
 metric_info["fw_connections_active"] = {
     "title": _("Active connections"),
     "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["fw_connections_peak"] = {
+    "title": _("Peak connections"),
+    "unit": "count",
     "color": "15/a",
 }
 
@@ -1610,6 +1616,19 @@ graph_info["firewall_connections"] = {
         ("fw_connections_halfopened", "stack"),
         ("fw_connections_halfclosed", "stack"),
         ("fw_connections_passthrough", "stack"),
+    ],
+}
+
+graph_info["firewall_connections_with_peak_value"] = {
+    "title": _("Firewall connections"),
+    "metrics": [
+        ("fw_connections_active", "area"),
+        ("fw_connections_peak", "line"),
+    ],
+    "range": (0, "fw_active_sessions_peak:max"),
+    "scalars": [
+        "fw_active_sessions:warn",
+        "fw_active_sessions:crit",
     ],
 }
 

@@ -27,7 +27,7 @@ import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_text, ensure_bytestr
+from cmk.utils.encoding import ensure_text, ensure_binary
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -182,10 +182,10 @@ def create_mkp_file(package, file_object=None):
         tar.addfile(info, info_file)
 
     # add the regular info file (Python format)
-    add_file("info", ensure_bytestr(pprint.pformat(package)))
+    add_file("info", ensure_binary(pprint.pformat(package)))
 
     # add the info file a second time (JSON format) for external tools
-    add_file("info.json", ensure_bytestr(json.dumps(package)))
+    add_file("info.json", ensure_binary(json.dumps(package)))
 
     # Now pack the actual files into sub tars
     for part in get_package_parts() + get_config_parts():

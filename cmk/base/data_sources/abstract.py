@@ -24,7 +24,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode, ensure_bytestr
+from cmk.utils.encoding import convert_to_unicode, ensure_binary
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
@@ -701,7 +701,7 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
         # type: (RawAgentData) -> bytes
         raw_data = cast(RawAgentData, raw_data)
         # TODO: This does not seem to be needed
-        return ensure_bytestr(raw_data)
+        return ensure_binary(raw_data)
 
     def _convert_to_sections(self, raw_data):
         # type: (RawAgentData) -> AgentHostSections

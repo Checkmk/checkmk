@@ -49,7 +49,9 @@ def check_netapp_api_snapvault(item, params, snapvault):
                 state = 1
 
     lag_time_minutes = lag_time / 60
-    perfdata = [ ("lag_time_minutes", lag_time_minutes, warn, crit) ]
+    warn_minutes = warn / 60
+    crit_minutes = crit / 60
+    perfdata = [ ("lag_time_minutes", lag_time_minutes, warn_minutes, crit_minutes) ]
 
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time), perfdata
 

@@ -89,7 +89,9 @@ try:
     )
     from cmk.base.api.agent_based.checking_types import CheckPlugin
     from cmk.base.api.agent_based.register.check_plugins_legacy import (
-        create_check_plugin_from_legacy,)
+        create_check_plugin_from_legacy,
+        resolve_legacy_name,
+    )
 except ImportError:
     # API is only Python3. This script is still called by python2 modules,
     # which for the moment don't require the API and for the time being we
@@ -1063,8 +1065,20 @@ def get_final_service_description(hostname, description):
     return new_description
 
 
-def service_ignored(hostname, check_plugin_name, description):
-    # type: (HostName, Optional[CheckPluginName], Optional[ServiceName]) -> bool
+def service_ignored(
+        hostname,  # type: HostName
+        check_plugin_name,  # type: Optional[Union[CheckPluginName, PluginName]]
+        description,  # type: Optional[ServiceName]
+):
+    # type: (...) -> bool
+    # TODO (mo): CMK-4573 Clean this up, once a PluginName instance can be in ignored_checktypes
+    if isinstance(check_plugin_name, PluginName):
+        try:
+            check_plugin_name = resolve_legacy_name(check_plugin_name)
+        except ValueError:
+            # no corresponding legcy plugin -> not yet disabled
+            return False
+
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
 

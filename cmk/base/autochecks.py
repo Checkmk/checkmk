@@ -16,7 +16,6 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.type_defs import CheckVariables
 from cmk.utils.log import console
 
@@ -135,8 +134,6 @@ class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
             # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
             # items from existing autocheck files for compatibility. TODO remove this one day
             item = entry["item"]
-            if isinstance(item, str):
-                item = convert_to_unicode(item)
 
             if not isinstance(entry["check_plugin_name"], str):
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
@@ -232,12 +229,6 @@ def _parse_autocheck_entry(hostname, entry, service_description):
         item = None
     else:
         raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
-
-    # With Check_MK 1.2.7i3 items are now defined to be unicode
-    # strings. Convert items from existing autocheck files for
-    # compatibility.
-    if isinstance(item, str):
-        item = convert_to_unicode(item)
 
     try:
         description = service_description(hostname, check_plugin_name, item)

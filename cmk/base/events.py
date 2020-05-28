@@ -29,7 +29,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.regex import regex
 import cmk.utils.debug
 import cmk.utils.daemon
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.type_defs import EventRule
 
 import cmk.base.config as config
@@ -211,20 +210,10 @@ def expand_backslashes(value):
     return value.replace("\\\\", "\0").replace("\\n", "\n").replace("\0", "\\")
 
 
-def convert_context_to_unicode(context):
-    # type: (EventContext) -> None
-    # Convert all values to unicode
-    for key, value in context.items():
-        if isinstance(value, str):
-            context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
-
-
 def render_context_dump(raw_context):
     # type: (EventContext) -> str
-    encoded_context = dict(raw_context)
-    convert_context_to_unicode(encoded_context)
-    return "Raw context:\n" \
-               + "\n".join(["                    %s=%s" % v for v in sorted(encoded_context.items())])
+    return "Raw context:\n" + "\n".join("                    %s=%s" % v  #
+                                        for v in sorted(raw_context.items()))
 
 
 def find_host_service_in_context(context):
@@ -394,8 +383,6 @@ def complete_raw_context(raw_context, with_dump):
         if raw_context["WHAT"] == "SERVICE":
             raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
         raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
-
-        convert_context_to_unicode(raw_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)

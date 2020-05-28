@@ -33,7 +33,6 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -1135,12 +1134,6 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
                           (hostname, check_plugin_name, repr(entry)))
             continue
-
-        # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
-        # strings here seamless. TODO remove this conversion one day and replace it
-        # with a validation that item needs to be of type unicode
-        if isinstance(item, str):
-            item = convert_to_unicode(item)
 
         description = config.service_description(hostname, check_plugin_name, item)
         # make sanity check

@@ -34,14 +34,14 @@ discovery = {
 checks = {
     '': [('/vol/ipb_datap/', {}, [(0, 'Source-System: 172.31.12.15', []),
                                   (0, 'Status: idle state snapvaulted', []),
-                                  (0, 'Lag-Time: 14 h', [PerfValue('lag_time_minutes', 896, None, None, None, None)]])]),
+                                  (0, 'Lag-Time: 14 h', [PerfValue('lag_time_minutes', 896, None, None, None, None)])]),
          ('/vol/ipb_datas/', {}, [(0, 'Source-System: 172.31.12.15', []),
                                   (0, 'Status: idle state snapvaulted', []),
-                                  (0, 'Lag-Time: 14 h', [PerfValue('lag_time_minutes', 896, None, None, None, None)]])]),
+                                  (0, 'Lag-Time: 14 h', [PerfValue('lag_time_minutes', 896, None, None, None, None)])]),
          ('/vol/ipb_user/', {}, [(0, 'Source-System: 172.31.12.15', []),
                                  (0, 'Status: idle state snapvaulted', []), (0, 'Lag-Time: 26 h',
-                                                                             [PerfValue('lag_time_minutes', 1616, None, None, None, None)]])]),
+                                                                             [PerfValue('lag_time_minutes', 1616, None, None, None, None)])]),
          ('/vol/ipb_vol0/', {}, [(0, 'Source-System: 172.31.12.15', []),
                                  (0, 'Status: idle state snapvaulted', []), (0, 'Lag-Time: 26 h',
-                                                                             [PerfValue('lag_time_minutes', 1616, None, None, None, None)]])])]
+                                                                             [PerfValue('lag_time_minutes', 1616, None, None, None, None)])])]
 }

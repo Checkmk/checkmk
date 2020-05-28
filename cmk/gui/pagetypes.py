@@ -27,7 +27,7 @@ from typing import (
     Tuple,
     Optional as _Optional,
 )
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
@@ -783,7 +783,7 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user_dir in os.listdir(config.config_dir):
-            user = UserId(ensure_text(user_dir))
+            user = UserId(ensure_str(user_dir))
             try:
                 path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user), cls.type_name())
                 if not os.path.exists(path):

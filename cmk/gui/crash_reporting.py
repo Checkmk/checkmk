@@ -14,7 +14,7 @@ import time
 import traceback
 from typing import Dict, Mapping, Optional
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import livestatus
 
@@ -527,7 +527,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return ensure_text(base64.b64decode(local_vars))
+    return ensure_str(base64.b64decode(local_vars))
 
 
 def format_params(params):

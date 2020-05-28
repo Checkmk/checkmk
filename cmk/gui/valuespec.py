@@ -60,7 +60,7 @@ else:
     from typing import Protocol  # pylint: disable=no-name-in-module
 
 from PIL import Image  # type: ignore[import]
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto  # type: ignore[import]
 
@@ -163,7 +163,7 @@ class ValueSpec(object):
             return None
 
         assert isinstance(self._help, str)
-        return ensure_text(self._help)
+        return ensure_str(self._help)
 
     def render_input(self, varprefix, value):
         # type: (str, Any) -> None
@@ -297,7 +297,7 @@ class FixedValue(ValueSpec):
             return self._totext
         if isinstance(value, str):
             return value
-        return ensure_text(value)
+        return ensure_str(value)
 
     def from_html_vars(self, varprefix):
         # type: (str) -> Any
@@ -647,7 +647,7 @@ class TextAscii(ValueSpec):
 
         if self._attrencode:
             return escaping.escape_attribute(value)
-        return ensure_text(value)
+        return ensure_str(value)
 
     def from_html_vars(self, varprefix):
         # type: (str) -> str
@@ -683,7 +683,7 @@ class TextAscii(ValueSpec):
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:
-            if not self._regex.match(ensure_text(value)):
+            if not self._regex.match(ensure_str(value)):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:
@@ -1000,7 +1000,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
         this_ip_class = ipaddress.IPv4Address if ip_class is None else ip_class
         try:
-            this_ip_class(ensure_text(value))
+            this_ip_class(ensure_str(value))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
@@ -3909,8 +3909,8 @@ class TimeofdayRange(ValueSpec):
         if value is None:
             return u""
 
-        return ensure_text(self._bounds[0].value_to_text(value[0]) + "-" +
-                           self._bounds[1].value_to_text(value[1]))
+        return ensure_str(self._bounds[0].value_to_text(value[0]) + "-" +
+                          self._bounds[1].value_to_text(value[1]))
 
     def from_html_vars(self, varprefix):
         # type: (str) -> _Optional[TimeofdayRangeValue]
@@ -4833,8 +4833,8 @@ class Dictionary(ValueSpec):
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        headers = self._headers if self._headers else [(ensure_text(self.title() or
-                                                                    _("Properties")), [])]
+        headers = self._headers if self._headers else [(ensure_str(self.title() or _("Properties")),
+                                                        [])]
         for header, css, section_elements in map(self._normalize_header, headers):
             self.render_input_form_header(varprefix,
                                           value,
@@ -5617,7 +5617,7 @@ class Labels(ValueSpec):
         # see: https://github.com/yairEO/tagify/pull/275
         labels = _encode_labels_for_tagify(value.items())
         html.text_input(varprefix,
-                        default_value=ensure_text(json.dumps(labels)) if labels else "",
+                        default_value=ensure_str(json.dumps(labels)) if labels else "",
                         cssclass="labels",
                         placeholder=_("Add some label"),
                         data_world=self._world.value,

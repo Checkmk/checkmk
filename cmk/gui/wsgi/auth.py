@@ -9,7 +9,7 @@ import time
 from typing import Optional
 
 from connexion import problem  # type: ignore[import]
-from six import ensure_text
+from six import ensure_str
 
 from cmk.utils.type_defs import UserId
 
@@ -42,7 +42,7 @@ def bearer_auth(token):
     if "/" in user_id:
         return None
 
-    if verify_automation_secret(UserId(ensure_text(user_id)), secret):
+    if verify_automation_secret(UserId(ensure_str(user_id)), secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
         return _subject(user_id)
 

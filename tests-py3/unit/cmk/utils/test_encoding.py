@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from six import ensure_text, ensure_binary
+from six import ensure_binary, ensure_str
 
 
 @pytest.mark.parametrize("source, utf8str", [
@@ -14,8 +14,8 @@ from six import ensure_text, ensure_binary
     ("há li", u"há li"),
     (u"hé ßß", u"hé ßß"),
 ])
-def test_ensure_text(source, utf8str):
-    assert ensure_text(source) == utf8str
+def test_ensure_str(source, utf8str):
+    assert ensure_str(source) == utf8str
 
 
 @pytest.mark.parametrize("source, bytestr", [

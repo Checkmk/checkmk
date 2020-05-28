@@ -8,7 +8,7 @@ import json
 import json.encoder
 
 import pytest  # type: ignore[import]
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 from cmk.gui.utils.html import HTML
 
@@ -60,8 +60,8 @@ def test_class_HTML():
     assert HTML() == HTML('')
     assert HTML(HTML()) == HTML()
     # One day we will fix this!
-    assert str(A) == ensure_text(a), str(A)
-    assert "%s" % A == ensure_text(a), "%s" % A
+    assert str(A) == ensure_str(a), str(A)
+    assert "%s" % A == ensure_str(a), "%s" % A
     assert json.loads(json.dumps(A)) == A
     assert repr(A) == 'HTML(\"%s\")' % ensure_str(A.value)
     assert len(B) == len(b)
@@ -112,7 +112,7 @@ def test_class_HTML():
 
     assert A == a
 
-    assert ("%s" % A) == ensure_text(a)
+    assert ("%s" % A) == ensure_str(a)
 
     assert B + C != C + B
 

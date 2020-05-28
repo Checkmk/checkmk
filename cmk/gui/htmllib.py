@@ -51,7 +51,7 @@ from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapp
 from pathlib import Path
 import urllib.parse
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 Value = TypeVar('Value')
 
@@ -1422,7 +1422,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = ensure_text(val) if isinstance(val, bytes) else val
+                request[key] = ensure_str(val) if isinstance(val, bytes) else val
 
         return request
 
@@ -2302,7 +2302,7 @@ class html(ABCHTMLGenerator):
         if isinstance(msg_or_exc, Exception):
             message = u"%s" % msg_or_exc  # type: str
         else:
-            message = ensure_text(msg_or_exc)
+            message = ensure_str(msg_or_exc)
 
         # TODO: Find the multiple varname call sites and clean this up
         if isinstance(varname, list):

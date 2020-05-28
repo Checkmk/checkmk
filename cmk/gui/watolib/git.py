@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils
 
@@ -93,7 +93,7 @@ def _git_command(args):
 
     status = p.wait()
     if status != 0:
-        out = u"" if p.stdout is None else ensure_text(p.stdout.read())
+        out = u"" if p.stdout is None else ensure_str(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
             (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))

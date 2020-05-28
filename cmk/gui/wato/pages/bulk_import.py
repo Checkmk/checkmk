@@ -13,7 +13,7 @@ from typing import Dict, Type, List, Optional, Any
 from pathlib import Path
 
 from difflib import SequenceMatcher
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.store as store
 
@@ -115,7 +115,7 @@ class ModeBulkImport(WatoMode):
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
 
-        store.save_text_to_file(self._file_path(), ensure_text(content))
+        store.save_text_to_file(self._file_path(), ensure_str(content))
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)

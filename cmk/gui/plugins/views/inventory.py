@@ -9,7 +9,7 @@ import time
 import abc
 from typing import Dict, Tuple
 
-from six import ensure_text
+from six import ensure_str
 
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
@@ -1784,7 +1784,7 @@ class NodeRenderer(object):
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
         elif isinstance(value, str):
-            html.write_text(ensure_text(value))
+            html.write_text(ensure_str(value))
         elif isinstance(value, int):
             html.write(str(value))
         elif isinstance(value, float):

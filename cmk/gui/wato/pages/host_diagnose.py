@@ -8,7 +8,7 @@
 import json
 from typing import List, Text
 
-from six import ensure_text
+from six import ensure_str
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -401,5 +401,5 @@ class ModeAjaxDiagHost(AjaxPage):
         return {
             "next_transid": html.transaction_manager.fresh_transid(),
             "status_code": result[0],
-            "output": ensure_text(result[1], errors="replace"),
+            "output": ensure_str(result[1], errors="replace"),
         }

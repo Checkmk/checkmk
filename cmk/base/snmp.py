@@ -11,7 +11,7 @@ from contextlib import suppress
 from typing import Dict, Iterable, List, Optional, Tuple
 from pathlib import Path
 
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
 import cmk.utils.snmp_cache as snmp_cache
@@ -161,7 +161,7 @@ def _convert_rows_for_stored_walk(rows):
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, ensure_text(value)))
+            new_rows.append((oid, ensure_str(value)))
     return new_rows
 
 
@@ -269,7 +269,7 @@ def _do_snmpwalk_on(snmp_config, options, filename):
     with Path(filename).open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(snmp_config, oids):
             for oid, value in rows:
-                file.write(ensure_text("%s %s\n" % (oid, value)))
+                file.write(ensure_str("%s %s\n" % (oid, value)))
             console.verbose("%d variables.\n" % len(rows))
 
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))

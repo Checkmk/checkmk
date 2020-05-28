@@ -9,7 +9,7 @@ import time
 import os
 
 from typing import Callable, Set, Dict, Any, Union, List, Tuple as _Tuple, Optional as _Optional
-from six import ensure_text
+from six import ensure_str
 
 from livestatus import SiteId
 
@@ -550,25 +550,25 @@ def render_number_function(timeformat):
         def render_number(n, d):
             if not d:
                 return _("n/a")
-            return ensure_text(("%." + timeformat[11:] + "f%%") % (float(n) / float(d) * 100.0))
+            return ensure_str(("%." + timeformat[11:] + "f%%") % (float(n) / float(d) * 100.0))
     elif timeformat == "seconds":
 
         def render_number(n, d):
-            return ensure_text("%d s" % n)
+            return ensure_str("%d s" % n)
     elif timeformat == "minutes":
 
         def render_number(n, d):
-            return ensure_text("%d min" % (n / 60))  # fixed: true-division
+            return ensure_str("%d min" % (n / 60))  # fixed: true-division
     elif timeformat == "hours":
 
         def render_number(n, d):
-            return ensure_text("%d h" % (n / 3600))  # fixed: true-division
+            return ensure_str("%d h" % (n / 3600))  # fixed: true-division
     else:
 
         def render_number(n, d):
             minn, sec = divmod(n, 60)
             hours, minn = divmod(minn, 60)
-            return ensure_text("%02d:%02d:%02d" % (hours, minn, sec))
+            return ensure_str("%02d:%02d:%02d" % (hours, minn, sec))
 
     return render_number
 
@@ -1428,7 +1428,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                             elif aggr == "max":
                                 r = render_number(x_max, entry["considered_duration"])
                             else:
-                                r = ensure_text(x_cnt)
+                                r = ensure_str(x_cnt)
                                 summary_counts.setdefault(ssid, 0)
                                 summary_counts[ssid] += x_cnt
                             cells.append((r, css))
@@ -1575,7 +1575,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
         texts = []
         for _timeformat, render_number in timeformats:
             texts.append(render_number(n, d))
-        return ensure_text(", ".join(texts))
+        return ensure_str(", ".join(texts))
 
     def chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
         # type: (AVTimeStamp, AVTimeStamp, int, int) -> AVTimelineSpan
@@ -1707,7 +1707,7 @@ def find_next_choord(broken, scale):
         epoch = time.mktime(broken)
         epoch += 3600
         broken[:] = list(time.localtime(epoch))
-        title = ensure_text(time.strftime("%H:%M", broken))
+        title = ensure_str(time.strftime("%H:%M", broken))
 
     elif scale == "2hours":
         broken[3] = int(broken[3] / 2) * 2

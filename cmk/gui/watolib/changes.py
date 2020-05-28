@@ -12,7 +12,7 @@ import time
 from typing import Dict
 from pathlib import Path
 
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.store as store
@@ -51,7 +51,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    write_tokens = (ensure_text(t) for t in write_tokens_tuple)
+    write_tokens = (ensure_str(t) for t in write_tokens_tuple)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:

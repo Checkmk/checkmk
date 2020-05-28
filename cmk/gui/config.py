@@ -14,7 +14,7 @@ from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Tuple, Unio
 from pathlib import Path
 import time
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
     SiteId, SiteConfiguration, SiteConfigurations,
@@ -443,7 +443,7 @@ def _initial_permission_cache(user_id):
     # type: (Optional[UserId]) -> Dict[str, bool]
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
-    if user_id in [ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return {
             "general.use": True,  # use Multisite
             "wato.use": True,  # enter WATO
@@ -884,11 +884,11 @@ def roles_of_user(user_id):
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    if user_id in [ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return ["admin"]
-    if user_id in [ensure_text(u) for u in guest_users]:
+    if user_id in [ensure_str(u) for u in guest_users]:
         return ["guest"]
-    if users is not None and user_id in [ensure_text(u) for u in users]:
+    if users is not None and user_id in [ensure_str(u) for u in users]:
         return ["user"]
     if user_id is not None and os.path.exists(config_dir + "/" + ensure_str(user_id) +
                                               "/automation.secret"):
@@ -1285,5 +1285,5 @@ def theme_choices():
 def get_page_heading():
     # type: () -> str
     if "%s" in page_heading:
-        return ensure_text(page_heading % (site(omd_site()).get('alias', _("GUI"))))
-    return ensure_text(page_heading)
+        return ensure_str(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_str(page_heading)

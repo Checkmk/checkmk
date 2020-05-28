@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, NamedTuple, Op
 from pathlib import Path
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
@@ -992,7 +992,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    descr_format = ensure_text(descr_format)
+    descr_format = ensure_str(descr_format)
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item

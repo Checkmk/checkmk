@@ -16,7 +16,7 @@ import sys
 import time
 import urllib.parse
 
-from six import ensure_text
+from six import ensure_str
 
 from testlib.utils import (
     cmk_path,
@@ -294,7 +294,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
                              stdout=open(os.devnull, "w"))
-            p.communicate(ensure_text(content))
+            p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))

@@ -18,7 +18,7 @@ import urllib.parse
 from mock import MagicMock
 import webtest  # type: ignore[import]
 import pytest  # type: ignore[import]
-from six import ensure_text
+from six import ensure_str
 from werkzeug.test import create_environ
 
 import cmk.utils.log
@@ -161,7 +161,7 @@ def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-defau
             if not _cache:
                 _cache.append(generate())
 
-    spec_data = ensure_text(_cache[0])
+    spec_data = ensure_str(_cache[0])
     store.makedirs(spec_path)
     store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
 

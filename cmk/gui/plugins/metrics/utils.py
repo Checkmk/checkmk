@@ -24,7 +24,7 @@ from typing import (
     Union,
 )
 
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
@@ -269,7 +269,7 @@ def _split_perf_data(perf_data_string):
     parts = shlex.split(ensure_str(perf_data_string))
     if isinstance(perf_data_string, bytes):
         return [ensure_binary(s) for s in parts]
-    return [ensure_text(s) for s in parts]
+    return [ensure_str(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):

@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
@@ -61,7 +61,7 @@ class Htpasswd(object):
     def save(self, entries):
         # type: (Dict[str, str]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = u"\n".join(u"%s:%s" % (ensure_text(e[0]), ensure_text(e[1]))
+        output = u"\n".join(u"%s:%s" % (ensure_str(e[0]), ensure_str(e[1]))
                             for e in sorted(entries.items())) + u"\n"
         store.save_text_to_file("%s" % self._path, output)
 

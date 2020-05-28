@@ -8,7 +8,7 @@
 import sys
 from typing import List, Optional, Any, Iterator, Union, Dict, Tuple
 
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json
 from werkzeug.utils import get_content_type
@@ -324,7 +324,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
             if val is None:
                 return None
-            return ensure_text(val)
+            return ensure_str(val)
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,

@@ -73,7 +73,11 @@ def _create_discovery_function(check_info_dict):
     # 1) ensure we have the correct signature
     # 2) ensure it is a generator of Service instances
     def discovery_migration_wrapper(section):
-        original_discovery_result = check_info_dict["inventory_function"](section)
+        disco_func = check_info_dict.get("inventory_function")
+        if not callable(disco_func):  # never discover:
+            return
+
+        original_discovery_result = disco_func(section)
         if not original_discovery_result:
             return
 

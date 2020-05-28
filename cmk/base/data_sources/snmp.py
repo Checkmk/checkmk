@@ -321,10 +321,13 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _get_raw_section_names_to_process(self):
         # type: () -> Set[CheckPluginName]
         """Return a set of raw section names that shall be processed"""
-        # TODO (mo): At this point, this is an exact copy of the super classes
-        #            former get_check_plugin_names method. Obviously this will change...
+        if self._selected_raw_section_names is not None:
+            return {str(n) for n in self._selected_raw_section_names}
+
+        # TODO (mo): At the moment, we must also consider the legacy version:
         if self._enforced_check_plugin_names is not None:
             return self._enforced_check_plugin_names
+
         return self._detector(
             self._snmp_config,
             on_error=self._on_error,

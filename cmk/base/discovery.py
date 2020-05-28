@@ -36,6 +36,11 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.register.check_plugins_legacy import (
+    maincheckify,
+    resolve_legacy_name,
+)
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
@@ -53,8 +58,6 @@ import cmk.base.section as section
 import cmk.base.snmp_scan as snmp_scan
 import cmk.base.utils
 
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.register.check_plugins_legacy import resolve_legacy_name
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import CheckParameters, DiscoveredService, FinalSectionContent
 from cmk.base.core_config import MonitoringCore
@@ -112,12 +115,20 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname, ipaddress, do_snmp_scan, on_error)
+            # If check plugins are specified via command line,
+            # see with raw sections we may need
+            selected_raw_sections = config.get_relevant_raw_sections(
+                # TODO (mo): move this out of the loop!
+                PluginName(maincheckify(n))
+                for n in arg_check_plugin_names) if arg_check_plugin_names is not None else None
 
-            # When check types are specified via command line,
-            # enforce them and disable auto detection
-            if arg_check_plugin_names:
-                sources.enforce_check_plugin_names(arg_check_plugin_names)
+            sources = _get_sources_for_discovery(
+                hostname,
+                ipaddress,
+                do_snmp_scan,
+                on_error,
+                selected_raw_sections=selected_raw_sections,
+            )
 
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
@@ -956,9 +967,15 @@ def _get_sources_for_discovery(
         do_snmp_scan,  # type: bool
         on_error,  # type: str
         for_check_discovery=False,  # type: bool
+        *,
+        selected_raw_sections=None,  # type: Optional[Set[config.SectionPlugin]]
 ):
     # type: (...) -> data_sources.DataSources
-    sources = data_sources.DataSources(hostname, ipaddress)
+    sources = data_sources.DataSources(
+        hostname,
+        ipaddress,
+        selected_raw_sections=selected_raw_sections,
+    )
 
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):

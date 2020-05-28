@@ -15,7 +15,6 @@ import datetime
 from contextlib import contextmanager
 from pathlib import Path
 
-import six
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
 

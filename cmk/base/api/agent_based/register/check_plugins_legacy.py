@@ -89,10 +89,14 @@ def _create_discovery_function(check_info_dict):
                     labels=list(element.service_labels),
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
-                yield Service(
-                    item=element[0],
+                service = Service(
+                    item=element[0] or None,
                     parameters=wrap_parameters(element[-1] or {}),
                 )
+                # nasty hack for nasty plugins:
+                # Bypass validation. Item should be None or non-empty string!
+                service._item = element[0]  # pylint: disable=protected-access
+                yield service
             else:
                 # just let it through. Base must deal with bogus return types anyway.
                 yield element

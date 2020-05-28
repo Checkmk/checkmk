@@ -37,6 +37,10 @@ from cmk.base.api.agent_based.checking_types import (
 
 ITEM_VARIABLE = "%s"
 
+MANAGEMENT_NAME_PREFIX = "mgmt_"
+
+MANAGEMENT_DESCR_PREFIX = "Management Interface: "
+
 
 def _validate_service_name(plugin_name, service_name):
     # type: (str, str) -> None
@@ -47,6 +51,15 @@ def _validate_service_name(plugin_name, service_name):
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
         raise ValueError("[%s]: service_name must contain %r at most once" %
                          (plugin_name, ITEM_VARIABLE))
+
+    if (plugin_name.startswith(MANAGEMENT_NAME_PREFIX)
+            is not service_name.startswith(MANAGEMENT_DESCR_PREFIX)):
+        raise ValueError(
+            "[%s]: service name and description inconsistency: Please neither have your plugins "
+            "name start with %r, nor the description with %r. In the rare case that you want to "
+            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            " you must do both of the above." %
+            (plugin_name, MANAGEMENT_NAME_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
 def _requires_item(service_name):

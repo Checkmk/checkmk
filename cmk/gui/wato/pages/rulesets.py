@@ -14,7 +14,6 @@ from typing import Dict, Generator, List, Optional, Text, Union
 
 from six import ensure_str
 
-from six import ensure_str
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import (

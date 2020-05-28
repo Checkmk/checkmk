@@ -280,26 +280,24 @@ content changes.
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python. At the moment the most of the code base is
-using Python 2.7. We are already preparing to change to Python 3, but this will
-take some time. We plan to finish this until 2020. For the moment Python 2.7 is
-the language to use.
+using Python 3.7.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
 ### Agent plugins: Supported Python versions
 
-The agent plugins need to be executed on older Linux systems which may
-have very old Python versions available. For this reason we need to use
-the old Python 2.5 compatible syntax here.
+The agent plugins are however available Python 2 compatible. These Python 2
+variants (.py2 ending in agents/plugins) will (in the future) be generated
+automatically from the Python 3 scripts, so no Python 2 script needs to be
+programmed.
 
-On the monitored host we use Python for some popular agent plugins (like
-`mk_logwatch`).  These are currently built to support Python 2.5 to Python 2.7.
+The Python 2 compatible plugins are compatible with Python 2.5 up to 2.7.
 
 Python plugins that are incompatible to 2.5, for example because some 3rd party
-library is not available with 2.5, need to be syntax compatible with 2.5 for
-the moment, but are allowed to terminate with a helpful error message about
-this incompatibility.
+library is not available with 2.5, need to be syntax compatible with 2.5 for the
+moment, but are allowed to terminate with a helpful error message about this
+incompatibility.
 
 Use `#!/usr/bin/env python` as shebang.
 
@@ -311,8 +309,8 @@ In case you want to explicitly create a Python 3 agent plugin, use
 
 ### Imports
 
-Don't use star import like `from module import *`. They make it hard to understand which
-names are really available and needed in the current namespace.
+Don't use star import like `from module import *`. They make it hard to
+understand which names are really available and needed in the current namespace.
 
 ### Exception handling
 
@@ -367,8 +365,8 @@ names are really available and needed in the current namespace.
 
 ### Argument parsing
 
-* Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
-  have to support Python <2.5, use `optparse`.
+* Use `argparse`. In agent plugins, which have to support Python <2.5, use
+  `optparse`.
 
 ### Logging
 
@@ -535,7 +533,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests-py3 test-mypy`.
+Code can be checked manually with `make -C tests-py3 test-mypy3`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to

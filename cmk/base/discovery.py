@@ -1397,6 +1397,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                                         discovered_service.description)
             section_name = section_name_of(discovered_service.check_plugin_name)
 
+            section_content = None
             try:
                 try:
                     section_content = multi_host_sections.get_section_content(

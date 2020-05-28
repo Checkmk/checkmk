@@ -13,17 +13,17 @@ function python_files() {
         prefix=tests-py3/
     fi
     for file in $2; do
-        if [[ ${file#"$GIT_ROOT/"} == $prefix* ]]; then
-            echo $file
-            continue
-        else
-            continue
-        fi
-        if [[ ${file#"$GIT_ROOT/"} == cmk/utils* ]]; then
+        relative=${file#"$GIT_ROOT/"}
+        if [[ $relative == $prefix* ]]; then
             echo $file
             continue
         fi
         if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
+            echo $file
+            continue
+        fi
+        # Assume 3 by default
+        if [ $1 -eq 3 ]; then
             echo $file
             continue
         fi

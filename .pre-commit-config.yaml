@@ -60,19 +60,9 @@ repos:
             language: script
             types: [file, python]
             verbose: true
-          - id: futurize
-            name: Check futurize
-            entry: scripts/check-futurize
-            language: script
-            types: [file, python]
           - id: mypy
             name: Check types with mypy
             entry: scripts/check-mypy
-            language: script
-            types: [file, python]
-          - id: shebang
-            name: Check shebang lines
-            entry: scripts/check-shebang
             language: script
             types: [file, python]
           - id: licence

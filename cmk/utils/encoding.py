@@ -7,29 +7,20 @@
 
 from typing import AnyStr, Optional
 
+from six import ensure_str
+
 
 def convert_to_unicode(
     value,
+    *,
     encoding=None,
     std_encoding="utf-8",
     fallback_encoding="latin-1",
-    on_error=None,
 ):
-    # type: (AnyStr, Optional[str], str, str, Optional[str]) -> str
-    if isinstance(value, str):
-        return value
-
+    # type: (AnyStr, Optional[str], str, str) -> str
     if encoding:
-        return value.decode(encoding)
-
+        return ensure_str(value, encoding)
     try:
-        return value.decode(std_encoding)
+        return ensure_str(value, std_encoding)
     except UnicodeDecodeError:
-        pass
-
-    try:
-        return value.decode(fallback_encoding)
-    except UnicodeDecodeError:
-        if on_error is None:
-            raise
-        return on_error
+        return ensure_str(value, fallback_encoding)

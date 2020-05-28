@@ -7,7 +7,7 @@
 import sys
 import re
 from typing import Union
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 if sys.version_info[0] >= 3:
     from html import escape as html_escape  # type: ignore[attr-defined]
@@ -80,11 +80,11 @@ def escape_attribute(value):
 def unescape_attributes(value):
     # type: (str) -> str
     # In python3 use html.unescape
-    return ensure_text(value  #
-                       .replace("&amp;", "&")  #
-                       .replace("&quot;", "\"")  #
-                       .replace("&lt;", "<")  #
-                       .replace("&gt;", ">"))
+    return ensure_str(value  #
+                      .replace("&amp;", "&")  #
+                      .replace("&quot;", "\"")  #
+                      .replace("&lt;", "<")  #
+                      .replace("&gt;", ">"))
 
 
 def escape_text(text):
@@ -187,7 +187,7 @@ def strip_tags(ht):
     if not isinstance(ht, str):
         return u"%s" % ht
 
-    ht = ensure_text(ht)
+    ht = ensure_str(ht)
 
     while True:
         x = ht.find('<')

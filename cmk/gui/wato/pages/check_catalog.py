@@ -7,7 +7,7 @@
 import re
 from typing import Set, List, Dict, Any
 
-from six import ensure_text
+from six import ensure_str
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
@@ -145,8 +145,8 @@ class ModeCheckPlugins(WatoMode):
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
             if isinstance(entry, dict):
-                name = ensure_text(entry.get("name", ""))
-                title = ensure_text(entry.get("title", ""))
+                name = ensure_str(entry.get("name", ""))
+                title = ensure_str(entry.get("title", ""))
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
 

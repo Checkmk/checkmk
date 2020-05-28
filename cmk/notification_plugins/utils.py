@@ -15,7 +15,7 @@ import sys
 from typing import Dict, List, Tuple
 
 import requests
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.paths
@@ -25,7 +25,7 @@ import cmk.utils.password_store
 def collect_context():
     # type: () -> Dict[str, str]
     return {
-        var[7:]: ensure_text(value)
+        var[7:]: ensure_str(value)
         for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_")
     }

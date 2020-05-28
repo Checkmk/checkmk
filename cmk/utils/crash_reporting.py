@@ -21,7 +21,7 @@ from typing import Any, Dict, Iterator, Optional, Tuple, Type
 import uuid
 import urllib.parse
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -277,7 +277,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return ensure_text(
+    return ensure_str(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

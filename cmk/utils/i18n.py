@@ -7,7 +7,7 @@
 
 from typing import AnyStr
 
-from six import ensure_text
+from six import ensure_str
 
 
 # TODO: Clean this up one day by using the way recommended by gettext.
@@ -16,4 +16,4 @@ from six import ensure_text
 # Fake i18n when not available
 def _(string):
     # type: (AnyStr) -> str
-    return ensure_text(string)
+    return ensure_str(string)

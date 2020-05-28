@@ -21,7 +21,7 @@ import os
 import re
 from pathlib import Path
 
-from six import ensure_text
+from six import ensure_str
 
 import cmk.utils.paths
 from cmk.gui.i18n import _u
@@ -51,7 +51,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_text(entry)
+            entry = ensure_str(entry)
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

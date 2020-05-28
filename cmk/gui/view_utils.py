@@ -8,7 +8,7 @@ import re
 import json
 from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
 
-from six import ensure_text
+from six import ensure_str
 
 from livestatus import SiteId
 
@@ -54,7 +54,7 @@ def format_plugin_output(output, row=None, shall_escape=True):
     if shall_escape:
         output = escaping.escape_attribute(output)
     else:
-        output = ensure_text("%s" % output)
+        output = ensure_str("%s" % output)
 
     output = output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
@@ -185,7 +185,7 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
         ]  # type: HTTPVariables
     elif label_type == "label":
         type_filter_vars = [
-            ("%s_label" % object_type, ensure_text(json.dumps([{
+            ("%s_label" % object_type, ensure_str(json.dumps([{
                 "value": "%s:%s" % (tg_id, tag)
             }]))),
         ]

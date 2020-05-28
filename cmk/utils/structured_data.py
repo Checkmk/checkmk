@@ -13,7 +13,7 @@ import re
 import pprint
 from typing import AnyStr, Dict, List, Optional
 
-from six import ensure_binary, ensure_text
+from six import ensure_binary, ensure_str
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -77,10 +77,10 @@ class StructuredDataTree:
         # type: (AnyStr) -> None
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if bytes/ensure_text is necessary.
+        # TODO: Check if bytes/ensure_str is necessary.
         if not isinstance(tree_path, (bytes, str)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        tp = ensure_text(tree_path)
+        tp = ensure_str(tree_path)
         if not tp.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):

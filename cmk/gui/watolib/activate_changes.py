@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple
 
 import psutil  # type: ignore[import]
-from six import ensure_binary, ensure_text
+from six import ensure_binary, ensure_str
 
 from livestatus import (
     SiteId,
@@ -1844,7 +1844,7 @@ def _create_distributed_wato_file_for_dcd(base_dir):
 
     with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",
                                                                           encoding="utf-8") as f:
-        f.write(ensure_text(wato_fileheader()))
+        f.write(ensure_str(wato_fileheader()))
         f.write(u"dcd_is_wato_remote_site = True\n")
 
 
@@ -1995,7 +1995,7 @@ def _get_sync_archive(to_sync, base_dir):
 
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_text(stderr)))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
 
     return archive
 
@@ -2020,7 +2020,7 @@ def _unpack_sync_archive(sync_archive, base_dir):
     stderr = p.communicate(sync_archive)[1]
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_text(stderr)))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
 
 
 ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [

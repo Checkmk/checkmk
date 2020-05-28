@@ -9,7 +9,7 @@ import copy
 import json
 from typing import Dict, Optional, NamedTuple, Tuple, Type, List, Union, Callable
 
-from six import ensure_text
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 from cmk.gui.utils.html import HTML
@@ -637,7 +637,7 @@ def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
             try:
                 exc_txt = str(e)
             except UnicodeDecodeError:
-                exc_txt = ensure_text(str(e))
+                exc_txt = ensure_str(str(e))
 
             html.show_error(
                 _("Problem while rendering dashlet %d of type %s: %s. Have a look at "

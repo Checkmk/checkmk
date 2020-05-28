@@ -10,7 +10,7 @@ import sys
 import ast
 from pathlib import Path
 
-from six import ensure_text
+from six import ensure_str
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -324,8 +324,8 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
             # mypy does not get the types of the ast objects here
             labels.add_label(
                 ServiceLabel(
-                    ensure_text(key.s),  # type: ignore[attr-defined]
-                    ensure_text(value.s),  # type: ignore[attr-defined]
+                    ensure_str(key.s),  # type: ignore[attr-defined]
+                    ensure_str(value.s),  # type: ignore[attr-defined]
                 ))
     return labels
 

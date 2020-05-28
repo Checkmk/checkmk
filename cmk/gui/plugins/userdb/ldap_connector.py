@@ -43,7 +43,7 @@ from typing import Optional, IO, Union, Dict, List, Set
 import ldap  # type: ignore[import]
 import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -617,8 +617,8 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[ensure_text(key).lower()] = [ensure_text(i) for i in val]
-                        result.append((ensure_text(dn).lower(), new_obj))
+                            new_obj[ensure_str(key).lower()] = [ensure_str(i) for i in val]
+                        result.append((ensure_str(dn).lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(

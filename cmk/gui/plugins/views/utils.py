@@ -15,7 +15,7 @@ from pathlib import Path
 import traceback
 from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import livestatus
 from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
@@ -285,7 +285,7 @@ def row_id(view_spec, row):
     key = u''
     for col in data_source_registry[view_spec['datasource']]().id_keys:
         key += u'~%s' % row[col]
-    return ensure_text(hashlib.sha256(key.encode('utf-8')).hexdigest())
+    return ensure_str(hashlib.sha256(key.encode('utf-8')).hexdigest())
 
 
 def group_value(row, group_cells):
@@ -1114,7 +1114,7 @@ def paint_stalified(row, text):
 def paint_host_list(site, hosts):
     # type: (SiteId, List[HostName]) -> CellSpec
     return "", ", ".join(
-        cmk.gui.view_utils.get_host_list_links(site, [ensure_text(h) for h in hosts]))
+        cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
 
 
 def format_plugin_output(output, row):
@@ -1810,7 +1810,7 @@ class Cell(object):
 
     def export_title(self):
         # type: () -> str
-        return ensure_text(self.painter_name())
+        return ensure_str(self.painter_name())
 
     def painter_options(self):
         # type: () -> List[str]
@@ -2118,7 +2118,7 @@ def _encode_sorter_url(sorters):
             url += '~' + s.join_key
         p.append(url)
 
-    return ensure_text(','.join(p))
+    return ensure_str(','.join(p))
 
 
 def _parse_url_sorters(sort):

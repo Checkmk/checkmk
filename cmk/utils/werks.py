@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 from typing import Any, Dict
 
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.paths
 
@@ -186,7 +186,7 @@ def _load_werk(path):
 
 def write_precompiled_werks(path, werks):
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(ensure_text(json.dumps(werks, check_circular=False)))
+        fp.write(ensure_str(json.dumps(werks, check_circular=False)))
 
 
 def write_as_text(werks, f, write_version=True):

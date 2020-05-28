@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import AnyStr, Dict, Generic, List, Optional, Set, Tuple, TypeVar, Union, cast
 
-from six import ensure_binary, ensure_str, ensure_text
+from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.agent_simulator as agent_simulator
@@ -1034,7 +1034,7 @@ def _normalize_ip_addresses(ip_addresses):
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()
 
-    decoded_ip_addresses = [ensure_text(word) for word in ip_addresses]
+    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
     expanded = [word for word in decoded_ip_addresses if '{' not in word]
     for word in decoded_ip_addresses:
         if word in expanded:

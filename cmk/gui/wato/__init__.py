@@ -81,7 +81,7 @@ import copy
 import inspect
 from hashlib import sha256
 from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
-from six import ensure_str, ensure_text
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -684,7 +684,7 @@ def add_scanned_hosts_to_folder(folder, found):
     entries = []
     for host_name, ipaddr in found:
         host_name = ensure_str(
-            cmk.utils.translations.translate_hostname(translation, ensure_text(host_name)))
+            cmk.utils.translations.translate_hostname(translation, ensure_str(host_name)))
 
         attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
 

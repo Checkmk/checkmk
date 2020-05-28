@@ -150,7 +150,7 @@ def clear_cache(monkeypatch):
     monkeypatch.setattr(snmp_cache, "_g_single_oid_cache", {})
 
 
-def test_get_single_oid_ipv6(snmp_config, backend):
+def test_get_single_oid_ipv6(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -159,11 +159,11 @@ def test_get_single_oid_ipv6(snmp_config, backend):
         ipaddress="::1",
     )
 
-    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
+    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(snmp_config, backend):
+def test_get_single_oid_snmpv3(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
@@ -174,44 +174,43 @@ def test_get_single_oid_snmpv3(snmp_config, backend):
         'authOnlyUser',
     ))
 
-    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
+    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(snmp_config, backend):
+def test_get_single_oid_wrong_credentials(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(credentials="dingdong")
-    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
+    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result is None
 
 
-def test_get_single_oid(snmp_config, backend):
-    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0", backend=backend)
+def test_get_single_oid(snmp_config):
+    result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(snmp_config, backend):
+def test_get_single_oid_cache(snmp_config):
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
-    assert snmp.get_single_oid(snmp_config, oid, backend=backend) == expected_value
+    assert snmp.get_single_oid(snmp_config, oid) == expected_value
     assert snmp_cache.is_in_single_oid_cache(oid)
     cached_oid = snmp_cache.get_oid_from_single_oid_cache(oid)
     assert cached_oid == expected_value
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(snmp_config, backend):
+def test_get_single_non_prefixed_oid(snmp_config):
     with pytest.raises(MKGeneralException, match="does not begin with"):
-        snmp.get_single_oid(snmp_config, "1.3.6.1.2.1.1.1.0", backend=backend)
+        snmp.get_single_oid(snmp_config, "1.3.6.1.2.1.1.1.0")
 
 
-def test_get_single_oid_next(snmp_config, backend):
-    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.*",
-                               backend=backend) == ".1.3.6.1.6.3.10.3.1.1"
+def test_get_single_oid_next(snmp_config):
+    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.*") == ".1.3.6.1.6.3.10.3.1.1"
 
 
 # The get_single_oid function currently does not support OID_BIN handling
@@ -219,21 +218,20 @@ def test_get_single_oid_next(snmp_config, backend):
 #    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
 
 
-def test_get_single_oid_value(snmp_config, backend):
-    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.2.1",
-                               backend=backend) == '.1.3.6.1.6.3.10.3.1.1'
+def test_get_single_oid_value(snmp_config):
+    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.2.1") == '.1.3.6.1.6.3.10.3.1.1'
 
 
-def test_get_single_oid_not_existing(snmp_config, backend):
-    assert snmp.get_single_oid(snmp_config, ".1.3.100.200.300.400", backend=backend) is None
+def test_get_single_oid_not_existing(snmp_config):
+    assert snmp.get_single_oid(snmp_config, ".1.3.100.200.300.400") is None
 
 
-def test_get_single_oid_not_resolvable(snmp_config, backend):
+def test_get_single_oid_not_resolvable(snmp_config):
     if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     snmp_config = snmp_config.update(ipaddress="bla.local")
-    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0", backend=backend) is None
+    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0") is None
 
 
 @pytest.mark.parametrize("oid,expected_table", [

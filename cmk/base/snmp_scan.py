@@ -21,7 +21,6 @@ import cmk.base.snmp as snmp
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import SNMPDetectAtom, SNMPDetectSpec
 from cmk.base.snmp_utils import ScanFunction
-from cmk.fetchers import factory  # pylint: disable=cmk-module-layer-violation
 
 
 def _evaluate_snmp_detection(oid_function, detect_spec):
@@ -78,7 +77,6 @@ def _snmp_scan(host_config,
                for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    backend = factory.backend(host_config)
 
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
@@ -91,10 +89,7 @@ def _snmp_scan(host_config,
                                                         config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
-            value = snmp.get_single_oid(host_config,
-                                        oid,
-                                        do_snmp_scan=do_snmp_scan,
-                                        backend=backend)
+            value = snmp.get_single_oid(host_config, oid, do_snmp_scan=do_snmp_scan)
             if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -133,11 +128,7 @@ def _snmp_scan(host_config,
 
             def oid_function(oid, default_value=None, cp_name=check_plugin_name):
                 # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
-                value = snmp.get_single_oid(host_config,
-                                            oid,
-                                            cp_name,
-                                            do_snmp_scan=do_snmp_scan,
-                                            backend=backend)
+                value = snmp.get_single_oid(host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
                 return default_value if value is None else value
 
             if callable(detection_spec):

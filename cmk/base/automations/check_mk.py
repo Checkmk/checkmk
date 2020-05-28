@@ -58,7 +58,6 @@ from cmk.base.automations import Automation, MKAutomationError, automations
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
-from cmk.fetchers import factory  # pylint: disable=cmk-module-layer-violation
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -1401,7 +1400,6 @@ class AutomationDiagHost(Automation):
             snmp_config,
             "",
             ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
-            backend=factory.backend(snmp_config),
         )
 
         if data:

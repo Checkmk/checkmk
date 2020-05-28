@@ -101,6 +101,8 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache)
+    check_plugin_names = {PluginName(maincheckify(n)) for n in arg_check_plugin_names
+                         } if arg_check_plugin_names is not None else None
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -116,11 +118,9 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
             # If check plugins are specified via command line,
-            # see with raw sections we may need
-            selected_raw_sections = config.get_relevant_raw_sections(
-                # TODO (mo): move this out of the loop!
-                PluginName(maincheckify(n))
-                for n in arg_check_plugin_names) if arg_check_plugin_names is not None else None
+            # see which raw sections we may need
+            selected_raw_sections = (None if check_plugin_names is None else
+                                     config.get_relevant_raw_sections(check_plugin_names))
 
             sources = _get_sources_for_discovery(
                 hostname,
@@ -132,7 +132,7 @@ def do_discovery(arg_hostnames, arg_check_plugin_names, arg_only_new):
 
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-            _do_discovery_for(hostname, ipaddress, multi_host_sections, arg_check_plugin_names,
+            _do_discovery_for(hostname, ipaddress, multi_host_sections, check_plugin_names,
                               arg_only_new, on_error)
 
         except Exception as e:
@@ -172,7 +172,7 @@ def _do_discovery_for(
         hostname,  # type: str
         ipaddress,  # type: Optional[str]
         multi_host_sections,  # type: data_sources.MultiHostSections
-        check_plugin_names,  # type: Optional[Set[CheckPluginName]]
+        check_plugin_names,  # type: Optional[Set[PluginName]]
         only_new,  # type: bool
         on_error,  # type: str
 ):
@@ -182,8 +182,7 @@ def _do_discovery_for(
         ipaddress,
         multi_host_sections,
         on_error=on_error,
-        check_plugin_whitelist=(None if check_plugin_names is None else
-                                {PluginName(n) for n in check_plugin_names}),
+        check_plugin_whitelist=check_plugin_names,
     )
 
     # There are three ways of how to merge existing and new discovered checks:
@@ -207,8 +206,8 @@ def _do_discovery_for(
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        if only_new or (check_plugin_names and
-                        existing_service.check_plugin_name not in check_plugin_names):
+        service_plugin_name = PluginName(maincheckify(existing_service.check_plugin_name))
+        if only_new or (check_plugin_names and service_plugin_name not in check_plugin_names):
             new_services.append(existing_service)
 
     services_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]

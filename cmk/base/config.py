@@ -1153,6 +1153,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
     decoded_backedhost = convert_to_unicode(backedhost,
+                                            std_encoding="utf-8",
                                             fallback_encoding=fallback_agent_output_encoding)
     return ensure_str(cmk.utils.translations.translate_hostname(translation, decoded_backedhost))
 

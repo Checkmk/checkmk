@@ -782,10 +782,10 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
                 if raw_nostrip is None:
                     line = stripped_line
 
-                if encoding:
-                    decoded_line = convert_to_unicode(line, std_encoding=ensure_str(encoding))
-                else:
-                    decoded_line = convert_to_unicode(line)
+                decoded_line = convert_to_unicode(
+                    line,
+                    std_encoding=("utf-8" if encoding is None else encoding),
+                    fallback_encoding="latin-1")
 
                 section_content.append(decoded_line.split(separator))
 

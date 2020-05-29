@@ -66,8 +66,8 @@ def _create_management_board_option(check_info_dict):
     raise NotImplementedError("unknown management_board value: %r" % (legacy_value,))
 
 
-def _create_discovery_function(check_info_dict):
-    # type: (Dict[str, Any]) -> Callable
+def _create_discovery_function(check_info_dict, default_parameters):
+    # type: (Dict[str, Any], Optional[Dict[str, Any]]) -> Callable
     """Create an API compliant discovery function"""
 
     # 1) ensure we have the correct signature
@@ -93,9 +93,10 @@ def _create_discovery_function(check_info_dict):
                     labels=list(element.service_labels),
                 )
             elif isinstance(element, tuple) and len(element) in (2, 3):
+                parameters = default_parameters if isinstance(element[-1], str) else element[-1]
                 service = Service(
                     item=element[0] or None,
-                    parameters=wrap_parameters(element[-1] or {}),
+                    parameters=wrap_parameters(parameters or {}),
                 )
                 # nasty hack for nasty plugins:
                 # Bypass validation. Item should be None or non-empty string!
@@ -267,9 +268,10 @@ def create_check_plugin_from_legacy(check_plugin_name, check_info_dict, forbidde
 
     new_check_name = maincheckify(check_plugin_name)
 
-    discovery_function = _create_discovery_function(check_info_dict)
-
     check_default_parameters = _create_wrapped_parameters(check_plugin_name, check_info_dict)
+
+    discovery_function = _create_discovery_function(check_info_dict, check_default_parameters)
+
     check_ruleset_name = check_info_dict.get("group")
     if check_ruleset_name is None and check_default_parameters is not None:
         check_ruleset_name = DUMMY_RULESET_NAME

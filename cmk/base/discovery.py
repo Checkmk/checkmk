@@ -1386,12 +1386,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue  # Skip not existing check silently
 
             # apply check_parameters
-            try:
-                params = _get_check_parameters(discovered_service)
-            except Exception:
-                raise MKGeneralException(
-                    "Invalid check parameter string '%s' found in discovered service %r" %
-                    (discovered_service.parameters_unresolved, discovered_service))
+            params = _get_check_parameters(discovered_service)
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)
@@ -1526,6 +1521,11 @@ def _get_check_parameters(discovered_service):
     params = discovered_service.parameters_unresolved
     if not isinstance(params, str):
         return params
-    check_context = config.get_check_context(discovered_service.check_plugin_name)
-    # TODO: Can't we simply access check_context[paramstring]?
-    return eval(params, check_context, check_context)
+    try:
+        check_context = config.get_check_context(discovered_service.check_plugin_name)
+        # TODO: Can't we simply access check_context[paramstring]?
+        return eval(params, check_context, check_context)
+    except Exception:
+        raise MKGeneralException(
+            "Invalid check parameter string '%s' found in discovered service %r" %
+            (discovered_service.parameters_unresolved, discovered_service))

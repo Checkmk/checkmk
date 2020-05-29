@@ -1473,10 +1473,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         if check_source == "active":
             params = _get_check_parameters(discovered_service)
 
-        checkgroup = None  # type: Optional[RulesetName]
-        if check_source not in ["legacy", "active", "custom"]:
-            checkgroup = config.check_info[discovered_service.check_plugin_name]["group"]
-
         if isinstance(params, config.TimespecificParamList):
             params = {
                 "tp_computed_params": {
@@ -1486,9 +1482,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             }
 
         table.append((
-            _get_preview_check_source(hostname, discovered_service, check_source),
+            _preview_check_source(hostname, discovered_service, check_source),
             discovered_service.check_plugin_name,
-            checkgroup,
+            _preview_ruleset_name(hostname, discovered_service, check_source),
             discovered_service.item,
             discovered_service.parameters_unresolved,
             params,
@@ -1502,7 +1498,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     return table, discovered_host_labels
 
 
-def _get_preview_check_source(
+def _preview_check_source(
     host_name: HostName,
     discovered_service: DiscoveredService,
     check_source: str,
@@ -1511,6 +1507,16 @@ def _get_preview_check_source(
             config.service_ignored(host_name, None, discovered_service.description)):
         return "%s_ignored" % check_source
     return check_source
+
+
+def _preview_ruleset_name(
+    host_name: HostName,
+    discovered_service: DiscoveredService,
+    check_source: str,
+) -> Optional[RulesetName]:
+    if check_source in ["legacy", "active", "custom"]:
+        return None
+    return config.check_info[discovered_service.check_plugin_name]["group"]
 
 
 def _get_check_parameters(discovered_service):

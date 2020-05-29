@@ -1381,7 +1381,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         params = _preview_params(hostname, discovered_service, check_source)
         exitcode = None  # type: Optional[ServiceState]
         perfdata = []  # type: List[Metric]
-        if check_source not in ['legacy', 'active', 'custom']:
+        if check_source in ['legacy', 'active', 'custom']:
+            output = u"WAITING - %s check, cannot be done offline" % check_source.title()
+        else:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
 
@@ -1446,10 +1448,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         raise
                     exitcode = 3
                     output = u"UNKNOWN - invalid output from agent or error in check implementation"
-        else:
-            exitcode = None
-            output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-            perfdata = []
 
         table.append((
             _preview_check_source(hostname, discovered_service, check_source),

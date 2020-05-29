@@ -970,7 +970,11 @@ _old_service_descriptions = {
 
 
 def service_description(hostname, check_plugin_name, item):
-    # type: (HostName, CheckPluginName, Item) -> ServiceName
+    # type: (HostName, Union[CheckPluginName, PluginName], Item) -> ServiceName
+    # TODO (mo): CMK-4576 bring this to the new API
+    if isinstance(check_plugin_name, PluginName):
+        check_plugin_name = resolve_legacy_name(check_plugin_name)
+
     if check_plugin_name not in check_info:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)

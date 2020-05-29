@@ -30,9 +30,11 @@
 // files during the build procedure of other editions.
 @import "../facelift/scss/cee/_graphs.scss";
 @import "../facelift/scss/cee/_reporting.scss";
+@import "../facelift/scss/cee/_ntop.scss";
 @if $ENTERPRISE = "yes" {
   @include graphs;
   @include reporting;
+  @include ntop;
 }
 
 @import "../facelift/scss/cme/_managed.scss";

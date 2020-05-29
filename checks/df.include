@@ -239,7 +239,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
     return levels
 
 
-def df_check_filesystem_list(
+def df_check_filesystem_list_coroutine(
     item,
     params,
     fslist_blocks,
@@ -273,7 +273,7 @@ def df_check_filesystem_list(
         if item not in blocks_info:
             return
         data, inodes_data = blocks_info.get(item), inodes_info.get(item, {})
-        return df_check_filesystem_single(
+        yield from df_check_filesystem_single_coroutine(
             item,
             data["size_mb"],
             data["avail_mb"],
@@ -283,10 +283,12 @@ def df_check_filesystem_list(
             params,
             this_time,
         )
+        return
 
     matching_mountpoints = mountpoints_in_group(blocks_info, params["patterns"])
     if not matching_mountpoints:
-        return 3, "No filesystem matching the patterns", []
+        yield 3, "No filesystem matching the patterns", []
+        return
 
     total_size_mb = group_sum("size_mb", blocks_info, matching_mountpoints)
     total_avail_mb = group_sum("avail_mb", blocks_info, matching_mountpoints)
@@ -295,7 +297,7 @@ def df_check_filesystem_list(
     total_inodes = group_sum("inodes_total", inodes_info, matching_mountpoints)
     total_inodes_avail = group_sum("inodes_avail", inodes_info, matching_mountpoints)
 
-    status, infotext, perfdata = df_check_filesystem_single(
+    yield from df_check_filesystem_single_coroutine(
         item,
         total_size_mb,
         total_avail_mb,
@@ -306,14 +308,14 @@ def df_check_filesystem_list(
         this_time,
     )
 
-    return status, infotext + " (%d filesystems)" % len(matching_mountpoints), perfdata
+    yield 0, "%d filesystems" % len(matching_mountpoints), []
 
 
 def _check_inodes(levels, inodes_total, inodes_avail):
     if not inodes_total:
-        return 0, "", []
-    inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
+        return
 
+    inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
     inodes_warn_abs, inodes_crit_abs, human_readable_func = (
         # Levels in absolute numbers
         (
@@ -342,7 +344,7 @@ def _check_inodes(levels, inodes_total, inodes_avail):
     show_inodes = levels["show_inodes"]
     inodes_avail_perc = 100.0 * inodes_avail / inodes_total
     infotext = (
-        ", %s, inodes available: %s/%s" % (
+        "%s, inodes available: %s/%s" % (
             inode_text,
             get_number_with_precision(inodes_avail),
             get_percent_human_readable(inodes_avail_perc),
@@ -353,10 +355,10 @@ def _check_inodes(levels, inodes_total, inodes_avail):
             show_inodes == "onproblem" and inode_status,
         )) else "")
 
-    return inode_status, infotext, inode_perf
+    yield inode_status, infotext, inode_perf
 
 
-def df_check_filesystem_single(
+def df_check_filesystem_single_coroutine(
     mountpoint,
     size_mb,
     avail_mb,
@@ -367,7 +369,8 @@ def df_check_filesystem_single(
     this_time=None,
 ):
     if size_mb == 0:
-        return 1, "Size of filesystem is 0 MB", []
+        yield 1, "Size of filesystem is 0 MB", []
+        return
 
     # params might still be a tuple
     show_levels, subtract_reserved, show_reserved = (
@@ -426,16 +429,40 @@ def df_check_filesystem_single(
     if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))
 
+    yield status, ", ".join(infotext), perfdata
+
     if levels.get("trend_range"):
-        trend_status, trend_infotext, trend_perfdata = size_trend('df', mountpoint, "disk", levels,
-                                                                  used_mb, size_mb, this_time)
-        status = max(status, trend_status)
-        infotext.append(trend_infotext)
-        perfdata.extend(trend_perfdata)
+        trend_state, trend_text, trend_perf = size_trend(
+            'df',
+            mountpoint,
+            "disk",
+            levels,
+            used_mb,
+            size_mb,
+            this_time,
+        )
+        # Todo(frans): Return value from size_trend() can be empty but we must yield a valid result
+        # - as soon as we can 'yield from' size_trend we do not have to check any more
+        if trend_state or trend_text or trend_perf:
+            yield trend_state, trend_text.strip(" ,"), trend_perf or []
 
-    istatus, iinfotext, iperfdata = _check_inodes(levels, inodes_total, inodes_avail)
-    status = max(status, istatus)
-    infotext.append(iinfotext)
-    perfdata.extend(iperfdata)
+    yield from _check_inodes(levels, inodes_total, inodes_avail)
 
-    return status, ", ".join(elem.strip(" ,") for elem in infotext if elem), perfdata
+
+def _aggregate(generator):
+    """Deprecated: used only to mimic old non-coroutine functions - don't use"""
+    def wrapped(*args, **kwargs):
+        try:
+            state, text, perfdata = tuple(zip(*generator(*args, **kwargs)))
+        except ValueError:
+            # BasicResult needs None - defaulting to ((), (), ()) doesn't help
+            return None
+        return max(state), ", ".join(elem.strip(" ,") for elem in text if elem), sum(perfdata, [])
+
+    return wrapped
+
+
+# Don't use df_check_filesystem_single or df_check_filesystem_list anymore
+# - use the *_coroutine variants instead
+df_check_filesystem_single = _aggregate(df_check_filesystem_single_coroutine)
+df_check_filesystem_list = _aggregate(df_check_filesystem_list_coroutine)

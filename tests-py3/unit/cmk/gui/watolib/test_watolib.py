@@ -131,6 +131,7 @@ def test_registered_configvars():
         'notification_fallback_email',
         'notification_logging',
         'notification_plugin_timeout',
+        'ntop_connection',
         'page_heading',
         'pagetitle_date_format',
         'password_policy',
@@ -291,6 +292,7 @@ def test_registered_configvar_groups():
         u'Site Management',
         u'User Interface',
         u'User Management',
+        u'Ntopng',
     ]
 
     if not cmk_version.is_raw_edition():

@@ -30,6 +30,8 @@ def test_builtin_icons_and_actions():
         'inventory',
         'logwatch',
         'mkeventd',
+        'ntop_host_interface',
+        'ntop_service_interface',
         'notes',
         'parent_child_topology',
         'perfgraph',

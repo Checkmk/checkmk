@@ -180,6 +180,8 @@ def test_registered_permissions():
         'icons_and_actions.logwatch',
         'icons_and_actions.mkeventd',
         'icons_and_actions.notes',
+        'icons_and_actions.ntop_host_interface',
+        'icons_and_actions.ntop_service_interface',
         'icons_and_actions.perfgraph',
         'icons_and_actions.prediction',
         'icons_and_actions.reschedule',

@@ -1077,11 +1077,7 @@ def service_ignored(
     # type: (...) -> bool
     # TODO (mo): CMK-4573 Clean this up, once a PluginName instance can be in ignored_checktypes
     if isinstance(check_plugin_name, PluginName):
-        try:
-            check_plugin_name = resolve_legacy_name(check_plugin_name)
-        except ValueError:
-            # no corresponding legcy plugin -> not yet disabled
-            return False
+        check_plugin_name = resolve_legacy_name(check_plugin_name)
 
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True

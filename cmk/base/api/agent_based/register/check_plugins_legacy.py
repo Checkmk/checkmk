@@ -315,7 +315,8 @@ def resolve_legacy_name(plugin_name):
     for legacy_name in config.check_info:
         if str(plugin_name) == maincheckify(legacy_name):
             return legacy_name
-    raise ValueError("can't resolve: %r" % (plugin_name,))
+    # nothing found, it may be a new plugin, which is OK.
+    return str(plugin_name)
 
 
 PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"

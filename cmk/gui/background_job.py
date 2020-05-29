@@ -236,12 +236,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # - Python 3's stdout and stderr expect 'str' not 'bytes'
         unbuffered = (Path(self.get_work_dir()) /
                       BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
-
-        if sys.version_info[0] >= 3:
-            sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
-        else:
-            sys.stdout = sys.stderr = unbuffered
-
+        sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
 

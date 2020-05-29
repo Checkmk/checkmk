@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
+from html import escape as html_escape
 import re
 from typing import Union
-from six import ensure_str
 
-if sys.version_info[0] >= 3:
-    from html import escape as html_escape  # type: ignore[attr-defined]
-else:
-    from future.moves.html import escape as html_escape  # type: ignore[import] # pylint: disable=import-error
+from six import ensure_str
 
 from cmk.gui.utils.html import HTML
 

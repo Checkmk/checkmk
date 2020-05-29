@@ -244,9 +244,7 @@ def _parse_autocheck_entry(hostname, entry, service_description):
 
 
 def _ast_node_is_none(node):
-    if sys.version_info[0] >= 3:
-        return isinstance(node, ast.NameConstant) and node.value is None
-    return isinstance(node, ast.Name) and node.id == "None"
+    return isinstance(node, ast.NameConstant) and node.value is None
 
 
 def _parse_pre_16_tuple_autocheck_entry(entry):

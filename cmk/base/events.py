@@ -13,13 +13,7 @@ import sys
 import select
 import socket
 import time
-
-if sys.version_info[0] >= 3:
-    # No stub file
-    from urllib.parse import quote  # type: ignore[import]  # pylint: disable=unused-import,no-name-in-module
-else:
-    from urllib import quote  # pylint: disable=unused-import,no-name-in-module
-
+from urllib.parse import quote
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from six import ensure_str

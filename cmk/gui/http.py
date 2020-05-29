@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-import sys
 from typing import List, Optional, Any, Iterator, Union, Dict, Tuple
 
 from six import ensure_binary, ensure_str
@@ -294,19 +293,10 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
         value = self.var(varname, deflt)
-
         if value is None:
             return value
-
-        if sys.version_info[0] >= 3:
-            if not value.isascii():
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-        else:
-            try:
-                value.decode("ascii")
-            except UnicodeDecodeError:
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-
+        if not value.isascii():
+            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
         return value
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up

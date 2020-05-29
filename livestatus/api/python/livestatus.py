@@ -11,7 +11,6 @@ import re
 import os
 import ast
 import ssl
-import sys
 from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
@@ -276,9 +275,7 @@ class Query(object):  # pylint: disable=useless-object-inheritance
 
     def __str__(self):
         # type: () -> str
-        if sys.version_info[0] >= 3:
-            return self._query
-        return self._query.encode("utf-8")
+        return self._query
 
 
 QueryTypes = Union[str, bytes, Query]
@@ -476,7 +473,7 @@ class SingleSiteConnection(Helpers):
             query += "\n"
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\n" % int(time.time())
-        query += "OutputFormat: %s\n" % ("python3" if sys.version_info[0] >= 3 else "python")
+        query += "OutputFormat: python3\n"
         query += "KeepAlive: on\n"
         query += "ResponseHeader: fixed16\n"
         query += add_headers

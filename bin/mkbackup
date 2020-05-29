@@ -976,11 +976,7 @@ class RestoreStream(MKBackupStream):
         if len(this_chunk) == 0:
             # Processing last chunk. Stip off padding.
             pad = self._next_chunk[-1]
-            if sys.version_info[0] >= 3:
-                padding_length = pad
-            else:
-                padding_length = ord(pad)
-            chunk = self._next_chunk[:-padding_length]
+            chunk = self._next_chunk[:-pad]
             return chunk, True
 
         # Processing regular chunk

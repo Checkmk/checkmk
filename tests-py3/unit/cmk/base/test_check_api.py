@@ -6,7 +6,6 @@
 
 import ast
 import math
-import sys
 from typing import Any, Dict
 
 import pytest  # type: ignore[import]

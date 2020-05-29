@@ -26,7 +26,7 @@ import cmk.utils.paths
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.snmp_table as snmp_table
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
@@ -1275,7 +1275,7 @@ class AutomationDiagHost(Automation):
             # respect the ecoding options of sections.
             # If this is a problem, we would have to apply parse and
             # decode logic and unparse the decoded output again.
-            output += convert_to_unicode(source_output)
+            output += ensure_str_with_fallback(source_output, encoding="utf-8", fallback="latin-1")
 
             if source.exception():
                 state = 1

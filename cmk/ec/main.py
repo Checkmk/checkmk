@@ -42,7 +42,7 @@ import cmk.utils.profile
 import cmk.utils.render
 import cmk.utils.regex
 import cmk.utils.debug
-from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
 import cmk.utils.store as store
 import livestatus
@@ -129,7 +129,7 @@ class SyslogFacility:
 
 def scrub_and_decode(s):
     # type: (AnyStr) -> str
-    return convert_to_unicode(scrub_string(s))
+    return ensure_str_with_fallback(scrub_string(s), encoding="utf-8", fallback="latin-1")
 
 
 #.

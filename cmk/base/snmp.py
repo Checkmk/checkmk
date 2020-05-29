@@ -16,7 +16,6 @@ from six import ensure_binary, ensure_str
 import cmk.utils.debug
 import cmk.utils.snmp_cache as snmp_cache
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -109,8 +108,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value = convert_to_unicode(
-            value, encoding=snmp_config.character_encoding)  # type: Optional[DecodedString]
+        decoded_value = snmp_config.ensure_str(value)  # type: Optional[DecodedString]
     else:
         decoded_value = value
 

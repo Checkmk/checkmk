@@ -5,16 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides some bytes-unicode encoding functions"""
 
-from typing import AnyStr, Optional
+from typing import AnyStr
 
 from six import ensure_str
-
-
-def convert_to_unicode(value, *, encoding=None):
-    # type: (AnyStr, Optional[str]) -> str
-    if encoding:
-        return ensure_str(value, encoding)
-    return ensure_str_with_fallback(value, encoding="utf-8", fallback="latin-1")
 
 
 def ensure_str_with_fallback(value, *, encoding, fallback):

@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, List, Optional, Set, Tuple, Union, cast
 
 from six import ensure_binary
 
 import cmk.utils.debug
 import cmk.utils.store as store
-from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -25,7 +24,6 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     Column,
     Columns,
-    DecodedBinary,
     DecodedValues,
     HostName,
     OIDBytes,
@@ -303,23 +301,19 @@ def _compute_fetch_oid(oid, suboid, column):
 
 def _sanitize_snmp_encoding(snmp_config, columns):
     # type: (SNMPHostConfig, ResultColumnsSanitized) -> ResultColumnsDecoded
-    snmp_encoding = snmp_config.character_encoding
-
-    def decode_string_func(s):
-        return convert_to_unicode(s, encoding=snmp_encoding)
-
-    new_columns = []  # type: ResultColumnsDecoded
-    for column, value_encoding in columns:
-        if value_encoding == "string":
-            new_columns.append(list(map(decode_string_func, column)))
-        else:
-            new_columns.append(list(map(_snmp_decode_binary, column)))
-    return new_columns
+    return [
+        _decode_column(snmp_config, column, value_encoding)  #
+        for column, value_encoding in columns
+    ]
 
 
-def _snmp_decode_binary(text):
-    # type: (RawValue) -> DecodedBinary
-    return list(bytearray(text))
+def _decode_column(snmp_config, column, value_encoding):
+    # type: (SNMPHostConfig, List[RawValue], SNMPValueEncoding) -> List[DecodedValues]
+    if value_encoding == "string":
+        decode = snmp_config.ensure_str  # type: Callable[[bytes], DecodedValues]
+    else:
+        decode = lambda v: list(bytearray(v))
+    return [decode(v) for v in column]
 
 
 def _sanitize_snmp_table_columns(columns):

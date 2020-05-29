@@ -269,6 +269,8 @@ system:
 
     cleanup_uninstall: smart # allowed none, smart and all
 
+    wait_network: 30
+
     service:
         restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
                                # no may be used if you have serious problems with crasghing and starting

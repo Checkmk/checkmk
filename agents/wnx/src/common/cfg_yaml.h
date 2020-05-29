@@ -200,6 +200,8 @@ constexpr const char* const kService = "service";                  // dictionary
 constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
 constexpr const char* const kErrorMode = "error_mode";             // string
 constexpr const char* const kStartMode = "start_mode";             // string
+
+constexpr const char* const kWaitNetwork = "wait_network";  // int, seconds
 }  // namespace vars
 
 namespace values {
@@ -251,6 +253,8 @@ constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
 constexpr std::string_view kModulesDir = "modules\\{}";
 
 constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
+
+constexpr uint32_t kServiceWaitNetwork = 30;
 
 }  // namespace defaults
 

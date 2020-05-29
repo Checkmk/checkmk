@@ -12,7 +12,7 @@ import os
 import ast
 import ssl
 import sys
-from typing import NewType, AnyStr, Any, Type, List, cast, Tuple, Union, Dict, Pattern, Optional
+from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -518,7 +518,7 @@ class SingleSiteConnection(Helpers):
             code = resp[0:3].decode("ascii")
             try:
                 length = int(resp[4:15].lstrip())
-            except:
+            except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
@@ -529,7 +529,7 @@ class SingleSiteConnection(Helpers):
             if code == "200":
                 try:
                     return ast.literal_eval(data)
-                except:
+                except Exception:
                     self.disconnect()
                     raise MKLivestatusSocketError("Malformed output")
 
@@ -610,16 +610,13 @@ class SingleSiteConnection(Helpers):
 
         if self.socket is None:
             self.connect()
-
-        # Mypy does not understand that self.connect() either sets self.socket to a socket object or
-        # raises an exception.
-        sock = cast(socket.socket, self.socket)
+        assert self.socket is not None  # TODO: refactor to avoid assert
 
         if not cmd.endswith(u"\n"):
             cmd += u"\n"
 
         try:
-            sock.send(("COMMAND %s\n" % cmd).encode("utf-8"))
+            self.socket.send(("COMMAND %s\n" % cmd).encode("utf-8"))
         except IOError as e:
             self.socket = None
             if self.persist:
@@ -977,8 +974,8 @@ class MultiSiteConnection(Helpers):
     def command(self, command, sitename=SiteId("local")):
         # type: (AnyStr, Optional[SiteId]) -> None
         if sitename in self.deadsites:
-            raise MKLivestatusSocketError("Connection to site %s is dead: %s" % \
-                    (sitename, self.deadsites[sitename]["exception"]))
+            raise MKLivestatusSocketError("Connection to site %s is dead: %s" %
+                                          (sitename, self.deadsites[sitename]["exception"]))
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:
             raise MKLivestatusConfigError("Cannot send command to unconfigured site '%s'" %

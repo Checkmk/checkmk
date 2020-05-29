@@ -29,16 +29,34 @@
 
 
 def snmp_scan_cisco_cpu(oid):
-    return (_is_cisco(oid) and not _has_table_2(oid) and
-            (bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1')) or
-             bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1'))))
+    # We've seen devices which have table 2 but also deprecated cpmCPUTotal5min
+    # and NOT OID "cpmCPUTotal5minRev".
+    # Example:
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.2.1 1
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.2.2 1
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.2.3 1
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.5.1 8
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.5.2 8
+    #   1.3.6.1.4.1.9.9.109.1.1.1.1.5.3 8
+    # Table 2 shows that there's only ONE index entry. In this case we assume
+    # that these devices have one CPU (as discovered in the past).
+
+    not_table_2_and_cpmCPUTotal5min = (not _has_table_2(oid) and
+                                       (_has_deprecated_cpmCPUTotal5min(oid) or
+                                        _has_cpmCPUTotal5minRev(oid)))
+
+    return _is_cisco(oid) and (not_table_2_and_cpmCPUTotal5min or
+                               _has_only_deprecated_cpmCPUTotal5min(oid))
 
 
 #   ---fallback-------------------------------------------------------------
 
 
 def snmp_scan_cisco_cpu_multiitem(oid):
-    return _is_cisco(oid) and not _is_cisco_nexus(oid) and _has_table_2(oid)
+    # We never discover devices which have deprecated OID for CPU util
+    # (cisco_cpu_multiitem does not collect this OID)
+    return (_is_cisco(oid) and not _is_cisco_nexus(oid) and _has_table_2(oid) and
+            not _has_only_deprecated_cpmCPUTotal5min(oid))
 
 
 #   ---Nexus devices--------------------------------------------------------
@@ -75,3 +93,15 @@ def _is_cisco_nexus(oid):
 
 def _has_table_2(oid):
     return bool(oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"))
+
+
+def _has_deprecated_cpmCPUTotal5min(oid):
+    return bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1'))
+
+
+def _has_cpmCPUTotal5minRev(oid):
+    return bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1'))
+
+
+def _has_only_deprecated_cpmCPUTotal5min(oid):
+    return _has_deprecated_cpmCPUTotal5min(oid) and not _has_cpmCPUTotal5minRev(oid)

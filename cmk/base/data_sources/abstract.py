@@ -24,7 +24,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout, MKSNMPError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
@@ -782,10 +782,8 @@ class CheckMKAgentDataSource(DataSource[RawAgentData, AgentSections, PersistedAg
                 if raw_nostrip is None:
                     line = stripped_line
 
-                decoded_line = convert_to_unicode(
-                    line,
-                    std_encoding=("utf-8" if encoding is None else encoding),
-                    fallback_encoding="latin-1")
+                decoded_line = ensure_str_with_fallback(
+                    line, encoding=("utf-8" if encoding is None else encoding), fallback="latin-1")
 
                 section_content.append(decoded_line.split(separator))
 

@@ -10,17 +10,16 @@ from typing import AnyStr, Optional
 from six import ensure_str
 
 
-def convert_to_unicode(
-    value,
-    *,
-    encoding=None,
-    std_encoding="utf-8",
-    fallback_encoding="latin-1",
-):
-    # type: (AnyStr, Optional[str], str, str) -> str
+def convert_to_unicode(value, *, encoding=None):
+    # type: (AnyStr, Optional[str]) -> str
     if encoding:
         return ensure_str(value, encoding)
+    return ensure_str_with_fallback(value, encoding="utf-8", fallback="latin-1")
+
+
+def ensure_str_with_fallback(value, *, encoding, fallback):
+    # type: (AnyStr, str, str) -> str
     try:
-        return ensure_str(value, std_encoding)
+        return ensure_str(value, encoding)
     except UnicodeDecodeError:
-        return ensure_str(value, fallback_encoding)
+        return ensure_str(value, fallback)

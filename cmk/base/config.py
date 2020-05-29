@@ -2205,7 +2205,9 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     config_cache = get_config_cache()
 
     # Get parameters configured via checkgroup_parameters
-    entries = _get_checkgroup_parameters(config_cache, host, checktype, item, descr)
+    checkgroup = check_info[checktype]["group"]
+    entries = ([] if not checkgroup else _get_checkgroup_parameters(config_cache, host, checkgroup,
+                                                                    item, descr))
 
     # Get parameters configured via check_parameters
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
@@ -2246,11 +2248,8 @@ def set_timespecific_param_list(entries, params):
     return TimespecificParamList(entries + [params])
 
 
-def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
-    # type: (ConfigCache, HostName, CheckPluginName, Item, ServiceName) -> List[CheckParameters]
-    checkgroup = check_info[checktype]["group"]
-    if not checkgroup:
-        return []
+def _get_checkgroup_parameters(config_cache, host, checkgroup, item, descr):
+    # type: (ConfigCache, HostName, RulesetName, Item, ServiceName) -> List[CheckParameters]
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
@@ -2275,7 +2274,7 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
                                                                     rules,
                                                                     is_binary=False))
     except MKGeneralException as e:
-        raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
+        raise MKGeneralException(str(e) + " (on host %s, checkgroup %s)" % (host, checkgroup))
 
 
 def filter_by_management_board(hostname,

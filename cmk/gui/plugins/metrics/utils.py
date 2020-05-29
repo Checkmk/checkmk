@@ -10,7 +10,7 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
@@ -937,7 +937,7 @@ def MetricName():
         if value is None:
             raise MKUserError(varprefix, _("You need to select a metric"))
 
-    choices = [(None, "")]  # type: List[Tuple[Any, Text]]
+    choices = [(None, "")]  # type: List[Tuple[Any, str]]
     choices += [
         (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
     ]

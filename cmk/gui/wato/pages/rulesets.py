@@ -10,7 +10,7 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, List, Optional, Text, Union
+from typing import Dict, Generator, List, Optional, Union
 
 from six import ensure_str
 
@@ -82,10 +82,9 @@ else:
 
 
 def render_html(text):
-    # type: (Union[HTML, str, Text]) -> Union[str, Text]
+    # type: (Union[HTML, str]) -> str
     if isinstance(text, HTML):
         return text.__html__()
-
     return text
 
 
@@ -1686,7 +1685,7 @@ class VSExplicitConditions(Transform):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
     def value_to_text(self, value):
-        # type: (RuleConditions) -> Text
+        # type: (RuleConditions) -> str
         with html.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
@@ -1754,8 +1753,8 @@ class LabelCondition(Transform):
 
 class RuleConditionRenderer(object):
     def render(self, rulespec, conditions):
-        # type: (Rulespec, RuleConditions) -> List[Text]
-        rendered = []  # type: List[Text]
+        # type: (Rulespec, RuleConditions) -> List[str]
+        rendered = []  # type: List[str]
         rendered += list(self._tag_conditions(conditions))
         rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
@@ -1857,8 +1856,8 @@ class RuleConditionRenderer(object):
         if conditions.host_name == []:
             return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
 
-        condition = []  # type: List[Union[HTML, Text]]
-        text_list = []  # type: List[Union[HTML, Text]]
+        condition = []  # type: List[Union[HTML, str]]
+        text_list = []  # type: List[Union[HTML, str]]
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.host_name)
@@ -1935,7 +1934,7 @@ class RuleConditionRenderer(object):
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list = []  # type: List[Union[HTML, Text]]
+        text_list = []  # type: List[Union[HTML, str]]
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")

@@ -12,7 +12,7 @@ import socket
 import contextlib
 import binascii
 import queue
-from typing import Dict, List, NamedTuple, Text, Union, Tuple as _Tuple
+from typing import Dict, List, NamedTuple, Union, Tuple as _Tuple
 
 from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
@@ -1019,11 +1019,11 @@ ChainVerifyResult = NamedTuple("ChainVerifyResult", [
 ])
 
 CertificateDetails = NamedTuple("CertificateDetails", [
-    ("issued_to", Text),
-    ("issued_by", Text),
-    ("valid_from", Text),
-    ("valid_till", Text),
-    ("signature_algorithm", Text),
+    ("issued_to", str),
+    ("issued_by", str),
+    ("valid_from", str),
+    ("valid_till", str),
+    ("signature_algorithm", str),
     ("digest_sha256", str),
     ("serial_number", int),
     ("is_ca", bool),

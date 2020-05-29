@@ -30,7 +30,6 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
-    Text,
     ValueSpec,
     Tuple,
     Transform,
@@ -2277,7 +2276,7 @@ bi_aggregation_functions["best"] = {
 
 
 def vs_count_ok_count(title, defval, defvalperc):
-    # type: (Text, int, int) -> Alternative
+    # type: (str, int, int) -> Alternative
     return Alternative(
         title=title,
         style="dropdown",

@@ -12,7 +12,7 @@ import signal
 import time
 from random import Random
 from types import FrameType
-from typing import IO, Any, AnyStr, Dict, Iterable, List, Optional, Text, Tuple, Union, cast
+from typing import IO, Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 from six import ensure_binary, ensure_str
 
@@ -99,7 +99,7 @@ CHECK_NOT_IMPLEMENTED = (3, 'Check not implemented', [])  # type: ServiceCheckRe
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
-    # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
+    # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n", ensure_str(cmk_version.__version__))
 
@@ -111,7 +111,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
     status = 0  # type: ServiceState
     infotexts = []  # type: List[ServiceDetails]
     long_infotexts = []  # type: List[ServiceAdditionalDetails]
-    perfdata = []  # type: List[Text]
+    perfdata = []  # type: List[str]
     try:
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
@@ -612,7 +612,7 @@ def _sanitize_yield_check_result(result):
     return status, ", ".join(infotexts), perfdata
 
 
-# TODO: Cleanup return value: Factor "infotext: Optional[Text]" case out and then make Tuple values
+# TODO: Cleanup return value: Factor "infotext: Optional[str]" case out and then make Tuple values
 # more specific
 def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
     # type: (Tuple, bool) -> ServiceCheckResultWithOptionalDetails

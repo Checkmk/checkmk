@@ -453,7 +453,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message = None  # type: _Optional[Text]
+    action_message = None  # type: _Optional[str]
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")

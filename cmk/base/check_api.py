@@ -87,7 +87,7 @@ import time
 import pprint  # noqa: F401 # pylint: disable=unused-import
 import calendar
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from six import ensure_str
 
@@ -351,7 +351,7 @@ def _normalize_levels(levels):
 
 
 def _do_check_levels(value, levels, human_readable_func, unit_info):
-    # type: (Union[int, float], Levels, Callable, Text) -> Tuple[ServiceState, ServiceDetails]
+    # type: (Union[int, float], Levels, Callable, str) -> Tuple[ServiceState, ServiceDetails]
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -368,7 +368,7 @@ def _do_check_levels(value, levels, human_readable_func, unit_info):
 
 
 def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
-    # type: (Text, Warn, Crit, Callable, Text) -> Text
+    # type: (str, Warn, Crit, Callable, str) -> str
     return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
                                                     human_readable_func(crit), unit_info)
 
@@ -397,7 +397,7 @@ def check_levels(value,
                  human_readable_func=None,
                  infoname=None,
                  boundaries=None):
-    # type: (Union[int, float], Union[None, MetricName], Any, Text, Union[int, float], Union[int, float], bool, Optional[Callable], Optional[Text], Optional[Tuple]) -> ServiceCheckResult
+    # type: (Union[int, float], Union[None, MetricName], Any, str, Union[int, float], Union[int, float], bool, Optional[Callable], Optional[str], Optional[Tuple]) -> ServiceCheckResult
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -443,7 +443,7 @@ def check_levels(value,
     boundaries: Add minimum and maximum to performance data.
     """
     if unit.startswith('/'):
-        unit_info = unit  # type: Text
+        unit_info = unit  # type: str
     elif unit:
         unit_info = " %s" % unit
     else:
@@ -613,7 +613,7 @@ def get_parsed_item_data(check_function):
     @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         # TODO
-        # type: (Text, Any, Any) -> Any
+        # type: (str, Any, Any) -> Any
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
         if item not in parsed or not parsed[item]:

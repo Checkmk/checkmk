@@ -8,7 +8,7 @@ import copy
 import time
 import json
 import traceback
-from typing import NamedTuple, Optional, Tuple, List, Text, Union
+from typing import NamedTuple, Optional, Tuple, List, Union
 
 import livestatus
 
@@ -29,7 +29,7 @@ from cmk.gui.plugins.metrics.utils import render_color_icon
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
-RenderOutput = Union[HTML, Text]
+RenderOutput = Union[HTML, str]
 
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |

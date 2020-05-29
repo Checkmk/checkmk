@@ -9,7 +9,7 @@ import signal
 import socket
 import time
 from types import FrameType
-from typing import Any, Callable, Dict, Iterator, List, NoReturn, Optional, Pattern, Set, Text, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, NoReturn, Optional, Pattern, Set, Tuple, Union
 
 from six import ensure_binary
 
@@ -67,8 +67,8 @@ _marked_host_discovery_timeout = 120
 DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
                                Tuple[str, DiscoveredService]]
 CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
-                          check_table.CheckParameters, check_table.CheckParameters, Text,
-                          Optional[int], Text, List[Metric], Dict[Text, Text]]
+                          check_table.CheckParameters, check_table.CheckParameters, str,
+                          Optional[int], str, List[Metric], Dict[str, str]]
 CheckPreviewTable = List[CheckPreviewEntry]
 DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
                        Tuple[Item, CheckParameters]]
@@ -405,7 +405,7 @@ def _accept_all_services(_hostname, _check_plugin_name, _item):
 
 @cmk.base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
-    # type: (str, Optional[str]) -> Tuple[int, List[Text], List[Text], List[Tuple]]
+    # type: (str, Optional[str]) -> Tuple[int, List[str], List[str], List[Tuple]]
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 

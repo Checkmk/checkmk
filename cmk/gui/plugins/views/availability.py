@@ -6,7 +6,7 @@
 
 import time
 import itertools
-from typing import List, Text, TYPE_CHECKING, Set, Tuple
+from typing import List, TYPE_CHECKING, Set, Tuple
 
 from six import ensure_str
 
@@ -597,7 +597,7 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
-    # type: (Text, Rows) -> None
+    # type: (str, Rows) -> None
     config.user.need_permission("general.see_availability")
 
     av_mode = html.request.get_ascii_input_mandatory("av_mode", "availability")
@@ -1083,7 +1083,7 @@ def _output_availability_csv(what, av_data, avoptions):
     # type: (AVObjectType, AVData, AVOptions) -> None
     def cells_from_row(table, group_titles, group_cells, object_titles, cell_titles, row_object,
                        row_cells):
-        # type: (Table, List[Text], List[Text], List[Text], List[Text], AVObjectCells, AVRowCells) -> None
+        # type: (Table, List[str], List[str], List[str], List[str], AVObjectCells, AVRowCells) -> None
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
@@ -1136,7 +1136,7 @@ def _output_availability_csv(what, av_data, avoptions):
 
 
 def _av_output_set_content_disposition(title):
-    # type: (Text) -> None
+    # type: (str) -> None
     filename = '%s-%s.csv' % (
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),

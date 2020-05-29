@@ -50,6 +50,8 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
+        'ntop_alerts',
+        'ntop_flows',
         'single_metric',
         'snapin',
     ]

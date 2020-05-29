@@ -17,14 +17,14 @@ _download_from_mirror() {
     local MIRROR_URL=$2
 
     log "Downloading ${MIRROR_URL}"
-    curl -sSf -o "${TARGET_PATH}" "${MIRROR_URL}" || return
+    curl -1 -sSf -o "${TARGET_PATH}" "${MIRROR_URL}" || return
     log "Got ${TARGET_PATH} file from ${MIRROR_URL}"
 }
 
 _download_from_upstream() {
     local TARGET_PATH=$1
     local UPSTREAM_URL=$2
-    curl -sSfL -o "${TARGET_PATH}" "${UPSTREAM_URL}"
+    curl -1 -sSfL -o "${TARGET_PATH}" "${UPSTREAM_URL}"
     log "Got ${TARGET_PATH} file from ${UPSTREAM_URL}"
 }
 

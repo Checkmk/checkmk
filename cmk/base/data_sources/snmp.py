@@ -7,7 +7,7 @@
 import abc
 import ast
 import time
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Callable, Dict, List, Optional, Set, cast
 
 from mypy_extensions import NamedArg
 

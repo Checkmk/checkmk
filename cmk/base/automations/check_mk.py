@@ -152,16 +152,11 @@ class AutomationDiscovery(DiscoveryAutomation):
 
 automations.register(AutomationDiscovery())
 
-if sys.version_info[0] >= 3:
-    StrIO = io.StringIO
-else:
-    StrIO = io.BytesIO
-
 
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
 def redirect_output(where):
-    # type: (StrIO) -> Iterator[StrIO]
+    # type: (io.StringIO) -> Iterator[io.StringIO]
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -181,7 +176,7 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(StrIO()) as buf:
+        with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
@@ -1798,7 +1793,7 @@ class AutomationCreateDiagnosticsDump(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(StrIO()) as buf:
+        with redirect_output(io.StringIO()) as buf:
             log.setup_console_logging()
             dump = DiagnosticsDump()
             dump.create()

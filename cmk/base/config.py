@@ -1802,7 +1802,7 @@ def load_precompiled_plugin(path, check_context):
     # https://docs.python.org/3/library/py_compile.html
     # https://www.python.org/dev/peps/pep-0552/
     # HACK:
-    header_size = 16 if sys.version_info[0] >= 3 else 8
+    header_size = 16
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1825,11 +1825,10 @@ def _is_plugin_precompiled(path, precompiled_path):
     if file_magic != _MAGIC_NUMBER:
         return False
 
-    if sys.version_info[0] >= 3:
-        # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
-        # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
-        file_hash = int(struct.unpack("I", f.read(4))[0])
-        assert file_hash == 0
+    # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
+    # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
+    file_hash = int(struct.unpack("I", f.read(4))[0])
+    assert file_hash == 0
 
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]

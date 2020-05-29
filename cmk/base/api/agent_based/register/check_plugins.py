@@ -6,15 +6,10 @@
 """Background tools required to register a check plugin
 """
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
-import sys
 import functools
 import inspect
 import itertools
-
-if sys.version_info[0] >= 3:
-    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
-else:
-    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
+from inspect import signature
 
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.checking_types import (

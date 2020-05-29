@@ -7,14 +7,9 @@
 """
 from typing import Any, Generator, List, Optional, Union
 import functools
-import sys
 import inspect
 import itertools
-
-if sys.version_info[0] >= 3:
-    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
-else:
-    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
+from inspect import signature
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex

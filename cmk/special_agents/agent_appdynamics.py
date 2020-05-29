@@ -10,11 +10,7 @@ import socket
 import sys
 from typing import Any, Dict
 from base64 import b64encode
-
-if sys.version_info[0] >= 3:
-    from http.client import HTTPConnection
-else:
-    from httplib import HTTPConnection  # pylint: disable=import-error
+from http.client import HTTPConnection
 
 from six import ensure_binary, ensure_str
 

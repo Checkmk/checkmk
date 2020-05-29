@@ -618,10 +618,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     assert list(kwargs.keys()) == ["files"]
     assert list(kwargs["files"].keys()) == ["snapshot"]
     # TODO: Add correct type once we are on Python 3 only
-    if sys.version_info[0] >= 3:
-        assert isinstance(kwargs["files"]["snapshot"], IOBase)
-    else:
-        assert isinstance(kwargs["files"]["snapshot"], file)  # pylint: disable=undefined-variable
+    assert isinstance(kwargs["files"]["snapshot"], IOBase)
 
     file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
     assert file_name == snapshot_settings.snapshot_path

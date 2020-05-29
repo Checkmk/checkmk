@@ -203,19 +203,15 @@ def test_discover_decorator_with_nested_entries():
     ]
 
 
-@pytest.mark.parametrize("parsed, selector, error_py2, error_py3", [
+@pytest.mark.parametrize("parsed, selector, error", [
     ({
         "one": None,
         "two": None,
-    }, lambda k: k, (TypeError, r"takes exactly 1 argument \(2 given\)"),
-     (TypeError, r"takes 1 positional argument but 2 were")),
-    (None, lambda k, v: k.startswith("o"), (ValueError, "type 'NoneType'"),
-     (ValueError, "and tuples you gave a")),
-    (list(range(5)), lambda k, v: v == k, (TypeError, r"takes exactly 2 arguments \(1 given\)"),
-     (TypeError, r"missing 1 required positional")),
+    }, lambda k: k, (TypeError, r"takes 1 positional argument but 2 were")),
+    (None, lambda k, v: k.startswith("o"), (ValueError, "and tuples you gave a")),
+    (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
 ])
-def test_discover_exceptions(parsed, selector, error_py2, error_py3):
-    error = error_py3 if sys.version_info[0] >= 3 else error_py2
+def test_discover_exceptions(parsed, selector, error):
     with pytest.raises(error[0], match=error[1]):
         next(check_api.discover(selector)(parsed))
 

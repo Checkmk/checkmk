@@ -967,7 +967,7 @@ def _get_sources_for_discovery(
         on_error,  # type: str
         for_check_discovery=False,  # type: bool
         *,
-        selected_raw_sections=None,  # type: Optional[Set[config.SectionPlugin]]
+        selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
 ):
     # type: (...) -> data_sources.DataSources
     sources = data_sources.DataSources(

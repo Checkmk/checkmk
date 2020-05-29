@@ -1300,7 +1300,7 @@ def get_registered_section_plugin(plugin_name):
 
 
 def get_relevant_raw_sections(check_plugin_names):
-    # type: (Iterable[PluginName]) -> Set[SectionPlugin]
+    # type: (Iterable[PluginName]) -> Dict[PluginName, SectionPlugin]
     """return the raw sections potentially relevant for the given check plugins"""
     parsed_section_names = set()  # type: Set[PluginName]
     for check_plguin_name in check_plugin_names:
@@ -1314,7 +1314,8 @@ def get_relevant_raw_sections(check_plugin_names):
     )  # type: Iterable[SectionPlugin]
 
     return {
-        section for section in iter_all_sections
+        section.name: section
+        for section in iter_all_sections
         if section.parsed_section_name in parsed_section_names
     }
 

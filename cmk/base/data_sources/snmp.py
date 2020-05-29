@@ -30,6 +30,7 @@ from cmk.utils.type_defs import (
 import cmk.base.config as config
 from cmk.base.api import PluginName
 from cmk.base.api.agent_based.register.check_plugins_legacy import maincheckify
+from cmk.base.api.agent_based.section_types import SNMPSectionPlugin
 from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKAgentError
 
@@ -137,10 +138,15 @@ class SNMPDataSource(ABCSNMPDataSource):
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> None
-        super(SNMPDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
+        super(SNMPDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            None if selected_raw_sections is None else
+            {s.name for s in selected_raw_sections.values() if isinstance(s, SNMPSectionPlugin)},
+        )
         self._detector = CachedSNMPDetector()
         self._do_snmp_scan = False
         self._on_error = "raise"
@@ -385,11 +391,11 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress,
-                                                            selected_raw_section_names)
+                                                            selected_raw_sections)
         self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
 
     def id(self):

@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostAddress, HostName, RawAgentData, ServiceCheckResult
 
 from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin
 import cmk.base.config as config
 from cmk.base.exceptions import MKAgentError
 
@@ -25,10 +26,15 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
             self,
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
-            selected_raw_section_names=None,  # type: Optional[Set[PluginName]]
+            selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> None
-        super(PiggyBackDataSource, self).__init__(hostname, ipaddress, selected_raw_section_names)
+        super(PiggyBackDataSource, self).__init__(
+            hostname,
+            ipaddress,
+            None if selected_raw_sections is None else
+            {s.name for s in selected_raw_sections.values() if isinstance(s, AgentSectionPlugin)},
+        )
         self._summary = None  # type: Optional[ServiceCheckResult]
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=self._hostname)

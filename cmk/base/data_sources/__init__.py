@@ -65,7 +65,7 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             hostname,  # type: HostName
             ipaddress,  # type: Optional[HostAddress]
             # optional set: None -> no selection, empty -> select *nothing*
-        selected_raw_sections=None,  # type: Optional[Set[config.SectionPlugin]]
+        selected_raw_sections=None,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> None
         super(DataSources, self).__init__()
@@ -82,7 +82,7 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
         self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
     def _initialize_data_sources(self, selected_raw_sections):
-        # type: (Optional[Set[config.SectionPlugin]]) -> None
+        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
         self._sources = {}  # type: Dict[str, DataSource]
 
         if self._host_config.is_cluster:
@@ -90,40 +90,31 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             # Instead all data is provided by the nodes
             return
 
-        selected_raw_section_names_snmp = (None if selected_raw_sections is None else {
-            s.name for s in selected_raw_sections if isinstance(s, SNMPSectionPlugin)
-        })
-        selected_raw_section_names_agent = (None if selected_raw_sections is None else {
-            s.name for s in selected_raw_sections if isinstance(s, AgentSectionPlugin)
-        })
+        self._initialize_agent_based_data_sources(selected_raw_sections)
+        self._initialize_snmp_data_sources(selected_raw_sections)
+        self._initialize_management_board_data_sources(selected_raw_sections)
 
-        self._initialize_agent_based_data_sources(selected_raw_section_names_agent)
-        self._initialize_snmp_data_sources(selected_raw_section_names_snmp)
-        self._initialize_management_board_data_sources(selected_raw_section_names_snmp)
-
-    def _initialize_agent_based_data_sources(self, selected_raw_section_names):
-        # type: (Optional[Set[PluginName]]) -> None
+    def _initialize_agent_based_data_sources(self, selected_raw_sections):
+        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
         if self._host_config.is_all_agents_host:
             source = self._get_agent_data_source(
                 ignore_special_agents=True,
-                selected_raw_section_names=selected_raw_section_names,
+                selected_raw_sections=selected_raw_sections,
             )
             source.set_main_agent_data_source()
             self._add_source(source)
 
             self._add_sources(
-                self._get_special_agent_data_sources(
-                    selected_raw_section_names=selected_raw_section_names,))
+                self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
 
         elif self._host_config.is_all_special_agents_host:
             self._add_sources(
-                self._get_special_agent_data_sources(
-                    selected_raw_section_names=selected_raw_section_names,))
+                self._get_special_agent_data_sources(selected_raw_sections=selected_raw_sections,))
 
         elif self._host_config.is_tcp_host:
             source = self._get_agent_data_source(
                 ignore_special_agents=False,
-                selected_raw_section_names=selected_raw_section_names,
+                selected_raw_sections=selected_raw_sections,
             )
             source.set_main_agent_data_source()
             self._add_source(source)
@@ -132,43 +123,41 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
             piggy_source = PiggyBackDataSource(
                 self._hostname,
                 self._ipaddress,
-                selected_raw_section_names=selected_raw_section_names,
+                selected_raw_sections=selected_raw_sections,
             )
             self._add_source(piggy_source)
 
-    def _initialize_snmp_data_sources(self, selected_raw_section_names):
-        # type: (Optional[Set[PluginName]]) -> None
+    def _initialize_snmp_data_sources(self, selected_raw_sections):
+        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
         if not self._host_config.is_snmp_host:
             return
         snmp_source = SNMPDataSource(
             self._hostname,
             self._ipaddress,
-            selected_raw_section_names=selected_raw_section_names,
+            selected_raw_sections=selected_raw_sections,
         )
         self._add_source(snmp_source)
 
-    def _initialize_management_board_data_sources(self, selected_raw_section_names):
-        # type: (Optional[Set[PluginName]]) -> None
+    def _initialize_management_board_data_sources(self, selected_raw_sections):
+        # type: (Optional[Dict[PluginName, config.SectionPlugin]]) -> None
         protocol = self._host_config.management_protocol
         if protocol is None:
             return
 
         ip_address = management_board_ipaddress(self._hostname)
         if protocol == "snmp":
-            # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
-            # multiple inheritance should solve the issue.
             self._add_source(
-                SNMPManagementBoardDataSource(  # py lint: disable=abstract-class-instantiated
+                SNMPManagementBoardDataSource(
                     self._hostname,
                     ip_address,
-                    selected_raw_section_names=selected_raw_section_names,
+                    selected_raw_sections=selected_raw_sections,
                 ))
         elif protocol == "ipmi":
             self._add_source(
-                IPMIManagementBoardDataSource(  # py lint: disable=abstract-class-instantiated
+                IPMIManagementBoardDataSource(
                     self._hostname,
                     ip_address,
-                    selected_raw_section_names=selected_raw_section_names,
+                    selected_raw_sections=selected_raw_sections,
                 ))
         else:
             raise NotImplementedError()
@@ -198,12 +187,12 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
     def _get_agent_data_source(
             self,
             ignore_special_agents,  # type: bool
-            selected_raw_section_names,  # type: Optional[Set[PluginName]]
+            selected_raw_sections,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> CheckMKAgentDataSource
         if not ignore_special_agents:
             special_agents = self._get_special_agent_data_sources(
-                selected_raw_section_names=selected_raw_section_names,)
+                selected_raw_sections=selected_raw_sections,)
             if special_agents:
                 return special_agents[0]
 
@@ -213,18 +202,18 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
                 self._hostname,
                 self._ipaddress,
                 datasource_program,
-                selected_raw_section_names=selected_raw_section_names,
+                selected_raw_sections=selected_raw_sections,
             )
 
         return TCPDataSource(
             self._hostname,
             self._ipaddress,
-            selected_raw_section_names=selected_raw_section_names,
+            selected_raw_sections=selected_raw_sections,
         )
 
     def _get_special_agent_data_sources(
             self,
-            selected_raw_section_names,  # type: Optional[Set[PluginName]]
+            selected_raw_sections,  # type: Optional[Dict[PluginName, config.SectionPlugin]]
     ):
         # type: (...) -> List[SpecialAgentDataSource]
         return [
@@ -233,7 +222,7 @@ class DataSources(object):  # pylint: disable=useless-object-inheritance
                 self._ipaddress,
                 agentname,
                 params,
-                selected_raw_section_names=selected_raw_section_names,
+                selected_raw_sections=selected_raw_sections,
             ) for agentname, params in self._host_config.special_agents
         ]
 

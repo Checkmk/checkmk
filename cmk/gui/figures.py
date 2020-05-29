@@ -127,6 +127,14 @@ class TableFigureDataCreator:
         }
     """
     @classmethod
+    def get_header_cell(cls, text, attrs=None, classes=None):
+        cell = {"text": text}
+        attrs = {} if attrs is None else attrs
+        attrs["cell_type"] = "th"
+        cell.update(cls.compute_attr_and_classes(attrs, classes))
+        return cell
+
+    @classmethod
     def get_text_cell(cls, text, attrs=None, classes=None):
         cell = {"text": text}
         cell.update(cls.compute_attr_and_classes(attrs, classes))

@@ -46,7 +46,7 @@ def check_sap_hana_ess(item, params, data):
     if started_threads is None or started_threads < 1:
         state = 2
     else:
-        state = 2
+        state = 0
     yield state, 'Started threads: %s' % started_threads, [('threads', started_threads)]
 
 

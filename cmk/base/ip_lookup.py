@@ -7,14 +7,7 @@
 import socket
 import errno
 import os
-from typing import (
-    Optional,
-    Dict,
-    Tuple,
-    Union,
-    List,
-    cast,
-)
+from typing import Optional, Dict, Tuple, Union, List, cast
 
 import cmk.utils.paths
 import cmk.utils.debug

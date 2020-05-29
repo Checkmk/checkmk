@@ -7,11 +7,7 @@
 settings"""
 
 import abc
-from typing import (
-    Optional,
-    Text,
-    Union,
-)
+from typing import Optional, Text, Union
 
 import cmk.utils.version as cmk_version
 import cmk.gui.config as config

@@ -5,13 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a section plugin
 """
-from typing import (
-    Any,
-    Generator,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Generator, List, Optional, Union
 import functools
 import sys
 import inspect

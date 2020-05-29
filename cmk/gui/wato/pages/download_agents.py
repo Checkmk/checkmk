@@ -7,11 +7,7 @@
 
 import os
 import glob
-
-from typing import (
-    List,
-    Text,
-)
+from typing import List, Text
 
 import cmk.utils.paths
 import cmk.utils.render

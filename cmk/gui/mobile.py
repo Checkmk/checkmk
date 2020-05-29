@@ -4,14 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Set,
-    Text,
-    Tuple,
-    Union,
-    Optional,
-    List,
-)
+from typing import Set, Text, Tuple, Union, Optional, List
 
 import cmk.gui.views as views
 import cmk.gui.config as config

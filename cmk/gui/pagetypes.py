@@ -19,14 +19,8 @@
 
 import os
 import json
-from typing import (
-    Dict,
-    Any,
-    Text,
-    List,
-    Tuple,
-    Optional as _Optional,
-)
+from typing import Dict, Any, Text, List, Tuple, Optional as _Optional
+
 from six import ensure_str
 
 import cmk.utils.store as store

@@ -6,13 +6,8 @@
 
 import time
 import itertools
-from typing import (
-    List,
-    Text,
-    TYPE_CHECKING,
-    Set,
-    Tuple,
-)
+from typing import List, Text, TYPE_CHECKING, Set, Tuple
+
 from six import ensure_str
 
 import cmk.utils.version as cmk_version

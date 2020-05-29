@@ -87,18 +87,7 @@ import time
 import pprint  # noqa: F401 # pylint: disable=unused-import
 import calendar
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union
 
 from six import ensure_str
 

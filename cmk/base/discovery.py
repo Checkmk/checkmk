@@ -9,20 +9,7 @@ import signal
 import socket
 import time
 from types import FrameType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Pattern,
-    Set,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterator, List, NoReturn, Optional, Pattern, Set, Text, Tuple, Union
 
 from six import ensure_binary
 

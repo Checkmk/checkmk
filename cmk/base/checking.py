@@ -12,19 +12,7 @@ import signal
 import time
 from random import Random
 from types import FrameType
-from typing import (
-    IO,
-    Any,
-    AnyStr,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Text,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import IO, Any, AnyStr, Dict, Iterable, List, Optional, Text, Tuple, Union, cast
 
 from six import ensure_binary, ensure_str
 

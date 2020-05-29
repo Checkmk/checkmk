@@ -7,15 +7,7 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import (
-    Dict,
-    Type,
-    Iterator,
-    Text,
-    Optional,
-    List,
-    Any,
-)
+from typing import Dict, Type, Iterator, Text, Optional, List, Any
 
 from livestatus import LocalConnection
 import cmk.utils.defines

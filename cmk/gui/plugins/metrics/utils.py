@@ -10,19 +10,7 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
-from typing import (
-    Any,
-    AnyStr,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Text,
-    Tuple,
-    Union,
-)
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union
 
 from six import ensure_binary, ensure_str
 

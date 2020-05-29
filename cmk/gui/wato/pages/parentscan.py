@@ -6,11 +6,7 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
-from typing import (
-    NamedTuple,
-    Text,
-    List,
-)
+from typing import NamedTuple, Text, List
 
 import cmk.utils.store as store
 

@@ -40,6 +40,10 @@ except Exception:
     keepalive = None  # type: ignore
 
 
+def ensure_str(s):
+    return s.encode("utf-8") if isinstance(s, unicode) else s
+
+
 def handle_check_mk_check_result(check_plugin_name, description):
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
@@ -90,9 +94,9 @@ def handle_check_mk_check_result(check_plugin_name, description):
 
             if _in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
-                console.verbose(output_txt.encode("utf-8"))
+                console.verbose(ensure_str(output_txt))
             else:
-                console.output(output_txt.encode("utf-8"))
+                console.output(ensure_str(output_txt))
 
             return status
 

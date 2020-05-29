@@ -1378,15 +1378,12 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
-        params = None  # type: Optional[CheckParameters]
+        params = _preview_params(hostname, discovered_service, check_source)
         exitcode = None  # type: Optional[ServiceState]
         perfdata = []  # type: List[Metric]
         if check_source not in ['legacy', 'active', 'custom']:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
-
-            # apply check_parameters
-            params = _get_check_parameters(discovered_service)
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)
@@ -1434,17 +1431,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             if exitcode is None:
                 check_function = config.check_info[
                     discovered_service.check_plugin_name]["check_function"]
-                if check_source != 'manual':
-                    params = check_table.get_precompiled_check_parameters(
-                        hostname, discovered_service.item,
-                        config.compute_check_parameters(hostname,
-                                                        discovered_service.check_plugin_name,
-                                                        discovered_service.item, params),
-                        discovered_service.check_plugin_name)
-                else:
-                    params = check_table.get_precompiled_check_parameters(
-                        hostname, discovered_service.item, params,
-                        discovered_service.check_plugin_name)
 
                 try:
                     item_state.reset_wrapped_counters()
@@ -1464,17 +1450,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
             perfdata = []
-
-        if check_source == "active":
-            params = _get_check_parameters(discovered_service)
-
-        if isinstance(params, config.TimespecificParamList):
-            params = {
-                "tp_computed_params": {
-                    "params": checking.legacy_determine_check_params(params),
-                    "computed_at": time.time(),
-                }
-            }
 
         table.append((
             _preview_check_source(hostname, discovered_service, check_source),
@@ -1512,6 +1487,51 @@ def _preview_ruleset_name(
     if check_source in ["legacy", "active", "custom"]:
         return None
     return config.check_info[discovered_service.check_plugin_name]["group"]
+
+
+def _preview_params(
+    host_name: HostName,
+    discovered_service: DiscoveredService,
+    check_source: str,
+) -> Optional[CheckParameters]:
+    params = None  # type: Optional[CheckParameters]
+
+    if check_source not in ['legacy', 'active', 'custom']:
+        if discovered_service.check_plugin_name not in config.check_info:
+            return params
+        params = _get_check_parameters(discovered_service)
+        if check_source != 'manual':
+            params = check_table.get_precompiled_check_parameters(
+                host_name,
+                discovered_service.item,
+                config.compute_check_parameters(
+                    host_name,
+                    discovered_service.check_plugin_name,
+                    discovered_service.item,
+                    params,
+                ),
+                discovered_service.check_plugin_name,
+            )
+        else:
+            params = check_table.get_precompiled_check_parameters(
+                host_name,
+                discovered_service.item,
+                params,
+                discovered_service.check_plugin_name,
+            )
+
+    if check_source == "active":
+        params = _get_check_parameters(discovered_service)
+
+    if isinstance(params, config.TimespecificParamList):
+        params = {
+            "tp_computed_params": {
+                "params": checking.legacy_determine_check_params(params),
+                "computed_at": time.time(),
+            }
+        }
+
+    return params
 
 
 def _get_check_parameters(discovered_service):

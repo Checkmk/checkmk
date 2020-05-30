@@ -1,0 +1,20 @@
+--- pnp4nagios-0.6.25/lib/kohana/system/libraries/Input.php
++++ pnp4nagios-0.6.25/lib/kohana/system/libraries/Input.php
+@@ -54,14 +54,14 @@ public function __construct()
+ 		if (Input::$instance === NULL)
+ 		{
+ 			// magic_quotes_runtime is enabled
+-			if (get_magic_quotes_runtime())
++			if (function_exists('get_magic_quotes_runtime'))
+ 			{
+-				set_magic_quotes_runtime(0);
++				ini_set('magic_quotes_runtime', 0);
+ 				Kohana::log('debug', 'Disable magic_quotes_runtime! It is evil and deprecated: http://php.net/magic_quotes');
+ 			}
+ 
+ 			// magic_quotes_gpc is enabled
+-			if (get_magic_quotes_gpc())
++			if (function_exists('get_magic_quotes_gpc'))
+ 			{
+ 				$this->magic_quotes_gpc = TRUE;
+ 				Kohana::log('debug', 'Disable magic_quotes_gpc! It is evil and deprecated: http://php.net/magic_quotes');

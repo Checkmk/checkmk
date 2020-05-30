@@ -14,7 +14,7 @@
 # 24.02.2020: rewritten for cmk 1.6.x, includes "temperature.include"
 #             Note: item has ben changed from "Environment: <sensorname" to "Temperature <sensorname>
 #             Note: wato/metrics changed to use CMK build in template
-# 30.05.2020: cleanup
+# 30.05.2020: cleanup.
 #
 
 factory_settings['cisco_asa_temp_default_levels'] = {}

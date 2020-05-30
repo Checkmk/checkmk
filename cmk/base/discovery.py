@@ -1488,10 +1488,19 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 }
             }
 
-        table.append((check_source, discovered_service.check_plugin_name, checkgroup,
-                      discovered_service.item, discovered_service.parameters_unresolved, params,
-                      discovered_service.description, exitcode, output, perfdata,
-                      discovered_service.service_labels.to_dict()))
+        table.append((
+            check_source,
+            discovered_service.check_plugin_name,
+            checkgroup,
+            discovered_service.item,
+            discovered_service.parameters_unresolved,
+            params,
+            discovered_service.description,
+            exitcode,
+            output,
+            perfdata,
+            discovered_service.service_labels.to_dict(),
+        ))
 
     return table, discovered_host_labels
 

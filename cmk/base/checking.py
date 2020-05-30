@@ -300,16 +300,26 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = PluginName(maincheckify(service.check_plugin_name))
     plugin = config.registered_check_plugins.get(plugin_name)
+    if (plugin is not None and host_config.is_cluster and
+            plugin.cluster_check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL):
+        return _execute_check_legacy_mode(
+            multi_host_sections,
+            host_config.hostname,
+            ipaddress,
+            service,
+        )
+
     if plugin is None:
-        _submit_check_result(host_config.hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        _submit_check_result(
+            host_config.hostname,
+            service.description,
+            CHECK_NOT_IMPLEMENTED,
+            None,
+        )
         return True
 
     check_function = (plugin.cluster_check_function
                       if host_config.is_cluster else plugin.check_function)
-
-    if check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL:
-        return _execute_check_legacy_mode(multi_host_sections, host_config.hostname, ipaddress,
-                                          service)
 
     source_type = (SourceType.MANAGEMENT
                    if service.check_plugin_name.startswith('mgmt_') else SourceType.HOST)

@@ -32,7 +32,6 @@ from cmk.utils.type_defs import (
     Item,
     Metric,
     RulesetName,
-    ServiceState,
     SourceType,
 )
 import cmk.utils.cleanup
@@ -1355,33 +1354,31 @@ def _get_cluster_services(
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
-def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
+def get_check_preview(host_name, use_caches, do_snmp_scan, on_error):
     # type: (HostName, bool, bool, str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config.get_config_cache().get_host_config(host_name)
 
-    if host_config.is_cluster:
-        ipaddress = None
-    else:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
+    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_name)
 
-    sources = _get_sources_for_discovery(hostname,
-                                         ipaddress,
-                                         do_snmp_scan=do_snmp_scan,
-                                         on_error=on_error)
+    sources = _get_sources_for_discovery(
+        host_name,
+        ip_address,
+        do_snmp_scan=do_snmp_scan,
+        on_error=on_error,
+    )
 
     multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-    services, discovered_host_labels = _get_host_services(host_config, ipaddress,
+    services, discovered_host_labels = _get_host_services(host_config, ip_address,
                                                           multi_host_sections, on_error)
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
-        params = _preview_params(hostname, discovered_service, check_source)
+        params = _preview_params(host_name, discovered_service, check_source)
         if check_source in ['legacy', 'active', 'custom']:
-            exitcode = None  # type: Optional[ServiceState]
+            exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
             perfdata = []  # type: List[Metric]
         else:
@@ -1391,16 +1388,16 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
                 multi_host_sections,
                 host_config,
-                ipaddress,
+                ip_address,
                 discovered_service,
                 # mypy can't infer "the type of lambda"
                 lambda p=params: Parameters(wrap_parameters(p)),  # type: ignore[misc]
             )
 
         table.append((
-            _preview_check_source(hostname, discovered_service, check_source),
+            _preview_check_source(host_name, discovered_service, check_source),
             discovered_service.check_plugin_name,
-            _preview_ruleset_name(hostname, discovered_service, check_source),
+            _preview_ruleset_name(host_name, discovered_service, check_source),
             discovered_service.item,
             discovered_service.parameters_unresolved,
             params,

@@ -94,7 +94,9 @@ UncleanPerfValue = Union[None, str, float]
 
 ITEM_NOT_FOUND = (3, "Item not found in monitoring data", [])  # type: ServiceCheckResult
 
-CHECK_NOT_IMPLEMENTED = (3, 'Check not implemented', [])  # type: ServiceCheckResult
+RECEIVED_NO_DATA = (3, "Check plugin received no monitoring data", [])  # type: ServiceCheckResult
+
+CHECK_NOT_IMPLEMENTED = (3, 'Check plugin not implemented', [])  # type: ServiceCheckResult
 
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
@@ -300,6 +302,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     # TODO (mo): centralize maincheckify: CMK-4295
     plugin_name = PluginName(maincheckify(service.check_plugin_name))
     plugin = config.registered_check_plugins.get(plugin_name)
+    # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == CLUSTER_LEGACY_MODE_FROM_HELL):
         return _execute_check_legacy_mode(
@@ -309,14 +312,37 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
             service,
         )
 
-    if plugin is None:
+    submit, data_received, result = _get_aggregated_result(
+        multi_host_sections,
+        host_config,
+        ipaddress,
+        service,
+    )
+
+    if submit:
         _submit_check_result(
             host_config.hostname,
             service.description,
-            CHECK_NOT_IMPLEMENTED,
-            None,
+            result,
+            multi_host_sections.get_cache_info(plugin.sections) if plugin else None,
         )
-        return True
+    elif data_received:
+        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), result[1])
+
+    return data_received
+
+
+def _get_aggregated_result(
+    multi_host_sections: data_sources.MultiHostSections,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+) -> Tuple[bool, bool, ServiceCheckResult]:
+    # TODO (mo): centralize maincheckify: CMK-4295
+    plugin_name = PluginName(maincheckify(service.check_plugin_name))
+    plugin = config.registered_check_plugins.get(plugin_name)
+    if plugin is None:
+        return False, True, CHECK_NOT_IMPLEMENTED
 
     check_function = (plugin.cluster_check_function
                       if host_config.is_cluster else plugin.check_function)
@@ -336,7 +362,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
         )
 
         if not kwargs:
-            return False
+            return False, False, RECEIVED_NO_DATA
 
         if service.item is not None:
             kwargs["item"] = service.item
@@ -348,9 +374,7 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
 
     except (item_state.MKCounterWrapped, checking_types.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
-        # Do not submit any check result in this case.
-        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), msg)
-        return True
+        return False, True, (0, msg, [])
 
     except MKTimeout:
         raise
@@ -358,18 +382,16 @@ def execute_check(multi_host_sections, host_config, ipaddress, service):
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            host_config.hostname, service.check_plugin_name, service.item,
-            is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
-            service.parameters, service.description, kwargs), []
+        return True, True, (
+            3,
+            cmk.base.crash_reporting.create_check_crash_dump(
+                host_config.hostname, service.check_plugin_name, service.item,
+                is_manual_check(host_config.hostname, service.check_plugin_name, service.item),
+                service.parameters, service.description, kwargs),
+            [],
+        )
 
-    _submit_check_result(
-        host_config.hostname,
-        service.description,
-        result,
-        multi_host_sections.get_cache_info(plugin.sections),
-    )
-    return True
+    return True, True, result
 
 
 def _execute_check_legacy_mode(multi_host_sections, hostname, ipaddress, service):

@@ -1,0 +1,25 @@
+title: Cisco ASA: fan sensors
+agents: snmp
+author: thl-cmk@outlook.com
+catalog: hw/network/cisco
+license: GPLv3
+distribution: https://thl-cmk.hopto.org
+description:
+ The Cisco "Adaptive Security Appliances" (ASA) has some fan sensors.
+ This check allows to monitor this Sensors.
+
+
+perfdata:
+  rpm
+
+
+item:
+  One item per fan sensor is generated.
+
+
+inventory:
+  The check detects ASA fan sensors and saves them.
+
+
+parameters:
+  lower/upper levels for fan speed. Default is lower: 2000/1000 rpm.

@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# License: GNU General Public License v2
+#
+# created by thl-cmk[at]outlook[dot]com
+#
+# Monitors Cisco ASA fan sensors
+# works with Cisco ASA 55xx-X and later
+# tested with and 5512-XX, 5585-SSP20
+# 24.03.2016: changed "47.1.1.1.1.2" PhysDescription to "47.1.1.1.1.7" entPhysicalName (duplicate descr. with ASA5585)
+# 02.07.2016: fixed crit/warn to >=
+# 09.01.2018: added minimum level
+# 03.05.2018: fixed inventory for empty sensorname (asa context)
+# 24.02.2020: rewritten for cmk 1.6.x, includes "temperature.include"
+#             Note: item has ben changed from "Environment: <sensorname" to "Fan <sensorname>
+#             Note: wato/metrics changed to use CMK build in template
+# 30.05.2020: cleanup
+
+factory_settings['cisco_asa_fan_default_levels'] = {
+    'lower': (2000, 1000),
+}
+
+
+def inventory_cisco_asa_fan(info):
+    for sensorname, sensortype, sensorvalue, sensorstatus, sensorunits in info:
+        if sensortype == '10' and sensorstatus == '1' and sensorname != '':
+            if sensorname.lower().startswith('fan '):
+                sensorname = sensorname[4:]
+            yield sensorname, None
+
+
+def check_cisco_asa_fan(item, params, info):
+    for sensorname, sensortype, sensorvalue, sensorstatus, sensorunits in info:
+        if sensorname.lower().startswith('fan '):
+            sensorname = sensorname[4:]
+        if sensorname == item and sensortype == '10':
+            sensorvalue = int(sensorvalue)
+            yield check_fan(sensorvalue, params)
+
+
+check_info['cisco_asa_fan'] = {
+    'check_function': check_cisco_asa_fan,
+    'inventory_function': inventory_cisco_asa_fan,
+    'service_description': 'Fan %s',
+    'has_perfdata': True,
+    'group': 'hw_fans',
+    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.1.0').lower().startswith(
+        'cisco adaptive security appliance'),
+    'snmp_info': (
+        '.1.3.6.1.2.1',
+        [
+            '47.1.1.1.1.7',  #ENTITY-MIB::entPhysicalName
+            '99.1.1.1.1',  #ENTITY-SENSOR-MIB::entPhySensorType
+            '99.1.1.1.4',  #ENTITY-SENSOR-MIB::entPhySensorValue
+            '99.1.1.1.5',  #ENTITY-SENSOR-MIB::entPhySensorOperStatus
+            '99.1.1.1.6',  #ENTITY-SENSOR-MIB::entPhySensorUnitsDisplay
+        ]),
+    'includes': ['fan.include'],
+    'default_levels_variable': 'cisco_asa_fan_default_levels',
+}

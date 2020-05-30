@@ -1,0 +1,11 @@
+Title: Fixed pnp4nagios graphs on systems with php-7.4
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p13
+Date: 1590848056
+Class: fix
+
+This fixes the possible error message 'Function get_magic_quotes_runtime() is
+deprecated' when viewing graphs in cre edition of checkmk.
